@@ -1,0 +1,64 @@
+{#- The ≡ menu of the left pane: administration links, viewpoint, time, participation and appearance. -#}
+{% set view_params = {'vp': ctx.vp.kind} if ctx is defined and ctx and ctx.vp is defined else {} %}
+<details class="im-menu" id="im-menu">
+  <summary class="im-icon-btn" aria-label="{{ _('Menu') }}" title="{{ _('Menu') }}">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+  </summary>
+  <div class="im-menu-panel" role="menu">
+    <div class="im-menu-brand">
+      <img src="{{ url_for('static', filename='assets/img/vector/logo/YSocial_l_teal.png') }}" alt="" width="28" height="28">
+      <span>{{ exp.exp_name }}</span>
+    </div>
+    {% if admin_links %}
+    <div class="im-menu-group">
+      <p class="im-menu-label">{{ _('Back to administration') }}</p>
+      {% for label, href in admin_links %}<a role="menuitem" class="im-menu-item" href="{{ href }}">{{ label }}</a>{% endfor %}
+    </div>
+    {% endif %}
+    {% if is_staff and ctx is defined and ctx and ctx.vp is defined %}
+    <div class="im-menu-group">
+      <p class="im-menu-label">{{ _('Viewpoint') }}</p>
+      <a role="menuitem" class="im-menu-item{{ ' is-active' if ctx.vp.kind == 'overview' }}" href="/{{ exp.idexp }}/im?vp=overview">{{ _('Researcher overview') }} <small>{{ _('everything, including private chats') }}</small></a>
+      <a role="menuitem" class="im-menu-item{{ ' is-active' if ctx.vp.kind == 'public' }}" href="/{{ exp.idexp }}/im?vp=public">{{ _('Public observer') }} <small>{{ _('what anyone can read') }}</small></a>
+      <form class="im-menu-form" method="get" action="/{{ exp.idexp }}/im" aria-label="{{ _('View as account') }}">
+        <input type="hidden" name="vp" value="account">
+        <label for="im-acc">{{ _('View as account') }}</label>
+        <input id="im-acc" name="acc" list="im-accounts" value="{{ ctx.vp.account_id or '' }}" placeholder="{{ _('username or account id') }}" autocomplete="off" required>
+        <datalist id="im-accounts">{% for a in accounts %}<option value="{{ a.id }}">{{ a.username }}{% if a.kind %} · {{ a.kind }}{% endif %}</option>{% endfor %}</datalist>
+        <button type="submit">{{ _('Open') }}</button>
+      </form>
+    </div>
+    {% endif %}
+    {% if time_travel and ctx is defined and ctx and ctx.vp is defined %}
+    <div class="im-menu-group">
+      <p class="im-menu-label">{{ _('Time') }}</p>
+      <form class="im-menu-form is-inline" method="get" action="{{ request.path }}">
+        {% for k, v in view_params.items() %}{% if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+        {% if ctx.vp.account_id %}<input type="hidden" name="acc" value="{{ ctx.vp.account_id }}">{% endif %}
+        <label for="im-day">{{ _('As of day') }}</label>
+        <input id="im-day" name="day" type="number" min="1" value="{{ day_slot[0] }}" class="im-num">
+        <label for="im-slot">{{ _('slot') }}</label>
+        <input id="im-slot" name="slot" type="number" min="1" max="24" value="{{ day_slot[1] }}" class="im-num">
+        <button type="submit">{{ _('Go') }}</button>
+        {% if ctx.vp.round != ctx.latest %}<a class="im-latest" href="{{ request.path }}?vp={{ ctx.vp.kind }}{% if ctx.vp.account_id %}&acc={{ ctx.vp.account_id }}{% endif %}">{{ _('Latest') }}</a>{% endif %}
+      </form>
+    </div>
+    {% endif %}
+    {% if participant %}
+    <div class="im-menu-group">
+      {% if ui.get('notifications_menu', True) %}<a role="menuitem" class="im-menu-item" href="/{{ exp.idexp }}/im/notifications">{{ _('Notifications') }}</a>{% endif %}
+      {% if writable and ui.get('interactions_enabled', True) %}
+      <form class="im-menu-form" id="im-join" data-im-action="join" autocomplete="off">
+        <label for="im-join-chat">{{ _('Join a chat') }}</label>
+        <input id="im-join-chat" name="chat_id" placeholder="{{ _('Chat id') }}" required>
+        <input id="im-join-invite" name="invite_id" placeholder="{{ _('Invite code (optional)') }}" aria-label="{{ _('Invite code (optional)') }}">
+        <button type="submit">{{ _('Join') }}</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+    <div class="im-menu-group">
+      <button type="button" id="im-theme" class="im-menu-item" aria-label="{{ _('Toggle dark mode') }}">{{ _('Dark mode') }} <span aria-hidden="true">◐</span></button>
+    </div>
+  </div>
+</details>

@@ -1,40 +1,97 @@
 {% extends "im/base.html" %}
 {% from "im/_message.html" import message %}
+{% from "im/_avatar.html" import avatar %}
 {% block title %}{{ page.title }} · {{ exp.exp_name }}{% endblock %}
 {% block content %}
+{% set own_id = participant.account_id if participant else (ctx.vp.account_id if ctx.vp.kind == 'account' else None) %}
 <section class="im-conversation" aria-labelledby="im-conv-h" data-infinite="{{ 1 if ui.get('infinite_scroll_enabled', True) else 0 }}" data-history-url="/{{ exp.idexp }}/im/api/chat/{{ chat_id }}/history">
-  <header class="im-conv-head">
-    <a class="im-back" href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}">← {{ _('Chats') }}</a>
-    <h2 id="im-conv-h">{{ page.title }}{% if topic %} · {{ topic.title }}{% endif %}</h2>
-    <a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/members{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Members') }}</a>
+  <header class="im-conv-head im-panel">
+    <a class="im-back im-icon-btn" href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}" aria-label="{{ _('Chats') }}">←</a>
+    {{ avatar(page.title, info.hue if info else 210, 'md') }}
+    <div class="im-conv-title">
+      <h2 id="im-conv-h">{{ page.title }}{% if topic %} · {{ topic.title }}{% endif %}</h2>
+      <p>{% if info %}{{ info.type }}{% if info.visibility == 'private' %} · {{ _('private') }}{% endif %} · {{ _('%(n)s members', n=info.members) }}{% endif %}</p>
+    </div>
     {% if participant and writable %}
     <button type="button" class="im-act" data-im-action="join" data-im-do="join" data-chat="{{ chat_id }}">{{ _('Join') }}</button>
     <button type="button" class="im-act" data-im-action="leave" data-im-do="leave" data-chat="{{ chat_id }}">{{ _('Leave') }}</button>
     <button type="button" class="im-act" data-im-action="invite" data-im-do="invite" data-chat="{{ chat_id }}">{{ _('Invite link') }}</button>
     {% endif %}
+    {% if ui.get('show_post_time', True) %}<span class="im-clock" data-im-time="" title="{{ _('Simulated time') }}">{{ _('day %(d)s, slot %(s)s', d=day_slot[0], s=day_slot[1]) }}</span>{% endif %}
+    {% if participant and ui.get('notifications_menu', True) %}<a class="im-icon-btn" href="/{{ exp.idexp }}/im/notifications" aria-label="{{ _('Notifications') }}" title="{{ _('Notifications') }}">🔔</a>{% endif %}
+    <button type="button" class="im-icon-btn" id="im-info-toggle" aria-controls="im-info" aria-expanded="false" aria-label="{{ _('Chat info') }}" title="{{ _('Chat info') }}">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </header>
   {% if topics %}
-  <nav class="im-topics" aria-label="{{ _('Forum topics') }}">
+  <nav class="im-topics im-panel" aria-label="{{ _('Forum topics') }}">
     <a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}" class="{{ 'is-active' if not topic }}">{{ _('All') }}</a>
     {% for t in topics %}<a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/topic/{{ t.id }}{{ '?' ~ (params|urlencode) if params else '' }}" class="{{ 'is-active' if topic and topic.id == t.id }}{{ ' is-deleted' if t.deleted }}">{{ t.title }}{% if t.deleted %} ({{ _('deleted') }}){% endif %}</a>{% endfor %}
   </nav>
   {% endif %}
+  <div class="im-scroll" id="im-scroll">
   {% if page.next_before %}
   <p class="im-older"><a href="?{{ (params|urlencode) ~ '&' if params else '' }}before={{ page.next_before }}" data-before="{{ page.next_before }}" data-im-more="older" rel="prev">{{ _('Older messages') }}</a></p>
   {% endif %}
   <div class="im-messages" id="im-messages">
-    {% for m in page["items"]|reverse %}{{ message(m, exp.idexp, params, ui, participant, writable) }}{% else %}<p class="im-empty">{{ _('No messages yet') }}</p>{% endfor %}
+    {% set ns = namespace(day=None) %}
+    {% for m in page["items"]|reverse %}
+    {% if ns.day != m.day %}{% set ns.day = m.day %}<p class="im-day-chip"><span>{{ _('Day %(d)s', d=m.day) }}</span></p>{% endif %}
+    {{ message(m, exp.idexp, params, ui, participant, writable, annotation_flags, own_id) }}
+    {% else %}<p class="im-empty">{{ _('No messages yet') }}</p>{% endfor %}
   </div>
   {% if page.next_after %}
   <p class="im-older"><a href="?{{ (params|urlencode) ~ '&' if params else '' }}after={{ page.next_after }}" data-im-more="newer" rel="next">{{ _('Newer messages') }}</a></p>
   {% endif %}
+  </div>
   {% if participant and writable %}
-  <form class="im-composer" id="im-composer" data-im-action="send" data-chat="{{ chat_id }}"{% if topic %} data-topic="{{ topic.id }}"{% endif %} autocomplete="off">
+  <form class="im-composer im-panel" id="im-composer" data-im-action="send" data-chat="{{ chat_id }}"{% if topic %} data-topic="{{ topic.id }}"{% endif %} autocomplete="off">
     <p id="im-replying" class="im-replying" hidden></p>
     <label class="im-sr" for="im-text">{{ _('Message') }}</label>
-    <textarea id="im-text" name="text" rows="2" maxlength="4000" placeholder="{{ _('Write a message') }}" required></textarea>
-    <button type="submit">{{ _('Send') }}</button>
+    <textarea id="im-text" name="text" rows="1" maxlength="4000" placeholder="{{ _('Message') }}" required></textarea>
+    <button type="submit" class="im-send" aria-label="{{ _('Send') }}" title="{{ _('Send') }}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 11.5 21 3l-8.5 18-2-7.5L3 11.5Z" fill="currentColor"/></svg></button>
   </form>
+  {% elif is_staff %}
+  <p class="im-readonly im-panel">{{ _('Observer view: the messages are read only.') }}</p>
   {% endif %}
 </section>
+{% endblock %}
+{% block info %}
+{% if info %}
+{% from "im/_avatar.html" import avatar %}
+<aside class="im-info im-panel" id="im-info" aria-label="{{ _('Chat info') }}" hidden>
+  <header class="im-info-head">
+    <button type="button" class="im-icon-btn" id="im-info-close" aria-label="{{ _('Close') }}">×</button>
+    <h3>{{ _('Chat info') }}</h3>
+  </header>
+  <div class="im-info-body">
+    <div class="im-info-hero">
+      {{ avatar(info.title, info.hue, 'xl') }}
+      <h4>{{ info.title }}</h4>
+      <p>{{ _('%(n)s members', n=info.members) }}</p>
+    </div>
+    <ul class="im-info-list">
+      {% if info.description %}<li><span>{{ _('Description') }}</span>{{ info.description }}</li>{% endif %}
+      <li><span>{{ _('Type') }}</span>{{ info.type }}{% if info.is_forum %} · {{ _('forum') }}{% endif %} · {{ info.visibility }}</li>
+      {% if info.username %}<li><span>{{ _('Link') }}</span>@{{ info.username }}</li>{% endif %}
+      {% if info.owner %}<li><span>{{ _('Owner') }}</span><a href="/{{ exp.idexp }}/im/profile/{{ info.owner.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ info.owner.username }}</a></li>{% endif %}
+      {% if info.discussion %}<li><span>{{ _('Discussion group') }}</span><a href="/{{ exp.idexp }}/im/chat/{{ info.discussion.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ info.discussion.title }}</a></li>{% endif %}
+      {% if info.topics %}<li><span>{{ _('Topics') }}</span><span class="im-chips">{% for t in info.topics %}<span class="im-chip is-topic">{{ t }}</span>{% endfor %}</span></li>{% endif %}
+      <li><span>{{ _('Created') }}</span>{{ _('round %(n)s', n=info.created_round) }} · {{ info.origin }}</li>
+    </ul>
+    <h5 class="im-info-h">{{ _('Members') }}</h5>
+    <ul class="im-members">
+      {% for mem in members[:200] %}
+      <li>
+        <a href="/{{ exp.idexp }}/im/profile/{{ mem.account_id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ avatar(mem.username, mem.hue, 'sm') }}<span class="im-member-name">{{ mem.username }}{% if ui.get('annotation_agent_type', True) and mem.kind %} <span class="im-kind" data-kind="{{ mem.kind }}">{{ mem.kind }}</span>{% endif %}</span></a>
+        {% if ui.get('im_show_member_roles', True) and mem.role in ('owner', 'admin') %}<span class="im-role">{{ mem.role }}</span>{% endif %}
+        {% if is_staff and ctx.vp.kind != 'public' %}<a class="im-viewas" href="/{{ exp.idexp }}/im?vp=account&acc={{ mem.account_id }}" title="{{ _('View as this account') }}">👁</a>{% endif %}
+      </li>
+      {% else %}<li class="im-empty">{{ _('No members to show.') }}</li>{% endfor %}
+    </ul>
+    {% if members|length > 200 %}<p><a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/members{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('All members') }}</a></p>{% endif %}
+    {% if members %}<p class="im-info-more"><a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/members{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Members table') }}</a></p>{% endif %}
+  </div>
+</aside>
+{% endif %}
 {% endblock %}

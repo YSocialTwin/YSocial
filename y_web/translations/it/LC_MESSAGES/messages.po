@@ -7,16 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 10:20+0000\n"
+"POT-Creation-Date: 2026-10-27 13:08+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
 "Language-Team: it <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.18.0\n"
+"Generated-By: Babel 2.8.0\n"
 
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
@@ -457,6 +457,14 @@ msgstr ""
 "Una popolazione è un gruppo di agenti sintetici che parteciperanno alla "
 "tua simulazione. Per opzioni più avanzate, visita la pagina %(link)s."
 
+msgid ""
+"A round never closes sooner than this, so that people have time to act. "
+"It is a lower bound: the simulation never waits for a person."
+msgstr ""
+"Un round non si chiude prima di questo tempo, così che le persone abbiano"
+" modo di agire. È un limite inferiore: la simulazione non aspetta mai una"
+" persona."
+
 msgid "A subset of agent's interests."
 msgstr "Un sottoinsieme degli interessi dell'agente."
 
@@ -542,6 +550,11 @@ msgstr "Azioni"
 msgid "Actions Per User Once Active"
 msgstr "Azioni per utente una volta attivo"
 
+msgid "Actions an agent may take besides posting, replying and reacting."
+msgstr ""
+"Azioni che un agente può compiere oltre a pubblicare, rispondere e "
+"reagire."
+
 msgid ""
 "Actions include posting, commenting, reading, searching, and platform-"
 "specific features."
@@ -551,6 +564,9 @@ msgstr ""
 
 msgid "Activate"
 msgstr "Attiva"
+
+msgid "Activate agent memory"
+msgstr "Attiva la memoria degli agenti"
 
 msgid "Activate run-scoped memory"
 msgstr "Attiva la memoria limitata all'esecuzione"
@@ -717,6 +733,9 @@ msgstr "Aggiungi un commento..."
 msgid "Add a new filter tag"
 msgstr "Aggiungi un nuovo tag di filtro"
 
+msgid "Add chat"
+msgstr "Aggiungi chat"
+
 msgid ""
 "Add explicit interests for this agent. If an opinion group is selected, "
 "the related opinion value is stored too. Stubborn interests are exported "
@@ -766,6 +785,9 @@ msgstr "Profilo di gioco di ruolo avanzato"
 
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
+
+msgid "Advanced settings updated."
+msgstr "Impostazioni avanzate aggiornate."
 
 msgid "Age"
 msgstr "Età"
@@ -926,6 +948,9 @@ msgstr "Agenti"
 msgid "Agents Pre-prompts"
 msgstr "Pre-prompt degli agenti"
 
+msgid "Agents leaving and joining during the run."
+msgstr "Agenti che escono ed entrano durante l'esecuzione."
+
 msgid "Agents update opinions based on similarity with others"
 msgstr "Gli agenti aggiornano le opinioni in base alla somiglianza con gli altri"
 
@@ -987,6 +1012,17 @@ msgstr ""
 "quanto pubblica nuovi contenuti."
 
 msgid ""
+"All actions are scored from 0 to 10, where 0 means that the action is "
+"never performed. Scores greater than 0 are relative to each other. "
+"Joining and leaving chats are rare events: their scores count a tenth and"
+" a twentieth as much."
+msgstr ""
+"Tutte le azioni hanno un punteggio da 0 a 10, dove 0 significa che "
+"l'azione non viene mai eseguita. I punteggi maggiori di 0 sono relativi "
+"tra loro. Entrare e uscire dalle chat sono eventi rari: il loro punteggio"
+" conta rispettivamente un decimo e un ventesimo."
+
+msgid ""
 "All actions are scored from 0 to 10, where 0 means the action is never "
 "performed. Scores greater than 0 are relative to each other."
 msgstr ""
@@ -999,6 +1035,9 @@ msgstr "Tutte le annotazioni"
 
 msgid "All interactions"
 msgstr "Tutte le interazioni"
+
+msgid "All members"
+msgstr "Tutti i membri"
 
 msgid "All posts"
 msgstr "Tutti gli articoli"
@@ -1016,6 +1055,18 @@ msgstr ""
 "Tutti i dati di telemetria sono conformi al GDPR. Puoi disattivarla in "
 "qualsiasi momento dalle %(link)s dell'applicazione."
 
+msgid "Allow forum topics"
+msgstr "Consenti i topic dei forum"
+
+msgid "Allow forwarding"
+msgstr "Consenti l'inoltro"
+
+msgid "Allow private messages"
+msgstr "Consenti i messaggi privati"
+
+msgid "Allow search"
+msgstr "Consenti la ricerca"
+
 msgid "Already registered?"
 msgstr "Già registrato?"
 
@@ -1027,6 +1078,12 @@ msgstr "Profilo alternativo"
 
 msgid "Alternative values"
 msgstr "Valori alternativi"
+
+msgid "Always offer chats with notifications"
+msgstr "Proponi sempre le chat con notifiche"
+
+msgid "Always offer owned chats"
+msgstr "Proponi sempre le chat di cui è proprietario"
 
 msgid "American"
 msgstr "Americana"
@@ -1075,6 +1132,27 @@ msgstr "Ambiente di analisi"
 msgid "Analytics Pages"
 msgstr "Pagine di analisi"
 
+msgid "Analytics data are being built."
+msgstr "I dati di analisi sono in costruzione."
+
+#, python-format
+msgid ""
+"Analytics data as of day %(d)s, slot %(s)s. The pages count a message as "
+"a post and a slot as the time unit."
+msgstr ""
+"Dati di analisi aggiornati al giorno %(d)s, slot %(s)s. Le pagine contano"
+" un messaggio come post e uno slot come unità di tempo."
+
+#, python-format
+msgid "Analytics data could not be built: %(message)s"
+msgstr "Impossibile costruire i dati di analisi: %(message)s"
+
+msgid "Analytics data have not been built yet."
+msgstr "I dati di analisi non sono ancora stati costruiti."
+
+msgid "Analytics data refreshed."
+msgstr "Dati di analisi aggiornati."
+
 msgid ""
 "Analyze how content recommendation exposure is distributed across posts, "
 "authors, and recommender configurations."
@@ -1116,6 +1194,9 @@ msgstr ""
 msgid "Apply"
 msgstr "Applica"
 
+msgid "Archetype"
+msgstr "Archetipo"
+
 msgid "Archetype Configuration"
 msgstr "Configurazione degli archetipi"
 
@@ -1155,9 +1236,6 @@ msgstr "Armena"
 msgid "Articles'"
 msgstr "articoli"
 
-msgid "As account"
-msgstr "Come account"
-
 msgid "As of day"
 msgstr "Al giorno"
 
@@ -1166,6 +1244,9 @@ msgstr "Chiedi all'agente delle sue esperienze, decisioni o relazioni..."
 
 msgid "Ask the agent about their experiences, relationships, or the community..."
 msgstr "Chiedi all'agente delle sue esperienze, relazioni o della community..."
+
+msgid "Ask the language model when uncertain"
+msgstr "Interroga il modello linguistico nei casi incerti"
 
 msgid "Assign Users to Experiment"
 msgstr "Assegna gli utenti all'esperimento"
@@ -1214,6 +1295,9 @@ msgstr "Agenti attaccanti"
 msgid "Attackers"
 msgstr "Attaccanti"
 
+msgid "Attention"
+msgstr "Attenzione"
+
 msgid "Attention Budget"
 msgstr "Budget di attenzione"
 
@@ -1253,6 +1337,9 @@ msgid ""
 msgstr ""
 "Monitoraggio automatico dello stato di esecuzione dei client HPC e "
 "rilevamento del completamento."
+
+msgid "Automatic restrictions on the chats."
+msgstr "Restrizioni automatiche sulle chat."
 
 msgid "Automatically load more posts as the user scrolls down the feed"
 msgstr "Carica automaticamente altri post mentre l'utente scorre il feed"
@@ -1391,6 +1478,9 @@ msgstr "Torna al feed"
 msgid "Back to Plugins"
 msgstr "Torna ai plugin"
 
+msgid "Back to administration"
+msgstr "Torna all'amministrazione"
+
 msgid "Back to feed"
 msgstr "Torna al feed"
 
@@ -1400,11 +1490,17 @@ msgstr "Torna al profilo"
 msgid "Back to the experiments"
 msgstr "Torna agli esperimenti"
 
+msgid "Back to the researcher overview"
+msgstr "Torna alla panoramica del ricercatore"
+
 msgid "Backend"
 msgstr "Backend"
 
 msgid "Backend Extensions"
 msgstr "Estensioni del backend"
+
+msgid "Background activity that does not come from the agents."
+msgstr "Attività di fondo che non proviene dagli agenti."
 
 msgid "Background and profile attributes shaping this account."
 msgstr "Contesto e attributi del profilo che caratterizzano questo account."
@@ -1435,8 +1531,20 @@ msgstr "Bilanciato (consigliato)"
 msgid "Bangladeshi"
 msgstr "Bangladese"
 
+msgid "Barrier poll (seconds)"
+msgstr "Intervallo di controllo della barriera (secondi)"
+
 msgid "Baseline & Exploration"
 msgstr "Riferimento ed esplorazione"
+
+msgid "Baseline Activity"
+msgstr "Attività di base"
+
+msgid "Baseline policy"
+msgstr "Politica di base"
+
+msgid "Baseline strength"
+msgstr "Intensità dell'attività di base"
 
 msgid "Basic Fields"
 msgstr "Campi di base"
@@ -1460,6 +1568,9 @@ msgstr ""
 "Prima di entrare nel tuo feed, personalizza il profilo e indica il tuo "
 "livello di interesse e la tua opinione per ogni argomento di discussione "
 "attivo."
+
+msgid "Before you start"
+msgstr "Prima di iniziare"
 
 msgid "Beginning of the conversation"
 msgstr "Inizio della conversazione"
@@ -1654,6 +1765,9 @@ msgstr "Modifica l'indirizzo email dell'utente."
 msgid "Change the user's password with secure validation."
 msgstr "Modifica la password dell'utente con convalida sicura."
 
+msgid "Channel"
+msgstr "Canale"
+
 msgid "Character cap for injected memory context (24B/Ollama-safe default)."
 msgstr ""
 "Limite di caratteri per il contesto di memoria inserito (valore "
@@ -1667,8 +1781,32 @@ msgstr ""
 msgid "Chat"
 msgstr "Chat"
 
+msgid "Chat Discovery"
+msgstr "Scoperta delle chat"
+
+msgid "Chat Topology"
+msgstr "Topologia delle chat"
+
+msgid "Chat creation likelihood"
+msgstr "Probabilità di creare una chat"
+
+msgid "Chat id"
+msgstr "Id della chat"
+
+msgid "Chat info"
+msgstr "Info chat"
+
 msgid "Chats"
 msgstr "Chat"
+
+msgid "Chats by Topic"
+msgstr "Chat per topic"
+
+msgid "Chats per topic"
+msgstr "Chat per topic"
+
+msgid "Chats that appear during the run."
+msgstr "Chat che compaiono durante l'esecuzione."
 
 msgid "Check for Updates"
 msgstr "Cerca aggiornamenti"
@@ -1786,6 +1924,12 @@ msgstr "Scegli il tuo esperimento"
 msgid "Churn"
 msgstr "Ricambio"
 
+msgid "Churn and New Agents"
+msgstr "Abbandoni e nuovi agenti"
+
+msgid "Churn probability"
+msgstr "Probabilità di abbandono"
+
 msgid "Clear"
 msgstr "Cancella"
 
@@ -1899,6 +2043,9 @@ msgstr "Panoramica del client"
 msgid "Client Recommenders & Large Language Models"
 msgstr "Sistemi di raccomandazione e modelli linguistici del client"
 
+msgid "Client Runtime"
+msgstr "Esecuzione del client"
+
 msgid "Client Settings"
 msgstr "Impostazioni del client"
 
@@ -1982,6 +2129,9 @@ msgstr "%(label)s clonato sul branch %(branch)s."
 
 msgid "Close"
 msgstr "Chiudi"
+
+msgid "Cluster"
+msgstr "Cluster"
 
 msgid "Cmd/Ctrl for multi-select"
 msgstr "Cmd/Ctrl per la selezione multipla"
@@ -2102,6 +2252,11 @@ msgstr ""
 
 msgid "Computational Social Science"
 msgstr "Scienze sociali computazionali"
+
+msgid "Concurrency, timeouts and the failure guard of the language model calls."
+msgstr ""
+"Concorrenza, timeout e controllo dei fallimenti delle chiamate al modello"
+" linguistico."
 
 msgid "Configurable Features"
 msgstr "Funzioni configurabili"
@@ -2254,6 +2409,14 @@ msgstr ""
 "Configura il recupero e il riepilogo facoltativi della memoria lato "
 "client per le esecuzioni HPC. La memoria è disattivata per impostazione "
 "predefinita."
+
+msgid ""
+"Configure optional memory of the agents: what they remember of the chats "
+"they read and write in. Memory is disabled by default."
+msgstr ""
+"Configura la memoria opzionale degli agenti: ciò che ricordano delle chat"
+" che leggono e in cui scrivono. La memoria è disattivata per impostazione"
+" predefinita."
 
 msgid ""
 "Configure optional memory retrieval and summarization for Standard "
@@ -2423,6 +2586,15 @@ msgstr "Connetti"
 #, python-format
 msgid "Connection error: %(error)s"
 msgstr "Errore di connessione: %(error)s"
+
+msgid "Connection lost, retrying…"
+msgstr "Connessione persa, nuovo tentativo…"
+
+msgid "Connection lost: the notifications will appear when it is back."
+msgstr "Connessione persa: le notifiche appariranno al ritorno."
+
+msgid "Connection lost: try again in a moment."
+msgstr "Connessione persa: riprova tra poco."
 
 #, python-format
 msgid "Connection timeout to %(host)s:%(port)s"
@@ -2653,6 +2825,9 @@ msgstr "Crea il tuo esperimento"
 
 msgid "Create Your Population"
 msgstr "Crea la tua popolazione"
+
+msgid "Create a group for each topic"
+msgstr "Crea un gruppo per ogni topic"
 
 msgid ""
 "Create a new population by merging multiple existing populations. Agents "
@@ -2962,6 +3137,9 @@ msgstr "Personalizza i tassi orari"
 msgid "Customize agent activity patterns by hour."
 msgstr "Personalizza gli schemi di attività degli agenti per ora."
 
+msgid "Customize hourly activity"
+msgstr "Personalizza l'attività oraria"
+
 msgid "Czech"
 msgstr "Ceca"
 
@@ -3022,6 +3200,12 @@ msgstr ""
 msgid "Danish"
 msgstr "Danese"
 
+msgid "Dark mode"
+msgstr "Modalità scura"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
 msgid "Dashboard language"
 msgstr "Lingua della dashboard"
 
@@ -3034,6 +3218,10 @@ msgstr "Errore del database: %(error)s"
 
 msgid "Day"
 msgstr "Giorno"
+
+#, python-format
+msgid "Day %(d)s"
+msgstr "Giorno %(d)s"
 
 #, python-format
 msgid "Day %(day)s"
@@ -3145,6 +3333,16 @@ msgstr "Definisci le connessioni iniziali tra gli agenti:"
 msgid "Define one or more %(link)s."
 msgstr "Definisci una o più %(link)s."
 
+msgid ""
+"Define the channels and groups that exist at the start and the topics "
+"each one is about. Without any, IM creates them from the topics and the "
+"population: this editor is for designs that need specific chats."
+msgstr ""
+"Definisci i canali e i gruppi che esistono all'inizio e i topic di cui "
+"parla ciascuno. Senza alcuna riga, IM li crea a partire dai topic e dalla"
+" popolazione: questo editor serve ai disegni sperimentali che richiedono "
+"chat specifiche."
+
 #, python-format
 msgid ""
 "Define the percentage of agents in each behavioral archetype (must sum to"
@@ -3194,6 +3392,9 @@ msgstr "Elimina tutti gli esperimenti fermati/pianificati"
 
 msgid "Delete photo"
 msgstr "Elimina foto"
+
+msgid "Delete this message?"
+msgstr "Eliminare questo messaggio?"
 
 #, python-format
 msgid "Deleted %(deleted_count)s experiment(s)."
@@ -3357,11 +3558,17 @@ msgstr "Disattivato per impostazione predefinita"
 msgid "Disconnect"
 msgstr "Disconnetti"
 
+msgid "Discovery mode"
+msgstr "Modalità di scoperta"
+
 msgid "Discussion"
 msgstr "Discussione"
 
 msgid "Discussion Board"
 msgstr "Bacheca di discussione"
+
+msgid "Discussion group"
+msgstr "Gruppo di discussione"
 
 msgid "Dislike"
 msgstr "Non mi piace"
@@ -3564,6 +3771,9 @@ msgstr "Modifica i prompt LLM"
 msgid "Edit Profile"
 msgstr "Modifica profilo"
 
+msgid "Edit message"
+msgstr "Modifica messaggio"
+
 msgid "Edit profile"
 msgstr "Modifica profilo"
 
@@ -3616,6 +3826,9 @@ msgstr "Servizio di embedding"
 msgid "Embedding settings updated successfully."
 msgstr "Impostazioni di embedding aggiornate con successo."
 
+msgid "Emergence, Chat Creation and Forums"
+msgstr "Emergenza, creazione di chat e forum"
+
 msgid "Emerging Hashtags"
 msgstr "Hashtag emergenti"
 
@@ -3636,6 +3849,9 @@ msgstr "Statistiche sulle emozioni"
 
 msgid "Emotion Tags"
 msgstr "Tag di emozione"
+
+msgid "Emotion annotation batch size"
+msgstr "Dimensione del batch di annotazione delle emozioni"
 
 msgid "Emotion tags and dominant patterns"
 msgstr "Etichette emotive e schemi dominanti"
@@ -3712,14 +3928,23 @@ msgstr ""
 msgid "Enable and configure these modules per experiment from %(link)s."
 msgstr "Attiva e configura questi moduli per ogni esperimento da %(link)s."
 
+msgid "Enable churn"
+msgstr "Abilita gli abbandoni"
+
 msgid "Enable embedding-backed retrieval"
 msgstr "Attiva il recupero basato su embedding"
 
 msgid "Enable follow probability decay over time"
 msgstr "Attiva il decadimento nel tempo della probabilità di follow"
 
+msgid "Enable forum chats"
+msgstr "Abilita le chat forum"
+
 msgid "Enable local image generation"
 msgstr "Attiva la generazione locale di immagini"
+
+msgid "Enable new agents"
+msgstr "Abilita i nuovi agenti"
 
 msgid "Enable or disable every interaction at once"
 msgstr "Attiva o disattiva tutte le interazioni insieme"
@@ -3746,6 +3971,9 @@ msgstr ""
 "Attiva o disattiva le annotazioni durante l'esecuzione. Aggiorna questa "
 "configurazione prima di avviare o fermare il server e prima di gestire i "
 "client."
+
+msgid "Enable reactive replies"
+msgstr "Abilita le risposte reattive"
 
 msgid "Enable run-scoped memory"
 msgstr "Attiva la memoria limitata all'esecuzione"
@@ -4071,6 +4299,9 @@ msgstr "Configurazione dell'esperimento aggiornata."
 msgid "Experiment created successfully!"
 msgstr "Esperimento creato con successo!"
 
+msgid "Experiment details"
+msgstr "Dettagli dell'esperimento"
+
 #, python-format
 msgid "Experiment group shared: %(name)s"
 msgstr "Gruppo di esperimenti condiviso: %(name)s"
@@ -4206,12 +4437,6 @@ msgstr "Decadimento esponenziale nei round di simulazione. 0 = disattivato."
 msgid "Export %(name)s"
 msgstr "Esporta %(name)s"
 
-msgid "Export and reports"
-msgstr "Esportazione e report"
-
-msgid "Export data"
-msgstr "Esporta i dati"
-
 #, python-format
 msgid "Export failed: %(error)s"
 msgstr "Esportazione non riuscita: %(error)s"
@@ -4221,12 +4446,6 @@ msgstr ""
 "Esportazione completata. I file sono elencati nel pannello Esportazione e"
 " report."
 
-msgid "Export format"
-msgstr "Formato di esportazione"
-
-msgid "Exports"
-msgstr "Esportazioni"
-
 msgid "Extend Simulation"
 msgstr "Estendi la simulazione"
 
@@ -4235,6 +4454,9 @@ msgstr "Estensioni"
 
 msgid "External Runtimes"
 msgstr "Runtime esterni"
+
+msgid "Extra session rate"
+msgstr "Frequenza delle sessioni aggiuntive"
 
 msgid "Extract Emotions (System)"
 msgstr "Estrarre le emozioni (sistema)"
@@ -4298,6 +4520,12 @@ msgstr "Impossibile aggiornare gli argomenti dell'esperimento: %(error)s"
 #, python-format
 msgid "Failed to update stress/reward settings: %(error)s"
 msgstr "Impossibile aggiornare le impostazioni di stress/ricompensa: %(error)s"
+
+msgid "Failure minimum (sessions)"
+msgstr "Minimo per il controllo dei fallimenti (sessioni)"
+
+msgid "Failure window (sessions)"
+msgstr "Finestra per il controllo dei fallimenti (sessioni)"
 
 msgid "False"
 msgstr "Falso"
@@ -4505,6 +4733,9 @@ msgstr "Per te (consigliati)"
 msgid "Forbidden"
 msgstr "Vietato"
 
+msgid "Forget deleted messages"
+msgstr "Dimentica i messaggi eliminati"
+
 msgid "Format: username,email,role,password (one per line)"
 msgstr "Formato: nome utente,email,ruolo,password (uno per riga)"
 
@@ -4561,6 +4792,12 @@ msgstr ""
 "Simulatore di forum (thread e risposte). Server e client si installano e "
 "si aggiornano separatamente dalla sua pagina."
 
+msgid "Forum topic creation likelihood"
+msgstr "Probabilità di creare un topic nel forum"
+
+msgid "Forum topic deletion likelihood"
+msgstr "Probabilità di eliminare un topic del forum"
+
 msgid "Forum topics"
 msgstr "Argomenti del forum"
 
@@ -4571,9 +4808,18 @@ msgstr ""
 "Il forum usa la condivisione di link per pubblicare i contenuti importati"
 " da RSS e da altre fonti."
 
+msgid "Forward"
+msgstr "Inoltra"
+
+msgid "Forward to the chat with id:"
+msgstr "Inoltra alla chat con id:"
+
 #, python-format
 msgid "Forwarded from %(chat)s"
 msgstr "Inoltrato da %(chat)s"
+
+msgid "Forwarded message"
+msgstr "Messaggio inoltrato"
 
 msgid "Forwarded-from line"
 msgstr "Riga «Inoltrato da»"
@@ -4671,6 +4917,9 @@ msgstr "Generare il commento a una condivisione"
 
 msgid "Generate Synthetic Network"
 msgstr "Genera una rete sintetica"
+
+msgid "Generate the topology if missing"
+msgstr "Genera la topologia se manca"
 
 msgid "Generate topics"
 msgstr "Genera argomenti"
@@ -4938,6 +5187,9 @@ msgstr "Hashtag da visualizzare"
 msgid "Header Image URL"
 msgstr "URL dell'immagine di copertina"
 
+msgid "Heartbeat interval (seconds)"
+msgstr "Intervallo di heartbeat (secondi)"
+
 msgid "Hello World"
 msgstr "Hello World"
 
@@ -5048,6 +5300,12 @@ msgstr "Tassi di attività orari"
 msgid "Hourly Activity Rates (Optional)"
 msgstr "Tassi di attività orari (facoltativo)"
 
+msgid "How agents find chats to join or leave."
+msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
+
+msgid "How chats, channels and their owners are generated."
+msgstr "Come vengono generati chat, canali e relativi proprietari."
+
 msgid "How do you feel?"
 msgstr "Come ti senti?"
 
@@ -5061,6 +5319,9 @@ msgstr ""
 "Quanti eventi di interazione recenti includere nel contesto dell'LLM per "
 "ogni coppia utente/discussione."
 
+msgid "How many sessions an agent may open in a round."
+msgstr "Quante sessioni può aprire un agente in un round."
+
 msgid "How much conversation history agents see"
 msgstr "Quanta cronologia delle conversazioni vedono gli agenti"
 
@@ -5072,6 +5333,9 @@ msgstr "Quanto spesso e quando gli agenti sono attivi."
 
 msgid "How often memory reflections are generated."
 msgstr "Con quale frequenza vengono generate le riflessioni della memoria."
+
+msgid "How the experiment topics map onto agents and chats."
+msgstr "Come i topic dell'esperimento vengono associati ad agenti e chat."
 
 msgid "How to order posts when scores are equal"
 msgstr "Come ordinare i post a parità di punteggio"
@@ -5094,6 +5358,9 @@ msgstr "Ibrido umano-LLM"
 msgid "Hybrid Models"
 msgstr "Modelli ibridi"
 
+msgid "I have read this, continue"
+msgstr "Ho letto, continua"
+
 msgid "ISTI-CNR"
 msgstr "ISTI-CNR"
 
@@ -5112,6 +5379,9 @@ msgid ""
 msgstr ""
 "Se il modello che vuoi usare non è disponibile, puoi scaricarlo dal "
 "server Ollama. Per l'elenco dei modelli disponibili consulta la %(link)s."
+
+msgid "Ignore topics when building the network"
+msgstr "Ignora i topic nella costruzione della rete"
 
 msgid "Image Commentary (System)"
 msgstr "Commento all'immagine (sistema)"
@@ -5163,6 +5433,13 @@ msgstr "Le immagini vengono ritagliate in un'anteprima quadrata quando serve."
 msgid "Importance Mode"
 msgstr "Modalità di importanza"
 
+msgid ""
+"In instant messaging the agent evaluates the opinion of the interlocutor "
+"only."
+msgstr ""
+"Nella messaggistica istantanea l'agente valuta solo l'opinione "
+"dell'interlocutore."
+
 msgid "In-Degree CCDF"
 msgstr "CCDF del grado entrante"
 
@@ -5171,6 +5448,9 @@ msgstr "Alter inattivo"
 
 msgid "Inactive modules"
 msgstr "Moduli inattivi"
+
+msgid "Inactivity threshold (rounds)"
+msgstr "Soglia di inattività (round)"
 
 msgid "Indian"
 msgstr "Indiana"
@@ -5307,6 +5587,17 @@ msgid ""
 msgstr ""
 "Esperimento di messaggistica istantanea importato. Crea i suoi client "
 "dalla pagina dell'esperimento."
+
+msgid ""
+"Instant messaging experiment: a message is counted as a post, a reply as "
+"a comment, a forward as a share, and the time unit is the slot of the "
+"day, not an hour. These figures are not directly comparable with the "
+"other platforms."
+msgstr ""
+"Esperimento di messaggistica istantanea: un messaggio conta come post, "
+"una risposta come commento, un inoltro come condivisione e l'unità di "
+"tempo è lo slot del giorno, non l'ora. Questi dati non sono direttamente "
+"confrontabili con quelli delle altre piattaforme."
 
 msgid "Instant messaging experiments are not supported with PostgreSQL."
 msgstr ""
@@ -5446,6 +5737,10 @@ msgstr "Formato dell'URL non valido"
 msgid "Invalid User ID or Experiment ID."
 msgstr "ID utente o ID esperimento non valido."
 
+#, python-format
+msgid "Invalid advanced settings: %(why)s"
+msgstr "Impostazioni avanzate non valide: %(why)s"
+
 msgid "Invalid age value provided."
 msgstr "Valore di età non valido."
 
@@ -5577,6 +5872,12 @@ msgstr "Sessione utente non valida."
 msgid "Inventive/Curious"
 msgstr "Inventivo/Curioso"
 
+msgid "Invite code (optional)"
+msgstr "Codice di invito (facoltativo)"
+
+msgid "Invite link"
+msgstr "Link di invito"
+
 msgid "Iranian"
 msgstr "Iraniana"
 
@@ -5618,6 +5919,9 @@ msgstr "Partecipa a questo esperimento"
 
 msgid "Join Y Social and choose what you want to take part in."
 msgstr "Unisciti a Y Social e scegli a cosa partecipare."
+
+msgid "Join a chat"
+msgstr "Entra in una chat"
 
 msgid "Joined (round)"
 msgstr "Iscritto (round)"
@@ -5744,6 +6048,9 @@ msgstr "Parametro lambda"
 msgid "Language"
 msgstr "Lingua"
 
+msgid "Language Model Reliability"
+msgstr "Affidabilità del modello linguistico"
+
 msgid "Language Spoken"
 msgstr "Lingua parlata"
 
@@ -5833,6 +6140,9 @@ msgstr "Avvia i client e apri l'interfaccia web dallo stesso pannello di control
 msgid "Leaning not found."
 msgstr "Orientamento non trovato."
 
+msgid "Leave"
+msgstr "Esci"
+
 msgid "Leave empty for all agents"
 msgstr "Lascia vuoto per tutti gli agenti"
 
@@ -5845,14 +6155,17 @@ msgstr "Lascia vuoto per usare il nome della configurazione..."
 msgid "Leave fields empty to use the default activity profile."
 msgstr "Lascia i campi vuoti per usare il profilo di attività predefinito."
 
-msgid "Leave message text out"
-msgstr "Escludi il testo dei messaggi"
-
 msgid "Left (round)"
 msgstr "Uscito (round)"
 
 msgid "Less"
 msgstr "Meno"
+
+msgid "Let agents create chats"
+msgstr "Consenti agli agenti di creare chat"
+
+msgid "Let chats emerge"
+msgstr "Lascia emergere nuove chat"
 
 msgid "Let non-staff viewers look at a past round"
 msgstr "Permetti a chi non fa parte dello staff di guardare un round passato"
@@ -5871,6 +6184,9 @@ msgstr "Vediamo cosa ci fa provare"
 
 msgid "Let's see what we are saying about"
 msgstr "Vediamo cosa stiamo dicendo su"
+
+msgid "Lexical"
+msgstr "Lessicale"
 
 msgid "Like"
 msgstr "Mi piace"
@@ -6148,6 +6464,21 @@ msgstr "Azioni massime"
 msgid "Maximum articles to process from each standard RSS feed."
 msgstr "Numero massimo di articoli da elaborare per ogni feed RSS standard."
 
+msgid "Maximum chain depth"
+msgstr "Profondità massima della catena"
+
+msgid "Maximum characters"
+msgstr "Numero massimo di caratteri"
+
+msgid "Maximum chats owned by an agent"
+msgstr "Numero massimo di chat possedute da un agente"
+
+msgid "Maximum chats per session"
+msgstr "Numero massimo di chat per sessione"
+
+msgid "Maximum concurrent requests"
+msgstr "Numero massimo di richieste concorrenti"
+
 msgid "Maximum entries to load from the database when live feeds are unavailable."
 msgstr ""
 "Numero massimo di voci da caricare dal database quando i feed in tempo "
@@ -6158,11 +6489,38 @@ msgstr ""
 "Numero massimo di immagini da recuperare per ogni feed di immagini basato"
 " su subreddit."
 
+msgid "Maximum items"
+msgstr "Numero massimo di elementi"
+
+msgid "Maximum number of participants"
+msgstr "Numero massimo di partecipanti"
+
 msgid "Maximum number of replies an agent can make per simulation round"
 msgstr "Numero massimo di risposte che un agente può dare per round di simulazione"
 
 msgid "Maximum posts to retrieve from Reddit subreddit feeds."
 msgstr "Numero massimo di post da recuperare dai feed dei subreddit di Reddit."
+
+msgid "Maximum reactions per round"
+msgstr "Numero massimo di reazioni per round"
+
+msgid "Maximum retries"
+msgstr "Numero massimo di tentativi"
+
+msgid "Maximum server retries"
+msgstr "Numero massimo di tentativi verso il server"
+
+msgid "Maximum sessions per round"
+msgstr "Numero massimo di sessioni per round"
+
+msgid "Maximum share of agents that churn"
+msgstr "Quota massima di agenti che abbandonano"
+
+msgid "Maximum share of failed sessions"
+msgstr "Quota massima di sessioni fallite"
+
+msgid "Maximum wait (rounds)"
+msgstr "Attesa massima (round)"
 
 msgid "Mean Duration by Path (seconds)"
 msgstr "Durata media per percorso (secondi)"
@@ -6182,6 +6540,9 @@ msgstr "URL del contenuto"
 msgid "Media URL*"
 msgstr "URL del contenuto*"
 
+msgid "Median reaction delay (minutes)"
+msgstr "Ritardo mediano della reazione (minuti)"
+
 msgid "Medium"
 msgstr "Medio"
 
@@ -6197,11 +6558,20 @@ msgstr "Ruoli dei membri"
 msgid "Members"
 msgstr "Membri"
 
+msgid "Members table"
+msgstr "Tabella dei membri"
+
 msgid "Memory"
 msgstr "Memoria"
 
 msgid "Memory Embeddings"
 msgstr "Embedding della memoria"
+
+msgid "Memory backend"
+msgstr "Backend della memoria"
+
+msgid "Memory retrieval"
+msgstr "Recupero della memoria"
 
 msgid "Mention Edges"
 msgstr "Archi di menzione"
@@ -6211,6 +6581,9 @@ msgstr "Rete delle menzioni"
 
 msgid "Mentioning Posts"
 msgstr "Post che ti menzionano"
+
+msgid "Menu"
+msgstr "Menu"
 
 msgid "Merge Populations"
 msgstr "Unisci le popolazioni"
@@ -6273,6 +6646,18 @@ msgstr "I miei"
 msgid "Minimum actions"
 msgstr "Azioni minime"
 
+msgid "Minimum activity level for several sessions"
+msgstr "Livello minimo di attività per più sessioni"
+
+msgid "Minimum round duration (seconds, 0 = off)"
+msgstr "Durata minima del round (secondi, 0 = disattivata)"
+
+msgid "Minimum score to recall another thread"
+msgstr "Punteggio minimo per richiamare un altro thread"
+
+msgid "Minimum topics of a forum"
+msgstr "Numero minimo di topic di un forum"
+
 msgid "Miscellanea"
 msgstr "Varie"
 
@@ -6314,6 +6699,12 @@ msgstr "Modelli e informazioni"
 
 msgid "Moderated Target"
 msgstr "Bersaglio moderato"
+
+msgid "Moderation"
+msgstr "Moderazione"
+
+msgid "Moderation policy"
+msgstr "Politica di moderazione"
 
 msgid "Moderator Actions"
 msgstr "Azioni dei moderatori"
@@ -6594,6 +6985,9 @@ msgstr "Nuovo livello di tossicità"
 msgid "New Zealander"
 msgstr "Neozelandese"
 
+msgid "New agents probability"
+msgstr "Probabilità di nuovi agenti"
+
 msgid "New here?"
 msgstr "Sei nuovo?"
 
@@ -6615,6 +7009,9 @@ msgstr "Nuova versione disponibile: %(get)s (v%(get2)s)"
 
 msgid "Newer"
 msgstr "Più recenti"
+
+msgid "Newer messages"
+msgstr "Messaggi più recenti"
 
 msgid "Newest posts first; within the same hour, the most commented come first."
 msgstr "Prima i post più recenti; nella stessa ora, prima i più commentati."
@@ -6874,7 +7271,6 @@ msgstr "Non ci sono ancora foto consigliate."
 msgid "No releases available"
 msgstr "Nessuna release disponibile"
 
-
 #, python-format
 msgid ""
 "No reusable RSS resources are available yet. Create them first in "
@@ -6954,6 +7350,9 @@ msgstr "Non"
 msgid "Not Interested"
 msgstr "Non interessato"
 
+msgid "Not about the topics of the chat"
+msgstr "Non riguarda i topic della chat"
+
 msgid "Not active"
 msgstr "Non attivo"
 
@@ -6994,11 +7393,11 @@ msgstr "Nota:"
 msgid "Notebook created at %(filepath)s"
 msgstr "Notebook creato in %(filepath)s"
 
-msgid "Nothing here yet."
-msgstr "Ancora nulla."
-
 msgid "Nothing matches your search."
 msgstr "Nessun risultato per la ricerca."
+
+msgid "Nothing new."
+msgstr "Niente di nuovo."
 
 msgid "Notice:"
 msgstr "Avviso:"
@@ -7071,12 +7470,18 @@ msgstr "Numero di argomenti:"
 msgid "OR"
 msgstr "OPPURE"
 
+msgid "Observer view: the messages are read only."
+msgstr "Vista osservatore: i messaggi sono in sola lettura."
+
 msgid ""
 "Off keeps the language fixed for everybody, so it does not become a "
 "variable of the experiment."
 msgstr ""
 "Se disattivato, la lingua resta fissa per tutti e non diventa una "
 "variabile dell'esperimento."
+
+msgid "Off-topic rate"
+msgstr "Frequenza dei messaggi fuori topic"
 
 msgid "Older"
 msgstr "Meno recenti"
@@ -7214,8 +7619,18 @@ msgstr "Apri le impostazioni dei prompt da %(b)s"
 msgid "Open prompt settings from the same panel"
 msgstr "Apri le impostazioni dei prompt dallo stesso pannello"
 
+msgid "Open slot rate"
+msgstr "Frequenza degli slot aperti"
+
 msgid "Open the active experiment dashboards from a single compact panel."
 msgstr "Apri le dashboard degli esperimenti attivi da un unico pannello compatto."
+
+msgid ""
+"Open the menu to see the experiment as a single account or as a public "
+"observer."
+msgstr ""
+"Apri il menu per vedere l'esperimento come un singolo account o come "
+"osservatore pubblico."
 
 msgid "Openness to Experience"
 msgstr "Apertura mentale"
@@ -7316,6 +7731,12 @@ msgstr "Ampiezza di opinione (α)"
 msgid "Opinion: %(value)s"
 msgstr "Opinione: %(value)s"
 
+msgid "Opinions"
+msgstr "Opinioni"
+
+msgid "Optional Agent Actions"
+msgstr "Azioni opzionali degli agenti"
+
 #, python-format
 msgid "Optional parameters: %(names)s"
 msgstr "Parametri facoltativi: %(names)s"
@@ -7365,6 +7786,9 @@ msgstr "Esperimenti posseduti"
 
 msgid "Owner"
 msgstr "Proprietario"
+
+msgid "Owner (page username, empty = automatic)"
+msgstr "Proprietario (username della pagina, vuoto = automatico)"
 
 #, python-format
 msgid "Owner: %(owner)s"
@@ -7418,14 +7842,6 @@ msgstr "Palestinese"
 msgid "Parent post not found"
 msgstr "Post padre non trovato"
 
-msgid ""
-"Parquet needs the analysis extra of the instant messaging runtime. While "
-"the simulation runs, a copy of the database is exported."
-msgstr ""
-"Parquet richiede l'extra di analisi del runtime di messaggistica "
-"istantanea. Mentre la simulazione è in corso viene esportata una copia "
-"del database."
-
 msgid "Parse"
 msgstr "Analizza"
 
@@ -7437,6 +7853,12 @@ msgstr "Partecipante"
 
 msgid "Participant mode"
 msgstr "Modalità partecipante"
+
+msgid "Participant notice"
+msgstr "Avviso ai partecipanti"
+
+msgid "Pass the seed to the model"
+msgstr "Passa il seed al modello"
 
 msgid "Password"
 msgstr "Password"
@@ -7690,6 +8112,9 @@ msgstr "Orientamento politico"
 msgid "Political leanings, education and professions of the agents."
 msgstr "Orientamenti politici, istruzione e professioni degli agenti."
 
+msgid "Popularity"
+msgstr "Popolarità"
+
 msgid "Popularity & Activity Bias"
 msgstr "Bias di popolarità e attività"
 
@@ -7888,6 +8313,9 @@ msgstr ""
 "Post sui tuoi argomenti di interesse, prima i più recenti, poi i più "
 "reagiti."
 
+msgid "Posts allowed before the limit"
+msgstr "Messaggi consentiti prima del limite"
+
 msgid ""
 "Posts are scored by your topics of interest and by how close the author's"
 " opinion is to yours. Your interests adapt to what you like, share and "
@@ -7994,6 +8422,9 @@ msgstr "Principale"
 msgid "Principal Investigator"
 msgstr "Responsabile scientifico"
 
+msgid "Private"
+msgstr "Privata"
+
 msgid "Private chat"
 msgstr "Chat privata"
 
@@ -8002,6 +8433,9 @@ msgstr "Chat private con gli agenti seguiti"
 
 msgid "Private chats with simulation agents"
 msgstr "Chat private con gli agenti della simulazione"
+
+msgid "Private message likelihood"
+msgstr "Probabilità di un messaggio privato"
 
 msgid "Private:"
 msgstr "Privato:"
@@ -8023,6 +8457,12 @@ msgstr "Probabilità di follow secondario"
 
 msgid "Probability Secondary Follow:"
 msgstr "Probabilità di follow secondario:"
+
+msgid "Probability of leaving a chat"
+msgstr "Probabilità di uscire da una chat"
+
+msgid "Probability of reacting"
+msgstr "Probabilità di reagire"
 
 msgid "Probability parameter"
 msgstr "Parametro di probabilità"
@@ -8121,6 +8561,9 @@ msgstr "Caratteri massimi del prompt"
 msgid "Prompt language"
 msgstr "Lingua dei prompt"
 
+msgid "Prompt mode"
+msgstr "Modalità del prompt"
+
 msgid "Prompts"
 msgstr "Prompt"
 
@@ -8214,6 +8657,9 @@ msgstr ""
 msgid "Provides specific instructions and input"
 msgstr "Fornisce istruzioni e input specifici"
 
+msgid "Public"
+msgstr "Pubblica"
+
 msgid "Public chats can be read by people who are not in the experiment"
 msgstr ""
 "Le chat pubbliche possono essere lette da chi non partecipa "
@@ -8304,6 +8750,13 @@ msgstr "Parametro di tasso"
 msgid "Ray Agents Batch Size"
 msgstr "Dimensione del lotto di agenti Ray"
 
+msgid "React"
+msgstr "Reagisci"
+
+#, python-format
+msgid "React %(e)s"
+msgstr "Reagisci %(e)s"
+
 msgid "Reaction counters"
 msgstr "Contatori delle reazioni"
 
@@ -8312,6 +8765,21 @@ msgstr "Peso delle reazioni"
 
 msgid "Reactions"
 msgstr "Reazioni"
+
+msgid "Reactive Replies"
+msgstr "Risposte reattive"
+
+msgid "Reactive forward likelihood"
+msgstr "Probabilità di inoltro reattivo"
+
+msgid "Reactive post likelihood"
+msgstr "Probabilità di messaggio reattivo"
+
+msgid "Reactive reaction likelihood"
+msgstr "Probabilità di reazione reattiva"
+
+msgid "Reactive reply likelihood"
+msgstr "Probabilità di risposta reattiva"
 
 msgid "Read"
 msgstr "Letto"
@@ -8322,8 +8790,14 @@ msgstr "Leggi l'articolo"
 msgid "Read a content"
 msgstr "Leggi un contenuto"
 
+msgid "Reading only: writing is available while the simulation is running."
+msgstr "Solo lettura: si può scrivere mentre la simulazione è in esecuzione."
+
 msgid "Reads"
 msgstr "Legge"
+
+msgid "Ready timeout (seconds)"
+msgstr "Timeout di prontezza (secondi)"
 
 msgid "Real-time (one wall-clock hour per round)"
 msgstr "Tempo reale (un'ora di orologio per round)"
@@ -8333,6 +8807,9 @@ msgstr "Analisi in tempo reale delle chiamate API del server dal file _server.lo
 
 msgid "Real-time preview of hourly activity distribution."
 msgstr "Anteprima in tempo reale della distribuzione oraria delle attività."
+
+msgid "Recall emotionally charged episodes"
+msgstr "Richiama gli episodi emotivamente intensi"
 
 msgid "Recency decay (β)"
 msgstr "Decadimento di recenza (β)"
@@ -8413,6 +8890,9 @@ msgstr "Foto consigliate per %(username)s."
 msgid "Recommender info"
 msgstr "Informazioni sul sistema di raccomandazione"
 
+msgid "Record the responses"
+msgstr "Registra le risposte"
+
 msgid "Recsys Evolution"
 msgstr "Evoluzione del sistema di raccomandazione"
 
@@ -8468,6 +8948,9 @@ msgstr "Aggiorna i dati"
 msgid "Refresh Memory"
 msgstr "Aggiorna la memoria"
 
+msgid "Refresh analytics data"
+msgstr "Aggiorna i dati di analisi"
+
 msgid "Refresh interval (seconds)"
 msgstr "Intervallo di aggiornamento (secondi)"
 
@@ -8487,6 +8970,9 @@ msgstr "Utenti registrati"
 
 msgid "Registration is not available at the moment."
 msgstr "La registrazione non è disponibile al momento."
+
+msgid "Rehydrate window (rounds)"
+msgstr "Finestra di ripristino (round)"
 
 msgid "Related:"
 msgstr "Correlati:"
@@ -8549,6 +9035,9 @@ msgstr ""
 msgid "Replay Tutorial"
 msgstr "Rivedi il tutorial"
 
+msgid "Replies and reactions triggered by the activity of other agents."
+msgstr "Risposte e reazioni innescate dall'attività di altri agenti."
+
 msgid "Replies to your posts and comments."
 msgstr "Risposte ai tuoi post e commenti."
 
@@ -8561,20 +9050,30 @@ msgstr "Controlli del comportamento di risposta"
 msgid "Reply Cooldown (rounds)"
 msgstr "Pausa tra risposte (round)"
 
+msgid "Reply context (characters)"
+msgstr "Contesto della risposta (caratteri)"
+
 msgid "Reply to posts and threads"
 msgstr "Rispondere a post e discussioni"
 
+msgid "Replying to"
+msgstr "In risposta a"
+
 msgid "Report"
 msgstr "Segnala"
+
+#, python-format
+msgid "Report failed: %(error)s"
+msgstr "Report non riuscito: %(error)s"
+
+msgid "Report finished. It is listed in the Export and reports panel."
+msgstr "Report completato. È elencato nel pannello Esportazione e report."
 
 msgid "Report this comment"
 msgstr "Segnala questo commento"
 
 msgid "Report this post"
 msgstr "Segnala questo post"
-
-msgid "Reports"
-msgstr "Report"
 
 msgid "Repository"
 msgstr "Repository"
@@ -8639,6 +9138,9 @@ msgstr "Riavvio necessario"
 #, python-format
 msgid "Restart required: %(label)s routes are loaded at startup."
 msgstr "Riavvio necessario: le rotte di %(label)s vengono caricate all'avvio."
+
+msgid "Restriction length (rounds)"
+msgstr "Durata della restrizione (round)"
 
 msgid "Resume"
 msgstr "Riprendi"
@@ -8755,6 +9257,9 @@ msgstr "Round da attendere prima di rispondere di nuovo allo stesso utente"
 
 msgid "Route args:"
 msgstr "Argomenti della route:"
+
+msgid "Rule threshold"
+msgstr "Soglia della regola"
 
 msgid "Run"
 msgstr "Avvia"
@@ -8924,6 +9429,9 @@ msgstr "Pianificazione non in esecuzione"
 msgid "Schedule stopped"
 msgstr "Pianificazione fermata"
 
+msgid "Scheduling"
+msgstr "Pianificazione"
+
 #, python-format
 msgid "Schema migration failed: %(error)s"
 msgstr "Migrazione dello schema non riuscita: %(error)s"
@@ -8981,6 +9489,9 @@ msgstr "Filtri di ricerca"
 msgid "Search followed agents"
 msgstr "Cerca tra gli agenti seguiti"
 
+msgid "Search likelihood"
+msgstr "Probabilità di ricerca"
+
 msgid "Search messages"
 msgstr "Cerca messaggi"
 
@@ -9004,6 +9515,9 @@ msgstr "Risultati della ricerca per"
 
 msgid "Search simulations and modules…"
 msgstr "Cerca simulazioni e moduli…"
+
+msgid "Search top-k"
+msgstr "Top-k della ricerca"
 
 msgid "Search topics and photo tags."
 msgstr "Cerca argomenti e tag delle foto."
@@ -9043,6 +9557,9 @@ msgstr "Seleziona i feed RSS"
 
 msgid "Select Users"
 msgstr "Seleziona gli utenti"
+
+msgid "Select a chat to start reading."
+msgstr "Seleziona una chat per iniziare a leggere."
 
 msgid "Select a conversation"
 msgstr "Seleziona una conversazione"
@@ -9336,6 +9853,9 @@ msgstr "Sensibile/Nervoso"
 msgid "Sentiment"
 msgstr "Sentimento"
 
+msgid "Sentiment (compound score)"
+msgstr "Sentiment (punteggio composto)"
+
 msgid "Sentiment Distribution"
 msgstr "Distribuzione del sentiment"
 
@@ -9366,6 +9886,9 @@ msgstr "Impostazioni del server"
 msgid "Server Trends Analysis"
 msgstr "Analisi delle tendenze del server"
 
+msgid "Server call timeout (seconds)"
+msgstr "Timeout delle chiamate al server (secondi)"
+
 msgid ""
 "Server log metrics reset and re-parsed. Client metrics unchanged. Server "
 "plots updated."
@@ -9387,6 +9910,14 @@ msgstr ""
 "Metriche del server azzerate e rianalizzate. Metriche del client azzerate"
 " ma non ancora rianalizzate. I grafici si aggiorneranno del tutto al "
 "prossimo aggiornamento."
+
+msgid ""
+"Server settings of the instant messaging simulation. People can register "
+"at any time: these settings only shape how they take part."
+msgstr ""
+"Impostazioni del server della simulazione di messaggistica istantanea. Le"
+" persone possono registrarsi in qualsiasi momento: queste impostazioni "
+"definiscono solo come partecipano."
 
 msgid "Server settings updated successfully"
 msgstr "Impostazioni del server aggiornate con successo"
@@ -9413,6 +9944,9 @@ msgstr ""
 "Imposta le probabilità relative (0-10) per ogni tipo di azione. Valori "
 "più alti significano azioni più frequenti. Usa 0 per disattivare "
 "un'azione."
+
+msgid "Set the share of activity of each hour (0 to 1)"
+msgstr "Imposta la quota di attività di ogni ora (da 0 a 1)"
 
 msgid "Settings"
 msgstr "Impostazioni"
@@ -9453,10 +9987,22 @@ msgstr "Condividi un singolo esperimento"
 msgid "Share and comment an Image"
 msgstr "Condividi e commenta un'immagine"
 
+msgid "Share of agents owning a channel"
+msgstr "Quota di agenti proprietari di un canale"
+
+msgid "Share of channels with a discussion group"
+msgstr "Quota di canali con un gruppo di discussione"
+
+msgid "Share of new agents"
+msgstr "Quota di nuovi agenti"
+
 msgid "Share of nodes contained in the largest weakly connected component by day."
 msgstr ""
 "Quota di nodi contenuti nella più grande componente debolmente connessa, "
 "per giorno."
+
+msgid "Share the topology across clients"
+msgstr "Condividi la topologia tra i client"
 
 msgid "Share weight"
 msgstr "Peso delle condivisioni"
@@ -9554,6 +10100,16 @@ msgstr ""
 msgid "Showing %(start)s-%(end)s of %(total)s"
 msgstr "Mostro %(start)s-%(end)s di %(total)s"
 
+msgid ""
+"Shown once to each participant before their first entry. Leave empty for "
+"none. You are responsible for informing participants."
+msgstr ""
+"Mostrato una volta a ogni partecipante prima del primo ingresso. Lascia "
+"vuoto per non mostrarlo. Sei tu a dover informare i partecipanti."
+
+msgid "Shutdown grace (seconds)"
+msgstr "Tolleranza allo spegnimento (secondi)"
+
 msgid "Sign Up"
 msgstr "Registrati"
 
@@ -9575,6 +10131,9 @@ msgstr ""
 
 msgid "Simulated (run as fast as possible)"
 msgstr "Simulato (il più veloce possibile)"
+
+msgid "Simulated time"
+msgstr "Tempo simulato"
 
 msgid "Simulation"
 msgstr "Simulazione"
@@ -9666,6 +10225,9 @@ msgstr "Slovacca"
 msgid "Slovenian"
 msgstr "Slovena"
 
+msgid "Slow down a little."
+msgstr "Rallenta un poco."
+
 msgid "Slower"
 msgstr "Più lento"
 
@@ -9701,6 +10263,9 @@ msgstr "Attributi sociali"
 
 msgid "Solitary/Reserved"
 msgstr "Solitario/Riservato"
+
+msgid "Someone replied to you"
+msgstr "Qualcuno ti ha risposto"
 
 msgid "Something went wrong on our end."
 msgstr "Qualcosa è andato storto da parte nostra."
@@ -9757,6 +10322,9 @@ msgstr "Lingua parlata"
 msgid "Spoken Languages"
 msgstr "Lingue parlate"
 
+msgid "Spread of the reaction delay"
+msgstr "Dispersione del ritardo della reazione"
+
 msgid "Standard agents can only be assigned to standard populations."
 msgstr "Gli agenti standard possono essere assegnati solo a popolazioni standard."
 
@@ -9765,6 +10333,9 @@ msgstr "Standard:"
 
 msgid "Start"
 msgstr "Avvia"
+
+msgid "Start Date"
+msgstr "Data di inizio"
 
 msgid "Start Day"
 msgstr "Giorno di inizio"
@@ -10017,6 +10588,9 @@ msgstr "Suggerimenti per te"
 msgid "Suite modules"
 msgstr "Moduli della suite"
 
+msgid "Supergroup"
+msgstr "Supergruppo"
+
 #, python-format
 msgid ""
 "Supported sources include standard RSS or Atom feeds and Reddit JSON "
@@ -10241,6 +10815,9 @@ msgstr "Il nome del sito web."
 msgid "The Website political leaning (if available)."
 msgstr "L'orientamento politico del sito web (se disponibile)."
 
+msgid "The action was refused."
+msgstr "L'azione è stata rifiutata."
+
 msgid "The ad hoc agent type is no longer available."
 msgstr "Il tipo di agente ad hoc non è più disponibile."
 
@@ -10378,6 +10955,9 @@ msgstr ""
 "L'esperimento ha già un catalogo dei topic diverso dai topic attuali: è "
 "stato mantenuto, così che le esecuzioni esistenti possano riprendere."
 
+msgid "The experiment has no data to analyze yet."
+msgstr "L'esperimento non ha ancora dati da analizzare."
+
 msgid "The experiment needs to be activated first."
 msgstr "L'esperimento deve essere prima attivato."
 
@@ -10398,6 +10978,11 @@ msgstr ""
 "La lingua di menu ed etichette di questo sito. Post e commenti non "
 "vengono mai tradotti."
 
+msgid "The lower bound of the uncertain band cannot exceed the upper one"
+msgstr ""
+"Il limite inferiore della banda di incertezza non può superare quello "
+"superiore"
+
 msgid ""
 "The matrix loader searched the experiment folder and its subfolders but "
 "did not find a readable server or client JSON config."
@@ -10405,6 +10990,14 @@ msgstr ""
 "Il caricatore della matrice ha cercato nella cartella dell'esperimento e "
 "nelle sue sottocartelle, ma non ha trovato una configurazione JSON "
 "leggibile del server o dei client."
+
+msgid ""
+"The memory of instant messaging agents scores items by shared words and "
+"recency: there is no embedding backend to configure."
+msgstr ""
+"La memoria degli agenti di messaggistica istantanea valuta gli elementi "
+"in base alle parole condivise e alla recenza: non c'è alcun backend di "
+"embedding da configurare."
 
 msgid ""
 "The network can be either synthetically generated or custom-made and "
@@ -10439,6 +11032,14 @@ msgstr "Il server non ha potuto comprendere la richiesta."
 
 msgid "The requested page could not be found."
 msgstr "La pagina richiesta non è stata trovata."
+
+msgid "The round is closed: try again in a moment."
+msgstr "Il round è chiuso: riprova tra poco."
+
+msgid "The run already started: reset the experiment to change these settings."
+msgstr ""
+"L'esecuzione è già iniziata: reimposta l'esperimento per modificare "
+"queste impostazioni."
 
 msgid "The same subreddit definition can be reused safely"
 msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
@@ -10498,6 +11099,16 @@ msgstr ""
 
 msgid "The simulation has not produced any round yet."
 msgstr "La simulazione non ha ancora prodotto alcun round."
+
+msgid "The simulation is not running."
+msgstr "La simulazione non è in esecuzione."
+
+msgid ""
+"The start date and the round length belong to the experiment: the first "
+"client set them."
+msgstr ""
+"La data di inizio e la durata del round appartengono all'esperimento: le "
+"ha fissate il primo client."
 
 msgid "The three agent archetypes have distinct characteristics:"
 msgstr "I tre archetipi di agente hanno caratteristiche distinte:"
@@ -10634,6 +11245,9 @@ msgstr ""
 msgid "This experiment is not an instant messaging experiment."
 msgstr "Questo esperimento non è un esperimento di messaggistica istantanea."
 
+msgid "This interaction is switched off for the experiment."
+msgstr "Questa interazione è disattivata per l'esperimento."
+
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -10743,6 +11357,9 @@ msgstr "Reazione «pollice in giù»"
 msgid "Thumbs-up reaction"
 msgstr "Reazione «pollice in su»"
 
+msgid "Ticks per Round"
+msgstr "Tick per round"
+
 msgid "Tier A Max Chars"
 msgstr "Caratteri massimi livello A"
 
@@ -10755,11 +11372,18 @@ msgstr "Caratteri massimi livello C"
 msgid "Tier C Uncertainty"
 msgstr "Incertezza livello C"
 
+msgid "Time"
+msgstr "Tempo"
+
 msgid "Time Period"
 msgstr "Periodo di tempo"
 
 msgid "Time travel for viewers"
 msgstr "Viaggio nel tempo per gli osservatori"
+
+#, python-format
+msgid "Time travel: showing the state at day %(d)s, slot %(s)s."
+msgstr "Viaggio nel tempo: stato al giorno %(d)s, slot %(s)s."
 
 msgid "Timeline"
 msgstr "Cronologia"
@@ -10772,6 +11396,9 @@ msgstr "Rapporto della timeline:"
 
 msgid "Timeout (seconds)"
 msgstr "Timeout (secondi)"
+
+msgid "Timeouts and polling of the client process."
+msgstr "Timeout e polling del processo client."
 
 msgid "Timezone used by real-time mode (experiment-wide across all clients)."
 msgstr ""
@@ -10855,6 +11482,9 @@ msgstr "Andamento cumulativo del volume degli argomenti"
 msgid "Topic Volume Heatmap"
 msgstr "Mappa di calore del volume degli argomenti"
 
+msgid "Topic assignment"
+msgstr "Assegnazione dei topic"
+
 msgid "Topic classification chips"
 msgstr "Etichette di classificazione degli argomenti"
 
@@ -10896,11 +11526,20 @@ msgstr "Riquadro Argomenti e opinioni nel profilo"
 msgid "Topics (select to visualize)"
 msgstr "Argomenti (seleziona per visualizzare)"
 
+msgid "Topics and Chats"
+msgstr "Topic e chat"
+
 msgid "Topics and toxicity levels of generated content."
 msgstr "Argomenti e livelli di tossicità dei contenuti generati."
 
 msgid "Topics covered and population assignments."
 msgstr "Argomenti trattati e assegnazioni alle popolazioni."
+
+msgid "Topics per agent"
+msgstr "Topic per agente"
+
+msgid "Topics per channel"
+msgstr "Topic per canale"
 
 msgid "Topics to Visualize"
 msgstr "Argomenti da visualizzare"
@@ -10931,6 +11570,9 @@ msgstr "Totale dei tag emotivi rispetto alle foto annotate distinte per giorno."
 
 msgid "Total emotion tags versus distinct annotated posts per day."
 msgstr "Totale dei tag emotivi rispetto ai post annotati distinti per giorno."
+
+msgid "Total memory in the prompt (characters)"
+msgstr "Memoria totale nel prompt (caratteri)"
 
 #, python-format
 msgid "Total must equal 100%%"
@@ -10973,6 +11615,9 @@ msgstr "Istruzione sul livello di tossicità"
 
 msgid "Toxicity level not found."
 msgstr "Livello di tossicità non trovato."
+
+msgid "Toxicity score"
+msgstr "Punteggio di tossicità"
 
 msgid "Trace excerpt:"
 msgstr "Estratto della traccia:"
@@ -11116,6 +11761,12 @@ msgstr "Impossibile avviare il download di Detoxify: %(error)s"
 msgid "Unavailable"
 msgstr "Non disponibile"
 
+msgid "Uncertain band, high"
+msgstr "Banda di incertezza, limite superiore"
+
+msgid "Uncertain band, low"
+msgstr "Banda di incertezza, limite inferiore"
+
 msgid "Unexpected error in the client: see the execution log."
 msgstr "Errore inatteso nel client: consulta il log di esecuzione."
 
@@ -11182,6 +11833,9 @@ msgstr "Modulo sconosciuto"
 msgid "Unknown platform type for this experiment."
 msgstr "Tipo di piattaforma sconosciuto per questo esperimento."
 
+msgid "Unknown report."
+msgstr "Report sconosciuto."
+
 msgid "Unknown suite"
 msgstr "Suite sconosciuta"
 
@@ -11196,6 +11850,9 @@ msgstr ""
 "Sblocca una funzione e fornisci valori alternativi. Attiva la modalità "
 "cartesiana per combinare tutte le funzioni attive; lasciala disattivata "
 "per generare varianti indipendenti, una funzione alla volta."
+
+msgid "Unmapped topics"
+msgstr "Topic non mappati"
 
 msgid "Unsupported GitHub session action."
 msgstr "Azione di sessione GitHub non supportata."
@@ -11656,6 +12313,15 @@ msgstr "Vedi la versione"
 msgid "View all friends."
 msgstr "Vedi tutti gli amici."
 
+msgid "View as"
+msgstr "Vedi come"
+
+msgid "View as account"
+msgstr "Vedi come account"
+
+msgid "View as this account"
+msgstr "Vedi come questo account"
+
 msgid "Viewing as"
 msgstr "Visualizzazione come"
 
@@ -11668,8 +12334,8 @@ msgstr ""
 msgid "Viewpoint"
 msgstr "Punto di vista"
 
-msgid "Viewpoint and time"
-msgstr "Punto di vista e tempo"
+msgid "Views"
+msgstr "Visualizzazioni"
 
 msgid ""
 "Virtual entities that represent social media users in simulations. They "
@@ -11679,6 +12345,9 @@ msgstr ""
 "Entità virtuali che rappresentano gli utenti dei social media nelle "
 "simulazioni. Possono essere configurate con diverse informazioni "
 "demografiche, interessi e tratti della personalità."
+
+msgid "Visibility"
+msgstr "Visibilità"
 
 msgid "Visibility assignment revoked."
 msgstr "Assegnazione di visibilità revocata."
@@ -11720,6 +12389,9 @@ msgstr ""
 
 msgid "Visualization Mode"
 msgstr "Modalità di visualizzazione"
+
+msgid "Votes only as a signal"
+msgstr "Voti solo come segnale"
 
 msgid "Warning: Client config file not found. Extension applied to database only."
 msgstr ""
@@ -11855,6 +12527,15 @@ msgstr "Peso di mi piace / reazioni"
 msgid "Weight for shares / reposts"
 msgstr "Peso di condivisioni / ripubblicazioni"
 
+msgid "Weight of notifications"
+msgstr "Peso delle notifiche"
+
+msgid "Weight of recent activity"
+msgstr "Peso dell'attività recente"
+
+msgid "Weight of topic affinity"
+msgstr "Peso dell'affinità con i topic"
+
 #, python-format
 msgid "Welcome %(username)s!"
 msgstr "Benvenuto, %(username)s!"
@@ -11951,8 +12632,17 @@ msgstr "Dove il mondo digitale prende vita."
 msgid "Where the digital world comes to life."
 msgstr "Dove il mondo digitale prende vita."
 
+msgid "Where the message comes from"
+msgstr "Origine del messaggio"
+
+msgid "Which chats an agent looks at in a session and how they are ranked."
+msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
+
 msgid "Who are you with?"
 msgstr "Con chi sei?"
+
+msgid "With a discussion group"
+msgstr "Con gruppo di discussione"
 
 msgid "Wrapped exception:"
 msgstr "Eccezione incapsulata:"
@@ -12040,6 +12730,9 @@ msgstr "Sì"
 msgid "You are not allowed to access this experiment."
 msgstr "Non hai il permesso di accedere a questo esperimento."
 
+msgid "You are not allowed to do that here."
+msgstr "Non puoi farlo qui."
+
 msgid "You are not allowed to start this experiment."
 msgstr "Non hai il permesso di avviare questo esperimento."
 
@@ -12076,6 +12769,9 @@ msgstr "Puoi condividere solo gli esperimenti di cui sei proprietario."
 
 msgid "You cannot delete your own account."
 msgstr "Non puoi eliminare il tuo account."
+
+msgid "You cannot read this chat."
+msgstr "Non puoi leggere questa chat."
 
 msgid "You do not have access to this experiment."
 msgstr "Non hai accesso a questo esperimento."
@@ -12141,6 +12837,16 @@ msgstr "Hai partecipato alla discussione"
 msgid "You posted on this topic"
 msgstr "Hai pubblicato su questo argomento"
 
+#, python-format
+msgid "You see the chats of %(name)s, and nothing else."
+msgstr "Vedi le chat di %(name)s, e nient'altro."
+
+msgid "You were invited"
+msgstr "Sei stato invitato"
+
+msgid "You were mentioned"
+msgstr "Sei stato menzionato"
+
 msgid "You've reached the end!"
 msgstr "Sei arrivato alla fine!"
 
@@ -12164,6 +12870,13 @@ msgstr ""
 msgid "Your account has been created. You can now sign in."
 msgstr "Il tuo account è stato creato. Ora puoi accedere."
 
+msgid ""
+"Your account is not ready yet (the participation service is not "
+"answering). You are seeing the public view; try again in a moment."
+msgstr ""
+"Il tuo account non è ancora pronto (il servizio di partecipazione non "
+"risponde). Stai vedendo la vista pubblica; riprova tra poco."
+
 msgid "Your annotations"
 msgstr "Le tue annotazioni"
 
@@ -12175,6 +12888,9 @@ msgstr "L'archivio dell'esperimento è pronto per il download."
 
 msgid "Your recommender system"
 msgstr "Il tuo sistema di raccomandazione"
+
+msgid "Your session expired: reload the page."
+msgstr "La sessione è scaduta: ricarica la pagina."
 
 msgid "ZIP File"
 msgstr "File ZIP"
@@ -12192,9 +12908,6 @@ msgid ""
 msgstr ""
 "`Simulato` procede velocemente; `Tempo reale` elabora l'ora di orologio "
 "corrente."
-
-msgid "account id"
-msgstr "id account"
 
 msgid "advanced population settings"
 msgstr "impostazioni avanzate delle popolazioni"
@@ -12234,6 +12947,13 @@ msgstr "archivio branch"
 msgid "cancelled"
 msgstr "annullata"
 
+msgid "click to cancel"
+msgstr "clicca per annullare"
+
+#, python-format
+msgid "d%(d)s · %(s)s"
+msgstr "g%(d)s · %(s)s"
+
 #, python-format
 msgid "day %(d)s, slot %(s)s"
 msgstr "giorno %(d)s, slot %(s)s"
@@ -12271,6 +12991,9 @@ msgstr "es. localhost:8000"
 
 msgid "edited"
 msgstr "modificato"
+
+msgid "everything, including private chats"
+msgstr "tutto, comprese le chat private"
 
 msgid "experiment_id is required"
 msgstr "experiment_id è obbligatorio"
@@ -12359,6 +13082,12 @@ msgstr "mai"
 msgid "none published"
 msgstr "nessuna pubblicata"
 
+msgid "not sent"
+msgstr "non inviato"
+
+msgid "off-topic"
+msgstr "fuori tema"
+
 msgid "ok"
 msgstr "ok"
 
@@ -12368,8 +13097,14 @@ msgstr "oppure illimitato"
 msgid "prerelease"
 msgstr "pre-release"
 
+msgid "press Send to retry"
+msgstr "premi Invia per riprovare"
+
 msgid "private"
 msgstr "privata"
+
+msgid "private chats and deleted messages are shown"
+msgstr "chat private e messaggi eliminati inclusi"
 
 msgid "processing"
 msgstr "in corso"
@@ -12400,8 +13135,15 @@ msgstr "ha risposto al tuo commento"
 msgid "replied to your post"
 msgstr "ha risposto al tuo post"
 
+#, python-format
+msgid "round %(n)s"
+msgstr "round %(n)s"
+
 msgid "sec"
 msgstr "s"
+
+msgid "sending…"
+msgstr "invio in corso…"
 
 msgid "server + client"
 msgstr "server + client"
@@ -12430,12 +13172,18 @@ msgstr "per confrontare scenari di simulazione"
 msgid "today."
 msgstr "oggi."
 
+msgid "unknown error"
+msgstr "errore sconosciuto"
+
 msgid "unread"
 msgstr "non letti"
 
 #, python-format
 msgid "update available: %(tag)s"
 msgstr "aggiornamento disponibile: %(tag)s"
+
+msgid "username or account id"
+msgstr "username o id account"
 
 msgid "uses"
 msgstr "usi"
@@ -12445,6 +13193,9 @@ msgstr "vLLM"
 
 msgid "vLLM server not running. Start manually:"
 msgstr "Il server vLLM non è in esecuzione. Avvialo manualmente:"
+
+msgid "what anyone can read"
+msgstr "ciò che chiunque può leggere"
 
 msgid "y-not.social"
 msgstr "y-not.social"
@@ -13204,781 +13955,216 @@ msgstr "✔️ Usa"
 #~ msgid "Standard option; works without git."
 #~ msgstr "Opzione standard; funziona senza git."
 
+#~ msgid "As account"
+#~ msgstr "Come account"
 
-#: y_web/templates/im
-msgid "Forwarded message"
-msgstr "Messaggio inoltrato"
+#~ msgid "Export and reports"
+#~ msgstr "Esportazione e report"
 
-#: y_web/templates/im
-msgid "Newer messages"
-msgstr "Messaggi più recenti"
+#~ msgid "Export data"
+#~ msgstr "Esporta i dati"
 
-#: y_web/templates/admin
-msgid "Instant messaging experiment: a message is counted as a post, a reply as a comment, a forward as a share, and the time unit is the slot of the day, not an hour. These figures are not directly comparable with the other platforms."
-msgstr "Esperimento di messaggistica istantanea: un messaggio conta come post, una risposta come commento, un inoltro come condivisione e l'unità di tempo è lo slot del giorno, non l'ora. Questi dati non sono direttamente confrontabili con quelli delle altre piattaforme."
+#~ msgid "Export format"
+#~ msgstr "Formato di esportazione"
 
-#: y_web/templates/admin
-msgid "Analytics data could not be built: %(message)s"
-msgstr "Impossibile costruire i dati di analisi: %(message)s"
+#~ msgid "Exports"
+#~ msgstr "Esportazioni"
 
-#: y_web/templates/admin
-msgid "Analytics data are being built."
-msgstr "I dati di analisi sono in costruzione."
+#~ msgid "Leave message text out"
+#~ msgstr "Escludi il testo dei messaggi"
 
-#: y_web/templates/admin
-msgid "Analytics data as of day %(d)s, slot %(s)s. The pages count a message as a post and a slot as the time unit."
-msgstr "Dati di analisi aggiornati al giorno %(d)s, slot %(s)s. Le pagine contano un messaggio come post e uno slot come unità di tempo."
+#~ msgid "Nothing here yet."
+#~ msgstr "Ancora nulla."
 
-#: y_web/templates/admin
-msgid "Analytics data have not been built yet."
-msgstr "I dati di analisi non sono ancora stati costruiti."
+#~ msgid ""
+#~ "Parquet needs the analysis extra of "
+#~ "the instant messaging runtime. While the"
+#~ " simulation runs, a copy of the "
+#~ "database is exported."
+#~ msgstr ""
+#~ "Parquet richiede l'extra di analisi del"
+#~ " runtime di messaggistica istantanea. "
+#~ "Mentre la simulazione è in corso "
+#~ "viene esportata una copia del database."
 
-#: y_web/templates/admin
-msgid "Refresh analytics data"
-msgstr "Aggiorna i dati di analisi"
+#~ msgid "Reports"
+#~ msgstr "Report"
 
-#: y_web/templates/admin
-msgid "unknown error"
-msgstr "errore sconosciuto"
+#~ msgid "Viewpoint and time"
+#~ msgstr "Punto di vista e tempo"
 
-#: y_web/templates/admin
-msgid "The experiment has no data to analyze yet."
-msgstr "L'esperimento non ha ancora dati da analizzare."
+#~ msgid "account id"
+#~ msgstr "id account"
 
-#: y_web/templates/admin
-msgid "Analytics data refreshed."
-msgstr "Dati di analisi aggiornati."
+#~ msgid "Human participation"
+#~ msgstr "Partecipazione umana"
 
-#: y_web/templates/im
-msgid "Human participation"
-msgstr "Partecipazione umana"
+#~ msgid "Participation service:"
+#~ msgstr "Servizio di partecipazione:"
 
-#: y_web/templates/im
-msgid "Participation service:"
-msgstr "Servizio di partecipazione:"
+#~ msgid "running"
+#~ msgstr "in esecuzione"
 
-#: y_web/templates/im
-msgid "running"
-msgstr "in esecuzione"
+#~ msgid "stopped"
+#~ msgstr "fermo"
 
-#: y_web/templates/im
-msgid "stopped"
-msgstr "fermo"
+#~ msgid "not answering"
+#~ msgstr "non risponde"
 
-#: y_web/templates/im
-msgid "not answering"
-msgstr "non risponde"
+#~ msgid "off"
+#~ msgstr "disattivato"
+
+#~ msgid ""
+#~ "The simulation does not depend on "
+#~ "it: participants can only read until "
+#~ "it is back."
+#~ msgstr ""
+#~ "La simulazione non ne dipende: i "
+#~ "partecipanti possono solo leggere finché "
+#~ "non torna disponibile."
+
+#~ msgid "Minimum round duration: %(s)s seconds"
+#~ msgstr "Durata minima del round: %(s)s secondi"
+
+#~ msgid "A run with human participants cannot be reproduced exactly."
+#~ msgstr ""
+#~ "Una simulazione con partecipanti umani "
+#~ "non può essere riprodotta esattamente."
+
+#~ msgid "Chat account"
+#~ msgstr "Account di chat"
+
+#~ msgid "Last active round"
+#~ msgstr "Ultimo round attivo"
+
+#~ msgid "not entered yet"
+#~ msgstr "non ancora entrato"
 
-#: y_web/templates/im
-msgid "off"
-msgstr "disattivato"
+#~ msgid "No participant is assigned to this experiment yet."
+#~ msgstr "Nessun partecipante è ancora assegnato a questo esperimento."
 
-#: y_web/templates/im
-msgid "The simulation does not depend on it: participants can only read until it is back."
-msgstr "La simulazione non ne dipende: i partecipanti possono solo leggere finché non torna disponibile."
+#~ msgid "Write a message"
+#~ msgstr "Scrivi un messaggio"
 
-#: y_web/templates/im
-msgid "Minimum round duration: %(s)s seconds"
-msgstr "Durata minima del round: %(s)s secondi"
+#~ msgid "Action log"
+#~ msgstr "Log delle azioni"
 
-#: y_web/templates/im
-msgid "A run with human participants cannot be reproduced exactly."
-msgstr "Una simulazione con partecipanti umani non può essere riprodotta esattamente."
+#~ msgid "Actor log"
+#~ msgstr "Log degli attori"
 
-#: y_web/templates/im
-msgid "Chat account"
-msgstr "Account di chat"
+#~ msgid "Broadcasters"
+#~ msgstr "Broadcaster"
 
-#: y_web/templates/im
-msgid "Last active round"
-msgstr "Ultimo round attivo"
+#~ msgid "Client log"
+#~ msgstr "Log del client"
+
+#~ msgid "Compress rotated logs"
+#~ msgstr "Comprimi i log ruotati"
+
+#~ msgid "Console log"
+#~ msgstr "Log della console"
+
+#~ msgid "Enable archetypes"
+#~ msgstr "Abilita gli archetipi"
+
+#~ msgid ""
+#~ "Every value has a default: change "
+#~ "only what your design needs. Opinion "
+#~ "dynamics, stress and reward, annotations "
+#~ "and memory are switched in Experiment"
+#~ " Configuration."
+#~ msgstr ""
+#~ "Ogni valore ha un default: modifica "
+#~ "solo ciò che serve al tuo disegno"
+#~ " sperimentale. Dinamiche di opinione, "
+#~ "stress e ricompensa, annotazioni e "
+#~ "memoria si attivano in Configurazione "
+#~ "dell'esperimento."
+
+#~ msgid "Execution log"
+#~ msgstr "Log di esecuzione"
+
+#~ msgid "Explorers"
+#~ msgstr "Esploratori"
+
+#~ msgid "Language model usage log"
+#~ msgstr "Log d'uso del modello linguistico"
+
+#~ msgid "Logging"
+#~ msgstr "Registrazione dei log"
+
+#~ msgid "Prompt log"
+#~ msgstr "Log dei prompt"
+
+#~ msgid ""
+#~ "Relative likelihood of each action of"
+#~ " an agent in a session. A value"
+#~ " of 0 means that the action is"
+#~ " never performed; values greater than "
+#~ "0 are relative to each other."
+#~ msgstr ""
+#~ "Probabilità relativa di ogni azione di"
+#~ " un agente in una sessione. Il "
+#~ "valore 0 significa che l'azione non "
+#~ "viene mai eseguita; i valori maggiori"
+#~ " di 0 sono relativi tra loro."
+
+#~ msgid ""
+#~ "Share of validators, broadcasters and "
+#~ "explorers (the three must add up "
+#~ "to 1)."
+#~ msgstr ""
+#~ "Quota di validatori, broadcaster ed "
+#~ "esploratori (le tre devono sommare a "
+#~ "1)."
+
+#~ msgid "The archetype shares must add up to 1"
+#~ msgstr "Le quote degli archetipi devono sommare a 1"
+
+#~ msgid "Tick log"
+#~ msgstr "Log dei tick"
+
+#~ msgid "Validators"
+#~ msgstr "Validatori"
+
+#~ msgid "Which logs the client writes (the verbose ones are off by default)."
+#~ msgstr ""
+#~ "Quali log scrive il client (quelli "
+#~ "dettagliati sono disattivati per impostazione"
+#~ " predefinita)."
+
+#~ msgid "Cascades"
+#~ msgstr "Cascate"
+
+#~ msgid "Network"
+#~ msgstr "Rete"
+
+#~ msgid "Homogeneity"
+#~ msgstr "Omogeneità"
+
+#~ msgid "Emergence"
+#~ msgstr "Emergenza"
+
+#~ msgid "Created chats"
+#~ msgstr "Chat create"
+
+#~ msgid "Stress and reward"
+#~ msgstr "Stress e ricompensa"
+
+#~ msgid "Generate report"
+#~ msgstr "Genera report"
+
+#~ msgid ""
+#~ "Reports are written to the reports "
+#~ "folder of the experiment. Detection, "
+#~ "evaluation, laundering and comparison reports"
+#~ " are run with yim-analyze."
+#~ msgstr ""
+#~ "I report vengono scritti nella cartella"
+#~ " reports dell'esperimento. I report di "
+#~ "rilevamento, valutazione, laundering e "
+#~ "confronto si eseguono con yim-analyze."
+
+#~ msgid "No reports yet. Generate one above."
+#~ msgstr "Nessun report per ora. Generane uno qui sopra."
 
-#: y_web/templates/im
-msgid "not entered yet"
-msgstr "non ancora entrato"
-
-#: y_web/templates/im
-msgid "No participant is assigned to this experiment yet."
-msgstr "Nessun partecipante è ancora assegnato a questo esperimento."
-
-#: y_web/templates/im
-msgid "Participant notice"
-msgstr "Avviso ai partecipanti"
-
-#: y_web/templates/im
-msgid "Shown once to each participant before their first entry. Leave empty for none. You are responsible for informing participants."
-msgstr "Mostrato una volta a ogni partecipante prima del primo ingresso. Lascia vuoto per non mostrarlo. Sei tu a dover informare i partecipanti."
-
-#: y_web/templates/im
-msgid "Minimum round duration (seconds, 0 = off)"
-msgstr "Durata minima del round (secondi, 0 = disattivata)"
-
-#: y_web/templates/im
-msgid "Maximum number of participants"
-msgstr "Numero massimo di partecipanti"
-
-#: y_web/templates/im
-msgid "React %(e)s"
-msgstr "Reagisci %(e)s"
-
-#: y_web/templates/im
-msgid "Forward"
-msgstr "Inoltra"
-
-#: y_web/templates/im
-msgid "Simulated time"
-msgstr "Tempo simulato"
-
-#: y_web/templates/im
-msgid "Connection lost, retrying…"
-msgstr "Connessione persa, nuovo tentativo…"
-
-#: y_web/templates/im
-msgid "Reading only: writing is available while the simulation is running."
-msgstr "Solo lettura: si può scrivere mentre la simulazione è in esecuzione."
-
-#: y_web/templates/im
-msgid "Your account is not ready yet (the participation service is not answering). You are seeing the public view; try again in a moment."
-msgstr "Il tuo account non è ancora pronto (il servizio di partecipazione non risponde). Stai vedendo la vista pubblica; riprova tra poco."
-
-#: y_web/templates/im
-msgid "sending…"
-msgstr "invio in corso…"
-
-#: y_web/templates/im
-msgid "not sent"
-msgstr "non inviato"
-
-#: y_web/templates/im
-msgid "press Send to retry"
-msgstr "premi Invia per riprovare"
-
-#: y_web/templates/im
-msgid "Replying to"
-msgstr "In risposta a"
-
-#: y_web/templates/im
-msgid "click to cancel"
-msgstr "clicca per annullare"
-
-#: y_web/templates/im
-msgid "Delete this message?"
-msgstr "Eliminare questo messaggio?"
-
-#: y_web/templates/im
-msgid "Edit message"
-msgstr "Modifica messaggio"
-
-#: y_web/templates/im
-msgid "Forward to the chat with id:"
-msgstr "Inoltra alla chat con id:"
-
-#: y_web/templates/im
-msgid "Invite link"
-msgstr "Link di invito"
-
-#: y_web/templates/im
-msgid "This interaction is switched off for the experiment."
-msgstr "Questa interazione è disattivata per l'esperimento."
-
-#: y_web/templates/im
-msgid "The simulation is not running."
-msgstr "La simulazione non è in esecuzione."
-
-#: y_web/templates/im
-msgid "The round is closed: try again in a moment."
-msgstr "Il round è chiuso: riprova tra poco."
-
-#: y_web/templates/im
-msgid "Connection lost: try again in a moment."
-msgstr "Connessione persa: riprova tra poco."
-
-#: y_web/templates/im
-msgid "You are not allowed to do that here."
-msgstr "Non puoi farlo qui."
-
-#: y_web/templates/im
-msgid "You cannot read this chat."
-msgstr "Non puoi leggere questa chat."
-
-#: y_web/templates/im
-msgid "Slow down a little."
-msgstr "Rallenta un poco."
-
-#: y_web/templates/im
-msgid "Your session expired: reload the page."
-msgstr "La sessione è scaduta: ricarica la pagina."
-
-#: y_web/templates/im
-msgid "The action was refused."
-msgstr "L'azione è stata rifiutata."
-
-#: y_web/templates/im
-msgid "Leave"
-msgstr "Esci"
-
-#: y_web/templates/im
-msgid "Write a message"
-msgstr "Scrivi un messaggio"
-
-#: y_web/templates/im
-msgid "Join a chat"
-msgstr "Entra in una chat"
-
-#: y_web/templates/im
-msgid "Chat id"
-msgstr "Id della chat"
-
-#: y_web/templates/im
-msgid "Invite code (optional)"
-msgstr "Codice di invito (facoltativo)"
-
-#: y_web/templates/im
-msgid "Before you start"
-msgstr "Prima di iniziare"
-
-#: y_web/templates/im
-msgid "I have read this, continue"
-msgstr "Ho letto, continua"
-
-#: y_web/templates/im
-msgid "Nothing new."
-msgstr "Niente di nuovo."
-
-#: y_web/templates/im
-msgid "You were mentioned"
-msgstr "Sei stato menzionato"
-
-#: y_web/templates/im
-msgid "Someone replied to you"
-msgstr "Qualcuno ti ha risposto"
-
-#: y_web/templates/im
-msgid "You were invited"
-msgstr "Sei stato invitato"
-
-#: y_web/templates/im
-msgid "Connection lost: the notifications will appear when it is back."
-msgstr "Connessione persa: le notifiche appariranno al ritorno."
-
-msgid "Action log"
-msgstr "Log delle azioni"
-
-msgid "Actions an agent may take besides posting, replying and reacting."
-msgstr "Azioni che un agente può compiere oltre a pubblicare, rispondere e reagire."
-
-msgid "Activate agent memory"
-msgstr "Attiva la memoria degli agenti"
-
-msgid "Actor log"
-msgstr "Log degli attori"
-
-msgid "Agents leaving and joining during the run."
-msgstr "Agenti che escono ed entrano durante l'esecuzione."
-
-msgid "Allow forum topics"
-msgstr "Consenti i topic dei forum"
-
-msgid "Allow forwarding"
-msgstr "Consenti l'inoltro"
-
-msgid "Allow private messages"
-msgstr "Consenti i messaggi privati"
-
-msgid "Allow search"
-msgstr "Consenti la ricerca"
-
-msgid "Always offer chats with notifications"
-msgstr "Proponi sempre le chat con notifiche"
-
-msgid "Always offer owned chats"
-msgstr "Proponi sempre le chat di cui è proprietario"
-
-msgid "Ask the language model when uncertain"
-msgstr "Interroga il modello linguistico nei casi incerti"
-
-msgid "Attention"
-msgstr "Attenzione"
-
-msgid "Automatic restrictions on the chats."
-msgstr "Restrizioni automatiche sulle chat."
-
-msgid "Background activity that does not come from the agents."
-msgstr "Attività di fondo che non proviene dagli agenti."
-
-msgid "Barrier poll (seconds)"
-msgstr "Intervallo di controllo della barriera (secondi)"
-
-msgid "Baseline Activity"
-msgstr "Attività di base"
-
-msgid "Baseline policy"
-msgstr "Politica di base"
-
-msgid "Baseline strength"
-msgstr "Intensità dell'attività di base"
-
-msgid "Broadcasters"
-msgstr "Broadcaster"
-
-msgid "Chat Discovery"
-msgstr "Scoperta delle chat"
-
-msgid "Chat Topology"
-msgstr "Topologia delle chat"
-
-msgid "Chat creation likelihood"
-msgstr "Probabilità di creare una chat"
-
-msgid "Chats per topic"
-msgstr "Chat per topic"
-
-msgid "Chats that appear during the run."
-msgstr "Chat che compaiono durante l'esecuzione."
-
-msgid "Churn and New Agents"
-msgstr "Abbandoni e nuovi agenti"
-
-msgid "Churn probability"
-msgstr "Probabilità di abbandono"
-
-msgid "Client Runtime"
-msgstr "Esecuzione del client"
-
-msgid "Client log"
-msgstr "Log del client"
-
-msgid "Compress rotated logs"
-msgstr "Comprimi i log ruotati"
-
-msgid "Concurrency, timeouts and the failure guard of the language model calls."
-msgstr "Concorrenza, timeout e controllo dei fallimenti delle chiamate al modello linguistico."
-
-msgid "Configure optional memory of the agents: what they remember of the chats they read and write in. Memory is disabled by default."
-msgstr "Configura la memoria opzionale degli agenti: ciò che ricordano delle chat che leggono e in cui scrivono. La memoria è disattivata per impostazione predefinita."
-
-msgid "Console log"
-msgstr "Log della console"
-
-msgid "Create a group for each topic"
-msgstr "Crea un gruppo per ogni topic"
-
-msgid "Customize hourly activity"
-msgstr "Personalizza l'attività oraria"
-
-msgid "Discovery mode"
-msgstr "Modalità di scoperta"
-
-msgid "Emergence, Chat Creation and Forums"
-msgstr "Emergenza, creazione di chat e forum"
-
-msgid "Emotion annotation batch size"
-msgstr "Dimensione del batch di annotazione delle emozioni"
-
-msgid "Enable archetypes"
-msgstr "Abilita gli archetipi"
-
-msgid "Enable churn"
-msgstr "Abilita gli abbandoni"
-
-msgid "Enable forum chats"
-msgstr "Abilita le chat forum"
-
-msgid "Enable new agents"
-msgstr "Abilita i nuovi agenti"
-
-msgid "Enable reactive replies"
-msgstr "Abilita le risposte reattive"
-
-msgid "Every value has a default: change only what your design needs. Opinion dynamics, stress and reward, annotations and memory are switched in Experiment Configuration."
-msgstr "Ogni valore ha un default: modifica solo ciò che serve al tuo disegno sperimentale. Dinamiche di opinione, stress e ricompensa, annotazioni e memoria si attivano in Configurazione dell'esperimento."
-
-msgid "Execution log"
-msgstr "Log di esecuzione"
-
-msgid "Explorers"
-msgstr "Esploratori"
-
-msgid "Extra session rate"
-msgstr "Frequenza delle sessioni aggiuntive"
-
-msgid "Failure minimum (sessions)"
-msgstr "Minimo per il controllo dei fallimenti (sessioni)"
-
-msgid "Failure window (sessions)"
-msgstr "Finestra per il controllo dei fallimenti (sessioni)"
-
-msgid "Forget deleted messages"
-msgstr "Dimentica i messaggi eliminati"
-
-msgid "Forum topic creation likelihood"
-msgstr "Probabilità di creare un topic nel forum"
-
-msgid "Forum topic deletion likelihood"
-msgstr "Probabilità di eliminare un topic del forum"
-
-msgid "Generate the topology if missing"
-msgstr "Genera la topologia se manca"
-
-msgid "Heartbeat interval (seconds)"
-msgstr "Intervallo di heartbeat (secondi)"
-
-msgid "How agents find chats to join or leave."
-msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
-
-msgid "How chats, channels and their owners are generated."
-msgstr "Come vengono generati chat, canali e relativi proprietari."
-
-msgid "How many sessions an agent may open in a round."
-msgstr "Quante sessioni può aprire un agente in un round."
-
-msgid "How the experiment topics map onto agents and chats."
-msgstr "Come i topic dell'esperimento vengono associati ad agenti e chat."
-
-msgid "Ignore topics when building the network"
-msgstr "Ignora i topic nella costruzione della rete"
-
-msgid "In instant messaging the agent evaluates the opinion of the interlocutor only."
-msgstr "Nella messaggistica istantanea l'agente valuta solo l'opinione dell'interlocutore."
-
-msgid "Inactivity threshold (rounds)"
-msgstr "Soglia di inattività (round)"
-
-msgid "Language Model Reliability"
-msgstr "Affidabilità del modello linguistico"
-
-msgid "Language model usage log"
-msgstr "Log d'uso del modello linguistico"
-
-msgid "Let agents create chats"
-msgstr "Consenti agli agenti di creare chat"
-
-msgid "Let chats emerge"
-msgstr "Lascia emergere nuove chat"
-
-msgid "Logging"
-msgstr "Registrazione dei log"
-
-msgid "Maximum chain depth"
-msgstr "Profondità massima della catena"
-
-msgid "Maximum characters"
-msgstr "Numero massimo di caratteri"
-
-msgid "Maximum chats owned by an agent"
-msgstr "Numero massimo di chat possedute da un agente"
-
-msgid "Maximum chats per session"
-msgstr "Numero massimo di chat per sessione"
-
-msgid "Maximum concurrent requests"
-msgstr "Numero massimo di richieste concorrenti"
-
-msgid "Maximum items"
-msgstr "Numero massimo di elementi"
-
-msgid "Maximum reactions per round"
-msgstr "Numero massimo di reazioni per round"
-
-msgid "Maximum retries"
-msgstr "Numero massimo di tentativi"
-
-msgid "Maximum server retries"
-msgstr "Numero massimo di tentativi verso il server"
-
-msgid "Maximum sessions per round"
-msgstr "Numero massimo di sessioni per round"
-
-msgid "Maximum share of agents that churn"
-msgstr "Quota massima di agenti che abbandonano"
-
-msgid "Maximum share of failed sessions"
-msgstr "Quota massima di sessioni fallite"
-
-msgid "Maximum wait (rounds)"
-msgstr "Attesa massima (round)"
-
-msgid "Median reaction delay (minutes)"
-msgstr "Ritardo mediano della reazione (minuti)"
-
-msgid "Memory backend"
-msgstr "Backend della memoria"
-
-msgid "Minimum activity level for several sessions"
-msgstr "Livello minimo di attività per più sessioni"
-
-msgid "Minimum score to recall another thread"
-msgstr "Punteggio minimo per richiamare un altro thread"
-
-msgid "Minimum topics of a forum"
-msgstr "Numero minimo di topic di un forum"
-
-msgid "Moderation"
-msgstr "Moderazione"
-
-msgid "Moderation policy"
-msgstr "Politica di moderazione"
-
-msgid "New agents probability"
-msgstr "Probabilità di nuovi agenti"
-
-msgid "Off-topic rate"
-msgstr "Frequenza dei messaggi fuori topic"
-
-msgid "Open slot rate"
-msgstr "Frequenza degli slot aperti"
-
-msgid "Optional Agent Actions"
-msgstr "Azioni opzionali degli agenti"
-
-msgid "Pass the seed to the model"
-msgstr "Passa il seed al modello"
-
-msgid "Posts allowed before the limit"
-msgstr "Messaggi consentiti prima del limite"
-
-msgid "Private message likelihood"
-msgstr "Probabilità di un messaggio privato"
-
-msgid "Probability of leaving a chat"
-msgstr "Probabilità di uscire da una chat"
-
-msgid "Probability of reacting"
-msgstr "Probabilità di reagire"
-
-msgid "Prompt log"
-msgstr "Log dei prompt"
-
-msgid "Prompt mode"
-msgstr "Modalità del prompt"
-
-msgid "React"
-msgstr "Reagisci"
-
-msgid "Reactive Replies"
-msgstr "Risposte reattive"
-
-msgid "Reactive forward likelihood"
-msgstr "Probabilità di inoltro reattivo"
-
-msgid "Reactive post likelihood"
-msgstr "Probabilità di messaggio reattivo"
-
-msgid "Reactive reaction likelihood"
-msgstr "Probabilità di reazione reattiva"
-
-msgid "Reactive reply likelihood"
-msgstr "Probabilità di risposta reattiva"
-
-msgid "Ready timeout (seconds)"
-msgstr "Timeout di prontezza (secondi)"
-
-msgid "Recall emotionally charged episodes"
-msgstr "Richiama gli episodi emotivamente intensi"
-
-msgid "Record the responses"
-msgstr "Registra le risposte"
-
-msgid "Rehydrate window (rounds)"
-msgstr "Finestra di ripristino (round)"
-
-msgid "Relative likelihood of each action of an agent in a session. A value of 0 means that the action is never performed; values greater than 0 are relative to each other."
-msgstr "Probabilità relativa di ogni azione di un agente in una sessione. Il valore 0 significa che l'azione non viene mai eseguita; i valori maggiori di 0 sono relativi tra loro."
-
-msgid "Replies and reactions triggered by the activity of other agents."
-msgstr "Risposte e reazioni innescate dall'attività di altri agenti."
-
-msgid "Reply context (characters)"
-msgstr "Contesto della risposta (caratteri)"
-
-msgid "Restriction length (rounds)"
-msgstr "Durata della restrizione (round)"
-
-msgid "Rule threshold"
-msgstr "Soglia della regola"
-
-msgid "Scheduling"
-msgstr "Pianificazione"
-
-msgid "Search likelihood"
-msgstr "Probabilità di ricerca"
-
-msgid "Search top-k"
-msgstr "Top-k della ricerca"
-
-msgid "Server call timeout (seconds)"
-msgstr "Timeout delle chiamate al server (secondi)"
-
-msgid "Set the share of activity of each hour (0 to 1)"
-msgstr "Imposta la quota di attività di ogni ora (da 0 a 1)"
-
-msgid "Share of agents owning a channel"
-msgstr "Quota di agenti proprietari di un canale"
-
-msgid "Share of channels with a discussion group"
-msgstr "Quota di canali con un gruppo di discussione"
-
-msgid "Share of new agents"
-msgstr "Quota di nuovi agenti"
-
-msgid "Share of validators, broadcasters and explorers (the three must add up to 1)."
-msgstr "Quota di validatori, broadcaster ed esploratori (le tre devono sommare a 1)."
-
-msgid "Share the topology across clients"
-msgstr "Condividi la topologia tra i client"
-
-msgid "Shutdown grace (seconds)"
-msgstr "Tolleranza allo spegnimento (secondi)"
-
-msgid "Spread of the reaction delay"
-msgstr "Dispersione del ritardo della reazione"
-
-msgid "Start Date"
-msgstr "Data di inizio"
-
-msgid "The archetype shares must add up to 1"
-msgstr "Le quote degli archetipi devono sommare a 1"
-
-msgid "The lower bound of the uncertain band cannot exceed the upper one"
-msgstr "Il limite inferiore della banda di incertezza non può superare quello superiore"
-
-msgid "The start date and the round length belong to the experiment: the first client set them."
-msgstr "La data di inizio e la durata del round appartengono all'esperimento: le ha fissate il primo client."
-
-msgid "Tick log"
-msgstr "Log dei tick"
-
-msgid "Ticks per Round"
-msgstr "Tick per round"
-
-msgid "Timeouts and polling of the client process."
-msgstr "Timeout e polling del processo client."
-
-msgid "Topic assignment"
-msgstr "Assegnazione dei topic"
-
-msgid "Topics and Chats"
-msgstr "Topic e chat"
-
-msgid "Topics per agent"
-msgstr "Topic per agente"
-
-msgid "Topics per channel"
-msgstr "Topic per canale"
-
-msgid "Total memory in the prompt (characters)"
-msgstr "Memoria totale nel prompt (caratteri)"
-
-msgid "Uncertain band, high"
-msgstr "Banda di incertezza, limite superiore"
-
-msgid "Uncertain band, low"
-msgstr "Banda di incertezza, limite inferiore"
-
-msgid "Unmapped topics"
-msgstr "Topic non mappati"
-
-msgid "Validators"
-msgstr "Validatori"
-
-msgid "Votes only as a signal"
-msgstr "Voti solo come segnale"
-
-msgid "Weight of notifications"
-msgstr "Peso delle notifiche"
-
-msgid "Weight of recent activity"
-msgstr "Peso dell'attività recente"
-
-msgid "Weight of topic affinity"
-msgstr "Peso dell'affinità con i topic"
-
-msgid "Which chats an agent looks at in a session and how they are ranked."
-msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
-
-msgid "Which logs the client writes (the verbose ones are off by default)."
-msgstr "Quali log scrive il client (quelli dettagliati sono disattivati per impostazione predefinita)."
-
-msgid "A round never closes sooner than this, so that people have time to act. It is a lower bound: the simulation never waits for a person."
-msgstr "Un round non si chiude prima di questo tempo, così che le persone abbiano modo di agire. È un limite inferiore: la simulazione non aspetta mai una persona."
-
-msgid "Advanced settings updated."
-msgstr "Impostazioni avanzate aggiornate."
-
-msgid "Invalid advanced settings: %(why)s"
-msgstr "Impostazioni avanzate non valide: %(why)s"
-
-msgid "Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part."
-msgstr "Impostazioni del server della simulazione di messaggistica istantanea. Le persone possono registrarsi in qualsiasi momento: queste impostazioni definiscono solo come partecipano."
-
-msgid "The run already started: reset the experiment to change these settings."
-msgstr "L'esecuzione è già iniziata: reimposta l'esperimento per modificare queste impostazioni."
-
-msgid "Add chat"
-msgstr "Aggiungi chat"
-
-msgid "Channel"
-msgstr "Canale"
-
-msgid "Chats by Topic"
-msgstr "Chat per topic"
-
-msgid "Define the channels and groups that exist at the start and the topics each one is about. Without any, IM creates them from the topics and the population: this editor is for designs that need specific chats."
-msgstr "Definisci i canali e i gruppi che esistono all'inizio e i topic di cui parla ciascuno. Senza alcuna riga, IM li crea a partire dai topic e dalla popolazione: questo editor serve ai disegni sperimentali che richiedono chat specifiche."
-
-msgid "Owner (page username, empty = automatic)"
-msgstr "Proprietario (username della pagina, vuoto = automatico)"
-
-msgid "Popularity"
-msgstr "Popolarità"
-
-msgid "Private"
-msgstr "Privata"
-
-msgid "Public"
-msgstr "Pubblica"
-
-msgid "Supergroup"
-msgstr "Supergruppo"
-
-msgid "Visibility"
-msgstr "Visibilità"
-
-msgid "With a discussion group"
-msgstr "Con gruppo di discussione"
-
-msgid "Cascades"
-msgstr "Cascate"
-
-msgid "Network"
-msgstr "Rete"
-
-msgid "Homogeneity"
-msgstr "Omogeneità"
-
-msgid "Emergence"
-msgstr "Emergenza"
-
-msgid "Created chats"
-msgstr "Chat create"
-
-msgid "Stress and reward"
-msgstr "Stress e ricompensa"
-
-msgid "Generate report"
-msgstr "Genera report"
-
-msgid "Reports are written to the reports folder of the experiment. Detection, evaluation, laundering and comparison reports are run with yim-analyze."
-msgstr "I report vengono scritti nella cartella reports dell'esperimento. I report di rilevamento, valutazione, laundering e confronto si eseguono con yim-analyze."
-
-msgid "Unknown report."
-msgstr "Report sconosciuto."
-
-msgid "Report finished. It is listed in the Export and reports panel."
-msgstr "Report completato. È elencato nel pannello Esportazione e report."
-
-msgid "Report failed: %(error)s"
-msgstr "Report non riuscito: %(error)s"
-
-msgid "No reports yet. Generate one above."
-msgstr "Nessun report per ora. Generane uno qui sopra."

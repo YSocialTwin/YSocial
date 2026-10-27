@@ -1,32 +1,10 @@
 {% extends "im/base.html" %}
 {% block content %}
-<section class="im-chatlist" aria-labelledby="im-chats-h">
-  <h2 id="im-chats-h">{{ _('Chats') }}</h2>
-  {% if ctx.vp.round == 0 %}<p class="im-empty">{{ _('The simulation has not produced any round yet.') }}</p>
-  {% elif not chats %}<p class="im-empty">{{ _('No chats to show for this viewpoint.') }}</p>{% endif %}
-  <ul class="im-chats">
-    {% for c in chats %}
-    <li class="im-chat-row">
-      <a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}">
-        <span class="im-chat-icon" title="{{ c.type }}">{{ {'private': '✉', 'group': '👥', 'supergroup': '👥', 'channel': '📢'}.get(c.type, '💬') }}</span>
-        <span class="im-chat-main">
-          <span class="im-chat-title">{{ c.title }}{% if c.is_forum %} <span class="im-flag">{{ _('forum') }}</span>{% endif %}{% if c.visibility == 'private' %} <span class="im-flag">{{ _('private') }}</span>{% endif %}</span>
-          <span class="im-chat-preview">{% if c.last %}{% if c.last.author %}{{ c.last.author }}: {% endif %}{{ _('(deleted)') if c.last.deleted else c.last.text }}{% else %}{{ _('No messages yet') }}{% endif %}</span>
-        </span>
-        <span class="im-chat-meta">{{ _('%(n)s members', n=c.members) }}{% if c.unread %}<span class="im-unread" aria-label="{{ _('%(n)s unread', n=c.unread) }}">{{ c.unread }}</span>{% endif %}</span>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-  {% if participant and writable %}
-  <form class="im-join" id="im-join" data-im-action="join" autocomplete="off">
-    <h3>{{ _('Join a chat') }}</h3>
-    <label for="im-join-chat">{{ _('Chat id') }}</label>
-    <input id="im-join-chat" name="chat_id" required>
-    <label for="im-join-invite">{{ _('Invite code (optional)') }}</label>
-    <input id="im-join-invite" name="invite_id">
-    <button type="submit">{{ _('Join') }}</button>
-  </form>
-  {% endif %}
+<section class="im-empty-pane" aria-labelledby="im-welcome-h">
+  <img src="{{ url_for('static', filename='assets/img/vector/logo/YSocial_l_teal.png') }}" alt="" width="96" height="96">
+  <h2 id="im-welcome-h">{{ exp.exp_name }}</h2>
+  <p>{% if ctx.vp.round == 0 %}{{ _('The simulation has not produced any round yet.') }}{% else %}{{ _('Select a chat to start reading.') }}{% endif %}</p>
+  {% if viewed_account %}<p class="im-hint">{{ _('You see the chats of %(name)s, and nothing else.', name=viewed_account.username) }}</p>
+  {% elif is_staff and ctx.vp.kind == 'overview' %}<p class="im-hint">{{ _('Open the menu to see the experiment as a single account or as a public observer.') }}</p>{% endif %}
 </section>
 {% endblock %}

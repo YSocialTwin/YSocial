@@ -1,0 +1,4 @@
+{#- Placeholder avatar: initials on a colour that is stable per chat or account. -#}
+{% macro avatar(name, hue, size='md', kind=None) -%}
+<span class="im-avatar is-{{ size }}" style="--im-hue: {{ hue or 210 }}" aria-hidden="true"{% if kind %} data-kind="{{ kind }}"{% endif %}>{{ ((name or '?').replace('@', '').split() | map('first') | list)[:2] | join('') | upper or '?' }}</span>
+{%- endmacro %}

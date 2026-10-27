@@ -1,12 +1,12 @@
 {% extends "im/base.html" %}
 {% block title %}{{ _('Before you start') }} · {{ exp.exp_name }}{% endblock %}
 {% block content %}
-<section class="im-notice" aria-labelledby="im-notice-h">
-  <h2 id="im-notice-h">{{ _('Before you start') }}</h2>
-  <div class="im-notice-text">{{ notice }}</div>
+<section class="im-page im-panel im-notice" aria-labelledby="im-notice-h">
+  <header class="im-page-head"><h2 id="im-notice-h">{{ _('Before you start') }}</h2></header>
+  <div class="im-page-body"><div class="im-notice-text">{{ notice }}</div>
   <form method="post" action="/{{ exp.idexp }}/im/notice">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <button type="submit">{{ _('I have read this, continue') }}</button>
-  </form>
+  </form></div>
 </section>
 {% endblock %}

@@ -17,7 +17,7 @@ from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.src.im import is_im_experiment
 from y_web.src.im.engine import ImReadError, open_reader
-from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, latest_round, status
+from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, avatar_hue, latest_round, status
 from y_web.src.im.timeline import clamp_round, day_slot, ordinal
 from y_web.src.im import participant as participation
 from y_web.src.im.gateway_client import GatewayClient, GatewayUnavailable
@@ -77,6 +77,8 @@ class _Context:
         self.ui = ui or {}
         self.participant = participant  # set in participant mode (plan 6.8); never from the request
         self.pending_account = False  # participation is on but the account does not exist yet
+        self.reader = None  # set by ``_view``: the sidebar of every page lists the chats of the viewpoint
+        self.session = None
 
     @property
     def writable(self):
@@ -187,7 +189,60 @@ def _participant_context(session, exp, ui, part):
     return _Context(exp, None, viewpoint, latest, bool(exp.running), ui, participant=part)
 
 
+def _annotation_flags(ctx):
+    """Which annotation chips a page shows: staff see every one, the others what the experiment switches on."""
+    ui = ctx.ui
+    master = ctx.staff is not None or bool(ui.get("annotations_enabled", True))
+    return {
+        "topics": master and (ctx.staff is not None or bool(ui.get("annotation_topics", True))),
+        "sentiment": master and (ctx.staff is not None or bool(ui.get("annotation_sentiment", True))),
+        "toxicity": master and (ctx.staff is not None or bool(ui.get("annotation_toxicity", True))),
+        "emotion": master and (ctx.staff is not None or bool(ui.get("annotation_emotions", True))),
+    }
+
+
+def _shell(ctx, values):
+    """Context of the three-pane shell: the chats of the viewpoint, the staff menu and the viewed account."""
+    out = {}
+    chats = values.get("chats")
+    if chats is None and ctx.reader is not None:
+        try:
+            chats = ctx.reader.chat_list()
+        except ImReadError:
+            chats = []
+    out["sidebar_chats"] = chats or []
+    accounts = values.get("accounts")
+    if accounts is None and ctx.staff is not None and ctx.session is not None:
+        accounts = _accounts_for_picker(ctx.session)
+    out["accounts"] = accounts or []
+    viewed = None
+    if ctx.vp.kind == "account":
+        viewed = next((a for a in out["accounts"] if a["id"] == ctx.vp.account_id), None) or {
+            "id": ctx.vp.account_id,
+            "username": ctx.vp.account_id,
+            "kind": None,
+            "hue": avatar_hue(ctx.vp.account_id),
+        }
+        if ctx.participant is not None:
+            viewed = None  # a participant is not "viewing as" anyone
+    out["viewed_account"] = viewed
+    out["annotation_flags"] = _annotation_flags(ctx)
+    out["admin_links"] = (
+        [
+            (_("Experiment details"), f"/admin/experiment_details/{ctx.exp.idexp}"),
+            (_("Experiments"), "/admin/experiments"),
+            (_("Dashboard"), "/admin/dashboard"),
+        ]
+        if ctx.staff is not None
+        else []
+    )
+    return out
+
+
 def _render(template, ctx, **values):
+    shell = _shell(ctx, values)
+    values.pop("accounts", None)
+    values.pop("chats", None)
     return render_template(
         template,
         exp=ctx.exp,
@@ -205,6 +260,7 @@ def _render(template, ctx, **values):
         writable=ctx.writable,
         pending_account=ctx.pending_account,
         csrf_token=participation.csrf_token(flask_session) if ctx.participant else "",
+        **shell,
         **values,
     )
 
@@ -219,7 +275,9 @@ def _view(exp_id, handler):
     try:
         with open_reader(_db_path(exp)) as session:
             ctx = _open_context(session, exp_id)
-            return handler(session, ctx, Reader(session, ctx.vp))
+            ctx.session = session
+            ctx.reader = Reader(session, ctx.vp)
+            return handler(session, ctx, ctx.reader)
     except _Redirect as redirect_to:
         return redirect(redirect_to.url)
     except ViewpointError:
@@ -233,7 +291,7 @@ def _accounts_for_picker(session):
 
     models = im_modules()[0]
     return [
-        {"id": row.id, "username": row.username, "kind": row.kind}
+        {"id": row.id, "username": row.username, "kind": row.kind, "hue": avatar_hue(row.id)}
         for row in session.scalars(select(models.Account).order_by(models.Account.username))
     ]
 
@@ -261,6 +319,11 @@ def _record_exposure(ctx, chat_id, page):
         pass
 
 
+def _info(rd, chat_id):
+    """The info panel of a chat: its facts and members."""
+    return {"info": rd.chat_info(chat_id), "members": rd.members(chat_id) or []}
+
+
 def _history(rd, ctx, chat_id, forum_topic_id=None):
     """One page of a chat, sized and opened where the experiment's settings say."""
     before = request.args.get("before") or None
@@ -280,8 +343,7 @@ def _history(rd, ctx, chat_id, forum_topic_id=None):
 @login_required
 def im_index(exp_id):
     def handler(session, ctx, rd):
-        accounts = _accounts_for_picker(session) if ctx.staff is not None else []
-        return _render("im/index.html", ctx, chats=rd.chat_list(), accounts=accounts)
+        return _render("im/index.html", ctx)
 
     return _view(exp_id, handler)
 
@@ -295,7 +357,7 @@ def im_chat(exp_id, chat_id):
             abort(404)
         _record_exposure(ctx, chat_id, page)
         topics = rd.forum_topics(chat_id)
-        return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=None)
+        return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=None, **_info(rd, chat_id))
 
     return _view(exp_id, handler)
 
@@ -312,7 +374,7 @@ def im_chat_topic(exp_id, chat_id, topic_id):
             abort(404)
         page = _history(rd, ctx, chat_id, forum_topic_id=topic_id)
         _record_exposure(ctx, chat_id, page)
-        return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=topic)
+        return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=topic, **_info(rd, chat_id))
 
     return _view(exp_id, handler)
 
@@ -490,6 +552,17 @@ def im_invite(exp_id):
     return jsonify(payload), code
 
 
+def _participant_sidebar(exp, part):
+    """The chat list of a participant's own viewpoint, for pages that do not run through ``_view``."""
+    try:
+        with open_reader(_db_path(exp)) as session:
+            latest = latest_round(session)
+            reader = Reader(session, Viewpoint("account", part.account_id, latest))
+            return {"sidebar_chats": reader.chat_list(), "latest": latest}
+    except (ImReadError, ViewpointError):
+        return {"sidebar_chats": [], "latest": 0}
+
+
 @main.route("/<int:exp_id>/im/notifications")
 @login_required
 def im_notifications(exp_id):
@@ -518,6 +591,8 @@ def im_notifications(exp_id):
         params={},
         poll_seconds=0,
         csrf_token="",
+        active_chat_id=None,
+        **_participant_sidebar(exp, part),
     )
 
 

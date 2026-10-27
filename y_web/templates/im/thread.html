@@ -1,9 +1,14 @@
 {% extends "im/base.html" %}
 {% from "im/_message.html" import message %}
 {% block content %}
-<section aria-labelledby="im-thr-h">
-  <a class="im-back" href="javascript:history.back()">← {{ _('Back') }}</a>
-  <h2 id="im-thr-h">{{ _('Thread') }}</h2>
-  <div class="im-messages">{% for m in thread["items"] %}{{ message(m, exp.idexp, params, ui, participant, writable) }}{% endfor %}</div>
+{% set own_id = participant.account_id if participant else (ctx.vp.account_id if ctx.vp.kind == 'account' else None) %}
+<section class="im-page im-panel" aria-labelledby="im-thr-h">
+  <header class="im-page-head">
+    <a class="im-back im-icon-btn" href="javascript:history.back()" aria-label="{{ _('Back') }}">←</a>
+    <h2 id="im-thr-h">{{ _('Thread') }}</h2>
+  </header>
+  <div class="im-page-body">
+  <div class="im-messages">{% for m in thread["items"] %}{{ message(m, exp.idexp, params, ui, participant, writable, annotation_flags, own_id) }}{% endfor %}</div>
+  </div>
 </section>
 {% endblock %}

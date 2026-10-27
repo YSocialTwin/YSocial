@@ -1,24 +1,41 @@
-{% macro message(m, exp_id, params, ui={}, me=None, can_write=False) -%}
-<article class="im-msg{{ ' is-deleted' if m.deleted }}{{ ' is-edited' if m.edited }}" id="m-{{ m.id }}">
-  <div class="im-avatar" aria-hidden="true" data-name="{{ m.sender.username if m.sender else '?' }}">{{ (m.sender.username if m.sender else '?')[:2]|upper }}</div>
+{% from "im/_avatar.html" import avatar %}
+{% macro message(m, exp_id, params, ui={}, me=None, can_write=False, flags=None, own_id=None, show_chat=False) -%}
+{%- set flags = flags or {'topics': True, 'sentiment': True, 'toxicity': True, 'emotion': True} -%}
+{%- set ann = m.annotations or {} -%}
+{%- set mine = own_id and m.sender and m.sender.id == own_id -%}
+<article class="im-msg{{ ' is-deleted' if m.deleted }}{{ ' is-edited' if m.edited }}{{ ' is-own' if mine }}" id="m-{{ m.id }}" data-origin="{{ m.origin or '' }}">
+  {% if not mine %}<a class="im-msg-avatar" href="/{{ exp_id }}/im/profile/{{ m.sender.id if m.sender else '' }}{{ '?' ~ (params|urlencode) if params else '' }}" tabindex="-1">{{ avatar(m.sender.username if m.sender else '?', m.sender.hue if m.sender else 210, 'sm') }}</a>{% endif %}
   <div class="im-bubble">
     <header class="im-msg-head">
-      {% if m.sender %}<a class="im-sender" href="/{{ exp_id }}/im/profile/{{ m.sender.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ m.posted_as or m.sender.username }}</a>
-      {% if ui.get('annotation_agent_type', True) %}<span class="im-kind">{{ m.sender.kind }}</span>{% endif %}{% else %}<span class="im-sender">{{ m.posted_as or '—' }}</span>{% endif %}
-      {% if ui.get('show_post_time', True) %}<time class="im-time" data-im-time="" datetime="{{ m.sim_ts }}">{{ _('day %(d)s, slot %(s)s', d=m.day, s=m.slot) }}</time>{% endif %}
+      {% if m.sender %}<a class="im-sender" style="--im-hue: {{ m.sender.hue }}" href="/{{ exp_id }}/im/profile/{{ m.sender.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ m.posted_as or m.sender.username }}</a>
+      {% if ui.get('annotation_agent_type', True) %}<span class="im-kind" data-kind="{{ m.sender.kind }}">{{ m.sender.kind }}</span>{% endif %}{% else %}<span class="im-sender">{{ m.posted_as or '—' }}</span>{% endif %}
+      {% if m.origin in ('event', 'campaign', 'rule') %}<span class="im-chip is-origin" title="{{ _('Where the message comes from') }}">{{ m.origin }}</span>{% endif %}
     </header>
     {% if m.forwarded %}<div class="im-fwd">{% if ui.get('im_show_forward_origin', True) %}{{ _('Forwarded from %(chat)s', chat=m.forwarded.origin_chat or m.forwarded.chat or '?') }}{% if m.forwarded.chained %} · {{ _('forwarded again') }}{% endif %}{% else %}{{ _('Forwarded message') }}{% endif %}</div>{% endif %}
-    {% if m.reply_to %}<a class="im-reply" href="#m-{{ m.reply_to.id }}"><strong>{{ m.reply_to.author or '?' }}</strong> {{ m.reply_to.text }}</a>{% endif %}
+    {% if m.reply_to %}<a class="im-reply" href="#m-{{ m.reply_to.id }}"><strong>{{ m.reply_to.author or '?' }}</strong> <span>{{ m.reply_to.text }}</span></a>{% endif %}
     {% if m.deleted %}
     <p class="im-text im-tombstone">{{ _('This message was deleted.') }}</p>
     {% else %}
     <p class="im-text">{{ m.text }}</p>
     {% endif %}
     {% if m.media_type %}<div class="im-media">{{ _('[%(kind)s attachment]', kind=m.media_type) }}</div>{% endif %}
-    {% for u in m.urls %}<div class="im-link-card"><a href="{{ u.url }}" rel="noopener noreferrer nofollow" target="_blank">{{ u.domain or u.url }}</a></div>{% endfor %}
+    {% for u in m.urls %}<div class="im-link-card"><a href="{{ u.url }}" rel="noopener noreferrer nofollow" target="_blank">{{ u.domain or u.url }}</a><small>{{ u.url }}</small></div>{% endfor %}
+    {% if not m.deleted %}
+    {%- set tox = ann.get('toxicity') -%}
+    {% if (flags.topics and m.topics) or (flags.sentiment and ann.get('sentiment')) or (flags.toxicity and tox is not none) or (flags.emotion and ann.get('emotion')) or m.off_topic or m.hashtags or m.mentions %}
+    <div class="im-chips">
+      {% if flags.topics %}{% for t in m.topics or [] %}<span class="im-chip is-topic" title="{{ _('Topic') }}{{ ' · ' ~ t.source if t.source }}">{{ t.label }}</span>{% endfor %}{% endif %}
+      {% for h in m.hashtags or [] %}<span class="im-chip is-tag">#{{ h }}</span>{% endfor %}
+      {% for u in m.mentions or [] %}<span class="im-chip is-mention">@{{ u }}</span>{% endfor %}
+      {% if flags.sentiment and ann.get('sentiment') %}<span class="im-chip is-sentiment is-{{ ann.get('sentiment').label }}" title="{{ _('Sentiment (compound score)') }}">{{ {'positive': '🙂', 'neutral': '😐', 'negative': '🙁'}.get(ann.get('sentiment').label) }} {{ '%+.2f'|format(ann.get('sentiment').compound) }}</span>{% endif %}
+      {% if flags.toxicity and tox is not none %}<span class="im-chip is-tox {{ 'is-high' if tox >= 0.6 else 'is-mid' if tox >= 0.3 else 'is-low' }}" title="{{ _('Toxicity score') }}">☣ {{ '%.2f'|format(tox) }}</span>{% endif %}
+      {% if flags.emotion and ann.get('emotion') %}<span class="im-chip is-emotion" title="{{ _('Emotion') }}">{{ ann.get('emotion') }}</span>{% endif %}
+      {% if m.off_topic %}<span class="im-chip is-off" title="{{ _('Not about the topics of the chat') }}">{{ _('off-topic') }}</span>{% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
     <footer class="im-msg-foot">
       {% if ui.get('im_show_reactions', True) %}{% for emoji, n in m.reactions.items() %}<span class="im-reaction" title="{{ _('%(n)s reactions', n=n) }}">{{ emoji }} {{ n }}</span>{% endfor %}{% endif %}
-      {% if m.edited %}<span class="im-flag">{{ _('edited') }}</span>{% endif %}
       {% if me and can_write and not m.deleted %}
       <span class="im-actions">
         <button type="button" class="im-act" data-im-action="reply" data-im-do="reply" data-message="{{ m.id }}" data-author="{{ m.sender.username if m.sender else '' }}">{{ _('Reply') }}</button>
@@ -30,7 +47,11 @@
         {% endif %}
       </span>
       {% endif %}
-      <a class="im-thread-link" href="/{{ exp_id }}/im/thread/{{ m.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Thread') }}</a>
+      <span class="im-foot-spacer"></span>
+      {% if m.views and not m.deleted %}<span class="im-views" title="{{ _('Views') }}">👁 {{ m.views }}</span>{% endif %}
+      {% if m.edited %}<span class="im-edited">{{ _('edited') }}</span>{% endif %}
+      <a class="im-thread-link" href="/{{ exp_id }}/im/thread/{{ m.id }}{{ '?' ~ (params|urlencode) if params else '' }}" title="{{ _('Thread') }}">⤷</a>
+      {% if ui.get('show_post_time', True) %}<time class="im-time" data-im-time="" datetime="{{ m.sim_ts }}">{{ _('d%(d)s · %(s)s', d=m.day, s=m.slot) }}</time>{% endif %}
     </footer>
   </div>
 </article>

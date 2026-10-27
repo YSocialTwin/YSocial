@@ -4,7 +4,7 @@
 <title>{{ exp.exp_name }} · {{ _('Instant Messaging') }}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/im.css') }}"></head>
 <body class="im-body">
-<main class="im-main im-unavailable">
+<main class="im-main im-unavailable im-panel">
   <h1>{{ exp.exp_name }}</h1>
   <p>{{ _('The conversations cannot be shown right now.') }}</p>
   <p class="im-empty">{{ message }}</p>

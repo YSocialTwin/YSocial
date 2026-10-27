@@ -14,6 +14,34 @@
       safe(function () { localStorage.setItem('im-theme', next); });
     });
   }
+  /* Info panel (Telegram-style right pane): remembered per browser. */
+  var info = document.getElementById('im-info'), itog = document.getElementById('im-info-toggle'), iclose = document.getElementById('im-info-close');
+  var app = document.querySelector('.im-app');
+  function showInfo(on) {
+    if (!info) return;
+    info.hidden = !on;
+    if (app) app.classList.toggle('has-info', on);
+    if (itog) itog.setAttribute('aria-expanded', on ? 'true' : 'false');
+    safe(function () { localStorage.setItem('im-info', on ? '1' : '0'); });
+  }
+  if (info) {
+    if (app) app.classList.remove('has-info');
+    if (safe(function () { return localStorage.getItem('im-info'); }) === '1' && window.innerWidth > 1100) showInfo(true);
+    if (itog) itog.addEventListener('click', function () { showInfo(info.hidden); });
+    if (iclose) iclose.addEventListener('click', function () { showInfo(false); });
+  }
+  /* The menu closes on outside click and Escape. */
+  var menu = document.getElementById('im-menu');
+  if (menu) {
+    document.addEventListener('click', function (e) { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menu.open) { menu.open = false; var s = menu.querySelector('summary'); if (s) s.focus(); } });
+  }
+  /* Open a conversation at its latest message (or at the linked one). */
+  var scroller = document.getElementById('im-scroll');
+  if (scroller) {
+    var target = location.hash && document.getElementById(location.hash.slice(1));
+    if (target) target.scrollIntoView({ block: 'center' }); else scroller.scrollTop = scroller.scrollHeight;
+  }
   var body = document.body;
   /* Infinite scrolling (setting "infinite_scroll_enabled"): load the older page when the link scrolls into view. */
   var box = document.getElementById('im-messages');

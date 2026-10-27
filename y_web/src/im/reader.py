@@ -21,6 +21,13 @@ from y_web.src.im.timeline import day_slot
 
 VIEWPOINT_KINDS = ("account", "public", "overview")
 PREVIEW_CHARS = 80
+
+
+def avatar_hue(key: str) -> int:
+    """A stable hue (0-359) for the placeholder avatar of a chat or an account."""
+    import hashlib
+
+    return int(hashlib.sha1(str(key).encode("utf-8")).hexdigest()[:6], 16) % 360
 REPLY_PREVIEW_CHARS = 160
 DEFAULT_PAGE = 30
 MAX_PAGE = 100
@@ -150,7 +157,7 @@ class Reader:
                 return original
         return msg.text or ""
 
-    def _item(self, msg, state, accounts, titles, reactions, urls, parents) -> Dict[str, Any]:
+    def _item(self, msg, state, accounts, titles, reactions, urls, parents, extras=None) -> Dict[str, Any]:
         day, slot = day_slot(msg.round_id)
         sender = accounts.get(msg.sender_account_id)
         parent = parents.get(msg.reply_to_message_id)
@@ -164,7 +171,7 @@ class Reader:
             "slot": slot,
             "sim_ts": msg.sim_ts.isoformat() if msg.sim_ts else None,
             "sender": (
-                {"id": sender.id, "username": sender.username, "kind": sender.kind}
+                {"id": sender.id, "username": sender.username, "kind": sender.kind, "hue": avatar_hue(sender.id)}
                 if sender is not None
                 else None
             ),
@@ -196,7 +203,66 @@ class Reader:
             "forum_topic_id": msg.forum_topic_id,
             "thread_root_id": msg.thread_root_id,
             "discussion_root_of": msg.discussion_root_of,
+            "origin": msg.origin,
+            "off_topic": bool(msg.off_topic),
+            "views": int(msg.views or 0),
+            **({} if tomb else (extras or {}).get(msg.id, {})),
         }
+
+    def _extras(self, ids: List[str]) -> Dict[str, Dict[str, Any]]:
+        """Topics, hashtags, mentions and the annotations (toxicity, sentiment, emotion) of the given messages."""
+        m = self.m
+        out: Dict[str, Dict[str, Any]] = {i: {} for i in ids}
+        topic_rows = self.s.execute(
+            select(m.MessageTopic.message_id, m.Topic.label, m.TopicCandidate.label, m.MessageTopic.source)
+            .outerjoin(m.Topic, m.Topic.id == m.MessageTopic.topic_id)
+            .outerjoin(m.TopicCandidate, m.TopicCandidate.id == m.MessageTopic.candidate_id)
+            .where(m.MessageTopic.message_id.in_(ids))
+            .order_by(m.MessageTopic.id)
+        )
+        for mid, label, candidate, source in topic_rows:
+            name = label or candidate
+            if name:
+                out[mid].setdefault("topics", []).append({"label": name, "source": source})
+        for mid, tag in self.s.execute(
+            select(m.MessageHashtag.message_id, m.Hashtag.hashtag)
+            .join(m.Hashtag, m.Hashtag.id == m.MessageHashtag.hashtag_id)
+            .where(m.MessageHashtag.message_id.in_(ids))
+            .order_by(m.Hashtag.hashtag)
+        ):
+            out[mid].setdefault("hashtags", []).append(tag)
+        for mid, name in self.s.execute(
+            select(m.Mention.message_id, m.Mention.username).where(m.Mention.message_id.in_(ids)).order_by(m.Mention.id)
+        ):
+            out[mid].setdefault("mentions", []).append(name)
+        seen = set()
+        for mid, method, value in self.s.execute(
+            select(m.Annotation.message_id, m.Annotation.method_ref, m.Annotation.value)
+            .where(m.Annotation.message_id.in_(ids), m.Annotation.status == "ok")
+            .order_by(m.Annotation.method_ref)
+        ):
+            kind = next((k for k in ("toxicity", "sentiment", "emotion") if str(method).startswith(k)), None)
+            if kind is None or (mid, kind) in seen or not isinstance(value, dict):
+                continue
+            seen.add((mid, kind))  # the first method by name wins when several ran
+            ann = out[mid].setdefault("annotations", {})
+            if kind == "toxicity":
+                score = value.get("toxicity")
+                if isinstance(score, (int, float)):
+                    ann["toxicity"] = round(float(score), 3)
+            elif kind == "sentiment":
+                compound = value.get("compound")
+                if isinstance(compound, (int, float)):
+                    label = "positive" if compound >= 0.05 else "negative" if compound <= -0.05 else "neutral"
+                    ann["sentiment"] = {"label": label, "compound": round(float(compound), 3)}
+            else:
+                emotion = value.get("emotion") or value.get("label")
+                if not emotion:
+                    scores = {k: v for k, v in value.items() if isinstance(v, (int, float))}
+                    emotion = max(scores, key=scores.get) if scores else None
+                if emotion:
+                    ann["emotion"] = str(emotion)
+        return out
 
     def _items(self, rows: List[Any]) -> List[Dict[str, Any]]:
         """Message DTOs for rows that are already known to be readable (state per row)."""
@@ -229,7 +295,8 @@ class Reader:
         urls: Dict[str, List[Dict[str, Any]]] = {}
         for row in self.s.scalars(select(self.m.MessageUrl).where(self.m.MessageUrl.message_id.in_(ids))):
             urls.setdefault(row.message_id, []).append({"url": row.url, "domain": row.domain})
-        return [self._item(m, state, accounts, titles, reactions, urls, parents) for m, state in rows]
+        extras = self._extras(ids)
+        return [self._item(m, state, accounts, titles, reactions, urls, parents, extras) for m, state in rows]
 
     # -- chat list -------------------------------------------------------------------------
     def _member_counts(self, chat_ids: List[str]) -> Dict[str, int]:
@@ -303,6 +370,7 @@ class Reader:
                 "linked_discussion_chat_id": chat.linked_discussion_chat_id,
                 "members": counts.get(chat.id, 0),
                 "last": None,
+                "hue": avatar_hue(chat.id),
             }
             if last:
                 row, state = last[0]
@@ -311,6 +379,8 @@ class Reader:
                     "id": row.id,
                     "round": row.round_id,
                     "sim_ts": dto["sim_ts"],
+                    "day": dto["day"],
+                    "slot": dto["slot"],
                     "author": (dto["sender"] or {}).get("username"),
                     "text": "" if state == "deleted" else dto["text"][:PREVIEW_CHARS],
                     "deleted": state == "deleted",
@@ -464,6 +534,7 @@ class Reader:
                     "account_id": row.account_id,
                     "username": getattr(account, "username", row.account_id),
                     "kind": getattr(account, "kind", None),
+                    "hue": avatar_hue(row.account_id),
                     "role": role,
                     "joined_round": row.joined_round,
                     "left_round": row.left_round if left else None,
@@ -471,6 +542,46 @@ class Reader:
                 }
             )
         return out
+
+    def chat_info(self, chat_id: str) -> Optional[Dict[str, Any]]:
+        """What the info panel of a chat shows (``None`` when the viewpoint cannot open it)."""
+        chat = self._chat(chat_id)
+        if not self._chat_visible(chat):
+            return None
+        m = self.m
+        owner = self.s.get(m.Account, chat.owner_account_id) if chat.owner_account_id else None
+        topics = [
+            label
+            for (label,) in self.s.execute(
+                select(m.Topic.label)
+                .join(m.ChatTopic, m.ChatTopic.topic_id == m.Topic.id)
+                .where(m.ChatTopic.chat_id == chat_id)
+                .order_by(m.Topic.label)
+            )
+        ]
+        discussion = (
+            self.s.get(m.Chat, chat.linked_discussion_chat_id) if chat.linked_discussion_chat_id else None
+        )
+        return {
+            "id": chat.id,
+            "title": chat.title or chat.id,
+            "type": chat.type,
+            "visibility": chat.visibility,
+            "username": chat.username,
+            "description": chat.description,
+            "is_forum": bool(chat.is_forum),
+            "origin": chat.origin,
+            "created_round": chat.created_round,
+            "members": self._member_counts([chat.id]).get(chat.id, 0),
+            "owner": {"id": owner.id, "username": owner.username} if owner is not None else None,
+            "topics": topics,
+            "discussion": (
+                {"id": discussion.id, "title": discussion.title or discussion.id}
+                if discussion is not None and self._chat_visible(discussion)
+                else None
+            ),
+            "hue": avatar_hue(chat.id),
+        }
 
     # -- forum topics ----------------------------------------------------------------------
     def forum_topics(self, chat_id: str) -> Optional[List[Dict[str, Any]]]:
@@ -544,5 +655,22 @@ class Reader:
             "status": account.status,
             "language": account.language,
             "persona": (account.persona or {}) if include_persona else None,
+            "archetype": account.archetype if include_persona else None,
+            "cluster": account.cluster if include_persona else None,
+            "opinions": self._opinions(account_id) if include_persona else [],
+            "hue": avatar_hue(account.id),
             "chats": sorted(chats, key=lambda c: c["title"]),
         }
+
+    def _opinions(self, account_id: str) -> List[Dict[str, Any]]:
+        """The latest opinion of an account on every topic it has one on, as of the viewpoint's round."""
+        m = self.m
+        latest: Dict[str, Any] = {}
+        for topic_id, label, value, rnd in self.s.execute(
+            select(m.AgentOpinion.topic_id, m.Topic.label, m.AgentOpinion.value, m.AgentOpinion.round_id)
+            .join(m.Topic, m.Topic.id == m.AgentOpinion.topic_id)
+            .where(m.AgentOpinion.account_id == account_id, m.AgentOpinion.round_id <= self.vp.round)
+            .order_by(m.AgentOpinion.round_id, m.AgentOpinion.id)
+        ):
+            latest[topic_id] = {"topic": label, "value": round(float(value), 3), "round": rnd}
+        return sorted(latest.values(), key=lambda o: o["topic"])

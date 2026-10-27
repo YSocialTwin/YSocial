@@ -57,7 +57,6 @@ def test_defaults_and_capabilities(suites_app, logged):
         "show_suggested_friends",
         "show_recsys_info",
         "show_annotation_stats",
-        "annotation_sentiment",
         "default_content_recsys",
         "onboarding_enabled",
         "filter_bubble_alpha",

@@ -31,7 +31,7 @@ def _page(client, path):
 
 
 def _busy_chat(client, exp_id, info):
-    return max(info["chats"], key=lambda c: len(client.get(f"/{exp_id}/im/chat/{c}").data))
+    return max(info["chats"], key=lambda c: client.get(f"/{exp_id}/im/chat/{c}").data.count(b'class="im-msg'))
 
 
 def test_show_post_time_off_hides_times(observer):
@@ -183,9 +183,12 @@ def test_time_travel_gate_for_non_staff(observer, monkeypatch):
     from y_web.routes.social import instant_messaging
 
     app, client, exp_id, info, _ = observer
-    chat = _busy_chat(client, exp_id, info)
     real_staff = instant_messaging._staff_user
     monkeypatch.setattr(instant_messaging, "_staff_user", lambda: None)
+    chat = max(
+        (c for c in info["chats"] if client.get(f"/{exp_id}/im/chat/{c}?day=1&slot=3").status_code == 200),
+        key=lambda c: client.get(f"/{exp_id}/im/chat/{c}").data.count(b'class="im-msg'),
+    )
     assert 'id="im-day"' in _page(client, f"/{exp_id}/im")
     early = _page(client, f"/{exp_id}/im/chat/{chat}?day=1&slot=3")
     _set(app, exp_id, im_allow_time_travel=False)

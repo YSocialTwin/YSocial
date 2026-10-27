@@ -1,0 +1,52 @@
+{% from "im/_avatar.html" import avatar %}
+<aside class="im-side im-panel" aria-label="{{ _('Chats') }}">
+  <div class="im-side-head">
+    {% include "im/_menu.html" %}
+    {% if ctx is defined and ctx and ctx.vp is defined and not participant %}
+    <form class="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search">
+      <input type="hidden" name="vp" value="{{ ctx.vp.kind }}">
+      {% if ctx.vp.account_id %}<input type="hidden" name="acc" value="{{ ctx.vp.account_id }}">{% endif %}
+      {% if ctx.vp.round != ctx.latest %}<input type="hidden" name="round" value="{{ ctx.vp.round }}">{% endif %}
+      <label class="im-sr" for="im-q">{{ _('Search messages') }}</label>
+      <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}">
+    </form>
+    {% else %}
+    <form class="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search">
+      <label class="im-sr" for="im-q">{{ _('Search messages') }}</label>
+      <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}">
+    </form>
+    {% endif %}
+  </div>
+  {% if viewed_account %}
+  <div class="im-viewing" role="note">
+    {{ avatar(viewed_account.username, viewed_account.hue, 'sm') }}
+    <span class="im-viewing-text">{{ _('Viewing as') }} <strong>{{ viewed_account.username }}</strong>{% if viewed_account.kind %} <small>{{ viewed_account.kind }}</small>{% endif %}</span>
+    <a class="im-viewing-exit" href="/{{ exp.idexp }}/im?vp=overview" title="{{ _('Back to the researcher overview') }}" aria-label="{{ _('Back to the researcher overview') }}">×</a>
+  </div>
+  {% elif ctx is defined and ctx and ctx.vp is defined and ctx.vp.kind == 'overview' %}
+  <div class="im-viewing is-overview" role="note">{{ _('Researcher overview') }} <small>{{ _('private chats and deleted messages are shown') }}</small></div>
+  {% endif %}
+  <nav class="im-chatlist" aria-label="{{ _('Chats') }}">
+    {% if ctx is defined and ctx and ctx.vp is defined and ctx.vp.round == 0 %}<p class="im-empty">{{ _('The simulation has not produced any round yet.') }}</p>
+    {% elif not sidebar_chats %}<p class="im-empty">{{ _('No chats to show for this viewpoint.') }}</p>{% endif %}
+    <ul class="im-chats">
+      {% for c in sidebar_chats %}
+      <li class="im-chat-row{{ ' is-active' if active_chat_id == c.id }}">
+        <a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}"{% if active_chat_id == c.id %} aria-current="page"{% endif %}>
+          {{ avatar(c.title, c.hue, 'lg') }}
+          <span class="im-chat-main">
+            <span class="im-chat-line">
+              <span class="im-chat-title"><span class="im-type" title="{{ c.type }}">{{ {'private': '✉', 'group': '👥', 'supergroup': '👥', 'channel': '📢'}.get(c.type, '💬') }}</span>{{ c.title }}{% if c.visibility == 'private' %} <span class="im-flag">{{ _('private') }}</span>{% endif %}</span>
+              {% if c.last and c.last.day %}<span class="im-chat-time" title="{{ _('day %(d)s, slot %(s)s', d=c.last.day, s=c.last.slot) }}">{{ _('d%(d)s · %(s)s', d=c.last.day, s=c.last.slot) }}</span>{% endif %}
+            </span>
+            <span class="im-chat-line">
+              <span class="im-chat-preview">{% if c.last %}{% if c.last.author %}<b>{{ c.last.author }}:</b> {% endif %}{{ _('(deleted)') if c.last.deleted else c.last.text }}{% else %}{{ _('No messages yet') }}{% endif %}</span>
+              {% if c.unread %}<span class="im-unread" aria-label="{{ _('%(n)s unread', n=c.unread) }}">{{ c.unread }}</span>{% elif c.is_forum %}<span class="im-flag">{{ _('forum') }}</span>{% endif %}
+            </span>
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+</aside>

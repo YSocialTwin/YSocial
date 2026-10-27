@@ -1,12 +1,15 @@
 {% extends "im/base.html" %}
 {% from "im/_message.html" import message %}
 {% block content %}
-<section aria-labelledby="im-s-h">
-  <h2 id="im-s-h">{{ _('Search') }}</h2>
+{% set own_id = participant.account_id if participant else (ctx.vp.account_id if ctx.vp.kind == 'account' else None) %}
+<section class="im-page im-panel" aria-labelledby="im-s-h">
+  <header class="im-page-head"><h2 id="im-s-h">{{ _('Search') }}{% if q %} <small>{{ q }}</small>{% endif %}</h2></header>
+  <div class="im-page-body">
   {% if not q %}<p class="im-empty">{{ _('Type at least two characters.') }}</p>
   {% elif not hits %}<p class="im-empty">{{ _('No messages found.') }}</p>{% endif %}
   <div class="im-messages">
-    {% for m in hits %}<p class="im-hit-chat"><a href="/{{ exp.idexp }}/im/chat/{{ m.chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}#m-{{ m.id }}">{{ m.chat_title }}</a></p>{{ message(m, exp.idexp, params, ui) }}{% endfor %}
+    {% for m in hits %}<p class="im-hit-chat"><a href="/{{ exp.idexp }}/im/chat/{{ m.chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}#m-{{ m.id }}">{{ m.chat_title }}</a></p>{{ message(m, exp.idexp, params, ui, None, False, annotation_flags, own_id) }}{% endfor %}
+  </div>
   </div>
 </section>
 {% endblock %}

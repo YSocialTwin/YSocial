@@ -1,17 +1,34 @@
 {% extends "im/base.html" %}
+{% from "im/_avatar.html" import avatar %}
 {% block title %}{{ profile.username }} · {{ exp.exp_name }}{% endblock %}
 {% block content %}
-<section aria-labelledby="im-p-h">
-  <a class="im-back" href="javascript:history.back()">← {{ _('Back') }}</a>
-  <h2 id="im-p-h">{{ profile.username }} {% if ui.get('annotation_agent_type', True) %}<span class="im-kind">{{ profile.kind }}</span>{% endif %}</h2>
+<section class="im-page im-panel" aria-labelledby="im-p-h">
+  <header class="im-page-head">
+    <a class="im-back im-icon-btn" href="javascript:history.back()" aria-label="{{ _('Back') }}">←</a>
+    {{ avatar(profile.username, profile.hue, 'lg') }}
+    <h2 id="im-p-h">{{ profile.username }} {% if ui.get('annotation_agent_type', True) %}<span class="im-kind" data-kind="{{ profile.kind }}">{{ profile.kind }}</span>{% endif %}</h2>
+    {% if is_staff and ctx.vp.kind != 'public' and not (ctx.vp.kind == 'account' and ctx.vp.account_id == profile.id) %}
+    <a class="im-viewas-btn" href="/{{ exp.idexp }}/im?vp=account&acc={{ profile.id }}">{{ _('View as this account') }}</a>
+    {% endif %}
+  </header>
+  <div class="im-page-body">
   <dl class="im-dl">
     <dt>{{ _('Status') }}</dt><dd>{{ profile.status }}</dd>
     {% if profile.language %}<dt>{{ _('Language') }}</dt><dd>{{ profile.language }}</dd>{% endif %}
+    {% if profile.archetype %}<dt>{{ _('Archetype') }}</dt><dd>{{ profile.archetype }}</dd>{% endif %}
+    {% if profile.cluster %}<dt>{{ _('Cluster') }}</dt><dd>{{ profile.cluster }}</dd>{% endif %}
     {% if profile.persona and ui.get('profile_topics_box', True) %}{% for k, v in profile.persona.items() %}<dt>{{ k }}</dt><dd>{{ v if v is string or v is number else v|tojson }}</dd>{% endfor %}{% endif %}
   </dl>
+  {% if profile.opinions %}
+  <h3>{{ _('Opinions') }}</h3>
+  <ul class="im-opinions">
+    {% for o in profile.opinions %}<li><span>{{ o.topic }}</span><span class="im-opinion" role="img" aria-label="{{ '%+.2f'|format(o.value) }}"><i style="left: {{ ((o.value + 1) / 2 * 100)|round(1) }}%"></i></span><small>{{ '%+.2f'|format(o.value) }} · {{ _('round %(n)s', n=o.round) }}</small></li>{% endfor %}
+  </ul>
+  {% endif %}
   <h3>{{ _('Chats') }}</h3>
-  <ul>
+  <ul class="im-plain">
     {% for c in profile.chats %}<li><a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ c.title }}</a> <span class="im-kind">{{ c.role }}</span></li>{% else %}<li>{{ _('No visible memberships.') }}</li>{% endfor %}
   </ul>
+  </div>
 </section>
 {% endblock %}

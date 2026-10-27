@@ -85,6 +85,11 @@ PLATFORM_CAPABILITIES = {
         "interactions_enabled",
         "interaction_share",  # forwarding
         "notifications_menu",
+        "annotations_enabled",  # topics, sentiment, toxicity and emotion chips on messages
+        "annotation_topics",
+        "annotation_sentiment",
+        "annotation_toxicity",
+        "annotation_emotions",
         "annotation_agent_type",  # agent / human badge on messages
         "annotation_author_type",
         "profile_topics_box",

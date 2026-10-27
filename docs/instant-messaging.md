@@ -38,14 +38,22 @@ tables are never created in it.
 
 ## What researchers see
 
-- **Observer pages** (chat list, history, threads, forum topics, members, search, profiles, time travel). Three
-  viewpoints: the public observer, one agent's account, and the researcher overview (with deleted messages as
-  tombstones). A differential test checks that what a viewpoint sees equals what IM's own visibility rules allow.
+- **Observer pages**, laid out like Telegram Web: a chat list on the left (avatars, last message, unread and forum
+  flags, simulated time), the conversation in the middle and a *Chat info* panel on the right (description, owner,
+  topics, discussion group, members). Messages carry the annotations the experiment produces: topics, hashtags,
+  mentions, sentiment, toxicity, emotion, off-topic, origin, views and reactions. Staff always see every chip;
+  other viewers see the ones the frontend settings allow. It works on narrow screens (one pane at a time) and in a
+  dark theme.
+- **Viewpoints** for admins and researchers, from the ≡ menu: the researcher overview (everything, deleted
+  messages as tombstones), the public observer, and *View as account*, which opens the chats, groups and channels
+  one account belongs to, exactly as it could read them. The menu also leads back to the administration
+  (experiment details, experiments, dashboard). Accounts can be opened from the member lists and profiles too.
+  A differential test checks that what a viewpoint sees equals what IM's own visibility rules allow.
 - **Analytics**: toxicity, sentiment, opinion dynamics, stress/reward, topics, hashtags and the network page work on
   a derived database, `analytics_im.db`, rebuilt from the run database; see [the mapping](im-analytics-mapping.md).
   Emotion and recommender pages stay unavailable. Messages count as posts, replies as comments, forwards as shares,
   and slots count from 1.
-- **Export and reports** on the experiment details page (`yim-export`, snapshot while running).
+- **Reports** (`yim-analyze`) can be generated from the experiment details page; the download function exports the data.
 
 ## Frontend settings
 

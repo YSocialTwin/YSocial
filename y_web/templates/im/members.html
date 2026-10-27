@@ -1,16 +1,21 @@
 {% extends "im/base.html" %}
+{% from "im/_avatar.html" import avatar %}
 {% block title %}{{ _('Members') }} · {{ title }}{% endblock %}
 {% block content %}
-<section aria-labelledby="im-mem-h">
-  <a class="im-back" href="/{{ exp.idexp }}/im/chat/{{ chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}">← {{ title }}</a>
-  <h2 id="im-mem-h">{{ _('Members') }}</h2>
+<section class="im-page im-panel" aria-labelledby="im-mem-h">
+  <header class="im-page-head">
+    <a class="im-back im-icon-btn" href="/{{ exp.idexp }}/im/chat/{{ chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}" aria-label="{{ title }}">←</a>
+    <h2 id="im-mem-h">{{ _('Members') }} <small>{{ title }}</small></h2>
+  </header>
+  <div class="im-page-body">
   <table class="im-table">
-    <thead><tr><th scope="col">{{ _('Account') }}</th>{% if ui.get('im_show_member_roles', True) %}<th scope="col">{{ _('Role') }}</th>{% endif %}<th scope="col">{{ _('Joined (round)') }}</th><th scope="col">{{ _('Left (round)') }}</th><th scope="col">{{ _('Permissions') }}</th></tr></thead>
+    <thead><tr><th scope="col">{{ _('Account') }}</th>{% if ui.get('im_show_member_roles', True) %}<th scope="col">{{ _('Role') }}</th>{% endif %}<th scope="col">{{ _('Joined (round)') }}</th><th scope="col">{{ _('Left (round)') }}</th><th scope="col">{{ _('Permissions') }}</th>{% if is_staff and ctx.vp.kind != 'public' %}<th scope="col"></th>{% endif %}</tr></thead>
     <tbody>
     {% for m in members %}
-      <tr><td><a href="/{{ exp.idexp }}/im/profile/{{ m.account_id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ m.username }}</a> {% if ui.get('annotation_agent_type', True) %}<span class="im-kind">{{ m.kind }}</span>{% endif %}</td>{% if ui.get('im_show_member_roles', True) %}<td>{{ m.role }}</td>{% endif %}<td>{{ m.joined_round }}</td><td>{{ m.left_round or '' }}</td><td>{{ m.permissions|join(', ') }}</td></tr>
-    {% else %}<tr><td colspan="{{ 5 if ui.get('im_show_member_roles', True) else 4 }}">{{ _('No members to show.') }}</td></tr>{% endfor %}
+      <tr><td class="im-member-cell">{{ avatar(m.username, m.hue, 'sm') }}<a href="/{{ exp.idexp }}/im/profile/{{ m.account_id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ m.username }}</a> {% if ui.get('annotation_agent_type', True) and m.kind %}<span class="im-kind" data-kind="{{ m.kind }}">{{ m.kind }}</span>{% endif %}</td>{% if ui.get('im_show_member_roles', True) %}<td>{{ m.role }}</td>{% endif %}<td>{{ m.joined_round }}</td><td>{{ m.left_round or '' }}</td><td>{{ m.permissions|join(', ') }}</td>{% if is_staff and ctx.vp.kind != 'public' %}<td><a class="im-viewas" href="/{{ exp.idexp }}/im?vp=account&acc={{ m.account_id }}">{{ _('View as') }}</a></td>{% endif %}</tr>
+    {% else %}<tr><td colspan="6">{{ _('No members to show.') }}</td></tr>{% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 {% endblock %}
