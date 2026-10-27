@@ -1117,7 +1117,12 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
     experiment-local Agent_Opinion data, so bootstrap a first neutral/random
     snapshot in the current experiment DB and invalidate cached aggregates.
     """
+    from y_web.src.im import is_im_experiment
     from y_web.src.models import Agent_Opinion, Interests, Rounds, User_mgmt
+
+    if is_im_experiment(experiment):
+        # the derived analytics database is read only: never seed opinions that the run did not produce
+        return 0
 
     if db.session.query(Agent_Opinion.id).limit(1).first() is not None:
         return 0
