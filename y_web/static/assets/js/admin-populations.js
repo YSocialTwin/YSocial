@@ -23,6 +23,7 @@ var AdminPopulations = (function() {
   const platformLabel = (platformType) => {
       if (platformType === 'forum') return YI18n.t('Forum');
       if (platformType === 'photo_sharing') return YI18n.t('Photo Sharing');
+      if (platformType === 'instant_messaging') return YI18n.t('Instant Messaging');
       return YI18n.t('Microblogging');
   };
 

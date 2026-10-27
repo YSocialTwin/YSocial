@@ -1,6 +1,6 @@
 """Client admin routes sub-package."""
 
-from . import _agents, _crud, _details, _execution, _opinion, _recsys
+from . import _agents, _crud, _details, _execution, _im, _opinion, _recsys
 from ._blueprint import clientsr
 from ._crud import (
     create_client,
