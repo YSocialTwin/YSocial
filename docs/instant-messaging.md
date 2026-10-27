@@ -89,3 +89,11 @@ up to 4000 characters).
 
 - Local SQLite only; remote or PostgreSQL IM experiments are refused.
 - Importing an IM zip creates the experiment and its inputs; clients are created again from the form.
+
+## Reports and sample notebook
+
+The **Export and reports** panel of the experiment page also generates the `yim-analyze` reports that need no extra
+model (activity, cascades, network, homogeneity, emergence, created chats, stress and reward); they are written to the
+`reports` folder of the experiment. Detection, evaluation, laundering and comparison reports are run with
+`yim-analyze` itself. `docs/notebooks/im_analysis_example.ipynb` shows how to read the CSV export with pandas.
+The network page shows chat membership as follow edges (a member follows the owner of the chat).
