@@ -341,3 +341,38 @@ def test_chat_membership_becomes_follow_edges_to_the_chat_owner(folder):
         round_ids = {r[0] for r in conn.execute("SELECT id FROM rounds")}
     assert len({(u, f) for u, f, _r, _a in edges}) == expected
     assert all(u != f and r in round_ids and a in {"follow", "unfollow"} for u, f, r, a in edges)
+
+
+@pytest.mark.external_repo
+def test_derived_volumes_agree_with_the_yim_analyze_activity_report(folder):
+    """YWeb's derived database and the report of ``yim-analyze activity`` count the same messages per round."""
+    import json
+
+    from y_web.src.im import analytics_etl as etl
+    from y_web.src.im.analysis import run_report
+
+    path, src, _info, _expected = folder
+    with sqlite3.connect(src) as conn:
+        conn.execute(
+            "INSERT INTO run_info (run_id, config_hash, seed, prompt_language, api_version, lifecycle) "
+            "VALUES ('r', 'h', 1, 'en', 1, 'completed')"
+        )
+        conn.commit()
+    with open(os.path.join(path, "server_config.json"), "w") as handle:
+        json.dump({}, handle)
+    ok, result = run_report(path, "activity")
+    assert ok, result
+    with open(os.path.join(path, "reports", "activity_report.json")) as handle:
+        volumes = json.load(handle)["volumes"]
+
+    etl.refresh(path, src)
+    with sqlite3.connect(etl.analytics_path(path)) as conn:
+        derived = dict(conn.execute("SELECT round, COUNT(*) FROM post GROUP BY round"))
+    with sqlite3.connect(src) as conn:
+        live = dict(
+            conn.execute("SELECT round_id, COUNT(*) FROM messages WHERE deleted_round IS NULL GROUP BY round_id")
+        )
+    assert {int(k): v for k, v in volumes["per_round"].items() if v} == live
+    assert volumes["messages"] == sum(live.values())
+    # the derived database keeps deleted messages, so it never counts fewer
+    assert all(derived.get(r, 0) >= n for r, n in live.items())
