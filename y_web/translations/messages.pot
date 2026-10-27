@@ -9300,9 +9300,6 @@ msgstr ""
 msgid "The instant messaging configuration is not valid: %(why)s"
 msgstr ""
 
-msgid "The instant messaging viewer is not available yet."
-msgstr ""
-
 msgid ""
 "The language of the menus and labels of this site. Posts and comments are"
 " never translated."
@@ -11175,9 +11172,6 @@ msgid "Reports"
 msgstr ""
 
 msgid "Unknown export format."
-msgstr ""
-
-msgid "This analysis is not available for instant messaging experiments."
 msgstr ""
 
 #, python-format

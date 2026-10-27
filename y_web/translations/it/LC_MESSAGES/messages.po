@@ -10655,11 +10655,6 @@ msgstr ""
 "Questo client ad hoc richiede un modello LLM perché almeno un agente "
 "gestito usa un comportamento basato su LLM."
 
-msgid "This analysis is not available for instant messaging experiments."
-msgstr ""
-"Questa analisi non è disponibile per gli esperimenti di messaggistica "
-"istantanea."
-
 msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
 "Questo esperimento ha almeno un client configurato per funzionare finché "
@@ -13250,9 +13245,6 @@ msgstr "✔️ Usa"
 
 #~ msgid "Standard option; works without git."
 #~ msgstr "Opzione standard; funziona senza git."
-
-#~ msgid "The instant messaging viewer is not available yet."
-#~ msgstr "Il visualizzatore di messaggistica istantanea non è ancora disponibile."
 
 
 #: y_web/templates/im
