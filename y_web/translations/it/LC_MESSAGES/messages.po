@@ -12995,3 +12995,6 @@ msgstr "Report"
 
 msgid "Unknown export format."
 msgstr "Formato di esportazione sconosciuto."
+
+msgid "This analysis is not available for instant messaging experiments."
+msgstr "Questa analisi non è disponibile per gli esperimenti di messaggistica istantanea."

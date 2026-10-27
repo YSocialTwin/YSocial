@@ -11176,3 +11176,6 @@ msgstr ""
 
 msgid "Unknown export format."
 msgstr ""
+
+msgid "This analysis is not available for instant messaging experiments."
+msgstr ""

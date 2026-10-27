@@ -66,3 +66,34 @@ def im_artifact(idexp, kind, name):
         flash(_("File not found."), "error")
         return redirect(request.referrer or url_for("admin.dashboard"))
     return send_file(path, as_attachment=True, download_name=os.path.basename(path))
+
+
+# analytics pages read the YSocial schema; an IM database has none of it (plan, 5.7)
+_YSOCIAL_ANALYTICS_ENDPOINTS = frozenset(
+    {
+        "opinion_evolution", "opinion_evolution_data", "stress_reward_evolution",
+        "stress_reward_evolution_data", "toxicity_evolution", "toxicity_evolution_data",
+        "sentiment_evolution", "sentiment_evolution_data", "emotion_statistics",
+        "emotion_statistics_data", "topic_evolution", "topic_evolution_data",
+        "hashtag_evolution", "hashtag_evolution_data", "recsys_evolution",
+        "recsys_evolution_data", "network_analysis", "network_analysis_data",
+    }
+)
+
+
+@experiments.before_request
+def _keep_ysocial_analytics_away_from_im_databases():
+    endpoint = (request.endpoint or "").rpartition(".")[2]
+    expid = (request.view_args or {}).get("expid")
+    if endpoint not in _YSOCIAL_ANALYTICS_ENDPOINTS or expid is None:
+        return None
+    if not current_user.is_authenticated:
+        return None  # login_required answers
+    if _im_experiment_or_none(expid) is None:
+        return None
+    flash(_("This analysis is not available for instant messaging experiments."), "error")
+    if endpoint.endswith("_data"):
+        from flask import jsonify
+
+        return jsonify({"error": _("This analysis is not available for instant messaging experiments.")}), 404
+    return redirect(url_for("experiments.experiment_details", uid=expid))

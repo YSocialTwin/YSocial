@@ -173,3 +173,18 @@ def test_run_export_reports_failures_and_resolve_artifact_stays_inside(tmp_path)
     assert resolve_artifact(str(tmp_path), "exports", "a.csv")
     assert resolve_artifact(str(tmp_path), "exports", "../a.csv") is None
     assert resolve_artifact(str(tmp_path), "db", "a.csv") is None
+
+
+def test_ysocial_analytics_are_closed_for_im_and_open_for_other_platforms(im_app):
+    from y_web import db
+    from y_web.src.models import Exps
+
+    app, client = im_app
+    im_id = _make_im_experiment(app)
+    for path in ("topic_evolution", "network_analysis", "opinion_evolution"):
+        r = client.get(f"/admin/{path}/{im_id}")
+        assert r.status_code == 302 and f"/admin/experiment_details/{im_id}" in r.headers["Location"]
+    r = client.get(f"/admin/topic_evolution_data/{im_id}")
+    assert r.status_code == 404 and "instant messaging" in r.get_json()["error"]
+    # the dashboard labels the platform
+    assert "Instant Messaging" in client.get("/admin/dashboard").data.decode()
