@@ -6874,8 +6874,6 @@ msgstr "Non ci sono ancora foto consigliate."
 msgid "No releases available"
 msgstr "Nessuna release disponibile"
 
-msgid "No reports yet. Reports are produced by yim-analyze."
-msgstr "Nessun report. I report sono prodotti da yim-analyze."
 
 #, python-format
 msgid ""
@@ -13948,3 +13946,39 @@ msgstr "Visibilità"
 
 msgid "With a discussion group"
 msgstr "Con gruppo di discussione"
+
+msgid "Cascades"
+msgstr "Cascate"
+
+msgid "Network"
+msgstr "Rete"
+
+msgid "Homogeneity"
+msgstr "Omogeneità"
+
+msgid "Emergence"
+msgstr "Emergenza"
+
+msgid "Created chats"
+msgstr "Chat create"
+
+msgid "Stress and reward"
+msgstr "Stress e ricompensa"
+
+msgid "Generate report"
+msgstr "Genera report"
+
+msgid "Reports are written to the reports folder of the experiment. Detection, evaluation, laundering and comparison reports are run with yim-analyze."
+msgstr "I report vengono scritti nella cartella reports dell'esperimento. I report di rilevamento, valutazione, laundering e confronto si eseguono con yim-analyze."
+
+msgid "Unknown report."
+msgstr "Report sconosciuto."
+
+msgid "Report finished. It is listed in the Export and reports panel."
+msgstr "Report completato. È elencato nel pannello Esportazione e report."
+
+msgid "Report failed: %(error)s"
+msgstr "Report non riuscito: %(error)s"
+
+msgid "No reports yet. Generate one above."
+msgstr "Nessun report per ora. Generane uno qui sopra."

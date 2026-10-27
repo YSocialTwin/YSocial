@@ -789,6 +789,27 @@
                                 </div>
                                 <p class="help">{{ _('Parquet needs the analysis extra of the instant messaging runtime. While the simulation runs, a copy of the database is exported.') }}</p>
                             </form>
+                            <form method="post" action="/admin/im_report/{{ experiment.idexp }}" class="ys-im-report-form" style="margin-top: 1rem;">
+                                <div class="field is-grouped is-align-items-center">
+                                    <div class="control">
+                                        <div class="select is-small">
+                                            <select name="report" aria-label="{{ _('Report') }}">
+                                                <option value="activity">{{ _('Activity') }}</option>
+                                                <option value="cascades">{{ _('Cascades') }}</option>
+                                                <option value="network">{{ _('Network') }}</option>
+                                                <option value="homogeneity">{{ _('Homogeneity') }}</option>
+                                                <option value="emergence">{{ _('Emergence') }}</option>
+                                                <option value="created-chats">{{ _('Created chats') }}</option>
+                                                <option value="stress-reward">{{ _('Stress and reward') }}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="control">
+                                        <button type="submit" class="button is-small is-primary">{{ _('Generate report') }}</button>
+                                    </div>
+                                </div>
+                                <p class="help">{{ _('Reports are written to the reports folder of the experiment. Detection, evaluation, laundering and comparison reports are run with yim-analyze.') }}</p>
+                            </form>
                             {% for kind, title in (('exports', _('Exports')), ('reports', _('Reports'))) %}
                             <h4 class="title is-6" style="margin-top: 1rem;">{{ title }}</h4>
                             {% if im_artifacts[kind] %}
@@ -798,7 +819,7 @@
                                 {% endfor %}
                             </ul>
                             {% else %}
-                            <p class="help">{{ _('Nothing here yet.') if kind == 'exports' else _('No reports yet. Reports are produced by yim-analyze.') }}</p>
+                            <p class="help">{{ _('Nothing here yet.') if kind == 'exports' else _('No reports yet. Generate one above.') }}</p>
                             {% endif %}
                             {% endfor %}
                         </div>

@@ -9,7 +9,13 @@ from sqlalchemy import select
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.src.im import is_im_experiment
-from y_web.src.im.analysis import EXPORT_FORMATS, resolve_artifact, run_export
+from y_web.src.im.analysis import (
+    EXPORT_FORMATS,
+    REPORT_COMMANDS,
+    resolve_artifact,
+    run_export,
+    run_report,
+)
 from y_web.src.models import Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -52,6 +58,28 @@ def im_export(idexp):
         flash(_("Export finished. The files are listed in the Export and reports panel."))
     else:
         flash(_("Export failed: %(error)s", error=result.get("error", "")), "error")
+    return redirect(back)
+
+
+@experiments.route("/admin/im_report/<int:idexp>", methods=["POST"])
+@login_required
+def im_report(idexp):
+    """Run one ``yim-analyze`` report for an IM experiment (a snapshot of the database while it runs)."""
+    check_privileges(current_user.username)
+    back = request.referrer or url_for("admin.dashboard")
+    exp = _im_experiment_or_none(idexp)
+    if exp is None:
+        flash(_("Experiment not found."), "error")
+        return redirect(back)
+    command = request.form.get("report", "")
+    if command not in REPORT_COMMANDS:
+        flash(_("Unknown report."), "error")
+        return redirect(back)
+    ok, result = run_report(_folder(exp), command, snapshot=bool(exp.running))
+    if ok:
+        flash(_("Report finished. It is listed in the Export and reports panel."))
+    else:
+        flash(_("Report failed: %(error)s", error=result.get("error", "")), "error")
     return redirect(back)
 
 

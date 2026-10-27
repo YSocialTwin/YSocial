@@ -167,6 +167,26 @@ def test_export_panel_lists_files_serves_them_and_runs_the_export(im_app, monkey
     assert client.post(f"/admin/im_export/{exp_id}", data={"format": "xml"}).status_code == 302
     assert calls == [("csv", True, False)]
 
+    reports = []
+
+    def fake_report(folder, command, snapshot=False, repo_dir=None):
+        reports.append((command, snapshot))
+        return True, {}
+
+    monkeypatch.setattr(_im_exports, "run_report", fake_report)
+    assert client.post(f"/admin/im_report/{exp_id}", data={"report": "network"}).status_code == 302
+    assert client.post(f"/admin/im_report/{exp_id}", data={"report": "laundering"}).status_code == 302
+    assert reports == [("network", False)]
+
+
+def test_run_report_rejects_unknown_and_reports_failures(tmp_path):
+    from y_web.src.im.analysis import run_report
+
+    ok, result = run_report(str(tmp_path), "rm -rf")
+    assert not ok and "unknown report" in result["error"]
+    ok, result = run_report(str(tmp_path / "missing"), "activity")
+    assert not ok and result["error"]
+
 
 def test_run_export_reports_failures_and_resolve_artifact_stays_inside(tmp_path):
     from y_web.src.im.analysis import resolve_artifact, run_export

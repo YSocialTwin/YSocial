@@ -16,6 +16,12 @@ from y_web.src.simulation.subprocess_env import build_subprocess_env
 EXPORT_MODULE = "yinstantmessaging.cli.export"
 EXPORT_TIMEOUT_SECONDS = 600
 EXPORT_FORMATS = ("parquet", "csv")
+# reports that need no extra model and no second run; the others stay on the command line
+REPORT_COMMANDS = (
+    "activity", "cascades", "network", "homogeneity", "emergence", "created-chats", "stress-reward",
+)
+REPORT_MODULE = "yinstantmessaging.cli.analyze"
+REPORT_TIMEOUT_SECONDS = 900
 ARTIFACT_KINDS = {"exports": "exports", "reports": "reports"}
 
 
@@ -79,6 +85,35 @@ def run_export(
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip().splitlines()
         return False, {"error": detail[-1] if detail else f"yim-export exited with code {proc.returncode}"}
+    try:
+        return True, json.loads(proc.stdout)
+    except ValueError:
+        return True, {}
+
+
+def run_report(
+    folder: str, command: str, snapshot: bool = False, repo_dir: Optional[str] = None
+) -> Tuple[bool, Dict[str, Any]]:
+    """Run ``yim-analyze <command>`` on ``folder``; the report lands in ``<folder>/reports``."""
+    if command not in REPORT_COMMANDS:
+        return False, {"error": f"unknown report: {command}"}
+    if repo_dir is None:
+        from y_web.src.system.path_utils import get_external_repo_dir
+
+        repo_dir = get_external_repo_dir("YInstantMessaging")
+    cmd = _python_command() + ["-m", REPORT_MODULE, command, "--config", str(folder)]
+    if snapshot:
+        cmd.append("--snapshot")
+    try:
+        proc = subprocess.run(
+            cmd, cwd=repo_dir, env=_env(repo_dir), capture_output=True, text=True,
+            timeout=REPORT_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return False, {"error": f"yim-analyze could not be run: {exc}"}
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "").strip().splitlines()
+        return False, {"error": detail[-1] if detail else f"yim-analyze exited with code {proc.returncode}"}
     try:
         return True, json.loads(proc.stdout)
     except ValueError:

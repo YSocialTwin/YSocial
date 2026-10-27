@@ -11121,8 +11121,6 @@ msgstr ""
 msgid "Leave message text out"
 msgstr ""
 
-msgid "No reports yet. Reports are produced by yim-analyze."
-msgstr ""
 
 msgid "Nothing here yet."
 msgstr ""
@@ -12109,4 +12107,40 @@ msgid "Visibility"
 msgstr ""
 
 msgid "With a discussion group"
+msgstr ""
+
+msgid "Cascades"
+msgstr ""
+
+msgid "Network"
+msgstr ""
+
+msgid "Homogeneity"
+msgstr ""
+
+msgid "Emergence"
+msgstr ""
+
+msgid "Created chats"
+msgstr ""
+
+msgid "Stress and reward"
+msgstr ""
+
+msgid "Generate report"
+msgstr ""
+
+msgid "Reports are written to the reports folder of the experiment. Detection, evaluation, laundering and comparison reports are run with yim-analyze."
+msgstr ""
+
+msgid "Unknown report."
+msgstr ""
+
+msgid "Report finished. It is listed in the Export and reports panel."
+msgstr ""
+
+msgid "Report failed: %(error)s"
+msgstr ""
+
+msgid "No reports yet. Generate one above."
 msgstr ""
