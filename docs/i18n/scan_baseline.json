@@ -70,6 +70,7 @@
  "y_web/static/assets/js/widgets.js": 3,
  "y_web/templates/admin/_flash_messages.html": 1,
  "y_web/templates/admin/clients_im.html": 5,
+ "y_web/templates/admin/experiment_details.html": 3,
  "y_web/templates/admin/rss_feeds.html": 1,
  "y_web/templates/admin/users.html": 2,
  "y_web/templates/admin/visibility_settings.html": 4,

@@ -710,6 +710,45 @@
                         </div>
                     </div>
 
+                    {% if experiment_details_variant == 'im' and im_artifacts is not none %}
+                    <div id="im-export-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
+                        <h3 class="title is-5 is-thin">{{ _('Export and reports') }}</h3>
+                        <div class="box-content ys-flex-1">
+                            <form method="post" action="/admin/im_export/{{ experiment.idexp }}" class="ys-im-export-form">
+                                <div class="field is-grouped is-align-items-center">
+                                    <div class="control">
+                                        <div class="select is-small">
+                                            <select name="format" aria-label="{{ _('Export format') }}">
+                                                <option value="csv">CSV</option>
+                                                <option value="parquet">Parquet</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="control">
+                                        <label class="checkbox"><input type="checkbox" name="no_text" value="1"> {{ _('Leave message text out') }}</label>
+                                    </div>
+                                    <div class="control">
+                                        <button type="submit" class="button is-small is-primary">{{ _('Export data') }}</button>
+                                    </div>
+                                </div>
+                                <p class="help">{{ _('Parquet needs the analysis extra of the instant messaging runtime. While the simulation runs, a copy of the database is exported.') }}</p>
+                            </form>
+                            {% for kind, title in (('exports', _('Exports')), ('reports', _('Reports'))) %}
+                            <h4 class="title is-6" style="margin-top: 1rem;">{{ title }}</h4>
+                            {% if im_artifacts[kind] %}
+                            <ul>
+                                {% for item in im_artifacts[kind] %}
+                                <li><a href="/admin/im_artifact/{{ experiment.idexp }}/{{ kind }}/{{ item.name }}">{{ item.name }}</a> <span class="help is-inline">{{ (item.size / 1024) | round(1) }} KB</span></li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="help">{{ _('Nothing here yet.') if kind == 'exports' else _('No reports yet. Reports are produced by yim-analyze.') }}</p>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {# IM analytics stay hidden until the derived analytics database exists (plan, 5.7) #}
                     {% set has_analytics_pages = experiment.is_remote == 0 and experiment_details_variant != 'im' %}
                     {% if has_analytics_pages %}

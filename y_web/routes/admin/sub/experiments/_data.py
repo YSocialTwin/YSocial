@@ -776,6 +776,19 @@ def experiment_details(uid):
         except Exception:
             forum_feed_health = None
 
+    im_artifacts = None
+    if is_im_experiment(experiment):
+        from y_web.src.im.analysis import list_artifacts
+        from y_web.src.system.path_utils import get_writable_path
+
+        try:
+            im_folder = _get_experiment_folder(
+                get_writable_path(), experiment, _get_database_type()
+            )
+            im_artifacts = list_artifacts(im_folder)
+        except Exception:
+            im_artifacts = {"exports": [], "reports": []}
+
     template_name = "admin/experiment_details.html"
     if experiment.platform_type == "forum":
         template_name = "admin/experiment_details_forum.html"
@@ -821,6 +834,7 @@ def experiment_details(uid):
         forum_avatar_settings=forum_avatar_settings,
         forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
+        im_artifacts=im_artifacts,
     )
 
 

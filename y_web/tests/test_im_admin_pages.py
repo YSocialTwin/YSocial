@@ -124,3 +124,52 @@ def test_failed_client_shows_the_reason_from_its_execution_log(im_app, monkeypat
         db.session.commit()
     page = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
     assert "language-model sessions failed" in page and "7 of 8 sessions failed" in page
+
+
+def test_export_panel_lists_files_serves_them_and_runs_the_export(im_app, monkeypatch, tmp_path):
+    from y_web import db
+    from y_web.routes.admin.sub.experiments import _im_exports
+    from y_web.src.models import Exps
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    with app.app_context():
+        exp = db.session.get(Exps, exp_id)
+        folder = tmp_path / "y_web" / "experiments" / exp.db_name.split("/")[1]
+        (folder / "exports").mkdir(parents=True)
+        (folder / "reports").mkdir()
+        (folder / "exports" / "messages.csv").write_text("id\n1\n")
+        (folder / "reports" / "activity_report.json").write_text("{}")
+        (tmp_path / "secret.txt").write_text("no")
+
+    page = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    assert "im-export-section" in page and "messages.csv" in page and "activity_report.json" in page
+
+    ok = client.get(f"/admin/im_artifact/{exp_id}/exports/messages.csv")
+    assert ok.status_code == 200 and ok.data == b"id\n1\n"
+    for bad in ("exports/../../secret.txt", "other/messages.csv", "exports/missing.csv"):
+        kind, _, name = bad.partition("/")
+        assert client.get(f"/admin/im_artifact/{exp_id}/{kind}/{name}").status_code == 302
+
+    calls = []
+
+    def fake_export(folder, fmt="csv", no_text=False, snapshot=False, repo_dir=None):
+        calls.append((fmt, no_text, snapshot))
+        return True, {}
+
+    monkeypatch.setattr(_im_exports, "run_export", fake_export)
+    assert client.post(f"/admin/im_export/{exp_id}", data={"format": "csv", "no_text": "1"}).status_code == 302
+    assert client.post(f"/admin/im_export/{exp_id}", data={"format": "xml"}).status_code == 302
+    assert calls == [("csv", True, False)]
+
+
+def test_run_export_reports_failures_and_resolve_artifact_stays_inside(tmp_path):
+    from y_web.src.im.analysis import resolve_artifact, run_export
+
+    ok, result = run_export(str(tmp_path), "xml")
+    assert not ok and "unknown export format" in result["error"]
+    (tmp_path / "exports").mkdir()
+    (tmp_path / "exports" / "a.csv").write_text("x")
+    assert resolve_artifact(str(tmp_path), "exports", "a.csv")
+    assert resolve_artifact(str(tmp_path), "exports", "../a.csv") is None
+    assert resolve_artifact(str(tmp_path), "db", "a.csv") is None

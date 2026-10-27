@@ -11136,3 +11136,43 @@ msgstr ""
 #, python-format
 msgid "The uploaded instant messaging experiment is not valid: %(errors)s"
 msgstr ""
+
+msgid "Export and reports"
+msgstr ""
+
+msgid "Export data"
+msgstr ""
+
+#, python-format
+msgid "Export failed: %(error)s"
+msgstr ""
+
+msgid "Export finished. The files are listed in the Export and reports panel."
+msgstr ""
+
+msgid "Export format"
+msgstr ""
+
+msgid "Exports"
+msgstr ""
+
+msgid "File not found."
+msgstr ""
+
+msgid "Leave message text out"
+msgstr ""
+
+msgid "No reports yet. Reports are produced by yim-analyze."
+msgstr ""
+
+msgid "Nothing here yet."
+msgstr ""
+
+msgid "Parquet needs the analysis extra of the instant messaging runtime. While the simulation runs, a copy of the database is exported."
+msgstr ""
+
+msgid "Reports"
+msgstr ""
+
+msgid "Unknown export format."
+msgstr ""

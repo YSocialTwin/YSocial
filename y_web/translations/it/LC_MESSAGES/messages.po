@@ -12955,3 +12955,43 @@ msgstr "L'esperimento di messaggistica istantanea caricato non ha una configuraz
 #, python-format
 msgid "The uploaded instant messaging experiment is not valid: %(errors)s"
 msgstr "L'esperimento di messaggistica istantanea caricato non è valido: %(errors)s"
+
+msgid "Export and reports"
+msgstr "Esportazione e report"
+
+msgid "Export data"
+msgstr "Esporta i dati"
+
+#, python-format
+msgid "Export failed: %(error)s"
+msgstr "Esportazione non riuscita: %(error)s"
+
+msgid "Export finished. The files are listed in the Export and reports panel."
+msgstr "Esportazione completata. I file sono elencati nel pannello Esportazione e report."
+
+msgid "Export format"
+msgstr "Formato di esportazione"
+
+msgid "Exports"
+msgstr "Esportazioni"
+
+msgid "File not found."
+msgstr "File non trovato."
+
+msgid "Leave message text out"
+msgstr "Escludi il testo dei messaggi"
+
+msgid "No reports yet. Reports are produced by yim-analyze."
+msgstr "Nessun report. I report sono prodotti da yim-analyze."
+
+msgid "Nothing here yet."
+msgstr "Ancora nulla."
+
+msgid "Parquet needs the analysis extra of the instant messaging runtime. While the simulation runs, a copy of the database is exported."
+msgstr "Parquet richiede l'extra di analisi del runtime di messaggistica istantanea. Mentre la simulazione è in corso viene esportata una copia del database."
+
+msgid "Reports"
+msgstr "Report"
+
+msgid "Unknown export format."
+msgstr "Formato di esportazione sconosciuto."
