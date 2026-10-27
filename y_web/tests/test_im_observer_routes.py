@@ -165,3 +165,16 @@ def test_join_experiment_opens_the_observer(observer, monkeypatch):
     app, client, exp_id, info, _ = observer
     r = client.get(f"/admin/join_experiment/{exp_id}")
     assert r.status_code == 302 and r.headers["Location"].endswith(f"/{exp_id}/im")
+
+
+def test_accessibility_smoke_headings_labels_and_landmarks(observer):
+    import re
+
+    app, client, exp_id, info, _ = observer
+    for url in (f"/{exp_id}/im", f"/{exp_id}/im/chat/{info['chats'][0]}", f"/{exp_id}/im/chat/{info['chats'][0]}/members"):
+        html = client.get(url).data.decode()
+        assert html.count("<h1") == 1 and "<main" in html and 'lang="' in html
+        assert 'class="im-skip"' in html
+        ids = set(re.findall(r'<(?:input|select)[^>]*\bid="([^"]+)"', html))
+        labelled = set(re.findall(r'<label[^>]*\bfor="([^"]+)"', html))
+        assert ids <= labelled | {"im-theme"}, ids - labelled
