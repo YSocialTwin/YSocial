@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 08:19+0000\n"
+"POT-Creation-Date: 2026-10-27 08:25+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4672,6 +4672,17 @@ msgstr ""
 msgid "Installed dependencies for %(label)s."
 msgstr ""
 
+msgid "Instant Messaging"
+msgstr ""
+
+msgid "Instant Messaging (e.g., Telegram)"
+msgstr ""
+
+msgid ""
+"Instant messaging experiments are unavailable because YInstantMessaging "
+"is not present."
+msgstr ""
+
 msgid "Instructions"
 msgstr ""
 
@@ -4837,6 +4848,10 @@ msgstr ""
 
 #, python-format
 msgid "Invalid instance ID: %(instance_id)s"
+msgstr ""
+
+#, python-format
+msgid "Invalid instant messaging settings: %(why)s"
 msgstr ""
 
 msgid "Invalid lower_bound value"
@@ -6204,6 +6219,9 @@ msgstr ""
 msgid "Number of blocks"
 msgstr ""
 
+msgid "Number of days"
+msgstr ""
+
 msgid ""
 "Number of days to run. Check \"Run until stopped\" to create an infinite-"
 "duration client that runs until manually stopped."
@@ -7512,6 +7530,9 @@ msgstr ""
 msgid "Remote host address is required for remote experiments."
 msgstr ""
 
+msgid "Remote instant messaging experiments are not supported."
+msgstr ""
+
 msgid "Remote port is required for remote experiments."
 msgstr ""
 
@@ -8653,6 +8674,9 @@ msgstr ""
 msgid "Start an interview session to load persona details."
 msgstr ""
 
+msgid "Start date"
+msgstr ""
+
 #, python-format
 msgid "Start or stop the server from %(b)s"
 msgstr ""
@@ -9173,6 +9197,13 @@ msgstr ""
 msgid "The image textual description."
 msgstr ""
 
+#, python-format
+msgid "The instant messaging configuration is not valid: %(why)s"
+msgstr ""
+
+msgid "The instant messaging viewer is not available yet."
+msgstr ""
+
 msgid ""
 "The language of the menus and labels of this site. Posts and comments are"
 " never translated."
@@ -9417,6 +9448,9 @@ msgid "Thumbs-down reaction"
 msgstr ""
 
 msgid "Thumbs-up reaction"
+msgstr ""
+
+msgid "Ticks per round"
 msgstr ""
 
 msgid "Tier A Max Chars"
