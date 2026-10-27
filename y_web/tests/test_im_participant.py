@@ -83,6 +83,7 @@ def stack(im_app, tmp_path, monkeypatch):
     s.srv.bootstrap_population("c1", helpers.AGENTS, helpers.TOPOLOGY)
     assert s.srv.open_round("c1", 1, 1).ok
     gateway = HumanGateway(LocalServer(s.srv).call, limiter=RateLimiter(burst=1000, per_second=1000))
+    s.gateway = gateway
     s.http = serve(gateway, TOKEN)
     (s.folder / "human_gateway.json").write_text(
         json.dumps({"host": "127.0.0.1", "port": s.http.server_address[1], "pid": os.getpid()})
@@ -330,3 +331,31 @@ def test_edit_and_delete_buttons_follow_the_run_configuration(stack):
     (s.folder / "server_config.json").write_text(json.dumps(cfg))
     page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
     assert 'data-im-do="edit"' not in page and 'data-im-do="reply"' in page
+
+
+def test_html_in_a_message_is_escaped_in_the_pages(stack):
+    s = stack
+    assert _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "xj"}).status_code == 200
+    evil = '<script>alert(1)</script><img src=x onerror=alert(2)>'
+    r = _act(s, {"type": "post", "chat_id": "c-chat", "text": evil, "client_action_id": "xp"})
+    assert r.status_code == 200 and r.get_json()["data"]["outcomes"][0]["ok"]
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert evil not in page
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page
+
+
+def test_a_burst_of_actions_is_rate_limited_and_writes_nothing_extra(stack):
+    s = stack
+    assert _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "bj"}).status_code == 200
+    token = _csrf(_enter(s))
+    from yinstantmessaging.gateway.core import RateLimiter
+
+    s.gateway.limiter = RateLimiter(burst=5, per_second=0.01)
+    codes = [
+        _act(s, {"type": "post", "chat_id": "c-chat", "text": "burst %d" % i, "client_action_id": "b%d" % i}, token=token).status_code
+        for i in range(60)
+    ]
+    assert 429 in codes, codes
+    written = [t for t in _texts(s) if t[0].startswith("burst ")]
+    assert 0 < len(written) <= 5
+    assert all(sender == _account(s) and origin == "human" for _, sender, origin in written)
