@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Added
+
+- **Instant messaging platform** (YInstantMessaging runtime, installed from the Plugins page)
+  - Experiment, population and client creation, validation with `yim-validate`, start/stop/resume, clone, reset,
+    download, upload, export and reports.
+  - Observer pages with three viewpoints, time travel, search and profiles, read-only on the run database.
+  - Analytics through a derived database (`analytics_im.db`); mapping in `docs/im-analytics-mapping.md`.
+  - Frontend settings for the instant messaging pages; one defaults table for all platforms.
+  - Optional human participation (off by default): participant mode, a loopback gateway with a per-run token, CSRF,
+    server-side enforcement of the interaction settings, optional minimum round time and participant notice.
+    Runs with humans are not reproducible.
+  - Guide: `docs/instant-messaging.md`.
+
+### Fixed
+
+- Documentation of the backend plugin hooks lists all five (`staff_experiment_access` and `experiment_page_widget`
+  were missing).
+- Italian: "turno passato" now follows the glossary ("round passato").
+
 ## [4.0.0] - 2026-10-23
 
 YSocial 4.0.0 turns the web application into an installable product: a Python

@@ -30,6 +30,11 @@ Typical tasks:
 - inspect profiles and content metadata
 - participate in interview flows when enabled
 
+## Platforms
+
+Microblogging, forum, photo sharing and, with the YInstantMessaging runtime installed, instant messaging (see
+[Instant messaging experiments](instant-messaging.md), including how people can take part in a run).
+
 ## Core feature areas
 
 ### Experiment management

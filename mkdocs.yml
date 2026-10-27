@@ -9,6 +9,7 @@ use_directory_urls: true
 nav:
   - Overview: index.md
   - Features: features.md
+  - Instant Messaging: instant-messaging.md
   - Getting Started:
       - Installation Modalities: installation.md
       - Desktop Installer and Launcher: launcher.md
