@@ -164,3 +164,91 @@ def test_search_api_in_an_account_viewpoint_marks_joined_chats(observer):
             res = _find(client, exp_id, "chats", title[:4], f"&vp=account&acc={acc}")["results"]
             assert all("joined" in r for r in res)
             break
+
+
+def _persona(path, account, persona):
+    from sqlalchemy.orm import Session
+
+    from y_web.src.im.engine import im_modules
+    from yinstantmessaging.server.db.database import make_engine_from_url
+
+    m = im_modules()[0]
+    engine = make_engine_from_url(f"sqlite:///{path}")
+    with Session(engine) as session:
+        session.get(m.Account, account).persona = persona
+        for variable, values in (("stress", (0.2, 0.4)), ("reward", (0.7, 0.6))):
+            for n, value in enumerate(values, 1):
+                session.add(m.StressReward(id=f"sr-{variable}-{n}", uid=account, variable=variable, value=value, type="aggregate", tid=n))
+        session.commit()
+    engine.dispose()
+
+
+def test_the_agent_profile_is_laid_out_in_cards_without_raw_json(observer):
+    app, client, exp_id, info, path = observer
+    acc = info["accounts"][0]
+    _persona(
+        path,
+        acc,
+        {
+            "age": 31, "gender": "female", "profession": "Hotel Receptionist", "education_level": "bachelor",
+            "interests": {"tea": 1.0, "trains": 0.4}, "opinions": {}, "feed_url": None, "toxicity": "none",
+            "big_five": {"ag": "critical/judgmental", "ne": "sensitive/nervous"}, "daily_activity_level": 2, "round_actions": 10,
+            "favourite_colour": {"main": "blue"},
+        },
+    )
+    html = _page(client, f"/{exp_id}/im/profile/{acc}")
+    assert 'class="im-card"' in html and "Education" in html and "Hotel Receptionist" in html
+    assert "Agreeableness" in html and "critical/judgmental" in html  # the Big Five by name, not by code
+    assert 'class="im-interests"' in html and "tea" in html
+    assert "{&#34;" not in html and '{"' not in html.split('class="im-page-body')[1]  # no JSON strings
+    assert "Stress and reward" in html and "is-stress" in html and "is-reward" in html
+    assert "feed_url" not in html and "Feed url" not in html  # empty attributes are not shown
+    assert "Other attributes" in html and "main: blue" in html  # unknown attributes are readable too
+
+
+def test_stress_and_reward_only_appear_when_the_run_computes_them(observer):
+    app, client, exp_id, info, path = observer
+    acc = info["accounts"][0]
+    assert "Stress and reward" not in _page(client, f"/{exp_id}/im/profile/{acc}")
+    _persona(path, acc, {"age": 20})
+    assert "Stress and reward" in _page(client, f"/{exp_id}/im/profile/{acc}")
+
+
+def test_llm_emotions_and_member_rights_are_readable(observer):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from y_web.src.im.engine import im_modules
+    from yinstantmessaging.server.db.database import make_engine_from_url
+
+    app, client, exp_id, info, path = observer
+    chat = _busy_chat(client, exp_id, info)
+    m = im_modules()[0]
+    engine = make_engine_from_url(f"sqlite:///{path}")
+    with Session(engine) as session:
+        session.add(m.AnnotationMethod(method_ref="emotions_llm@t", method_id="emotions_llm", version="1", params_hash="z"))
+        msg = session.scalars(select(m.Message.id).where(m.Message.chat_id == chat).order_by(m.Message.sim_ts.desc())).first()
+        session.add(m.Annotation(message_id=msg, method_ref="emotions_llm@t", status="ok", value={"emotions": ["joy", "amusement"]}))
+        session.commit()
+    engine.dispose()
+    assert "joy, amusement" in _page(client, f"/{exp_id}/im/chat/{chat}")
+    members = _page(client, f"/{exp_id}/im/chat/{chat}/members")
+    assert "Special rights" in members and "Permissions" not in members
+
+
+def test_message_times_show_day_hour_and_the_estimated_minute(observer):
+    app, client, exp_id, info, path = observer
+    chat = _busy_chat(client, exp_id, info)
+    html = _page(client, f"/{exp_id}/im/chat/{chat}")
+    assert re.search(r'data-im-time="" title="[^"]+"[^>]*>d\d+ · \d\d:\d\d</time>', html)
+
+
+def test_time_section_shows_the_moment_and_steps_between_slots(observer):
+    app, client, exp_id, info, path = observer
+    html = _page(client, f"/{exp_id}/im")
+    menu = html[html.index('id="im-menu"') : html.index("</details>")]
+    assert "im-time-now" in menu and "is-live" in menu and "Previous" in menu and "Next" not in menu.split("im-stepper")[1].split("</div>")[0].replace("Next slot", "")
+    assert 'name="day"' in menu and 'name="slot"' in menu and "im-viewform" in menu
+    past = _page(client, f"/{exp_id}/im?day=1&slot=2")
+    pmenu = past[past.index('id="im-menu"') : past.index("</details>")]
+    assert "is-past" in pmenu and "Next" in pmenu and "im-latest" in pmenu

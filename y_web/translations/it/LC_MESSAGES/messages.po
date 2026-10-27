@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:14+0000\n"
+"POT-Creation-Date: 2026-10-27 14:22+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -564,6 +564,9 @@ msgid ""
 msgstr ""
 "Le azioni comprendono pubblicare, commentare, leggere, cercare e le "
 "funzioni specifiche della piattaforma."
+
+msgid "Actions per round"
+msgstr "Azioni per round"
 
 msgid "Activate"
 msgstr "Attiva"
@@ -1242,9 +1245,6 @@ msgstr "Armena"
 msgid "Articles'"
 msgstr "articoli"
 
-msgid "As of day"
-msgstr "Al giorno"
-
 msgid "Ask the agent about their experiences, decisions, or relationships..."
 msgstr "Chiedi all'agente delle sue esperienze, decisioni o relazioni..."
 
@@ -1601,6 +1601,9 @@ msgstr "Icona della campanella / menzioni nella barra superiore"
 
 msgid "Beta"
 msgstr "Beta"
+
+msgid "Big Five"
+msgstr "Big Five"
 
 msgid "Big Five Personality Profile"
 msgstr "Profilo di personalità Big Five"
@@ -3172,6 +3175,9 @@ msgstr "Budget giornaliero"
 
 msgid "Daily Heatmap"
 msgstr "Mappa di calore giornaliera"
+
+msgid "Daily activity level"
+msgstr "Livello di attività giornaliera"
 
 msgid "Daily agent creation and removal rates"
 msgstr "Tassi giornalieri di creazione e rimozione degli agenti"
@@ -6335,6 +6341,9 @@ msgstr "Immagine del logo"
 msgid "Logout"
 msgstr "Esci"
 
+msgid "Look for chats, users, groups, channels or posts from the search box."
+msgstr "Cerca chat, utenti, gruppi, canali o post dalla barra di ricerca."
+
 msgid "Low"
 msgstr "Basso"
 
@@ -7070,6 +7079,9 @@ msgstr "Pagina successiva"
 msgid "Next image"
 msgstr "Immagine successiva"
 
+msgid "Next slot"
+msgstr "Slot successivo"
+
 msgid "Next →"
 msgstr "Avanti →"
 
@@ -7662,6 +7674,9 @@ msgstr ""
 "Apri il menu per vedere l'esperimento come un singolo account o come "
 "osservatore pubblico."
 
+msgid "Openness"
+msgstr "Apertura"
+
 msgid "Openness to Experience"
 msgstr "Apertura mentale"
 
@@ -7795,6 +7810,9 @@ msgstr ""
 msgid "Other"
 msgstr "Altro"
 
+msgid "Other attributes"
+msgstr "Altri attributi"
+
 msgid "Out-Degree CCDF"
 msgstr "CCDF del grado uscente"
 
@@ -7911,6 +7929,9 @@ msgstr "Password aggiornata con successo"
 msgid "Passwords do not match"
 msgstr "Le password non coincidono"
 
+msgid "Past"
+msgstr "Passato"
+
 msgid "Path:"
 msgstr "Percorso:"
 
@@ -7951,9 +7972,6 @@ msgstr ""
 "Distribuzione per post di quanto spesso i post dell'autore selezionato "
 "sono stati raccomandati."
 
-msgid "Permissions"
-msgstr "Permessi"
-
 msgid "Persist memory events"
 msgstr "Conserva gli eventi della memoria"
 
@@ -7968,6 +7986,9 @@ msgstr "Modello di persona"
 
 msgid "Personalise your account details."
 msgstr "Personalizza i dati del tuo account."
+
+msgid "Personality"
+msgstr "Personalità"
 
 msgid "Personalization"
 msgstr "Personalizzazione"
@@ -8446,6 +8467,9 @@ msgstr "Pagina precedente"
 msgid "Previous image"
 msgstr "Immagine precedente"
 
+msgid "Previous slot"
+msgstr "Slot precedente"
+
 msgid "Primary"
 msgstr "Principale"
 
@@ -8868,6 +8892,9 @@ msgstr "Interazioni di propaganda recenti"
 msgid "Recent SA Interactions"
 msgstr "Interazioni SA recenti"
 
+msgid "Recent trend"
+msgstr "Andamento recente"
+
 msgid "Recognition"
 msgstr "Riconoscimento"
 
@@ -9251,6 +9278,9 @@ msgid ""
 msgstr ""
 "Visibilità del gruppo «%(group)s» revocata ai ricercatori selezionati "
 "(%(count)s assegnazioni rimosse)."
+
+msgid "Reward"
+msgstr "Ricompensa"
 
 msgid "Reward Distribution"
 msgstr "Distribuzione della ricompensa"
@@ -10143,6 +10173,9 @@ msgstr ""
 "Mostrato una volta a ogni partecipante prima del primo ingresso. Lascia "
 "vuoto per non mostrarlo. Sei tu a dover informare i partecipanti."
 
+msgid "Shows the chats that account can read, as it could read them."
+msgstr "Mostra le chat che l'account può leggere, così come potrebbe leggerle."
+
 msgid "Shutdown grace (seconds)"
 msgstr "Tolleranza allo spegnimento (secondi)"
 
@@ -10170,6 +10203,9 @@ msgstr "Simulato (il più veloce possibile)"
 
 msgid "Simulated time"
 msgstr "Tempo simulato"
+
+msgid "Simulated time (the minutes are estimated from the interval of the round)"
+msgstr "Tempo simulato (i minuti sono stimati dall'intervallo del round)"
 
 msgid "Simulation"
 msgstr "Simulazione"
@@ -10255,6 +10291,9 @@ msgstr "Vai al contenuto"
 msgid "Sliding Window Days"
 msgstr "Giorni della finestra scorrevole"
 
+msgid "Slot"
+msgstr "Slot"
+
 msgid "Slovak"
 msgstr "Slovacca"
 
@@ -10329,6 +10368,17 @@ msgstr "Sudcoreana"
 
 msgid "Spanish"
 msgstr "Spagnola"
+
+msgid "Special rights"
+msgstr "Diritti speciali"
+
+msgid ""
+"Special rights granted to the member: the actions an admin may perform, "
+"or what a restricted member may still do. Empty for ordinary members."
+msgstr ""
+"Diritti speciali concessi al membro: le azioni che un amministratore può "
+"svolgere o ciò che un membro limitato può ancora fare. Vuoto per i membri "
+"ordinari."
 
 msgid ""
 "Specific prompts for different agent action types (post, comment, share, "
@@ -10509,6 +10559,9 @@ msgstr ""
 
 msgid "Stress Distribution"
 msgstr "Distribuzione dello stress"
+
+msgid "Stress and reward"
+msgstr "Stress e ricompensa"
 
 msgid "Stress/Reward"
 msgstr "Stress/ricompensa"
@@ -11650,6 +11703,9 @@ msgstr "Istruzione sul livello di tossicità"
 msgid "Toxicity level not found."
 msgstr "Livello di tossicità non trovato."
 
+msgid "Toxicity profile"
+msgstr "Profilo di tossicità"
+
 msgid "Toxicity score"
 msgstr "Punteggio di tossicità"
 
@@ -12371,6 +12427,9 @@ msgstr ""
 msgid "Viewpoint"
 msgstr "Punto di vista"
 
+msgid "Viewpoints"
+msgstr "Punti di vista"
+
 msgid "Views"
 msgstr "Visualizzazioni"
 
@@ -12971,6 +13030,10 @@ msgstr "e"
 msgid "anonymous"
 msgstr "anonima"
 
+#, python-format
+msgid "as of round %(n)s"
+msgstr "al round %(n)s"
+
 msgid "authenticated"
 msgstr "autenticata"
 
@@ -12993,6 +13056,10 @@ msgstr "clicca per annullare"
 #, python-format
 msgid "d%(d)s · %(s)s"
 msgstr "g%(d)s · %(s)s"
+
+#, python-format
+msgid "d%(d)s · %(t)s"
+msgstr "g%(d)s · %(t)s"
 
 #, python-format
 msgid "day %(d)s, slot %(s)s"
@@ -13197,8 +13264,9 @@ msgstr "impostazioni"
 msgid "signals"
 msgstr "segnali"
 
-msgid "slot"
-msgstr "slot"
+#, python-format
+msgid "slot %(s)s"
+msgstr "slot %(s)s"
 
 msgid "success"
 msgstr "riuscita"
@@ -14246,4 +14314,13 @@ msgstr "✔️ Usa"
 
 #~ msgid "You joined the chat."
 #~ msgstr ""
+
+#~ msgid "As of day"
+#~ msgstr "Al giorno"
+
+#~ msgid "Permissions"
+#~ msgstr "Permessi"
+
+#~ msgid "slot"
+#~ msgstr "slot"
 

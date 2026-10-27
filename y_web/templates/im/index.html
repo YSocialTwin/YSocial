@@ -1,10 +1,17 @@
 {% extends "im/base.html" %}
 {% block content %}
-<section class="im-empty-pane" aria-labelledby="im-welcome-h">
-  <img src="{{ url_for('static', filename='assets/img/vector/logo/YSocial_l_teal.png') }}" alt="" width="96" height="96">
-  <h2 id="im-welcome-h">{{ exp.exp_name }}</h2>
-  <p>{% if ctx.vp.round == 0 %}{{ _('The simulation has not produced any round yet.') }}{% else %}{{ _('Select a chat to start reading.') }}{% endif %}</p>
-  {% if viewed_account %}<p class="im-hint">{{ _('You see the chats of %(name)s, and nothing else.', name=viewed_account.username) }}</p>
-  {% elif is_staff and ctx.vp.kind == 'overview' %}<p class="im-hint">{{ _('Open the menu to see the experiment as a single account or as a public observer.') }}</p>{% endif %}
+<section class="im-page im-panel im-welcome" aria-labelledby="im-welcome-h">
+  <div class="im-page-body im-welcome-body">
+    <img src="{{ url_for('static', filename='assets/img/vector/logo/YSocial_l_teal.png') }}" alt="" width="72" height="72">
+    <h2 id="im-welcome-h">{{ exp.exp_name }}</h2>
+    <p class="im-welcome-lead">{% if ctx.vp.round == 0 %}{{ _('The simulation has not produced any round yet.') }}{% else %}{{ _('Select a chat to start reading.') }}{% endif %}</p>
+    {% if viewed_account %}<p class="im-hint">{{ _('You see the chats of %(name)s, and nothing else.', name=viewed_account.username) }}</p>
+    {% elif is_staff and ctx.vp.kind == 'overview' %}
+    <ul class="im-tips">
+      <li><strong>{{ _('Viewpoints') }}</strong><span>{{ _('Open the menu to see the experiment as a single account or as a public observer.') }}</span></li>
+      <li><strong>{{ _('Search') }}</strong><span>{{ _('Look for chats, users, groups, channels or posts from the search box.') }}</span></li>
+    </ul>
+    {% endif %}
+  </div>
 </section>
 {% endblock %}

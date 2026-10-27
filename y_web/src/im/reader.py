@@ -169,6 +169,8 @@ class Reader:
             "round": msg.round_id,
             "day": day,
             "slot": slot,
+            "hour": slot - 1,
+            "minute": int(msg.sim_minute or 0) % 60,  # the start of the interval (tick) it was posted in: an estimate
             "sim_ts": msg.sim_ts.isoformat() if msg.sim_ts else None,
             "sender": (
                 {"id": sender.id, "username": sender.username, "kind": sender.kind, "hue": avatar_hue(sender.id)}
@@ -257,6 +259,8 @@ class Reader:
                     ann["sentiment"] = {"label": label, "compound": round(float(compound), 3)}
             else:
                 emotion = value.get("emotion") or value.get("label")
+                if not emotion and isinstance(value.get("emotions"), list):  # the LLM annotator's labels
+                    emotion = ", ".join(str(e) for e in value["emotions"][:3]) or None
                 if not emotion:
                     scores = {k: v for k, v in value.items() if isinstance(v, (int, float))}
                     emotion = max(scores, key=scores.get) if scores else None
@@ -739,9 +743,35 @@ class Reader:
             "archetype": account.archetype if include_persona else None,
             "cluster": account.cluster if include_persona else None,
             "opinions": self._opinions(account_id) if include_persona else [],
+            "stress_reward": self._stress_reward(account_id) if include_persona else {},
             "hue": avatar_hue(account.id),
             "chats": sorted(chats, key=lambda c: c["title"]),
         }
+
+    def _stress_reward(self, account_id: str, points: int = 30) -> Dict[str, Any]:
+        """Stress and reward (0..1) of an account as of the viewpoint's round: the latest value and a short history.
+
+        Empty when the run does not compute them. ``spark`` is ready for an SVG polyline in a 100 x 24 box.
+        """
+        m = self.m
+        rows: Dict[str, List[Tuple[int, float]]] = {}
+        for variable, value, tid in self.s.execute(
+            select(m.StressReward.variable, m.StressReward.value, m.StressReward.tid)
+            .where(
+                m.StressReward.uid == account_id,
+                m.StressReward.type == "aggregate",
+                m.StressReward.tid <= self.vp.round,
+            )
+            .order_by(m.StressReward.tid)
+        ):
+            rows.setdefault(variable, []).append((tid, float(value)))
+        out: Dict[str, Any] = {}
+        for variable, series in rows.items():
+            series = series[-points:]
+            n = max(1, len(series) - 1)
+            spark = " ".join(f"{(i / n * 100):.1f},{(22 - v * 20):.1f}" for i, (_t, v) in enumerate(series))
+            out[variable] = {"value": round(series[-1][1], 3), "round": series[-1][0], "spark": spark if len(series) > 1 else ""}
+        return out
 
     def _opinions(self, account_id: str) -> List[Dict[str, Any]]:
         """The latest opinion of an account on every topic it has one on, as of the viewpoint's round."""

@@ -44,6 +44,13 @@ tables are never created in it.
   mentions, sentiment, toxicity, emotion, off-topic, origin, views and reactions. Staff always see every chip;
   other viewers see the ones the frontend settings allow. It works on narrow screens (one pane at a time) and in a
   dark theme, switched with the button next to the search box (available to every viewer).
+- **Conversations** list messages in chronological order with infinite scrolling: while the simulation runs, new
+  messages appear at the bottom (a "new messages" pill shows when you have scrolled up) and scrolling up loads older
+  ones. Message times show day, hour and minute (`d3 · 04:25`); the minute is estimated from the interval of the
+  round. In groups and channels agents tag (`@username`) the author they reply to.
+- **Agent profiles** are cards: personality (Big Five meters), interests, activity, toxicity profile and, for staff,
+  stress and reward with a recent trend when the experiment records them. The members table has a *Special rights*
+  column (what an admin may do, or what a restricted member can still do) and role badges.
 - **Search** opens an overlay over the chat list, as in Telegram Web, with one tab per kind of result (*Chats*,
   *Users*, *Groups*, *Channels*, *Posts*); results update while typing and respect the viewpoint and the time of the
   page. Without JavaScript the box still opens the plain list of matching messages.

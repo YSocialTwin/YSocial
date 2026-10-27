@@ -1,34 +1,105 @@
 {% extends "im/base.html" %}
 {% from "im/_avatar.html" import avatar %}
 {% block title %}{{ profile.username }} · {{ exp.exp_name }}{% endblock %}
+{#- Friendly names for the persona fields the platform knows; any other field is shown with its name made readable. -#}
+{% set labels = {
+  'age': _('Age'), 'gender': _('Gender'), 'nationality': _('Nationality'), 'education_level': _('Education'),
+  'profession': _('Profession'), 'leaning': _('Political leaning'), 'toxicity': _('Toxicity profile'),
+  'daily_activity_level': _('Daily activity level'), 'round_actions': _('Actions per round'), 'language': _('Language')
+} %}
+{% set big5 = [('oe', _('Openness')), ('co', _('Conscientiousness')), ('ex', _('Extraversion')), ('ag', _('Agreeableness')), ('ne', _('Neuroticism'))] %}
+{% set about_keys = ['age', 'gender', 'nationality', 'education_level', 'profession', 'leaning', 'toxicity'] %}
+{% set handled = about_keys + ['language', 'interests', 'opinions', 'big_five', 'daily_activity_level', 'round_actions', 'feed_url'] %}
+{% set P = profile.persona if (profile.persona and ui.get('profile_topics_box', True)) else {} %}
+{% macro meter(value) -%}<span class="im-meter" role="img" aria-label="{{ '%.2f'|format(value) }}"><i style="width: {{ (value * 100)|round(1) }}%"></i></span>{%- endmacro %}
 {% block content %}
-<section class="im-page im-panel" aria-labelledby="im-p-h">
+<section class="im-page im-panel im-profile" aria-labelledby="im-p-h">
   <header class="im-page-head">
     <a class="im-back im-icon-btn" href="javascript:history.back()" aria-label="{{ _('Back') }}">←</a>
     {{ avatar(profile.username, profile.hue, 'lg') }}
-    <h2 id="im-p-h">{{ profile.username }} {% if ui.get('annotation_agent_type', True) %}<span class="im-kind" data-kind="{{ profile.kind }}">{{ profile.kind }}</span>{% endif %}</h2>
+    <div class="im-profile-title">
+      <h2 id="im-p-h">{{ profile.username }} {% if ui.get('annotation_agent_type', True) %}<span class="im-kind" data-kind="{{ profile.kind }}">{{ profile.kind }}</span>{% endif %}</h2>
+      <p>{{ profile.status }}{% if profile.language %} · {{ profile.language }}{% endif %}{% if P.get('profession') %} · {{ P.get('profession') }}{% endif %}</p>
+    </div>
     {% if is_staff and ctx.vp.kind != 'public' and not (ctx.vp.kind == 'account' and ctx.vp.account_id == profile.id) %}
     <a class="im-viewas-btn" href="/{{ exp.idexp }}/im?vp=account&acc={{ profile.id }}">{{ _('View as this account') }}</a>
     {% endif %}
   </header>
-  <div class="im-page-body">
-  <dl class="im-dl">
-    <dt>{{ _('Status') }}</dt><dd>{{ profile.status }}</dd>
-    {% if profile.language %}<dt>{{ _('Language') }}</dt><dd>{{ profile.language }}</dd>{% endif %}
-    {% if profile.archetype %}<dt>{{ _('Archetype') }}</dt><dd>{{ profile.archetype }}</dd>{% endif %}
-    {% if profile.cluster %}<dt>{{ _('Cluster') }}</dt><dd>{{ profile.cluster }}</dd>{% endif %}
-    {% if profile.persona and ui.get('profile_topics_box', True) %}{% for k, v in profile.persona.items() %}<dt>{{ k }}</dt><dd>{{ v if v is string or v is number else v|tojson }}</dd>{% endfor %}{% endif %}
-  </dl>
-  {% if profile.opinions %}
-  <h3>{{ _('Opinions') }}</h3>
-  <ul class="im-opinions">
-    {% for o in profile.opinions %}<li><span>{{ o.topic }}</span><span class="im-opinion" role="img" aria-label="{{ '%+.2f'|format(o.value) }}"><i style="left: {{ ((o.value + 1) / 2 * 100)|round(1) }}%"></i></span><small>{{ '%+.2f'|format(o.value) }} · {{ _('round %(n)s', n=o.round) }}</small></li>{% endfor %}
-  </ul>
-  {% endif %}
-  <h3>{{ _('Chats') }}</h3>
-  <ul class="im-plain">
-    {% for c in profile.chats %}<li><a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ c.title }}</a> <span class="im-kind">{{ c.role }}</span></li>{% else %}<li>{{ _('No visible memberships.') }}</li>{% endfor %}
-  </ul>
+  <div class="im-page-body im-cards">
+    {% set rows = [] %}
+    {% for k in about_keys %}{% if P.get(k) not in (None, '', {}, []) %}{% set _x = rows.append((labels[k], P.get(k))) %}{% endif %}{% endfor %}
+    {% if profile.archetype %}{% set _x = rows.append((_('Archetype'), profile.archetype)) %}{% endif %}
+    {% if profile.cluster %}{% set _x = rows.append((_('Cluster'), profile.cluster)) %}{% endif %}
+    {% if rows %}
+    <section class="im-card">
+      <h3>{{ _('About') }}</h3>
+      <dl class="im-facts">{% for k, v in rows %}<div><dt>{{ k }}</dt><dd>{{ v }}</dd></div>{% endfor %}</dl>
+    </section>
+    {% endif %}
+
+    {% set bf = P.get('big_five') %}
+    {% if bf %}
+    <section class="im-card">
+      <h3>{{ _('Personality') }} <small>{{ _('Big Five') }}</small></h3>
+      <dl class="im-facts is-wide">{% for code, name in big5 %}{% if bf.get(code) %}<div><dt>{{ name }}</dt><dd>{{ bf.get(code) }}</dd></div>{% endif %}{% endfor %}</dl>
+    </section>
+    {% endif %}
+
+    {% set interests = P.get('interests') %}
+    {% if interests %}
+    <section class="im-card">
+      <h3>{{ _('Interests') }}</h3>
+      <ul class="im-interests">{% for name, w in interests|dictsort(false, 'value')|reverse %}<li><span>{{ name }}</span>{% if w is number %}{{ meter(w if w <= 1 else 1) }}<small>{{ '%.2f'|format(w) }}</small>{% endif %}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+
+    {% if profile.stress_reward %}
+    <section class="im-card">
+      <h3>{{ _('Stress and reward') }} <small>{{ _('as of round %(n)s', n=ctx.vp.round) }}</small></h3>
+      <div class="im-gauges">
+        {% for key, name, tone in [('stress', _('Stress'), 'is-stress'), ('reward', _('Reward'), 'is-reward')] %}{% set sr = profile.stress_reward.get(key) %}{% if sr %}
+        <div class="im-gauge {{ tone }}">
+          <div class="im-gauge-head"><span>{{ name }}</span><strong>{{ '%.2f'|format(sr.value) }}</strong></div>
+          {{ meter(sr.value) }}
+          {% if sr.spark %}<svg class="im-spark" viewBox="0 0 100 24" preserveAspectRatio="none" role="img" aria-label="{{ _('Recent trend') }}"><polyline points="{{ sr.spark }}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>{% endif %}
+        </div>{% endif %}{% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if profile.opinions %}
+    <section class="im-card">
+      <h3>{{ _('Opinions') }}</h3>
+      <ul class="im-opinions">
+        {% for o in profile.opinions %}<li><span>{{ o.topic }}</span><span class="im-opinion" role="img" aria-label="{{ '%+.2f'|format(o.value) }}"><i style="left: {{ ((o.value + 1) / 2 * 100)|round(1) }}%"></i></span><small>{{ '%+.2f'|format(o.value) }} · {{ _('round %(n)s', n=o.round) }}</small></li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% set activity = [] %}
+    {% for k in ['daily_activity_level', 'round_actions'] %}{% if P.get(k) is not none %}{% set _x = activity.append((labels[k], P.get(k))) %}{% endif %}{% endfor %}
+    {% if activity %}
+    <section class="im-card">
+      <h3>{{ _('Activity') }}</h3>
+      <div class="im-stats">{% for k, v in activity %}<div><strong>{{ v }}</strong><span>{{ k }}</span></div>{% endfor %}</div>
+    </section>
+    {% endif %}
+
+    {% set extra = [] %}
+    {% for k, v in P.items() %}{% if k not in handled and v not in (None, '', {}, []) %}{% set _x = extra.append((k, v)) %}{% endif %}{% endfor %}
+    {% if extra %}
+    <section class="im-card">
+      <h3>{{ _('Other attributes') }}</h3>
+      <dl class="im-facts">{% for k, v in extra %}<div><dt>{{ k|replace('_', ' ')|capitalize }}</dt><dd>{% if v is mapping %}{% for kk, vv in v.items() %}<span class="im-chip">{{ kk|replace('_', ' ') }}: {{ vv }}</span> {% endfor %}{% elif v is iterable and v is not string %}{{ v|join(', ') }}{% else %}{{ v }}{% endif %}</dd></div>{% endfor %}</dl>
+    </section>
+    {% endif %}
+
+    <section class="im-card">
+      <h3>{{ _('Chats') }}</h3>
+      <ul class="im-plain">
+        {% for c in profile.chats %}<li><a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ c.title }}</a> <span class="im-kind">{{ c.role }}</span></li>{% else %}<li>{{ _('No visible memberships.') }}</li>{% endfor %}
+      </ul>
+    </section>
   </div>
 </section>
 {% endblock %}

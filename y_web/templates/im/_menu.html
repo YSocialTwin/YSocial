@@ -19,28 +19,39 @@
       <p class="im-menu-label">{{ _('Viewpoint') }}</p>
       <a role="menuitem" class="im-menu-item{{ ' is-active' if ctx.vp.kind == 'overview' }}" href="/{{ exp.idexp }}/im?vp=overview">{{ _('Researcher overview') }} <small>{{ _('everything, including private chats') }}</small></a>
       <a role="menuitem" class="im-menu-item{{ ' is-active' if ctx.vp.kind == 'public' }}" href="/{{ exp.idexp }}/im?vp=public">{{ _('Public observer') }} <small>{{ _('what anyone can read') }}</small></a>
-      <form class="im-menu-form" method="get" action="/{{ exp.idexp }}/im" aria-label="{{ _('View as account') }}">
+      <form class="im-menu-form im-viewform" method="get" action="/{{ exp.idexp }}/im" aria-label="{{ _('View as account') }}">
         <input type="hidden" name="vp" value="account">
         <label for="im-acc">{{ _('View as account') }}</label>
-        <input id="im-acc" name="acc" list="im-accounts" value="{{ ctx.vp.account_id or '' }}" placeholder="{{ _('username or account id') }}" autocomplete="off" required>
+        <div class="im-inputrow">
+          <input id="im-acc" name="acc" list="im-accounts" value="{{ ctx.vp.account_id or '' }}" placeholder="{{ _('username or account id') }}" autocomplete="off" required>
+          <button type="submit">{{ _('Open') }}</button>
+        </div>
         <datalist id="im-accounts">{% for a in accounts %}<option value="{{ a.id }}">{{ a.username }}{% if a.kind %} · {{ a.kind }}{% endif %}</option>{% endfor %}</datalist>
-        <button type="submit">{{ _('Open') }}</button>
+        <small>{{ _('Shows the chats that account can read, as it could read them.') }}</small>
       </form>
     </div>
     {% endif %}
     {% if time_travel and ctx is defined and ctx and ctx.vp is defined %}
+    {% set r = ctx.vp.round %}
+    {% set keep = (('vp=' ~ ctx.vp.kind) ~ ('&acc=' ~ ctx.vp.account_id if ctx.vp.account_id else '')) %}
     <div class="im-menu-group">
       <p class="im-menu-label">{{ _('Time') }}</p>
-      <form class="im-menu-form is-inline" method="get" action="{{ request.path }}">
+      <p class="im-time-now">
+        <strong>{{ _('Day %(d)s', d=day_slot[0]) }}</strong> · {{ _('slot %(s)s', s=day_slot[1]) }} <small>{{ '%02d:00'|format(day_slot[1] - 1) }}</small>
+        <span class="im-pill{{ ' is-live' if r == ctx.latest else ' is-past' }}">{{ _('Latest') if r == ctx.latest else _('Past') }}</span>
+      </p>
+      <form class="im-menu-form im-timeform" method="get" action="{{ request.path }}">
         {% for k, v in view_params.items() %}{% if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
         {% if ctx.vp.account_id %}<input type="hidden" name="acc" value="{{ ctx.vp.account_id }}">{% endif %}
-        <label for="im-day">{{ _('As of day') }}</label>
-        <input id="im-day" name="day" type="number" min="1" value="{{ day_slot[0] }}" class="im-num">
-        <label for="im-slot">{{ _('slot') }}</label>
-        <input id="im-slot" name="slot" type="number" min="1" max="24" value="{{ day_slot[1] }}" class="im-num">
+        <label class="im-field" for="im-day"><span>{{ _('Day') }}</span><input id="im-day" name="day" type="number" min="1" value="{{ day_slot[0] }}" class="im-num"></label>
+        <label class="im-field" for="im-slot"><span>{{ _('Slot') }}</span><input id="im-slot" name="slot" type="number" min="1" max="24" value="{{ day_slot[1] }}" class="im-num"></label>
         <button type="submit">{{ _('Go') }}</button>
-        {% if ctx.vp.round != ctx.latest %}<a class="im-latest" href="{{ request.path }}?vp={{ ctx.vp.kind }}{% if ctx.vp.account_id %}&acc={{ ctx.vp.account_id }}{% endif %}">{{ _('Latest') }}</a>{% endif %}
       </form>
+      <div class="im-stepper">
+        {% if r > 1 %}<a href="{{ request.path }}?{{ keep }}&day={{ (r - 2) // 24 + 1 }}&slot={{ (r - 2) % 24 + 1 }}" title="{{ _('Previous slot') }}">‹ {{ _('Previous') }}</a>{% else %}<span></span>{% endif %}
+        {% if r != ctx.latest %}<a class="im-latest" href="{{ request.path }}?{{ keep }}">{{ _('Latest') }}</a>{% endif %}
+        {% if r < ctx.latest %}<a href="{{ request.path }}?{{ keep }}&day={{ r // 24 + 1 }}&slot={{ r % 24 + 1 }}" title="{{ _('Next slot') }}">{{ _('Next') }} ›</a>{% else %}<span></span>{% endif %}
+      </div>
     </div>
     {% endif %}
     {% if participant %}

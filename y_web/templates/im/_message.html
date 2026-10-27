@@ -51,7 +51,7 @@
       {% if m.views and not m.deleted %}<span class="im-views" title="{{ _('Views') }}">👁 {{ m.views }}</span>{% endif %}
       {% if m.edited %}<span class="im-edited">{{ _('edited') }}</span>{% endif %}
       <a class="im-thread-link" href="/{{ exp_id }}/im/thread/{{ m.id }}{{ '?' ~ (params|urlencode) if params else '' }}" title="{{ _('Thread') }}">⤷</a>
-      {% if ui.get('show_post_time', True) %}<time class="im-time" data-im-time="" datetime="{{ m.sim_ts }}">{{ _('d%(d)s · %(s)s', d=m.day, s=m.slot) }}</time>{% endif %}
+      {% if ui.get('show_post_time', True) %}<time class="im-time" data-im-time="" title="{{ _('Simulated time (the minutes are estimated from the interval of the round)') }}" datetime="{{ m.sim_ts }}">{{ _('d%(d)s · %(t)s', d=m.day, t='%02d:%02d'|format(m.hour|default(m.slot - 1), m.minute|default(0))) }}</time>{% endif %}
     </footer>
   </div>
 </article>

@@ -138,49 +138,120 @@
   var scroller = document.getElementById('im-scroll');
   if (scroller) {
     var target = location.hash && document.getElementById(location.hash.slice(1));
+    scroller.style.scrollBehavior = 'auto';
     if (target) target.scrollIntoView({ block: 'center' }); else scroller.scrollTop = scroller.scrollHeight;
+    scroller.style.scrollBehavior = '';
   }
   var body = document.body;
-  /* Infinite scrolling (setting "infinite_scroll_enabled"): load the older page when the link scrolls into view. */
   var box = document.getElementById('im-messages');
-  var more = document.querySelector('[data-im-more="older"]');
-  if (body.getAttribute('data-infinite') === '1' && box && more && 'IntersectionObserver' in window) {
-    var busy = false;
-    var io = new IntersectionObserver(function (entries) {
-      if (busy || !entries[0].isIntersecting) return;
-      var link = document.querySelector('[data-im-more="older"]');
-      if (!link) return;
-      busy = true;
-      fetch(link.href, { credentials: 'same-origin' })
-        .then(function (r) { return r.ok ? r.text() : null; })
-        .then(function (html) {
-          if (!html) { busy = false; return; }
-          var doc = new DOMParser().parseFromString(html, 'text/html');
-          var older = doc.getElementById('im-messages');
-          var next = doc.querySelector('[data-im-more="older"]');
-          if (older) {
-            var first = box.firstChild;
-            Array.prototype.slice.call(older.children).forEach(function (n) { box.insertBefore(document.importNode(n, true), first); });
-          }
-          if (next) { link.href = next.href; link.setAttribute('data-before', next.getAttribute('data-before')); busy = false; }
-          else { link.parentNode.remove(); io.disconnect(); }
-        })
-        .catch(function () { busy = false; });
-    });
-    io.observe(more);
-  }
   var seconds = parseInt(body.getAttribute('data-poll') || '0', 10);
   var latest = parseInt(body.getAttribute('data-latest') || '0', 10);
   var url = body.getAttribute('data-status-url');
   var banner = document.getElementById('im-live');
-  if (!seconds || !url || !banner) return;
+
+  /* Conversation: messages are in chronological order, the oldest are loaded while scrolling up and, while the
+     simulation runs, the new ones are appended at the bottom (the page is only fetched, never reloaded). */
+  function parsePage(href) {
+    return fetch(href, { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) { return html ? new DOMParser().parseFromString(html, 'text/html') : null; });
+  }
+  function chipText(n) { return n && n.classList && n.classList.contains('im-day-chip') ? n.textContent.trim() : null; }
+  function messageNodes(doc) { var b = doc.getElementById('im-messages'); return b ? Array.prototype.slice.call(b.children) : []; }
+  var live = !!(scroller && box);
+  if (live) {
+    var infinite = body.getAttribute('data-infinite') === '1';
+    var busyOld = false, busyNew = false, unseen = 0, pill = null;
+    function nearBottom() { return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 140; }
+    function keepPosition(fn) {
+      var prevStyle = scroller.style.scrollBehavior, h = scroller.scrollHeight, t = scroller.scrollTop;
+      scroller.style.scrollBehavior = 'auto';
+      fn();
+      scroller.scrollTop = t + (scroller.scrollHeight - h);
+      scroller.style.scrollBehavior = prevStyle;
+    }
+    function loadOlder() {
+      var link = document.querySelector('[data-im-more="older"]');
+      if (!infinite || busyOld || !link) return;
+      busyOld = true;
+      parsePage(link.href).then(function (doc) {
+        if (!doc) { busyOld = false; return; }
+        var nodes = messageNodes(doc), next = doc.querySelector('[data-im-more="older"]');
+        keepPosition(function () {
+          var first = box.firstElementChild;
+          var chips = nodes.filter(function (n) { return chipText(n) !== null; });
+          if (chips.length && chipText(first) !== null && chipText(first) === chipText(chips[chips.length - 1])) box.removeChild(first);
+          var anchor = box.firstChild;
+          nodes.forEach(function (n) { if (!n.id || !document.getElementById(n.id)) box.insertBefore(document.importNode(n, true), anchor); });
+        });
+        if (next) { link.href = next.href; link.setAttribute('data-before', next.getAttribute('data-before')); }
+        else { link.parentNode.remove(); }
+        busyOld = false;
+        if (next) fill();
+      }).catch(function () { busyOld = false; });
+    }
+    /* keep loading while the top of the conversation is near or the page does not fill the pane */
+    function fill(initial) { if ((!initial && scroller.scrollTop < 240) || scroller.scrollHeight <= scroller.clientHeight + 240) loadOlder(); }
+    scroller.addEventListener('scroll', function () { if (scroller.scrollTop < 240) loadOlder(); if (pill && nearBottom()) dropPill(); }, { passive: true });
+    setTimeout(function () { fill(true); }, 150);
+
+    function dropPill() { if (pill) { pill.remove(); pill = null; unseen = 0; } }
+    function showPill(n) {
+      unseen += n;
+      if (!pill) {
+        pill = document.createElement('button');
+        pill.type = 'button'; pill.className = 'im-newpill';
+        pill.addEventListener('click', function () { scroller.scrollTop = scroller.scrollHeight; dropPill(); });
+        scroller.parentNode.appendChild(pill);
+      }
+      pill.textContent = '↓ ' + unseen;
+    }
+    function lastId() {
+      var all = box.querySelectorAll('article.im-msg');
+      return all.length ? all[all.length - 1].id.replace(/^m-/, '') : null;
+    }
+    function loadNewer() {
+      if (busyNew || document.querySelector('[data-im-more="newer"]')) return Promise.resolve();
+      var id = lastId();
+      busyNew = true;
+      var u = new URL(location.href);
+      u.hash = ''; u.searchParams.delete('before');
+      if (id) u.searchParams.set('after', id); else u.searchParams.delete('after');
+      return parsePage(u.href).then(function (doc) {
+        busyNew = false;
+        if (!doc) return;
+        var stick = nearBottom(), added = 0, nodes = messageNodes(doc);
+        nodes.forEach(function (n) {
+          if (n.tagName === 'P' && n.classList.contains('im-empty')) return;
+          if (n.id && document.getElementById(n.id)) return;
+          var chip = chipText(n);
+          if (chip !== null) {
+            var lastChip = Array.prototype.filter.call(box.children, function (c) { return chipText(c) !== null; }).pop();
+            if (lastChip && chipText(lastChip) === chip) return;
+          }
+          var empty = box.querySelector('.im-empty'); if (empty) empty.remove();
+          box.appendChild(document.importNode(n, true));
+          if (n.classList.contains('im-msg')) added++;
+        });
+        if (added) { if (stick) scroller.scrollTop = scroller.scrollHeight; else showPill(added); }
+        if (doc.querySelector('[data-im-more="newer"]')) return loadNewer();
+      }).catch(function () { busyNew = false; });
+    }
+    window.imLoadNewer = loadNewer;
+  }
+
+  if (!seconds || !url) return;
   var timer = setInterval(function () {
     if (document.hidden) return;
     fetch(url + '?after=' + latest, { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (s) {
         if (!s) return;
-        if (s.changed) banner.hidden = false;
+        if (s.changed) {
+          latest = s.round || latest;
+          if (live && window.imLoadNewer) window.imLoadNewer();
+          else if (banner) banner.hidden = false;
+        }
         if (!s.running) clearInterval(timer);
       })
       .catch(function () {});
