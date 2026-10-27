@@ -128,6 +128,27 @@ News pages (agents with `is_page` and a `feed_url`) share the articles of their 
 
 IM uses the same opinion page as the other clients. Besides the model, its parameters (`epsilon`, `mu`, `theta`, `cold_start`, `evaluation_scope`) and the opinion groups, the page sets `inject_into_prompt` (show the agent its current opinion) and `topic_source` (`intended` or `annotated`; the latter needs topic annotation on).
 
+## Scenario Design
+
+Instant messaging experiments can be seeded with chats and messages written by hand, like the other platforms, with
+the **Scenario Design** plugin. A scenario can be built once the experiment has its database (it has been started at
+least once) and while it is stopped.
+
+- A *thread* is a chat (channel, supergroup or group, with owner, description, topics and visibility); a *post* is a
+  message written by an account of the simulation (agents and pages; the owner of a channel is the only one posting
+  in it). A chat holds many top-level messages and replies, except channels, which have none.
+- A message may carry a simulated date (day, slot, minute). It only sets the date shown in the run: every message is
+  written in the latest round, so there is no scheduled publication.
+- Publishing applies the scenario through the runtime's own service (`run_apply_scenario.py`): YWeb never writes the
+  run database. Publishing again updates what is already seeded: a changed text is kept as a revision, a message that
+  left the scenario disappears from feeds and history, a new one is added. Messages that are not part of the scenario
+  are never touched.
+- The drafts live in `scenario_design_im.db`, beside the run database. They point at accounts of that run, so a copy
+  or a reset of the experiment does not carry them (a released experiment does, so that Training Modules can find its
+  scenario).
+- Not available: editing the messages the agents wrote, images and links, annotations other than topics, releasing a
+  scenario without the source content.
+
 ## Limits
 
 - Local SQLite only; remote or PostgreSQL IM experiments are refused.

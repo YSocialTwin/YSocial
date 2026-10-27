@@ -21,6 +21,7 @@ RUN_ARTIFACT_PATTERNS = (
     "database_server.db-journal",
     "analytics_im.db*",  # derived by YWeb from the run database; rebuilt on demand (plan 5.6)
     "analytics_im.status.json",
+    "scenario_design_im.db*",  # Scenario Design drafts: they point at the accounts of this run, so they stay with it
     "*.state.json",
     "ray_*.temp",
     "human_gateway.*",  # address and per-run token of the human gateway (plan 4.8)

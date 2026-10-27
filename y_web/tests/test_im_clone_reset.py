@@ -18,7 +18,7 @@ def _dirty(folder):
     for name in (
         "database_server.db", "database_server.db-wal", "database_server.db-shm",
         "client_cl-pop.json.state.json", "ray_ready.temp", "ray_config.temp", "logs/x_server.log",
-        "logs/x_server.log.1", "logs/old.log.gz",
+        "logs/x_server.log.1", "logs/old.log.gz", "scenario_design_im.db", "scenario_design_im.db-journal",
     ):
         (folder / name).write_text("x")
     for d in ("reports", "exports"):
@@ -35,7 +35,7 @@ def test_clear_artifacts_keeps_inputs(tmp_path):
         (tmp_path / name).write_text("{}")
     _dirty(tmp_path)
     removed, failed = clear_im_run_artifacts(str(tmp_path))
-    assert removed >= 8 and failed == []
+    assert removed >= 10 and failed == []
     left = {p.name for p in tmp_path.iterdir()}
     assert left == {"server_config.json", "client_cl-pop.json", "pop.json", "topic_catalog.json",
                     "prompt_language.json", "news_snapshot.jsonl", "events.jsonl", "logs"}
