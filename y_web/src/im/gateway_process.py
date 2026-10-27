@@ -139,3 +139,21 @@ def gateway_status(exp_folder: str) -> dict:
     if code != 200:
         return {"status": "unreachable"}
     return {"status": "running", "state": body.get("data")}
+
+
+def register_offline(exp_folder: str, repo_dir: str, key: str, username: str, python_cmd: Optional[str] = None) -> bool:
+    """Create a human account while the server is down, through the runtime's own script; ``True`` on success."""
+    script = os.path.join(repo_dir, "run_register_human.py")
+    if not os.path.exists(script):
+        return False
+    done = subprocess.run(
+        [python_cmd or sys.executable, script, exp_folder, key, username],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        stdin=subprocess.DEVNULL,
+    )
+    if done.returncode != 0:
+        logger.warning("Offline human registration failed: %s", (done.stderr or "").strip())
+    return done.returncode == 0

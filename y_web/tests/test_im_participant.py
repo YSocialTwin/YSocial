@@ -270,13 +270,24 @@ def test_a_dead_gateway_is_connection_lost_not_an_error(stack):
     assert page.status_code == 200 and 'id="im-composer"' not in page.data.decode()
 
 
-def test_first_entry_without_the_gateway_falls_back_to_the_public_view(stack):
+def test_first_entry_without_the_gateway_creates_the_account_offline(stack):
     s = stack
     s.http.shutdown()
     s.http.server_close()
     page = s.client.get(f"/{s.exp_id}/im")
-    html = page.data.decode()
-    assert page.status_code == 200 and "not ready yet" in html and 'data-participant="1"' not in html
+    assert page.status_code == 200 and 'data-participant="1"' in page.data.decode()
+
+
+def test_first_entry_falls_back_to_the_public_view_when_nothing_can_create_the_account(stack, monkeypatch):
+    from y_web.routes.social import instant_messaging as page_module
+
+    s = stack
+    s.http.shutdown()
+    s.http.server_close()
+    monkeypatch.setattr(page_module, "_register_offline", lambda *a, **k: False)
+    html = s.client.get(f"/{s.exp_id}/im").data.decode()
+    assert "not ready yet" in html or "not started" in html
+    assert 'data-participant="1"' not in html
 
 
 def test_the_notice_comes_before_the_first_entry(stack):

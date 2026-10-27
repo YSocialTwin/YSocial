@@ -536,7 +536,30 @@ def start_hpc_server(exp):
                 )
                 if attempt == max_retries - 1:
                     print("Warning: Server may not be fully started, proceeding anyway")
+    if getattr(exp, "platform_type", "") == "instant_messaging":
+        _start_im_gateway_when_ready(exp)
     return process
+
+
+def _start_im_gateway_when_ready(exp):
+    """Human participation does not depend on the agent clients: the gateway starts with the server.
+
+    It runs in the background (the server may need a while to be ready) and a failure is only a warning.
+    """
+    import threading
+
+    exp_folder = _resolve_hpc_experiment_folder(exp)
+
+    def _run():
+        try:
+            from y_web.src.hpc.client import _start_im_human_gateway, _wait_for_hpc_server_ready
+
+            _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
+            _start_im_human_gateway(exp_folder)
+        except Exception as exc:  # noqa: BLE001
+            print(f"Warning: human gateway not started with the server: {exc}")
+
+    threading.Thread(target=_run, name="im-gateway-start", daemon=True).start()
 
 
 def stop_hpc_server(exp_id):

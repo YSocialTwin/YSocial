@@ -9,7 +9,7 @@ import os
 import uuid
 from urllib.parse import urlencode
 
-from flask import abort, jsonify, redirect, render_template, request, session as flask_session, url_for
+from flask import abort, current_app, g as flask_g, jsonify, redirect, render_template, request, session as flask_session, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -166,16 +166,64 @@ def _participant(session, exp, ui):
     models = im_modules()[0]
     if session.get(models.Account, part.account_id) is not None:
         return part
-    try:  # first entry: the account is created through the gateway (never by YWeb)
-        code, _body = GatewayClient(part.exp_folder).ensure(
-            part.key, participation.pseudonym(user)
-        )
+    # first entry: the account is created through the gateway (never by YWeb)
+    def _ensure():
+        return GatewayClient(part.exp_folder).ensure(part.key, participation.pseudonym(user))
+
+    try:
+        code, _body = _ensure()
     except GatewayUnavailable:
-        return False
+        code = None
+        if exp.running and _revive_gateway(part.exp_folder):  # the server is up but the gateway is not
+            try:
+                code, _body = _ensure()
+            except GatewayUnavailable:
+                code = None
+        if code is None:
+            # no gateway answers (typically the server is not running): a person can still enter, the account
+            # is created by the runtime's own offline registration
+            if _register_offline(exp, part, participation.pseudonym(user)):
+                session.rollback()
+                if session.get(models.Account, part.account_id) is not None:
+                    return part
+            flask_g.im_pending_reason = "unavailable" if exp.running else "not_running"
+            return False
     if code != 200:
+        flask_g.im_pending_reason = "refused"
+        current_app.logger.warning("IM gateway refused to create the account of %s (HTTP %s)", user.username, code)
         return False
     session.rollback()  # end the read snapshot so the new row is visible
     return part if session.get(models.Account, part.account_id) is not None else False
+
+
+def _register_offline(exp, part, username):
+    """Create the account without the server (see ``yinstantmessaging.server.offline``); ``True`` when it exists."""
+    try:
+        from y_web.src.hpc.platforms import get_hpc_platform
+        from y_web.src.im.gateway_process import register_offline
+        from y_web.src.simulation.server import detect_env_handler
+        from y_web.src.system.path_utils import get_external_repo_dir
+
+        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
+        return register_offline(part.exp_folder, repo_dir, part.key, username, detect_env_handler())
+    except Exception:  # noqa: BLE001
+        current_app.logger.warning("IM offline registration failed", exc_info=True)
+        return False
+
+
+def _revive_gateway(exp_folder):
+    """Start the human gateway of a running experiment that has none (a failure is only a warning)."""
+    from y_web.src.im.gateway_process import human_enabled, is_running
+
+    if not human_enabled(exp_folder) or is_running(exp_folder):
+        return False
+    try:
+        from y_web.src.hpc.client import _start_im_human_gateway
+
+        _start_im_human_gateway(exp_folder)
+    except Exception:  # noqa: BLE001
+        return False
+    return is_running(exp_folder)
 
 
 def _participant_context(session, exp, ui, part):
@@ -252,6 +300,7 @@ def _render(template, ctx, **values):
         participant=ctx.participant,
         writable=ctx.writable,
         pending_account=ctx.pending_account,
+        pending_reason=flask_g.get("im_pending_reason", "") if ctx.pending_account else "",
         csrf_token=participation.csrf_token(flask_session) if ctx.participant else "",
         **shell,
         **values,

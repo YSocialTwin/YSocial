@@ -16,7 +16,7 @@
   <div class="im-stage">
     <h1 class="im-sr">{{ exp.exp_name }} · {{ _('Instant Messaging') }}</h1>
     {% if participant and not writable %}<div class="im-banner" role="note">{{ _('Reading only: writing is available while the simulation is running.') }}</div>
-    {% elif pending_account %}<div class="im-banner" role="note">{{ _('Your account is not ready yet (the participation service is not answering). You are seeing the public view; try again in a moment.') }}</div>
+    {% elif pending_account %}<div class="im-banner" role="note">{% if pending_reason == 'not_running' %}{{ _('The experiment server is not started, so your account cannot be created yet. You are seeing the public view; come back when the experiment has been started.') }}{% elif pending_reason == 'refused' %}{{ _('Your account could not be created (the participation service refused the request). You are seeing the public view; please tell the researcher.') }}{% else %}{{ _('Your account is not ready yet (the participation service is not answering). You are seeing the public view; try again in a moment.') }}{% endif %}</div>
     {% elif ctx is defined and ctx and ctx.vp is defined and ctx.vp.kind == 'overview' %}<div class="im-banner is-overview" role="note">{{ _('Omniscient researcher view: private chats and deleted messages are shown. This is not what a participant sees.') }}</div>
     {% elif ctx is defined and ctx and ctx.vp is defined and ctx.vp.kind == 'account' and not participant %}<div class="im-banner is-account" role="note">{{ _('Viewing as account %(id)s, exactly what it could read at this round.', id=ctx.vp.account_id) }}</div>
     {% endif %}

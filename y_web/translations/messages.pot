@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:22+0000\n"
+"POT-Creation-Date: 2026-10-27 14:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10092,6 +10092,12 @@ msgstr ""
 msgid "The experiment needs to be activated first."
 msgstr ""
 
+msgid ""
+"The experiment server is not started, so your account cannot be created "
+"yet. You are seeing the public view; come back when the experiment has "
+"been started."
+msgstr ""
+
 msgid "The feelings surfacing most in the feed"
 msgstr ""
 
@@ -11761,6 +11767,11 @@ msgid "Your Profile"
 msgstr ""
 
 msgid "Your YSocial installation is up to date."
+msgstr ""
+
+msgid ""
+"Your account could not be created (the participation service refused the "
+"request). You are seeing the public view; please tell the researcher."
 msgstr ""
 
 #, python-format
