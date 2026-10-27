@@ -230,7 +230,13 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     if is_im_experiment(experiment):
         # IM owns its database and keeps no YWeb participant row (no ``user_mgmt``): the participant is the
         # runtime's human account, derived from the experiment and the user, registered when the person first acts
-        return _im_participant(experiment, kwargs.get("user_id"), kwargs.get("username")), False
+        user = _im_participant(experiment, kwargs.get("user_id"), kwargs.get("username"))
+        if account_id is not None and user is not None:
+            # Training Modules marks the scenario as entered from this hook, whatever the platform
+            from y_web.src.external_runtime.plugin_hooks import emit_hook
+
+            emit_hook("experiment_user_provisioned", experiment, account_id, user.id, False)
+        return user, False
     user, created = _ensure_experiment_user(experiment, **kwargs)
     if account_id is not None and user is not None:
         from y_web.src.external_runtime.plugin_hooks import emit_hook
