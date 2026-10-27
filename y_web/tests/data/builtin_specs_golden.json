@@ -205,6 +205,41 @@
     "min_ysocial_version": null
   },
   {
+    "key": "instant_messaging",
+    "group": "instant_messaging",
+    "group_label": "Instant Messaging",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YInstantMessaging",
+    "path": "YInstantMessaging",
+    "github_repo": "YSocialTwin/YInstantMessaging",
+    "repo_url": "https://github.com/YSocialTwin/YInstantMessaging.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "yinstantmessaging",
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Simulation runtime for instant-messaging experiments, with Telegram-like chats, groups, channels and forum topics.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
     "key": "agent_plugins",
     "group": "agent_plugins",
     "group_label": "Agent Plugins",

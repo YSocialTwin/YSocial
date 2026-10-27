@@ -160,12 +160,14 @@ def _external_repo_availability():
     hpc = _installed("hpc_simulator")
     forum = _installed("forum_server") and _installed("forum_client")
     photo_sharing = _installed("photo_sharing")
+    instant_messaging = _installed("instant_messaging")
 
     return {
         "microblogging": microblogging,
         "hpc": hpc,
         "forum": forum,
         "photo_sharing": photo_sharing,
+        "instant_messaging": instant_messaging,
     }
 
 

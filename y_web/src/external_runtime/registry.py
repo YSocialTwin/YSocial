@@ -31,6 +31,9 @@ RUNTIME_TEXTS = (
     N_(
         "Simulation runtime for photo-sharing experiments, with an Instagram-like platform."
     ),
+    N_(
+        "Simulation runtime for instant-messaging experiments, with Telegram-like chats, groups, channels and forum topics."
+    ),
     N_("Runs large-scale simulations in a distributed way on HPC clusters."),
     N_(
         "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
@@ -224,6 +227,7 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         "microblogging",
         "forum",
         "photo_sharing",
+        "instant_messaging",
         "hpc",
         "agent_plugins",
         "frontend_plugins",
