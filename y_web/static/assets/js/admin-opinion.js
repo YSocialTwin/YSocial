@@ -1,3 +1,8 @@
+/* Data bridge: pages may carry their data as JSON instead of an inline script. */
+(function () {
+  var el = document.getElementById('ys-data-opinion');
+  if (el && typeof window.YS_DATA_OPINION === 'undefined') { try { window.YS_DATA_OPINION = JSON.parse(el.textContent); } catch (e) {} }
+})();
 var AdminOpinion = (function() {
   const bindById = (id, eventName, handler) => {
       const element = document.getElementById(id);

@@ -20,9 +20,9 @@ from y_web.tests.test_im_admin_pages import _make_im_experiment, im_app  # noqa:
 IM_REPO = Path(__file__).resolve().parents[2] / "external" / "YInstantMessaging"
 TOKEN = "k" * 32
 
-pytestmark = pytest.mark.skipif(
-    not (IM_REPO / "yinstantmessaging").is_dir(), reason="YInstantMessaging is not installed"
-)
+pytestmark = pytest.mark.integration
+if not (IM_REPO / "yinstantmessaging").is_dir():
+    pytest.skip("YInstantMessaging is not installed", allow_module_level=True)
 
 
 def _im_helpers():

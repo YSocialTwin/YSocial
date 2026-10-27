@@ -1,3 +1,8 @@
+/* Data bridge: pages may carry their data as JSON instead of an inline script. */
+(function () {
+  var el = document.getElementById('ys-data-clients');
+  if (el && typeof window.YS_DATA_CLIENTS === 'undefined') { try { window.YS_DATA_CLIENTS = JSON.parse(el.textContent); } catch (e) {} }
+})();
 /**
  * AdminClients - Extracted from admin templates (Phase T6)
  * Auto-generated. Do not edit manually.
