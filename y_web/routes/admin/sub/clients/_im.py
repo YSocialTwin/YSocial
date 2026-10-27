@@ -114,6 +114,7 @@ def clients_im(idexp):
             "run_started": started,
             "adv_groups": advanced_settings.GROUPS,
             "adv_actions": advanced_settings.ACTIONS,
+            "adv_action_scale": advanced_settings.ACTION_SCALE,
             "adv_memory": advanced_settings.MEMORY,
             "adv_defaults": advanced_settings.defaults(),
             "adv_name": advanced_settings.field_name,

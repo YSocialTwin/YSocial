@@ -148,7 +148,7 @@ def test_export_panel_lists_files_serves_them_and_runs_the_export(im_app, monkey
         (tmp_path / "secret.txt").write_text("no")
 
     page = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
-    assert "im-export-section" in page and "messages.csv" in page and "activity_report.json" in page
+    assert "im-export-section" not in page  # the download action covers it; the routes stay for direct use
 
     ok = client.get(f"/admin/im_artifact/{exp_id}/exports/messages.csv")
     assert ok.status_code == 200 and ok.data == b"id\n1\n"
@@ -229,7 +229,9 @@ def test_client_form_has_the_sections_of_the_other_platforms(im_app, monkeypatch
     # structured advanced settings, no free JSON, no opinion model or switches (those are the experiment's)
     assert "advanced_json" not in page and 'name="opinion_model"' not in page
     assert 'name="opinion_enabled"' not in page and 'name="stress_reward_enabled"' not in page
+    # not offered: logs (the runtime decides) and archetypes (they make no sense for chats)
+    assert "adv.logging." not in page and "agent_archetypes" not in page
     for expected in ('name="adv.telegram.reactive.probability"', 'name="adv.telegram.discovery.mode"',
-                     'name="adv.telegram.actions_likelihood.post"', 'name="adv.logging.enable_prompt_log__present"',
+                     'name="adv.telegram.actions_likelihood.post"', 'name="adv.telegram.moderation.policy"', 'data-scale-factor="0.05"',
                      'name="adv.agents.memory_total_max_chars"', 'id="standard_memory_config_fields"'):
         assert expected in page, expected

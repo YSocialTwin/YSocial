@@ -38,9 +38,8 @@ def test_form_defaults_and_validation():
         {"start_date": "tomorrow"},
         {"adv.telegram.reactive.probability": "2"},
         {"adv.telegram.discovery.mode": "psychic"},
-        {"adv.simulation.agent_archetypes.distribution.validator": "0.9",
-         "adv.simulation.agent_archetypes.distribution.broadcaster": "0.9",
-         "adv.simulation.agent_archetypes.distribution.explorer": "0.9"},
+        {"memory_enabled": "true", "adv.agents.memory_high_affect_uncertain_low": "0.9",
+         "adv.agents.memory_high_affect_uncertain_high": "0.2"},
     ):
         with pytest.raises(ImClientFormError):
             parse_client_form(bad)
@@ -56,6 +55,7 @@ def test_config_never_carries_runtime_keys_or_secrets():
     cfg = build_client_config(client_name="c", settings=s, topics=["a", " "], activity_profiles={"p": "1,2"},
                               prompt_language="it")
     assert cfg["seed"] == 5 and cfg["simulation"]["num_days"] == 2
+    assert cfg["logging"] == {"compress_rotated": False}  # YWeb reads plain rotated logs
     assert cfg["simulation"]["discussion_topics"] == ["a"]
     assert cfg["telegram"]["topics"]["catalog_file"] == "topic_catalog.json"
     assert cfg["prompt_language"] == "it" and cfg["llm"]["model"] == "m"

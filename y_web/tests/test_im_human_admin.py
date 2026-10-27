@@ -149,12 +149,13 @@ def test_details_page_lists_the_participants_and_the_gateway(im_app, tmp_path, m
         expected = human_account_id(uid, user.id)
     folder = tmp_path / "y_web" / "experiments" / uid
     folder.mkdir(parents=True)
-    page = client.get(f"/admin/experiment_details/{exp_id}")
-    assert page.status_code == 200 and b"im-human-section" not in page.data  # off: nothing shown
     (folder / "server_config.json").write_text(json.dumps({"human": {"enabled": True, "pace": {"min_round_seconds": 4}}}))
     page = client.get(f"/admin/experiment_details/{exp_id}")
-    html = page.data.decode()
-    assert page.status_code == 200 and "im-human-section" in html
-    assert "pp" in html and "not entered yet" in html and "cannot be reproduced" in html
-    assert "stopped" in html and "Minimum round duration" in html
-    assert expected not in html  # the account is listed only once it exists
+    # humans can always take part: the details page has no box about it
+    assert page.status_code == 200 and b"im-human-section" not in page.data
+    from y_web.src.im.humans_admin import humans_overview
+
+    with app.app_context():
+        overview = humans_overview(db.session.get(Exps, exp_id))
+    assert [h["user"] for h in overview["humans"]] == ["pp"] and overview["humans"][0]["created"] is False
+    assert overview["humans"][0]["account_id"] == expected

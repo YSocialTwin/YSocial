@@ -776,19 +776,6 @@ def experiment_details(uid):
         except Exception:
             forum_feed_health = None
 
-    im_artifacts = None
-    if is_im_experiment(experiment):
-        from y_web.src.im.analysis import list_artifacts
-        from y_web.src.system.path_utils import get_writable_path
-
-        try:
-            im_folder = _get_experiment_folder(
-                get_writable_path(), experiment, _get_database_type()
-            )
-            im_artifacts = list_artifacts(im_folder)
-        except Exception:
-            im_artifacts = {"exports": [], "reports": []}
-
     im_analytics = None
     if is_im_experiment(experiment):
         # the analytics cards follow the tables of the derived database, like every other platform's pages follow theirs
@@ -824,14 +811,15 @@ def experiment_details(uid):
         except Exception:
             db.session.rollback()
 
-    im_humans = None
+    im_switches = None
     if is_im_experiment(experiment):
         try:
-            from y_web.src.im.humans_admin import humans_overview
+            from y_web.src.im.experiment_config import load_server_config, read_switches
+            from y_web.src.im.participant import experiment_folder
 
-            im_humans = humans_overview(experiment)
+            im_switches = read_switches(load_server_config(experiment_folder(experiment)))
         except Exception:
-            im_humans = None
+            im_switches = None
 
     template_name = "admin/experiment_details.html"
     if experiment.platform_type == "forum":
@@ -878,9 +866,9 @@ def experiment_details(uid):
         forum_avatar_settings=forum_avatar_settings,
         forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
-        im_artifacts=im_artifacts,
+        
         im_analytics=im_analytics,
-        im_humans=im_humans,
+        im_switches=im_switches,
         im_advanced=im_advanced,
     )
 

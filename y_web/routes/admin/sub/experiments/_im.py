@@ -113,7 +113,7 @@ def generate_im_server_config(
                 )
             }
         },
-        "logging": {"enable_server_log": True, "enable_console_log": True},
+        "logging": {"enable_server_log": True, "enable_console_log": True, "compress_rotated": False},
         "platform_type": "instant_messaging",
         "database_uri": db_uri,
         "data_path": data_path,

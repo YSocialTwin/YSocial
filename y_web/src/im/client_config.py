@@ -254,6 +254,8 @@ def build_client_config(
         "telegram": {"topics": {"catalog_file": "topic_catalog.json"}},
         "agents": {"memory_enabled": bool(settings.get("memory_enabled"))},
         "stress_reward": {"enabled": bool(settings.get("stress_reward"))},
+        # YWeb reads plain rotated files only (the logs are not a setting of the form)
+        "logging": {"compress_rotated": False},
     }
     if prompt_language:
         config["prompt_language"] = prompt_language

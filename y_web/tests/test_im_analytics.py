@@ -259,10 +259,20 @@ def test_pages_without_their_tables_show_the_normal_unavailable_state(pages):
 
 def test_details_page_cards_follow_the_derived_tables(pages):
     app, client, exp_id, folder, src = pages
+    from y_web.src.im.experiment_config import apply_experiment_switches, load_server_config, save_server_config
+
     html = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
     assert "Analytics data as of day 2, slot 6" in html and "Refresh analytics data" in html
-    for link in ("toxicity_evolution", "sentiment_evolution", "opinion_evolution", "stress_reward_evolution",
-                 "topic_evolution", "hashtag_evolution", "network_analysis"):
+    for link in ("topic_evolution", "hashtag_evolution", "network_analysis"):  # always meaningful
+        assert f"/admin/{link}/{exp_id}" in html, link
+    for link in ("toxicity_evolution", "sentiment_evolution", "opinion_evolution", "stress_reward_evolution"):
+        assert f"/admin/{link}/{exp_id}" not in html, link  # optional: only when the experiment enables them
+    config = apply_experiment_switches(
+        load_server_config(folder), toxicity=True, sentiment=True, opinion=True, stress_reward=True
+    )
+    save_server_config(folder, config)
+    html = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    for link in ("toxicity_evolution", "sentiment_evolution", "opinion_evolution", "stress_reward_evolution"):
         assert f"/admin/{link}/{exp_id}" in html, link
     assert f"/admin/emotion_statistics/{exp_id}" not in html
     assert f"/admin/recsys_evolution/{exp_id}" not in html

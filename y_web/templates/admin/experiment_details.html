@@ -237,21 +237,18 @@
                                     </span>
                                 </div>
                                 {% endif %}
-                                    </div>
-                                </details>
+                                {% if experiment_details_variant == 'im' and memory_module_enabled %}
+                                <div class="box-line">
+                                    <span class="left">{{ _('Memory retrieval') }}</span>
+                                    <span class="right"><small>{{ _('Lexical') }}</small></span>
+                                </div>
+                                <div class="ys-text-xs-meta">{{ _('The memory of instant messaging agents scores items by shared words and recency: there is no embedding backend to configure.') }}</div>
+                                {% endif %}
                                 {% if experiment_details_variant == 'im' and im_advanced %}
-                                <details class="ys-mb-20" id="im-advanced-settings">
-                                    <summary class="ys-accordion-header">
-                                        <span class="ys-inline-flex-gap">
-                                            <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                            {{ _('Advanced Settings') }}
-                                        </span>
-                                    </summary>
-                                    <div class="ys-content-panel">
-                                        <p class="ys-label-hint">{{ _('Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part.') }}</p>
-                                        <form method="POST" action="/admin/update_im_advanced_settings/{{ experiment.idexp }}">
+                                <div id="im-advanced-settings">
+                                    <hr>
+                                    <p class="ys-label-hint">{{ _('Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part.') }}</p>
+                                    <form method="POST" action="/admin/update_im_advanced_settings/{{ experiment.idexp }}">
                                             <div class="box-line">
                                                 <span class="left">{{ _('Minimum round duration (seconds, 0 = off)') }}</span>
                                                 <span class="right"><input type="number" name="min_round_seconds" class="input" min="0" max="3600" step="1" value="{{ im_advanced.min_round_seconds|int if im_advanced.min_round_seconds == im_advanced.min_round_seconds|int else im_advanced.min_round_seconds }}" {% if im_advanced.locked %}disabled{% endif %}></span>
@@ -267,9 +264,10 @@
                                             <button type="submit" class="button is-small is-info ys-mt-8">{{ _('Update Configuration') }}</button>
                                             {% endif %}
                                         </form>
+                                </div>
+                                {% endif %}
                                     </div>
                                 </details>
-                                {% endif %}
                                 <hr>
                                 <b>{{ _('Management') }}</b>
  <p class="ys-label-hint">{{ _('Download or remove this experiment.') }}</p>
@@ -739,93 +737,6 @@
                         </div>
                     </div>
 
-                    {% if experiment_details_variant == 'im' and im_humans and im_humans.enabled %}
-                    <div id="im-human-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
-                        <h3 class="title is-5 is-thin">{{ _('Human participation') }}</h3>
-                        <div class="box-content ys-flex-1">
-                            <p>
-                                {{ _('Participation service:') }}
-                                <strong id="im-gateway-status">{{ {'running': _('running'), 'stopped': _('stopped'), 'unreachable': _('not answering'), 'off': _('off')}.get(im_humans.gateway.status, im_humans.gateway.status) }}</strong>
-                                {% if im_humans.gateway.status == 'stopped' or im_humans.gateway.status == 'unreachable' %}<br><small>{{ _('The simulation does not depend on it: participants can only read until it is back.') }}</small>{% endif %}
-                                {% if im_humans.config.pace and im_humans.config.pace.min_round_seconds %}<br><small>{{ _('Minimum round duration: %(s)s seconds', s=im_humans.config.pace.min_round_seconds) }}</small>{% endif %}
-                            </p>
-                            <p><small>{{ _('A run with human participants cannot be reproduced exactly.') }}</small></p>
-                            {% if im_humans.humans %}
-                            <table class="table is-fullwidth is-narrow">
-                                <thead><tr><th>{{ _('Participant') }}</th><th>{{ _('Chat account') }}</th><th>{{ _('Messages') }}</th><th>{{ _('Last active round') }}</th></tr></thead>
-                                <tbody>
-                                {% for h in im_humans.humans %}
-                                <tr><td>{{ h.user }}</td><td>{% if h.created %}<code>{{ h.account_id }}</code>{% else %}<small>{{ _('not entered yet') }}</small>{% endif %}</td><td>{{ h.messages }}</td><td>{{ h.last_round if h.last_round is not none else '—' }}</td></tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                            {% else %}
-                            <p><small>{{ _('No participant is assigned to this experiment yet.') }}</small></p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if experiment_details_variant == 'im' and im_artifacts is not none %}
-                    <div id="im-export-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
-                        <h3 class="title is-5 is-thin">{{ _('Export and reports') }}</h3>
-                        <div class="box-content ys-flex-1">
-                            <form method="post" action="/admin/im_export/{{ experiment.idexp }}" class="ys-im-export-form">
-                                <div class="field is-grouped is-align-items-center">
-                                    <div class="control">
-                                        <div class="select is-small">
-                                            <select name="format" aria-label="{{ _('Export format') }}">
-                                                <option value="csv">CSV</option>
-                                                <option value="parquet">Parquet</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="control">
-                                        <label class="checkbox"><input type="checkbox" name="no_text" value="1"> {{ _('Leave message text out') }}</label>
-                                    </div>
-                                    <div class="control">
-                                        <button type="submit" class="button is-small is-primary">{{ _('Export data') }}</button>
-                                    </div>
-                                </div>
-                                <p class="help">{{ _('Parquet needs the analysis extra of the instant messaging runtime. While the simulation runs, a copy of the database is exported.') }}</p>
-                            </form>
-                            <form method="post" action="/admin/im_report/{{ experiment.idexp }}" class="ys-im-report-form" style="margin-top: 1rem;">
-                                <div class="field is-grouped is-align-items-center">
-                                    <div class="control">
-                                        <div class="select is-small">
-                                            <select name="report" aria-label="{{ _('Report') }}">
-                                                <option value="activity">{{ _('Activity') }}</option>
-                                                <option value="cascades">{{ _('Cascades') }}</option>
-                                                <option value="network">{{ _('Network') }}</option>
-                                                <option value="homogeneity">{{ _('Homogeneity') }}</option>
-                                                <option value="emergence">{{ _('Emergence') }}</option>
-                                                <option value="created-chats">{{ _('Created chats') }}</option>
-                                                <option value="stress-reward">{{ _('Stress and reward') }}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="control">
-                                        <button type="submit" class="button is-small is-primary">{{ _('Generate report') }}</button>
-                                    </div>
-                                </div>
-                                <p class="help">{{ _('Reports are written to the reports folder of the experiment. Detection, evaluation, laundering and comparison reports are run with yim-analyze.') }}</p>
-                            </form>
-                            {% for kind, title in (('exports', _('Exports')), ('reports', _('Reports'))) %}
-                            <h4 class="title is-6" style="margin-top: 1rem;">{{ title }}</h4>
-                            {% if im_artifacts[kind] %}
-                            <ul>
-                                {% for item in im_artifacts[kind] %}
-                                <li><a href="/admin/im_artifact/{{ experiment.idexp }}/{{ kind }}/{{ item.name }}">{{ item.name }}</a> <span class="help is-inline">{{ (item.size / 1024) | round(1) }} KB</span></li>
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                            <p class="help">{{ _('Nothing here yet.') if kind == 'exports' else _('No reports yet. Generate one above.') }}</p>
-                            {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-
                     {# IM analytics stay hidden until the derived analytics database exists (plan, 5.7) #}
                     {% set has_analytics_pages = experiment.is_remote == 0 and (experiment_details_variant != 'im' or im_analytics) %}
                     {% if has_analytics_pages %}
@@ -872,7 +783,7 @@
                                     </span>
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
-                                {% if experiment_details_variant != 'im' or im_analytics.recsys %}
+                                {% if experiment_details_variant != 'im' %}
                                 <a href="/admin/recsys_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-view-dashboard-outline"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -882,7 +793,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if experiment.annotations and 'opinions' in experiment.annotations %}
+                                {% if (im_switches.opinion if experiment_details_variant == 'im' and im_switches else (experiment.annotations and 'opinions' in experiment.annotations)) %}
                                 <a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-info">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-line"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -892,7 +803,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if (im_analytics.stress_reward if experiment_details_variant == 'im' and im_analytics else stress_reward_enabled) %}
+                                {% if (im_switches.stress_reward if experiment_details_variant == 'im' and im_switches else stress_reward_enabled) %}
                                 <a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-pulse"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -902,7 +813,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if (im_analytics.toxicity if experiment_details_variant == 'im' and im_analytics else toxicity_annotation_enabled) %}
+                                {% if (im_switches.toxicity if experiment_details_variant == 'im' and im_switches else toxicity_annotation_enabled) %}
                                 <a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-alert-octagon-outline"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -912,7 +823,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if (im_analytics.sentiment if experiment_details_variant == 'im' and im_analytics else sentiment_annotation_enabled) %}
+                                {% if (im_switches.sentiment if experiment_details_variant == 'im' and im_switches else sentiment_annotation_enabled) %}
                                 <a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-success">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-bell-curve"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -922,7 +833,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if (im_analytics.emotion if experiment_details_variant == 'im' and im_analytics else emotion_annotation_enabled) %}
+                                {% if (emotion_annotation_enabled and experiment_details_variant != 'im') %}
                                 <a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="ys-analytics-page-card is-warning">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-emoticon-outline"></i></span>
                                     <span class="ys-analytics-page-body">

@@ -177,9 +177,23 @@
                                     <div id="section-actions-relevance" class="tutorial-section">
                                         <div class="form-section-header">{{ _("Agents' Actions Relevance") }}</div>
                                         <div class="form-section-description">
-                                            {{ _('Relative likelihood of each action of an agent in a session. A value of 0 means that the action is never performed; values greater than 0 are relative to each other.') }}
+                                            {{ _('All actions are scored from 0 to 10, where 0 means that the action is never performed. Scores greater than 0 are relative to each other. Joining and leaving chats are rare events: their scores count a tenth and a twentieth as much.') }}
                                         </div>
-                                        {% for f in adv_actions %}{{ adv_field(f) }}{% endfor %}
+                                        {% for f in adv_actions %}
+                                        {%- set action = f[0].split('.')[-1] -%}
+                                        {%- set factor = adv_action_scale.get(action, 1) -%}
+                                        <div class="box-line">
+                                            <span class="left">{{ _(f[2]) }}</span>
+                                            <span class="right ys-w-70">
+                                                <div class="scale-wrapper" data-scale-factor="{{ factor }}">
+                                                    <div class="number-scale">
+                                                        {% for n in range(0, 11) %}<div class="number-box{% if (f[3] / factor)|round|int == n %} selected{% endif %}" data-value="{{ n }}">{{ n }}</div>{% endfor %}
+                                                    </div>
+                                                    <input type="hidden" name="{{ adv_name(f[0]) }}" value="{{ f[3] }}">
+                                                </div>
+                                            </span>
+                                        </div>
+                                        {% endfor %}
                                     </div>
 
                                     <div class="tutorial-section">
@@ -228,19 +242,13 @@
                                         </div>
                                     </div>
 
-                                    <div class="tutorial-section">
-                                        <div class="form-section-header">{{ _('Advanced Settings') }}</div>
-                                        <div class="form-section-description">
-                                            {{ _('Every value has a default: change only what your design needs. Opinion dynamics, stress and reward, annotations and memory are switched in Experiment Configuration.') }}
-                                        </div>
-                                        {% for gid, glabel, gdescr, gfields in adv_groups %}
-                                        <details class="ys-advanced-group" style="margin-bottom: 8px;">
-                                            <summary><b>{{ _(glabel) }}</b></summary>
-                                            <div class="form-section-description">{{ _(gdescr) }}</div>
-                                            {% for f in gfields %}{{ adv_field(f) }}{% endfor %}
-                                        </details>
-                                        {% endfor %}
+                                    {% for gid, glabel, gdescr, gfields in adv_groups %}
+                                    <div class="tutorial-section" id="section-{{ gid }}">
+                                        <div class="form-section-header ys-field-note">{{ _(glabel) }} <span>{{ _('(Optional)') }}</span></div>
+                                        <div class="form-section-description">{{ _(gdescr) }}</div>
+                                        {% for f in gfields %}{{ adv_field(f) }}{% endfor %}
                                     </div>
+                                    {% endfor %}
                                 </div>
                                 <div class="ys-form-actions">
                                     <button type="submit" id="create_client_button" class="button is-solid accent-button">{{ _('Create Client') }}</button>

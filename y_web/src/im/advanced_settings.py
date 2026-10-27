@@ -157,17 +157,6 @@ GROUPS: List[Group] = [
         ],
     ),
     (
-        "archetypes",
-        N_("Agent Archetypes"),
-        N_("Share of validators, broadcasters and explorers (the three must add up to 1)."),
-        [
-            ("simulation.agent_archetypes.enabled", "bool", N_("Enable archetypes"), False, None),
-            ("simulation.agent_archetypes.distribution.validator", "float", N_("Validators"), 0.33, (0, 1)),
-            ("simulation.agent_archetypes.distribution.broadcaster", "float", N_("Broadcasters"), 0.33, (0, 1)),
-            ("simulation.agent_archetypes.distribution.explorer", "float", N_("Explorers"), 0.34, (0, 1)),
-        ],
-    ),
-    (
         "population",
         N_("Churn and New Agents"),
         N_("Agents leaving and joining during the run."),
@@ -210,25 +199,12 @@ GROUPS: List[Group] = [
             ("barrier_poll_seconds", "float", N_("Barrier poll (seconds)"), 0.2, (0.01, 60)),
         ],
     ),
-    (
-        "logging",
-        N_("Logging"),
-        N_("Which logs the client writes (the verbose ones are off by default)."),
-        [
-            ("logging.enable_console_log", "bool", N_("Console log"), True, None),
-            ("logging.enable_execution_log", "bool", N_("Execution log"), True, None),
-            ("logging.enable_actor_log", "bool", N_("Actor log"), True, None),
-            ("logging.enable_client_log", "bool", N_("Client log"), True, None),
-            ("logging.enable_llm_usage_log", "bool", N_("Language model usage log"), True, None),
-            ("logging.enable_prompt_log", "bool", N_("Prompt log"), False, None),
-            ("logging.enable_action_log", "bool", N_("Action log"), False, None),
-            ("logging.enable_tick_log", "bool", N_("Tick log"), False, None),
-            ("logging.compress_rotated", "bool", N_("Compress rotated logs"), True, None),
-        ],
-    ),
 ]
 
 # the likelihood of each action of an agent, in the section "Agents' Actions Relevance"
+# the score (0-10) the form shows times this factor is the weight written: joining and leaving chats are rare
+ACTION_SCALE = {"join": 0.1, "leave": 0.05}
+
 ACTIONS: List[Field] = [
     ("telegram.actions_likelihood.post", "float", N_("Post"), 2.0, (0, _P)),
     ("telegram.actions_likelihood.forward", "float", N_("Forward"), 2.0, (0, _P)),
@@ -310,7 +286,7 @@ def _parse_one(form, field: Field, label_of=lambda text: text):
     raw = str(raw).strip()
     if kind in ("int", "float"):
         try:
-            value = int(raw) if kind == "int" else float(raw)
+            value = int(raw) if kind == "int" else round(float(raw), 6)
         except ValueError:
             raise AdvancedSettingsError(f"{label_of(label)}: not a number") from None
         lo, hi = bounds
@@ -346,9 +322,6 @@ def _cross_checks(fragment: dict, label_of) -> None:
         raise AdvancedSettingsError(
             label_of(N_("The lower bound of the uncertain band cannot exceed the upper one"))
         )
-    dist = _get_path(fragment, "simulation.agent_archetypes.distribution")
-    if isinstance(dist, dict) and len(dist) == 3 and abs(sum(dist.values()) - 1.0) > 0.011:
-        raise AdvancedSettingsError(label_of(N_("The archetype shares must add up to 1")))
 
 
 def values_from_config(config: Optional[dict], *, memory: bool = True) -> Dict[str, Any]:
