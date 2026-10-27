@@ -781,6 +781,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
         "microblogging",
         "forum",
         "hpc",
+        "instant_messaging",
     }:
         flash(
             _(
@@ -818,7 +819,14 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
             config = {}
 
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
-    if not bool(stress_reward_cfg.get("enabled", False)):
+    stress_enabled = bool(stress_reward_cfg.get("enabled", False))
+    if experiment.platform_type == "instant_messaging":
+        # IM's own configuration decides; the page is offered when the derived database holds stress/reward rows
+        from y_web.src.im import analytics as im_analytics
+
+        im_analytics.ensure_derived(experiment)
+        stress_enabled = im_analytics.cards(experiment)["stress_reward"]
+    if not stress_enabled:
         flash(_("Enable stress/reward in Experiment Configuration first."), "warning")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 

@@ -13262,3 +13262,39 @@ msgstr "Messaggio inoltrato"
 #: y_web/templates/im
 msgid "Newer messages"
 msgstr "Messaggi più recenti"
+
+#: y_web/templates/admin
+msgid "Instant messaging experiment: a message is counted as a post, a reply as a comment, a forward as a share, and the time unit is the slot of the day, not an hour. These figures are not directly comparable with the other platforms."
+msgstr "Esperimento di messaggistica istantanea: un messaggio conta come post, una risposta come commento, un inoltro come condivisione e l'unità di tempo è lo slot del giorno, non l'ora. Questi dati non sono direttamente confrontabili con quelli delle altre piattaforme."
+
+#: y_web/templates/admin
+msgid "Analytics data could not be built: %(message)s"
+msgstr "Impossibile costruire i dati di analisi: %(message)s"
+
+#: y_web/templates/admin
+msgid "Analytics data are being built."
+msgstr "I dati di analisi sono in costruzione."
+
+#: y_web/templates/admin
+msgid "Analytics data as of day %(d)s, slot %(s)s. The pages count a message as a post and a slot as the time unit."
+msgstr "Dati di analisi aggiornati al giorno %(d)s, slot %(s)s. Le pagine contano un messaggio come post e uno slot come unità di tempo."
+
+#: y_web/templates/admin
+msgid "Analytics data have not been built yet."
+msgstr "I dati di analisi non sono ancora stati costruiti."
+
+#: y_web/templates/admin
+msgid "Refresh analytics data"
+msgstr "Aggiorna i dati di analisi"
+
+#: y_web/templates/admin
+msgid "unknown error"
+msgstr "errore sconosciuto"
+
+#: y_web/templates/admin
+msgid "The experiment has no data to analyze yet."
+msgstr "L'esperimento non ha ancora dati da analizzare."
+
+#: y_web/templates/admin
+msgid "Analytics data refreshed."
+msgstr "Dati di analisi aggiornati."

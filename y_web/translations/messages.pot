@@ -11420,3 +11420,39 @@ msgstr ""
 #: y_web/templates/im
 msgid "Newer messages"
 msgstr ""
+
+#: y_web/templates/admin
+msgid "Instant messaging experiment: a message is counted as a post, a reply as a comment, a forward as a share, and the time unit is the slot of the day, not an hour. These figures are not directly comparable with the other platforms."
+msgstr ""
+
+#: y_web/templates/admin
+msgid "Analytics data could not be built: %(message)s"
+msgstr ""
+
+#: y_web/templates/admin
+msgid "Analytics data are being built."
+msgstr ""
+
+#: y_web/templates/admin
+msgid "Analytics data as of day %(d)s, slot %(s)s. The pages count a message as a post and a slot as the time unit."
+msgstr ""
+
+#: y_web/templates/admin
+msgid "Analytics data have not been built yet."
+msgstr ""
+
+#: y_web/templates/admin
+msgid "Refresh analytics data"
+msgstr ""
+
+#: y_web/templates/admin
+msgid "unknown error"
+msgstr ""
+
+#: y_web/templates/admin
+msgid "The experiment has no data to analyze yet."
+msgstr ""
+
+#: y_web/templates/admin
+msgid "Analytics data refreshed."
+msgstr ""

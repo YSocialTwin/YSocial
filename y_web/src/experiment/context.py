@@ -53,6 +53,17 @@ def register_experiment_database(app, exp_id, db_name):
     """
     # An instant messaging experiment owns its database: never bind it as ``db_exp`` nor touch its schema.
     if _is_im_experiment_id(exp_id):
+        from y_web.src.im.analytics import is_derived_db_name
+
+        if not is_derived_db_name(db_name):
+            return
+        # the derived analytics database is YWeb's own and has only the tables its data fills: bind it
+        # without applying the YSocial schema (the pages detect their tables by presence)
+        from y_web.src.system.path_utils import get_writable_path
+
+        app.config["SQLALCHEMY_BINDS"][get_db_bind_key_for_exp(exp_id)] = "sqlite:///" + get_writable_path(
+            os.path.join("y_web", db_name)
+        )
         return
 
     bind_key = get_db_bind_key_for_exp(exp_id)

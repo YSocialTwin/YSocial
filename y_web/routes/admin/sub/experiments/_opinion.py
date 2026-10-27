@@ -978,6 +978,12 @@ def _build_mop_target_panel(
 
 def _resolve_opinion_experiment_db_name(experiment):
     """Resolve the sqlite database path that should back opinion evolution."""
+    if getattr(experiment, "platform_type", "") == "instant_messaging":
+        # the analytics pages read the derived database, rebuilt here when IM's database changed (plan 4.7)
+        from y_web.src.im import analytics as im_analytics
+
+        im_analytics.ensure_derived(experiment)
+        return im_analytics.derived_db_name(experiment)
     db_name = (
         str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
     )
@@ -4344,6 +4350,8 @@ def _network_graph_metrics(graph):
 
 def _available_network_analysis_types(db_path):
     available = []
+    if not db_path or not os.path.exists(db_path):
+        return available  # nothing built yet: the page shows its normal unavailable state
     with sqlite3.connect(db_path) as conn:
         table_names = {
             row["name"] if isinstance(row, sqlite3.Row) else row[0]

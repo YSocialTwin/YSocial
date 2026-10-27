@@ -68,32 +68,51 @@ def im_artifact(idexp, kind, name):
     return send_file(path, as_attachment=True, download_name=os.path.basename(path))
 
 
-# analytics pages read the YSocial schema; an IM database has none of it (plan, 5.7)
-_YSOCIAL_ANALYTICS_ENDPOINTS = frozenset(
+@experiments.route("/admin/im/analytics/<int:idexp>/refresh", methods=["POST"])
+@login_required
+def im_analytics_refresh(idexp):
+    """Rebuild the derived analytics database now (plan 5.7, 8.2)."""
+    check_privileges(current_user.username)
+    exp = _im_experiment_or_none(idexp)
+    if exp is None:
+        flash(_("Experiment not found."), "error")
+        return redirect("/admin/experiments")
+    from y_web.src.im import analytics
+
+    result = analytics.ensure_derived(exp, force=True)
+    if result.get("state") == "failed":
+        flash(_("Analytics data could not be built: %(message)s", message=result.get("message", "")), "error")
+    elif result.get("state") == "running":
+        flash(_("Analytics data are being built."), "info")
+    elif result.get("state") == "never":
+        flash(_("The experiment has no data to analyze yet."), "info")
+    else:
+        flash(_("Analytics data refreshed."), "success")
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+
+# the analytics pages of IM experiments read the derived database; bring it up to date before any of them runs, so
+# their own checks (``Exps.annotations``, table presence) see the current state (plan 4.7)
+_ANALYTICS_ENDPOINTS = frozenset(
     {
-        "opinion_evolution", "opinion_evolution_data", "stress_reward_evolution",
-        "stress_reward_evolution_data", "toxicity_evolution", "toxicity_evolution_data",
-        "sentiment_evolution", "sentiment_evolution_data", "emotion_statistics",
-        "emotion_statistics_data", "topic_evolution", "topic_evolution_data",
-        "hashtag_evolution", "hashtag_evolution_data", "recsys_evolution",
-        "recsys_evolution_data", "network_analysis", "network_analysis_data",
+        "opinion_evolution", "opinion_evolution_data", "stress_reward_evolution", "stress_reward_evolution_data",
+        "toxicity_evolution", "toxicity_analytics_data", "sentiment_evolution", "sentiment_analytics_data",
+        "emotion_statistics", "emotion_analytics_data", "emotion_statistics_data", "topic_evolution", "topic_evolution_data",
+        "hashtag_evolution", "hashtag_evolution_data", "recsys_evolution", "recsys_evolution_data",
+        "network_analysis", "network_analysis_data",
     }
 )
 
 
 @experiments.before_request
-def _keep_ysocial_analytics_away_from_im_databases():
+def _refresh_im_analytics_before_the_pages():
     endpoint = (request.endpoint or "").rpartition(".")[2]
     expid = (request.view_args or {}).get("expid")
-    if endpoint not in _YSOCIAL_ANALYTICS_ENDPOINTS or expid is None:
+    if endpoint not in _ANALYTICS_ENDPOINTS or expid is None or not current_user.is_authenticated:
         return None
-    if not current_user.is_authenticated:
-        return None  # login_required answers
-    if _im_experiment_or_none(expid) is None:
-        return None
-    flash(_("This analysis is not available for instant messaging experiments."), "error")
-    if endpoint.endswith("_data"):
-        from flask import jsonify
+    exp = _im_experiment_or_none(expid)
+    if exp is not None:
+        from y_web.src.im import analytics
 
-        return jsonify({"error": _("This analysis is not available for instant messaging experiments.")}), 404
-    return redirect(url_for("experiments.experiment_details", uid=expid))
+        analytics.ensure_derived(exp)
+    return None

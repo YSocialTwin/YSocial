@@ -77,7 +77,7 @@ def test_pages_render_for_an_im_experiment(im_app, monkeypatch, path, expected):
         assert b"Traceback" not in response.data
 
 
-def test_im_details_page_hides_analytics_and_annotation_config_other_platforms_keep_them(im_app):
+def test_im_details_page_has_analytics_but_not_the_ysocial_annotation_config(im_app):
     from y_web import db
     from y_web.src.models import Exps
 
@@ -94,7 +94,9 @@ def test_im_details_page_hides_analytics_and_annotation_config_other_platforms_k
         other_id = other.idexp
     im_page = client.get(f"/admin/experiment_details/{im_id}").data.decode()
     mb_page = client.get(f"/admin/experiment_details/{other_id}").data.decode()
-    assert "analytics-pages-section" not in im_page and "update_experiment_config" not in im_page
+    assert "update_experiment_config" not in im_page  # IM's own configuration decides which annotations exist
+    assert "analytics-pages-section" in im_page and "Refresh analytics data" in im_page
+    assert "have not been built yet" in im_page  # no run yet
     assert "Instant Messaging" in im_page
     assert "analytics-pages-section" in mb_page and "update_experiment_config" in mb_page
 
@@ -175,16 +177,13 @@ def test_run_export_reports_failures_and_resolve_artifact_stays_inside(tmp_path)
     assert resolve_artifact(str(tmp_path), "db", "a.csv") is None
 
 
-def test_ysocial_analytics_are_closed_for_im_and_open_for_other_platforms(im_app):
-    from y_web import db
-    from y_web.src.models import Exps
-
+def test_analytics_pages_without_data_show_the_normal_unavailable_state(im_app):
     app, client = im_app
     im_id = _make_im_experiment(app)
-    for path in ("topic_evolution", "network_analysis", "opinion_evolution"):
+    for path in ("topic_evolution", "network_analysis", "opinion_evolution", "toxicity_evolution", "recsys_evolution"):
         r = client.get(f"/admin/{path}/{im_id}")
-        assert r.status_code == 302 and f"/admin/experiment_details/{im_id}" in r.headers["Location"]
-    r = client.get(f"/admin/topic_evolution_data/{im_id}")
-    assert r.status_code == 404 and "instant messaging" in r.get_json()["error"]
+        assert r.status_code == 302, path  # flash + redirect, never a 500
+    for path in ("topic_evolution_data", "toxicity_evolution_data"):
+        assert client.get(f"/admin/{path}/{im_id}").status_code in (400, 404)
     # the dashboard labels the platform
     assert "Instant Messaging" in client.get("/admin/dashboard").data.decode()

@@ -19,6 +19,8 @@ RUN_ARTIFACT_PATTERNS = (
     "database_server.db-wal",
     "database_server.db-shm",
     "database_server.db-journal",
+    "analytics_im.db*",  # derived by YWeb from the run database; rebuilt on demand (plan 5.6)
+    "analytics_im.status.json",
     "*.state.json",
     "ray_*.temp",
     "*.log",
@@ -99,8 +101,8 @@ def snapshot_for_download(folder: str, staging_dir: str) -> str:
 
     os.makedirs(staging_dir, exist_ok=True)
     for entry in os.listdir(folder):
-        if entry.startswith("database_server.db"):
-            continue
+        if entry.startswith(("database_server.db", "analytics_im.")):
+            continue  # the derived analytics database is left out of downloads: it is rebuilt from the run database
         source = os.path.join(folder, entry)
         target = os.path.join(staging_dir, entry)
         if os.path.isdir(source):

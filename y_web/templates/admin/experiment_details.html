@@ -750,11 +750,23 @@
                     {% endif %}
 
                     {# IM analytics stay hidden until the derived analytics database exists (plan, 5.7) #}
-                    {% set has_analytics_pages = experiment.is_remote == 0 and experiment_details_variant != 'im' %}
+                    {% set has_analytics_pages = experiment.is_remote == 0 and (experiment_details_variant != 'im' or im_analytics) %}
                     {% if has_analytics_pages %}
                     <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">{{ _('Analytics Pages') }}</h3>
                         <div class="box-content ys-flex-1">
+                            {% if experiment_details_variant == 'im' and im_analytics %}
+                            {% set im_state = im_analytics.state %}
+                            <p class="ys-analytics-pages-intro" id="im-analytics-state">
+                                {% if im_state.state == 'failed' %}{{ _('Analytics data could not be built: %(message)s', message=im_state.message or _('unknown error')) }}
+                                {% elif im_state.state == 'running' %}{{ _('Analytics data are being built.') }}
+                                {% elif im_state.day %}{{ _('Analytics data as of day %(d)s, slot %(s)s. The pages count a message as a post and a slot as the time unit.', d=im_state.day, s=im_state.slot) }}
+                                {% else %}{{ _('Analytics data have not been built yet.') }}{% endif %}
+                            </p>
+                            <form method="post" action="/admin/im/analytics/{{ experiment.idexp }}/refresh" style="margin-bottom:.75rem;">
+                                <button type="submit" class="button is-small is-info">{{ _('Refresh analytics data') }}</button>
+                            </form>
+                            {% endif %}
                             <p class="ys-analytics-pages-intro">
                                 {{ _('Open the active experiment dashboards from a single compact panel.') }}
                             </p>
@@ -783,6 +795,7 @@
                                     </span>
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
+                                {% if experiment_details_variant != 'im' or im_analytics.recsys %}
                                 <a href="/admin/recsys_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-view-dashboard-outline"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -791,6 +804,7 @@
                                     </span>
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
+                                {% endif %}
                                 {% if experiment.annotations and 'opinions' in experiment.annotations %}
                                 <a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-info">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-line"></i></span>

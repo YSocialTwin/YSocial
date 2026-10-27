@@ -789,6 +789,21 @@ def experiment_details(uid):
         except Exception:
             im_artifacts = {"exports": [], "reports": []}
 
+    im_analytics = None
+    if is_im_experiment(experiment):
+        # the analytics cards follow the tables of the derived database, like every other platform's pages follow theirs
+        try:
+            from y_web.src.im import analytics as im_analytics_module
+
+            im_analytics_module.ensure_derived(experiment)
+            im_analytics = im_analytics_module.cards(experiment)
+            toxicity_annotation_enabled = im_analytics["toxicity"]
+            sentiment_annotation_enabled = im_analytics["sentiment"]
+            emotion_annotation_enabled = im_analytics["emotion"]
+            stress_reward_enabled = im_analytics["stress_reward"]
+        except Exception:
+            im_analytics = {"state": {"state": "failed", "message": ""}}
+
     template_name = "admin/experiment_details.html"
     if experiment.platform_type == "forum":
         template_name = "admin/experiment_details_forum.html"
@@ -835,6 +850,7 @@ def experiment_details(uid):
         forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
         im_artifacts=im_artifacts,
+        im_analytics=im_analytics,
     )
 
 
