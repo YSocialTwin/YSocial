@@ -23,6 +23,7 @@ RUN_ARTIFACT_PATTERNS = (
     "analytics_im.status.json",
     "*.state.json",
     "ray_*.temp",
+    "human_gateway.*",  # address and per-run token of the human gateway (plan 4.8)
     "*.log",
     "*.log.*",
 )

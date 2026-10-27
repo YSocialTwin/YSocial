@@ -572,6 +572,20 @@ def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
     return True
 
 
+def _start_im_human_gateway(exp_folder: str) -> None:
+    """Start the human gateway before the first IM client (a failure is a warning, never an error)."""
+    try:
+        from y_web.src.im.gateway_process import start_gateway
+        from y_web.src.simulation.server import detect_env_handler
+
+        from y_web.src.system.path_utils import get_external_repo_dir
+
+        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
+        start_gateway(exp_folder, repo_dir, detect_env_handler())
+    except Exception as exc:  # noqa: BLE001
+        print(f"Warning: human gateway not started: {exc}")
+
+
 def start_hpc_client(exp, cli, population):
     """
     Start an HPC client using subprocess.Popen.
@@ -696,6 +710,9 @@ def start_hpc_client(exp, cli, population):
     # listening endpoints before the client performs the first lookup.
     _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
     time.sleep(3)
+
+    if exp.platform_type == "instant_messaging":
+        _start_im_human_gateway(exp_folder)  # server -> gateway -> clients (plan 4.8)
 
     # Remove completion log entries from actor log if restarting
     # Actor logs are in logs/{client_name}_actor.log

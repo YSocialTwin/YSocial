@@ -577,6 +577,14 @@ def stop_hpc_server(exp_id):
             )
             return True
 
+        if exp.platform_type == "instant_messaging":
+            try:  # reverse of the start order: gateway first, then the server (plan 4.8)
+                from y_web.src.im.gateway_process import stop_gateway
+
+                stop_gateway(exp_folder)
+            except Exception as exc:  # noqa: BLE001
+                print(f"Warning: human gateway not stopped cleanly: {exc}")
+
         pid = exp.server_pid
         print(f"Terminating HPC server process with PID {pid}...")
 
