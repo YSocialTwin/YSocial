@@ -299,6 +299,14 @@ def select_experiment():
         flash(_("Experiment not found or not active."))
         return redirect(url_for("auth.login"))
 
+    from y_web.src.im import is_im_experiment
+
+    if is_im_experiment(exp):
+        # IM keeps no per-user row in its database: the participant lands on the public observer view
+        login_user(user, remember=remember)
+        session["platform_account_id"] = user.id
+        return redirect(f"/{exp.idexp}/im")
+
     try:
         user_agent, _created = ensure_experiment_user(
             exp,

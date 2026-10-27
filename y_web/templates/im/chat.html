@@ -1,0 +1,24 @@
+{% extends "im/base.html" %}
+{% from "im/_message.html" import message %}
+{% block title %}{{ page.title }} · {{ exp.exp_name }}{% endblock %}
+{% block content %}
+<section class="im-conversation" aria-labelledby="im-conv-h">
+  <header class="im-conv-head">
+    <a class="im-back" href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}">← {{ _('Chats') }}</a>
+    <h2 id="im-conv-h">{{ page.title }}{% if topic %} · {{ topic.title }}{% endif %}</h2>
+    <a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/members{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Members') }}</a>
+  </header>
+  {% if topics %}
+  <nav class="im-topics" aria-label="{{ _('Forum topics') }}">
+    <a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}" class="{{ 'is-active' if not topic }}">{{ _('All') }}</a>
+    {% for t in topics %}<a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/topic/{{ t.id }}{{ '?' ~ (params|urlencode) if params else '' }}" class="{{ 'is-active' if topic and topic.id == t.id }}{{ ' is-deleted' if t.deleted }}">{{ t.title }}{% if t.deleted %} ({{ _('deleted') }}){% endif %}</a>{% endfor %}
+  </nav>
+  {% endif %}
+  {% if page.next_before %}
+  <p class="im-older"><a href="?{{ (params|urlencode) ~ '&' if params else '' }}before={{ page.next_before }}" data-before="{{ page.next_before }}" rel="prev">{{ _('Older messages') }}</a></p>
+  {% endif %}
+  <div class="im-messages" id="im-messages">
+    {% for m in page["items"]|reverse %}{{ message(m, exp.idexp, params) }}{% else %}<p class="im-empty">{{ _('No messages yet') }}</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

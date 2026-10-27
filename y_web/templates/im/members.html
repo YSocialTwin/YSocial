@@ -1,0 +1,16 @@
+{% extends "im/base.html" %}
+{% block title %}{{ _('Members') }} · {{ title }}{% endblock %}
+{% block content %}
+<section aria-labelledby="im-mem-h">
+  <a class="im-back" href="/{{ exp.idexp }}/im/chat/{{ chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}">← {{ title }}</a>
+  <h2 id="im-mem-h">{{ _('Members') }}</h2>
+  <table class="im-table">
+    <thead><tr><th scope="col">{{ _('Account') }}</th><th scope="col">{{ _('Role') }}</th><th scope="col">{{ _('Joined (round)') }}</th><th scope="col">{{ _('Left (round)') }}</th><th scope="col">{{ _('Permissions') }}</th></tr></thead>
+    <tbody>
+    {% for m in members %}
+      <tr><td><a href="/{{ exp.idexp }}/im/profile/{{ m.account_id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ m.username }}</a> <span class="im-kind">{{ m.kind }}</span></td><td>{{ m.role }}</td><td>{{ m.joined_round }}</td><td>{{ m.left_round or '' }}</td><td>{{ m.permissions|join(', ') }}</td></tr>
+    {% else %}<tr><td colspan="5">{{ _('No members to show.') }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

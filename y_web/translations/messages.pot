@@ -11179,3 +11179,148 @@ msgstr ""
 
 msgid "This analysis is not available for instant messaging experiments."
 msgstr ""
+
+#, python-format
+msgid "%(n)s members"
+msgstr ""
+
+#, python-format
+msgid "%(n)s reactions"
+msgstr ""
+
+#, python-format
+msgid "%(n)s unread"
+msgstr ""
+
+msgid "(deleted)"
+msgstr ""
+
+msgid "As account"
+msgstr ""
+
+msgid "As of day"
+msgstr ""
+
+msgid "Back to the experiments"
+msgstr ""
+
+msgid "Chats"
+msgstr ""
+
+msgid "Forum topics"
+msgstr ""
+
+#, python-format
+msgid "Forwarded from %(chat)s"
+msgstr ""
+
+msgid "Go"
+msgstr ""
+
+msgid "Joined (round)"
+msgstr ""
+
+msgid "Latest"
+msgstr ""
+
+msgid "Left (round)"
+msgstr ""
+
+msgid "Members"
+msgstr ""
+
+msgid "New rounds are available."
+msgstr ""
+
+msgid "No chats to show for this viewpoint."
+msgstr ""
+
+msgid "No members to show."
+msgstr ""
+
+msgid "No messages found."
+msgstr ""
+
+msgid "No messages yet"
+msgstr ""
+
+msgid "No visible memberships."
+msgstr ""
+
+msgid "Older messages"
+msgstr ""
+
+msgid "Omniscient researcher view: private chats and deleted messages are shown. This is not what a participant sees."
+msgstr ""
+
+msgid "Permissions"
+msgstr ""
+
+msgid "Public observer"
+msgstr ""
+
+msgid "Researcher overview"
+msgstr ""
+
+msgid "Search messages"
+msgstr ""
+
+msgid "Skip to content"
+msgstr ""
+
+msgid "The conversations cannot be shown right now."
+msgstr ""
+
+msgid "The simulation has not produced any round yet."
+msgstr ""
+
+msgid "This message was deleted."
+msgstr ""
+
+msgid "Thread"
+msgstr ""
+
+msgid "Toggle dark mode"
+msgstr ""
+
+msgid "Type at least two characters."
+msgstr ""
+
+#, python-format
+msgid "Viewing as account %(id)s, exactly what it could read at this round."
+msgstr ""
+
+msgid "Viewpoint"
+msgstr ""
+
+msgid "Viewpoint and time"
+msgstr ""
+
+#, python-format
+msgid "[%(kind)s attachment]"
+msgstr ""
+
+msgid "account id"
+msgstr ""
+
+#, python-format
+msgid "day %(d)s, slot %(s)s"
+msgstr ""
+
+msgid "deleted"
+msgstr ""
+
+msgid "edited"
+msgstr ""
+
+msgid "forum"
+msgstr ""
+
+msgid "forwarded again"
+msgstr ""
+
+msgid "private"
+msgstr ""
+
+msgid "slot"
+msgstr ""

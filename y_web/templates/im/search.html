@@ -1,0 +1,12 @@
+{% extends "im/base.html" %}
+{% from "im/_message.html" import message %}
+{% block content %}
+<section aria-labelledby="im-s-h">
+  <h2 id="im-s-h">{{ _('Search') }}</h2>
+  {% if not q %}<p class="im-empty">{{ _('Type at least two characters.') }}</p>
+  {% elif not hits %}<p class="im-empty">{{ _('No messages found.') }}</p>{% endif %}
+  <div class="im-messages">
+    {% for m in hits %}<p class="im-hit-chat"><a href="/{{ exp.idexp }}/im/chat/{{ m.chat_id }}{{ '?' ~ (params|urlencode) if params else '' }}#m-{{ m.id }}">{{ m.chat_title }}</a></p>{{ message(m, exp.idexp, params) }}{% endfor %}
+  </div>
+</section>
+{% endblock %}

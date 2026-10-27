@@ -1,0 +1,17 @@
+{% extends "im/base.html" %}
+{% block title %}{{ profile.username }} · {{ exp.exp_name }}{% endblock %}
+{% block content %}
+<section aria-labelledby="im-p-h">
+  <a class="im-back" href="javascript:history.back()">← {{ _('Back') }}</a>
+  <h2 id="im-p-h">{{ profile.username }} <span class="im-kind">{{ profile.kind }}</span></h2>
+  <dl class="im-dl">
+    <dt>{{ _('Status') }}</dt><dd>{{ profile.status }}</dd>
+    {% if profile.language %}<dt>{{ _('Language') }}</dt><dd>{{ profile.language }}</dd>{% endif %}
+    {% if profile.persona %}{% for k, v in profile.persona.items() %}<dt>{{ k }}</dt><dd>{{ v if v is string or v is number else v|tojson }}</dd>{% endfor %}{% endif %}
+  </dl>
+  <h3>{{ _('Chats') }}</h3>
+  <ul>
+    {% for c in profile.chats %}<li><a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ c.title }}</a> <span class="im-kind">{{ c.role }}</span></li>{% else %}<li>{{ _('No visible memberships.') }}</li>{% endfor %}
+  </ul>
+</section>
+{% endblock %}

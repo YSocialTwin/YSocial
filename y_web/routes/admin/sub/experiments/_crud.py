@@ -679,8 +679,8 @@ def join_experiment(exp_id):
             return redirect("/admin/experiments")
 
     if is_im_experiment(exp):
-        flash(_("The instant messaging viewer is not available yet."), "warning")
-        return redirect("/admin/experiments")
+        # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
+        return redirect(f"/{exp.idexp}/im")
 
     user_id = current_user.id
     user_email = str(getattr(current_user, "email", "") or "")

@@ -1,0 +1,22 @@
+{% extends "im/base.html" %}
+{% block content %}
+<section class="im-chatlist" aria-labelledby="im-chats-h">
+  <h2 id="im-chats-h">{{ _('Chats') }}</h2>
+  {% if ctx.vp.round == 0 %}<p class="im-empty">{{ _('The simulation has not produced any round yet.') }}</p>
+  {% elif not chats %}<p class="im-empty">{{ _('No chats to show for this viewpoint.') }}</p>{% endif %}
+  <ul class="im-chats">
+    {% for c in chats %}
+    <li class="im-chat-row">
+      <a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}">
+        <span class="im-chat-icon" title="{{ c.type }}">{{ {'private': '✉', 'group': '👥', 'supergroup': '👥', 'channel': '📢'}.get(c.type, '💬') }}</span>
+        <span class="im-chat-main">
+          <span class="im-chat-title">{{ c.title }}{% if c.is_forum %} <span class="im-flag">{{ _('forum') }}</span>{% endif %}{% if c.visibility == 'private' %} <span class="im-flag">{{ _('private') }}</span>{% endif %}</span>
+          <span class="im-chat-preview">{% if c.last %}{% if c.last.author %}{{ c.last.author }}: {% endif %}{{ _('(deleted)') if c.last.deleted else c.last.text }}{% else %}{{ _('No messages yet') }}{% endif %}</span>
+        </span>
+        <span class="im-chat-meta">{{ _('%(n)s members', n=c.members) }}{% if c.unread %}<span class="im-unread" aria-label="{{ _('%(n)s unread', n=c.unread) }}">{{ c.unread }}</span>{% endif %}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

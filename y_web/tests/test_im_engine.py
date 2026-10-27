@@ -37,8 +37,21 @@ def test_reader_is_read_only_and_leaves_the_file_untouched(db_path):
 
 
 def test_importing_the_read_services_does_not_import_ray():
-    engine.im_modules()
-    assert "ray" not in sys.modules
+    """Checked in a fresh interpreter: other tests in the session may have imported Ray already."""
+    import subprocess
+    import textwrap
+
+    code = textwrap.dedent(
+        """
+        import sys
+        from y_web.src.im import engine, reader
+        engine.im_modules()
+        assert "ray" not in sys.modules, "ray was imported"
+        """
+    )
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    proc = subprocess.run([sys.executable, "-c", code], cwd=root, capture_output=True, text=True, timeout=120)
+    assert proc.returncode == 0, proc.stderr[-600:]
 
 
 def test_missing_and_foreign_databases_are_refused(tmp_path):

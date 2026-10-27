@@ -12998,3 +12998,148 @@ msgstr "Formato di esportazione sconosciuto."
 
 msgid "This analysis is not available for instant messaging experiments."
 msgstr "Questa analisi non è disponibile per gli esperimenti di messaggistica istantanea."
+
+#, python-format
+msgid "%(n)s members"
+msgstr "%(n)s membri"
+
+#, python-format
+msgid "%(n)s reactions"
+msgstr "%(n)s reazioni"
+
+#, python-format
+msgid "%(n)s unread"
+msgstr "%(n)s non letti"
+
+msgid "(deleted)"
+msgstr "(eliminato)"
+
+msgid "As account"
+msgstr "Come account"
+
+msgid "As of day"
+msgstr "Al giorno"
+
+msgid "Back to the experiments"
+msgstr "Torna agli esperimenti"
+
+msgid "Chats"
+msgstr "Chat"
+
+msgid "Forum topics"
+msgstr "Argomenti del forum"
+
+#, python-format
+msgid "Forwarded from %(chat)s"
+msgstr "Inoltrato da %(chat)s"
+
+msgid "Go"
+msgstr "Vai"
+
+msgid "Joined (round)"
+msgstr "Iscritto (round)"
+
+msgid "Latest"
+msgstr "Ultimo"
+
+msgid "Left (round)"
+msgstr "Uscito (round)"
+
+msgid "Members"
+msgstr "Membri"
+
+msgid "New rounds are available."
+msgstr "Sono disponibili nuovi round."
+
+msgid "No chats to show for this viewpoint."
+msgstr "Nessuna chat da mostrare per questo punto di vista."
+
+msgid "No members to show."
+msgstr "Nessun membro da mostrare."
+
+msgid "No messages found."
+msgstr "Nessun messaggio trovato."
+
+msgid "No messages yet"
+msgstr "Ancora nessun messaggio"
+
+msgid "No visible memberships."
+msgstr "Nessuna iscrizione visibile."
+
+msgid "Older messages"
+msgstr "Messaggi precedenti"
+
+msgid "Omniscient researcher view: private chats and deleted messages are shown. This is not what a participant sees."
+msgstr "Vista onnisciente del ricercatore: sono mostrate le chat private e i messaggi eliminati. Non è ciò che vede un partecipante."
+
+msgid "Permissions"
+msgstr "Permessi"
+
+msgid "Public observer"
+msgstr "Osservatore pubblico"
+
+msgid "Researcher overview"
+msgstr "Panoramica del ricercatore"
+
+msgid "Search messages"
+msgstr "Cerca messaggi"
+
+msgid "Skip to content"
+msgstr "Vai al contenuto"
+
+msgid "The conversations cannot be shown right now."
+msgstr "Le conversazioni non possono essere mostrate in questo momento."
+
+msgid "The simulation has not produced any round yet."
+msgstr "La simulazione non ha ancora prodotto alcun round."
+
+msgid "This message was deleted."
+msgstr "Questo messaggio è stato eliminato."
+
+msgid "Thread"
+msgstr "Discussione"
+
+msgid "Toggle dark mode"
+msgstr "Attiva/disattiva tema scuro"
+
+msgid "Type at least two characters."
+msgstr "Digita almeno due caratteri."
+
+#, python-format
+msgid "Viewing as account %(id)s, exactly what it could read at this round."
+msgstr "Vista come account %(id)s: esattamente ciò che poteva leggere in questo round."
+
+msgid "Viewpoint"
+msgstr "Punto di vista"
+
+msgid "Viewpoint and time"
+msgstr "Punto di vista e tempo"
+
+#, python-format
+msgid "[%(kind)s attachment]"
+msgstr "[allegato %(kind)s]"
+
+msgid "account id"
+msgstr "id account"
+
+#, python-format
+msgid "day %(d)s, slot %(s)s"
+msgstr "giorno %(d)s, slot %(s)s"
+
+msgid "deleted"
+msgstr "eliminato"
+
+msgid "edited"
+msgstr "modificato"
+
+msgid "forum"
+msgstr "forum"
+
+msgid "forwarded again"
+msgstr "inoltrato di nuovo"
+
+msgid "private"
+msgstr "privata"
+
+msgid "slot"
+msgstr "slot"

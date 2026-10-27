@@ -1,0 +1,26 @@
+{% macro message(m, exp_id, params) -%}
+<article class="im-msg{{ ' is-deleted' if m.deleted }}{{ ' is-edited' if m.edited }}" id="m-{{ m.id }}">
+  <div class="im-avatar" aria-hidden="true" data-name="{{ m.sender.username if m.sender else '?' }}">{{ (m.sender.username if m.sender else '?')[:2]|upper }}</div>
+  <div class="im-bubble">
+    <header class="im-msg-head">
+      {% if m.sender %}<a class="im-sender" href="/{{ exp_id }}/im/profile/{{ m.sender.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ m.posted_as or m.sender.username }}</a>
+      <span class="im-kind">{{ m.sender.kind }}</span>{% else %}<span class="im-sender">{{ m.posted_as or '—' }}</span>{% endif %}
+      <time class="im-time" datetime="{{ m.sim_ts }}">{{ _('day %(d)s, slot %(s)s', d=m.day, s=m.slot) }}</time>
+    </header>
+    {% if m.forwarded %}<div class="im-fwd">{{ _('Forwarded from %(chat)s', chat=m.forwarded.origin_chat or m.forwarded.chat or '?') }}{% if m.forwarded.chained %} · {{ _('forwarded again') }}{% endif %}</div>{% endif %}
+    {% if m.reply_to %}<a class="im-reply" href="#m-{{ m.reply_to.id }}"><strong>{{ m.reply_to.author or '?' }}</strong> {{ m.reply_to.text }}</a>{% endif %}
+    {% if m.deleted %}
+    <p class="im-text im-tombstone">{{ _('This message was deleted.') }}</p>
+    {% else %}
+    <p class="im-text">{{ m.text }}</p>
+    {% endif %}
+    {% if m.media_type %}<div class="im-media">{{ _('[%(kind)s attachment]', kind=m.media_type) }}</div>{% endif %}
+    {% for u in m.urls %}<div class="im-link-card"><a href="{{ u.url }}" rel="noopener noreferrer nofollow" target="_blank">{{ u.domain or u.url }}</a></div>{% endfor %}
+    <footer class="im-msg-foot">
+      {% for emoji, n in m.reactions.items() %}<span class="im-reaction" title="{{ _('%(n)s reactions', n=n) }}">{{ emoji }} {{ n }}</span>{% endfor %}
+      {% if m.edited %}<span class="im-flag">{{ _('edited') }}</span>{% endif %}
+      <a class="im-thread-link" href="/{{ exp_id }}/im/thread/{{ m.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Thread') }}</a>
+    </footer>
+  </div>
+</article>
+{%- endmacro %}
