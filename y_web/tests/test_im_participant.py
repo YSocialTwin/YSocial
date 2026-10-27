@@ -1,0 +1,332 @@
+"""Human participation in the IM frontend, against a real orchestrator and a real gateway (Phase 10 gate).
+
+Nothing is mocked between the YWeb routes and the IM server: the participant pages read the run database
+read-only and every write travels through the gateway (HTTP, per-run token) to the server's own handlers.
+"""
+
+import importlib.util
+import json
+import os
+import re
+import sys
+import uuid
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from y_web.tests.test_im_admin_pages import _make_im_experiment, im_app  # noqa: F401
+
+IM_REPO = Path(__file__).resolve().parents[2] / "external" / "YInstantMessaging"
+TOKEN = "k" * 32
+
+pytestmark = pytest.mark.skipif(
+    not (IM_REPO / "yinstantmessaging").is_dir(), reason="YInstantMessaging is not installed"
+)
+
+
+def _im_helpers():
+    spec = importlib.util.spec_from_file_location("im_test_helpers", IM_REPO / "tests" / "helpers.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class Stack:
+    pass
+
+
+@pytest.fixture
+def stack(im_app, tmp_path, monkeypatch):
+    from y_web import db
+    from y_web.src.im.engine import ensure_im_importable
+    from y_web.src.models import Admin_users, Exps, User_Experiment
+
+    ensure_im_importable(str(IM_REPO))
+    from yinstantmessaging.client.server_api import LocalServer
+    from yinstantmessaging.common.config import load_server_config
+    from yinstantmessaging.gateway import HumanGateway, serve
+    from yinstantmessaging.gateway.core import RateLimiter
+    from yinstantmessaging.server.orchestrator import OrchestratorServer
+
+    helpers = _im_helpers()
+    app, client = im_app
+    s = Stack()
+    s.app, s.client = app, client
+    s.exp_id = _make_im_experiment(app)
+    with app.app_context():
+        exp = db.session.get(Exps, s.exp_id)
+        exp.status, exp.running = 1, 1
+        uid = exp.db_name.split("/")[1]
+        user = Admin_users(
+            username="part1", email=f"{uuid.uuid4().hex}@x.test", password="x",
+            last_seen="2026-01-01", role="user",
+        )
+        db.session.add(user)
+        db.session.commit()
+        db.session.add(User_Experiment(user_id=user.id, exp_id=exp.id if hasattr(exp, "id") else s.exp_id))
+        db.session.commit()
+        s.user_id, s.uid = user.id, uid
+    s.folder = tmp_path / "y_web" / "experiments" / s.uid
+    helpers.write_experiment(
+        s.folder,
+        human={"enabled": True, "max_humans": 5},
+        telegram={"time": {"ticks_per_round": 12}, "edits": {"enabled": True}},
+    )
+    cfg = load_server_config(s.folder)
+    cfg["logging"]["log_dir"] = str(s.folder / "logs")
+    s.srv = OrchestratorServer(
+        db_config=cfg["database"], config_path=str(s.folder), min_to_start=cfg["min_to_start"],
+        server_name=cfg["server_name"], timeout_seconds=cfg["timeout_seconds"], simulation_config=cfg,
+    )
+    s.srv.register_client("c1", {})
+    s.srv.bootstrap_population("c1", helpers.AGENTS, helpers.TOPOLOGY)
+    assert s.srv.open_round("c1", 1, 1).ok
+    gateway = HumanGateway(LocalServer(s.srv).call, limiter=RateLimiter(burst=1000, per_second=1000))
+    s.http = serve(gateway, TOKEN)
+    (s.folder / "human_gateway.json").write_text(
+        json.dumps({"host": "127.0.0.1", "port": s.http.server_address[1], "pid": os.getpid()})
+    )
+    (s.folder / "human_gateway.token").write_text(TOKEN)
+    s.participant = SimpleNamespace(
+        is_authenticated=True, is_active=True, is_anonymous=False, id=s.user_id, username="part1",
+        role="user", telemetry_enabled=0, get_id=lambda: str(s.user_id), email="p@x.test",
+    )
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: s.participant)
+    yield s
+    s.http.shutdown()
+
+
+def _csrf(html):
+    return re.search(r'data-csrf="([^"]+)"', html).group(1)
+
+
+def _enter(s):
+    r = s.client.get(f"/{s.exp_id}/im")
+    assert r.status_code == 200, r.data[:500]
+    return r.data.decode()
+
+
+def _act(s, payload, token=None, **kw):
+    headers = {"X-CSRF-Token": token or _csrf(_enter(s))}
+    return s.client.post(f"/{s.exp_id}/im/act", json=payload, headers=headers, **kw)
+
+
+def _set(s, **settings):
+    from y_web import db
+    from y_web.src.models import ExpFrontendSettings
+
+    with s.app.app_context():
+        row = db.session.get(ExpFrontendSettings, s.exp_id)
+        if row is None:
+            row = ExpFrontendSettings(exp_id=s.exp_id, settings_json="{}")
+            db.session.add(row)
+        data = json.loads(row.settings_json or "{}")
+        data.update(settings)
+        row.settings_json = json.dumps(data)
+        db.session.commit()
+
+
+def _account(s):
+    from y_web.src.im.human_identity import human_account_id
+
+    return human_account_id(s.uid, s.user_id)
+
+
+def _texts(s):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from yinstantmessaging.server.db import models as m
+
+    with s.srv.sessions() as session:
+        return [
+            (r.text, r.sender_account_id, r.origin)
+            for r in session.scalars(select(m.Message).order_by(m.Message.sim_ts))
+        ]
+
+
+def test_first_entry_creates_the_account_and_shows_the_participant_ui(stack):
+    s = stack
+    html = _enter(s)
+    assert 'data-participant="1"' in html and 'data-writable="1"' in html
+    assert "Omniscient" not in html and 'id="im-vp"' not in html  # no viewpoint or time selectors
+    from yinstantmessaging.server.db import models as m
+
+    with s.srv.sessions() as session:
+        row = session.get(m.Account, _account(s))
+        assert row is not None and row.kind == "human" and row.username == "participant-%d" % s.user_id
+
+
+def test_the_account_is_derived_from_the_session_never_from_the_request(stack):
+    s = stack
+    assert _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j1"}).status_code == 200
+    r = _act(
+        s,
+        {
+            "type": "post", "chat_id": "c-chat", "text": "hello from a human",
+            "client_action_id": "p1", "actor_account_id": "a-alice", "account_id": "a-alice",
+            "generation": {"model": "x"},
+        },
+    )
+    assert r.status_code == 200 and r.get_json()["data"]["outcomes"][0]["ok"]
+    rows = [t for t in _texts(s) if t[0] == "hello from a human"]
+    assert rows == [("hello from a human", _account(s), "human")]
+
+
+def test_a_sent_message_shows_in_the_chat_page_and_a_retry_is_deduplicated(stack):
+    s = stack
+    _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j1"})
+    payload = {"type": "post", "chat_id": "c-chat", "text": "once only", "client_action_id": "same"}
+    assert _act(s, payload).status_code == 200
+    again = _act(s, payload)
+    assert again.status_code == 200
+    assert again.get_json()["data"]["outcomes"][0]["code"] == "duplicate_action"
+    assert [t for t in _texts(s) if t[0] == "once only"].__len__() == 1
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert "once only" in page and 'id="im-composer"' in page
+
+
+def test_reply_react_edit_delete_and_forward(stack):
+    s = stack
+    _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j"})
+    _act(s, {"type": "post", "chat_id": "c-chat", "text": "base", "client_action_id": "b"})
+    from sqlalchemy import select
+
+    from yinstantmessaging.server.db import models as m
+
+    with s.srv.sessions() as session:
+        base = session.scalars(select(m.Message).where(m.Message.text == "base")).one().id
+    ok = lambda r: r.status_code == 200 and r.get_json()["data"]["outcomes"][0]["ok"]  # noqa: E731
+    assert ok(_act(s, {"type": "reply", "chat_id": "c-chat", "text": "re", "reply_to_message_id": base, "client_action_id": "r"}))
+    assert ok(_act(s, {"type": "react", "message_id": base, "emoji": "👍", "client_action_id": "x"}))
+    assert ok(_act(s, {"type": "edit", "message_id": base, "text": "base edited", "client_action_id": "e"}))
+    assert ok(_act(s, {"type": "forward", "chat_id": "c-chat", "forward_of_message_id": base, "client_action_id": "f"}))
+    assert ok(_act(s, {"type": "delete", "message_id": base, "client_action_id": "d"}))
+
+
+def test_csrf_is_required_and_checked(stack):
+    s = stack
+    _enter(s)
+    body = {"type": "join", "chat_id": "c-chat", "client_action_id": "j"}
+    assert s.client.post(f"/{s.exp_id}/im/act", json=body).status_code == 400
+    assert s.client.post(f"/{s.exp_id}/im/act", json=body, headers={"X-CSRF-Token": "nope"}).status_code == 400
+
+
+def test_switched_off_interactions_are_refused_by_the_server_and_hidden(stack):
+    s = stack
+    _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j"})
+    _set(s, interaction_post=False)
+    r = _act(s, {"type": "post", "chat_id": "c-chat", "text": "no", "client_action_id": "n1"})
+    assert r.status_code == 403 and r.get_json()["code"] == "interaction_post_disabled"
+    assert 'data-im-action="send"' in s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert '[data-im-action="send"]' in s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()  # the gating rule
+    _set(s, interaction_post=True, interactions_enabled=False)
+    assert _act(s, {"type": "react", "message_id": "m", "emoji": "👍", "client_action_id": "n2"}).status_code == 403
+    assert not [t for t in _texts(s) if t[0] == "no"]
+
+
+def test_only_assigned_participants_and_never_staff_can_write(stack, monkeypatch):
+    s = stack
+    token = _csrf(_enter(s))
+    admin = SimpleNamespace(
+        is_authenticated=True, is_active=True, is_anonymous=False, id=1, username="adm", role="admin",
+        telemetry_enabled=0, get_id=lambda: "1", email="a@x.test",
+    )
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: admin)
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "z"}, headers={"X-CSRF-Token": token})
+    assert r.status_code == 403
+    stranger = SimpleNamespace(**{**vars(s.participant), "id": s.user_id + 99, "username": "other", "get_id": lambda: "x"})
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: stranger)
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "z"}, headers={"X-CSRF-Token": token})
+    assert r.status_code == 403  # not assigned to this experiment
+
+
+def test_a_stopped_simulation_is_read_only(stack):
+    from y_web import db
+    from y_web.src.models import Exps
+
+    s = stack
+    token = _csrf(_enter(s))
+    with s.app.app_context():
+        db.session.get(Exps, s.exp_id).running = 0
+        db.session.commit()
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "q"}, headers={"X-CSRF-Token": token})
+    assert r.status_code == 409 and r.get_json()["code"] == "not_running"
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert 'id="im-composer"' not in page and "Reading only" in page
+
+
+def test_a_dead_gateway_is_connection_lost_not_an_error(stack):
+    s = stack
+    token = _csrf(_enter(s))
+    s.http.shutdown()
+    s.http.server_close()
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "q"}, headers={"X-CSRF-Token": token})
+    assert r.status_code == 503 and r.get_json()["code"] == "unavailable"
+    assert s.client.get(f"/{s.exp_id}/im/api/gateway").get_json()["online"] is False
+    page = s.client.get(f"/{s.exp_id}/im")  # the history stays readable
+    assert page.status_code == 200 and 'id="im-composer"' not in page.data.decode()
+
+
+def test_first_entry_without_the_gateway_falls_back_to_the_public_view(stack):
+    s = stack
+    s.http.shutdown()
+    s.http.server_close()
+    page = s.client.get(f"/{s.exp_id}/im")
+    html = page.data.decode()
+    assert page.status_code == 200 and "not ready yet" in html and 'data-participant="1"' not in html
+
+
+def test_the_notice_comes_before_the_first_entry(stack):
+    s = stack
+    _set(s, im_participant_notice="This study records your messages.")
+    r = s.client.get(f"/{s.exp_id}/im")
+    assert r.status_code == 302 and r.headers["Location"].endswith(f"/{s.exp_id}/im/notice")
+    page = s.client.get(f"/{s.exp_id}/im/notice").data.decode()
+    assert "This study records your messages." in page
+    token = re.search(r'name="csrf_token" value="([^"]+)"', page).group(1)
+    assert s.client.post(f"/{s.exp_id}/im/notice", data={"csrf_token": "bad"}).status_code == 400
+    assert s.client.post(f"/{s.exp_id}/im/notice", data={"csrf_token": token}).status_code == 302
+    assert s.client.get(f"/{s.exp_id}/im").status_code == 200
+
+
+def test_notifications_page_follows_the_setting(stack):
+    s = stack
+    _enter(s)
+    assert s.client.get(f"/{s.exp_id}/im/notifications").status_code == 200
+    assert "/im/notifications" in _enter(s)
+    _set(s, notifications_menu=False)
+    assert s.client.get(f"/{s.exp_id}/im/notifications").status_code == 404
+    assert "/im/notifications" not in _enter(s)
+
+
+def test_participation_off_keeps_the_public_observer(stack):
+    s = stack
+    _set(s, im_participant_mode_enabled=False)
+    html = _enter(s)
+    assert 'data-participant="1"' not in html
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "q"})
+    assert r.status_code == 403
+
+
+def test_identity_matches_the_runtime(stack):
+    from y_web.src.im.human_identity import human_account_id, human_key
+    from yinstantmessaging.server.orchestrator import OrchestratorServer
+
+    assert human_account_id("abc_1", 7) == OrchestratorServer.human_account_id(human_key("abc_1", 7))
+    assert human_account_id("abc_1", 7) != human_account_id("abc_1", 8)
+    assert human_account_id("abc_1", 7) != human_account_id("abc_2", 7)
+
+
+def test_edit_and_delete_buttons_follow_the_run_configuration(stack):
+    s = stack
+    _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j"})
+    _act(s, {"type": "post", "chat_id": "c-chat", "text": "mine", "client_action_id": "m"})
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert 'data-im-do="edit"' in page and 'data-im-do="delete"' in page
+    cfg = json.loads((s.folder / "server_config.json").read_text())
+    cfg["telegram"]["edits"]["enabled"] = False
+    (s.folder / "server_config.json").write_text(json.dumps(cfg))
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert 'data-im-do="edit"' not in page and 'data-im-do="reply"' in page
