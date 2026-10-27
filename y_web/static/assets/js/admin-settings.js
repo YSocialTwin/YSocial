@@ -1630,10 +1630,6 @@ var AdminSettings = (function() {
               hpcToggleContainer.style.display = 'flex';
           }
 
-          const imConfigBox = document.getElementById('im-config-box');
-          if (imConfigBox) {
-              imConfigBox.style.display = isInstantMessaging ? 'flex' : 'none';
-          }
           if (platformTypeSelect) {
               const instantMessagingOption = platformTypeSelect.querySelector('option[value="instant_messaging"]');
               if (instantMessagingOption) {

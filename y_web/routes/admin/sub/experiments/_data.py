@@ -646,7 +646,7 @@ def experiment_details(uid):
     adhoc_clients = []
     memory_module_enabled = False
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
-        agent_memory_plugin_installed()
+        agent_memory_plugin_installed() or is_im_experiment(experiment)
     )
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
@@ -797,12 +797,24 @@ def experiment_details(uid):
 
             im_analytics_module.ensure_derived(experiment)
             im_analytics = im_analytics_module.cards(experiment)
-            toxicity_annotation_enabled = im_analytics["toxicity"]
-            sentiment_annotation_enabled = im_analytics["sentiment"]
-            emotion_annotation_enabled = im_analytics["emotion"]
-            stress_reward_enabled = im_analytics["stress_reward"]
+            # the analytics cards follow the data (im_analytics); the switches above stay the configuration
         except Exception:
             im_analytics = {"state": {"state": "failed", "message": ""}}
+
+    im_advanced = None
+    if is_im_experiment(experiment):
+        try:
+            from y_web.src.im.experiment_config import read_advanced_settings
+
+            from y_web.src.system.path_utils import get_writable_path
+
+            im_advanced = read_advanced_settings(
+                _get_experiment_folder(
+                    get_writable_path(), experiment, _get_database_type()
+                )
+            )
+        except Exception:
+            im_advanced = None
 
     im_humans = None
     if is_im_experiment(experiment):
@@ -861,6 +873,7 @@ def experiment_details(uid):
         im_artifacts=im_artifacts,
         im_analytics=im_analytics,
         im_humans=im_humans,
+        im_advanced=im_advanced,
     )
 
 
@@ -1040,7 +1053,7 @@ def update_experiment_config(uid):
         )
 
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
-        agent_memory_plugin_installed()
+        agent_memory_plugin_installed() or is_im_experiment(exp)
     )
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")
@@ -1050,7 +1063,12 @@ def update_experiment_config(uid):
     else:
         memory_enabled = False
 
-    if getattr(exp, "platform_type", "") in {"microblogging", "forum", "hpc"}:
+    if getattr(exp, "platform_type", "") in {
+        "microblogging",
+        "forum",
+        "hpc",
+        "instant_messaging",
+    }:
         stress_reward_enabled = _is_checked("stress_reward_enabled")
 
     existing = [a.strip() for a in (exp.annotations or "").split(",") if a.strip()]
@@ -1111,6 +1129,22 @@ def update_experiment_config(uid):
             memory_config["enabled"] = bool(memory_config.get("enabled"))
         config["memory"] = memory_config
 
+        if is_im_experiment(exp):
+            # IM acts on its own keys: mirror the switches there (and drop what only the others understand)
+            from y_web.src.im.experiment_config import apply_experiment_switches
+
+            config.pop("perspective_api", None)
+            apply_experiment_switches(
+                config,
+                toxicity=toxicity_enabled,
+                sentiment=sentiment_enabled,
+                emotion=emotion_enabled,
+                opinion=opinion_dynamics_enabled,
+                stress_reward=stress_reward_enabled,
+                memory=memory_config["enabled"],
+                stress_reward_config=stress_reward_config,
+            )
+
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
 
@@ -1142,7 +1176,19 @@ def update_experiment_config(uid):
                 with open(client_config_file, "r") as f:
                     client_config = json.load(f)
 
-                if exp.simulator_type == "HPC":
+                if is_im_experiment(exp):
+                    from y_web.src.im.experiment_config import (
+                        apply_switches_to_client,
+                    )
+
+                    apply_switches_to_client(
+                        client_config,
+                        emotion=emotion_enabled,
+                        opinion=opinion_dynamics_enabled,
+                        stress_reward=stress_reward_enabled,
+                        memory=memory_config["enabled"],
+                    )
+                elif exp.simulator_type == "HPC":
                     if not isinstance(client_config.get("simulation"), dict):
                         client_config["simulation"] = {}
                     client_config["simulation"]["enable_sentiment"] = sentiment_enabled
@@ -1199,6 +1245,41 @@ def update_experiment_config(uid):
         db.session.rollback()
         flash(_("Failed to update configuration: %(error)s", error=str(exc)), "error")
 
+    return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
+@experiments.route("/admin/update_im_advanced_settings/<int:uid>", methods=["POST"])
+@login_required
+def update_im_advanced_settings(uid):
+    """Save the server-level settings of an IM experiment (round pacing and participant limit)."""
+    check_privileges(current_user.username)
+
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
+    if not exp or not is_im_experiment(exp):
+        flash(_("Experiment not found."), "error")
+        return redirect(url_for("experiments.settings"))
+    if not user_can_manage_experiment(_current_admin_user_or_none(), exp):
+        flash(_("You do not have permission to update this experiment."), "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    from y_web.src.im.experiment_config import (
+        AdvancedSettingsError,
+        write_advanced_settings,
+    )
+    from y_web.src.system.path_utils import get_writable_path
+
+    exp_folder = _get_experiment_folder(get_writable_path(), exp, _get_database_type())
+    try:
+        write_advanced_settings(
+            exp_folder,
+            min_round_seconds=request.form.get("min_round_seconds"),
+            max_humans=request.form.get("max_humans"),
+        )
+        flash(_("Advanced settings updated."), "success")
+    except AdvancedSettingsError as exc:
+        flash(_("Invalid advanced settings: %(why)s", why=str(exc)), "error")
+    except Exception as exc:
+        flash(_("Failed to update configuration: %(error)s", error=str(exc)), "error")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -1321,6 +1402,10 @@ def update_stress_reward_settings(uid):
             )
 
         config["stress_reward"] = stress_reward_config
+        if is_im_experiment(experiment):
+            from y_web.src.im.experiment_config import apply_experiment_switches
+
+            apply_experiment_switches(config, stress_reward_config=stress_reward_config)
         with open(config_path, "w", encoding="utf-8") as handle:
             json.dump(config, handle, indent=4)
 
@@ -1349,9 +1434,17 @@ def update_stress_reward_settings(uid):
             try:
                 with open(client_config_file, "r", encoding="utf-8") as handle:
                     client_config = json.load(handle) or {}
-                client_config = sync_stress_reward_client_config(
-                    client_config, stress_reward_config
-                )
+                if is_im_experiment(experiment):
+                    from y_web.src.im.experiment_config import apply_switches_to_client
+
+                    apply_switches_to_client(
+                        client_config,
+                        stress_reward=bool(stress_reward_config.get("enabled")),
+                    )
+                else:
+                    client_config = sync_stress_reward_client_config(
+                        client_config, stress_reward_config
+                    )
                 with open(client_config_file, "w", encoding="utf-8") as handle:
                     json.dump(client_config, handle, indent=4)
             except Exception:

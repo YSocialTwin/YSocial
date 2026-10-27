@@ -77,7 +77,7 @@ def test_pages_render_for_an_im_experiment(im_app, monkeypatch, path, expected):
         assert b"Traceback" not in response.data
 
 
-def test_im_details_page_has_analytics_but_not_the_ysocial_annotation_config(im_app):
+def test_im_details_page_has_analytics_and_the_same_configuration_toggles(im_app):
     from y_web import db
     from y_web.src.models import Exps
 
@@ -94,7 +94,10 @@ def test_im_details_page_has_analytics_but_not_the_ysocial_annotation_config(im_
         other_id = other.idexp
     im_page = client.get(f"/admin/experiment_details/{im_id}").data.decode()
     mb_page = client.get(f"/admin/experiment_details/{other_id}").data.decode()
-    assert "update_experiment_config" not in im_page  # IM's own configuration decides which annotations exist
+    # the same configuration box as the other platforms, with the switches IM implements
+    assert "update_experiment_config" in im_page
+    for name in ("opinion_dynamics_enabled", "stress_reward_enabled", "toxicity_annotation", "sentiment_annotation"):
+        assert f'name="{name}"' in im_page, name
     assert "analytics-pages-section" in im_page and "Refresh analytics data" in im_page
     assert "have not been built yet" in im_page  # no run yet
     assert "Instant Messaging" in im_page

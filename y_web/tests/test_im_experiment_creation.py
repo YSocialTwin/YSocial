@@ -26,8 +26,15 @@ def test_generated_server_config_has_the_documented_keys():
     assert cfg["min_to_start"] == 1
     assert cfg["timeout_seconds"] == cfg["ready_timeout_seconds"] == 180
     assert cfg["database"] == {"type": "sqlite"}
-    assert cfg["simulation"] == {"num_days": 3, "start_date": "2026-02-01"}
-    assert cfg["telegram"] == {"time": {"ticks_per_round": 6}}
+    assert cfg["simulation"]["num_days"] == 3 and cfg["simulation"]["start_date"] == "2026-02-01"
+    assert cfg["simulation"]["enable_toxicity"] is False and cfg["simulation"]["memory_enabled"] is False
+    assert cfg["telegram"]["time"] == {"ticks_per_round": 6}
+    assert cfg["telegram"]["stress_reward"]["enabled"] is False
+    # the switches the experiment page reads, and the lock until the researcher confirms them
+    assert cfg["toxicity_annotation"] is False and cfg["opinion_dynamics_enabled"] is False
+    assert cfg["memory"] == {"enabled": False} and cfg["experiment_configuration_confirmed"] is False
+    # humans can register at any time: the gateway is always part of the experiment
+    assert cfg["human"] == {"enabled": True, "max_humans": 50, "pace": {"min_round_seconds": 0.0}}
     assert cfg["logging"]["enable_server_log"] is True
     assert cfg["platform_type"] == "instant_messaging"
     assert cfg["experiment_name"] == "exp" and cfg["is_remote"] is False
@@ -200,13 +207,15 @@ def test_create_im_experiment_writes_config_and_no_database(app, create_env):
     from y_web.src.models import Exps
 
     with app.app_context():
+        # the form has no IM-specific fields: run length and start date come from the client form
         _post_create(app, create_env, AVAILABLE, im_num_days="5", im_start_date="2026-03-01")
         exp = db.session.query(Exps).one()
         assert exp.platform_type == "instant_messaging" and exp.simulator_type == "HPC"
         assert exp.db_name.endswith("database_server.db") and exp.annotations == ""
         folder = create_env.tmp / "y_web" / Path(exp.db_name).parent
         cfg = json.loads((folder / "server_config.json").read_text())
-        assert cfg["simulation"] == {"num_days": 5, "start_date": "2026-03-01"}
+        assert cfg["simulation"]["num_days"] == 7 and cfg["simulation"]["start_date"] != "2026-03-01"
+        assert cfg["human"]["enabled"] is True and cfg["experiment_configuration_confirmed"] is False
         assert not (folder / "database_server.db").exists()
         assert not (folder / "config_server.json").exists()
 
@@ -219,17 +228,6 @@ def test_create_im_experiment_without_the_runtime_is_refused(app, create_env):
         _post_create(app, create_env, {**AVAILABLE, "instant_messaging": False})
         assert db.session.query(Exps).count() == 0
         assert any("YInstantMessaging" in m for _, m in create_env.flashes)
-
-
-def test_create_im_experiment_with_a_bad_value_leaves_nothing_behind(app, create_env):
-    from y_web import db
-    from y_web.src.models import Exps
-
-    with app.app_context():
-        _post_create(app, create_env, AVAILABLE, im_num_days="0")
-        assert db.session.query(Exps).count() == 0
-        assert any("num_days" in m for _, m in create_env.flashes)
-        assert not list((create_env.tmp / "y_web" / "experiments").glob("*"))
 
 
 # -- real server start/stop cycles --------------------------------------------------------------------

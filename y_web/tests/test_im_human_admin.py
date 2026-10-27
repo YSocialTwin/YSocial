@@ -12,13 +12,14 @@ import pytest
 from y_web.tests.test_im_admin_pages import _make_im_experiment, im_app  # noqa: F401
 
 
-def test_participation_off_leaves_the_configuration_untouched():
+def test_participation_off_leaves_the_configuration_untouched_and_on_is_the_default():
     from y_web.routes.admin.sub.experiments._im import generate_im_server_config
 
     base = dict(exp_name="e", db_uri="/x/database_server.db", data_path="/x", num_days="3", start_date="2026-01-01")
-    plain = generate_im_server_config(**base)
+    plain = generate_im_server_config(**base, human_enabled=False)
     assert "human" not in plain
     assert generate_im_server_config(**base, human_enabled=False, human_min_round_seconds="9") == plain
+    assert generate_im_server_config(**base)["human"]["enabled"] is True  # YWeb experiments always have it
 
 
 def test_participation_on_writes_the_human_section_and_validates():

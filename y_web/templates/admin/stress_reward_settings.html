@@ -70,6 +70,7 @@
                                                 ('moderation', 'protected', 'Moderation: Protected'),
                                                 ('moderation', 'sanctioned', 'Moderation: Sanctioned')
                                             ] %}
+                                            {% if experiment.platform_type != 'instant_messaging' or family in ('reaction', 'comment') %}
                                             <tr>
                                                 <td>{{ label }}</td>
                                                 <td>
@@ -79,6 +80,7 @@
                                                     <input class="input is-small" type="number" step="0.001" name="sr_event_{{ family }}_{{ subtype }}_reward" value="{{ stress_reward_config['system']['events'][family][subtype]['reward'] }}">
                                                 </td>
                                             </tr>
+                                            {% endif %}
                                             {% endfor %}
                                         </tbody>
                                     </table>

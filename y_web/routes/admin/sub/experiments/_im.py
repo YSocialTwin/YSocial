@@ -46,11 +46,12 @@ def _float_in_range(value, name, lo, hi, default):
     return number
 
 
-def human_section(enabled=False, min_round_seconds=None, max_humans=None):
-    """The ``human`` block of ``server_config.json`` (plan 5.8); ``None`` when participation is off.
+def human_section(enabled=True, min_round_seconds=None, max_humans=None):
+    """The ``human`` block of ``server_config.json`` (plan 5.8).
 
-    Off means the key is absent, so an experiment without humans keeps exactly the configuration (and the
-    configuration hash) it had before this feature existed.
+    Humans can register at any time, as on the other platforms, so YWeb always writes the block for the
+    experiments it creates: the gateway is a non-blocking client and never holds a round. ``None`` (key
+    absent) only when a caller explicitly turns it off, which keeps the configuration of older experiments.
     """
     if not enabled:
         return None
@@ -73,11 +74,24 @@ def generate_im_server_config(
     num_days=None,
     start_date=None,
     ticks_per_round=None,
-    human_enabled=False,
+    human_enabled=True,
     human_min_round_seconds=None,
     human_max_humans=None,
+    toxicity_annotation=False,
+    sentiment_annotation=False,
+    emotion_annotation=False,
+    opinion_dynamics_enabled=False,
+    stress_reward_enabled=False,
+    memory_enabled=False,
 ):
     """Build the ``server_config.json`` of an IM experiment (plan, table in 5.2).
+
+    The structure follows the other platforms: the experiment-level switches (annotations, opinion dynamics,
+    stress/reward, memory) sit at the top level, where the experiment page reads them, and are mirrored into the
+    keys IM itself reads (``simulation.enable_*``, ``telegram.stress_reward``) by
+    :func:`y_web.src.im.experiment_config.apply_experiment_switches`. The run length, start date and round
+    length are set from the client form (see :func:`y_web.src.im.experiment_config.apply_time_parameters`);
+    the defaults below apply until a client is created.
 
     The database is not pre-created: IM creates ``database_server.db`` on first start (SQLite only in v1).
     """
@@ -105,7 +119,20 @@ def generate_im_server_config(
         "data_path": data_path,
         "is_remote": is_remote,
         "experiment_name": exp_name,
+        # like the other platforms: workflows stay locked until the researcher confirms the configuration
+        "experiment_configuration_confirmed": False,
     }
+    from y_web.src.im.experiment_config import apply_experiment_switches
+
+    apply_experiment_switches(
+        config,
+        toxicity=toxicity_annotation,
+        sentiment=sentiment_annotation,
+        emotion=emotion_annotation,
+        opinion=opinion_dynamics_enabled,
+        stress_reward=stress_reward_enabled,
+        memory=memory_enabled,
+    )
     human = human_section(human_enabled, human_min_round_seconds, human_max_humans)
     if human is not None:
         config["human"] = human

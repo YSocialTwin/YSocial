@@ -91,7 +91,6 @@
                                     </div>
                                 </div>
                                 {% if can_manage_experiment %}
-                                {% if experiment_details_variant != 'im' %}
                                 <hr>
                                 <b>{{ _('Experiment Configuration') }}</b>
                             <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">{% if memory_plugin_installed %}{{ _('Enable or disable runtime annotations and memory.') }}{% else %}{{ _('Enable or disable runtime annotations.') }}{% endif %}</p>
@@ -128,7 +127,7 @@
                                                 </label>
                                                 <span>{{ _('Opinion Dynamics') }}</span>
                                             </div>
-                                            {% if experiment.platform_type in ["microblogging", "hpc"] %}
+                                            {% if experiment.platform_type in ["microblogging", "hpc", "instant_messaging"] %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" name="stress_reward_enabled" {% if stress_reward_enabled %}checked{% endif %}>
@@ -164,7 +163,6 @@
                                 </div>
  <button type="submit" class="button is-small is-info ys-mt-8">{{ _('Update Configuration') }}</button>
                             </form>
-                            {% endif %}
                             {% if llm_agents_enabled_effective %}
 
                             {% endif %}
@@ -194,7 +192,7 @@
  <div class="ys-content-panel">
  <p class="ys-label-hint">{{ _('Adjust experiment prompts and supporting configuration.') }}</p>
 
-                                {% if len(clients)>0 %}
+                                {% if len(clients)>0 and experiment_details_variant != 'im' %}
                                 <div class="box-line">
                                     <span class="left">{{ _('Edit LLM Prompts') }}</span>
                                     <span class="right">
@@ -204,7 +202,7 @@
                                 </div>
                                 {% endif %}
 
-                                {% if memory_configuration_supported and memory_module_enabled %}
+                                {% if memory_configuration_supported and memory_module_enabled and experiment_details_variant != 'im' %}
                                 <div class="box-line">
                                     <span class="left">{{ _('Memory Embeddings') }}</span>
                                     <span class="right">
@@ -241,6 +239,37 @@
                                 {% endif %}
                                     </div>
                                 </details>
+                                {% if experiment_details_variant == 'im' and im_advanced %}
+                                <details class="ys-mb-20" id="im-advanced-settings">
+                                    <summary class="ys-accordion-header">
+                                        <span class="ys-inline-flex-gap">
+                                            <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                            {{ _('Advanced Settings') }}
+                                        </span>
+                                    </summary>
+                                    <div class="ys-content-panel">
+                                        <p class="ys-label-hint">{{ _('Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part.') }}</p>
+                                        <form method="POST" action="/admin/update_im_advanced_settings/{{ experiment.idexp }}">
+                                            <div class="box-line">
+                                                <span class="left">{{ _('Minimum round duration (seconds, 0 = off)') }}</span>
+                                                <span class="right"><input type="number" name="min_round_seconds" class="input" min="0" max="3600" step="1" value="{{ im_advanced.min_round_seconds|int if im_advanced.min_round_seconds == im_advanced.min_round_seconds|int else im_advanced.min_round_seconds }}" {% if im_advanced.locked %}disabled{% endif %}></span>
+                                            </div>
+                                            <div class="ys-text-xs-meta">{{ _('A round never closes sooner than this, so that people have time to act. It is a lower bound: the simulation never waits for a person.') }}</div>
+                                            <div class="box-line">
+                                                <span class="left">{{ _('Maximum number of participants') }}</span>
+                                                <span class="right"><input type="number" name="max_humans" class="input" min="1" max="1000" value="{{ im_advanced.max_humans }}" {% if im_advanced.locked %}disabled{% endif %}></span>
+                                            </div>
+                                            {% if im_advanced.locked %}
+                                            <div class="ys-text-xs-meta">{{ _('The run already started: reset the experiment to change these settings.') }}</div>
+                                            {% else %}
+                                            <button type="submit" class="button is-small is-info ys-mt-8">{{ _('Update Configuration') }}</button>
+                                            {% endif %}
+                                        </form>
+                                    </div>
+                                </details>
+                                {% endif %}
                                 <hr>
                                 <b>{{ _('Management') }}</b>
  <p class="ys-label-hint">{{ _('Download or remove this experiment.') }}</p>
@@ -842,7 +871,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if stress_reward_enabled %}
+                                {% if (im_analytics.stress_reward if experiment_details_variant == 'im' and im_analytics else stress_reward_enabled) %}
                                 <a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-pulse"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -852,7 +881,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if toxicity_annotation_enabled %}
+                                {% if (im_analytics.toxicity if experiment_details_variant == 'im' and im_analytics else toxicity_annotation_enabled) %}
                                 <a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-alert-octagon-outline"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -862,7 +891,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if sentiment_annotation_enabled %}
+                                {% if (im_analytics.sentiment if experiment_details_variant == 'im' and im_analytics else sentiment_annotation_enabled) %}
                                 <a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-success">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-bell-curve"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -872,7 +901,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if emotion_annotation_enabled %}
+                                {% if (im_analytics.emotion if experiment_details_variant == 'im' and im_analytics else emotion_annotation_enabled) %}
                                 <a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="ys-analytics-page-card is-warning">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-emoticon-outline"></i></span>
                                     <span class="ys-analytics-page-body">

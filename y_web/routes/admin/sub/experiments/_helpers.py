@@ -293,9 +293,6 @@ def _experiment_configuration_box_present(experiment):
     """Return whether experiment_details should show a configuration block."""
     if experiment is None:
         return False
-    if is_im_experiment(experiment):
-        # IM decides its own annotations and has nothing to acknowledge: no configuration box
-        return False
     return True
 
 

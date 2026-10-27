@@ -2424,17 +2424,17 @@ def create_experiment():
             from ._im import ImConfigError, generate_im_server_config
 
             try:
+                # run length, start date and round length come from the client form; humans can register
+                # at any time, so the gateway is always part of an IM experiment
                 config = generate_im_server_config(
                     exp_name=exp_name,
                     db_uri=db_uri,
                     data_path=data_path,
                     is_remote=is_remote,
-                    num_days=request.form.get("im_num_days"),
-                    start_date=request.form.get("im_start_date"),
-                    ticks_per_round=request.form.get("im_ticks_per_round"),
-                    human_enabled=request.form.get("im_human_enabled") in ("1", "on", "true"),
-                    human_min_round_seconds=request.form.get("im_human_min_round_seconds"),
-                    human_max_humans=request.form.get("im_human_max_humans"),
+                    toxicity_annotation=toxicity_annotation,
+                    sentiment_annotation=sentiment_annotation,
+                    emotion_annotation=emotion_annotation,
+                    opinion_dynamics_enabled=opinion_dynamics_enabled,
                 )
             except ImConfigError as exc:
                 shutil.rmtree(data_path, ignore_errors=True)
