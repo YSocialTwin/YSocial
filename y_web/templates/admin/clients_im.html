@@ -1,6 +1,28 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
 
+{% macro adv_field(f) %}
+{%- set path, kind, label, default, bounds = f -%}
+{%- set name = adv_name(path) -%}
+<div class="box-line">
+    <span class="left">{{ _(label) }}</span>
+    <span class="right ys-w-70">
+    {%- if kind == 'bool' -%}
+        <input type="hidden" name="{{ name }}__present" value="1">
+        <input type="checkbox" name="{{ name }}" value="true" {% if default %}checked{% endif %}>
+    {%- elif kind == 'choice' -%}
+        <div class="select"><select name="{{ name }}">
+            {% for choice in bounds %}<option value="{{ choice }}" {% if choice == default %}selected{% endif %}>{{ choice }}</option>{% endfor %}
+        </select></div>
+    {%- elif kind == 'text' -%}
+        <input type="text" name="{{ name }}" class="input" value="{{ default }}">
+    {%- else -%}
+        <input type="number" name="{{ name }}" class="input" min="{{ bounds[0] }}" {% if bounds[1] < 1000000 %}max="{{ bounds[1] }}"{% endif %} step="{{ '1' if kind == 'int' else 'any' }}" value="{{ default }}">
+    {%- endif -%}
+    </span>
+</div>
+{% endmacro %}
+
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" class="dashboard-container">
         {% include "admin/dash_head.html" %}
@@ -46,103 +68,173 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-section-header">{{ _('Simulation Parameters') }}</div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Simulation Length (days)') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="days" class="input" min="1" max="3650" step="1" value="1" required></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Random Seed') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="seed" class="input" min="0" step="1" placeholder="{{ _('Random if empty') }}"></span>
-                                    </div>
+                                    <input type="hidden" name="experiment_opinion_dynamics_enabled" value="{{ 'true' if experiment_opinion_dynamics_enabled else 'false' }}">
+                                    <input type="hidden" name="experiment_stress_reward_enabled" value="{{ 'true' if switches.stress_reward else 'false' }}">
 
-                                    <div class="form-section-header">{{ _('Language Model') }}</div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Backend') }}</span>
-                                        <div class="select">
-                                            <select name="llm_backend">
-                                                <option value="echo" selected>echo ({{ _('no model, for tests') }})</option>
-                                                <option value="ollama">ollama</option>
-                                                <option value="vllm">vllm</option>
-                                                <option value="openai">openai</option>
-                                            </select>
+                                    <div class="tutorial-section">
+                                        <div class="form-section-header">{{ _('Simulation Parameters') }}</div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Simulation Length (days)') }}</span>
+                                            <span class="right ys-w-70"><input type="number" name="days" class="input" min="1" max="3650" step="1" value="{{ times.days if run_started or times_locked else 7 }}" required></span>
+                                        </div>
+                                        <div class="box-line ys-hint-text">
+                                            <span class="left">{{ _('Start Date') }}</span>
+                                            <span class="right ys-w-70"><input type="date" name="start_date" class="input" value="{{ times.start_date }}" {% if times_locked %}readonly{% endif %} required>
+                                            {% if times_locked %}<small>{{ _('The start date and the round length belong to the experiment: the first client set them.') }}</small>{% endif %}</span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Ticks per Round') }}</span>
+                                            <span class="right ys-w-70"><input type="number" name="ticks_per_round" class="input" min="1" max="60" step="1" value="{{ times.ticks_per_round }}" {% if times_locked %}readonly{% endif %} required></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Random Seed') }}</span>
+                                            <span class="right ys-w-70"><input type="number" name="seed" class="input" min="0" step="1" placeholder="{{ _('Random if empty') }}"></span>
                                         </div>
                                     </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Model') }}</span>
-                                        <span class="right ys-w-70"><input type="text" name="llm_model" class="input"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Server Address') }}</span>
-                                        <span class="right ys-w-70"><input type="text" name="llm_address" class="input" placeholder="127.0.0.1"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Server Port') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="llm_port" class="input" min="1" max="65535"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Temperature') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="llm_temperature" class="input" min="0" max="5" step="0.1"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Max Tokens') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="llm_max_tokens" class="input" min="1"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Max Concurrency') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="llm_max_concurrency" class="input" min="1"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Timeout (seconds)') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="llm_timeout_seconds" class="input" min="1"></span>
-                                    </div>
-                                    <div class="box-line ys-hint-text">
-                                        <span class="left">{{ _('API Key Environment Variable') }}</span>
-                                        <span class="right ys-w-70"><input type="text" name="llm_api_key_env" class="input" placeholder="OPENAI_API_KEY">
-                                        <small>{{ _('Name of the environment variable holding the key; the key itself is never written to the configuration.') }}</small></span>
-                                    </div>
 
-                                    <div class="form-section-header">{{ _('Agent Behaviour') }}</div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Agent Memory') }}</span>
-                                        <span class="right"><input type="checkbox" name="memory_enabled" value="true"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Stress and Reward') }}</span>
-                                        <span class="right"><input type="checkbox" name="stress_reward_enabled" value="true"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Opinion Dynamics') }}</span>
-                                        <span class="right"><input type="checkbox" name="opinion_enabled" value="true"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Opinion Model') }}</span>
-                                        <span class="right ys-w-70"><input type="text" name="opinion_model" class="input" value="bounded_confidence"></span>
-                                    </div>
-
-                                    <div class="form-section-header">{{ _('Topic Interest Distribution') }}</div>
-                                    <div class="form-section-description">
-                                        {{ _('Specify the percentage of agents interested in each topic. Default is 100%% for all topics.') }}
-                                    </div>
-                                    <div class="topic-interest-boxes">
-                                        {% for topic in topics %}
-                                        <div class="topic-interest-box">
-                                            <h4>{{ topic.name }}</h4>
-                                            <p>{{ _('Interest percentage') }}</p>
-                                            <input type="number" name="topic_interest_{{ topic.id }}" value="100" step="0.1" min="0" max="100"> <span class="topic-percentage-label">%</span>
+                                    {% if llm_agents_enabled %}
+                                    <div class="tutorial-section">
+                                        <div class="form-section-header">{{ _('Large Language Models') }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('Configure the LLM backend and model for agent content generation.') }}
                                         </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('LLM Backend') }}</span>
+                                            <span class="right ys-w-70">
+                                                <input type="hidden" name="llm_backend" id="llm_backend" value="ollama">
+                                                <div class="input" style="display:flex; align-items:center; min-height:38px;">
+                                                    {{ _('LLM Service') }}
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('LLM Server URL') }}</span>
+                                            <span class="right ys-w-70">
+                                                <div class="ys-flex-row-mb">
+                                                    <input type="text" id="custom_llm_url_client" name="llm" class="input ys-flex-1" placeholder="{{ _('e.g., localhost:8000') }}" value="{{ exp_llm_defaults.llm }}">
+                                                    <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
+                                                        {{ _('Fetch Models') }}
+                                                    </button>
+                                                </div>
+                                                <div id="llm_url_status_client" class="ys-badge-min"></div>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('LLM Model') }}</span>
+                                            <div class="select">
+                                                <select name="llm_model" id="models_select_client">
+                                                    <option value=""></option>
+                                                    {% for model in models %}
+                                                    <option value="{{ model }}">{{ model }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="box-line ys-hint-text">
+                                            <span class="left">{{ _('API Key Environment Variable') }}</span>
+                                            <span class="right ys-w-70"><input type="text" name="llm_api_key_env" class="input" placeholder="OPENAI_API_KEY">
+                                            <small>{{ _('Name of the environment variable holding the key; the key itself is never written to the configuration.') }}</small></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Max tokens') }}</span>
+                                            <span class="right ys-w-70"><input type="number" name="llm_max_tokens" class="input" value="{{ exp_llm_defaults.llm_max_tokens }}"></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Temperature') }}</span>
+                                            <span class="right ys-w-70"><input type="number" name="llm_temperature" class="input" min="0" max="5" step="0.1" value="{{ exp_llm_defaults.llm_temperature }}"></span>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <input type="hidden" name="llm_backend" id="llm_backend" value="echo">
+                                    {% endif %}
+
+                                    {% if memory_configuration_supported %}
+                                    <div id="section-memory" class="tutorial-section">
+                                        <div class="form-section-header">{{ _('Agent Memory') }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('Configure optional memory of the agents: what they remember of the chats they read and write in. Memory is disabled by default.') }}
+                                        </div>
+                                        {% if not experiment_memory_enabled %}
+                                        <div class="ys-text-xs-meta" style="margin-bottom: 10px;">
+                                            {{ _('Enable %(memory)s in %(link)s before configuring client-level memory.', memory=wrap('b', _('Memory')), link=wrap('a', _('Experiment Configuration'), href='/admin/experiment_details/' ~ experiment.idexp)) }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Enable Memory') }}</span>
+                                            <span class="right ys-w-70">
+                                                <label class="ys-flex-click">
+                                                    <input type="checkbox" id="standard_memory_enabled" name="memory_enabled" value="true" onchange="toggleStandardMemorySettings()" {% if not experiment_memory_enabled %}disabled{% endif %}>
+                                                    <span class="ys-text-brand">{{ _('Activate agent memory') }}</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                        <div id="standard_memory_config_fields" class="ys-collapsible-panel">
+                                            {% for f in adv_memory %}{{ adv_field(f) }}{% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <div id="section-actions-relevance" class="tutorial-section">
+                                        <div class="form-section-header">{{ _("Agents' Actions Relevance") }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('Relative likelihood of each action of an agent in a session. A value of 0 means that the action is never performed; values greater than 0 are relative to each other.') }}
+                                        </div>
+                                        {% for f in adv_actions %}{{ adv_field(f) }}{% endfor %}
+                                    </div>
+
+                                    <div class="tutorial-section">
+                                        <div class="form-section-header">{{ _('Topic Interest Distribution') }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('Specify the percentage of agents interested in each topic. Default is 100%% for all topics.') }}
+                                        </div>
+                                        <div class="topic-interest-boxes">
+                                            {% for topic in topics %}
+                                            <div class="topic-interest-box">
+                                                <h4>{{ topic.name }}</h4>
+                                                <p>{{ _('Interest percentage') }}</p>
+                                                <input type="number" name="topic_interest_{{ topic.id }}" value="100" step="0.1" min="0" max="100"> <span class="topic-percentage-label">%</span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="tutorial-section">
+                                        <div class="form-section-header ys-field-note">{{ _('Hourly Activity Rates') }} <span>{{ _('(Optional)') }}</span></div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Customize hourly activity') }}</span>
+                                            <span class="right ys-w-70">
+                                                <label class="ys-flex-click">
+                                                    <input type="checkbox" name="hourly_custom" value="true" onchange="document.getElementById('im_hourly_fields').style.display = this.checked ? 'block' : 'none'">
+                                                    <span class="ys-text-brand">{{ _('Set the share of activity of each hour (0 to 1)') }}</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                        <div id="im_hourly_fields" class="ys-collapsible-panel">
+                                            {% for hour in range(24) %}
+                                            <div class="box-line">
+                                                <span class="left">{{ '%02d:00' % hour }}</span>
+                                                <span class="right ys-w-70"><input type="number" name="hourly_{{ hour }}" class="input" min="0" max="1" step="0.01" placeholder="0 - 1"></span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="tutorial-section">
+                                        <div class="form-section-header">{{ _('Advanced Settings') }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('Every value has a default: change only what your design needs. Opinion dynamics, stress and reward, annotations and memory are switched in Experiment Configuration.') }}
+                                        </div>
+                                        {% for gid, glabel, gdescr, gfields in adv_groups %}
+                                        <details class="ys-advanced-group" style="margin-bottom: 8px;">
+                                            <summary><b>{{ _(glabel) }}</b></summary>
+                                            <div class="form-section-description">{{ _(gdescr) }}</div>
+                                            {% for f in gfields %}{{ adv_field(f) }}{% endfor %}
+                                        </details>
                                         {% endfor %}
-                                    </div>
-
-                                    <div class="form-section-header">{{ _('Advanced Settings') }}</div>
-                                    <div class="box-line ys-hint-text">
-                                        <span class="left">{{ _('Advanced Settings (JSON)') }}</span>
-                                        <span class="right ys-w-70"><textarea name="advanced_json" class="input" rows="5" placeholder="{}"></textarea>
-                                        <small>{{ _('Merged into the client configuration and validated against the instant messaging schema.') }}</small></span>
                                     </div>
                                 </div>
                                 <div class="ys-form-actions">
-                                    <button type="submit" class="button is-solid accent-button">{{ _('Create Client') }}</button>
+                                    <button type="submit" id="create_client_button" class="button is-solid accent-button">{{ _('Create Client') }}</button>
                                 </div>
                             </form>
                         </div>
@@ -153,5 +245,12 @@
     </div>
 </div>
 
+<script>
+var YS_DATA_CLIENTS = {
+    llmAgentsEnabled: {{ llm_agents_enabled | tojson }},
+    experimentMemoryEnabled: {{ experiment_memory_enabled | tojson }},
+    memoryConfigurationSupported: {{ memory_configuration_supported | tojson }}
+};
+</script>
 <script src="{{ url_for('static', filename='assets/js/admin-clients.js') }}"></script>
 {% include "admin/footer.html" %}

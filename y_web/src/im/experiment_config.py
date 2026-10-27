@@ -273,3 +273,32 @@ def write_advanced_settings(exp_folder: str, *, min_round_seconds=None, max_huma
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=4)
     return config
+
+
+def load_server_config(exp_folder: str) -> Dict[str, Any]:
+    """The experiment's ``server_config.json`` (an empty dict when it does not exist yet)."""
+    import json
+    import os
+
+    path = _server_config_path(exp_folder)
+    if not os.path.isfile(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle) or {}
+
+
+def save_server_config(exp_folder: str, config: Dict[str, Any]) -> None:
+    import json
+
+    with open(_server_config_path(exp_folder), "w", encoding="utf-8") as handle:
+        json.dump(config, handle, indent=4)
+
+
+def time_parameters(config: Dict[str, Any]) -> Dict[str, Any]:
+    """The run length, start date and round length a server configuration holds (what the client form pre-fills)."""
+    simulation = config.get("simulation") or {}
+    return {
+        "days": int(simulation.get("num_days", 7) or 7),
+        "start_date": str(simulation.get("start_date") or ""),
+        "ticks_per_round": int(((config.get("telegram") or {}).get("time") or {}).get("ticks_per_round", 12) or 12),
+    }

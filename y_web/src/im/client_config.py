@@ -5,6 +5,7 @@ Pure functions with no Flask or database access, so they can be tested alone. Th
 """
 
 import copy
+import datetime
 import json
 import os
 import random
@@ -71,41 +72,72 @@ def build_topic_catalog(topic_weights: Dict[str, float]) -> Dict[str, Any]:
     return {"topics": topics}
 
 
-def parse_client_form(form) -> Dict[str, Any]:
-    """Validated client settings from the form (any mapping with ``get``)."""
+def split_llm_url(url: Optional[str]) -> Optional[str]:
+    """IM's ``llm.address`` from the "LLM Server URL" of the form (``localhost:11434/v1`` -> ``http://localhost:11434``).
+
+    IM appends ``/v1/chat/completions`` itself and accepts a full URL as address, so the scheme is kept (``http``
+    when missing) and a trailing ``/v1`` is dropped.
+    """
+    text = (url or "").strip()
+    if not text:
+        return None
+    if "://" not in text:
+        text = "http://" + text
+    text = text.rstrip("/")
+    if text.endswith("/v1"):
+        text = text[: -len("/v1")]
+    return text.rstrip("/")
+
+
+def parse_client_form(form, label_of=lambda text: text) -> Dict[str, Any]:
+    """Validated client settings from the form (any mapping with ``get``).
+
+    The opinion, stress/reward and memory switches come from the experiment page, as in the other platforms: the
+    form carries them as hidden ``experiment_*`` fields. ``label_of`` translates the field labels used in errors.
+    """
+    from y_web.src.im import advanced_settings
+
     backend = (form.get("llm_backend") or "echo").strip().lower()
     if backend not in LLM_BACKENDS:
         raise ImClientFormError(f"llm_backend must be one of {', '.join(LLM_BACKENDS)}")
     api_key_env = (form.get("llm_api_key_env") or "").strip() or None
     if api_key_env and not _ENV_NAME.match(api_key_env):
         raise ImClientFormError("llm_api_key_env must be an environment variable name, not a key")
-    advanced = None
-    raw_advanced = (form.get("advanced_json") or "").strip()
-    if raw_advanced:
-        try:
-            advanced = json.loads(raw_advanced)
-        except ValueError as exc:
-            raise ImClientFormError(f"advanced settings are not valid JSON: {exc}") from None
-        if not isinstance(advanced, dict):
-            raise ImClientFormError("advanced settings must be a JSON object")
     seed = _num(form.get("seed"), "seed", 0, 2**31 - 1, None, int)
+    start_date = (form.get("start_date") or "").strip() or None
+    if start_date:
+        try:
+            datetime.date.fromisoformat(start_date)
+        except ValueError:
+            raise ImClientFormError("start_date must be a date (YYYY-MM-DD)") from None
+    memory_enabled = _flag(form.get("memory_enabled"))
+    try:
+        advanced = advanced_settings.parse_fields(form, memory=memory_enabled, label_of=label_of)
+    except advanced_settings.AdvancedSettingsError as exc:
+        raise ImClientFormError(str(exc)) from None
+    # the model of the form is the one picked after "Fetch Models" (``llm_model``); "model" is kept as a fallback
+    model = (form.get("llm_model") or form.get("user_type") or "").strip() or None
+    address = split_llm_url(form.get("llm")) or (form.get("llm_address") or "").strip() or None
     return {
         "days": _num(form.get("days"), "days", 1, 3650, 1, int),
+        "start_date": start_date,
+        "ticks_per_round": _num(form.get("ticks_per_round"), "ticks_per_round", 1, 60, None, int),
         "seed": seed if seed is not None else random.randint(1, 2**31 - 1),
         "backend": backend,
-        "model": (form.get("llm_model") or "").strip() or None,
-        "address": (form.get("llm_address") or "").strip() or None,
+        "model": model,
+        "address": address,
         "port": _num(form.get("llm_port"), "llm_port", 1, 65535, None, int),
         "temperature": _num(form.get("llm_temperature"), "llm_temperature", 0, 5, None),
-        "max_tokens": _num(form.get("llm_max_tokens"), "llm_max_tokens", 1, 100000, None, int),
+        "max_tokens": _num(form.get("llm_max_tokens"), "llm_max_tokens", -1, 100000, None, int),
         "max_concurrency": _num(form.get("llm_max_concurrency"), "llm_max_concurrency", 1, 1024, None, int),
         "timeout_seconds": _num(form.get("llm_timeout_seconds"), "llm_timeout_seconds", 1, 3600, None),
         "api_key_env": api_key_env,
-        "memory_enabled": _flag(form.get("memory_enabled")),
-        "stress_reward": _flag(form.get("stress_reward_enabled")),
-        "opinion_enabled": _flag(form.get("opinion_enabled")),
+        "memory_enabled": memory_enabled,
+        "stress_reward": _flag(form.get("experiment_stress_reward_enabled") or form.get("stress_reward_enabled")),
+        "opinion_enabled": _flag(form.get("experiment_opinion_dynamics_enabled") or form.get("opinion_enabled")),
         "opinion_model": (form.get("opinion_model") or "bounded_confidence").strip(),
-        "advanced": advanced,
+        "emotion_annotation": _flag(form.get("experiment_emotion_annotation")),
+        "advanced": advanced or None,
     }
 
 
@@ -138,6 +170,8 @@ def build_client_config(
         "activity_profiles": dict(activity_profiles),
         "discussion_topics": [t for t in topics if str(t).strip()],
     }
+    if settings.get("emotion_annotation"):
+        simulation["emotion_annotation"] = True
     if hourly_activity:
         simulation["hourly_activity"] = {str(h): float(v) for h, v in hourly_activity.items()}
 

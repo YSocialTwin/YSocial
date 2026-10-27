@@ -1,5 +1,6 @@
 """Instant messaging (IM) client creation: page and route (plan, 5.3)."""
 
+import datetime
 import json
 import os
 from pathlib import Path
@@ -15,7 +16,16 @@ from y_web.routes.admin.sub.experiments._helpers import (
 )
 from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.src.agents.platform import infer_population_username_type
-from y_web.src.im import is_im_experiment
+from y_web.src.im import advanced_settings, is_im_experiment
+from y_web.src.im.experiment_config import (
+    TimeParameterError,
+    apply_time_parameters,
+    load_server_config,
+    read_switches,
+    run_started,
+    save_server_config,
+    time_parameters,
+)
 from y_web.src.im.client_config import (
     IM_SLOTS_PER_DAY,
     ImClientFormError,
@@ -82,6 +92,31 @@ def clients_im(idexp):
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
+    exp_dir = _experiment_folder(exp)
+    server_config = load_server_config(exp_dir)
+    switches = read_switches(server_config)
+    other_clients = db.session.query(Client).filter_by(id_exp=exp.idexp).count()
+    started = run_started(exp_dir)
+    times = time_parameters(server_config)
+    if not times["start_date"]:
+        times["start_date"] = datetime.date.today().isoformat()
+    context.update(
+        {
+            "switches": switches,
+            "experiment_memory_enabled": switches["memory"],
+            "experiment_opinion_dynamics_enabled": switches["opinion"],
+            "memory_configuration_supported": bool(context.get("llm_agents_enabled")),
+            "times": times,
+            # the start date and the round length belong to the experiment once a client or a run exists
+            "times_locked": bool(other_clients) or started,
+            "run_started": started,
+            "adv_groups": advanced_settings.GROUPS,
+            "adv_actions": advanced_settings.ACTIONS,
+            "adv_memory": advanced_settings.MEMORY,
+            "adv_defaults": advanced_settings.defaults(),
+            "adv_name": advanced_settings.field_name,
+        }
+    )
     return render_template("admin/clients_im.html", **context)
 
 
@@ -109,6 +144,25 @@ def _profile_name(profile_id):
     return row.name if row else "Always On"
 
 
+def _hourly_activity(form):
+    """``{hour: rate}`` when the researcher customised the hourly activity, else ``None`` (IM's default)."""
+    if str(form.get("hourly_custom") or "").lower() not in {"1", "true", "on", "yes"}:
+        return None
+    rates = {}
+    for hour in range(24):
+        raw = form.get(f"hourly_{hour}")
+        if raw in (None, ""):
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            raise ImClientFormError("hourly activity must be numbers between 0 and 1") from None
+        if not 0 <= value <= 1:
+            raise ImClientFormError("hourly activity must be numbers between 0 and 1")
+        rates[str(hour)] = value
+    return rates or None
+
+
 def create_im_client(exp, name, descr, population_id, form_data):
     """Create an IM client: config, population and catalog files plus the database rows."""
     back = url_for("clientsr.clients_im", idexp=exp.idexp)
@@ -131,8 +185,21 @@ def create_im_client(exp, name, descr, population_id, form_data):
         flash(_("Invalid client name."), "error")
         return redirect(back)
 
+    exp_dir = _experiment_folder(exp)
+    server_config = load_server_config(exp_dir)
+    switches = read_switches(server_config)
+    # the switches are the experiment's (Experiment Configuration), never the form's
+    form_data = {key: form_data.get(key) for key in form_data.keys()}
+    form_data["experiment_stress_reward_enabled"] = "true" if switches["stress_reward"] else ""
+    form_data["experiment_opinion_dynamics_enabled"] = "true" if switches["opinion"] else ""
+    form_data["experiment_emotion_annotation"] = "true" if switches["emotion"] else ""
+    if not switches["memory"]:
+        form_data["memory_enabled"] = ""
+    form_data.pop("stress_reward_enabled", None)
+    form_data.pop("opinion_enabled", None)
     try:
-        settings = parse_client_form(form_data)
+        settings = parse_client_form(form_data, label_of=_)
+        hourly = _hourly_activity(form_data)
     except ImClientFormError as exc:
         flash(_("Invalid client settings: %(why)s", why=str(exc)), "error")
         return redirect(back)
@@ -208,6 +275,7 @@ def create_im_client(exp, name, descr, population_id, form_data):
         settings=settings,
         topics=topics,
         activity_profiles=_activity_profiles(population.id),
+        hourly_activity=hourly,
         prompt_language=prompt_language,
     )
     schema_file = Path(get_external_repo_dir("YInstantMessaging")) / "schemas" / "config" / "client_config.json"
@@ -218,12 +286,26 @@ def create_im_client(exp, name, descr, population_id, form_data):
         )
         return redirect(back)
 
-    exp_dir = _experiment_folder(exp)
     os.makedirs(exp_dir, exist_ok=True)
     config_filename = _client_config_path_for_platform(exp_dir, exp, name, population.name)
     if os.path.exists(config_filename):
         flash(_("A client with this name and population already exists."), "error")
         return redirect(back)
+
+    # run length, start date and round length: set here, carried into the server configuration
+    try:
+        apply_time_parameters(
+            server_config,
+            days=settings["days"],
+            start_date=settings["start_date"],
+            ticks_per_round=settings["ticks_per_round"],
+            other_clients=db.session.query(Client).filter_by(id_exp=exp.idexp).count(),
+            run_started=run_started(exp_dir),
+        )
+    except (TimeParameterError, ValueError) as exc:
+        flash(_("Invalid client settings: %(why)s", why=str(exc)), "error")
+        return redirect(back)
+    save_server_config(exp_dir, server_config)
 
     with open(config_filename, "w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=2)

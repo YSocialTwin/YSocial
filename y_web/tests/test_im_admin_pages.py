@@ -190,3 +190,26 @@ def test_analytics_pages_without_data_show_the_normal_unavailable_state(im_app):
         assert client.get(f"/admin/{path}/{im_id}").status_code in (400, 404)
     # the dashboard labels the platform
     assert "Instant Messaging" in client.get("/admin/dashboard").data.decode()
+
+
+def test_client_form_has_the_sections_of_the_other_platforms(im_app, monkeypatch):
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    page = client.get(f"/admin/clients_im/{_make_im_experiment(app)}").data.decode()
+    # language model like the other clients: LLM service URL, Fetch Models, model picked from the list
+    for expected in ("fetchModelsForClient", 'name="llm"', 'id="models_select_client"', 'name="llm_model"',
+                     'name="llm_max_tokens"', 'name="llm_temperature"', 'id="create_client_button"'):
+        assert expected in page, expected
+    # run parameters live in the client form
+    for expected in ('name="days"', 'name="start_date"', 'name="ticks_per_round"'):
+        assert expected in page, expected
+    # structured advanced settings, no free JSON, no opinion model or switches (those are the experiment's)
+    assert "advanced_json" not in page and 'name="opinion_model"' not in page
+    assert 'name="opinion_enabled"' not in page and 'name="stress_reward_enabled"' not in page
+    for expected in ('name="adv.telegram.reactive.probability"', 'name="adv.telegram.discovery.mode"',
+                     'name="adv.telegram.actions_likelihood.post"', 'name="adv.logging.enable_prompt_log__present"',
+                     'name="adv.agents.memory_total_max_chars"', 'id="standard_memory_config_fields"'):
+        assert expected in page, expected

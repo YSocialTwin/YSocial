@@ -35,8 +35,12 @@ def test_form_defaults_and_validation():
         {"llm_backend": "gpt"},
         {"days": "0"},
         {"llm_api_key_env": "sk-abc def"},
-        {"advanced_json": "[1]"},
-        {"advanced_json": "{oops"},
+        {"start_date": "tomorrow"},
+        {"adv.telegram.reactive.probability": "2"},
+        {"adv.telegram.discovery.mode": "psychic"},
+        {"adv.simulation.agent_archetypes.distribution.validator": "0.9",
+         "adv.simulation.agent_archetypes.distribution.broadcaster": "0.9",
+         "adv.simulation.agent_archetypes.distribution.explorer": "0.9"},
     ):
         with pytest.raises(ImClientFormError):
             parse_client_form(bad)
@@ -46,8 +50,8 @@ def test_config_never_carries_runtime_keys_or_secrets():
     from y_web.src.im.client_config import build_client_config, parse_client_form
 
     s = parse_client_form(
-        {"days": "2", "seed": "5", "advanced_json": json.dumps(
-            {"client_id": "x", "namespace": "n", "llm": {"llm_api_key": "SECRET", "model": "m"}})}
+        {"days": "2", "seed": "5", "llm": "localhost:11434/v1", "llm_model": "m",
+         "adv.telegram.reactive.enabled__present": "1", "adv.telegram.reactive.probability": "0.4"}
     )
     cfg = build_client_config(client_name="c", settings=s, topics=["a", " "], activity_profiles={"p": "1,2"},
                               prompt_language="it")
@@ -55,8 +59,72 @@ def test_config_never_carries_runtime_keys_or_secrets():
     assert cfg["simulation"]["discussion_topics"] == ["a"]
     assert cfg["telegram"]["topics"]["catalog_file"] == "topic_catalog.json"
     assert cfg["prompt_language"] == "it" and cfg["llm"]["model"] == "m"
-    assert "client_id" not in cfg and "namespace" not in cfg
-    assert "SECRET" not in json.dumps(cfg)
+    assert cfg["llm"]["address"] == "http://localhost:11434"
+    assert cfg["telegram"]["reactive"] == {"enabled": False, "probability": 0.4}
+    assert "client_id" not in cfg and "namespace" not in cfg and "llm_api_key" not in cfg["llm"]
+
+
+def test_llm_url_maps_to_the_address_im_expects():
+    from y_web.src.im.client_config import split_llm_url
+
+    assert split_llm_url("http://127.0.0.1:11434/v1") == "http://127.0.0.1:11434"
+    assert split_llm_url("localhost:8000/") == "http://localhost:8000"
+    assert split_llm_url("https://api.example.org/v1/") == "https://api.example.org"
+    assert split_llm_url("  ") is None
+
+
+def test_memory_fields_are_read_only_when_memory_is_on():
+    from y_web.src.im.client_config import parse_client_form
+
+    form = {"adv.agents.memory_total_max_chars": "900", "adv.agents.memory_forget_deleted__present": "1",
+            "adv.agents.memory_forget_deleted": "true"}
+    assert parse_client_form(form)["advanced"] is None
+    on = parse_client_form({**form, "memory_enabled": "true"})["advanced"]
+    assert on == {"agents": {"memory_total_max_chars": 900, "memory_forget_deleted": True}}
+
+
+def test_structured_advanced_table_matches_im_schema():
+    """Every field of the form exists in IM's schema, with the same default and compatible bounds."""
+    from y_web.src.im import advanced_settings as adv
+
+    schema = json.loads((IM_REPO / "schemas" / "config" / "client_config.json").read_text())
+    for path, kind, label, default, bounds in adv.all_fields():
+        node = schema
+        keys = path.split(".")
+        for i, key in enumerate(keys):
+            if "properties" not in node:
+                # a free-form object (a map): the key lives in its default, the bounds in additionalProperties
+                assert node.get("default", {}).get(key, default) == default, path
+                node = node.get("additionalProperties", {})
+                break
+            assert key in node["properties"], path
+            node = node["properties"][key]
+        if "default" in node and i == len(keys) - 1:
+            assert node["default"] == default, (path, node["default"], default)
+        if kind == "choice":
+            assert set(node["enum"]) == set(bounds), path
+        if kind in ("int", "float") and "minimum" in node:
+            assert bounds[0] >= node["minimum"], path
+        if kind in ("int", "float") and "maximum" in node:
+            assert bounds[1] <= node["maximum"], path
+
+
+def test_default_advanced_form_builds_a_schema_valid_config():
+    from y_web.src.im import advanced_settings as adv
+    from y_web.src.im.client_config import build_client_config, parse_client_form, schema_errors
+
+    form = {"memory_enabled": "true"}
+    for path, kind, _label, default, _bounds in adv.all_fields():
+        if kind == "bool":
+            form[adv.field_name(path) + "__present"] = "1"
+            if default:
+                form[adv.field_name(path)] = "true"
+        else:
+            form[adv.field_name(path)] = str(default)
+    settings = parse_client_form(form)
+    cfg = build_client_config(client_name="c", settings=settings, topics=["a"], activity_profiles={"p": "1"})
+    assert schema_errors(cfg, str(IM_REPO / "schemas" / "config" / "client_config.json")) == []
+    assert cfg["telegram"]["actions_likelihood"]["post"] == 2.0 and cfg["agents"]["memory_backend"] == "hybrid_semantic"
 
 
 def test_agent_mapper_writes_only_read_fields_and_dict_interests():
@@ -187,6 +255,43 @@ def test_create_im_client_writes_files_and_rows(app, env):
         _post(app, env, exp, pop)
         assert db.session.query(Client).count() == 1
         assert any("already exists" in m for _, m in env.flashes)
+
+
+def test_experiment_switches_and_time_parameters_come_through_the_server_config(app, env):
+    from y_web.src.im.experiment_config import apply_experiment_switches, load_server_config, save_server_config
+
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        folder = env.im._experiment_folder(exp)
+        server = load_server_config(folder)
+        apply_experiment_switches(server, opinion=True, stress_reward=True, memory=True, emotion=True)
+        save_server_config(folder, server)
+        # the form may claim anything: the switches are the experiment's
+        _post(app, env, exp, pop, days="3", start_date="2026-03-02", ticks_per_round="6",
+              opinion_enabled="", memory_enabled="true",
+              **{"adv.agents.memory_total_max_chars": "700"})
+        assert not [f for f in env.flashes if f[0] == "error"], env.flashes
+        cfg = json.loads(Path(folder, "client_cl-pop.json").read_text())
+        assert cfg["opinion_dynamics"]["enabled"] is True and cfg["stress_reward"]["enabled"] is True
+        assert cfg["agents"]["memory_enabled"] is True and cfg["agents"]["memory_total_max_chars"] == 700
+        assert cfg["simulation"]["emotion_annotation"] is True
+        server = load_server_config(folder)
+        assert server["simulation"]["num_days"] == 3 and server["simulation"]["start_date"] == "2026-03-02"
+        assert server["telegram"]["time"]["ticks_per_round"] == 6
+        # a second client must agree on the start date and the round length
+        env.flashes.clear()
+        _post(app, env, exp, pop, name="cl2", days="5", start_date="2026-04-01", ticks_per_round="6")
+        assert any("start date" in m for _, m in env.flashes)
+        _post(app, env, exp, pop, name="cl3", days="5", start_date="2026-03-02", ticks_per_round="6")
+        assert load_server_config(folder)["simulation"]["num_days"] == 5
+
+
+def test_memory_stays_off_when_the_experiment_has_it_off(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, memory_enabled="true", **{"adv.agents.memory_total_max_chars": "700"})
+        cfg = json.loads(Path(env.im._experiment_folder(exp), "client_cl-pop.json").read_text())
+        assert cfg["agents"] == {"memory_enabled": False}
 
 
 def test_bad_settings_leave_nothing_behind(app, env):
