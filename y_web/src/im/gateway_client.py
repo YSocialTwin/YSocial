@@ -106,3 +106,17 @@ class GatewayClient:
             "/v1/invites",
             {"account_id": account_id, "chat_id": chat_id, "usage_limit": usage_limit},
         )
+
+    def events(self, account_id: str, cursor: Optional[str] = None):
+        params: Dict[str, Any] = {"account_id": account_id}
+        if cursor:
+            params["cursor"] = cursor
+        return self.request("GET", "/v1/events", params=params)
+
+    def exposures(self, account_id: str, chat_id: str, message_ids: list, request_id: str):
+        """Record what a page showed to a participant (the pages read the database, not the gateway)."""
+        return self.request(
+            "POST",
+            "/v1/exposures",
+            {"account_id": account_id, "chat_id": chat_id, "message_ids": message_ids, "request_id": request_id},
+        )

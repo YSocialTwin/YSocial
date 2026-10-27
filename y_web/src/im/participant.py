@@ -129,6 +129,15 @@ def namespaced_action_id(account_id: str, client_action_id: str) -> Optional[str
     return "w-" + hashlib.sha256(f"{account_id}:{cid}".encode()).hexdigest()[:40]
 
 
+def exposure_request_id(account_id: str, round_id, chat_id: str) -> str:
+    """The request id under which a page records what it showed: one per participant, round and chat.
+
+    The server records a message once per request id, so a refresh of the same chat in the same round counts
+    once, while a message that arrives later, or the same chat in a later round, counts again.
+    """
+    return "yweb-" + hashlib.sha256(f"{account_id}|{round_id}|{chat_id}".encode()).hexdigest()[:40]
+
+
 def action_allowed(ui, action_type: str) -> Optional[str]:
     """``None`` when the action may be attempted, else the reason it is switched off."""
     if action_type not in ACTION_TYPES:

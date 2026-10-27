@@ -238,6 +238,29 @@ def _accounts_for_picker(session):
     ]
 
 
+def _record_exposure(ctx, chat_id, page):
+    """Tell the server what a participant is being shown, so human reads are exposures like the agents' ones.
+
+    The pages read the database; the exposure goes through the gateway, which applies the same visibility checks
+    as ``read_chat``. A gateway that does not answer never breaks the page.
+    """
+    part = ctx.participant
+    if not part or not page or not ctx.live:
+        return
+    ids = [item["id"] for item in page.get("items", []) if not item.get("deleted")][:200]
+    if not ids:
+        return
+    try:
+        GatewayClient(part.exp_folder).exposures(
+            part.account_id,
+            chat_id,
+            ids,
+            participation.exposure_request_id(part.account_id, ctx.latest, chat_id),
+        )
+    except GatewayUnavailable:
+        pass
+
+
 def _history(rd, ctx, chat_id, forum_topic_id=None):
     """One page of a chat, sized and opened where the experiment's settings say."""
     before = request.args.get("before") or None
@@ -270,6 +293,7 @@ def im_chat(exp_id, chat_id):
         page = _history(rd, ctx, chat_id)
         if page is None:
             abort(404)
+        _record_exposure(ctx, chat_id, page)
         topics = rd.forum_topics(chat_id)
         return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=None)
 
@@ -287,6 +311,7 @@ def im_chat_topic(exp_id, chat_id, topic_id):
         if topic is None:
             abort(404)
         page = _history(rd, ctx, chat_id, forum_topic_id=topic_id)
+        _record_exposure(ctx, chat_id, page)
         return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=topic)
 
     return _view(exp_id, handler)
@@ -361,6 +386,7 @@ def im_api_history(exp_id, chat_id):
         page = _history(rd, ctx, chat_id)
         if page is None:
             abort(404)
+        _record_exposure(ctx, chat_id, page)
         return jsonify(page)
 
     return _view(exp_id, handler)

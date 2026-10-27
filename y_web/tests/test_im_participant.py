@@ -359,3 +359,32 @@ def test_a_burst_of_actions_is_rate_limited_and_writes_nothing_extra(stack):
     written = [t for t in _texts(s) if t[0].startswith("burst ")]
     assert 0 < len(written) <= 5
     assert all(sender == _account(s) and origin == "human" for _, sender, origin in written)
+
+
+def test_what_a_participant_reads_is_recorded_as_exposures_once_per_round_and_chat(stack):
+    from sqlalchemy import func, select
+
+    from yinstantmessaging.server.db import models as m
+
+    s = stack
+    _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j"})
+    _act(s, {"type": "post", "chat_id": "c-chat", "text": "read me", "client_action_id": "p"})
+
+    def exposures():
+        with s.srv.sessions() as session:
+            return session.scalar(
+                select(func.count()).select_from(m.Exposure).where(m.Exposure.account_id == _account(s))
+            )
+
+    assert exposures() == 0
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat")
+    assert page.status_code == 200 and "read me" in page.data.decode()
+    first = exposures()
+    assert first >= 1
+    # a refresh, the history API and the topic-less page again: same round and chat, nothing counted twice
+    s.client.get(f"/{s.exp_id}/im/chat/c-chat")
+    assert s.client.get(f"/{s.exp_id}/im/api/chat/c-chat/history").status_code == 200
+    assert exposures() == first
+    # a gateway that does not answer never breaks the page
+    s.http.shutdown()
+    assert s.client.get(f"/{s.exp_id}/im/chat/c-chat").status_code == 200

@@ -10,9 +10,22 @@ result; the simulation itself and its database belong to IM.
 
 1. Install the *Instant Messaging* runtime from **Plugins**. The platform appears in the experiment form only once it
    is installed.
-2. Create the experiment, choose *Instant Messaging*, and set the number of days, the start date and the ticks per
-   round (the length of one round, in ticks).
-3. Create a population (type *instant messaging*: agents and pages) and a client (LLM backend, topology, topics).
+2. Create the experiment and choose *Instant Messaging*. As on the other platforms, the form asks nothing specific to
+   the platform. On the experiment details page, *Experiment Configuration* has the same switches as the other
+   experiments (annotations, opinion dynamics, stress and reward, memory); the experiment starts locked until
+   *Update Configuration* confirms them. The server-level settings that only matter to people taking part (minimum
+   round seconds, maximum number of participants) are in its *Advanced Settings*; they cannot change once a run has
+   started.
+3. Create a population (type *instant messaging*: agents and pages) and a client. The client form has the sections of
+   the other platforms: the run (length in days, start date, ticks per round, seed), the language model (the URL of
+   an OpenAI-compatible service, *Fetch Models*, model, temperature, maximum tokens), agent memory (only when it is
+   on in the experiment), the relevance of each agent action, topic interests, optional hourly activity, and
+   *Advanced Settings* as a structured form (scheduling, topology, topics, attention, reactive replies, discovery,
+   moderation, archetypes, churn, language-model reliability, logs, and more) with the defaults of IM. The length, the
+   start date and the round length are carried into the experiment's server configuration: the first client sets the
+   start date and the round length, later clients must agree, and nothing but a longer run can change once the
+   server has started. When opinion dynamics are on in the experiment, each client has a link to its own
+   *Opinion Configuration* page (distributions per topic, bounded confidence or LLM evaluation).
    The client form validates the files with `yim-validate` before anything is written; a file that IM would refuse
    is refused here with the same messages.
 4. Start the server, then the client. Pause, resume, stop, reset, clone, download and upload work as for the other
@@ -41,8 +54,8 @@ interaction switches (post, comment, share, like, notifications) and the partici
 
 ## Human participation
 
-Off by default. When *Allow human participation* is enabled in the experiment settings, people who join the
-experiment take part as **participants**: they read their own chats and can post, reply, forward, react, edit and
+People can register at any time, as on the other platforms: there is nothing to decide when the experiment is
+created. Those who join the experiment take part as **participants**: they read their own chats and can post, reply, forward, react, edit and
 delete (the last two only if the run enables edits), join and leave chats, invite, search and read notifications.
 They cannot create chats: in IM that is an agent mechanism with quotas.
 
@@ -55,6 +68,9 @@ How it works, and what to keep in mind:
   comes from the session), accepts only the actions above, limits their rate and de-duplicates retries. The browser
   sends its own CSRF token.
 - The interaction switches of the frontend settings are enforced by the server (403), not only hidden.
+- What a participant reads is recorded as exposures, like the agents' feed: the pages read the database, and each
+  view tells the gateway which messages were shown (one request per participant, round and chat, so refreshing does
+  not count twice; the server applies the same visibility checks as for `read_chat`).
 - Humans never hold up the simulation: the gateway is a non-blocking client, so an absent or slow person cannot stall
   a round. *Minimum round seconds* (default 0, a lower bound only) gives people a window to act in a slow-paced run;
   the right value depends on the people involved, so try it with someone at the keyboard.
