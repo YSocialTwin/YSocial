@@ -2,21 +2,26 @@
 <aside class="im-side im-panel" aria-label="{{ _('Chats') }}">
   <div class="im-side-head">
     {% include "im/_menu.html" %}
-    {% if ctx is defined and ctx and ctx.vp is defined and not participant %}
-    <form class="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search">
-      <input type="hidden" name="vp" value="{{ ctx.vp.kind }}">
-      {% if ctx.vp.account_id %}<input type="hidden" name="acc" value="{{ ctx.vp.account_id }}">{% endif %}
-      {% if ctx.vp.round != ctx.latest %}<input type="hidden" name="round" value="{{ ctx.vp.round }}">{% endif %}
-      <label class="im-sr" for="im-q">{{ _('Search messages') }}</label>
-      <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}">
+    <form class="im-search" id="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search" data-find-url="/{{ exp.idexp }}/im/api/search" data-find-params="{{ params|urlencode if params else '' }}">
+      {% for k, v in params.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <label class="im-sr" for="im-q">{{ _('Search') }}</label>
+      <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}" autocomplete="off" aria-controls="im-find">
     </form>
-    {% else %}
-    <form class="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search">
-      <label class="im-sr" for="im-q">{{ _('Search messages') }}</label>
-      <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}">
-    </form>
-    {% endif %}
+    <button type="button" id="im-theme" class="im-icon-btn" aria-label="{{ _('Toggle dark mode') }}" title="{{ _('Toggle dark mode') }}">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    </button>
   </div>
+  <section class="im-find" id="im-find" hidden aria-label="{{ _('Search') }}">
+    <div class="im-find-tabs" role="tablist" aria-label="{{ _('Search in') }}">
+      <button type="button" role="tab" data-kind="chats" aria-selected="true">{{ _('Chats') }}</button>
+      <button type="button" role="tab" data-kind="users" aria-selected="false">{{ _('Users') }}</button>
+      <button type="button" role="tab" data-kind="groups" aria-selected="false">{{ _('Groups') }}</button>
+      <button type="button" role="tab" data-kind="channels" aria-selected="false">{{ _('Channels') }}</button>
+      <button type="button" role="tab" data-kind="posts" aria-selected="false">{{ _('Posts') }}</button>
+    </div>
+    <p class="im-find-msg" id="im-find-msg" role="status" aria-live="polite">{{ _('Type to search.') }}</p>
+    <ul class="im-find-list" id="im-find-list"></ul>
+  </section>
   {% if viewed_account %}
   <div class="im-viewing" role="note">
     {{ avatar(viewed_account.username, viewed_account.hue, 'sm') }}

@@ -7,12 +7,31 @@ from y_web.tests.test_im_observer_routes import observer  # noqa: F401
 from y_web.tests.test_im_observer_settings import _busy_chat, _page, _set
 
 
-def test_staff_menu_links_back_to_the_administration(observer):
+def test_staff_menu_has_one_dashboard_link_viewpoints_and_time(observer):
     app, client, exp_id, info, _ = observer
     html = _page(client, f"/{exp_id}/im")
-    assert f'href="/admin/experiment_details/{exp_id}"' in html
-    assert 'href="/admin/experiments"' in html
-    assert 'name="acc"' in html and 'list="im-accounts"' in html  # the "view as account" picker
+    menu = html[html.index('id="im-menu"') : html.index("</details>")]
+    assert menu.count('href="/admin/') == 1 and 'href="/admin/dashboard"' in menu
+    assert "experiment_details" not in menu and "/admin/experiments" not in menu
+    assert "vp=overview" in menu and "vp=public" in menu  # the viewpoints
+    assert 'list="im-accounts"' in menu and 'name="day"' in menu  # view as account, time selection
+
+
+def test_dark_mode_button_is_outside_the_menu_for_everyone(observer):
+    app, client, exp_id, info, _ = observer
+    html = _page(client, f"/{exp_id}/im")
+    assert html.count('id="im-theme"') == 1
+    menu = html[html.index('id="im-menu"') : html.index("</details>")]
+    assert 'id="im-theme"' not in menu
+    assert html.index('id="im-theme"') > html.index("</details>")
+
+
+def test_wallpaper_is_neutral_not_green(observer):
+    import os
+
+    css = open(os.path.join(os.path.dirname(__file__), "..", "static", "assets", "css", "im.css")).read()
+    assert "--im-wall-2" not in css and "#c6dca0" not in css and "#a9c98a" not in css
+    assert "radial-gradient" not in css
 
 
 def test_view_as_account_shows_the_chip_and_an_exit(observer):
@@ -73,3 +92,75 @@ def test_annotation_chips_are_shown_to_staff_whatever_the_setting(observer):
     html = _page(client, f"/{exp_id}/im/chat/{chat}")
     assert "#shell" in html
     assert "is-tox is-high" in html and "is-sentiment is-negative" in html  # staff always see every annotation
+
+
+def _names(path):
+    from y_web.src.im import engine
+
+    with engine.open_reader(path) as session:
+        m = engine.im_modules()[0]
+        chats = [(c.id, c.title, c.type, c.visibility) for c in session.query(m.Chat)]
+        accounts = [(a.id, a.username) for a in session.query(m.Account)]
+    return chats, accounts
+
+
+def _find(client, exp_id, kind, q, extra=""):
+    r = client.get(f"/{exp_id}/im/api/search?kind={kind}&q={q}{extra}")
+    assert r.status_code == 200
+    return r.get_json()
+
+
+def test_search_overlay_is_in_the_shell_with_one_tab_per_kind(observer):
+    app, client, exp_id, info, _ = observer
+    html = _page(client, f"/{exp_id}/im")
+    assert 'id="im-find"' in html and f'data-find-url="/{exp_id}/im/api/search"' in html
+    tabs = re.findall(r'role="tab" data-kind="(\w+)"', html)
+    assert tabs == ["chats", "users", "groups", "channels", "posts"]
+    assert 'action="/%s/im/search"' % exp_id in html  # still works without JavaScript
+
+
+def test_search_api_finds_chats_by_title_and_filters_by_kind(observer):
+    app, client, exp_id, info, path = observer
+    chats, _ = _names(path)
+    group = next(c for c in chats if c[2] in ("group", "supergroup") and c[3] == "public" and c[1])
+    data = _find(client, exp_id, "chats", group[1][:4].replace(" ", "%20"))
+    assert group[0] in [r["chat_id"] for r in data["results"]]
+    hit = next(r for r in data["results"] if r["chat_id"] == group[0])
+    assert hit["href"].startswith(f"/{exp_id}/im/chat/{group[0]}") and "members" in hit["subtitle"]
+    assert group[0] in [r["chat_id"] for r in _find(client, exp_id, "groups", group[1][:4])["results"]]
+    assert group[0] not in [r["chat_id"] for r in _find(client, exp_id, "channels", group[1][:4])["results"]]
+
+
+def test_search_api_finds_users_and_posts_and_reports_empty_states(observer):
+    app, client, exp_id, info, path = observer
+    _, accounts = _names(path)
+    acc = next(a for a in accounts if a[1])
+    users = _find(client, exp_id, "users", acc[1])["results"]
+    assert acc[0] in [u["href"].split("/profile/")[1].split("?")[0] for u in users]
+    assert _find(client, exp_id, "users", "zzzzqqqq")["message"]
+    assert _find(client, exp_id, "chats", "")["results"] == []
+    assert _find(client, exp_id, "posts", "a")["results"] == []  # posts need two characters
+    assert _find(client, exp_id, "nonsense", "x")["kind"] == "chats"
+
+
+def test_search_api_respects_the_viewpoint(observer):
+    app, client, exp_id, info, path = observer
+    chats, _ = _names(path)
+    private = [c for c in chats if c[3] == "private" or c[2] == "private"]
+    assert private
+    for cid, title, ctype, vis in private:
+        if not title:
+            continue
+        found = _find(client, exp_id, "chats", title[:4], "&vp=public")["results"]
+        assert cid not in [r["chat_id"] for r in found]
+
+
+def test_search_api_in_an_account_viewpoint_marks_joined_chats(observer):
+    app, client, exp_id, info, path = observer
+    acc = info["accounts"][0]
+    chats, _ = _names(path)
+    for cid, title, ctype, vis in chats:
+        if title and ctype != "private":
+            res = _find(client, exp_id, "chats", title[:4], f"&vp=account&acc={acc}")["results"]
+            assert all("joined" in r for r in res)
+            break

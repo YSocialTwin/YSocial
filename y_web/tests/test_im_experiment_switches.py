@@ -139,7 +139,8 @@ def test_the_update_action_writes_server_and_client_files(monkeypatch, tmp_path)
     page = client_http.get(f"/admin/experiment_details/{exp_id}").data.decode()
     assert "memory_enabled" in page, "memory toggle"
     assert "Stress / Reward Settings" in page, "stress link"
-    assert "Memory Embeddings" not in page and "Edit LLM Prompts" not in page
+    assert "Memory Embeddings" in page, "IM memory uses the same embeddings page as the other platforms"
+    assert "Edit LLM Prompts" not in page
     assert 'id="im-advanced-settings"' in page and 'name="min_round_seconds"' in page
     save = client_http.post(f"/admin/update_im_advanced_settings/{exp_id}", data={"min_round_seconds": "2", "max_humans": "9"})
     assert save.status_code == 302

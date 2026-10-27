@@ -1,4 +1,4 @@
-{#- The ≡ menu of the left pane: administration links, viewpoint, time, participation and appearance. -#}
+{#- The ≡ menu of the left pane: the link back to the dashboard, viewpoint, time and participation. -#}
 {% set view_params = {'vp': ctx.vp.kind} if ctx is defined and ctx and ctx.vp is defined else {} %}
 <details class="im-menu" id="im-menu">
   <summary class="im-icon-btn" aria-label="{{ _('Menu') }}" title="{{ _('Menu') }}">
@@ -11,7 +11,6 @@
     </div>
     {% if admin_links %}
     <div class="im-menu-group">
-      <p class="im-menu-label">{{ _('Back to administration') }}</p>
       {% for label, href in admin_links %}<a role="menuitem" class="im-menu-item" href="{{ href }}">{{ label }}</a>{% endfor %}
     </div>
     {% endif %}
@@ -57,8 +56,5 @@
       {% endif %}
     </div>
     {% endif %}
-    <div class="im-menu-group">
-      <button type="button" id="im-theme" class="im-menu-item" aria-label="{{ _('Toggle dark mode') }}">{{ _('Dark mode') }} <span aria-hidden="true">◐</span></button>
-    </div>
   </div>
 </details>

@@ -122,6 +122,8 @@ GROUPS: List[Group] = [
             ("telegram.agent_actions.forum_topics.enabled", "bool", N_("Allow forum topics"), True, None),
             ("telegram.agent_actions.forum_topics.create_likelihood", "float", N_("Forum topic creation likelihood"), 0.2, (0, _P)),
             ("telegram.agent_actions.forum_topics.delete_likelihood", "float", N_("Forum topic deletion likelihood"), 0.05, (0, _P)),
+            ("telegram.agent_actions.rename_chat.enabled", "bool", N_("Allow owners to rename their chats"), True, None),
+            ("telegram.agent_actions.rename_chat.likelihood", "float", N_("Chat renaming likelihood"), 0.05, (0, _P)),
         ],
     ),
     (

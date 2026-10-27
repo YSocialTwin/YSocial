@@ -36,6 +36,94 @@
     document.addEventListener('click', function (e) { if (menu.open && !menu.contains(e.target)) menu.open = false; });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menu.open) { menu.open = false; var s = menu.querySelector('summary'); if (s) s.focus(); } });
   }
+  /* Structured search (Telegram-Web-like): focusing the box opens an overlay over the chat list with one tab per
+     kind of result; results follow what is typed. Without JavaScript the form still opens the plain results page. */
+  var form = document.getElementById('im-search'), find = document.getElementById('im-find');
+  if (form && find && window.fetch) {
+    var input = document.getElementById('im-q'), side = form.closest('.im-side');
+    var list = document.getElementById('im-find-list'), msg = document.getElementById('im-find-msg');
+    var tabs = Array.prototype.slice.call(find.querySelectorAll('[role="tab"]'));
+    var kind = safe(function () { return sessionStorage.getItem('im-find-kind'); }) || 'chats';
+    var timer = null, seq = 0, closer = null;
+    var base = form.getAttribute('data-find-url'), extra = form.getAttribute('data-find-params') || '';
+    function paint() {
+      tabs.forEach(function (t) {
+        var on = t.getAttribute('data-kind') === kind;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+      });
+    }
+    function open() {
+      if (!find.hidden) return;
+      find.hidden = false;
+      if (side) side.classList.add('is-finding');
+      paint();
+      if (!closer) {
+        closer = document.createElement('button');
+        closer.type = 'button'; closer.className = 'im-icon-btn im-find-back';
+        closer.setAttribute('aria-label', find.getAttribute('aria-label') + ' ×');
+        closer.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        closer.addEventListener('click', close);
+        form.parentNode.insertBefore(closer, form);
+      }
+    }
+    function close() {
+      find.hidden = true;
+      if (side) side.classList.remove('is-finding');
+      if (closer) { closer.remove(); closer = null; }
+      input.value = '';
+      list.textContent = '';
+      seq++;
+    }
+    function row(r) {
+      var li = document.createElement('li'), a = document.createElement('a');
+      a.href = r.href; a.className = 'im-find-row';
+      var av = document.createElement('span');
+      av.className = 'im-avatar is-md'; av.style.setProperty('--im-hue', r.hue);
+      av.textContent = (r.title || '?').trim().charAt(0).toUpperCase();
+      var main = document.createElement('span'); main.className = 'im-find-main';
+      var t = document.createElement('span'); t.className = 'im-find-title'; t.textContent = r.title;
+      main.appendChild(t);
+      if (r.subtitle) { var sub = document.createElement('span'); sub.className = 'im-find-sub'; sub.textContent = r.subtitle; main.appendChild(sub); }
+      if (r.snippet) { var sn = document.createElement('span'); sn.className = 'im-find-snippet'; sn.textContent = r.snippet; main.appendChild(sn); }
+      a.appendChild(av); a.appendChild(main); li.appendChild(a);
+      return li;
+    }
+    function run() {
+      var q = input.value.trim(), mine = ++seq;
+      var url = base + '?' + (extra ? extra + '&' : '') + 'kind=' + encodeURIComponent(kind) + '&q=' + encodeURIComponent(q);
+      fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || mine !== seq) return;
+          list.textContent = '';
+          d.results.forEach(function (r) { list.appendChild(row(r)); });
+          msg.textContent = d.message || '';
+          msg.hidden = !d.message;
+        })
+        .catch(function () {});
+    }
+    function schedule() { clearTimeout(timer); timer = setTimeout(run, 180); }
+    input.addEventListener('focus', function () { open(); if (input.value.trim()) run(); });
+    input.addEventListener('input', function () { open(); schedule(); });
+    form.addEventListener('submit', function (e) { e.preventDefault(); clearTimeout(timer); run(); });
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        kind = t.getAttribute('data-kind');
+        safe(function () { sessionStorage.setItem('im-find-kind', kind); });
+        paint(); run(); input.focus();
+      });
+      t.addEventListener('keydown', function (e) {
+        var i = tabs.indexOf(t), n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+        if (n < 0) return;
+        e.preventDefault();
+        tabs[(n + tabs.length) % tabs.length].click();
+      });
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !find.hidden) { close(); input.blur(); } });
+    paint();
+    if (input.value.trim()) { open(); run(); }
+  }
   /* Open a conversation at its latest message (or at the linked one). */
   var scroller = document.getElementById('im-scroll');
   if (scroller) {

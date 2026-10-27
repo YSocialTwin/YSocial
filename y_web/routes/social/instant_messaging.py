@@ -7,6 +7,7 @@ viewpoints: ``public`` (all roles), ``account`` and ``overview`` (admin and rese
 
 import os
 import uuid
+from urllib.parse import urlencode
 
 from flask import abort, jsonify, redirect, render_template, request, session as flask_session, url_for
 from flask_login import current_user, login_required
@@ -227,15 +228,7 @@ def _shell(ctx, values):
             viewed = None  # a participant is not "viewing as" anyone
     out["viewed_account"] = viewed
     out["annotation_flags"] = _annotation_flags(ctx)
-    out["admin_links"] = (
-        [
-            (_("Experiment details"), f"/admin/experiment_details/{ctx.exp.idexp}"),
-            (_("Experiments"), "/admin/experiments"),
-            (_("Dashboard"), "/admin/dashboard"),
-        ]
-        if ctx.staff is not None
-        else []
-    )
+    out["admin_links"] = [(_("Dashboard"), "/admin/dashboard")] if ctx.staff is not None else []
     return out
 
 
@@ -410,6 +403,83 @@ def im_search(exp_id):
     def handler(session, ctx, rd):
         q = (request.args.get("q") or "").strip()
         return _render("im/search.html", ctx, q=q, hits=rd.search(q))
+
+    return _view(exp_id, handler)
+
+
+# what the search overlay can look for: tab -> (chat types, or None for people and messages)
+_FIND_KINDS = {
+    "chats": ("private", "group", "supergroup", "channel"),
+    "groups": ("group", "supergroup"),
+    "channels": ("channel",),
+    "users": None,
+    "posts": None,
+}
+
+
+def _find_payload(ctx, rd, kind, q):
+    """The results of one search tab as the overlay shows them (texts already translated)."""
+    suffix = "?" + urlencode(ctx.params) if ctx.params else ""
+    base = f"/{ctx.exp.idexp}/im"
+    need = 2 if kind == "posts" else 1
+    if len(q) < need:
+        hint = _("Type at least two characters.") if kind == "posts" else _("Type to search.")
+        return {"kind": kind, "q": q, "results": [], "message": hint}
+    results = []
+    if kind == "users":
+        for a in rd.find_accounts(q):
+            results.append(
+                {
+                    "href": f"{base}/profile/{a['id']}{suffix}",
+                    "title": a["username"],
+                    "subtitle": a["kind"] or "",
+                    "hue": a["hue"],
+                }
+            )
+    elif kind == "posts":
+        for m in rd.search(q):
+            sender = (m.get("sender") or {}).get("username")
+            text = (m.get("text") or "").strip().replace("\n", " ")
+            results.append(
+                {
+                    "href": f"{base}/chat/{m['chat_id']}{suffix}#m-{m['id']}",
+                    "title": m["chat_title"],
+                    "subtitle": _("d%(d)s · %(s)s", d=m["day"], s=m["slot"]),
+                    "snippet": ((sender + ": ") if sender else "") + text[:160],
+                    "hue": avatar_hue(m["chat_id"]),
+                }
+            )
+    else:
+        for c in rd.find_chats(q, kinds=_FIND_KINDS[kind]):
+            parts = [_("%(n)s members", n=c["members"])]
+            if c["username"]:
+                parts.append("@" + c["username"])
+            if c["visibility"] == "private":
+                parts.append(_("private"))
+            if c["joined"]:
+                parts.append(_("joined"))
+            results.append(
+                {
+                    "href": f"{base}/chat/{c['id']}{suffix}",
+                    "title": c["title"],
+                    "subtitle": " · ".join(parts),
+                    "type": c["type"],
+                    "hue": c["hue"],
+                    "chat_id": c["id"],
+                    "joined": c["joined"],
+                }
+            )
+    return {"kind": kind, "q": q, "results": results, "message": "" if results else _("Nothing found.")}
+
+
+@main.route("/<int:exp_id>/im/api/search")
+@login_required
+def im_api_search(exp_id):
+    def handler(session, ctx, rd):
+        kind = request.args.get("kind", "chats")
+        if kind not in _FIND_KINDS:
+            kind = "chats"
+        return jsonify(_find_payload(ctx, rd, kind, (request.args.get("q") or "").strip()))
 
     return _view(exp_id, handler)
 

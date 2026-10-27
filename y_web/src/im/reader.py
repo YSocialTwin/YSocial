@@ -633,6 +633,87 @@ class Reader:
             item["chat_title"] = titles.get(item["chat_id"], item["chat_id"])
         return items
 
+    def _like(self, query: str) -> str:
+        return "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+    def find_chats(self, query: str, kinds: Tuple[str, ...] = ("channel", "supergroup", "group"), limit: int = 20):
+        """Chats the viewpoint can open whose title, @username or description contain ``query``.
+
+        Unlike the chat list, an account's search also finds public chats it has not joined.
+        """
+        query = (query or "").strip()
+        if len(query) < 1:
+            return []
+        m = self.m
+        pattern = self._like(query)
+        stmt = (
+            select(m.Chat)
+            .where(
+                m.Chat.type.in_(kinds),
+                or_(
+                    m.Chat.title.ilike(pattern, escape="\\"),
+                    m.Chat.username.ilike(pattern, escape="\\"),
+                    m.Chat.description.ilike(pattern, escape="\\"),
+                ),
+            )
+            .order_by(m.Chat.title, m.Chat.id)
+        )
+        found = [c for c in self.s.scalars(stmt) if self._chat_visible(c)][: max(1, min(int(limit), 50))]
+        counts = self._member_counts([c.id for c in found])
+        mine = set()
+        if self.vp.kind == "account":
+            mine = {
+                row.chat_id
+                for row in self.s.scalars(
+                    select(m.ChatMember).where(m.ChatMember.account_id == self.vp.account_id)
+                )
+                if row.role not in ("banned", "left")
+                and row.joined_round <= self.vp.round
+                and (row.left_round is None or row.left_round > self.vp.round)
+            }
+        return [
+            {
+                "id": c.id,
+                "title": c.title or c.id,
+                "type": c.type,
+                "username": c.username,
+                "visibility": c.visibility,
+                "members": counts.get(c.id, 0),
+                "hue": avatar_hue(c.id),
+                "joined": c.id in mine,
+            }
+            for c in found
+        ]
+
+    def find_accounts(self, query: str, limit: int = 20):
+        """Accounts whose username contains ``query`` and who belong to a chat the viewpoint can open."""
+        query = (query or "").strip()
+        if len(query) < 1:
+            return []
+        m = self.m
+        pattern = self._like(query)
+        rows = []
+        for acc in self.s.scalars(
+            select(m.Account).where(m.Account.username.ilike(pattern, escape="\\")).order_by(m.Account.username)
+        ):
+            if acc.status == "removed":
+                continue
+            rows.append(acc)
+            if len(rows) >= 200:
+                break
+        out = []
+        for acc in rows:
+            chats = self.s.scalars(
+                select(m.ChatMember.chat_id).where(
+                    m.ChatMember.account_id == acc.id, m.ChatMember.role.notin_(("banned", "left"))
+                )
+            ).all()
+            if any(self._chat_visible(self._chat(cid)) for cid in chats):
+                out.append({"id": acc.id, "username": acc.username, "kind": acc.kind, "hue": avatar_hue(acc.id)})
+            if len(out) >= max(1, min(int(limit), 50)):
+                break
+        return out
+
     # -- profile ---------------------------------------------------------------------------
     def profile(self, account_id: str, include_persona: bool = False) -> Optional[Dict[str, Any]]:
         account = self.s.get(self.m.Account, account_id)

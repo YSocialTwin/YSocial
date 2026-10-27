@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 13:08+0000\n"
+"POT-Creation-Date: 2026-10-27 13:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -975,6 +975,9 @@ msgstr ""
 msgid "Allow forwarding"
 msgstr ""
 
+msgid "Allow owners to rename their chats"
+msgstr ""
+
 msgid "Allow private messages"
 msgstr ""
 
@@ -1363,9 +1366,6 @@ msgstr ""
 msgid "Back to Plugins"
 msgstr ""
 
-msgid "Back to administration"
-msgstr ""
-
 msgid "Back to feed"
 msgstr ""
 
@@ -1638,6 +1638,9 @@ msgstr ""
 msgid "Channel"
 msgstr ""
 
+msgid "Channels"
+msgstr ""
+
 msgid "Character cap for injected memory context (24B/Ollama-safe default)."
 msgstr ""
 
@@ -1660,6 +1663,9 @@ msgid "Chat id"
 msgstr ""
 
 msgid "Chat info"
+msgstr ""
+
+msgid "Chat renaming likelihood"
 msgstr ""
 
 msgid "Chats"
@@ -2846,9 +2852,6 @@ msgstr ""
 msgid "Danish"
 msgstr ""
 
-msgid "Dark mode"
-msgstr ""
-
 msgid "Dashboard"
 msgstr ""
 
@@ -3848,9 +3851,6 @@ msgid "Experiment configuration updated."
 msgstr ""
 
 msgid "Experiment created successfully!"
-msgstr ""
-
-msgid "Experiment details"
 msgstr ""
 
 #, python-format
@@ -5592,9 +5592,6 @@ msgstr ""
 msgid "Let's see what we are saying about"
 msgstr ""
 
-msgid "Lexical"
-msgstr ""
-
 msgid "Like"
 msgstr ""
 
@@ -5941,9 +5938,6 @@ msgid "Memory Embeddings"
 msgstr ""
 
 msgid "Memory backend"
-msgstr ""
-
-msgid "Memory retrieval"
 msgstr ""
 
 msgid "Mention Edges"
@@ -6734,6 +6728,9 @@ msgstr ""
 
 #, python-format
 msgid "Notebook created at %(filepath)s"
+msgstr ""
+
+msgid "Nothing found."
 msgstr ""
 
 msgid "Nothing matches your search."
@@ -8682,10 +8679,10 @@ msgstr ""
 msgid "Search followed agents"
 msgstr ""
 
-msgid "Search likelihood"
+msgid "Search in"
 msgstr ""
 
-msgid "Search messages"
+msgid "Search likelihood"
 msgstr ""
 
 msgid "Search photos, people, hashtags"
@@ -10030,11 +10027,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The memory of instant messaging agents scores items by shared words and "
-"recency: there is no embedding backend to configure."
-msgstr ""
-
-msgid ""
 "The network can be either synthetically generated or custom-made and "
 "uploaded. To create a custom network file download the agent name list "
 "using"
@@ -10663,6 +10655,9 @@ msgid "Type id: %(id)s"
 msgstr ""
 
 msgid "Type of Network"
+msgstr ""
+
+msgid "Type to search."
 msgstr ""
 
 msgid "URL"
@@ -11839,6 +11834,9 @@ msgid "images"
 msgstr ""
 
 msgid "in context."
+msgstr ""
+
+msgid "joined"
 msgstr ""
 
 msgid "llm_url parameter is required"
