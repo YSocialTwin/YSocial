@@ -50,4 +50,13 @@ DEFAULT_SETTINGS = {
     "filter_bubble_wr": 1.0,  # weight for reactions in engagement score
     "filter_bubble_wc": 1.5,  # weight for comments in engagement score
     "filter_bubble_ws": 2.0,  # weight for shares in engagement score
+    # Instant messaging (read-only observer pages and, later, participant mode)
+    "im_show_forward_origin": True,  # show "Forwarded from ..." above forwarded messages
+    "im_show_reactions": True,  # show the reaction counters under each message
+    "im_show_member_roles": True,  # show owner/admin badges in member lists
+    "im_default_view": "latest",  # latest | start: where a chat opens
+    "im_allow_time_travel": True,  # let non-staff viewers pick a past round
+    "im_public_observer_enabled": True,  # public chats readable without a participant login
+    "im_participant_mode_enabled": True,  # human participants may take part (phase 9)
+    "im_participant_poll_seconds": 3,  # polling interval of the chat page, clamped to 1-60
 }

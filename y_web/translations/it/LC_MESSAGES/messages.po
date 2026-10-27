@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 08:25+0000\n"
+"POT-Creation-Date: 2026-10-27 10:20+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.8.0\n"
+"Generated-By: Babel 2.18.0\n"
 
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
@@ -144,6 +144,10 @@ msgid "%(n)s configurable values"
 msgstr "%(n)s valori configurabili"
 
 #, python-format
+msgid "%(n)s members"
+msgstr "%(n)s membri"
+
+#, python-format
 msgid "%(n)s plugin types"
 msgstr "%(n)s tipi di plugin"
 
@@ -152,12 +156,20 @@ msgid "%(n)s populations"
 msgstr "%(n)s popolazioni"
 
 #, python-format
+msgid "%(n)s reactions"
+msgstr "%(n)s reazioni"
+
+#, python-format
 msgid "%(n)s resources"
 msgstr "%(n)s risorse"
 
 #, python-format
 msgid "%(n)s steps"
 msgstr "%(n)s passi"
+
+#, python-format
+msgid "%(n)s unread"
+msgstr "%(n)s non letti"
 
 #, python-format
 msgid "%(n)s visible resources"
@@ -285,6 +297,9 @@ msgstr "(almeno 2)"
 
 msgid "(available in developer/docker mode)"
 msgstr "(disponibile in modalità sviluppatore/docker)"
+
+msgid "(deleted)"
+msgstr "(eliminato)"
 
 msgid "(e.g., personality traits & toxicity)"
 msgstr "(es. tratti di personalità e tossicità)"
@@ -1146,6 +1161,12 @@ msgstr "Armena"
 msgid "Articles'"
 msgstr "articoli"
 
+msgid "As account"
+msgstr "Come account"
+
+msgid "As of day"
+msgstr "Al giorno"
+
 msgid "Ask the agent about their experiences, decisions, or relationships..."
 msgstr "Chiedi all'agente delle sue esperienze, decisioni o relazioni..."
 
@@ -1189,6 +1210,9 @@ msgstr "Almeno un simbolo speciale"
 
 msgid "At least one uppercase letter"
 msgstr "Almeno una lettera maiuscola"
+
+msgid "At the latest messages or at the beginning of the conversation"
+msgstr "Sugli ultimi messaggi o all'inizio della conversazione"
 
 msgid "Attacker Agents"
 msgstr "Agenti attaccanti"
@@ -1379,6 +1403,9 @@ msgstr "Torna al feed"
 msgid "Back to profile"
 msgstr "Torna al profilo"
 
+msgid "Back to the experiments"
+msgstr "Torna agli esperimenti"
+
 msgid "Backend"
 msgstr "Backend"
 
@@ -1439,6 +1466,9 @@ msgstr ""
 "Prima di entrare nel tuo feed, personalizza il profilo e indica il tuo "
 "livello di interesse e la tua opinione per ogni argomento di discussione "
 "attivo."
+
+msgid "Beginning of the conversation"
+msgstr "Inizio della conversazione"
 
 msgid "Behavior"
 msgstr "Comportamento"
@@ -1643,6 +1673,9 @@ msgstr ""
 msgid "Chat"
 msgstr "Chat"
 
+msgid "Chats"
+msgstr "Chat"
+
 msgid "Check for Updates"
 msgstr "Cerca aggiornamenti"
 
@@ -1737,6 +1770,11 @@ msgid ""
 msgstr ""
 "Scegli fino a 5 foto dalla tua galleria. Le immagini selezionate saranno "
 "salvate nella storia come carosello."
+
+msgid "Choose what the chat pages of this experiment show and who can open them."
+msgstr ""
+"Scegli cosa mostrano le pagine delle chat di questo esperimento e chi può"
+" aprirle."
 
 msgid ""
 "Choose whether to consider only the interlocutor's opinion or also first-"
@@ -4174,6 +4212,27 @@ msgstr "Decadimento esponenziale nei round di simulazione. 0 = disattivato."
 msgid "Export %(name)s"
 msgstr "Esporta %(name)s"
 
+msgid "Export and reports"
+msgstr "Esportazione e report"
+
+msgid "Export data"
+msgstr "Esporta i dati"
+
+#, python-format
+msgid "Export failed: %(error)s"
+msgstr "Esportazione non riuscita: %(error)s"
+
+msgid "Export finished. The files are listed in the Export and reports panel."
+msgstr ""
+"Esportazione completata. I file sono elencati nel pannello Esportazione e"
+" report."
+
+msgid "Export format"
+msgstr "Formato di esportazione"
+
+msgid "Exports"
+msgstr "Esportazioni"
+
 msgid "Extend Simulation"
 msgstr "Estendi la simulazione"
 
@@ -4332,6 +4391,9 @@ msgid ""
 msgstr ""
 "Errore di formato del file: fornisci un file csv con due colonne di nomi "
 "di agenti. Nessuna intestazione richiesta."
+
+msgid "File not found."
+msgstr "File non trovato."
 
 msgid "Filter"
 msgstr "Filtro"
@@ -4505,12 +4567,22 @@ msgstr ""
 "Simulatore di forum (thread e risposte). Server e client si installano e "
 "si aggiornano separatamente dalla sua pagina."
 
+msgid "Forum topics"
+msgstr "Argomenti del forum"
+
 msgid ""
 "Forum uses link-sharing to publish content imported from RSS and feed "
 "sources."
 msgstr ""
 "Il forum usa la condivisione di link per pubblicare i contenuti importati"
 " da RSS e da altre fonti."
+
+#, python-format
+msgid "Forwarded from %(chat)s"
+msgstr "Inoltrato da %(chat)s"
+
+msgid "Forwarded-from line"
+msgstr "Riga «Inoltrato da»"
 
 msgid "French"
 msgstr "Francese"
@@ -4698,6 +4770,9 @@ msgstr "Globale"
 
 msgid "Global Actions Likelihood"
 msgstr "Probabilità globale delle azioni"
+
+msgid "Go"
+msgstr "Vai"
 
 msgid "Go to Homepage"
 msgstr "Vai alla home page"
@@ -4995,6 +5070,9 @@ msgstr ""
 msgid "How much conversation history agents see"
 msgstr "Quanta cronologia delle conversazioni vedono gli agenti"
 
+msgid "How often an open chat looks for new messages (1 to 60)"
+msgstr "Ogni quanto una chat aperta cerca nuovi messaggi (da 1 a 60)"
+
 msgid "How often and when agents are active."
 msgstr "Quanto spesso e quando gli agenti sono attivi."
 
@@ -5006,6 +5084,9 @@ msgstr "Come ordinare i post a parità di punteggio"
 
 msgid "Human"
 msgstr "Umano"
+
+msgid "Human participants can take part in the chats"
+msgstr "I partecipanti umani possono intervenire nelle chat"
 
 msgid "Hungarian"
 msgstr "Ungherese"
@@ -5219,9 +5300,24 @@ msgstr "Messaggistica istantanea"
 msgid "Instant Messaging (e.g., Telegram)"
 msgstr "Messaggistica istantanea (es. Telegram)"
 
+msgid "Instant messaging"
+msgstr "Messaggistica istantanea"
+
 #, python-format
 msgid "Instant messaging client '%(name)s' created successfully"
 msgstr "Client di messaggistica istantanea '%(name)s' creato con successo"
+
+msgid ""
+"Instant messaging experiment imported. Create its clients from the "
+"experiment page."
+msgstr ""
+"Esperimento di messaggistica istantanea importato. Crea i suoi client "
+"dalla pagina dell'esperimento."
+
+msgid "Instant messaging experiments are not supported with PostgreSQL."
+msgstr ""
+"Gli esperimenti di messaggistica istantanea non sono supportati con "
+"PostgreSQL."
 
 msgid ""
 "Instant messaging experiments are unavailable because YInstantMessaging "
@@ -5229,6 +5325,9 @@ msgid ""
 msgstr ""
 "Gli esperimenti di messaggistica istantanea non sono disponibili perché "
 "YInstantMessaging non è presente."
+
+msgid "Instant messaging pages"
+msgstr "Pagine di messaggistica istantanea"
 
 msgid "Instructions"
 msgstr "Istruzioni"
@@ -5379,7 +5478,9 @@ msgstr "Impostazioni del client non valide: %(why)s"
 msgid ""
 "Invalid configuration or a missing required plugin: fix the client "
 "settings and start again."
-msgstr "Configurazione non valida o plugin richiesto mancante: correggi le impostazioni del client e riavvia."
+msgstr ""
+"Configurazione non valida o plugin richiesto mancante: correggi le "
+"impostazioni del client e riavvia."
 
 msgid "Invalid download path."
 msgstr "Percorso di download non valido."
@@ -5523,6 +5624,9 @@ msgstr "Partecipa a questo esperimento"
 
 msgid "Join Y Social and choose what you want to take part in."
 msgstr "Unisciti a Y Social e scegli a cosa partecipare."
+
+msgid "Joined (round)"
+msgstr "Iscritto (round)"
 
 msgid "Joined Experiments"
 msgstr "Esperimenti a cui partecipa"
@@ -5699,6 +5803,9 @@ msgstr "Ultima esecuzione"
 msgid "Last Seen"
 msgstr "Ultima comparsa"
 
+msgid "Latest"
+msgstr "Ultimo"
+
 msgid "Latest aggregate reward state binned across tracked agents."
 msgstr ""
 "Ultimo stato aggregato di ricompensa, suddiviso in fasce tra gli agenti "
@@ -5714,6 +5821,9 @@ msgstr ""
 
 msgid "Latest articles from this page's RSS feed."
 msgstr "Ultimi articoli del feed RSS di questa pagina."
+
+msgid "Latest messages"
+msgstr "Ultimi messaggi"
 
 msgid "Latest release"
 msgstr "Ultima release"
@@ -5744,8 +5854,17 @@ msgstr "Lascia vuoto per usare il nome della configurazione..."
 msgid "Leave fields empty to use the default activity profile."
 msgstr "Lascia i campi vuoti per usare il profilo di attività predefinito."
 
+msgid "Leave message text out"
+msgstr "Escludi il testo dei messaggi"
+
+msgid "Left (round)"
+msgstr "Uscito (round)"
+
 msgid "Less"
 msgstr "Meno"
+
+msgid "Let non-staff viewers look at a past round"
+msgstr "Permetti a chi non fa parte dello staff di guardare un turno passato"
 
 msgid "Let participants change the language"
 msgstr "Permetti ai partecipanti di cambiare lingua"
@@ -6083,6 +6202,12 @@ msgstr "Medio-alto"
 
 msgid "Medium-Low"
 msgstr "Medio-basso"
+
+msgid "Member roles"
+msgstr "Ruoli dei membri"
+
+msgid "Members"
+msgstr "Membri"
 
 msgid "Memory"
 msgstr "Memoria"
@@ -6500,6 +6625,9 @@ msgstr "Nuovo post"
 msgid "New posts available"
 msgstr "Nuovi post disponibili"
 
+msgid "New rounds are available."
+msgstr "Sono disponibili nuovi round."
+
 #, python-format
 msgid "New version available: %(get)s (v%(get2)s)"
 msgstr "Nuova versione disponibile: %(get)s (v%(get2)s)"
@@ -6599,6 +6727,9 @@ msgstr "Nessuna porta disponibile da assegnare al nuovo esperimento."
 msgid "No available port found"
 msgstr "Nessuna porta disponibile"
 
+msgid "No chats to show for this viewpoint."
+msgstr "Nessuna chat da mostrare per questo punto di vista."
+
 msgid "No client configuration files were found for this experiment."
 msgstr ""
 "Non sono stati trovati file di configurazione dei client per questo "
@@ -6694,6 +6825,15 @@ msgstr "Ancora nessun log"
 msgid "No matching visibility assignment found."
 msgstr "Nessuna assegnazione di visibilità corrispondente trovata."
 
+msgid "No members to show."
+msgstr "Nessun membro da mostrare."
+
+msgid "No messages found."
+msgstr "Nessun messaggio trovato."
+
+msgid "No messages yet"
+msgstr "Ancora nessun messaggio"
+
 #, python-format
 msgid "No models found at %(llm_url)s"
 msgstr "Nessun modello trovato su %(llm_url)s"
@@ -6753,6 +6893,9 @@ msgstr "Non ci sono ancora foto consigliate."
 msgid "No releases available"
 msgstr "Nessuna release disponibile"
 
+msgid "No reports yet. Reports are produced by yim-analyze."
+msgstr "Nessun report. I report sono prodotti da yim-analyze."
+
 #, python-format
 msgid ""
 "No reusable RSS resources are available yet. Create them first in "
@@ -6811,6 +6954,9 @@ msgstr "Nessun utente o esperimento selezionato."
 msgid "No visibility grants configured yet."
 msgstr "Ancora nessuna concessione di visibilità configurata."
 
+msgid "No visible memberships."
+msgstr "Nessuna iscrizione visibile."
+
 msgid "Nodes"
 msgstr "Nodi"
 
@@ -6868,6 +7014,9 @@ msgstr "Nota:"
 #, python-format
 msgid "Notebook created at %(filepath)s"
 msgstr "Notebook creato in %(filepath)s"
+
+msgid "Nothing here yet."
+msgstr "Ancora nulla."
 
 msgid "Nothing matches your search."
 msgstr "Nessun risultato per la ricerca."
@@ -6956,6 +7105,9 @@ msgstr ""
 msgid "Older"
 msgstr "Meno recenti"
 
+msgid "Older messages"
+msgstr "Messaggi precedenti"
+
 msgid "Ollama"
 msgstr "Ollama"
 
@@ -6967,6 +7119,13 @@ msgstr "Host Ollama"
 
 msgid "Ollama directory"
 msgstr "raccolta dei modelli Ollama"
+
+msgid ""
+"Omniscient researcher view: private chats and deleted messages are shown."
+" This is not what a participant sees."
+msgstr ""
+"Vista onnisciente del ricercatore: sono mostrate le chat private e i "
+"messaggi eliminati. Non è ciò che vede un partecipante."
 
 msgid "Onboarding screen"
 msgstr "Schermata di onboarding"
@@ -7286,6 +7445,14 @@ msgstr "Palestinese"
 msgid "Parent post not found"
 msgstr "Post padre non trovato"
 
+msgid ""
+"Parquet needs the analysis extra of the instant messaging runtime. While "
+"the simulation runs, a copy of the database is exported."
+msgstr ""
+"Parquet richiede l'extra di analisi del runtime di messaggistica "
+"istantanea. Mentre la simulazione è in corso viene esportata una copia "
+"del database."
+
 msgid "Parse"
 msgstr "Analizza"
 
@@ -7294,6 +7461,9 @@ msgstr "Installato parzialmente"
 
 msgid "Participant"
 msgstr "Partecipante"
+
+msgid "Participant mode"
+msgstr "Modalità partecipante"
 
 msgid "Password"
 msgstr "Password"
@@ -7355,6 +7525,9 @@ msgid ""
 msgstr ""
 "Distribuzione per post di quanto spesso i post dell'autore selezionato "
 "sono stati raccomandati."
+
+msgid "Permissions"
+msgstr "Permessi"
 
 msgid "Persist memory events"
 msgstr "Conserva gli eventi della memoria"
@@ -8068,6 +8241,17 @@ msgstr ""
 msgid "Provides specific instructions and input"
 msgstr "Fornisce istruzioni e input specifici"
 
+msgid "Public chats can be read by people who are not in the experiment"
+msgstr ""
+"Le chat pubbliche possono essere lette da chi non partecipa "
+"all'esperimento"
+
+msgid "Public observer"
+msgstr "Osservatore pubblico"
+
+msgid "Public observer pages"
+msgstr "Pagine pubbliche di osservazione"
+
 msgid "Public profile attributes and appearance."
 msgstr "Attributi e aspetto del profilo pubblico."
 
@@ -8146,6 +8330,9 @@ msgstr "Parametro di tasso"
 
 msgid "Ray Agents Batch Size"
 msgstr "Dimensione del lotto di agenti Ray"
+
+msgid "Reaction counters"
+msgstr "Contatori delle reazioni"
 
 msgid "Reaction weight"
 msgstr "Peso delle reazioni"
@@ -8308,6 +8495,9 @@ msgstr "Aggiorna i dati"
 msgid "Refresh Memory"
 msgstr "Aggiorna la memoria"
 
+msgid "Refresh interval (seconds)"
+msgstr "Intervallo di aggiornamento (secondi)"
+
 msgid "Refresh interval in seconds (5-300)"
 msgstr "Intervallo di aggiornamento in secondi (5-300)"
 
@@ -8410,6 +8600,9 @@ msgstr "Segnala questo commento"
 msgid "Report this post"
 msgstr "Segnala questo post"
 
+msgid "Reports"
+msgstr "Report"
+
 msgid "Repository"
 msgstr "Repository"
 
@@ -8443,6 +8636,9 @@ msgstr "Ricercatore"
 
 msgid "Researcher Users"
 msgstr "Utenti ricercatori"
+
+msgid "Researcher overview"
+msgstr "Panoramica del ricercatore"
 
 msgid "Reset HPC Experiment"
 msgstr "Reimposta l'esperimento HPC"
@@ -8689,6 +8885,9 @@ msgstr "Salva gli argomenti"
 msgid "Save annotations"
 msgstr "Salva le annotazioni"
 
+msgid "Save chat pages"
+msgstr "Salva pagine chat"
+
 msgid "Save feed & profile"
 msgstr "Salva feed e profilo"
 
@@ -8808,6 +9007,9 @@ msgstr "Filtri di ricerca"
 
 msgid "Search followed agents"
 msgstr "Cerca tra gli agenti seguiti"
+
+msgid "Search messages"
+msgstr "Cerca messaggi"
 
 msgid "Search photos, people, hashtags"
 msgstr "Cerca foto, persone, hashtag"
@@ -9339,6 +9541,9 @@ msgstr "Mostra meno"
 msgid "Show or hide every annotation type at once"
 msgstr "Mostra o nascondi insieme tutti i tipi di annotazione"
 
+msgid "Show owner and admin badges in member lists"
+msgstr "Mostra i badge di proprietario e amministratore negli elenchi dei membri"
+
 msgid "Show password"
 msgstr "Mostra password"
 
@@ -9360,6 +9565,12 @@ msgid "Show the profile-setup wizard to users on their first login"
 msgstr ""
 "Mostra agli utenti la procedura guidata di configurazione del profilo al "
 "primo accesso"
+
+msgid "Show the reactions under each message"
+msgstr "Mostra le reazioni sotto ogni messaggio"
+
+msgid "Show where a forwarded message comes from"
+msgstr "Mostra da dove proviene un messaggio inoltrato"
 
 #, python-format
 msgid ""
@@ -9472,6 +9683,9 @@ msgstr "Salta"
 
 msgid "Skip Tutorial"
 msgstr "Salta il tutorial"
+
+msgid "Skip to content"
+msgstr "Vai al contenuto"
 
 msgid "Sliding Window Days"
 msgstr "Giorni della finestra scorrevole"
@@ -10127,7 +10341,12 @@ msgstr "Il client è stato interrotto."
 msgid ""
 "The configuration differs from the one recorded when the run started: "
 "restore the original files or reset the experiment."
-msgstr "La configurazione differisce da quella registrata all'avvio della simulazione: ripristina i file originali o reimposta l'esperimento."
+msgstr ""
+"La configurazione differisce da quella registrata all'avvio della "
+"simulazione: ripristina i file originali o reimposta l'esperimento."
+
+msgid "The conversations cannot be shown right now."
+msgstr "Le conversazioni non possono essere mostrate in questo momento."
 
 #, python-format
 msgid "The current experiment database does not contain %(lower)s tables."
@@ -10179,7 +10398,9 @@ msgstr ""
 msgid ""
 "The database is unusable, a migration failed or its schema is newer than "
 "the installed runtime."
-msgstr "Il database non è utilizzabile, una migrazione è fallita o il suo schema è più recente del runtime installato."
+msgstr ""
+"Il database non è utilizzabile, una migrazione è fallita o il suo schema "
+"è più recente del runtime installato."
 
 msgid ""
 "The experiment already exists. Please check the experiment name and try "
@@ -10205,9 +10426,6 @@ msgstr "La descrizione testuale dell'immagine."
 #, python-format
 msgid "The instant messaging configuration is not valid: %(why)s"
 msgstr "La configurazione di messaggistica istantanea non è valida: %(why)s"
-
-msgid "The instant messaging viewer is not available yet."
-msgstr "Il visualizzatore di messaggistica istantanea non è ancora disponibile."
 
 msgid ""
 "The language of the menus and labels of this site. Posts and comments are"
@@ -10310,7 +10528,12 @@ msgstr "Il server ha incontrato una condizione imprevista."
 msgid ""
 "The server was not ready or not reachable, or its actor is dead: start "
 "the experiment server first."
-msgstr "Il server non era pronto o non è raggiungibile, oppure il suo actor è terminato: avvia prima il server dell'esperimento."
+msgstr ""
+"Il server non era pronto o non è raggiungibile, oppure il suo actor è "
+"terminato: avvia prima il server dell'esperimento."
+
+msgid "The simulation has not produced any round yet."
+msgstr "La simulazione non ha ancora prodotto alcun round."
 
 msgid "The three agent archetypes have distinct characteristics:"
 msgstr "I tre archetipi di agente hanno caratteristiche distinte:"
@@ -10334,6 +10557,27 @@ msgid ""
 msgstr ""
 "L'assegnazione aggiornata dei feed di immagini è stata salvata. I client "
 "in esecuzione useranno i nuovi feed dopo il riavvio."
+
+msgid "The uploaded experiment has no name. Please provide one."
+msgstr "L'esperimento caricato non ha un nome. Indicane uno."
+
+msgid "The uploaded instant messaging experiment could not be validated."
+msgstr ""
+"Non è stato possibile validare l'esperimento di messaggistica istantanea "
+"caricato."
+
+msgid ""
+"The uploaded instant messaging experiment has no readable server "
+"configuration."
+msgstr ""
+"L'esperimento di messaggistica istantanea caricato non ha una "
+"configurazione del server leggibile."
+
+#, python-format
+msgid "The uploaded instant messaging experiment is not valid: %(errors)s"
+msgstr ""
+"L'esperimento di messaggistica istantanea caricato non è valido: "
+"%(errors)s"
 
 msgid ""
 "The username must have 3 to 15 characters: letters, digits, dots, dashes "
@@ -10411,6 +10655,11 @@ msgstr ""
 "Questo client ad hoc richiede un modello LLM perché almeno un agente "
 "gestito usa un comportamento basato su LLM."
 
+msgid "This analysis is not available for instant messaging experiments."
+msgstr ""
+"Questa analisi non è disponibile per gli esperimenti di messaggistica "
+"istantanea."
+
 msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
 "Questo esperimento ha almeno un client configurato per funzionare finché "
@@ -10444,6 +10693,9 @@ msgid ""
 msgstr ""
 "È l’algoritmo che decide quali post compaiono nel tuo feed e in che "
 "ordine."
+
+msgid "This message was deleted."
+msgstr "Questo messaggio è stato eliminato."
 
 msgid "This module is not available for this experiment type."
 msgstr "Questo modulo non è disponibile per questo tipo di esperimento."
@@ -10496,6 +10748,9 @@ msgstr ""
 "esperimento, per aiutarci a diagnosticare i problemi e migliorare la "
 "piattaforma."
 
+msgid "Thread"
+msgstr "Discussione"
+
 msgid "Thread Context Length"
 msgstr "Lunghezza del contesto della discussione"
 
@@ -10547,6 +10802,9 @@ msgstr "Incertezza livello C"
 msgid "Time Period"
 msgstr "Periodo di tempo"
 
+msgid "Time travel for viewers"
+msgstr "Viaggio nel tempo per gli osservatori"
+
 msgid "Timeline"
 msgstr "Cronologia"
 
@@ -10581,6 +10839,9 @@ msgstr ""
 msgid "Toggle chat panel"
 msgstr "Mostra o nascondi il pannello della chat"
 
+msgid "Toggle dark mode"
+msgstr "Attiva/disattiva tema scuro"
+
 msgid "Toggle menu"
 msgstr "Mostra/nascondi il menu"
 
@@ -10597,7 +10858,10 @@ msgid ""
 "Too many language-model sessions failed in a round: check that the LLM "
 "server and model are reachable. The client resumes from the round it did "
 "not close."
-msgstr "Troppe sessioni del modello linguistico sono fallite in un round: verifica che server e modello LLM siano raggiungibili. Il client riprende dal round che non ha chiuso."
+msgstr ""
+"Troppe sessioni del modello linguistico sono fallite in un round: "
+"verifica che server e modello LLM siano raggiungibili. Il client riprende"
+" dal round che non ha chiuso."
 
 msgid "Top"
 msgstr "Migliori"
@@ -10844,6 +11108,9 @@ msgstr "Scrivi un argomento e premi Invio"
 msgid "Type a value and press Enter"
 msgstr "Scrivi un valore e premi Invio"
 
+msgid "Type at least two characters."
+msgstr "Digita almeno due caratteri."
+
 #, python-format
 msgid "Type id: %(id)s"
 msgstr "ID del tipo: %(id)s"
@@ -10946,6 +11213,9 @@ msgstr "Université Lyon 1"
 
 msgid "Unknown action"
 msgstr "Azione sconosciuta"
+
+msgid "Unknown export format."
+msgstr "Formato di esportazione sconosciuto."
 
 msgid "Unknown external runtime repository."
 msgstr "Repository del runtime esterno sconosciuto."
@@ -11433,6 +11703,18 @@ msgstr "Vedi tutti gli amici."
 msgid "Viewing as"
 msgstr "Visualizzazione come"
 
+#, python-format
+msgid "Viewing as account %(id)s, exactly what it could read at this round."
+msgstr ""
+"Vista come account %(id)s: esattamente ciò che poteva leggere in questo "
+"round."
+
+msgid "Viewpoint"
+msgstr "Punto di vista"
+
+msgid "Viewpoint and time"
+msgstr "Punto di vista e tempo"
+
 msgid ""
 "Virtual entities that represent social media users in simulations. They "
 "can be configured with different demographic information, interests, and "
@@ -11701,6 +11983,9 @@ msgstr ""
 "dell'attivazione e può chiedere al server di segnare l'agente come "
 "uscito."
 
+msgid "Where a chat opens"
+msgstr "Dove si apre una chat"
+
 msgid "Where are you going?"
 msgstr "Dove stai andando?"
 
@@ -11941,12 +12226,19 @@ msgstr "File ZIP"
 msgid "Zipf"
 msgstr "Zipf"
 
+#, python-format
+msgid "[%(kind)s attachment]"
+msgstr "[allegato %(kind)s]"
+
 msgid ""
 "`Simulated` runs quickly; `Real-time` processes the current wall-clock "
 "hour."
 msgstr ""
 "`Simulato` procede velocemente; `Tempo reale` elabora l'ora di orologio "
 "corrente."
+
+msgid "account id"
+msgstr "id account"
 
 msgid "advanced population settings"
 msgstr "impostazioni avanzate delle popolazioni"
@@ -11987,6 +12279,13 @@ msgid "cancelled"
 msgstr "annullata"
 
 #, python-format
+msgid "day %(d)s, slot %(s)s"
+msgstr "giorno %(d)s, slot %(s)s"
+
+msgid "deleted"
+msgstr "eliminato"
+
+#, python-format
 msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr "dipendenze %(deps)s, convalida %(validation)s"
 
@@ -12014,6 +12313,9 @@ msgstr "es. http://localhost:8000/v1"
 msgid "e.g., localhost:8000"
 msgstr "es. localhost:8000"
 
+msgid "edited"
+msgstr "modificato"
+
 msgid "experiment_id is required"
 msgstr "experiment_id è obbligatorio"
 
@@ -12033,6 +12335,12 @@ msgstr ""
 
 msgid "follows a branch; an installed checkout is updated in place"
 msgstr "segue un branch; un checkout già installato viene aggiornato sul posto"
+
+msgid "forum"
+msgstr "forum"
+
+msgid "forwarded again"
+msgstr "inoltrato di nuovo"
 
 msgid "full discussion thread"
 msgstr "l'intera discussione"
@@ -12107,6 +12415,9 @@ msgstr "oppure illimitato"
 msgid "prerelease"
 msgstr "pre-release"
 
+msgid "private"
+msgstr "privata"
+
 msgid "processing"
 msgstr "in corso"
 
@@ -12147,6 +12458,9 @@ msgstr "impostazioni"
 
 msgid "signals"
 msgstr "segnali"
+
+msgid "slot"
+msgstr "slot"
 
 msgid "success"
 msgstr "riuscita"
@@ -12937,209 +13251,6 @@ msgstr "✔️ Usa"
 #~ msgid "Standard option; works without git."
 #~ msgstr "Opzione standard; funziona senza git."
 
-msgid "Instant messaging experiment imported. Create its clients from the experiment page."
-msgstr "Esperimento di messaggistica istantanea importato. Crea i suoi client dalla pagina dell'esperimento."
+#~ msgid "The instant messaging viewer is not available yet."
+#~ msgstr "Il visualizzatore di messaggistica istantanea non è ancora disponibile."
 
-msgid "Instant messaging experiments are not supported with PostgreSQL."
-msgstr "Gli esperimenti di messaggistica istantanea non sono supportati con PostgreSQL."
-
-msgid "The uploaded experiment has no name. Please provide one."
-msgstr "L'esperimento caricato non ha un nome. Indicane uno."
-
-msgid "The uploaded instant messaging experiment could not be validated."
-msgstr "Non è stato possibile validare l'esperimento di messaggistica istantanea caricato."
-
-msgid "The uploaded instant messaging experiment has no readable server configuration."
-msgstr "L'esperimento di messaggistica istantanea caricato non ha una configurazione del server leggibile."
-
-#, python-format
-msgid "The uploaded instant messaging experiment is not valid: %(errors)s"
-msgstr "L'esperimento di messaggistica istantanea caricato non è valido: %(errors)s"
-
-msgid "Export and reports"
-msgstr "Esportazione e report"
-
-msgid "Export data"
-msgstr "Esporta i dati"
-
-#, python-format
-msgid "Export failed: %(error)s"
-msgstr "Esportazione non riuscita: %(error)s"
-
-msgid "Export finished. The files are listed in the Export and reports panel."
-msgstr "Esportazione completata. I file sono elencati nel pannello Esportazione e report."
-
-msgid "Export format"
-msgstr "Formato di esportazione"
-
-msgid "Exports"
-msgstr "Esportazioni"
-
-msgid "File not found."
-msgstr "File non trovato."
-
-msgid "Leave message text out"
-msgstr "Escludi il testo dei messaggi"
-
-msgid "No reports yet. Reports are produced by yim-analyze."
-msgstr "Nessun report. I report sono prodotti da yim-analyze."
-
-msgid "Nothing here yet."
-msgstr "Ancora nulla."
-
-msgid "Parquet needs the analysis extra of the instant messaging runtime. While the simulation runs, a copy of the database is exported."
-msgstr "Parquet richiede l'extra di analisi del runtime di messaggistica istantanea. Mentre la simulazione è in corso viene esportata una copia del database."
-
-msgid "Reports"
-msgstr "Report"
-
-msgid "Unknown export format."
-msgstr "Formato di esportazione sconosciuto."
-
-msgid "This analysis is not available for instant messaging experiments."
-msgstr "Questa analisi non è disponibile per gli esperimenti di messaggistica istantanea."
-
-#, python-format
-msgid "%(n)s members"
-msgstr "%(n)s membri"
-
-#, python-format
-msgid "%(n)s reactions"
-msgstr "%(n)s reazioni"
-
-#, python-format
-msgid "%(n)s unread"
-msgstr "%(n)s non letti"
-
-msgid "(deleted)"
-msgstr "(eliminato)"
-
-msgid "As account"
-msgstr "Come account"
-
-msgid "As of day"
-msgstr "Al giorno"
-
-msgid "Back to the experiments"
-msgstr "Torna agli esperimenti"
-
-msgid "Chats"
-msgstr "Chat"
-
-msgid "Forum topics"
-msgstr "Argomenti del forum"
-
-#, python-format
-msgid "Forwarded from %(chat)s"
-msgstr "Inoltrato da %(chat)s"
-
-msgid "Go"
-msgstr "Vai"
-
-msgid "Joined (round)"
-msgstr "Iscritto (round)"
-
-msgid "Latest"
-msgstr "Ultimo"
-
-msgid "Left (round)"
-msgstr "Uscito (round)"
-
-msgid "Members"
-msgstr "Membri"
-
-msgid "New rounds are available."
-msgstr "Sono disponibili nuovi round."
-
-msgid "No chats to show for this viewpoint."
-msgstr "Nessuna chat da mostrare per questo punto di vista."
-
-msgid "No members to show."
-msgstr "Nessun membro da mostrare."
-
-msgid "No messages found."
-msgstr "Nessun messaggio trovato."
-
-msgid "No messages yet"
-msgstr "Ancora nessun messaggio"
-
-msgid "No visible memberships."
-msgstr "Nessuna iscrizione visibile."
-
-msgid "Older messages"
-msgstr "Messaggi precedenti"
-
-msgid "Omniscient researcher view: private chats and deleted messages are shown. This is not what a participant sees."
-msgstr "Vista onnisciente del ricercatore: sono mostrate le chat private e i messaggi eliminati. Non è ciò che vede un partecipante."
-
-msgid "Permissions"
-msgstr "Permessi"
-
-msgid "Public observer"
-msgstr "Osservatore pubblico"
-
-msgid "Researcher overview"
-msgstr "Panoramica del ricercatore"
-
-msgid "Search messages"
-msgstr "Cerca messaggi"
-
-msgid "Skip to content"
-msgstr "Vai al contenuto"
-
-msgid "The conversations cannot be shown right now."
-msgstr "Le conversazioni non possono essere mostrate in questo momento."
-
-msgid "The simulation has not produced any round yet."
-msgstr "La simulazione non ha ancora prodotto alcun round."
-
-msgid "This message was deleted."
-msgstr "Questo messaggio è stato eliminato."
-
-msgid "Thread"
-msgstr "Discussione"
-
-msgid "Toggle dark mode"
-msgstr "Attiva/disattiva tema scuro"
-
-msgid "Type at least two characters."
-msgstr "Digita almeno due caratteri."
-
-#, python-format
-msgid "Viewing as account %(id)s, exactly what it could read at this round."
-msgstr "Vista come account %(id)s: esattamente ciò che poteva leggere in questo round."
-
-msgid "Viewpoint"
-msgstr "Punto di vista"
-
-msgid "Viewpoint and time"
-msgstr "Punto di vista e tempo"
-
-#, python-format
-msgid "[%(kind)s attachment]"
-msgstr "[allegato %(kind)s]"
-
-msgid "account id"
-msgstr "id account"
-
-#, python-format
-msgid "day %(d)s, slot %(s)s"
-msgstr "giorno %(d)s, slot %(s)s"
-
-msgid "deleted"
-msgstr "eliminato"
-
-msgid "edited"
-msgstr "modificato"
-
-msgid "forum"
-msgstr "forum"
-
-msgid "forwarded again"
-msgstr "inoltrato di nuovo"
-
-msgid "private"
-msgstr "privata"
-
-msgid "slot"
-msgstr "slot"

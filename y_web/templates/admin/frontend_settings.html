@@ -674,6 +674,56 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             </div>
           </div>
 
+          <!-- ══ BOX — Instant messaging pages ══ -->
+          <div class="misc-compact-box" id="box-im" data-cap-any="im_show_forward_origin im_show_reactions im_show_member_roles im_default_view im_allow_time_travel im_public_observer_enabled im_participant_mode_enabled im_participant_poll_seconds">
+            <h3>{{ _('Instant messaging pages') }}</h3>
+            <div class="box-content">
+              <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
+                {{ _('Choose what the chat pages of this experiment show and who can open them.') }}
+              </p>
+              <div class="ys-toggle-row" data-cap="im_show_forward_origin">
+                <span class="ys-toggle-label">{{ _('Forwarded-from line') }} <small>{{ _('Show where a forwarded message comes from') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="im_show_forward_origin"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_show_reactions">
+                <span class="ys-toggle-label">{{ _('Reaction counters') }} <small>{{ _('Show the reactions under each message') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="im_show_reactions"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_show_member_roles">
+                <span class="ys-toggle-label">{{ _('Member roles') }} <small>{{ _('Show owner and admin badges in member lists') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="im_show_member_roles"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_default_view" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
+                <span class="ys-toggle-label">{{ _('Where a chat opens') }} <small>{{ _('At the latest messages or at the beginning of the conversation') }}</small></span>
+                <select id="im_default_view" class="input" style="width:100%;max-width:380px;">
+                  <option value="latest">{{ _('Latest messages') }}</option>
+                  <option value="start">{{ _('Beginning of the conversation') }}</option>
+                </select>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_allow_time_travel">
+                <span class="ys-toggle-label">{{ _('Time travel for viewers') }} <small>{{ _('Let non-staff viewers look at a past round') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="im_allow_time_travel"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_public_observer_enabled">
+                <span class="ys-toggle-label">{{ _('Public observer pages') }} <small>{{ _('Public chats can be read by people who are not in the experiment') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="im_public_observer_enabled"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_participant_mode_enabled">
+                <span class="ys-toggle-label">{{ _('Participant mode') }} <small>{{ _('Human participants can take part in the chats') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="im_participant_mode_enabled"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="im_participant_poll_seconds">
+                <span class="ys-toggle-label">{{ _('Refresh interval (seconds)') }} <small>{{ _('How often an open chat looks for new messages (1 to 60)') }}</small></span>
+                <input type="number" id="im_participant_poll_seconds" min="1" max="60" value="3"
+                       style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
+              </div>
+              <div class="ys-fs-save-row">
+                <button class="button is-solid primary-button" onclick="saveSection(event,'im')">{{ _('Save chat pages') }}</button>
+                <span class="ys-fs-save-status" id="status-im"></span>
+              </div>
+            </div>
+          </div>
+
           <!-- ══ BOX 5+ — Frontend plugin suites (group="frontend_plugins") ══ -->
           {% for suite in frontend_plugin_suites %}
           <div class="misc-compact-box" id="box-suite-{{ suite.repo_key }}" style="display:none;">
@@ -750,6 +800,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       show_recsys_info: ['Recommender info', 'Show the content recommender system box beside the feed'],
       show_annotation_stats: ['Annotation statistics', 'Show the live annotation statistics box beside the feed'],
     },
+    instant_messaging: {
+      interaction_post:    ['Send message', 'Write in a chat'],
+      interaction_like:    ['React',        'React to a message'],
+      interaction_comment: ['Reply',        'Reply to a message or in a thread'],
+      interaction_share:   ['Forward',      'Forward a message to another chat'],
+      annotation_agent_type: ['Agent badge', 'Mark messages written by agents'],
+      annotation_author_type: ['Author type', 'Show whether the author is an agent or a person'],
+    },
   };
   const BOX_DESCRIPTIONS = {
     'box-annotations': {
@@ -794,7 +852,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     const overrides = PLATFORM_LABEL_OVERRIDES[platform] || {};
     document.querySelectorAll('[data-cap]').forEach(row => {
       const key = row.getAttribute('data-cap');
-      if (overrides[key]) _setLabel(row, overrides[key][0], overrides[key][1]); else _restoreLabel(row);
+      if (overrides[key]) _setLabel(row, YI18n.t(overrides[key][0]), YI18n.t(overrides[key][1])); else _restoreLabel(row);
     });
     Object.keys(BOX_DESCRIPTIONS).forEach(id => {
       const p = document.querySelector('#' + id + ' .box-content > p');
@@ -812,7 +870,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     if (fp) fp.textContent = platform === 'microblogging'
       ? YI18n.t('Configure default recommendation algorithms and profile/onboarding options for standard users.')
       : YI18n.t('Configure the default feed view of this platform. Recommendation algorithms are specific to each platform and are not shared with microblogging.');
-    toggleInfiniteScrollControls(platform === 'microblogging' ? document.getElementById('infinite_scroll_enabled').checked : false);
+    toggleInfiniteScrollControls(['microblogging','instant_messaging'].includes(platform) ? document.getElementById('infinite_scroll_enabled').checked : false);
   }
 
   function _fillSimple(selectId, items) {
@@ -968,6 +1026,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled','language_switch_allowed',
+      'im_show_forward_origin','im_show_reactions','im_show_member_roles','im_allow_time_travel','im_public_observer_enabled','im_participant_mode_enabled',
     ];
     boolIds.forEach(key => {
       const el = document.getElementById(key);
@@ -998,10 +1057,11 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       const el = document.getElementById(key);
       if (el) el.value = s[key] || '';
     });
-    ['default_forum_feed_type','default_photo_feed_tab'].forEach(key => {
+    ['default_forum_feed_type','default_photo_feed_tab','im_default_view'].forEach(key => {
       const el = document.getElementById(key);
       if (el && s[key]) el.value = s[key];
     });
+    { const el = document.getElementById('im_participant_poll_seconds'); if (el) el.value = s['im_participant_poll_seconds'] != null ? s['im_participant_poll_seconds'] : 3; }
     syncFilterBubbleSection();
 
     // Sync master toggle visual states for children groups
@@ -1077,11 +1137,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled','language_switch_allowed',
+      'im_show_forward_origin','im_show_reactions','im_show_member_roles','im_allow_time_travel','im_public_observer_enabled','im_participant_mode_enabled',
     ];
     const out = {};
     boolIds.forEach(id => { const el = document.getElementById(id); out[id] = el ? el.checked : true; });
     // Numeric settings
     { const el = document.getElementById('posts_per_page'); out['posts_per_page'] = el ? parseInt(el.value, 10) || 10 : 10; }
+    { const el = document.getElementById('im_participant_poll_seconds'); out['im_participant_poll_seconds'] = el ? parseInt(el.value, 10) || 3 : 3; }
     // FilterBubble float fields
     ['filter_bubble_alpha','filter_bubble_beta','filter_bubble_gamma',
      'filter_bubble_lr','filter_bubble_wr','filter_bubble_wc','filter_bubble_ws'].forEach(id => {
@@ -1089,7 +1151,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       out[id] = el ? parseFloat(el.value) || 0 : 0;
     });
     // String settings (select elements)
-    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab','language'].forEach(id => {
+    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab','im_default_view','language'].forEach(id => {
       const el = document.getElementById(id);
       out[id] = el ? el.value : '';
     });
@@ -1445,7 +1507,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     const row = document.getElementById('posts-per-page-row');
     if (!row) return;
     // Outside microblogging the "per page" value is the batch size and is always editable.
-    row.style.display = (currentPlatform !== 'microblogging' || !enabled) ? '' : 'none';
+    row.style.display = (!['microblogging','instant_messaging'].includes(currentPlatform) || !enabled) ? '' : 'none';
   };
 
 })();

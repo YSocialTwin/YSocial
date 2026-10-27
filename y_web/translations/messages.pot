@@ -11324,3 +11324,91 @@ msgstr ""
 
 msgid "slot"
 msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Instant messaging"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Instant messaging pages"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Choose what the chat pages of this experiment show and who can open them."
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Forwarded-from line"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Show where a forwarded message comes from"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Reaction counters"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Show the reactions under each message"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Member roles"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Show owner and admin badges in member lists"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Where a chat opens"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "At the latest messages or at the beginning of the conversation"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Latest messages"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Beginning of the conversation"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Time travel for viewers"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Let non-staff viewers look at a past round"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Public observer pages"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Public chats can be read by people who are not in the experiment"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Participant mode"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Human participants can take part in the chats"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Refresh interval (seconds)"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "How often an open chat looks for new messages (1 to 60)"
+msgstr ""
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Save chat pages"
+msgstr ""

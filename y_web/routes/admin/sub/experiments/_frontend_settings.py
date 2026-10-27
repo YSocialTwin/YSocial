@@ -32,11 +32,12 @@ from ._blueprint import experiments
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
 # ------------------------------------------------------------------
-SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing")
+SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging")
 PLATFORM_LABELS = {
     "microblogging": N_("Microblogging"),
     "forum": N_("Forum"),
     "photo_sharing": N_("Photo sharing"),
+    "instant_messaging": N_("Instant messaging"),
 }
 
 _COMMON_CAPABILITIES = {
@@ -78,6 +79,24 @@ PLATFORM_CAPABILITIES = {
         "interaction_share",
         "annotation_agent_type",
         "default_photo_feed_tab",
+    },
+    "instant_messaging": _COMMON_CAPABILITIES
+    | {
+        "interactions_enabled",
+        "interaction_share",  # forwarding
+        "notifications_menu",
+        "annotation_agent_type",  # agent / human badge on messages
+        "annotation_author_type",
+        "profile_topics_box",
+        "infinite_scroll_enabled",
+        "im_show_forward_origin",
+        "im_show_reactions",
+        "im_show_member_roles",
+        "im_default_view",
+        "im_allow_time_travel",
+        "im_public_observer_enabled",
+        "im_participant_mode_enabled",
+        "im_participant_poll_seconds",
     },
 }
 
@@ -130,7 +149,11 @@ from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS  # noqa: E40
 _ENUM_SETTINGS = {
     "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
     "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},
+    "im_default_view": {"latest", "start"},
 }
+
+# integer settings with a server-side range: (low, high)
+_INT_RANGES = {"im_participant_poll_seconds": (1, 60)}
 
 
 def _language_choices() -> set:
@@ -403,6 +426,9 @@ def frontend_settings_save():
                 safe[k] = int(new_settings[k])
             except (TypeError, ValueError):
                 safe[k] = default
+            if k in _INT_RANGES:
+                low, high = _INT_RANGES[k]
+                safe[k] = max(low, min(high, safe[k]))
         else:
             # string settings (recsys names, sort mode…)
             value = str(new_settings[k])
