@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ exp.exp_name }}{% endblock %} · {{ _('Instant Messaging') }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/im.css') }}">
+  {% include "shared/platform_ui_gating.html" %}
 </head>
-<body class="im-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest|default(0) }}" data-status-url="/{{ exp.idexp }}/im/api/status">
+<body class="im-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest|default(0) }}" data-infinite="{{ 1 if ui.get('infinite_scroll_enabled', True) else 0 }}" data-status-url="/{{ exp.idexp }}/im/api/status">
 <a class="im-skip" href="#im-main">{{ _('Skip to content') }}</a>
 <header class="im-header">
   <h1 class="im-title"><a href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}">{{ exp.exp_name }}</a></h1>
@@ -26,10 +27,12 @@
     <input id="im-acc" name="acc" list="im-accounts" value="{{ ctx.vp.account_id or '' }}" size="14" placeholder="{{ _('account id') }}">
     {% if accounts %}<datalist id="im-accounts">{% for a in accounts %}<option value="{{ a.id }}">{{ a.username }}</option>{% endfor %}</datalist>{% endif %}
     {% endif %}
+    {% if time_travel %}
     <label for="im-day">{{ _('As of day') }}</label>
     <input id="im-day" name="day" type="number" min="1" value="{{ day_slot[0] }}" class="im-num">
     <label for="im-slot">{{ _('slot') }}</label>
     <input id="im-slot" name="slot" type="number" min="1" max="24" value="{{ day_slot[1] }}" class="im-num">
+    {% endif %}
     <button type="submit">{{ _('Go') }}</button>
     {% if ctx.vp.round != ctx.latest %}<a class="im-latest" href="{{ request.path }}?vp={{ ctx.vp.kind }}{% if ctx.vp.account_id %}&acc={{ ctx.vp.account_id }}{% endif %}">{{ _('Latest') }}</a>{% endif %}
   </form>

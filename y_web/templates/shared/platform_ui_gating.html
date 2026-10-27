@@ -15,6 +15,13 @@
   {% if not ui.interaction_post %}{% set rules = rules + ['#create-post-trigger, #compose-card'] %}{% endif %}
   {% if not ui.show_post_time %}{% set rules = rules + ['.forum-post-time'] %}{% endif %}
   {% if not ui.notifications_menu %}{% set rules = rules + ['a.reply-notif-bell, .navbar-item[href*="rnotifications"]'] %}{% endif %}
+{% elif platform_ui == 'im' %}
+  {# markers carried by the participant controls (phase 9); the observer pages render none of them #}
+  {% if not ui.interactions_enabled %}{% set rules = rules + ['[data-im-action]'] %}{% endif %}
+  {% if not ui.interaction_post %}{% set rules = rules + ['[data-im-action="send"]'] %}{% endif %}
+  {% if not ui.interaction_comment %}{% set rules = rules + ['[data-im-action="reply"]'] %}{% endif %}
+  {% if not ui.interaction_like %}{% set rules = rules + ['[data-im-action="react"]'] %}{% endif %}
+  {% if not ui.interaction_share %}{% set rules = rules + ['[data-im-action="forward"]'] %}{% endif %}
 {% elif platform_ui == 'photo' %}
   {% if not ui.interaction_like %}{% set rules = rules + ['[data-photo-post-like]'] %}{% endif %}
   {% if not ui.interaction_comment %}{% set rules = rules + ['.photo-overlay__composer, [data-photo-comment-reply]'] %}{% endif %}

@@ -3,11 +3,11 @@
 {% block content %}
 <section aria-labelledby="im-p-h">
   <a class="im-back" href="javascript:history.back()">← {{ _('Back') }}</a>
-  <h2 id="im-p-h">{{ profile.username }} <span class="im-kind">{{ profile.kind }}</span></h2>
+  <h2 id="im-p-h">{{ profile.username }} {% if ui.get('annotation_agent_type', True) %}<span class="im-kind">{{ profile.kind }}</span>{% endif %}</h2>
   <dl class="im-dl">
     <dt>{{ _('Status') }}</dt><dd>{{ profile.status }}</dd>
     {% if profile.language %}<dt>{{ _('Language') }}</dt><dd>{{ profile.language }}</dd>{% endif %}
-    {% if profile.persona %}{% for k, v in profile.persona.items() %}<dt>{{ k }}</dt><dd>{{ v if v is string or v is number else v|tojson }}</dd>{% endfor %}{% endif %}
+    {% if profile.persona and ui.get('profile_topics_box', True) %}{% for k, v in profile.persona.items() %}<dt>{{ k }}</dt><dd>{{ v if v is string or v is number else v|tojson }}</dd>{% endfor %}{% endif %}
   </dl>
   <h3>{{ _('Chats') }}</h3>
   <ul>

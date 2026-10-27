@@ -13254,3 +13254,11 @@ msgstr "✔️ Usa"
 #~ msgid "The instant messaging viewer is not available yet."
 #~ msgstr "Il visualizzatore di messaggistica istantanea non è ancora disponibile."
 
+
+#: y_web/templates/im
+msgid "Forwarded message"
+msgstr "Messaggio inoltrato"
+
+#: y_web/templates/im
+msgid "Newer messages"
+msgstr "Messaggi più recenti"

@@ -331,11 +331,14 @@ class Reader:
 
     # -- history ---------------------------------------------------------------------------
     def history(self, chat_id: str, before: Optional[str] = None, limit: int = DEFAULT_PAGE,
-                forum_topic_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
+                forum_topic_id: Optional[int] = None, after: Optional[str] = None,
+                from_start: bool = False) -> Optional[Dict[str, Any]]:
         """A page of the chat, newest first (the page is shown oldest first by the template).
 
         ``None`` when the chat does not exist or the viewpoint cannot open it; ``before`` is the id of the
-        oldest message of the previous page.
+        oldest message of the previous page. ``from_start`` (or ``after``, the id of the newest message already
+        shown) pages forward from the beginning of the conversation instead; ``items`` stay newest first and
+        ``next_after`` is set when newer messages remain.
         """
         chat = self._chat(chat_id)
         if not self._chat_visible(chat):
@@ -352,6 +355,8 @@ class Reader:
             query = query.where(
                 or_(m.Message.sim_ts < pivot.sim_ts, and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id < pivot.id))
             )
+        if from_start or after is not None:
+            return self._history_forward(chat, query, limit, after)
         picked: List[Tuple[Any, str]] = []
         exhausted = True
         for row in self.s.scalars(
@@ -368,6 +373,37 @@ class Reader:
             "title": chat.title or chat.id,
             "items": self._items(picked),
             "next_before": None if exhausted or not picked else picked[-1][0].id,
+            "next_after": None,
+        }
+
+    def _history_forward(self, chat, query, limit, after):
+        """Oldest-first page of the chat (``after`` is the newest message already shown)."""
+        m = self.m
+        if after is not None:
+            pivot = self.s.get(m.Message, after)
+            if pivot is None or pivot.chat_id != chat.id:
+                return None
+            query = query.where(
+                or_(m.Message.sim_ts > pivot.sim_ts, and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id > pivot.id))
+            )
+        picked: List[Tuple[Any, str]] = []
+        exhausted = True
+        for row in self.s.scalars(
+            query.order_by(m.Message.sim_ts.asc(), m.Message.id.asc()).execution_options(yield_per=100)
+        ):
+            if len(picked) == limit:
+                exhausted = False
+                break
+            state = self._message_state(chat, row)
+            if state is not None:
+                picked.append((row, state))
+        picked.reverse()  # callers show ``items`` newest first, like the backward pages
+        return {
+            "chat_id": chat.id,
+            "title": chat.title or chat.id,
+            "items": self._items(picked),
+            "next_before": None,
+            "next_after": None if exhausted or not picked else picked[0][0].id,
         }
 
     # -- thread ----------------------------------------------------------------------------

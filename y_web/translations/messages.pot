@@ -11412,3 +11412,11 @@ msgstr ""
 #: y_web/templates/admin/frontend_settings.html
 msgid "Save chat pages"
 msgstr ""
+
+#: y_web/templates/im
+msgid "Forwarded message"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Newer messages"
+msgstr ""

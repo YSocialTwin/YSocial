@@ -14,14 +14,33 @@ from sqlalchemy import select
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
-from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.src.im import is_im_experiment
 from y_web.src.im.engine import ImReadError, open_reader
 from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, latest_round, status
 from y_web.src.im.timeline import clamp_round, day_slot, ordinal
 from y_web.src.models import Exps
 
-POLL_SECONDS = 10
+POLL_SECONDS = 10  # used when the experiment's own setting is missing
+
+
+def _ui(exp_id):
+    from y_web.routes.social.helpers import _load_ui_settings
+
+    return _load_ui_settings(exp_id)
+
+
+def _poll_seconds(ui):
+    try:
+        return max(1, min(60, int(ui.get("im_participant_poll_seconds", POLL_SECONDS))))
+    except (TypeError, ValueError):
+        return POLL_SECONDS
+
+
+def _page_size(ui):
+    try:
+        return max(1, min(100, int(ui.get("posts_per_page", 30))))
+    except (TypeError, ValueError):
+        return 30
 
 
 def _staff_user():
@@ -49,8 +68,9 @@ def _db_path(exp) -> str:
 class _Context:
     """What every page needs: experiment, viewpoint, round and the query string that keeps them."""
 
-    def __init__(self, exp, staff, viewpoint, latest, live):
+    def __init__(self, exp, staff, viewpoint, latest, live, ui=None):
         self.exp, self.staff, self.vp, self.latest, self.live = exp, staff, viewpoint, latest, live
+        self.ui = ui or {}
 
     @property
     def params(self):
@@ -73,12 +93,18 @@ def _open_context(session, exp_id):
     staff = _staff_user()
     if staff is not None and not user_can_view_experiment(staff, exp):
         abort(403)
+    ui = _ui(exp_id)
+    if staff is None and not ui.get("im_public_observer_enabled", True):
+        abort(403)  # the researcher closed the public pages of this experiment
     kind = request.args.get("vp") or ("overview" if staff is not None else "public")
     if kind != "public" and staff is None:
         abort(403)  # participants see the public observer view only
     latest = latest_round(session)
     requested = request.args.get("round")
-    if request.args.get("day") and request.args.get("slot"):
+    time_travel = staff is not None or ui.get("im_allow_time_travel", True)
+    if not time_travel:
+        requested = None
+    elif request.args.get("day") and request.args.get("slot"):
         try:
             requested = ordinal(int(request.args["day"]), int(request.args["slot"]))
         except ValueError:
@@ -88,7 +114,7 @@ def _open_context(session, exp_id):
         viewpoint = Viewpoint(kind, request.args.get("acc") or None, rnd)
     except ViewpointError:
         abort(400)
-    return _Context(exp, staff, viewpoint, latest, bool(exp.running))
+    return _Context(exp, staff, viewpoint, latest, bool(exp.running), ui)
 
 
 def _render(template, ctx, **values):
@@ -99,8 +125,11 @@ def _render(template, ctx, **values):
         params=ctx.params,
         is_staff=ctx.staff is not None,
         day_slot=ctx.day_slot(),
-        poll_seconds=POLL_SECONDS if (ctx.live and ctx.vp.round == ctx.latest) else 0,
-        frontend_adds_on_modules=active_modules_context(ctx.exp.idexp),
+        poll_seconds=_poll_seconds(ctx.ui) if (ctx.live and ctx.vp.round == ctx.latest) else 0,
+        ui=ctx.ui,
+        time_travel=ctx.staff is not None or bool(ctx.ui.get("im_allow_time_travel", True)),
+        platform_ui="im",
+        frontend_adds_on_modules=[],  # no frontend plugin module attaches to the chat pages
         **values,
     )
 
@@ -132,6 +161,21 @@ def _accounts_for_picker(session):
     ]
 
 
+def _history(rd, ctx, chat_id, forum_topic_id=None):
+    """One page of a chat, sized and opened where the experiment's settings say."""
+    before = request.args.get("before") or None
+    after = request.args.get("after") or None
+    from_start = before is None and after is None and ctx.ui.get("im_default_view") == "start"
+    return rd.history(
+        chat_id,
+        before=before,
+        after=after,
+        from_start=from_start,
+        limit=_page_size(ctx.ui),
+        forum_topic_id=forum_topic_id,
+    )
+
+
 @main.route("/<int:exp_id>/im")
 @login_required
 def im_index(exp_id):
@@ -146,7 +190,7 @@ def im_index(exp_id):
 @login_required
 def im_chat(exp_id, chat_id):
     def handler(session, ctx, rd):
-        page = rd.history(chat_id, before=request.args.get("before") or None)
+        page = _history(rd, ctx, chat_id)
         if page is None:
             abort(404)
         topics = rd.forum_topics(chat_id)
@@ -165,7 +209,7 @@ def im_chat_topic(exp_id, chat_id, topic_id):
         topic = next((t for t in topics if t["id"] == topic_id), None)
         if topic is None:
             abort(404)
-        page = rd.history(chat_id, before=request.args.get("before") or None, forum_topic_id=topic_id)
+        page = _history(rd, ctx, chat_id, forum_topic_id=topic_id)
         return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=topic)
 
     return _view(exp_id, handler)
@@ -237,7 +281,7 @@ def im_api_status(exp_id):
 @login_required
 def im_api_history(exp_id, chat_id):
     def handler(session, ctx, rd):
-        page = rd.history(chat_id, before=request.args.get("before") or None)
+        page = _history(rd, ctx, chat_id)
         if page is None:
             abort(404)
         return jsonify(page)

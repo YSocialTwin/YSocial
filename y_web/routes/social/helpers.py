@@ -819,9 +819,16 @@ def _platform_ui_context():
         from y_web.src.models import Exps  # noqa: PLC0415
 
         exp = db.session.get(Exps, int(raw))
-        if exp is None or exp.platform_type not in ("forum", "photo_sharing"):
+        if exp is None or exp.platform_type not in (
+            "forum",
+            "photo_sharing",
+            "instant_messaging",
+        ):
             return {}
         ui = _load_ui_settings(int(raw))
+        if exp.platform_type == "instant_messaging":
+            # frontend plugin modules (microblogging/forum/photo hooks) have nothing to attach to in the chat pages
+            return {"frontend_adds_on_modules": [], "ui": ui, "platform_ui": "im"}
         annotations = bool(ui.get("annotations_enabled", True))
         modules = []
         try:
