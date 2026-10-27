@@ -39,7 +39,8 @@ from flask_babel import format_datetime
 from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
-from y_web import db  # , app
+from y_web import db
+from y_web.src.im import is_im_experiment  # , app
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -291,6 +292,9 @@ def clear_experiment_log_files(exp_folder):
 def _experiment_configuration_box_present(experiment):
     """Return whether experiment_details should show a configuration block."""
     if experiment is None:
+        return False
+    if is_im_experiment(experiment):
+        # IM decides its own annotations and has nothing to acknowledge: no configuration box
         return False
     return True
 

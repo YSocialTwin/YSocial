@@ -17,6 +17,9 @@
                         {% if experiment_details_variant == 'photo' %}
  <span class="tag is-info">{{ _('Photo Sharing') }}</span>
                         {% endif %}
+                        {% if experiment_details_variant == 'im' %}
+ <span class="tag is-info">{{ _('Instant Messaging') }}</span>
+                        {% endif %}
                         {% if has_infinite_client %}
  <span class="ys-badge-success2" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">{{ _('∞ Infinite') }}</span>
                         {% endif %}
@@ -88,6 +91,7 @@
                                     </div>
                                 </div>
                                 {% if can_manage_experiment %}
+                                {% if experiment_details_variant != 'im' %}
                                 <hr>
                                 <b>{{ _('Experiment Configuration') }}</b>
                             <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">{% if memory_plugin_installed %}{{ _('Enable or disable runtime annotations and memory.') }}{% else %}{{ _('Enable or disable runtime annotations.') }}{% endif %}</p>
@@ -160,6 +164,7 @@
                                 </div>
  <button type="submit" class="button is-small is-info ys-mt-8">{{ _('Update Configuration') }}</button>
                             </form>
+                            {% endif %}
                             {% if llm_agents_enabled_effective %}
 
                             {% endif %}
@@ -483,7 +488,7 @@
  <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
  <div class="ys-text-flex-sm" style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ client.name }}">{{ client.name }}</span>
-                                        {% if (opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations)) and (not configuration_update_required or experiment.running == 0) %}
+                                        {% if experiment_details_variant != 'im' and (opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations)) and (not configuration_update_required or experiment.running == 0) %}
                                         <a href="/admin/opinion_configuration_standard/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="{{ _('Configure Opinion Dynamics') }}">
                                             <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6;"></i>
                                         </a>
@@ -540,6 +545,14 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% if client_failures and client_failures.get(client.id) %}
+                                {% set failure = client_failures.get(client.id) %}
+ <div class="ys-cell-pad" style="font-size: 0.85em; color: #b42318;">
+                                    <i class="mdi mdi-alert-circle-outline"></i>
+                                    {{ failure.message }}
+                                    {% if failure.detail %}<br><span style="color: #777;">{{ failure.error_type }}: {{ failure.detail }}</span>{% endif %}
+                                </div>
+                                {% endif %}
                                 
 
                             </div>
@@ -697,7 +710,8 @@
                         </div>
                     </div>
 
-                    {% set has_analytics_pages = experiment.is_remote == 0 %}
+                    {# IM analytics stay hidden until the derived analytics database exists (plan, 5.7) #}
+                    {% set has_analytics_pages = experiment.is_remote == 0 and experiment_details_variant != 'im' %}
                     {% if has_analytics_pages %}
                     <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">{{ _('Analytics Pages') }}</h3>

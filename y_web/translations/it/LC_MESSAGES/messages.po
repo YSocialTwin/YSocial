@@ -5376,6 +5376,11 @@ msgstr "Nome del client non valido."
 msgid "Invalid client settings: %(why)s"
 msgstr "Impostazioni del client non valide: %(why)s"
 
+msgid ""
+"Invalid configuration or a missing required plugin: fix the client "
+"settings and start again."
+msgstr "Configurazione non valida o plugin richiesto mancante: correggi le impostazioni del client e riavvia."
+
 msgid "Invalid download path."
 msgstr "Percorso di download non valido."
 
@@ -6100,7 +6105,9 @@ msgstr "Unisci le popolazioni"
 msgid ""
 "Merged into the client configuration and validated against the instant "
 "messaging schema."
-msgstr "Unite alla configurazione del client e validate rispetto allo schema della messaggistica istantanea."
+msgstr ""
+"Unite alla configurazione del client e validate rispetto allo schema "
+"della messaggistica istantanea."
 
 msgid "Merged population type must match the selected population platform type."
 msgstr ""
@@ -6307,7 +6314,9 @@ msgstr "Il nome è obbligatorio"
 msgid ""
 "Name of the environment variable holding the key; the key itself is never"
 " written to the configuration."
-msgstr "Nome della variabile d'ambiente che contiene la chiave; la chiave non viene mai scritta nella configurazione."
+msgstr ""
+"Nome della variabile d'ambiente che contiene la chiave; la chiave non "
+"viene mai scritta nella configurazione."
 
 msgid "Name:"
 msgstr "Nome:"
@@ -7587,7 +7596,9 @@ msgstr ""
 msgid ""
 "Population Username Type '%(pop_type)s' is incompatible with experiment "
 "platform 'instant_messaging'."
-msgstr "Il tipo di username della popolazione '%(pop_type)s' non è compatibile con la piattaforma 'instant_messaging' dell'esperimento."
+msgstr ""
+"Il tipo di username della popolazione '%(pop_type)s' non è compatibile "
+"con la piattaforma 'instant_messaging' dell'esperimento."
 
 #, python-format
 msgid ""
@@ -10110,6 +10121,14 @@ msgstr ""
 "Le modifiche sono salvate direttamente nel tuo profilo dell'esperimento "
 "senza lasciare questa pagina."
 
+msgid "The client was interrupted."
+msgstr "Il client è stato interrotto."
+
+msgid ""
+"The configuration differs from the one recorded when the run started: "
+"restore the original files or reset the experiment."
+msgstr "La configurazione differisce da quella registrata all'avvio della simulazione: ripristina i file originali o reimposta l'esperimento."
+
 #, python-format
 msgid "The current experiment database does not contain %(lower)s tables."
 msgstr "Il database dell'esperimento corrente non contiene tabelle %(lower)s."
@@ -10158,6 +10177,11 @@ msgstr ""
 "subreddit, compresi gli interessi associati."
 
 msgid ""
+"The database is unusable, a migration failed or its schema is newer than "
+"the installed runtime."
+msgstr "Il database non è utilizzabile, una migrazione è fallita o il suo schema è più recente del runtime installato."
+
+msgid ""
 "The experiment already exists. Please check the experiment name and try "
 "again."
 msgstr "L'esperimento esiste già. Controlla il nome dell'esperimento e riprova."
@@ -10165,7 +10189,9 @@ msgstr "L'esperimento esiste già. Controlla il nome dell'esperimento e riprova.
 msgid ""
 "The experiment already has a topic catalog that differs from the current "
 "topics: it was kept, so that existing runs can resume."
-msgstr "L'esperimento ha già un catalogo dei topic diverso dai topic attuali: è stato mantenuto, così che le esecuzioni esistenti possano riprendere."
+msgstr ""
+"L'esperimento ha già un catalogo dei topic diverso dai topic attuali: è "
+"stato mantenuto, così che le esecuzioni esistenti possano riprendere."
 
 msgid "The experiment needs to be activated first."
 msgstr "L'esperimento deve essere prima attivato."
@@ -10280,6 +10306,11 @@ msgstr ""
 
 msgid "The server encountered an unexpected condition."
 msgstr "Il server ha incontrato una condizione imprevista."
+
+msgid ""
+"The server was not ready or not reachable, or its actor is dead: start "
+"the experiment server first."
+msgstr "Il server non era pronto o non è raggiungibile, oppure il suo actor è terminato: avvia prima il server dell'esperimento."
 
 msgid "The three agent archetypes have distinct characteristics:"
 msgstr "I tre archetipi di agente hanno caratteristiche distinte:"
@@ -10561,6 +10592,12 @@ msgstr "Passa il valore generato tra falso e vero"
 
 msgid "Token stored for this session"
 msgstr "Token memorizzato per questa sessione"
+
+msgid ""
+"Too many language-model sessions failed in a round: check that the LLM "
+"server and model are reachable. The client resumes from the round it did "
+"not close."
+msgstr "Troppe sessioni del modello linguistico sono fallite in un round: verifica che server e modello LLM siano raggiungibili. Il client riprende dal round che non ha chiuso."
 
 msgid "Top"
 msgstr "Migliori"
@@ -10855,6 +10892,9 @@ msgstr "Impossibile avviare il download di Detoxify: %(error)s"
 
 msgid "Unavailable"
 msgstr "Non disponibile"
+
+msgid "Unexpected error in the client: see the execution log."
+msgstr "Errore inatteso nel client: consulta il log di esecuzione."
 
 #, python-format
 msgid "Unexpected error pausing ad hoc client: %(error)s"

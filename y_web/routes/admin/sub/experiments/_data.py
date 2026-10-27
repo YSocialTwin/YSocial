@@ -573,6 +573,26 @@ def experiment_details(uid):
     else:
         client_executions = {}
 
+    # why an IM client stopped, from the last ERROR record of its execution log (plan, 5.4)
+    client_failures = {}
+    if is_im_experiment(experiment) and client_ids:
+        try:
+            from y_web.src.hpc.client import resolve_hpc_client_execution_log_path
+            from y_web.src.im.failures import describe_client_failure
+
+            for row in execution_rows:
+                if getattr(row, "terminal_state", None) != "failed":
+                    continue
+                owner = next((c for c in clients if c.id == row.client_id), None)
+                log_path = resolve_hpc_client_execution_log_path(
+                    experiment, owner.name if owner else None
+                )
+                info = describe_client_failure(log_path)
+                if info:
+                    client_failures[row.client_id] = info
+        except Exception:
+            current_app.logger.warning("Could not read IM client failures", exc_info=True)
+
     # HPC reset availability: only stopped experiments that already started once.
     has_started_once = _experiment_has_started_once(experiment, clients=clients)
     hpc_reset_available = (
@@ -761,12 +781,15 @@ def experiment_details(uid):
         template_name = "admin/experiment_details_forum.html"
     elif experiment.platform_type == "photo_sharing":
         template_name = "admin/experiment_details_photo.html"
+    elif is_im_experiment(experiment):
+        template_name = "admin/experiment_details_im.html"
 
     return render_template(
         template_name,
         experiment=experiment,
         clients=clients,
         client_executions=client_executions,
+        client_failures=client_failures,
         has_infinite_client=has_infinite_client,
         has_agent_plugins_installed=has_agent_plugins_installed,
         installed_agent_plugin_names=installed_agent_plugin_names,

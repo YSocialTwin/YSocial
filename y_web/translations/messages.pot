@@ -4845,6 +4845,11 @@ msgstr ""
 msgid "Invalid client settings: %(why)s"
 msgstr ""
 
+msgid ""
+"Invalid configuration or a missing required plugin: fix the client "
+"settings and start again."
+msgstr ""
+
 msgid "Invalid download path."
 msgstr ""
 
@@ -9226,6 +9231,14 @@ msgid ""
 " this page."
 msgstr ""
 
+msgid "The client was interrupted."
+msgstr ""
+
+msgid ""
+"The configuration differs from the one recorded when the run started: "
+"restore the original files or reset the experiment."
+msgstr ""
+
 #, python-format
 msgid "The current experiment database does not contain %(lower)s tables."
 msgstr ""
@@ -9257,6 +9270,11 @@ msgstr ""
 msgid ""
 "The dashboard database stores the canonical subreddit definitions, "
 "including their mapped interests."
+msgstr ""
+
+msgid ""
+"The database is unusable, a migration failed or its schema is newer than "
+"the installed runtime."
 msgstr ""
 
 msgid ""
@@ -9361,6 +9379,11 @@ msgid "The server could not understand the request due to invalid syntax."
 msgstr ""
 
 msgid "The server encountered an unexpected condition."
+msgstr ""
+
+msgid ""
+"The server was not ready or not reachable, or its actor is dead: start "
+"the experiment server first."
 msgstr ""
 
 msgid "The three agent archetypes have distinct characteristics:"
@@ -9595,6 +9618,12 @@ msgid "Toggle the generated value between false and true"
 msgstr ""
 
 msgid "Token stored for this session"
+msgstr ""
+
+msgid ""
+"Too many language-model sessions failed in a round: check that the LLM "
+"server and model are reachable. The client resumes from the round it did "
+"not close."
 msgstr ""
 
 msgid "Top"
@@ -9875,6 +9904,9 @@ msgid "Unable to start Detoxify download: %(error)s"
 msgstr ""
 
 msgid "Unavailable"
+msgstr ""
+
+msgid "Unexpected error in the client: see the execution log."
 msgstr ""
 
 #, python-format

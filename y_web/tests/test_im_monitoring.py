@@ -177,10 +177,11 @@ def test_kill_nine_is_failed_and_manual_stop_is_not(app, env, monkeypatch, tmp_p
             hs.stop_hpc_server(exp.idexp)
 
 
-def test_exit_messages_cover_the_documented_codes():
-    from y_web.src.im.failures import EXIT_MESSAGES, describe_client_failure, failure_reason
+def test_exit_messages_cover_the_documented_codes(app):
+    from y_web.src.im.failures import describe_client_failure, exit_messages, failure_reason
 
-    assert {1, 2, 3, 4, 5, 6, 130} <= set(EXIT_MESSAGES)
+    with app.app_context():
+        assert {1, 2, 3, 4, 5, 6, 130} <= set(exit_messages())
     assert describe_client_failure(None) is None and failure_reason("/does/not/exist") is None
 
 
