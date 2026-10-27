@@ -2,11 +2,16 @@
 <aside class="im-side im-panel" aria-label="{{ _('Chats') }}">
   <div class="im-side-head">
     {% include "im/_menu.html" %}
-    <form class="im-search" id="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search" data-find-url="/{{ exp.idexp }}/im/api/search" data-find-params="{{ params|urlencode if params else '' }}">
+    <form class="im-search" id="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search" data-find-url="/{{ exp.idexp }}/im/api/search" data-find-params="{{ params|urlencode if params else '' }}" data-t-join="{{ _('Join') }}">
       {% for k, v in params.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
       <label class="im-sr" for="im-q">{{ _('Search') }}</label>
       <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}" autocomplete="off" aria-controls="im-find">
     </form>
+    {% if participant and writable and participant.create_chats %}
+    <button type="button" id="im-new-open" class="im-icon-btn" aria-haspopup="dialog" aria-label="{{ _('New chat') }}" title="{{ _('New chat') }}">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </button>
+    {% endif %}
     <button type="button" id="im-theme" class="im-icon-btn" aria-label="{{ _('Toggle dark mode') }}" title="{{ _('Toggle dark mode') }}">
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
     </button>
@@ -55,3 +60,28 @@
     </ul>
   </nav>
 </aside>
+{% if participant and writable and participant.create_chats %}
+<dialog id="im-new" class="im-dialog" aria-labelledby="im-new-h">
+  <form id="im-new-form" autocomplete="off">
+    <h2 id="im-new-h">{{ _('New chat') }}</h2>
+    <label>{{ _('Type') }}
+      <select name="chat_type">
+        <option value="channel">{{ _('Channel: public, only you post') }}</option>
+        <option value="supergroup">{{ _('Group: public, everyone can write') }}</option>
+        {% if participant.private_groups %}<option value="group">{{ _('Private group: invite only') }}</option>{% endif %}
+        {% if participant.direct_chats %}<option value="private">{{ _('Direct chat with a user') }}</option>{% endif %}
+      </select>
+    </label>
+    <label data-im-for="named">{{ _('Name') }}<input name="title" maxlength="128"></label>
+    <label data-im-for="named">{{ _('Description (optional)') }}<input name="description" maxlength="512"></label>
+    <label data-im-for="direct" hidden>{{ _('User') }}<input name="target" list="im-new-users" placeholder="{{ _('username') }}"></label>
+    <datalist id="im-new-users"></datalist>
+    <label>{{ _('First message (optional)') }}<textarea name="text" rows="3" maxlength="4000"></textarea></label>
+    <p class="im-form-error" id="im-new-error" role="alert" hidden></p>
+    <div class="im-dialog-actions">
+      <button type="button" class="im-ghost" data-im-close>{{ _('Cancel') }}</button>
+      <button type="submit" class="im-act">{{ _('Create') }}</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}

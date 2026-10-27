@@ -43,11 +43,14 @@ tables are never created in it.
   topics, discussion group, members). Messages carry the annotations the experiment produces: topics, hashtags,
   mentions, sentiment, toxicity, emotion, off-topic, origin, views and reactions. Staff always see every chip;
   other viewers see the ones the frontend settings allow. It works on narrow screens (one pane at a time) and in a
-  dark theme.
+  dark theme, switched with the button next to the search box (available to every viewer).
+- **Search** opens an overlay over the chat list, as in Telegram Web, with one tab per kind of result (*Chats*,
+  *Users*, *Groups*, *Channels*, *Posts*); results update while typing and respect the viewpoint and the time of the
+  page. Without JavaScript the box still opens the plain list of matching messages.
 - **Viewpoints** for admins and researchers, from the ≡ menu: the researcher overview (everything, deleted
   messages as tombstones), the public observer, and *View as account*, which opens the chats, groups and channels
-  one account belongs to, exactly as it could read them. The menu also leads back to the administration
-  (experiment details, experiments, dashboard). Accounts can be opened from the member lists and profiles too.
+  one account belongs to, exactly as it could read them. The menu keeps one link back to the dashboard, the
+  viewpoints and the time selection. Accounts can be opened from the member lists and profiles too.
   A differential test checks that what a viewpoint sees equals what IM's own visibility rules allow.
 - **Analytics**: toxicity, sentiment, opinion dynamics, stress/reward, topics, hashtags and the network page work on
   a derived database, `analytics_im.db`, rebuilt from the run database; see [the mapping](im-analytics-mapping.md).
@@ -65,8 +68,13 @@ interaction switches (post, comment, share, like, notifications) and the partici
 
 People can register at any time, as on the other platforms: there is nothing to decide when the experiment is
 created. Those who join the experiment take part as **participants**: they read their own chats and can post, reply, forward, react, edit and
-delete (the last two only if the run enables edits), join and leave chats, invite, search and read notifications.
-They cannot create chats: in IM that is an agent mechanism with quotas.
+delete (the last two only if the run enables edits), join and leave public chats (and, from the search results, join
+with one click), invite, search and read notifications. They can also **create chats**: a channel (public, only the
+owner posts), a group (public, everyone writes), a private group (invite only) or a direct chat with another account
+(there is one per pair), from the *New chat* button above the chat list, and the owner of a channel or group can
+rename it. People are not held to the quotas of simulated agents; what limits them is the number of chats they own at
+once (`human.chat_creation.max_owned_chats`, default 5), and each kind can be switched off in the same block of the
+server configuration.
 
 How it works, and what to keep in mind:
 

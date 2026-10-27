@@ -434,6 +434,7 @@ def _find_payload(ctx, rd, kind, q):
                     "title": a["username"],
                     "subtitle": a["kind"] or "",
                     "hue": a["hue"],
+                    "account_id": a["id"],
                 }
             )
     elif kind == "posts":

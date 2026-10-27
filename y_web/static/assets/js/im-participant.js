@@ -32,6 +32,7 @@
   };
   function explain(res) {
     var code = res && res.code;
+    if (res && res.message && strings[res.message]) return strings[res.message];
     if (code && reasonKey[code]) return T(reasonKey[code]);
     if (/_disabled$/.test(code || '')) return T('disabled');
     return (res && (res.message || res.code)) ? (res.message || res.code) : T('refused');
@@ -50,7 +51,7 @@
       return r.json().catch(function () { return { ok: false, code: 'unavailable' }; });
     }).then(function (res) {
       var outcome = res && res.data && res.data.outcomes && res.data.outcomes[0];
-      if (res && res.ok && outcome && outcome.ok) { delete pending[key]; return { ok: true }; }
+      if (res && res.ok && outcome && outcome.ok) { delete pending[key]; return { ok: true, chat_id: outcome.chat_id }; }
       if (res && res.ok && outcome) { delete pending[key]; return { ok: false, code: outcome.code, message: outcome.reason }; }
       return { ok: false, code: res && res.code, message: res && res.message };
     }).catch(function () { return { ok: false, code: 'unavailable' }; });
@@ -97,6 +98,69 @@
     });
   }
 
+  function chatUrl(id) { return '/' + body.getAttribute('data-exp') + '/im/chat/' + encodeURIComponent(id); }
+
+  /* New chat: a channel, a group, a private group or a direct chat with another user. */
+  var dlg = document.getElementById('im-new'), openNew = document.getElementById('im-new-open');
+  if (dlg && openNew) {
+    var nform = document.getElementById('im-new-form'), nerr = document.getElementById('im-new-error');
+    var kindSel = nform.querySelector('[name=chat_type]'), users = document.getElementById('im-new-users');
+    var named = nform.querySelectorAll('[data-im-for=named]'), direct = nform.querySelector('[data-im-for=direct]');
+    var finder = document.getElementById('im-search'), known = {}, ptimer = null;
+    function syncKind() {
+      var dm = kindSel.value === 'private';
+      Array.prototype.forEach.call(named, function (n) { n.hidden = dm; });
+      direct.hidden = !dm;
+    }
+    function fail(text) { nerr.textContent = text; nerr.hidden = !text; }
+    kindSel.addEventListener('change', syncKind);
+    openNew.addEventListener('click', function () { fail(''); syncKind(); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); });
+    dlg.querySelector('[data-im-close]').addEventListener('click', function () { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); });
+    direct.querySelector('input').addEventListener('input', function (ev) {
+      var q = ev.target.value.trim();
+      clearTimeout(ptimer);
+      if (!q || !finder) return;
+      ptimer = setTimeout(function () {
+        var extra = finder.getAttribute('data-find-params') || '';
+        fetch(finder.getAttribute('data-find-url') + '?' + (extra ? extra + '&' : '') + 'kind=users&q=' + encodeURIComponent(q), { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (!d) return;
+            users.textContent = '';
+            d.results.forEach(function (u) {
+              known[u.title] = u.account_id;
+              var o = document.createElement('option'); o.value = u.title; users.appendChild(o);
+            });
+          }).catch(function () {});
+      }, 180);
+    });
+    nform.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      fail('');
+      var type = kindSel.value, payload = { type: 'create_chat', chat_type: type };
+      var text = nform.querySelector('[name=text]').value.trim();
+      if (text) payload.text = text;
+      if (type === 'private') {
+        var who = nform.querySelector('[name=target]').value.trim();
+        if (!known[who]) { fail(T('unknown_target')); return; }
+        payload.target_account_id = known[who];
+      } else {
+        var title = nform.querySelector('[name=title]').value.trim(), desc = nform.querySelector('[name=description]').value.trim();
+        if (!title) { fail(T('empty_title')); return; }
+        payload.title = title;
+        if (desc) payload.description = desc;
+      }
+      var button = nform.querySelector('button[type=submit]');
+      button.disabled = true;
+      act(payload, 'create|' + JSON.stringify(payload)).then(function (r) {
+        button.disabled = false;
+        if (r.ok && r.chat_id) location.href = chatUrl(r.chat_id);
+        else if (r.ok) location.reload();
+        else fail(explain(r));
+      });
+    });
+  }
+
   var joinForm = document.getElementById('im-join');
   if (joinForm) {
     joinForm.addEventListener('submit', function (ev) {
@@ -130,7 +194,14 @@
       if (!target) return;
       return act({ type: 'forward', chat_id: target.trim(), forward_of_message_id: msg }, 'fwd|' + msg + '|' + target).then(function (r) { done(r); });
     }
-    if (what === 'join' || what === 'leave') return act({ type: what, chat_id: chat }, what + '|' + chat + '|' + Date.now()).then(function (r) { done(r); });
+    if (what === 'join' || what === 'leave') return act({ type: what, chat_id: chat }, what + '|' + chat + '|' + Date.now()).then(function (r) {
+      if (r.ok && el.getAttribute('data-go')) { location.href = chatUrl(chat); } else done(r);
+    });
+    if (what === 'rename') {
+      var name = window.prompt(T('rename_prompt'), el.getAttribute('data-title') || '');
+      if (name === null || !name.trim() || name.trim() === el.getAttribute('data-title')) return;
+      return act({ type: 'rename_chat', chat_id: chat, title: name.trim() }, 'rename|' + chat + '|' + name).then(function (r) { done(r); });
+    }
     if (what === 'invite') {
       return fetch('/' + body.getAttribute('data-exp') + '/im/invite', {
         method: 'POST', credentials: 'same-origin',

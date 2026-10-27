@@ -75,8 +75,10 @@
       list.textContent = '';
       seq++;
     }
+    var canJoin = document.body.getAttribute('data-participant') === '1' && document.body.getAttribute('data-writable') === '1';
     function row(r) {
       var li = document.createElement('li'), a = document.createElement('a');
+      li.className = 'im-find-item';
       a.href = r.href; a.className = 'im-find-row';
       var av = document.createElement('span');
       av.className = 'im-avatar is-md'; av.style.setProperty('--im-hue', r.hue);
@@ -87,6 +89,14 @@
       if (r.subtitle) { var sub = document.createElement('span'); sub.className = 'im-find-sub'; sub.textContent = r.subtitle; main.appendChild(sub); }
       if (r.snippet) { var sn = document.createElement('span'); sn.className = 'im-find-snippet'; sn.textContent = r.snippet; main.appendChild(sn); }
       a.appendChild(av); a.appendChild(main); li.appendChild(a);
+      if (canJoin && r.chat_id && r.type !== 'private' && !r.joined) {
+        /* the participant script handles [data-im-do]; "data-go" opens the chat afterwards */
+        var j = document.createElement('button');
+        j.type = 'button'; j.className = 'im-act im-find-join';
+        j.setAttribute('data-im-do', 'join'); j.setAttribute('data-chat', r.chat_id); j.setAttribute('data-go', '1');
+        j.textContent = form.getAttribute('data-t-join') || 'Join';
+        li.appendChild(j);
+      }
       return li;
     }
     function run() {

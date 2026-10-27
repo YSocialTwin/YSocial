@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 13:55+0000\n"
+"POT-Creation-Date: 2026-10-27 14:14+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -418,6 +418,9 @@ msgstr "@dsalvaz"
 
 msgid "@katie_abramski"
 msgstr "@katie_abramski"
+
+msgid "A chat with this name already exists."
+msgstr "Esiste già una chat con questo nome."
 
 msgid ""
 "A client manages a population of agents that interact within the "
@@ -1768,6 +1771,9 @@ msgstr "Modifica la password dell'utente con convalida sicura."
 msgid "Channel"
 msgstr "Canale"
 
+msgid "Channel: public, only you post"
+msgstr "Canale: pubblico, scrivi solo tu"
+
 msgid "Channels"
 msgstr "Canali"
 
@@ -1859,6 +1865,9 @@ msgstr "Scegli un gruppo esistente o scrivine uno nuovo"
 
 msgid "Choose an image from your gallery or upload a new one."
 msgstr "Scegli un'immagine dalla galleria o caricane una nuova."
+
+msgid "Choose another user."
+msgstr "Scegli un altro utente."
 
 msgid "Choose at least one of the available activities."
 msgstr "Scegli almeno una delle attività disponibili."
@@ -2940,6 +2949,9 @@ msgstr "Creazione del client ad hoc in corso..."
 msgid "Creating agent..."
 msgstr "Creazione dell'agente in corso..."
 
+msgid "Creating chats is not available here."
+msgstr "Qui non è possibile creare chat."
+
 #, python-format
 msgid "Creator Tier %%"
 msgstr "Livello creatore %%"
@@ -3469,6 +3481,9 @@ msgstr "Descrivi la tua simulazione con un %(link)s."
 msgid "Description"
 msgstr "Descrizione"
 
+msgid "Description (optional)"
+msgstr "Descrizione (facoltativa)"
+
 msgid "Description:"
 msgstr "Descrizione:"
 
@@ -3548,6 +3563,9 @@ msgid ""
 msgstr ""
 "Gli URL diretti degli articoli restano locali all'esperimento corrente "
 "perché di solito sono specifici di una campagna o di un'esecuzione."
+
+msgid "Direct chat with a user"
+msgstr "Chat diretta con un utente"
 
 msgid "Disable"
 msgstr "Disattiva"
@@ -4641,6 +4659,9 @@ msgstr "Prima comparsa"
 msgid "First group has no experiments"
 msgstr "Il primo gruppo non ha esperimenti"
 
+msgid "First message (optional)"
+msgstr "Primo messaggio (facoltativo)"
+
 msgid "Flirtation"
 msgstr "Flirt"
 
@@ -5000,6 +5021,9 @@ msgstr "Sessione GitHub attivata per l'accesso alle release dei plugin."
 msgid "GitHub:"
 msgstr "GitHub:"
 
+msgid "Give the chat a name."
+msgstr "Dai un nome alla chat."
+
 msgid ""
 "Gives simulated agents a memory of past interactions: relationship "
 "history, thread continuity and conversation cues used when they reply."
@@ -5070,6 +5094,9 @@ msgstr "Gruppo"
 
 msgid "Group not found"
 msgstr "Gruppo non trovato"
+
+msgid "Group: public, everyone can write"
+msgstr "Gruppo: pubblico, tutti possono scrivere"
 
 msgid "Groups"
 msgstr "Gruppi"
@@ -6982,11 +7009,17 @@ msgstr "Neozelandese"
 msgid "New agents probability"
 msgstr "Probabilità di nuovi agenti"
 
+msgid "New chat"
+msgstr "Nuova chat"
+
 msgid "New here?"
 msgstr "Sei nuovo?"
 
 msgid "New message"
 msgstr "Nuovo messaggio"
+
+msgid "New name for this chat"
+msgstr "Nuovo nome per questa chat"
 
 msgid "New post"
 msgstr "Nuovo post"
@@ -8431,6 +8464,9 @@ msgstr "Chat private con gli agenti seguiti"
 msgid "Private chats with simulation agents"
 msgstr "Chat private con gli agenti della simulazione"
 
+msgid "Private group: invite only"
+msgstr "Gruppo privato: solo su invito"
+
 msgid "Private message likelihood"
 msgstr "Probabilità di un messaggio privato"
 
@@ -9018,6 +9054,9 @@ msgstr "Rimuovi questo post"
 
 msgid "Rename"
 msgstr "Rinomina"
+
+msgid "Rename chat"
+msgstr "Rinomina chat"
 
 msgid "Repeat Password"
 msgstr "Ripeti la password"
@@ -11156,6 +11195,9 @@ msgstr "Caratterizzazione tematica"
 msgid "Themes gaining momentum right now"
 msgstr "Temi che stanno prendendo slancio in questo momento"
 
+msgid "There is no such user."
+msgstr "Non esiste questo utente."
+
 msgid ""
 "There was an error loading the experiment files. Please check the files "
 "and try again."
@@ -11255,6 +11297,9 @@ msgid ""
 msgstr ""
 "È l’algoritmo che decide quali post compaiono nel tuo feed e in che "
 "ordine."
+
+msgid "This kind of chat is not available."
+msgstr "Questo tipo di chat non è disponibile."
 
 msgid "This message was deleted."
 msgstr "Questo messaggio è stato eliminato."
@@ -12719,6 +12764,9 @@ msgstr "YSocialTwin"
 msgid "Yes"
 msgstr "Sì"
 
+msgid "You already own as many chats as allowed."
+msgstr "Possiedi già il numero massimo di chat consentito."
+
 msgid "You are not allowed to access this experiment."
 msgstr "Non hai il permesso di accedere a questo esperimento."
 
@@ -13176,6 +13224,9 @@ msgstr "non letti"
 #, python-format
 msgid "update available: %(tag)s"
 msgstr "aggiornamento disponibile: %(tag)s"
+
+msgid "username"
+msgstr "nome utente"
 
 msgid "username or account id"
 msgstr "username o id account"
@@ -14192,4 +14243,7 @@ msgstr "✔️ Usa"
 #~ "base alle parole condivise e alla "
 #~ "recenza: non c'è alcun backend di "
 #~ "embedding da configurare."
+
+#~ msgid "You joined the chat."
+#~ msgstr ""
 

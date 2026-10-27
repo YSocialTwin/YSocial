@@ -388,3 +388,70 @@ def test_what_a_participant_reads_is_recorded_as_exposures_once_per_round_and_ch
     # a gateway that does not answer never breaks the page
     s.http.shutdown()
     assert s.client.get(f"/{s.exp_id}/im/chat/c-chat").status_code == 200
+
+
+def _outcome(r):
+    assert r.status_code == 200, r.data[:300]
+    return r.get_json()["data"]["outcomes"][0]
+
+
+def test_a_participant_creates_chats_and_owns_them(stack):
+    s = stack
+    out = _outcome(_act(s, {"type": "create_chat", "chat_type": "channel", "title": "Night trains", "text": "Welcome aboard", "client_action_id": "mk1"}))
+    assert out["ok"] and out["chat_id"]
+    page = s.client.get(f"/{s.exp_id}/im/chat/{out['chat_id']}").data.decode()
+    assert "Night trains" in page and "Welcome aboard" in page
+    assert 'data-im-do="rename"' in page and 'data-im-do="leave"' not in page  # the owner renames and cannot leave
+    renamed = _outcome(_act(s, {"type": "rename_chat", "chat_id": out["chat_id"], "title": "Day trains", "client_action_id": "rn1"}))
+    assert renamed["ok"]
+    assert "Day trains" in s.client.get(f"/{s.exp_id}/im/chat/{out['chat_id']}").data.decode()
+    direct = _outcome(_act(s, {"type": "create_chat", "chat_type": "private", "target_account_id": "a-alice", "text": "hi Alice", "client_action_id": "mk2"}))
+    assert direct["ok"] and direct["chat_id"] != out["chat_id"]
+
+
+def test_chat_creation_is_limited_and_refused_with_a_reason(stack):
+    s = stack
+    cfg = json.loads((s.folder / "server_config.json").read_text())
+    cfg["human"]["chat_creation"] = {"max_owned_chats": 1}
+    (s.folder / "server_config.json").write_text(json.dumps(cfg))
+    s.srv.messages.human_chats.cfg = type(s.srv.messages.human_chats.cfg)(max_owned_chats=1)
+    assert _outcome(_act(s, {"type": "create_chat", "chat_type": "channel", "title": "One", "client_action_id": "a"}))["ok"]
+    second = _outcome(_act(s, {"type": "create_chat", "chat_type": "channel", "title": "Two", "client_action_id": "b"}))
+    assert not second["ok"] and second["reason"] == "creation_limit_reached"
+
+
+def test_the_new_chat_button_follows_the_run_settings(stack):
+    s = stack
+    html = _enter(s)
+    assert 'id="im-new-open"' in html and 'value="private"' in html and 'value="group"' in html
+    cfg = json.loads((s.folder / "server_config.json").read_text())
+    cfg["human"]["chat_creation"] = {"allow_direct": False, "allow_private_groups": False}
+    (s.folder / "server_config.json").write_text(json.dumps(cfg))
+    html = _enter(s)
+    assert 'id="im-new-open"' in html and 'value="private"' not in html and 'value="group"' not in html
+    cfg["human"]["chat_creation"] = {"enabled": False}
+    (s.folder / "server_config.json").write_text(json.dumps(cfg))
+    html = _enter(s)
+    assert 'id="im-new-open"' not in html and 'id="im-new"' not in html
+
+
+def test_join_and_leave_buttons_follow_the_membership_and_search_shows_it(stack):
+    s = stack
+    before = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert 'data-im-do="join"' in before and 'data-im-do="leave"' not in before
+    assert _outcome(_act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j"}))["ok"]
+    after = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert 'data-im-do="leave"' in after and 'data-im-do="join"' not in after
+    assert _outcome(_act(s, {"type": "leave", "chat_id": "c-chat", "client_action_id": "l"}))["ok"]
+    from sqlalchemy import select
+
+    from yinstantmessaging.server.db import models as m
+
+    with s.srv.sessions() as session:
+        title = session.get(m.Chat, "c-chat").title
+    found = s.client.get(f"/{s.exp_id}/im/api/search?kind=chats&q={title[:3]}").get_json()
+    hit = next(r for r in found["results"] if r["chat_id"] == "c-chat")
+    assert hit["joined"] is False
+    _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j2"})
+    again = s.client.get(f"/{s.exp_id}/im/api/search?kind=chats&q={title[:3]}").get_json()
+    assert next(r for r in again["results"] if r["chat_id"] == "c-chat")["joined"] is True

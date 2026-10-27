@@ -40,6 +40,8 @@ ACTION_TYPES = frozenset(
         "read",
         "create_forum_topic",
         "delete_forum_topic",
+        "create_chat",
+        "rename_chat",
         "ban",
         "restrict",
     }
@@ -54,6 +56,9 @@ class Participant:
     account_id: str
     exp_folder: str
     edits: bool = False  # the run allows editing and deleting own messages (``telegram.edits.enabled``)
+    create_chats: bool = True  # ``human.chat_creation.enabled``: the person may start channels, groups and chats
+    private_groups: bool = True  # ... invite-only groups
+    direct_chats: bool = True  # ... one-to-one chats
 
 
 def experiment_folder(exp) -> str:
@@ -80,6 +85,22 @@ def _edits_enabled(folder: str) -> bool:
         return False
 
 
+def _chat_creation_options(folder: str) -> dict:
+    """What the run lets a person create (``human.chat_creation``; everything is on when the block is missing)."""
+    import json
+
+    try:
+        with open(os.path.join(folder, "server_config.json"), encoding="utf-8") as fh:
+            block = ((json.load(fh).get("human") or {}).get("chat_creation")) or {}
+    except (OSError, ValueError, AttributeError):
+        block = {}
+    return {
+        "create_chats": bool(block.get("enabled", True)) and int(block.get("max_owned_chats", 5)) > 0,
+        "private_groups": bool(block.get("allow_private_groups", True)),
+        "direct_chats": bool(block.get("allow_direct", True)),
+    }
+
+
 def participant_for(exp, user, ui, assigned: bool) -> Optional[Participant]:
     """The participant behind ``user`` for this experiment, or ``None`` (observer only)."""
     if user is None or getattr(user, "role", None) not in PARTICIPANT_ROLES or not assigned:
@@ -94,6 +115,7 @@ def participant_for(exp, user, ui, assigned: bool) -> Optional[Participant]:
         human_account_id(uid, user.id),
         experiment_folder(exp),
         _edits_enabled(experiment_folder(exp)),
+        **_chat_creation_options(experiment_folder(exp)),
     )
 
 

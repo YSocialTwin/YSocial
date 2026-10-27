@@ -4,6 +4,8 @@
 {% block title %}{{ page.title }} · {{ exp.exp_name }}{% endblock %}
 {% block content %}
 {% set own_id = participant.account_id if participant else (ctx.vp.account_id if ctx.vp.kind == 'account' else None) %}
+{% set is_member = participant and (members|selectattr('account_id', 'equalto', participant.account_id)|list|length > 0) %}
+{% set is_owner = participant and info and info.owner and info.owner.id == participant.account_id %}
 <section class="im-conversation" aria-labelledby="im-conv-h" data-infinite="{{ 1 if ui.get('infinite_scroll_enabled', True) else 0 }}" data-history-url="/{{ exp.idexp }}/im/api/chat/{{ chat_id }}/history">
   <header class="im-conv-head im-panel">
     <a class="im-back im-icon-btn" href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}" aria-label="{{ _('Chats') }}">←</a>
@@ -12,10 +14,12 @@
       <h2 id="im-conv-h">{{ page.title }}{% if topic %} · {{ topic.title }}{% endif %}</h2>
       <p>{% if info %}{{ info.type }}{% if info.visibility == 'private' %} · {{ _('private') }}{% endif %} · {{ _('%(n)s members', n=info.members) }}{% endif %}</p>
     </div>
-    {% if participant and writable %}
-    <button type="button" class="im-act" data-im-action="join" data-im-do="join" data-chat="{{ chat_id }}">{{ _('Join') }}</button>
-    <button type="button" class="im-act" data-im-action="leave" data-im-do="leave" data-chat="{{ chat_id }}">{{ _('Leave') }}</button>
+    {% if participant and writable and info and info.type != 'private' %}
+    {% if not is_member %}<button type="button" class="im-act" data-im-action="join" data-im-do="join" data-chat="{{ chat_id }}">{{ _('Join') }}</button>
+    {% else %}
+    {% if not is_owner %}<button type="button" class="im-act" data-im-action="leave" data-im-do="leave" data-chat="{{ chat_id }}">{{ _('Leave') }}</button>{% endif %}
     <button type="button" class="im-act" data-im-action="invite" data-im-do="invite" data-chat="{{ chat_id }}">{{ _('Invite link') }}</button>
+    {% endif %}
     {% endif %}
     {% if ui.get('show_post_time', True) %}<span class="im-clock" data-im-time="" title="{{ _('Simulated time') }}">{{ _('day %(d)s, slot %(s)s', d=day_slot[0], s=day_slot[1]) }}</span>{% endif %}
     {% if participant and ui.get('notifications_menu', True) %}<a class="im-icon-btn" href="/{{ exp.idexp }}/im/notifications" aria-label="{{ _('Notifications') }}" title="{{ _('Notifications') }}">🔔</a>{% endif %}
@@ -79,6 +83,9 @@
       {% if info.topics %}<li><span>{{ _('Topics') }}</span><span class="im-chips">{% for t in info.topics %}<span class="im-chip is-topic">{{ t }}</span>{% endfor %}</span></li>{% endif %}
       <li><span>{{ _('Created') }}</span>{{ _('round %(n)s', n=info.created_round) }} · {{ info.origin }}</li>
     </ul>
+    {% if participant and writable and info.type != 'private' and info.owner and info.owner.id == participant.account_id %}
+    <p><button type="button" class="im-act" data-im-action="rename" data-im-do="rename" data-chat="{{ chat_id }}" data-title="{{ info.title }}" data-description="{{ info.description or '' }}">{{ _('Rename chat') }}</button></p>
+    {% endif %}
     <h5 class="im-info-h">{{ _('Members') }}</h5>
     <ul class="im-members">
       {% for mem in members[:200] %}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 13:55+0000\n"
+"POT-Creation-Date: 2026-10-27 14:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -394,6 +394,9 @@ msgid "@dsalvaz"
 msgstr ""
 
 msgid "@katie_abramski"
+msgstr ""
+
+msgid "A chat with this name already exists."
 msgstr ""
 
 msgid ""
@@ -1638,6 +1641,9 @@ msgstr ""
 msgid "Channel"
 msgstr ""
 
+msgid "Channel: public, only you post"
+msgstr ""
+
 msgid "Channels"
 msgstr ""
 
@@ -1722,6 +1728,9 @@ msgid "Choose an existing group or type a new one"
 msgstr ""
 
 msgid "Choose an image from your gallery or upload a new one."
+msgstr ""
+
+msgid "Choose another user."
 msgstr ""
 
 msgid "Choose at least one of the available activities."
@@ -2623,6 +2632,9 @@ msgstr ""
 msgid "Creating agent..."
 msgstr ""
 
+msgid "Creating chats is not available here."
+msgstr ""
+
 #, python-format
 msgid "Creator Tier %%"
 msgstr ""
@@ -3095,6 +3107,9 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
+msgid "Description (optional)"
+msgstr ""
+
 msgid "Description:"
 msgstr ""
 
@@ -3162,6 +3177,9 @@ msgstr ""
 msgid ""
 "Direct article URLs remain local to the current experiment because they "
 "are typically campaign- or run-specific."
+msgstr ""
+
+msgid "Direct chat with a user"
 msgstr ""
 
 msgid "Disable"
@@ -4177,6 +4195,9 @@ msgstr ""
 msgid "First group has no experiments"
 msgstr ""
 
+msgid "First message (optional)"
+msgstr ""
+
 msgid "Flirtation"
 msgstr ""
 
@@ -4506,6 +4527,9 @@ msgstr ""
 msgid "GitHub:"
 msgstr ""
 
+msgid "Give the chat a name."
+msgstr ""
+
 msgid ""
 "Gives simulated agents a memory of past interactions: relationship "
 "history, thread continuity and conversation cues used when they reply."
@@ -4567,6 +4591,9 @@ msgid "Group"
 msgstr ""
 
 msgid "Group not found"
+msgstr ""
+
+msgid "Group: public, everyone can write"
 msgstr ""
 
 msgid "Groups"
@@ -6333,10 +6360,16 @@ msgstr ""
 msgid "New agents probability"
 msgstr ""
 
+msgid "New chat"
+msgstr ""
+
 msgid "New here?"
 msgstr ""
 
 msgid "New message"
+msgstr ""
+
+msgid "New name for this chat"
 msgstr ""
 
 msgid "New post"
@@ -7671,6 +7704,9 @@ msgstr ""
 msgid "Private chats with simulation agents"
 msgstr ""
 
+msgid "Private group: invite only"
+msgstr ""
+
 msgid "Private message likelihood"
 msgstr ""
 
@@ -8233,6 +8269,9 @@ msgid "Remove this post"
 msgstr ""
 
 msgid "Rename"
+msgstr ""
+
+msgid "Rename chat"
 msgstr ""
 
 msgid "Repeat Password"
@@ -10161,6 +10200,9 @@ msgstr ""
 msgid "Themes gaining momentum right now"
 msgstr ""
 
+msgid "There is no such user."
+msgstr ""
+
 msgid ""
 "There was an error loading the experiment files. Please check the files "
 "and try again."
@@ -10235,6 +10277,9 @@ msgstr ""
 msgid ""
 "This is the algorithm that decides which posts appear in your feed and in"
 " what order."
+msgstr ""
+
+msgid "This kind of chat is not available."
 msgstr ""
 
 msgid "This message was deleted."
@@ -11533,6 +11578,9 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
+msgid "You already own as many chats as allowed."
+msgstr ""
+
 msgid "You are not allowed to access this experiment."
 msgstr ""
 
@@ -11973,6 +12021,9 @@ msgstr ""
 
 #, python-format
 msgid "update available: %(tag)s"
+msgstr ""
+
+msgid "username"
 msgstr ""
 
 msgid "username or account id"
