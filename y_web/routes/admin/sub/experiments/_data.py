@@ -722,7 +722,7 @@ def experiment_details(uid):
             memory_cfg = config.get("memory")
             if isinstance(memory_cfg, dict):
                 memory_module_enabled = bool(memory_cfg.get("enabled"))
-            if experiment.platform_type in {"forum", "microblogging"}:
+            if experiment.platform_type in {"forum", "microblogging", "instant_messaging"}:
                 persisted_embedding = config.get("memory_embeddings")
                 if isinstance(persisted_embedding, dict):
                     embedding_settings = {

@@ -235,3 +235,29 @@ def test_client_form_has_the_sections_of_the_other_platforms(im_app, monkeypatch
                      'name="adv.telegram.actions_likelihood.post"', 'name="adv.telegram.moderation.policy"', 'data-scale-factor="0.05"',
                      'name="adv.agents.memory_total_max_chars"', 'id="standard_memory_config_fields"'):
         assert expected in page, expected
+
+
+def test_memory_embeddings_are_configured_for_im_like_the_other_platforms(im_app, tmp_path):
+    import json
+    import os
+
+    from y_web import db
+    from y_web.src.models import Exps
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    with app.app_context():
+        folder = os.path.dirname(db.session.get(Exps, exp_id).db_name).split("/")[-1]
+    exp_dir = tmp_path / "y_web" / "experiments" / folder
+    exp_dir.mkdir(parents=True)
+    (exp_dir / "server_config.json").write_text(json.dumps({"memory": {"enabled": True}}))
+    page = client.get(f"/admin/embedding_settings/{exp_id}")
+    assert page.status_code == 200 and b"Instant Messaging Memory Embeddings" in page.data
+    done = client.post(
+        f"/admin/update_embedding_settings/{exp_id}",
+        data={"embedding_service": "ollama", "embedding_host": "box:11434", "embedding_model": "m"},
+    )
+    assert done.status_code == 302
+    saved = json.loads((exp_dir / "server_config.json").read_text())
+    assert saved["memory_embeddings"] == {"service": "ollama", "host": "http://box:11434", "model": "m"}
+    assert saved["memory"] == {"enabled": True}

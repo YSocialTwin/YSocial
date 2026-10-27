@@ -723,9 +723,11 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     """Load a memory-capable experiment and its writable directory."""
     check_privileges(current_user.username)
 
+    from y_web.src.im import is_im_experiment
     from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 
-    if not agent_memory_plugin_installed():
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
+    if experiment and not (agent_memory_plugin_installed() or is_im_experiment(experiment)):
         flash(_("The Agent Memory plugin is not installed."), "error")
         return (
             None,
@@ -733,7 +735,6 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
             redirect(url_for("experiments.experiment_details", uid=uid)),
         )
 
-    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))

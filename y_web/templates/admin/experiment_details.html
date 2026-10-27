@@ -202,7 +202,7 @@
                                 </div>
                                 {% endif %}
 
-                                {% if memory_configuration_supported and memory_module_enabled and experiment_details_variant != 'im' %}
+                                {% if memory_configuration_supported and memory_module_enabled %}
                                 <div class="box-line">
                                     <span class="left">{{ _('Memory Embeddings') }}</span>
                                     <span class="right">
@@ -237,14 +237,7 @@
                                     </span>
                                 </div>
                                 {% endif %}
-                                {% if experiment_details_variant == 'im' and memory_module_enabled %}
-                                <div class="box-line">
-                                    <span class="left">{{ _('Memory retrieval') }}</span>
-                                    <span class="right"><small>{{ _('Lexical') }}</small></span>
-                                </div>
-                                <div class="ys-text-xs-meta">{{ _('The memory of instant messaging agents scores items by shared words and recency: there is no embedding backend to configure.') }}</div>
-                                {% endif %}
-                                {% if experiment_details_variant == 'im' and im_advanced %}
+                                                                {% if experiment_details_variant == 'im' and im_advanced %}
                                 <div id="im-advanced-settings">
                                     <hr>
                                     <p class="ys-label-hint">{{ _('Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part.') }}</p>

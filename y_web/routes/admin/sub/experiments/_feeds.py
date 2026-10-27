@@ -1002,14 +1002,22 @@ def embedding_settings(uid):
         experiment=experiment,
         embedding_settings=_read_experiment_embedding_settings(experiment_dir),
         platform_label=(
-            "HPC"
-            if experiment.simulator_type == "HPC"
-            else ("Forum" if experiment.platform_type == "forum" else "Microblogging")
+            "Instant Messaging"
+            if experiment.platform_type == "instant_messaging"
+            else (
+                "HPC"
+                if experiment.simulator_type == "HPC"
+                else ("Forum" if experiment.platform_type == "forum" else "Microblogging")
+            )
         ),
         server_label=(
-            "YSimulator"
-            if experiment.simulator_type == "HPC"
-            else ("YServerReddit" if experiment.platform_type == "forum" else "YServer")
+            "YInstantMessaging"
+            if experiment.platform_type == "instant_messaging"
+            else (
+                "YSimulator"
+                if experiment.simulator_type == "HPC"
+                else ("YServerReddit" if experiment.platform_type == "forum" else "YServer")
+            )
         ),
     )
 
@@ -1029,6 +1037,7 @@ def update_embedding_settings(uid):
         (
             "server_config.json"
             if experiment.simulator_type == "HPC"
+            or experiment.platform_type == "instant_messaging"
             else "config_server.json"
         ),
     )
