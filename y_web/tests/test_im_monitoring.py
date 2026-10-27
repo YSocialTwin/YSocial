@@ -201,3 +201,33 @@ def test_describe_failure_reads_the_last_error_record(tmp_path):
     info = describe_client_failure(str(log))
     assert info["exit_code"] == 6 and info["error_type"] == "ConfigMismatchError"
     assert "differs" in failure_reason(str(log))
+
+
+def test_metrics_tables_fill_from_the_logs_of_a_real_run(app, env, monkeypatch, tmp_path):
+    from y_web import db
+    from y_web.src.hpc.client import resolve_hpc_client_log_path
+    from y_web.src.hpc.log_metrics import (
+        update_client_execution_from_log,
+        update_client_log_metrics,
+        update_server_log_metrics,
+    )
+    from y_web.src.models import ClientLogMetrics, ServerLogMetrics
+
+    with app.app_context():
+        hs, exp, folder = _setup(app, env, monkeypatch, tmp_path, days="2")
+        _start_server(hs, exp, folder, monkeypatch, tmp_path)
+        proc = _spawn(folder)
+        try:
+            assert proc.wait(timeout=150) == 0
+        finally:
+            hs.stop_hpc_server(exp.idexp)
+        client, execution = _register(exp, proc, expected_rounds=48)
+        logs = Path(folder) / "logs"
+        assert update_server_log_metrics(exp.idexp, str(logs / "_server.log"), is_hpc=True) is not False
+        client_log = resolve_hpc_client_log_path(exp, "cl", log_folder=str(logs))
+        assert update_client_log_metrics(exp.idexp, client.id, client_log, is_hpc=True) is not False
+        update_client_execution_from_log(client.id, client_log)
+        db.session.expire_all()
+        assert db.session.query(ServerLogMetrics).filter_by(exp_id=exp.idexp).count() > 0
+        assert db.session.query(ClientLogMetrics).filter_by(exp_id=exp.idexp).count() > 0
+        assert execution.elapsed_time > 0 and execution.last_active_day >= 1
