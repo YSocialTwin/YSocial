@@ -30,6 +30,10 @@ class HpcPlatform:
     client_actor_prefix: str = ""
     # the runtime ships an offline validator that must pass before the server is started
     validates_config: bool = False
+    # YSimulator-style client preparation steps (stress/reward and network bootstrap rewrite the client
+    # config; the actor log clean-up trims "completion" lines); the prompts file must exist before a start
+    syncs_client_config: bool = True
+    requires_prompts_file: bool = True
 
     @property
     def server_repo(self) -> str:
@@ -62,9 +66,12 @@ HPC_PLATFORMS = {
         supports_gunicorn=False,
         frozen_server_runs_script=True,
         client_config_only=True,
+        normalizes_client_config=True,
         prompts_filename="prompts_im.json",
         orchestrator_actor="orchestrator_server",
         validates_config=True,
+        syncs_client_config=False,
+        requires_prompts_file=False,
     ),
 }
 

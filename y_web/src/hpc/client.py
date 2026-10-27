@@ -181,6 +181,53 @@ def _normalize_photo_sharing_client_config(
         json.dump(client_config, handle, indent=2)
 
 
+def _normalize_im_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Align a YInstantMessaging client config with the experiment server runtime.
+
+    Only keys that IM excludes from the config hash are written (``client_id``, ``namespace``,
+    ``server_name``, ``address``, ``agents_file``, ``logging.log_dir``, ``logging.instance_name``), so
+    running it before every start never changes the hash a resumed run is checked against. No secret is
+    ever written here, and the result is the same however many times it runs.
+    """
+    from y_web.routes.admin.sub.experiments._im import IM_NAMESPACE, IM_SERVER_NAME
+
+    server_config_path = os.path.join(exp_folder, "server_config.json")
+    server_config = {}
+    if os.path.exists(server_config_path):
+        with open(server_config_path, "r", encoding="utf-8") as handle:
+            server_config = json.load(handle)
+
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+
+    runtime_client_id = _build_hpc_runtime_client_id(exp_folder, client_name)
+    desired = {
+        "client_id": runtime_client_id,
+        "namespace": server_config.get("namespace", IM_NAMESPACE),
+        "server_name": server_config.get("server_name", IM_SERVER_NAME),
+        "address": "auto",
+        "agents_file": f"{population_name}.json",
+    }
+    logging_cfg = dict(client_config.get("logging") or {})
+    logging_cfg["log_dir"] = os.path.join(exp_folder, "logs")
+    logging_cfg["instance_name"] = runtime_client_id
+    desired["logging"] = logging_cfg
+
+    if all(client_config.get(key) == value for key, value in desired.items()):
+        return
+    client_config.update(desired)
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=2)
+
+
+_CLIENT_NORMALIZERS = {
+    "photo_sharing": _normalize_photo_sharing_client_config,
+    "instant_messaging": _normalize_im_client_config,
+}
+
+
 def _migrate_legacy_photo_sharing_client_layout(
     exp_folder: str, client_name: str, population_name: str, client_config_path: str
 ) -> None:
@@ -560,22 +607,31 @@ def start_hpc_client(exp, cli, population):
             exp_folder, f"client_{cli.name}-{population.name}.json"
         )
         agents_file = os.path.join(exp_folder, f"{population.name}.json")
-        prompts_file = os.path.join(exp_folder, "prompts.json")
+        prompts_file = os.path.join(
+            exp_folder,
+            "prompts_im.json" if exp.platform_type == "instant_messaging" else "prompts.json",
+        )
 
-    # Validate that required files exist
-    for file_path, file_name in [
+    _launch_spec = find_hpc_platform(exp.platform_type)
+    _required_files = [
         (client_config, "client config"),
         (agents_file, "agents"),
-        (prompts_file, "prompts"),
-    ]:
+    ]
+    if _launch_spec is None or _launch_spec.requires_prompts_file:
+        _required_files.append((prompts_file, "prompts"))
+
+    # Validate that required files exist
+    for file_path, file_name in _required_files:
         if not Path(file_path).exists():
             raise FileNotFoundError(
                 f"{file_name.capitalize()} file not found: {file_path}\n"
                 f"Please ensure the HPC experiment is properly configured."
             )
 
+    _syncs_config = _launch_spec is None or _launch_spec.syncs_client_config
     try:
-        _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
+        if _syncs_config:
+            _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
 
@@ -585,7 +641,8 @@ def start_hpc_client(exp, cli, population):
         print(f"Warning: failed to synchronize HPC client duration: {exc}")
 
     try:
-        _sync_hpc_network_bootstrap(exp_folder, client_config, cli)
+        if _syncs_config:
+            _sync_hpc_network_bootstrap(exp_folder, client_config, cli)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC network bootstrap: {exc}")
 
@@ -626,7 +683,7 @@ def start_hpc_client(exp, cli, population):
     logs_folder = os.path.join(exp_folder, "logs")
     actor_log_path = os.path.join(logs_folder, f"{cli.name}_actor.log")
 
-    if os.path.exists(actor_log_path):
+    if _syncs_config and os.path.exists(actor_log_path):
         try:
             # Read all lines from the actor log
             with open(actor_log_path, "r", encoding="utf-8") as f:
@@ -663,11 +720,12 @@ def start_hpc_client(exp, cli, population):
         runtime_config_dir = client_config
 
         try:
-            _normalize_photo_sharing_client_config(
+            _CLIENT_NORMALIZERS[spec.key](
                 exp_folder, cli.name, population.name, client_config
             )
         except Exception:
-            pass
+            if spec.key == "instant_messaging":
+                raise  # IM must not start with a client config that could not be aligned
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     is_frozen = getattr(sys, "frozen", False)
