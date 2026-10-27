@@ -4,6 +4,6 @@
 <section aria-labelledby="im-thr-h">
   <a class="im-back" href="javascript:history.back()">← {{ _('Back') }}</a>
   <h2 id="im-thr-h">{{ _('Thread') }}</h2>
-  <div class="im-messages">{% for m in thread["items"] %}{{ message(m, exp.idexp, params, ui) }}{% endfor %}</div>
+  <div class="im-messages">{% for m in thread["items"] %}{{ message(m, exp.idexp, params, ui, participant, writable) }}{% endfor %}</div>
 </section>
 {% endblock %}

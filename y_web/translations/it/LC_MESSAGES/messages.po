@@ -5864,7 +5864,7 @@ msgid "Less"
 msgstr "Meno"
 
 msgid "Let non-staff viewers look at a past round"
-msgstr "Permetti a chi non fa parte dello staff di guardare un turno passato"
+msgstr "Permetti a chi non fa parte dello staff di guardare un round passato"
 
 msgid "Let participants change the language"
 msgstr "Permetti ai partecipanti di cambiare lingua"
@@ -13298,3 +13298,219 @@ msgstr "L'esperimento non ha ancora dati da analizzare."
 #: y_web/templates/admin
 msgid "Analytics data refreshed."
 msgstr "Dati di analisi aggiornati."
+
+#: y_web/templates/im
+msgid "Human participation"
+msgstr "Partecipazione umana"
+
+#: y_web/templates/im
+msgid "Participation service:"
+msgstr "Servizio di partecipazione:"
+
+#: y_web/templates/im
+msgid "running"
+msgstr "in esecuzione"
+
+#: y_web/templates/im
+msgid "stopped"
+msgstr "fermo"
+
+#: y_web/templates/im
+msgid "not answering"
+msgstr "non risponde"
+
+#: y_web/templates/im
+msgid "off"
+msgstr "disattivato"
+
+#: y_web/templates/im
+msgid "The simulation does not depend on it: participants can only read until it is back."
+msgstr "La simulazione non ne dipende: i partecipanti possono solo leggere finché non torna disponibile."
+
+#: y_web/templates/im
+msgid "Minimum round duration: %(s)s seconds"
+msgstr "Durata minima del round: %(s)s secondi"
+
+#: y_web/templates/im
+msgid "A run with human participants cannot be reproduced exactly."
+msgstr "Una simulazione con partecipanti umani non può essere riprodotta esattamente."
+
+#: y_web/templates/im
+msgid "Chat account"
+msgstr "Account di chat"
+
+#: y_web/templates/im
+msgid "Last active round"
+msgstr "Ultimo round attivo"
+
+#: y_web/templates/im
+msgid "not entered yet"
+msgstr "non ancora entrato"
+
+#: y_web/templates/im
+msgid "No participant is assigned to this experiment yet."
+msgstr "Nessun partecipante è ancora assegnato a questo esperimento."
+
+#: y_web/templates/im
+msgid "Participant notice"
+msgstr "Avviso ai partecipanti"
+
+#: y_web/templates/im
+msgid "Shown once to each participant before their first entry. Leave empty for none. You are responsible for informing participants."
+msgstr "Mostrato una volta a ogni partecipante prima del primo ingresso. Lascia vuoto per non mostrarlo. Sei tu a dover informare i partecipanti."
+
+#: y_web/templates/im
+msgid "Assigned participants can read and write in the chats. A run with humans cannot be reproduced exactly. You are responsible for informing participants."
+msgstr "I partecipanti assegnati possono leggere e scrivere nelle chat. Una simulazione con umani non può essere riprodotta esattamente. Sei tu a dover informare i partecipanti."
+
+#: y_web/templates/im
+msgid "Minimum round duration (seconds, 0 = off)"
+msgstr "Durata minima del round (secondi, 0 = disattivata)"
+
+#: y_web/templates/im
+msgid "Maximum number of participants"
+msgstr "Numero massimo di partecipanti"
+
+#: y_web/templates/im
+msgid "React %(e)s"
+msgstr "Reagisci %(e)s"
+
+#: y_web/templates/im
+msgid "Forward"
+msgstr "Inoltra"
+
+#: y_web/templates/im
+msgid "Simulated time"
+msgstr "Tempo simulato"
+
+#: y_web/templates/im
+msgid "Connection lost, retrying…"
+msgstr "Connessione persa, nuovo tentativo…"
+
+#: y_web/templates/im
+msgid "Reading only: writing is available while the simulation is running."
+msgstr "Solo lettura: si può scrivere mentre la simulazione è in esecuzione."
+
+#: y_web/templates/im
+msgid "Your account is not ready yet (the participation service is not answering). You are seeing the public view; try again in a moment."
+msgstr "Il tuo account non è ancora pronto (il servizio di partecipazione non risponde). Stai vedendo la vista pubblica; riprova tra poco."
+
+#: y_web/templates/im
+msgid "sending…"
+msgstr "invio in corso…"
+
+#: y_web/templates/im
+msgid "not sent"
+msgstr "non inviato"
+
+#: y_web/templates/im
+msgid "press Send to retry"
+msgstr "premi Invia per riprovare"
+
+#: y_web/templates/im
+msgid "Replying to"
+msgstr "In risposta a"
+
+#: y_web/templates/im
+msgid "click to cancel"
+msgstr "clicca per annullare"
+
+#: y_web/templates/im
+msgid "Delete this message?"
+msgstr "Eliminare questo messaggio?"
+
+#: y_web/templates/im
+msgid "Edit message"
+msgstr "Modifica messaggio"
+
+#: y_web/templates/im
+msgid "Forward to the chat with id:"
+msgstr "Inoltra alla chat con id:"
+
+#: y_web/templates/im
+msgid "Invite link"
+msgstr "Link di invito"
+
+#: y_web/templates/im
+msgid "This interaction is switched off for the experiment."
+msgstr "Questa interazione è disattivata per l'esperimento."
+
+#: y_web/templates/im
+msgid "The simulation is not running."
+msgstr "La simulazione non è in esecuzione."
+
+#: y_web/templates/im
+msgid "The round is closed: try again in a moment."
+msgstr "Il round è chiuso: riprova tra poco."
+
+#: y_web/templates/im
+msgid "Connection lost: try again in a moment."
+msgstr "Connessione persa: riprova tra poco."
+
+#: y_web/templates/im
+msgid "You are not allowed to do that here."
+msgstr "Non puoi farlo qui."
+
+#: y_web/templates/im
+msgid "You cannot read this chat."
+msgstr "Non puoi leggere questa chat."
+
+#: y_web/templates/im
+msgid "Slow down a little."
+msgstr "Rallenta un poco."
+
+#: y_web/templates/im
+msgid "Your session expired: reload the page."
+msgstr "La sessione è scaduta: ricarica la pagina."
+
+#: y_web/templates/im
+msgid "The action was refused."
+msgstr "L'azione è stata rifiutata."
+
+#: y_web/templates/im
+msgid "Leave"
+msgstr "Esci"
+
+#: y_web/templates/im
+msgid "Write a message"
+msgstr "Scrivi un messaggio"
+
+#: y_web/templates/im
+msgid "Join a chat"
+msgstr "Entra in una chat"
+
+#: y_web/templates/im
+msgid "Chat id"
+msgstr "Id della chat"
+
+#: y_web/templates/im
+msgid "Invite code (optional)"
+msgstr "Codice di invito (facoltativo)"
+
+#: y_web/templates/im
+msgid "Before you start"
+msgstr "Prima di iniziare"
+
+#: y_web/templates/im
+msgid "I have read this, continue"
+msgstr "Ho letto, continua"
+
+#: y_web/templates/im
+msgid "Nothing new."
+msgstr "Niente di nuovo."
+
+#: y_web/templates/im
+msgid "You were mentioned"
+msgstr "Sei stato menzionato"
+
+#: y_web/templates/im
+msgid "Someone replied to you"
+msgstr "Qualcuno ti ha risposto"
+
+#: y_web/templates/im
+msgid "You were invited"
+msgstr "Sei stato invitato"
+
+#: y_web/templates/im
+msgid "Connection lost: the notifications will appear when it is back."
+msgstr "Connessione persa: le notifiche appariranno al ritorno."

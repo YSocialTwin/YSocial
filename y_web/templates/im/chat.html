@@ -7,6 +7,11 @@
     <a class="im-back" href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}">← {{ _('Chats') }}</a>
     <h2 id="im-conv-h">{{ page.title }}{% if topic %} · {{ topic.title }}{% endif %}</h2>
     <a href="/{{ exp.idexp }}/im/chat/{{ chat_id }}/members{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Members') }}</a>
+    {% if participant and writable %}
+    <button type="button" class="im-act" data-im-action="join" data-im-do="join" data-chat="{{ chat_id }}">{{ _('Join') }}</button>
+    <button type="button" class="im-act" data-im-action="leave" data-im-do="leave" data-chat="{{ chat_id }}">{{ _('Leave') }}</button>
+    <button type="button" class="im-act" data-im-action="invite" data-im-do="invite" data-chat="{{ chat_id }}">{{ _('Invite link') }}</button>
+    {% endif %}
   </header>
   {% if topics %}
   <nav class="im-topics" aria-label="{{ _('Forum topics') }}">
@@ -18,10 +23,18 @@
   <p class="im-older"><a href="?{{ (params|urlencode) ~ '&' if params else '' }}before={{ page.next_before }}" data-before="{{ page.next_before }}" data-im-more="older" rel="prev">{{ _('Older messages') }}</a></p>
   {% endif %}
   <div class="im-messages" id="im-messages">
-    {% for m in page["items"]|reverse %}{{ message(m, exp.idexp, params, ui) }}{% else %}<p class="im-empty">{{ _('No messages yet') }}</p>{% endfor %}
+    {% for m in page["items"]|reverse %}{{ message(m, exp.idexp, params, ui, participant, writable) }}{% else %}<p class="im-empty">{{ _('No messages yet') }}</p>{% endfor %}
   </div>
   {% if page.next_after %}
   <p class="im-older"><a href="?{{ (params|urlencode) ~ '&' if params else '' }}after={{ page.next_after }}" data-im-more="newer" rel="next">{{ _('Newer messages') }}</a></p>
+  {% endif %}
+  {% if participant and writable %}
+  <form class="im-composer" id="im-composer" data-im-action="send" data-chat="{{ chat_id }}"{% if topic %} data-topic="{{ topic.id }}"{% endif %} autocomplete="off">
+    <p id="im-replying" class="im-replying" hidden></p>
+    <label class="im-sr" for="im-text">{{ _('Message') }}</label>
+    <textarea id="im-text" name="text" rows="2" maxlength="4000" placeholder="{{ _('Write a message') }}" required></textarea>
+    <button type="submit">{{ _('Send') }}</button>
+  </form>
   {% endif %}
 </section>
 {% endblock %}

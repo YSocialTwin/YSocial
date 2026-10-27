@@ -1,4 +1,4 @@
-{% macro message(m, exp_id, params, ui={}) -%}
+{% macro message(m, exp_id, params, ui={}, me=None, can_write=False) -%}
 <article class="im-msg{{ ' is-deleted' if m.deleted }}{{ ' is-edited' if m.edited }}" id="m-{{ m.id }}">
   <div class="im-avatar" aria-hidden="true" data-name="{{ m.sender.username if m.sender else '?' }}">{{ (m.sender.username if m.sender else '?')[:2]|upper }}</div>
   <div class="im-bubble">
@@ -19,6 +19,17 @@
     <footer class="im-msg-foot">
       {% if ui.get('im_show_reactions', True) %}{% for emoji, n in m.reactions.items() %}<span class="im-reaction" title="{{ _('%(n)s reactions', n=n) }}">{{ emoji }} {{ n }}</span>{% endfor %}{% endif %}
       {% if m.edited %}<span class="im-flag">{{ _('edited') }}</span>{% endif %}
+      {% if me and can_write and not m.deleted %}
+      <span class="im-actions">
+        <button type="button" class="im-act" data-im-action="reply" data-im-do="reply" data-message="{{ m.id }}" data-author="{{ m.sender.username if m.sender else '' }}">{{ _('Reply') }}</button>
+        {% for e in ['👍', '❤️', '😂', '😮', '😢'] %}<button type="button" class="im-act im-emoji" data-im-action="react" data-im-do="react" data-message="{{ m.id }}" data-emoji="{{ e }}" aria-label="{{ _('React %(e)s', e=e) }}">{{ e }}</button>{% endfor %}
+        <button type="button" class="im-act" data-im-action="forward" data-im-do="forward" data-message="{{ m.id }}">{{ _('Forward') }}</button>
+        {% if m.sender and m.sender.id == me.account_id and me.edits %}
+        <button type="button" class="im-act" data-im-action="edit" data-im-do="edit" data-message="{{ m.id }}" data-text="{{ m.text }}">{{ _('Edit') }}</button>
+        <button type="button" class="im-act" data-im-action="delete" data-im-do="delete" data-message="{{ m.id }}">{{ _('Delete') }}</button>
+        {% endif %}
+      </span>
+      {% endif %}
       <a class="im-thread-link" href="/{{ exp_id }}/im/thread/{{ m.id }}{{ '?' ~ (params|urlencode) if params else '' }}">{{ _('Thread') }}</a>
     </footer>
   </div>

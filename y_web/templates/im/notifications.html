@@ -1,0 +1,19 @@
+{% extends "im/base.html" %}
+{% block title %}{{ _('Notifications') }} · {{ exp.exp_name }}{% endblock %}
+{% block content %}
+<section class="im-notifications" aria-labelledby="im-notif-h">
+  <header class="im-conv-head">
+    <a class="im-back" href="/{{ exp.idexp }}/im">← {{ _('Chats') }}</a>
+    <h2 id="im-notif-h">{{ _('Notifications') }}</h2>
+  </header>
+  {% if error %}<p class="im-empty" role="alert">{{ error }}</p>
+  {% elif not items %}<p class="im-empty">{{ _('Nothing new.') }}</p>{% endif %}
+  <ul class="im-chats">
+    {% for n in items %}
+    <li class="im-chat-row"><a href="/{{ exp.idexp }}/im/chat/{{ n.chat_id }}#m-{{ n.message_id }}">
+      <span class="im-chat-main"><span class="im-chat-title">{{ {'mention': _('You were mentioned'), 'reply': _('Someone replied to you'), 'invite': _('You were invited')}.get(n.kind, n.kind) }}</span></span>
+    </a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

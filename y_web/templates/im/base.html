@@ -7,11 +7,20 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/im.css') }}">
   {% include "shared/platform_ui_gating.html" %}
 </head>
-<body class="im-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest|default(0) }}" data-infinite="{{ 1 if ui.get('infinite_scroll_enabled', True) else 0 }}" data-status-url="/{{ exp.idexp }}/im/api/status">
+<body class="im-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest|default(0) }}" data-infinite="{{ 1 if ui.get('infinite_scroll_enabled', True) else 0 }}" data-status-url="/{{ exp.idexp }}/im/api/status"{% if participant %} data-participant="1" data-writable="{{ 1 if writable else 0 }}" data-act-url="/{{ exp.idexp }}/im/act" data-csrf="{{ csrf_token }}" data-gateway-url="/{{ exp.idexp }}/im/api/gateway"{% endif %}>
 <a class="im-skip" href="#im-main">{{ _('Skip to content') }}</a>
 <header class="im-header">
   <h1 class="im-title"><a href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}">{{ exp.exp_name }}</a></h1>
-  {% if ctx is defined and ctx.vp is defined %}
+  {% if participant and ctx is defined and ctx.vp is defined %}
+  <span class="im-clock" data-im-time="" title="{{ _('Simulated time') }}">{{ _('day %(d)s, slot %(s)s', d=day_slot[0], s=day_slot[1]) }}</span>
+  <span id="im-conn" class="im-conn" hidden role="status">{{ _('Connection lost, retrying…') }}</span>
+  <form class="im-search" method="get" action="/{{ exp.idexp }}/im/search" role="search">
+    <label class="im-sr" for="im-q">{{ _('Search messages') }}</label>
+    <input id="im-q" name="q" type="search" value="{{ request.args.get('q', '') }}" placeholder="{{ _('Search') }}">
+  </form>
+  {% if ui.get('notifications_menu', True) %}<a class="im-bell" href="/{{ exp.idexp }}/im/notifications" aria-label="{{ _('Notifications') }}">🔔</a>{% endif %}
+  <button type="button" id="im-theme" class="im-theme" aria-label="{{ _('Toggle dark mode') }}">◐</button>
+  {% elif ctx is defined and ctx.vp is defined %}
   <form class="im-controls" method="get" action="{{ request.path }}" aria-label="{{ _('Viewpoint and time') }}">
     {% if request.args.get('q') %}<input type="hidden" name="q" value="{{ request.args.get('q') }}">{% endif %}
     <label for="im-vp">{{ _('Viewpoint') }}</label>
@@ -46,7 +55,11 @@
   <button type="button" id="im-theme" class="im-theme" aria-label="{{ _('Toggle dark mode') }}">◐</button>
   {% endif %}
 </header>
-{% if ctx is defined and ctx.vp is defined and ctx.vp.kind == 'overview' %}
+{% if participant %}
+{% if not writable %}<div class="im-banner" role="note">{{ _('Reading only: writing is available while the simulation is running.') }}</div>{% endif %}
+{% elif pending_account %}
+<div class="im-banner" role="note">{{ _('Your account is not ready yet (the participation service is not answering). You are seeing the public view; try again in a moment.') }}</div>
+{% elif ctx is defined and ctx.vp is defined and ctx.vp.kind == 'overview' %}
 <div class="im-banner" role="note">{{ _('Omniscient researcher view: private chats and deleted messages are shown. This is not what a participant sees.') }}</div>
 {% elif ctx is defined and ctx.vp is defined and ctx.vp.kind == 'account' %}
 <div class="im-banner is-account" role="note">{{ _('Viewing as account %(id)s, exactly what it could read at this round.', id=ctx.vp.account_id) }}</div>
@@ -57,6 +70,30 @@
 </main>
 {% include "shared/language_switcher.html" %}
 {% include "shared/plugin_loader.html" %}
+<div id="im-toast" class="im-toast" role="status" aria-live="polite" hidden></div>
 <script src="{{ url_for('static', filename='assets/js/im-chat.js') }}"></script>
+{% if participant %}
+<script type="application/json" id="im-i18n">{{ {
+  'sending': _('sending…'),
+  'not_sent': _('not sent'),
+  'retry': _('press Send to retry'),
+  'replying_to': _('Replying to'),
+  'cancel': _('click to cancel'),
+  'delete_confirm': _('Delete this message?'),
+  'edit_prompt': _('Edit message'),
+  'forward_prompt': _('Forward to the chat with id:'),
+  'invite_title': _('Invite link'),
+  'disabled': _('This interaction is switched off for the experiment.'),
+  'not_running': _('The simulation is not running.'),
+  'round_closed': _('The round is closed: try again in a moment.'),
+  'unavailable': _('Connection lost: try again in a moment.'),
+  'not_allowed': _('You are not allowed to do that here.'),
+  'not_visible': _('You cannot read this chat.'),
+  'rate_limited': _('Slow down a little.'),
+  'csrf': _('Your session expired: reload the page.'),
+  'refused': _('The action was refused.')
+}|tojson }}</script>
+<script src="{{ url_for('static', filename='assets/js/im-participant.js') }}"></script>
+{% endif %}
 </body>
 </html>

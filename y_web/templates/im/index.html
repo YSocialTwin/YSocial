@@ -18,5 +18,15 @@
     </li>
     {% endfor %}
   </ul>
+  {% if participant and writable %}
+  <form class="im-join" id="im-join" data-im-action="join" autocomplete="off">
+    <h3>{{ _('Join a chat') }}</h3>
+    <label for="im-join-chat">{{ _('Chat id') }}</label>
+    <input id="im-join-chat" name="chat_id" required>
+    <label for="im-join-invite">{{ _('Invite code (optional)') }}</label>
+    <input id="im-join-invite" name="invite_id">
+    <button type="submit">{{ _('Join') }}</button>
+  </form>
+  {% endif %}
 </section>
 {% endblock %}

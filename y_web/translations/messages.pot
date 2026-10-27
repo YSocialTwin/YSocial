@@ -11456,3 +11456,219 @@ msgstr ""
 #: y_web/templates/admin
 msgid "Analytics data refreshed."
 msgstr ""
+
+#: y_web/templates/im
+msgid "Human participation"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Participation service:"
+msgstr ""
+
+#: y_web/templates/im
+msgid "running"
+msgstr ""
+
+#: y_web/templates/im
+msgid "stopped"
+msgstr ""
+
+#: y_web/templates/im
+msgid "not answering"
+msgstr ""
+
+#: y_web/templates/im
+msgid "off"
+msgstr ""
+
+#: y_web/templates/im
+msgid "The simulation does not depend on it: participants can only read until it is back."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Minimum round duration: %(s)s seconds"
+msgstr ""
+
+#: y_web/templates/im
+msgid "A run with human participants cannot be reproduced exactly."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Chat account"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Last active round"
+msgstr ""
+
+#: y_web/templates/im
+msgid "not entered yet"
+msgstr ""
+
+#: y_web/templates/im
+msgid "No participant is assigned to this experiment yet."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Participant notice"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Shown once to each participant before their first entry. Leave empty for none. You are responsible for informing participants."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Assigned participants can read and write in the chats. A run with humans cannot be reproduced exactly. You are responsible for informing participants."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Minimum round duration (seconds, 0 = off)"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Maximum number of participants"
+msgstr ""
+
+#: y_web/templates/im
+msgid "React %(e)s"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Forward"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Simulated time"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Connection lost, retrying…"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Reading only: writing is available while the simulation is running."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Your account is not ready yet (the participation service is not answering). You are seeing the public view; try again in a moment."
+msgstr ""
+
+#: y_web/templates/im
+msgid "sending…"
+msgstr ""
+
+#: y_web/templates/im
+msgid "not sent"
+msgstr ""
+
+#: y_web/templates/im
+msgid "press Send to retry"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Replying to"
+msgstr ""
+
+#: y_web/templates/im
+msgid "click to cancel"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Delete this message?"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Edit message"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Forward to the chat with id:"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Invite link"
+msgstr ""
+
+#: y_web/templates/im
+msgid "This interaction is switched off for the experiment."
+msgstr ""
+
+#: y_web/templates/im
+msgid "The simulation is not running."
+msgstr ""
+
+#: y_web/templates/im
+msgid "The round is closed: try again in a moment."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Connection lost: try again in a moment."
+msgstr ""
+
+#: y_web/templates/im
+msgid "You are not allowed to do that here."
+msgstr ""
+
+#: y_web/templates/im
+msgid "You cannot read this chat."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Slow down a little."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Your session expired: reload the page."
+msgstr ""
+
+#: y_web/templates/im
+msgid "The action was refused."
+msgstr ""
+
+#: y_web/templates/im
+msgid "Leave"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Write a message"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Join a chat"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Chat id"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Invite code (optional)"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Before you start"
+msgstr ""
+
+#: y_web/templates/im
+msgid "I have read this, continue"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Nothing new."
+msgstr ""
+
+#: y_web/templates/im
+msgid "You were mentioned"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Someone replied to you"
+msgstr ""
+
+#: y_web/templates/im
+msgid "You were invited"
+msgstr ""
+
+#: y_web/templates/im
+msgid "Connection lost: the notifications will appear when it is back."
+msgstr ""

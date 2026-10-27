@@ -96,6 +96,7 @@ PLATFORM_CAPABILITIES = {
         "im_allow_time_travel",
         "im_public_observer_enabled",
         "im_participant_mode_enabled",
+        "im_participant_notice",
         "im_participant_poll_seconds",
     },
 }
@@ -434,6 +435,8 @@ def frontend_settings_save():
             value = str(new_settings[k])
             allowed = _language_choices() if k == "language" else _ENUM_SETTINGS.get(k)
             safe[k] = value if allowed is None or value in allowed else default
+            if k == "im_participant_notice":
+                safe[k] = value.strip()[:4000]
 
     if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
         safe["show_annotation_stats"] = (

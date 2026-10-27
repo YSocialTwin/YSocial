@@ -6,8 +6,9 @@ viewpoints: ``public`` (all roles), ``account`` and ``overview`` (admin and rese
 """
 
 import os
+import uuid
 
-from flask import abort, jsonify, redirect, render_template, request, url_for
+from flask import abort, jsonify, redirect, render_template, request, session as flask_session, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -18,7 +19,10 @@ from y_web.src.im import is_im_experiment
 from y_web.src.im.engine import ImReadError, open_reader
 from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, latest_round, status
 from y_web.src.im.timeline import clamp_round, day_slot, ordinal
-from y_web.src.models import Exps
+from y_web.src.im import participant as participation
+from y_web.src.im.gateway_client import GatewayClient, GatewayUnavailable
+from y_web.src.im.gateway_process import is_running as gateway_running
+from y_web.src.models import Exps, User_Experiment
 
 POLL_SECONDS = 10  # used when the experiment's own setting is missing
 
@@ -68,9 +72,21 @@ def _db_path(exp) -> str:
 class _Context:
     """What every page needs: experiment, viewpoint, round and the query string that keeps them."""
 
-    def __init__(self, exp, staff, viewpoint, latest, live, ui=None):
+    def __init__(self, exp, staff, viewpoint, latest, live, ui=None, participant=None):
         self.exp, self.staff, self.vp, self.latest, self.live = exp, staff, viewpoint, latest, live
         self.ui = ui or {}
+        self.participant = participant  # set in participant mode (plan 6.8); never from the request
+        self.pending_account = False  # participation is on but the account does not exist yet
+
+    @property
+    def writable(self):
+        """A participant can write while the run is live and the gateway answers."""
+        return bool(
+            self.participant
+            and self.live
+            and self.latest
+            and gateway_running(self.participant.exp_folder)
+        )
 
     @property
     def params(self):
@@ -94,7 +110,11 @@ def _open_context(session, exp_id):
     if staff is not None and not user_can_view_experiment(staff, exp):
         abort(403)
     ui = _ui(exp_id)
-    if staff is None and not ui.get("im_public_observer_enabled", True):
+    part = _participant(session, exp, ui) if staff is None else None
+    if part is not None and part is not False:
+        return _participant_context(session, exp, ui, part)
+    pending = part is False  # participation is on, the account is not there yet
+    if staff is None and not ui.get("im_public_observer_enabled", True) and not pending:
         abort(403)  # the researcher closed the public pages of this experiment
     kind = request.args.get("vp") or ("overview" if staff is not None else "public")
     if kind != "public" and staff is None:
@@ -114,7 +134,57 @@ def _open_context(session, exp_id):
         viewpoint = Viewpoint(kind, request.args.get("acc") or None, rnd)
     except ViewpointError:
         abort(400)
-    return _Context(exp, staff, viewpoint, latest, bool(exp.running), ui)
+    ctx = _Context(exp, staff, viewpoint, latest, bool(exp.running), ui)
+    ctx.pending_account = pending
+    return ctx
+
+
+class _Redirect(Exception):
+    def __init__(self, url):
+        self.url = url
+
+
+def _participant(session, exp, ui):
+    """The participant behind the session: a ``Participant``, ``False`` (account not created yet), or ``None``."""
+    user = current_user if current_user.is_authenticated else None
+    if user is None:
+        return None
+    assigned = (
+        db.session.scalars(
+            select(User_Experiment).filter_by(user_id=user.id, exp_id=exp.idexp)
+        ).first()
+        is not None
+    )
+    part = participation.participant_for(exp, user, ui, assigned)
+    if part is None:
+        return None
+    from y_web.src.im.engine import im_modules
+
+    models = im_modules()[0]
+    if session.get(models.Account, part.account_id) is not None:
+        return part
+    try:  # first entry: the account is created through the gateway (never by YWeb)
+        code, _body = GatewayClient(part.exp_folder).ensure(
+            part.key, participation.pseudonym(user)
+        )
+    except GatewayUnavailable:
+        return False
+    if code != 200:
+        return False
+    session.rollback()  # end the read snapshot so the new row is visible
+    return part if session.get(models.Account, part.account_id) is not None else False
+
+
+def _participant_context(session, exp, ui, part):
+    from y_web.src.im.reader import Viewpoint
+
+    notice = (ui.get("im_participant_notice") or "").strip()
+    ack_key = participation.NOTICE_SESSION_PREFIX + str(exp.idexp)
+    if notice and not flask_session.get(ack_key) and request.endpoint != "main.im_notice":
+        raise _Redirect(url_for("main.im_notice", exp_id=exp.idexp))
+    latest = latest_round(session)
+    viewpoint = Viewpoint("account", part.account_id, latest)  # fixed: no time travel, no other account
+    return _Context(exp, None, viewpoint, latest, bool(exp.running), ui, participant=part)
 
 
 def _render(template, ctx, **values):
@@ -127,9 +197,14 @@ def _render(template, ctx, **values):
         day_slot=ctx.day_slot(),
         poll_seconds=_poll_seconds(ctx.ui) if (ctx.live and ctx.vp.round == ctx.latest) else 0,
         ui=ctx.ui,
-        time_travel=ctx.staff is not None or bool(ctx.ui.get("im_allow_time_travel", True)),
+        time_travel=ctx.participant is None
+        and (ctx.staff is not None or bool(ctx.ui.get("im_allow_time_travel", True))),
         platform_ui="im",
         frontend_adds_on_modules=[],  # no frontend plugin module attaches to the chat pages
+        participant=ctx.participant,
+        writable=ctx.writable,
+        pending_account=ctx.pending_account,
+        csrf_token=participation.csrf_token(flask_session) if ctx.participant else "",
         **values,
     )
 
@@ -145,6 +220,8 @@ def _view(exp_id, handler):
         with open_reader(_db_path(exp)) as session:
             ctx = _open_context(session, exp_id)
             return handler(session, ctx, Reader(session, ctx.vp))
+    except _Redirect as redirect_to:
+        return redirect(redirect_to.url)
     except ViewpointError:
         abort(400)
     except ImReadError as exc:
@@ -287,3 +364,144 @@ def im_api_history(exp_id, chat_id):
         return jsonify(page)
 
     return _view(exp_id, handler)
+
+
+# -- participant mode (plan 6.8): every write goes through the human gateway ----------------------
+def _participant_or_403(exp_id):
+    """Experiment and participant of the session for a write; 403 for everyone else."""
+    exp = _experiment_or_404(exp_id)
+    ui = _ui(exp_id)
+    user = current_user if current_user.is_authenticated else None
+    assigned = (
+        user is not None
+        and db.session.scalars(
+            select(User_Experiment).filter_by(user_id=user.id, exp_id=exp.idexp)
+        ).first()
+        is not None
+    )
+    part = participation.participant_for(exp, user, ui, bool(assigned))
+    if part is None:
+        abort(403)
+    return exp, ui, part
+
+
+def _json_error(status, code, message=None):
+    return jsonify({"ok": False, "code": code, "message": message}), status
+
+
+@main.route("/<int:exp_id>/im/notice", methods=["GET", "POST"])
+@login_required
+def im_notice(exp_id):
+    exp, ui, part = _participant_or_403(exp_id)
+    notice = (ui.get("im_participant_notice") or "").strip()
+    key = participation.NOTICE_SESSION_PREFIX + str(exp.idexp)
+    if request.method == "POST":
+        if not participation.csrf_ok(flask_session, request.form.get("csrf_token")):
+            abort(400)
+        flask_session[key] = True
+        return redirect(url_for("main.im_index", exp_id=exp.idexp))
+    if not notice:
+        return redirect(url_for("main.im_index", exp_id=exp.idexp))
+    return render_template(
+        "im/notice.html",
+        exp=exp,
+        notice=notice,
+        csrf_token=participation.csrf_token(flask_session),
+        ui=ui,
+        platform_ui="im",
+        participant=part,
+        ctx=None,
+        params={},
+        poll_seconds=0,
+    )
+
+
+@main.route("/<int:exp_id>/im/act", methods=["POST"])
+@login_required
+def im_act(exp_id):
+    exp, ui, part = _participant_or_403(exp_id)
+    if not participation.csrf_ok(flask_session, request.headers.get(participation.CSRF_HEADER)):
+        return _json_error(400, "csrf", "missing or wrong CSRF token")
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict) or request.content_length is None or request.content_length > 16384:
+        return _json_error(400, "invalid_request", "a JSON object (up to 16 KiB) is expected")
+    action_type = body.get("type")
+    reason = participation.action_allowed(ui, action_type)
+    if reason == "unknown_action":
+        return _json_error(400, "invalid_request", "unknown action")
+    if reason:
+        return _json_error(403, reason, "this interaction is switched off for the experiment")
+    if not exp.running:
+        return _json_error(409, "not_running", "the simulation is not running")
+    action_id = participation.namespaced_action_id(part.account_id, body.get("client_action_id"))
+    if action_id is None:
+        return _json_error(400, "invalid_request", "client_action_id is required (up to 64 chars)")
+    fields = {k: v for k, v in body.items() if k not in ("type", "client_action_id")}
+    action = {"type": action_type, "client_action_id": action_id, **fields}
+    try:
+        code, payload = GatewayClient(part.exp_folder).actions(part.account_id, [action])
+    except GatewayUnavailable:
+        return _json_error(503, "unavailable", "connection lost: try again in a moment")
+    return jsonify(payload), code
+
+
+@main.route("/<int:exp_id>/im/invite", methods=["POST"])
+@login_required
+def im_invite(exp_id):
+    exp, ui, part = _participant_or_403(exp_id)
+    if not participation.csrf_ok(flask_session, request.headers.get(participation.CSRF_HEADER)):
+        return _json_error(400, "csrf", "missing or wrong CSRF token")
+    if not ui.get("interactions_enabled", True):
+        return _json_error(403, "interactions_disabled")
+    body = request.get_json(silent=True) or {}
+    chat_id = str(body.get("chat_id") or "")
+    if not chat_id:
+        return _json_error(400, "invalid_request", "chat_id is required")
+    try:
+        code, payload = GatewayClient(part.exp_folder).invite(part.account_id, chat_id)
+    except GatewayUnavailable:
+        return _json_error(503, "unavailable", "connection lost: try again in a moment")
+    return jsonify(payload), code
+
+
+@main.route("/<int:exp_id>/im/notifications")
+@login_required
+def im_notifications(exp_id):
+    exp, ui, part = _participant_or_403(exp_id)
+    if not ui.get("notifications_menu", True):
+        abort(404)
+    error, items = None, []
+    try:
+        code, payload = GatewayClient(part.exp_folder).notifications(part.account_id)
+        if code == 200:
+            per_account = (payload.get("data") or {}).get("notifications") or {}
+            items = per_account.get(part.account_id, [])
+        else:
+            error = payload.get("message") or payload.get("code")
+    except GatewayUnavailable:
+        error = _("Connection lost: the notifications will appear when it is back.")
+    return render_template(
+        "im/notifications.html",
+        exp=exp,
+        items=items,
+        error=error,
+        ui=ui,
+        platform_ui="im",
+        participant=part,
+        ctx=None,
+        params={},
+        poll_seconds=0,
+        csrf_token="",
+    )
+
+
+@main.route("/<int:exp_id>/im/api/gateway")
+@login_required
+def im_api_gateway(exp_id):
+    """Is the gateway answering? The participant pages poll this to show 'connection lost'."""
+    exp, ui, part = _participant_or_403(exp_id)
+    try:
+        code, payload = GatewayClient(part.exp_folder).state()
+    except GatewayUnavailable:
+        return jsonify({"ok": False, "online": False}), 200
+    return jsonify({"ok": code == 200, "online": code == 200, "state": payload.get("data")}), 200
