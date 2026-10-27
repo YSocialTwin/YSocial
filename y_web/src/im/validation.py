@@ -14,7 +14,7 @@ VALIDATE_MODULE = "yinstantmessaging.cli.validate"
 VALIDATE_TIMEOUT_SECONDS = 60
 
 
-class ImValidationError(Exception):
+class ImValidationError(RuntimeError):
     """The experiment folder is not valid for IM (``messages`` carry the reasons)."""
 
     def __init__(self, messages: List[str]):
@@ -31,7 +31,9 @@ def _python_command() -> List[str]:
     return [python_cmd]
 
 
-def run_yim_validate(config_dir: str, repo_dir: Optional[str] = None) -> Tuple[bool, List[str]]:
+def run_yim_validate(
+    config_dir: str, repo_dir: Optional[str] = None, client_config: Optional[str] = None
+) -> Tuple[bool, List[str]]:
     """Run ``yim-validate --json`` on ``config_dir``; return ``(valid, error messages)``.
 
     A runtime that cannot be executed or answers something unparsable counts as invalid, with a message.
@@ -47,6 +49,8 @@ def run_yim_validate(config_dir: str, repo_dir: Optional[str] = None) -> Tuple[b
         [repo_dir] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
     )
     cmd = _python_command() + ["-m", VALIDATE_MODULE, "--config", str(config_dir), "--json"]
+    if client_config:
+        cmd += ["--client-config", str(client_config)]
     try:
         proc = subprocess.run(
             cmd,
@@ -74,8 +78,10 @@ def run_yim_validate(config_dir: str, repo_dir: Optional[str] = None) -> Tuple[b
     return False, messages or [f"yim-validate exited with code {proc.returncode}"]
 
 
-def validate_im_folder(config_dir: str, repo_dir: Optional[str] = None) -> None:
-    """Raise :class:`ImValidationError` unless ``config_dir`` passes ``yim-validate``."""
-    valid, messages = run_yim_validate(config_dir, repo_dir)
+def validate_im_folder(
+    config_dir: str, repo_dir: Optional[str] = None, client_config: Optional[str] = None
+) -> None:
+    """Raise :class:`ImValidationError` unless ``config_dir`` (and the named client file) pass ``yim-validate``."""
+    valid, messages = run_yim_validate(config_dir, repo_dir, client_config)
     if not valid:
         raise ImValidationError(messages)

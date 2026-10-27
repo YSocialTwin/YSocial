@@ -109,6 +109,11 @@ def test_start_im_client_command_and_no_ysimulator_steps(monkeypatch, tmp_path):
     monkeypatch.setattr(hc.db.session, "add", lambda *a, **k: None)
     for name in ("_sync_stress_reward_into_hpc_client_config", "_sync_hpc_network_bootstrap"):
         monkeypatch.setattr(hc, name, lambda *a, **k: pytest.fail(f"{name} must not run for IM"))
+    validated = []
+    monkeypatch.setattr(
+        "y_web.src.im.validation.validate_im_folder",
+        lambda folder_, repo_, client_config=None: validated.append((folder_, client_config)),
+    )
     calls = []
     proc = MagicMock()
     proc.pid = 777
@@ -127,4 +132,5 @@ def test_start_im_client_command_and_no_ysimulator_steps(monkeypatch, tmp_path):
 
     assert calls == [["python", str(repo / "run_client.py"), "--config", str(folder / "client_cl-pop.json")]]
     assert cli.pid == 777
+    assert validated == [(str(folder), "client_cl-pop.json")]
     assert json.loads((folder / "client_cl-pop.json").read_text())["client_id"] == "uid1:cl"
