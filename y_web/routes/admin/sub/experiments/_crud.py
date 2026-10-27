@@ -1954,9 +1954,10 @@ def generate_photo_sharing_config(
 
 
 def _hpc_prompts_filename(experiment) -> str:
-    if getattr(experiment, "platform_type", None) == "photo_sharing":
-        return "prompts_ygram.json"
-    return "prompts.json"
+    from y_web.src.hpc.platforms import find_hpc_platform
+
+    spec = find_hpc_platform(getattr(experiment, "platform_type", None))
+    return spec.prompts_filename if spec else "prompts.json"
 
 
 @experiments.route("/admin/create_experiment", methods=["POST", "GET"])

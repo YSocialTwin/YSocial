@@ -20,6 +20,7 @@ import ray
 from sqlalchemy import select
 
 from y_web import db
+from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
 from y_web.src.system.path_utils import get_base_path, get_writable_path
@@ -654,10 +655,11 @@ def start_hpc_client(exp, cli, population):
             return candidate
         return os.path.join(resource_external, repo_name)
 
-    # Determine the script path based on platform type
+    # Determine the script path and arguments from the platform spec
+    spec = get_hpc_platform(exp.platform_type)
     runtime_config_dir = exp_folder
-    if exp.platform_type == "photo_sharing":
-        script_path = os.path.join(_external_repo_dir("YPhotoSharing"), "run_client.py")
+    script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_client.py")
+    if spec.normalizes_client_config:
         runtime_config_dir = client_config
 
         try:
@@ -666,10 +668,6 @@ def start_hpc_client(exp, cli, population):
             )
         except Exception:
             pass
-    elif exp.platform_type == "microblogging":
-        script_path = os.path.join(_external_repo_dir("YSimulator"), "run_client.py")
-    else:
-        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     is_frozen = getattr(sys, "frozen", False)
@@ -680,9 +678,7 @@ def start_hpc_client(exp, cli, population):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
-        expected_repo = (
-            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
-        )
+        expected_repo = spec.runtime_repo
         raise FileNotFoundError(
             f"Client script not found: {script_path}\n"
             f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
@@ -692,70 +688,35 @@ def start_hpc_client(exp, cli, population):
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
+    def _client_args():
+        if spec.client_config_only:
+            return ["--config", runtime_config_dir]
+        return [
+            "--config",
+            client_config,
+            "--agents",
+            agents_file,
+            "--prompts",
+            prompts_file,
+        ]
+
     # Build the command
     if is_frozen or has_meipass or is_bundle_exe:
         # Running from PyInstaller bundle
-        if exp.platform_type == "photo_sharing":
-            cmd = [
-                sys.executable,
-                script_path,
-                "--config",
-                runtime_config_dir,
-            ]
+        if spec.client_config_only:
+            cmd = [sys.executable, script_path] + _client_args()
         else:
-            cmd = [
-                sys.executable,
-                "--run-hpc-client-subprocess",
-                "--config",
-                client_config,
-                "--agents",
-                agents_file,
-                "--prompts",
-                prompts_file,
-            ]
+            cmd = [sys.executable, "--run-hpc-client-subprocess"] + _client_args()
     elif (
         isinstance(python_cmd, str)
         and " " in python_cmd
         and not os.path.isabs(python_cmd)
     ):
         # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        if exp.platform_type == "photo_sharing":
-            cmd = cmd_parts + [
-                script_path,
-                "--config",
-                runtime_config_dir,
-            ]
-        else:
-            cmd = cmd_parts + [
-                script_path,
-                "--config",
-                client_config,
-                "--agents",
-                agents_file,
-                "--prompts",
-                prompts_file,
-            ]
+        cmd = python_cmd.split() + [script_path] + _client_args()
     else:
         # Simple python executable path (may contain spaces on Windows)
-        if exp.platform_type == "photo_sharing":
-            cmd = [
-                python_cmd,
-                script_path,
-                "--config",
-                runtime_config_dir,
-            ]
-        else:
-            cmd = [
-                python_cmd,
-                script_path,
-                "--config",
-                client_config,
-                "--agents",
-                agents_file,
-                "--prompts",
-                prompts_file,
-            ]
+        cmd = [python_cmd, script_path] + _client_args()
 
     cmd = ray_safe_cmd(cmd)
 
@@ -917,18 +878,12 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                             runtime_client_id = _build_hpc_runtime_client_id(
                                 exp_folder, cli.name
                             )
-                            is_photo_sharing = (
-                                getattr(exp, "platform_type", None) == "photo_sharing"
-                            )
-                            orchestrator_name = (
-                                "orchestrator_server"
-                                if is_photo_sharing
-                                else "Orchestrator"
-                            )
-                            runtime_actor_name = (
-                                f"Client_{runtime_client_id}"
-                                if is_photo_sharing
-                                else runtime_client_id
+                            actor_spec = find_hpc_platform(
+                                getattr(exp, "platform_type", None)
+                            ) or get_hpc_platform("microblogging")
+                            orchestrator_name = actor_spec.orchestrator_actor
+                            runtime_actor_name = actor_spec.client_actor_name(
+                                runtime_client_id
                             )
                             orchestrator = ray.get_actor(
                                 orchestrator_name, namespace=namespace
