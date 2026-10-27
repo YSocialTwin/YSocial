@@ -12937,3 +12937,21 @@ msgstr "✔️ Usa"
 #~ msgid "Standard option; works without git."
 #~ msgstr "Opzione standard; funziona senza git."
 
+msgid "Instant messaging experiment imported. Create its clients from the experiment page."
+msgstr "Esperimento di messaggistica istantanea importato. Crea i suoi client dalla pagina dell'esperimento."
+
+msgid "Instant messaging experiments are not supported with PostgreSQL."
+msgstr "Gli esperimenti di messaggistica istantanea non sono supportati con PostgreSQL."
+
+msgid "The uploaded experiment has no name. Please provide one."
+msgstr "L'esperimento caricato non ha un nome. Indicane uno."
+
+msgid "The uploaded instant messaging experiment could not be validated."
+msgstr "Non è stato possibile validare l'esperimento di messaggistica istantanea caricato."
+
+msgid "The uploaded instant messaging experiment has no readable server configuration."
+msgstr "L'esperimento di messaggistica istantanea caricato non ha una configurazione del server leggibile."
+
+#, python-format
+msgid "The uploaded instant messaging experiment is not valid: %(errors)s"
+msgstr "L'esperimento di messaggistica istantanea caricato non è valido: %(errors)s"

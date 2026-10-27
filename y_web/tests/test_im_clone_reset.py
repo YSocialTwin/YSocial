@@ -149,3 +149,81 @@ def test_download_of_a_running_experiment_has_an_openable_database(app, env, mon
         assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0] == 200
         conn.close()
+
+
+def test_is_im_folder_detects_marker_and_topic_catalog(tmp_path):
+    import sqlite3
+
+    from y_web.src.im.clone import is_im_folder
+
+    plain = tmp_path / "hpc"
+    plain.mkdir()
+    (plain / "server_config.json").write_text("{}")
+    assert not is_im_folder(str(plain))
+    sqlite3.connect(plain / "database_server.db").executescript("CREATE TABLE post (id INTEGER)")
+    assert not is_im_folder(str(plain))
+    (plain / "topic_catalog.json").write_text("{}")
+    assert is_im_folder(str(plain))
+
+    marked = tmp_path / "marked"
+    marked.mkdir()
+    (marked / "server_config.json").write_text("{}")
+    sqlite3.connect(marked / "database_server.db").executescript("CREATE TABLE run_info (k TEXT)")
+    assert is_im_folder(str(marked))
+    assert not is_im_folder(str(tmp_path))  # no server_config.json
+
+
+def test_uploaded_im_folder_is_validated_and_registered_without_the_ysocial_schema(
+    app, env, monkeypatch, tmp_path
+):
+    import shutil
+    import sqlite3
+
+    from y_web import db
+    from y_web.src.models import Exps
+
+    flashes = []
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, days="2")
+        source = Path(env.im._experiment_folder(exp))
+        _dirty(source)
+        upload = tmp_path / "up"
+        shutil.copytree(source, upload)
+        sqlite3.connect(upload / "database_server.db").executescript("CREATE TABLE run_info (k TEXT)")
+        from y_web.src.im import validation
+
+        calls = []
+
+        def fake_validate(folder, repo_dir=None, client_config=None):
+            calls.append(client_config)
+            if client_config and Path(folder, client_config).read_text().strip() == "{}":
+                raise validation.ImValidationError(["config: broken client"])
+
+        monkeypatch.setattr(validation, "validate_im_folder", fake_validate)
+        monkeypatch.setattr(env.ecrud, "current_user", SimpleNamespace(username="admin", id=1))
+        monkeypatch.setattr(env.ecrud, "flash", lambda m, c="message": flashes.append(str(m)))
+        monkeypatch.setattr(env.ecrud, "url_for", lambda e, **k: f"/{e}")
+        monkeypatch.setattr("y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path))
+        with app.test_request_context("/admin/upload_experiment", method="POST"):
+            env.ecrud._import_im_upload(str(upload), "newuid", "uploaded", "g")
+        assert not any("not valid" in m or "could not" in m for m in flashes), flashes
+        new = db.session.query(Exps).filter_by(exp_name="uploaded").one()
+        assert new.platform_type == "instant_messaging" and new.running == 0 and new.exp_group == "g"
+        names = {p.name for p in upload.iterdir()}
+        assert "database_server.db" not in names  # a foreign run database is never kept
+        cfg = json.loads((upload / "server_config.json").read_text())
+        assert cfg["experiment_name"] == "uploaded" and cfg["server"]["port"] == new.port
+        assert any("imported" in m for m in flashes), flashes
+        assert calls[0] is None and "client_cl-pop.json" in calls, calls
+
+        # an invalid configuration is refused and nothing is registered
+        bad = tmp_path / "bad"
+        shutil.copytree(source, bad)
+        (bad / "client_cl-pop.json").write_text("{}")
+        flashes.clear()
+        with app.test_request_context("/admin/upload_experiment", method="POST"):
+            env.ecrud._import_im_upload(str(bad), "baduid", "bad-one", "")
+        assert db.session.query(Exps).filter_by(exp_name="bad-one").first() is None
+        assert any("not valid" in m for m in flashes), flashes
+        assert not bad.exists()

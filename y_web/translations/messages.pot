@@ -11118,3 +11118,21 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
+msgid "Instant messaging experiment imported. Create its clients from the experiment page."
+msgstr ""
+
+msgid "Instant messaging experiments are not supported with PostgreSQL."
+msgstr ""
+
+msgid "The uploaded experiment has no name. Please provide one."
+msgstr ""
+
+msgid "The uploaded instant messaging experiment could not be validated."
+msgstr ""
+
+msgid "The uploaded instant messaging experiment has no readable server configuration."
+msgstr ""
+
+#, python-format
+msgid "The uploaded instant messaging experiment is not valid: %(errors)s"
+msgstr ""

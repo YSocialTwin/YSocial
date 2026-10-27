@@ -624,7 +624,7 @@ def join_simulation():
     admin_user = _current_admin_user_or_none()
     if not admin_user:
         flash(_("Unable to resolve current user."))
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Get visible active experiments
     active_exps = get_visible_experiment_query(admin_user).filter_by(status=1).all()
@@ -751,7 +751,7 @@ def change_active_experiment(exp_id):
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
         flash(_("You are not allowed to access this experiment."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Toggle experiment status
     if exp.status == 1:
@@ -808,7 +808,7 @@ def change_active_experiment(exp_id):
         )
         if participant is None:
             flash(_("Unable to prepare the experiment user."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
         if created:
             current_app.logger.info(
                 "Created experiment participant %s for experiment %s",
@@ -838,6 +838,98 @@ def change_active_experiment(exp_id):
         login_user(admin_user, remember=True, force=True)
 
     return redirect("/admin/dashboard")
+
+
+def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
+    """Register an uploaded instant messaging experiment (plan, 5.6): validated, never given the YSocial schema.
+
+    Only the experiment is registered; clients and populations are created again from the admin pages.
+    """
+    from y_web.src.im.clone import clear_im_run_artifacts, rewrite_server_config
+    from y_web.src.im.validation import ImValidationError, validate_im_folder
+    from y_web.src.system.path_utils import get_writable_path
+
+    def refuse(message):
+        shutil.rmtree(exp_dir, ignore_errors=True)
+        flash(message)
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return refuse(_("Instant messaging experiments are not supported with PostgreSQL."))
+    try:
+        with open(os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8") as handle:
+            config = json.load(handle)
+    except (OSError, ValueError):
+        return refuse(_("The uploaded instant messaging experiment has no readable server configuration."))
+
+    name = exp_name_override or str(config.get("experiment_name") or "").strip()
+    if not name:
+        return refuse(_("The uploaded experiment has no name. Please provide one."))
+    if db.session.scalars(select(Exps).filter_by(exp_name=name)).first():
+        return refuse(
+            _("The experiment already exists. Please check the experiment name and try again.")
+        )
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        return refuse(
+            _("Error: No available port found in range 5000-6000. Cannot upload experiment.")
+        )
+
+    # an uploaded run is imported as inputs only: a database or state from another installation is dropped
+    clear_im_run_artifacts(exp_dir)
+    try:
+        validate_im_folder(exp_dir)
+        for item in sorted(os.listdir(exp_dir)):
+            if item.startswith("client_") and item.endswith(".json") and ".state." not in item:
+                validate_im_folder(exp_dir, client_config=item)
+    except ImValidationError as exc:
+        return refuse(
+            _("The uploaded instant messaging experiment is not valid: %(errors)s", errors="; ".join(exc.messages))
+        )
+    except Exception as exc:  # yim-validate unavailable: do not register what cannot be checked
+        current_app.logger.warning("yim-validate could not run for an upload: %s", exc)
+        return refuse(_("The uploaded instant messaging experiment could not be validated."))
+
+    folder = os.path.join(get_writable_path(), "y_web", "experiments", uid)
+    rewrite_server_config(
+        exp_dir, name, os.path.join(folder, "database_server.db"), folder + os.sep
+    )
+    config_path = os.path.join(exp_dir, "server_config.json")
+    with open(config_path, "r", encoding="utf-8") as handle:
+        config = json.load(handle)
+    config.setdefault("server", {})["port"] = suggested_port
+    with open(config_path, "w", encoding="utf-8") as handle:
+        json.dump(config, handle, indent=2)
+    prompt_language = None
+    try:
+        with open(os.path.join(exp_dir, "prompt_language.json"), "r", encoding="utf-8") as handle:
+            prompt_language = json.load(handle).get("prompt_language")
+    except (OSError, ValueError, AttributeError):
+        pass
+
+    exp = Exps(
+        exp_name=name,
+        db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+        prompt_language=prompt_packs.resolve(prompt_language),
+        owner=current_user.username,
+        exp_descr="",
+        status=0,
+        running=0,
+        port=suggested_port,
+        server=(config.get("server") or {}).get("host", "127.0.0.1"),
+        platform_type="instant_messaging",
+        llm_agents_enabled=1,
+        simulator_type="HPC",
+        exp_group=exp_group,
+    )
+    db.session.add(exp)
+    db.session.commit()
+    db.session.add(Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"))
+    db.session.commit()
+    flash(
+        _("Instant messaging experiment imported. Create its clients from the experiment page.")
+    )
+    return redirect(request.referrer or url_for("admin.dashboard"))
 
 
 @experiments.route("/admin/upload_experiment", methods=["POST"])
@@ -893,6 +985,11 @@ def upload_experiment():
                     # Remove the subdirectory (will fail if not empty, which is ok)
                     shutil.rmtree(subdir, ignore_errors=True)
                     break
+
+    from y_web.src.im.clone import is_im_folder
+
+    if is_im_folder(exp_dir):
+        return _import_im_upload(exp_dir, uid, exp_name_override, exp_group)
 
     # Determine database type
     db_type = "sqlite"
@@ -2007,7 +2104,7 @@ def create_experiment():
             ),
             "error",
         )
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if platform_type == "photo_sharing" and not repo_availability["photo_sharing"]:
         flash(
@@ -2016,7 +2113,7 @@ def create_experiment():
             ),
             "error",
         )
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if platform_type == "instant_messaging" and not repo_availability.get(
         "instant_messaging"
@@ -2027,7 +2124,7 @@ def create_experiment():
             ),
             "error",
         )
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if platform_type == "microblogging":
         if simulator_type == "HPC":
@@ -2041,7 +2138,7 @@ def create_experiment():
                         ),
                         "error",
                     )
-                    return redirect(url_for("experiments.settings"))
+                    return redirect(url_for("admin.dashboard"))
         else:
             if not repo_availability["microblogging"]:
                 if repo_availability["hpc"]:
@@ -2053,7 +2150,7 @@ def create_experiment():
                         ),
                         "error",
                     )
-                    return redirect(url_for("experiments.settings"))
+                    return redirect(url_for("admin.dashboard"))
     elif platform_type in {"photo_sharing", "instant_messaging"}:
         simulator_type = "HPC"
 
@@ -2071,7 +2168,7 @@ def create_experiment():
         host = request.form.get("remote_host", "").strip()
         if not host:
             flash(_("Remote host address is required for remote experiments."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         # Basic validation for hostname/IP format
         # Allow: IP addresses (IPv4), domain names, and localhost
@@ -2081,23 +2178,23 @@ def create_experiment():
         # Pattern allows: alphanumeric, dots, hyphens, and colons (for IPv6)
         if not re.match(r"^[a-zA-Z0-9\.\-\:]+$", host):
             flash(_("Invalid remote host format. Use IP address or domain name."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         # Validate and parse remote_port
         remote_port_str = request.form.get("remote_port", "").strip()
         if not remote_port_str:
             flash(_("Remote port is required for remote experiments."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         try:
             port = int(remote_port_str)
             # Validate port range
             if not (1 <= port <= 65535):
                 flash(_("Invalid remote port. Port must be between 1 and 65535."))
-                return redirect(url_for("experiments.settings"))
+                return redirect(url_for("admin.dashboard"))
         except ValueError:
             flash(_("Invalid remote port. Please enter a valid number."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
     else:
         # For local experiments, use default local settings
         host = "127.0.0.1"
@@ -2108,7 +2205,7 @@ def create_experiment():
                 _("No available port could be assigned for the new experiment."),
                 "error",
             )
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
     # Redis configuration parameters for HPC simulator
     prompt_language = prompt_packs.resolve(request.form.get("prompt_language"))
@@ -2160,7 +2257,7 @@ def create_experiment():
         redis_enabled = False
         if is_remote:
             flash(_("Remote instant messaging experiments are not supported."), "error")
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
         if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
             current_app.logger.info(
                 "Instant messaging experiments use SQLite even if the platform uses PostgreSQL"
@@ -2339,7 +2436,7 @@ def create_experiment():
             except ImConfigError as exc:
                 shutil.rmtree(data_path, ignore_errors=True)
                 flash(_("Invalid instant messaging settings: %(why)s", why=str(exc)), "error")
-                return redirect(url_for("experiments.settings"))
+                return redirect(url_for("admin.dashboard"))
         elif platform_type == "photo_sharing":
             config = generate_photo_sharing_config(
                 exp_name=exp_name,
@@ -2681,14 +2778,14 @@ def delete_simulations_bulk():
         exp_ids = json.loads(exp_ids_json)
     except json.JSONDecodeError:
         flash(_("Invalid experiment IDs provided."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     admin_user = _current_admin_user_or_none()
     normalized_ids = _resolve_bulk_experiment_ids(exp_ids, admin_user=admin_user)
 
     if not normalized_ids:
         flash(_("No experiments selected for deletion."), "warning")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     deleted_count = 0
     failed_ids = []
@@ -2719,7 +2816,7 @@ def delete_simulations_bulk():
             "warning",
         )
 
-    return redirect(url_for("experiments.settings"))
+    return redirect(url_for("admin.dashboard"))
 
 
 @experiments.route("/admin/start_experiment/<int:uid>")
@@ -2733,7 +2830,7 @@ def start_experiment(uid):
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
         flash(_("You are not allowed to start this experiment."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if _experiment_configuration_update_required(exp):
         flash(
@@ -2796,7 +2893,7 @@ def stop_experiment(uid):
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
         flash(_("You do not have permission to stop this experiment."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if _experiment_configuration_update_required(exp):
         flash(
@@ -2932,7 +3029,7 @@ def prompts_forum(uid):
 
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if experiment.simulator_type == "HPC":
         return redirect(url_for("experiments.prompts_hpc", uid=uid))
@@ -2967,7 +3064,7 @@ def prompts_hpc(uid):
 
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
@@ -3016,7 +3113,7 @@ def set_prompt_language(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     language = prompt_packs.resolve(request.form.get("prompt_language"))
     exp_dir = os.path.join(
@@ -3080,7 +3177,7 @@ def update_prompts_hpc(uid):
 
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
@@ -3179,7 +3276,7 @@ def copy_experiment():
     # Validate inputs
     if not new_exp_name or not source_exp_id:
         flash(_("Both experiment name and source experiment are required."))
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Parse and validate num_copies
     try:
@@ -3193,7 +3290,7 @@ def copy_experiment():
     source_exp = db.session.scalars(select(Exps).filter_by(idexp=source_exp_id)).first()
     if not source_exp:
         flash(_("Source experiment not found."))
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Generate list of experiment names to create
     exp_names_to_create = _build_copy_experiment_names(new_exp_name, num_copies)
@@ -3203,7 +3300,7 @@ def copy_experiment():
         existing_exp = db.session.scalars(select(Exps).filter_by(exp_name=name)).first()
         if existing_exp:
             flash(_("An experiment with name '%(name)s' already exists.", name=name))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
     # Create each copy
     created_count = 0
@@ -3255,7 +3352,7 @@ def copy_experiment():
                 )
             )
 
-    return redirect(url_for("experiments.settings"))
+    return redirect(url_for("admin.dashboard"))
 
 
 def _build_copy_group_experiment_name(
@@ -3417,7 +3514,7 @@ def copy_experiment_group():
             flash(structured_failure_message, "error")
         else:
             flash(error_message, "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if structured_failure_message:
         flash(structured_failure_message, "warning")
@@ -3439,7 +3536,7 @@ def copy_experiment_group():
             )
         )
 
-    return redirect(url_for("experiments.settings"))
+    return redirect(url_for("admin.dashboard"))
 
 
 @experiments.route("/admin/experiment_matrix", methods=["GET", "POST"])
@@ -3451,7 +3548,7 @@ def experiment_matrix():
     user = _current_admin_user_or_none()
     if not user:
         flash(_("Invalid user session."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if user.role not in ("admin", "researcher"):
         flash(_("Access denied. Please use the experiment feed."))
@@ -3574,10 +3671,10 @@ def experiment_matrix():
             and (source_exp.exp_group or "").strip() != source_group
         ):
             flash(_("Source experiment not found."), "error")
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
         if not source_exp:
             flash(_("Source experiment not found."), "error")
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         variation_items = _matrix_parse_variation_payload(variation_payload)
         unlocked_items = []

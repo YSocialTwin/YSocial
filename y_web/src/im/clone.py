@@ -117,3 +117,32 @@ def snapshot_for_download(folder: str, staging_dir: str) -> str:
             target_conn.close()
             source_conn.close()
     return staging_dir
+
+
+def is_im_folder(folder: str) -> bool:
+    """True when an unpacked experiment folder is an IM one (``topic_catalog.json`` or the ``run_info`` marker).
+
+    Checked before YWeb touches an uploaded folder: the YSocial schema must never reach an IM database.
+    """
+    import sqlite3
+
+    from y_web.src.im import IM_MARKER_TABLE
+
+    if not os.path.isfile(os.path.join(folder, "server_config.json")):
+        return False
+    if os.path.isfile(os.path.join(folder, "topic_catalog.json")):
+        return True
+    db_path = os.path.join(folder, "database_server.db")
+    if not os.path.isfile(db_path):
+        return False
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (IM_MARKER_TABLE,)
+            ).fetchone()
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return False
+    return row is not None
