@@ -767,9 +767,6 @@ msgstr "Profilo di gioco di ruolo avanzato"
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
 
-msgid "Advanced Settings (JSON)"
-msgstr "Impostazioni avanzate (JSON)"
-
 msgid "Age"
 msgstr "Età"
 
@@ -808,9 +805,6 @@ msgstr "Archetipi degli agenti e transizioni"
 
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr "Archetipi degli agenti e transizioni (facoltativo)"
-
-msgid "Agent Behaviour"
-msgstr "Comportamento degli agenti"
 
 msgid "Agent Extensions"
 msgstr "Estensioni per agenti"
@@ -5750,9 +5744,6 @@ msgstr "Parametro lambda"
 msgid "Language"
 msgstr "Lingua"
 
-msgid "Language Model"
-msgstr "Modello linguistico"
-
 msgid "Language Spoken"
 msgstr "Lingua parlata"
 
@@ -6112,9 +6103,6 @@ msgstr ""
 msgid "Matrix"
 msgstr "Matrix"
 
-msgid "Max Concurrency"
-msgstr "Concorrenza massima"
-
 msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
 msgstr ""
 "Il numero massimo di esperimenti HPC per gruppo deve essere almeno 1, "
@@ -6226,13 +6214,6 @@ msgstr "Post che ti menzionano"
 
 msgid "Merge Populations"
 msgstr "Unisci le popolazioni"
-
-msgid ""
-"Merged into the client configuration and validated against the instant "
-"messaging schema."
-msgstr ""
-"Unite alla configurazione del client e validate rispetto allo schema "
-"della messaggistica istantanea."
 
 msgid "Merged population type must match the selected population platform type."
 msgstr ""
@@ -7051,9 +7032,6 @@ msgstr "Numero di copie"
 msgid "Number of blocks"
 msgstr "Numero di blocchi"
 
-msgid "Number of days"
-msgstr "Numero di giorni"
-
 msgid ""
 "Number of days to run. Check \"Run until stopped\" to create an infinite-"
 "duration client that runs until manually stopped."
@@ -7279,9 +7257,6 @@ msgstr "Tendenze dei gruppi di opinione"
 
 msgid "Opinion Groups"
 msgstr "Gruppi di opinione"
-
-msgid "Opinion Model"
-msgstr "Modello di opinione"
 
 msgid "Opinion Modeling"
 msgstr "Modellazione delle opinioni"
@@ -9387,9 +9362,6 @@ msgstr "Controlli del server"
 msgid "Server Logs Analysis"
 msgstr "Analisi dei log del server"
 
-msgid "Server Port"
-msgstr "Porta del server"
-
 msgid "Server Settings"
 msgstr "Impostazioni del server"
 
@@ -9811,9 +9783,6 @@ msgstr "Avvia la sessione"
 msgid "Start an interview session to load persona details."
 msgstr "Avvia una sessione di intervista per caricare i dettagli del profilo."
 
-msgid "Start date"
-msgstr "Data di inizio"
-
 #, python-format
 msgid "Start or stop the server from %(b)s"
 msgstr "Avvia o ferma il server da %(b)s"
@@ -9935,9 +9904,6 @@ msgstr ""
 
 msgid "Stress Distribution"
 msgstr "Distribuzione dello stress"
-
-msgid "Stress and Reward"
-msgstr "Stress e ricompensa"
 
 msgid "Stress/Reward"
 msgstr "Stress/ricompensa"
@@ -10778,9 +10744,6 @@ msgstr "Reazione «pollice in giù»"
 
 msgid "Thumbs-up reaction"
 msgstr "Reazione «pollice in su»"
-
-msgid "Ticks per round"
-msgstr "Tick per round"
 
 msgid "Tier A Max Chars"
 msgstr "Caratteri massimi livello A"
@@ -12395,9 +12358,6 @@ msgstr "più client"
 msgid "never"
 msgstr "mai"
 
-msgid "no model, for tests"
-msgstr "nessun modello, per i test"
-
 msgid "none published"
 msgstr "nessuna pubblicata"
 
@@ -13352,10 +13312,6 @@ msgid "Shown once to each participant before their first entry. Leave empty for 
 msgstr "Mostrato una volta a ogni partecipante prima del primo ingresso. Lascia vuoto per non mostrarlo. Sei tu a dover informare i partecipanti."
 
 #: y_web/templates/im
-msgid "Assigned participants can read and write in the chats. A run with humans cannot be reproduced exactly. You are responsible for informing participants."
-msgstr "I partecipanti assegnati possono leggere e scrivere nelle chat. Una simulazione con umani non può essere riprodotta esattamente. Sei tu a dover informare i partecipanti."
-
-#: y_web/templates/im
 msgid "Minimum round duration (seconds, 0 = off)"
 msgstr "Durata minima del round (secondi, 0 = disattivata)"
 
@@ -13506,3 +13462,456 @@ msgstr "Sei stato invitato"
 #: y_web/templates/im
 msgid "Connection lost: the notifications will appear when it is back."
 msgstr "Connessione persa: le notifiche appariranno al ritorno."
+
+msgid "Action log"
+msgstr "Log delle azioni"
+
+msgid "Actions an agent may take besides posting, replying and reacting."
+msgstr "Azioni che un agente può compiere oltre a pubblicare, rispondere e reagire."
+
+msgid "Activate agent memory"
+msgstr "Attiva la memoria degli agenti"
+
+msgid "Actor log"
+msgstr "Log degli attori"
+
+msgid "Agents leaving and joining during the run."
+msgstr "Agenti che escono ed entrano durante l'esecuzione."
+
+msgid "Allow forum topics"
+msgstr "Consenti i topic dei forum"
+
+msgid "Allow forwarding"
+msgstr "Consenti l'inoltro"
+
+msgid "Allow private messages"
+msgstr "Consenti i messaggi privati"
+
+msgid "Allow search"
+msgstr "Consenti la ricerca"
+
+msgid "Always offer chats with notifications"
+msgstr "Proponi sempre le chat con notifiche"
+
+msgid "Always offer owned chats"
+msgstr "Proponi sempre le chat di cui è proprietario"
+
+msgid "Ask the language model when uncertain"
+msgstr "Interroga il modello linguistico nei casi incerti"
+
+msgid "Attention"
+msgstr "Attenzione"
+
+msgid "Automatic restrictions on the chats."
+msgstr "Restrizioni automatiche sulle chat."
+
+msgid "Background activity that does not come from the agents."
+msgstr "Attività di fondo che non proviene dagli agenti."
+
+msgid "Barrier poll (seconds)"
+msgstr "Intervallo di controllo della barriera (secondi)"
+
+msgid "Baseline Activity"
+msgstr "Attività di base"
+
+msgid "Baseline policy"
+msgstr "Politica di base"
+
+msgid "Baseline strength"
+msgstr "Intensità dell'attività di base"
+
+msgid "Broadcasters"
+msgstr "Broadcaster"
+
+msgid "Chat Discovery"
+msgstr "Scoperta delle chat"
+
+msgid "Chat Topology"
+msgstr "Topologia delle chat"
+
+msgid "Chat creation likelihood"
+msgstr "Probabilità di creare una chat"
+
+msgid "Chats per topic"
+msgstr "Chat per topic"
+
+msgid "Chats that appear during the run."
+msgstr "Chat che compaiono durante l'esecuzione."
+
+msgid "Churn and New Agents"
+msgstr "Abbandoni e nuovi agenti"
+
+msgid "Churn probability"
+msgstr "Probabilità di abbandono"
+
+msgid "Client Runtime"
+msgstr "Esecuzione del client"
+
+msgid "Client log"
+msgstr "Log del client"
+
+msgid "Compress rotated logs"
+msgstr "Comprimi i log ruotati"
+
+msgid "Concurrency, timeouts and the failure guard of the language model calls."
+msgstr "Concorrenza, timeout e controllo dei fallimenti delle chiamate al modello linguistico."
+
+msgid "Configure optional memory of the agents: what they remember of the chats they read and write in. Memory is disabled by default."
+msgstr "Configura la memoria opzionale degli agenti: ciò che ricordano delle chat che leggono e in cui scrivono. La memoria è disattivata per impostazione predefinita."
+
+msgid "Console log"
+msgstr "Log della console"
+
+msgid "Create a group for each topic"
+msgstr "Crea un gruppo per ogni topic"
+
+msgid "Customize hourly activity"
+msgstr "Personalizza l'attività oraria"
+
+msgid "Discovery mode"
+msgstr "Modalità di scoperta"
+
+msgid "Emergence, Chat Creation and Forums"
+msgstr "Emergenza, creazione di chat e forum"
+
+msgid "Emotion annotation batch size"
+msgstr "Dimensione del batch di annotazione delle emozioni"
+
+msgid "Enable archetypes"
+msgstr "Abilita gli archetipi"
+
+msgid "Enable churn"
+msgstr "Abilita gli abbandoni"
+
+msgid "Enable forum chats"
+msgstr "Abilita le chat forum"
+
+msgid "Enable new agents"
+msgstr "Abilita i nuovi agenti"
+
+msgid "Enable reactive replies"
+msgstr "Abilita le risposte reattive"
+
+msgid "Every value has a default: change only what your design needs. Opinion dynamics, stress and reward, annotations and memory are switched in Experiment Configuration."
+msgstr "Ogni valore ha un default: modifica solo ciò che serve al tuo disegno sperimentale. Dinamiche di opinione, stress e ricompensa, annotazioni e memoria si attivano in Configurazione dell'esperimento."
+
+msgid "Execution log"
+msgstr "Log di esecuzione"
+
+msgid "Explorers"
+msgstr "Esploratori"
+
+msgid "Extra session rate"
+msgstr "Frequenza delle sessioni aggiuntive"
+
+msgid "Failure minimum (sessions)"
+msgstr "Minimo per il controllo dei fallimenti (sessioni)"
+
+msgid "Failure window (sessions)"
+msgstr "Finestra per il controllo dei fallimenti (sessioni)"
+
+msgid "Forget deleted messages"
+msgstr "Dimentica i messaggi eliminati"
+
+msgid "Forum topic creation likelihood"
+msgstr "Probabilità di creare un topic nel forum"
+
+msgid "Forum topic deletion likelihood"
+msgstr "Probabilità di eliminare un topic del forum"
+
+msgid "Generate the topology if missing"
+msgstr "Genera la topologia se manca"
+
+msgid "Heartbeat interval (seconds)"
+msgstr "Intervallo di heartbeat (secondi)"
+
+msgid "How agents find chats to join or leave."
+msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
+
+msgid "How chats, channels and their owners are generated."
+msgstr "Come vengono generati chat, canali e relativi proprietari."
+
+msgid "How many sessions an agent may open in a round."
+msgstr "Quante sessioni può aprire un agente in un round."
+
+msgid "How the experiment topics map onto agents and chats."
+msgstr "Come i topic dell'esperimento vengono associati ad agenti e chat."
+
+msgid "Ignore topics when building the network"
+msgstr "Ignora i topic nella costruzione della rete"
+
+msgid "In instant messaging the agent evaluates the opinion of the interlocutor only."
+msgstr "Nella messaggistica istantanea l'agente valuta solo l'opinione dell'interlocutore."
+
+msgid "Inactivity threshold (rounds)"
+msgstr "Soglia di inattività (round)"
+
+msgid "Language Model Reliability"
+msgstr "Affidabilità del modello linguistico"
+
+msgid "Language model usage log"
+msgstr "Log d'uso del modello linguistico"
+
+msgid "Let agents create chats"
+msgstr "Consenti agli agenti di creare chat"
+
+msgid "Let chats emerge"
+msgstr "Lascia emergere nuove chat"
+
+msgid "Logging"
+msgstr "Registrazione dei log"
+
+msgid "Maximum chain depth"
+msgstr "Profondità massima della catena"
+
+msgid "Maximum characters"
+msgstr "Numero massimo di caratteri"
+
+msgid "Maximum chats owned by an agent"
+msgstr "Numero massimo di chat possedute da un agente"
+
+msgid "Maximum chats per session"
+msgstr "Numero massimo di chat per sessione"
+
+msgid "Maximum concurrent requests"
+msgstr "Numero massimo di richieste concorrenti"
+
+msgid "Maximum items"
+msgstr "Numero massimo di elementi"
+
+msgid "Maximum reactions per round"
+msgstr "Numero massimo di reazioni per round"
+
+msgid "Maximum retries"
+msgstr "Numero massimo di tentativi"
+
+msgid "Maximum server retries"
+msgstr "Numero massimo di tentativi verso il server"
+
+msgid "Maximum sessions per round"
+msgstr "Numero massimo di sessioni per round"
+
+msgid "Maximum share of agents that churn"
+msgstr "Quota massima di agenti che abbandonano"
+
+msgid "Maximum share of failed sessions"
+msgstr "Quota massima di sessioni fallite"
+
+msgid "Maximum wait (rounds)"
+msgstr "Attesa massima (round)"
+
+msgid "Median reaction delay (minutes)"
+msgstr "Ritardo mediano della reazione (minuti)"
+
+msgid "Memory backend"
+msgstr "Backend della memoria"
+
+msgid "Minimum activity level for several sessions"
+msgstr "Livello minimo di attività per più sessioni"
+
+msgid "Minimum score to recall another thread"
+msgstr "Punteggio minimo per richiamare un altro thread"
+
+msgid "Minimum topics of a forum"
+msgstr "Numero minimo di topic di un forum"
+
+msgid "Moderation"
+msgstr "Moderazione"
+
+msgid "Moderation policy"
+msgstr "Politica di moderazione"
+
+msgid "New agents probability"
+msgstr "Probabilità di nuovi agenti"
+
+msgid "Off-topic rate"
+msgstr "Frequenza dei messaggi fuori topic"
+
+msgid "Open slot rate"
+msgstr "Frequenza degli slot aperti"
+
+msgid "Optional Agent Actions"
+msgstr "Azioni opzionali degli agenti"
+
+msgid "Pass the seed to the model"
+msgstr "Passa il seed al modello"
+
+msgid "Posts allowed before the limit"
+msgstr "Messaggi consentiti prima del limite"
+
+msgid "Private message likelihood"
+msgstr "Probabilità di un messaggio privato"
+
+msgid "Probability of leaving a chat"
+msgstr "Probabilità di uscire da una chat"
+
+msgid "Probability of reacting"
+msgstr "Probabilità di reagire"
+
+msgid "Prompt log"
+msgstr "Log dei prompt"
+
+msgid "Prompt mode"
+msgstr "Modalità del prompt"
+
+msgid "React"
+msgstr "Reagisci"
+
+msgid "Reactive Replies"
+msgstr "Risposte reattive"
+
+msgid "Reactive forward likelihood"
+msgstr "Probabilità di inoltro reattivo"
+
+msgid "Reactive post likelihood"
+msgstr "Probabilità di messaggio reattivo"
+
+msgid "Reactive reaction likelihood"
+msgstr "Probabilità di reazione reattiva"
+
+msgid "Reactive reply likelihood"
+msgstr "Probabilità di risposta reattiva"
+
+msgid "Ready timeout (seconds)"
+msgstr "Timeout di prontezza (secondi)"
+
+msgid "Recall emotionally charged episodes"
+msgstr "Richiama gli episodi emotivamente intensi"
+
+msgid "Record the responses"
+msgstr "Registra le risposte"
+
+msgid "Rehydrate window (rounds)"
+msgstr "Finestra di ripristino (round)"
+
+msgid "Relative likelihood of each action of an agent in a session. A value of 0 means that the action is never performed; values greater than 0 are relative to each other."
+msgstr "Probabilità relativa di ogni azione di un agente in una sessione. Il valore 0 significa che l'azione non viene mai eseguita; i valori maggiori di 0 sono relativi tra loro."
+
+msgid "Replies and reactions triggered by the activity of other agents."
+msgstr "Risposte e reazioni innescate dall'attività di altri agenti."
+
+msgid "Reply context (characters)"
+msgstr "Contesto della risposta (caratteri)"
+
+msgid "Restriction length (rounds)"
+msgstr "Durata della restrizione (round)"
+
+msgid "Rule threshold"
+msgstr "Soglia della regola"
+
+msgid "Scheduling"
+msgstr "Pianificazione"
+
+msgid "Search likelihood"
+msgstr "Probabilità di ricerca"
+
+msgid "Search top-k"
+msgstr "Top-k della ricerca"
+
+msgid "Server call timeout (seconds)"
+msgstr "Timeout delle chiamate al server (secondi)"
+
+msgid "Set the share of activity of each hour (0 to 1)"
+msgstr "Imposta la quota di attività di ogni ora (da 0 a 1)"
+
+msgid "Share of agents owning a channel"
+msgstr "Quota di agenti proprietari di un canale"
+
+msgid "Share of channels with a discussion group"
+msgstr "Quota di canali con un gruppo di discussione"
+
+msgid "Share of new agents"
+msgstr "Quota di nuovi agenti"
+
+msgid "Share of validators, broadcasters and explorers (the three must add up to 1)."
+msgstr "Quota di validatori, broadcaster ed esploratori (le tre devono sommare a 1)."
+
+msgid "Share the topology across clients"
+msgstr "Condividi la topologia tra i client"
+
+msgid "Shutdown grace (seconds)"
+msgstr "Tolleranza allo spegnimento (secondi)"
+
+msgid "Spread of the reaction delay"
+msgstr "Dispersione del ritardo della reazione"
+
+msgid "Start Date"
+msgstr "Data di inizio"
+
+msgid "The archetype shares must add up to 1"
+msgstr "Le quote degli archetipi devono sommare a 1"
+
+msgid "The lower bound of the uncertain band cannot exceed the upper one"
+msgstr "Il limite inferiore della banda di incertezza non può superare quello superiore"
+
+msgid "The start date and the round length belong to the experiment: the first client set them."
+msgstr "La data di inizio e la durata del round appartengono all'esperimento: le ha fissate il primo client."
+
+msgid "Tick log"
+msgstr "Log dei tick"
+
+msgid "Ticks per Round"
+msgstr "Tick per round"
+
+msgid "Timeouts and polling of the client process."
+msgstr "Timeout e polling del processo client."
+
+msgid "Topic assignment"
+msgstr "Assegnazione dei topic"
+
+msgid "Topics and Chats"
+msgstr "Topic e chat"
+
+msgid "Topics per agent"
+msgstr "Topic per agente"
+
+msgid "Topics per channel"
+msgstr "Topic per canale"
+
+msgid "Total memory in the prompt (characters)"
+msgstr "Memoria totale nel prompt (caratteri)"
+
+msgid "Uncertain band, high"
+msgstr "Banda di incertezza, limite superiore"
+
+msgid "Uncertain band, low"
+msgstr "Banda di incertezza, limite inferiore"
+
+msgid "Unmapped topics"
+msgstr "Topic non mappati"
+
+msgid "Validators"
+msgstr "Validatori"
+
+msgid "Votes only as a signal"
+msgstr "Voti solo come segnale"
+
+msgid "Weight of notifications"
+msgstr "Peso delle notifiche"
+
+msgid "Weight of recent activity"
+msgstr "Peso dell'attività recente"
+
+msgid "Weight of topic affinity"
+msgstr "Peso dell'affinità con i topic"
+
+msgid "Which chats an agent looks at in a session and how they are ranked."
+msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
+
+msgid "Which logs the client writes (the verbose ones are off by default)."
+msgstr "Quali log scrive il client (quelli dettagliati sono disattivati per impostazione predefinita)."
+
+msgid "A round never closes sooner than this, so that people have time to act. It is a lower bound: the simulation never waits for a person."
+msgstr "Un round non si chiude prima di questo tempo, così che le persone abbiano modo di agire. È un limite inferiore: la simulazione non aspetta mai una persona."
+
+msgid "Advanced settings updated."
+msgstr "Impostazioni avanzate aggiornate."
+
+msgid "Invalid advanced settings: %(why)s"
+msgstr "Impostazioni avanzate non valide: %(why)s"
+
+msgid "Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part."
+msgstr "Impostazioni del server della simulazione di messaggistica istantanea. Le persone possono registrarsi in qualsiasi momento: queste impostazioni definiscono solo come partecipano."
+
+msgid "The run already started: reset the experiment to change these settings."
+msgstr "L'esecuzione è già iniziata: reimposta l'esperimento per modificare queste impostazioni."

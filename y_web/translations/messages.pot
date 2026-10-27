@@ -696,9 +696,6 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-msgid "Advanced Settings (JSON)"
-msgstr ""
-
 msgid "Age"
 msgstr ""
 
@@ -736,9 +733,6 @@ msgid "Agent Archetypes and Transitions"
 msgstr ""
 
 msgid "Agent Archetypes and Transitions (Optional)"
-msgstr ""
-
-msgid "Agent Behaviour"
 msgstr ""
 
 msgid "Agent Extensions"
@@ -5099,9 +5093,6 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-msgid "Language Model"
-msgstr ""
-
 msgid "Language Spoken"
 msgstr ""
 
@@ -5412,9 +5403,6 @@ msgstr ""
 msgid "Matrix"
 msgstr ""
 
-msgid "Max Concurrency"
-msgstr ""
-
 msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
 msgstr ""
 
@@ -5509,11 +5497,6 @@ msgid "Mentioning Posts"
 msgstr ""
 
 msgid "Merge Populations"
-msgstr ""
-
-msgid ""
-"Merged into the client configuration and validated against the instant "
-"messaging schema."
 msgstr ""
 
 msgid "Merged population type must match the selected population platform type."
@@ -6279,9 +6262,6 @@ msgstr ""
 msgid "Number of blocks"
 msgstr ""
 
-msgid "Number of days"
-msgstr ""
-
 msgid ""
 "Number of days to run. Check \"Run until stopped\" to create an infinite-"
 "duration client that runs until manually stopped."
@@ -6463,9 +6443,6 @@ msgid "Opinion Group Trends"
 msgstr ""
 
 msgid "Opinion Groups"
-msgstr ""
-
-msgid "Opinion Model"
 msgstr ""
 
 msgid "Opinion Modeling"
@@ -8377,9 +8354,6 @@ msgstr ""
 msgid "Server Logs Analysis"
 msgstr ""
 
-msgid "Server Port"
-msgstr ""
-
 msgid "Server Settings"
 msgstr ""
 
@@ -8752,9 +8726,6 @@ msgstr ""
 msgid "Start an interview session to load persona details."
 msgstr ""
 
-msgid "Start date"
-msgstr ""
-
 #, python-format
 msgid "Start or stop the server from %(b)s"
 msgstr ""
@@ -8865,9 +8836,6 @@ msgid ""
 msgstr ""
 
 msgid "Stress Distribution"
-msgstr ""
-
-msgid "Stress and Reward"
 msgstr ""
 
 msgid "Stress/Reward"
@@ -9555,9 +9523,6 @@ msgid "Thumbs-down reaction"
 msgstr ""
 
 msgid "Thumbs-up reaction"
-msgstr ""
-
-msgid "Ticks per round"
 msgstr ""
 
 msgid "Tier A Max Chars"
@@ -10957,9 +10922,6 @@ msgstr ""
 msgid "never"
 msgstr ""
 
-msgid "no model, for tests"
-msgstr ""
-
 msgid "none published"
 msgstr ""
 
@@ -11512,10 +11474,6 @@ msgid "Shown once to each participant before their first entry. Leave empty for 
 msgstr ""
 
 #: y_web/templates/im
-msgid "Assigned participants can read and write in the chats. A run with humans cannot be reproduced exactly. You are responsible for informing participants."
-msgstr ""
-
-#: y_web/templates/im
 msgid "Minimum round duration (seconds, 0 = off)"
 msgstr ""
 
@@ -11665,4 +11623,457 @@ msgstr ""
 
 #: y_web/templates/im
 msgid "Connection lost: the notifications will appear when it is back."
+msgstr ""
+
+msgid "Action log"
+msgstr ""
+
+msgid "Actions an agent may take besides posting, replying and reacting."
+msgstr ""
+
+msgid "Activate agent memory"
+msgstr ""
+
+msgid "Actor log"
+msgstr ""
+
+msgid "Agents leaving and joining during the run."
+msgstr ""
+
+msgid "Allow forum topics"
+msgstr ""
+
+msgid "Allow forwarding"
+msgstr ""
+
+msgid "Allow private messages"
+msgstr ""
+
+msgid "Allow search"
+msgstr ""
+
+msgid "Always offer chats with notifications"
+msgstr ""
+
+msgid "Always offer owned chats"
+msgstr ""
+
+msgid "Ask the language model when uncertain"
+msgstr ""
+
+msgid "Attention"
+msgstr ""
+
+msgid "Automatic restrictions on the chats."
+msgstr ""
+
+msgid "Background activity that does not come from the agents."
+msgstr ""
+
+msgid "Barrier poll (seconds)"
+msgstr ""
+
+msgid "Baseline Activity"
+msgstr ""
+
+msgid "Baseline policy"
+msgstr ""
+
+msgid "Baseline strength"
+msgstr ""
+
+msgid "Broadcasters"
+msgstr ""
+
+msgid "Chat Discovery"
+msgstr ""
+
+msgid "Chat Topology"
+msgstr ""
+
+msgid "Chat creation likelihood"
+msgstr ""
+
+msgid "Chats per topic"
+msgstr ""
+
+msgid "Chats that appear during the run."
+msgstr ""
+
+msgid "Churn and New Agents"
+msgstr ""
+
+msgid "Churn probability"
+msgstr ""
+
+msgid "Client Runtime"
+msgstr ""
+
+msgid "Client log"
+msgstr ""
+
+msgid "Compress rotated logs"
+msgstr ""
+
+msgid "Concurrency, timeouts and the failure guard of the language model calls."
+msgstr ""
+
+msgid "Configure optional memory of the agents: what they remember of the chats they read and write in. Memory is disabled by default."
+msgstr ""
+
+msgid "Console log"
+msgstr ""
+
+msgid "Create a group for each topic"
+msgstr ""
+
+msgid "Customize hourly activity"
+msgstr ""
+
+msgid "Discovery mode"
+msgstr ""
+
+msgid "Emergence, Chat Creation and Forums"
+msgstr ""
+
+msgid "Emotion annotation batch size"
+msgstr ""
+
+msgid "Enable archetypes"
+msgstr ""
+
+msgid "Enable churn"
+msgstr ""
+
+msgid "Enable forum chats"
+msgstr ""
+
+msgid "Enable new agents"
+msgstr ""
+
+msgid "Enable reactive replies"
+msgstr ""
+
+msgid "Every value has a default: change only what your design needs. Opinion dynamics, stress and reward, annotations and memory are switched in Experiment Configuration."
+msgstr ""
+
+msgid "Execution log"
+msgstr ""
+
+msgid "Explorers"
+msgstr ""
+
+msgid "Extra session rate"
+msgstr ""
+
+msgid "Failure minimum (sessions)"
+msgstr ""
+
+msgid "Failure window (sessions)"
+msgstr ""
+
+msgid "Forget deleted messages"
+msgstr ""
+
+msgid "Forum topic creation likelihood"
+msgstr ""
+
+msgid "Forum topic deletion likelihood"
+msgstr ""
+
+msgid "Generate the topology if missing"
+msgstr ""
+
+msgid "Heartbeat interval (seconds)"
+msgstr ""
+
+msgid "How agents find chats to join or leave."
+msgstr ""
+
+msgid "How chats, channels and their owners are generated."
+msgstr ""
+
+msgid "How many sessions an agent may open in a round."
+msgstr ""
+
+msgid "How the experiment topics map onto agents and chats."
+msgstr ""
+
+msgid "Ignore topics when building the network"
+msgstr ""
+
+msgid "In instant messaging the agent evaluates the opinion of the interlocutor only."
+msgstr ""
+
+msgid "Inactivity threshold (rounds)"
+msgstr ""
+
+msgid "Language Model Reliability"
+msgstr ""
+
+msgid "Language model usage log"
+msgstr ""
+
+msgid "Let agents create chats"
+msgstr ""
+
+msgid "Let chats emerge"
+msgstr ""
+
+msgid "Logging"
+msgstr ""
+
+msgid "Maximum chain depth"
+msgstr ""
+
+msgid "Maximum characters"
+msgstr ""
+
+msgid "Maximum chats owned by an agent"
+msgstr ""
+
+msgid "Maximum chats per session"
+msgstr ""
+
+msgid "Maximum concurrent requests"
+msgstr ""
+
+msgid "Maximum items"
+msgstr ""
+
+msgid "Maximum reactions per round"
+msgstr ""
+
+msgid "Maximum retries"
+msgstr ""
+
+msgid "Maximum server retries"
+msgstr ""
+
+msgid "Maximum sessions per round"
+msgstr ""
+
+msgid "Maximum share of agents that churn"
+msgstr ""
+
+msgid "Maximum share of failed sessions"
+msgstr ""
+
+msgid "Maximum wait (rounds)"
+msgstr ""
+
+msgid "Median reaction delay (minutes)"
+msgstr ""
+
+msgid "Memory backend"
+msgstr ""
+
+msgid "Minimum activity level for several sessions"
+msgstr ""
+
+msgid "Minimum score to recall another thread"
+msgstr ""
+
+msgid "Minimum topics of a forum"
+msgstr ""
+
+msgid "Moderation"
+msgstr ""
+
+msgid "Moderation policy"
+msgstr ""
+
+msgid "New agents probability"
+msgstr ""
+
+msgid "Off-topic rate"
+msgstr ""
+
+msgid "Open slot rate"
+msgstr ""
+
+msgid "Optional Agent Actions"
+msgstr ""
+
+msgid "Pass the seed to the model"
+msgstr ""
+
+msgid "Posts allowed before the limit"
+msgstr ""
+
+msgid "Private message likelihood"
+msgstr ""
+
+msgid "Probability of leaving a chat"
+msgstr ""
+
+msgid "Probability of reacting"
+msgstr ""
+
+msgid "Prompt log"
+msgstr ""
+
+msgid "Prompt mode"
+msgstr ""
+
+msgid "React"
+msgstr ""
+
+msgid "Reactive Replies"
+msgstr ""
+
+msgid "Reactive forward likelihood"
+msgstr ""
+
+msgid "Reactive post likelihood"
+msgstr ""
+
+msgid "Reactive reaction likelihood"
+msgstr ""
+
+msgid "Reactive reply likelihood"
+msgstr ""
+
+msgid "Ready timeout (seconds)"
+msgstr ""
+
+msgid "Recall emotionally charged episodes"
+msgstr ""
+
+msgid "Record the responses"
+msgstr ""
+
+msgid "Rehydrate window (rounds)"
+msgstr ""
+
+msgid "Relative likelihood of each action of an agent in a session. A value of 0 means that the action is never performed; values greater than 0 are relative to each other."
+msgstr ""
+
+msgid "Replies and reactions triggered by the activity of other agents."
+msgstr ""
+
+msgid "Reply context (characters)"
+msgstr ""
+
+msgid "Restriction length (rounds)"
+msgstr ""
+
+msgid "Rule threshold"
+msgstr ""
+
+msgid "Scheduling"
+msgstr ""
+
+msgid "Search likelihood"
+msgstr ""
+
+msgid "Search top-k"
+msgstr ""
+
+msgid "Server call timeout (seconds)"
+msgstr ""
+
+msgid "Set the share of activity of each hour (0 to 1)"
+msgstr ""
+
+msgid "Share of agents owning a channel"
+msgstr ""
+
+msgid "Share of channels with a discussion group"
+msgstr ""
+
+msgid "Share of new agents"
+msgstr ""
+
+msgid "Share of validators, broadcasters and explorers (the three must add up to 1)."
+msgstr ""
+
+msgid "Share the topology across clients"
+msgstr ""
+
+msgid "Shutdown grace (seconds)"
+msgstr ""
+
+msgid "Spread of the reaction delay"
+msgstr ""
+
+msgid "Start Date"
+msgstr ""
+
+msgid "The archetype shares must add up to 1"
+msgstr ""
+
+msgid "The lower bound of the uncertain band cannot exceed the upper one"
+msgstr ""
+
+msgid "The start date and the round length belong to the experiment: the first client set them."
+msgstr ""
+
+msgid "Tick log"
+msgstr ""
+
+msgid "Ticks per Round"
+msgstr ""
+
+msgid "Timeouts and polling of the client process."
+msgstr ""
+
+msgid "Topic assignment"
+msgstr ""
+
+msgid "Topics and Chats"
+msgstr ""
+
+msgid "Topics per agent"
+msgstr ""
+
+msgid "Topics per channel"
+msgstr ""
+
+msgid "Total memory in the prompt (characters)"
+msgstr ""
+
+msgid "Uncertain band, high"
+msgstr ""
+
+msgid "Uncertain band, low"
+msgstr ""
+
+msgid "Unmapped topics"
+msgstr ""
+
+msgid "Validators"
+msgstr ""
+
+msgid "Votes only as a signal"
+msgstr ""
+
+msgid "Weight of notifications"
+msgstr ""
+
+msgid "Weight of recent activity"
+msgstr ""
+
+msgid "Weight of topic affinity"
+msgstr ""
+
+msgid "Which chats an agent looks at in a session and how they are ranked."
+msgstr ""
+
+msgid "Which logs the client writes (the verbose ones are off by default)."
+msgstr ""
+
+msgid "A round never closes sooner than this, so that people have time to act. It is a lower bound: the simulation never waits for a person."
+msgstr ""
+
+msgid "Advanced settings updated."
+msgstr ""
+
+msgid "Invalid advanced settings: %(why)s"
+msgstr ""
+
+msgid "Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part."
+msgstr ""
+
+msgid "The run already started: reset the experiment to change these settings."
 msgstr ""
