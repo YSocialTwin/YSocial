@@ -50,6 +50,34 @@ class GatewayClient:
         return f"http://{state.get('host', '127.0.0.1')}:{int(state['port'])}", token
 
     def request(self, method: str, path: str, body: Optional[dict] = None, params=None):
+        try:
+            return self._http(method, path, body, params)
+        except GatewayUnavailable:
+            if not self._offline_possible():
+                raise
+        return self._offline(method, path, body, params)
+
+    def _offline_possible(self) -> bool:
+        from y_web.src.im.gateway_process import offline_possible
+
+        return offline_possible(self.exp_folder)
+
+    def _offline(self, method: str, path: str, body, params):
+        """No gateway and no server: the runtime's own code answers, on the database (see ``run_offline_gateway``)."""
+        from y_web.src.hpc.platforms import get_hpc_platform
+        from y_web.src.im.gateway_process import offline_request
+        from y_web.src.simulation.server import detect_env_handler
+        from y_web.src.system.path_utils import get_external_repo_dir
+
+        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
+        return offline_request(
+            self.exp_folder,
+            repo_dir,
+            {"method": method, "path": path, "params": params, "body": body},
+            detect_env_handler(),
+        )
+
+    def _http(self, method: str, path: str, body: Optional[dict] = None, params=None):
         base, token = self._base()
         try:
             resp = self.session.request(

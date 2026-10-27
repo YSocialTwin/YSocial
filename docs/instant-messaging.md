@@ -100,6 +100,14 @@ How it works, and what to keep in mind:
   the right value depends on the people involved, so try it with someone at the keyboard.
 - If the gateway stops, the run goes on and the participant page shows "connection lost"; an action sent twice is
   applied once.
+- **People can take part while the server is off**, as on the other platforms (where YWeb writes with the latest
+  round). When no gateway answers and no server runs, the runtime's own *offline gateway* (`run_offline_gateway.py`)
+  answers the same requests on the database: the account is created, and reading, writing and every interaction work,
+  with the same services and rules as the agents' actions. Contents are stamped with the **latest round** of the run (at
+  the last tick the person can still read); nothing opens, closes or advances a round, so the server resumes from the
+  same state when it starts again and the agents see what people wrote. One offline writer at a time (a lock), never
+  while a server runs (then the gateway is the only way in). A run that never started has no round, so there is nothing
+  to read or write yet.
 - **A run with humans is not reproducible**: it cannot be repeated from the same files. The experiment details page
   says so.
 - Notifications from other clients' current round appear one round later (IM design).

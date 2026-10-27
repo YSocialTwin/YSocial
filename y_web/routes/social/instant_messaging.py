@@ -22,7 +22,7 @@ from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, avatar_hue, l
 from y_web.src.im.timeline import clamp_round, day_slot, ordinal
 from y_web.src.im import participant as participation
 from y_web.src.im.gateway_client import GatewayClient, GatewayUnavailable
-from y_web.src.im.gateway_process import is_running as gateway_running
+from y_web.src.im.gateway_process import is_running as gateway_running, offline_possible
 from y_web.src.models import Exps, User_Experiment
 
 POLL_SECONDS = 10  # used when the experiment's own setting is missing
@@ -83,12 +83,14 @@ class _Context:
 
     @property
     def writable(self):
-        """A participant can write while the run is live and the gateway answers."""
+        """A participant can write when the gateway answers, or when no server runs (the runtime's offline gateway)."""
         return bool(
             self.participant
-            and self.live
             and self.latest
-            and gateway_running(self.participant.exp_folder)
+            and (
+                gateway_running(self.participant.exp_folder)
+                or offline_possible(self.participant.exp_folder)
+            )
         )
 
     @property
@@ -180,14 +182,17 @@ def _participant(session, exp, ui):
             except GatewayUnavailable:
                 code = None
         if code is None:
-            # no gateway answers (typically the server is not running): a person can still enter, the account
-            # is created by the runtime's own offline registration
-            if _register_offline(exp, part, participation.pseudonym(user)):
-                session.rollback()
-                if session.get(models.Account, part.account_id) is not None:
-                    return part
-            flask_g.im_pending_reason = "unavailable" if exp.running else "not_running"
+            flask_g.im_pending_reason = "unavailable"
             return False
+    if code == 503 and offline_possible(part.exp_folder):
+        # the run has no round yet (so the offline gateway has nothing to act on): the account itself can still be
+        # created by the runtime, and the person enters
+        if _register_offline(exp, part, participation.pseudonym(user)):
+            session.rollback()
+            if session.get(models.Account, part.account_id) is not None:
+                return part
+        flask_g.im_pending_reason = "not_running"
+        return False
     if code != 200:
         flask_g.im_pending_reason = "refused"
         current_app.logger.warning("IM gateway refused to create the account of %s (HTTP %s)", user.username, code)
@@ -639,8 +644,6 @@ def im_act(exp_id):
         return _json_error(400, "invalid_request", "unknown action")
     if reason:
         return _json_error(403, reason, "this interaction is switched off for the experiment")
-    if not exp.running:
-        return _json_error(409, "not_running", "the simulation is not running")
     action_id = participation.namespaced_action_id(part.account_id, body.get("client_action_id"))
     if action_id is None:
         return _json_error(400, "invalid_request", "client_action_id is required (up to 64 chars)")

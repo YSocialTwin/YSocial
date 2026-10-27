@@ -157,3 +157,36 @@ def register_offline(exp_folder: str, repo_dir: str, key: str, username: str, py
     if done.returncode != 0:
         logger.warning("Offline human registration failed: %s", (done.stderr or "").strip())
     return done.returncode == 0
+
+
+def server_up(exp_folder: str) -> bool:
+    """The IM server of the experiment publishes ``ray_ready.temp`` while it runs."""
+    return os.path.exists(os.path.join(exp_folder, "ray_ready.temp"))
+
+
+def offline_possible(exp_folder: str) -> bool:
+    """A person can act without the server when participation is on and no server is running (nobody else writes)."""
+    return human_enabled(exp_folder) and not server_up(exp_folder)
+
+
+def offline_request(exp_folder: str, repo_dir: str, request: dict, python_cmd: Optional[str] = None):
+    """Run one gateway request through the runtime's offline gateway; returns ``(status, payload)``.
+
+    Raises ``GatewayUnavailable`` when the runtime script is missing or does not answer.
+    """
+    script = os.path.join(repo_dir, "run_offline_gateway.py")
+    if not os.path.exists(script):
+        raise GatewayUnavailable("the instant messaging runtime has no offline gateway: update it")
+    try:
+        done = subprocess.run(
+            [python_cmd or sys.executable, script, exp_folder],
+            cwd=repo_dir,
+            input=json.dumps(request),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        answer = json.loads((done.stdout or "").strip().splitlines()[-1])
+        return int(answer["status"]), answer["payload"]
+    except (OSError, ValueError, IndexError, KeyError, subprocess.SubprocessError) as exc:
+        raise GatewayUnavailable(f"offline gateway failed: {exc}") from exc

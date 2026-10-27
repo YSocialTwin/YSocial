@@ -243,19 +243,49 @@ def test_only_assigned_participants_and_never_staff_can_write(stack, monkeypatch
     assert r.status_code == 403  # not assigned to this experiment
 
 
-def test_a_stopped_simulation_is_read_only(stack):
-    from y_web import db
-    from y_web.src.models import Exps
+def _server_off(s, monkeypatch):
+    """No gateway process and no server: the runtime's offline gateway answers (called in-process here)."""
+    from y_web.src.im import gateway_process
 
+    s.http.shutdown()
+    s.http.server_close()
+    for name in ("human_gateway.json", "human_gateway.token"):
+        (s.folder / name).unlink()
+    from yinstantmessaging.server.offline import handle_offline
+
+    calls = []
+
+    def fake(folder, repo_dir, request, python_cmd=None):
+        calls.append(request["path"])
+        return handle_offline(folder, request["method"], request["path"], request.get("params"), request.get("body"))
+
+    monkeypatch.setattr(gateway_process, "offline_request", fake)
+    return calls
+
+
+def test_a_person_writes_with_the_server_off(stack, monkeypatch):
+    s = stack
+    html = _enter(s)
+    token = _csrf(html)
+    calls = _server_off(s, monkeypatch)
+    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+    assert 'id="im-composer"' in page and "Reading only" not in page
+    headers = {"X-CSRF-Token": token}
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "j"}, headers=headers)
+    assert r.status_code == 200 and r.get_json()["data"]["outcomes"][0]["ok"] is True
+    r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "post", "chat_id": "c-chat", "text": "offline hello", "client_action_id": "p"}, headers=headers)
+    assert r.status_code == 200 and r.get_json()["data"]["outcomes"][0]["ok"] is True
+    assert "/v1/actions" in calls
+    assert "offline hello" in s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
+
+
+def test_a_running_server_without_a_gateway_is_not_written_around(stack, monkeypatch):
     s = stack
     token = _csrf(_enter(s))
-    with s.app.app_context():
-        db.session.get(Exps, s.exp_id).running = 0
-        db.session.commit()
+    _server_off(s, monkeypatch)
+    (s.folder / "ray_ready.temp").write_text("ns\n")  # the server is up: nobody else may write the database
     r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "q"}, headers={"X-CSRF-Token": token})
-    assert r.status_code == 409 and r.get_json()["code"] == "not_running"
-    page = s.client.get(f"/{s.exp_id}/im/chat/c-chat").data.decode()
-    assert 'id="im-composer"' not in page and "Reading only" in page
+    assert r.status_code == 503 and r.get_json()["code"] == "unavailable"
 
 
 def test_a_dead_gateway_is_connection_lost_not_an_error(stack):
@@ -263,6 +293,7 @@ def test_a_dead_gateway_is_connection_lost_not_an_error(stack):
     token = _csrf(_enter(s))
     s.http.shutdown()
     s.http.server_close()
+    (s.folder / "ray_ready.temp").write_text("ns\n")  # the server is up: the gateway is the only way in
     r = s.client.post(f"/{s.exp_id}/im/act", json={"type": "join", "chat_id": "c-chat", "client_action_id": "q"}, headers={"X-CSRF-Token": token})
     assert r.status_code == 503 and r.get_json()["code"] == "unavailable"
     assert s.client.get(f"/{s.exp_id}/im/api/gateway").get_json()["online"] is False
@@ -284,9 +315,14 @@ def test_first_entry_falls_back_to_the_public_view_when_nothing_can_create_the_a
     s = stack
     s.http.shutdown()
     s.http.server_close()
+    from y_web.src.im import gateway_process
+
     monkeypatch.setattr(page_module, "_register_offline", lambda *a, **k: False)
+    monkeypatch.setattr(
+        gateway_process, "offline_request", lambda *a, **k: (503, {"ok": False, "code": "unavailable"})
+    )
     html = s.client.get(f"/{s.exp_id}/im").data.decode()
-    assert "not ready yet" in html or "not started" in html
+    assert "not started" in html
     assert 'data-participant="1"' not in html
 
 
