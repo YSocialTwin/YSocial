@@ -87,3 +87,33 @@ def rewrite_server_config(new_folder: str, new_exp_name: str, new_db_uri: str, n
 
 def new_uid() -> str:
     return str(uuid.uuid4()).replace("-", "_")
+
+
+def snapshot_for_download(folder: str, staging_dir: str) -> str:
+    """A consistent copy of a (possibly running) IM experiment folder in ``staging_dir``.
+
+    The database is copied with SQLite's online backup API, so the ``-wal`` and ``-shm`` files of a
+    running server are neither needed nor included; everything else is copied as it is.
+    """
+    import sqlite3
+
+    os.makedirs(staging_dir, exist_ok=True)
+    for entry in os.listdir(folder):
+        if entry.startswith("database_server.db"):
+            continue
+        source = os.path.join(folder, entry)
+        target = os.path.join(staging_dir, entry)
+        if os.path.isdir(source):
+            shutil.copytree(source, target, dirs_exist_ok=True)
+        else:
+            shutil.copy2(source, target)
+    db_file = os.path.join(folder, "database_server.db")
+    if os.path.exists(db_file):
+        source_conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True, timeout=30)
+        target_conn = sqlite3.connect(os.path.join(staging_dir, "database_server.db"))
+        try:
+            source_conn.backup(target_conn)
+        finally:
+            target_conn.close()
+            source_conn.close()
+    return staging_dir

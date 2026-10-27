@@ -116,3 +116,36 @@ def test_reset_deletes_sidecars_and_keeps_news_snapshot(app, env, monkeypatch, t
         assert not {"database_server.db", "database_server.db-wal", "database_server.db-shm",
                     "client_cl-pop.json.state.json", "reports", "exports", "ray_ready.temp"} & left
         assert db.session.query(Client_Execution).one().expected_duration_rounds == 48
+
+
+def test_download_of_a_running_experiment_has_an_openable_database(app, env, monkeypatch, tmp_path):
+    import sqlite3
+    import zipfile
+
+    from y_web.routes.admin.sub.experiments import _notifications
+
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, days="1")
+        folder = Path(env.im._experiment_folder(exp))
+        db_file = folder / "database_server.db"
+        writer = sqlite3.connect(str(db_file), isolation_level=None)
+        writer.execute("PRAGMA journal_mode=WAL")
+        writer.execute("PRAGMA wal_autocheckpoint=0")
+        writer.execute("CREATE TABLE run_info (run_id TEXT)")
+        writer.execute("CREATE TABLE messages (id INTEGER PRIMARY KEY, text TEXT)")
+        writer.executemany("INSERT INTO messages (text) VALUES (?)", [(f"m{i}",) for i in range(200)])
+        assert (folder / "database_server.db-wal").exists() and (folder / "database_server.db-wal").stat().st_size > 0
+        monkeypatch.setattr("y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path))
+        out = tmp_path / "out.zip"
+        _notifications._build_single_experiment_zip(exp.idexp, str(out))
+        writer.close()
+        with zipfile.ZipFile(out) as archive:
+            names = archive.namelist()
+            assert "database_server.db" in names
+            assert not any(n.endswith("-wal") or n.endswith("-shm") for n in names)
+            archive.extract("database_server.db", tmp_path / "x")
+        conn = sqlite3.connect(str(tmp_path / "x" / "database_server.db"))
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+        assert conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0] == 200
+        conn.close()
