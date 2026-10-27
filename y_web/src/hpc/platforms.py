@@ -28,6 +28,8 @@ class HpcPlatform:
     # Ray actor names used to stop a client
     orchestrator_actor: str = "Orchestrator"
     client_actor_prefix: str = ""
+    # the runtime ships an offline validator that must pass before the server is started
+    validates_config: bool = False
 
     @property
     def server_repo(self) -> str:
@@ -53,6 +55,16 @@ HPC_PLATFORMS = {
         prompts_filename="prompts_ygram.json",
         orchestrator_actor="orchestrator_server",
         client_actor_prefix="Client_",
+    ),
+    "instant_messaging": HpcPlatform(
+        key="instant_messaging",
+        runtime_repo="YInstantMessaging",
+        supports_gunicorn=False,
+        frozen_server_runs_script=True,
+        client_config_only=True,
+        prompts_filename="prompts_im.json",
+        orchestrator_actor="orchestrator_server",
+        validates_config=True,
     ),
 }
 

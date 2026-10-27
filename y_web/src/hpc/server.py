@@ -228,6 +228,11 @@ def start_hpc_server(exp):
     server_dir = _external_repo_dir(spec.server_repo)
     script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_server.py")
 
+    if spec.validates_config:
+        from y_web.src.im.validation import validate_im_folder
+
+        validate_im_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+
     # Validate that script_path exists (skip check for PyInstaller bundles)
     # Check multiple PyInstaller indicators
     is_frozen = getattr(sys, "frozen", False)
