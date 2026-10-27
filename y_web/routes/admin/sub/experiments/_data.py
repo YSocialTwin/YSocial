@@ -804,6 +804,15 @@ def experiment_details(uid):
         except Exception:
             im_analytics = {"state": {"state": "failed", "message": ""}}
 
+    im_humans = None
+    if is_im_experiment(experiment):
+        try:
+            from y_web.src.im.humans_admin import humans_overview
+
+            im_humans = humans_overview(experiment)
+        except Exception:
+            im_humans = None
+
     template_name = "admin/experiment_details.html"
     if experiment.platform_type == "forum":
         template_name = "admin/experiment_details_forum.html"
@@ -851,6 +860,7 @@ def experiment_details(uid):
         hpc_reset_available=hpc_reset_available,
         im_artifacts=im_artifacts,
         im_analytics=im_analytics,
+        im_humans=im_humans,
     )
 
 

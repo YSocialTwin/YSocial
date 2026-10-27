@@ -2432,6 +2432,9 @@ def create_experiment():
                     num_days=request.form.get("im_num_days"),
                     start_date=request.form.get("im_start_date"),
                     ticks_per_round=request.form.get("im_ticks_per_round"),
+                    human_enabled=request.form.get("im_human_enabled") in ("1", "on", "true"),
+                    human_min_round_seconds=request.form.get("im_human_min_round_seconds"),
+                    human_max_humans=request.form.get("im_human_max_humans"),
                 )
             except ImConfigError as exc:
                 shutil.rmtree(data_path, ignore_errors=True)
