@@ -226,3 +226,148 @@ def test_population_of_another_platform_is_refused(app, env):
         _post(app, env, exp, pop)
         assert db.session.query(Client).count() == 0
         assert any("incompatible" in m for _, m in env.flashes)
+
+
+# -- real run -------------------------------------------------------------------------------------
+def _start_server(hs, exp, folder, monkeypatch, tmp_path):
+    import os
+    import sys
+    import time
+
+    monkeypatch.setattr(hs, "get_writable_path", lambda *a: str(tmp_path))
+    monkeypatch.setattr(hs, "get_base_path", lambda: str(ROOT))
+    monkeypatch.setattr(hs, "build_subprocess_env", lambda: dict(os.environ))
+    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: sys.executable)
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_external_repo_dir", lambda name: str(ROOT / "external" / name)
+    )
+    hs.start_hpc_server(exp)
+    deadline = time.time() + 120
+    while time.time() < deadline and not (Path(folder) / "ray_ready.temp").exists():
+        time.sleep(0.5)
+    assert (Path(folder) / "ray_ready.temp").exists(), "server never became ready"
+
+
+def _run_client(folder, name, timeout, kill_after=None):
+    import os
+    import subprocess
+    import sys
+    import time
+
+    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.validation import validate_im_folder
+
+    cfg = Path(folder) / f"client_{name}-pop.json"
+    _normalize_im_client_config(str(folder), name, "pop", str(cfg))
+    validate_im_folder(str(folder), str(IM_REPO), client_config=cfg.name)
+    proc = subprocess.Popen(
+        [sys.executable, str(IM_REPO / "run_client.py"), "--config", str(cfg)],
+        env=dict(os.environ), stdout=open(Path(folder) / f'client_{name}.out', 'w'), stderr=subprocess.STDOUT,
+    )
+    if kill_after is not None:
+        time.sleep(kill_after)
+        proc.kill()
+    try:
+        return proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        raise
+
+
+@pytest.mark.external_repo
+@pytest.mark.integration
+def test_one_day_echo_run_through_the_admin_routes(app, env, monkeypatch, tmp_path):
+    import sqlite3
+
+    if not (IM_REPO / "run_server.py").is_file():
+        pytest.skip("YInstantMessaging is not installed")
+    from y_web.src.hpc import server as hs
+
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, days="1")
+        folder = env.im._experiment_folder(exp)
+        _start_server(hs, exp, folder, monkeypatch, tmp_path)
+        try:
+            assert _run_client(folder, "cl", timeout=150) == 0
+            conn = sqlite3.connect(str(Path(folder) / "database_server.db"))
+            rounds = conn.execute("SELECT COUNT(*) FROM rounds").fetchone()[0]
+            conn.close()
+            assert rounds >= 1
+        finally:
+            hs.stop_hpc_server(exp.idexp)
+
+
+def _fingerprint(db_file):
+    """A digest of what the run produced, without the wall-clock columns."""
+    import hashlib
+    import sqlite3
+
+    conn = sqlite3.connect(str(db_file))
+    digest = hashlib.sha256()
+    try:
+        for (table,) in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('run_info') ORDER BY name"
+        ).fetchall():
+            wall = ("created_at", "updated_at", "heartbeat", "timestamp", "opened_at", "closed_at", "applied_at")
+            columns = [
+                c[1]
+                for c in conn.execute(f"PRAGMA table_info({table})").fetchall()
+                # wall-clock columns and auto-increment keys depend on timing, not on the simulation
+                if not any(w in c[1] for w in wall) and not (c[5] and c[2].upper() == "INTEGER")
+            ]
+            if not columns:
+                continue
+            rows = sorted(
+                conn.execute(f"SELECT {', '.join(columns)} FROM {table}").fetchall(), key=repr
+            )
+            digest.update(repr((table, columns, rows)).encode())
+    finally:
+        conn.close()
+    return digest.hexdigest()
+
+
+@pytest.mark.external_repo
+@pytest.mark.integration
+def test_kill_nine_resume_and_server_restart_equal_a_clean_run(app, env, monkeypatch, tmp_path):
+    if not (IM_REPO / "run_server.py").is_file():
+        pytest.skip("YInstantMessaging is not installed")
+    from y_web.src.hpc import server as hs
+
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, days="8")
+        folder = env.im._experiment_folder(exp)
+
+        # clean run
+        _start_server(hs, exp, folder, monkeypatch, tmp_path)
+        try:
+            assert _run_client(folder, "cl", timeout=170) == 0
+        finally:
+            hs.stop_hpc_server(exp.idexp)
+        clean = _fingerprint(Path(folder) / "database_server.db")
+
+        # The same inputs under the same experiment folder name in a second root (the client id, which is
+        # part of every derived id and seed, includes the folder name): killed with SIGKILL, the server
+        # restarted, then resumed.
+        import shutil
+
+        root_b = tmp_path / "root_b"
+        other = root_b / "y_web" / "experiments" / Path(folder).name
+        other.mkdir(parents=True)
+        for name in ("server_config.json", "client_cl-pop.json", "pop.json", "topic_catalog.json", "prompt_language.json"):
+            shutil.copy(Path(folder) / name, other / name)
+        cfg = json.loads((other / "server_config.json").read_text())
+        cfg["database"] = {"type": "sqlite"}
+        (other / "server_config.json").write_text(json.dumps(cfg))
+        _start_server(hs, exp, other, monkeypatch, root_b)
+        try:
+            assert _run_client(other, "cl", timeout=170, kill_after=5) == -9, "the client ended before it was killed: raise the days"
+        finally:
+            hs.stop_hpc_server(exp.idexp)
+        _start_server(hs, exp, other, monkeypatch, root_b)  # exit 6 would show here as a server that never gets ready
+        try:
+            assert _run_client(other, "cl", timeout=170) == 0
+        finally:
+            hs.stop_hpc_server(exp.idexp)
+        assert _fingerprint(other / "database_server.db") == clean
