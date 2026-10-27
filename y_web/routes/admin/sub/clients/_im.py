@@ -34,6 +34,8 @@ from y_web.src.im.client_config import (
     build_page,
     build_topic_catalog,
     check_unique,
+    topic_id,
+    parse_chat_rows,
     parse_client_form,
     schema_errors,
 )
@@ -219,7 +221,10 @@ def create_im_client(exp, name, descr, population_id, form_data):
             percentages[topic.name] = 100.0
 
     try:
-        catalog = build_topic_catalog({t: max(percentages[t], 1.0) / 100.0 for t in topics})
+        chats = parse_chat_rows(form_data, {topic.id: topic.name for _link, topic in topic_rows})
+        catalog = build_topic_catalog(
+            {t: max(percentages[t], 1.0) / 100.0 for t in topics}, chats=chats
+        )
     except ImClientFormError as exc:
         flash(_("Invalid client settings: %(why)s", why=str(exc)), "error")
         return redirect(back)
@@ -278,8 +283,16 @@ def create_im_client(exp, name, descr, population_id, form_data):
         hourly_activity=hourly,
         prompt_language=prompt_language,
     )
-    schema_file = Path(get_external_repo_dir("YInstantMessaging")) / "schemas" / "config" / "client_config.json"
-    problems = schema_errors(config, str(schema_file))
+    # chats typed in the editor make the client's own catalog; otherwise the shared one is used
+    catalog_file = "topic_catalog.json"
+    if catalog.get("chats"):
+        catalog_file = f"topic_catalog_{topic_id(name)}.json"
+        config["telegram"]["topics"]["catalog_file"] = catalog_file
+    schemas = Path(get_external_repo_dir("YInstantMessaging")) / "schemas" / "config"
+    schema_file = schemas / "client_config.json"
+    problems = schema_errors(config, str(schema_file)) + schema_errors(
+        catalog, str(schemas / "topic_catalog.json")
+    )
     if problems:
         flash(
             _("Invalid client settings: %(why)s", why="; ".join(problems[:5])), "error"
@@ -289,6 +302,9 @@ def create_im_client(exp, name, descr, population_id, form_data):
     os.makedirs(exp_dir, exist_ok=True)
     config_filename = _client_config_path_for_platform(exp_dir, exp, name, population.name)
     if os.path.exists(config_filename):
+        flash(_("A client with this name and population already exists."), "error")
+        return redirect(back)
+    if catalog_file != "topic_catalog.json" and os.path.exists(os.path.join(exp_dir, catalog_file)):
         flash(_("A client with this name and population already exists."), "error")
         return redirect(back)
 
@@ -312,19 +328,23 @@ def create_im_client(exp, name, descr, population_id, form_data):
     with open(os.path.join(exp_dir, f"{population.name}.json"), "w", encoding="utf-8") as handle:
         json.dump({"agents": accounts}, handle, indent=2)
 
+    shared = {"topics": catalog["topics"]}
     catalog_path = os.path.join(exp_dir, "topic_catalog.json")
     if not os.path.exists(catalog_path):
         with open(catalog_path, "w", encoding="utf-8") as handle:
-            json.dump(catalog, handle, indent=2)
+            json.dump(shared, handle, indent=2)
     else:
         with open(catalog_path, "r", encoding="utf-8") as handle:
-            if json.load(handle) != catalog:
+            if json.load(handle).get("topics") != shared["topics"]:
                 flash(
                     _(
                         "The experiment already has a topic catalog that differs from the current topics: it was kept, so that existing runs can resume."
                     ),
                     "warning",
                 )
+    if catalog_file != "topic_catalog.json":
+        with open(os.path.join(exp_dir, catalog_file), "w", encoding="utf-8") as handle:
+            json.dump(catalog, handle, indent=2)
     prompt_packs.record_language(exp_dir, client=name, client_language=prompt_language)
 
     if not db.session.scalars(

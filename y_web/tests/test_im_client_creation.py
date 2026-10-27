@@ -476,3 +476,81 @@ def test_kill_nine_resume_and_server_restart_equal_a_clean_run(app, env, monkeyp
         finally:
             hs.stop_hpc_server(exp.idexp)
         assert _fingerprint(other / "database_server.db") == clean
+
+
+def test_chat_rows_become_catalog_chats_with_catalog_topic_ids():
+    from y_web.src.im.client_config import ImClientFormError, build_topic_catalog, parse_chat_rows
+
+    topics = {7: "Climate Change", 8: "health"}
+    form = {
+        "chat.0.title": "Green News", "chat.0.type": "channel", "chat.0.visibility": "public",
+        "chat.0.topic.7": "true", "chat.0.popularity": "2.5", "chat.0.owner": "newsbot", "chat.0.discussion": "true",
+        "chat.1.title": "", "chat.1.type": "group",  # an untouched row
+        "chat.2.title": "Doctors", "chat.2.type": "group", "chat.2.visibility": "private",
+        "chat.2.topic.7": "true", "chat.2.topic.8": "true",
+        "chat.3.title": "Green News", "chat.3.type": "supergroup", "chat.3.topic.8": "true",
+    }
+    chats = parse_chat_rows(form, topics)
+    assert [c["id"] for c in chats] == ["chat-green-news", "chat-doctors", "chat-green-news-2"]
+    assert chats[0] == {"id": "chat-green-news", "type": "channel", "title": "Green News", "visibility": "public",
+                        "topics": ["Climate Change"], "popularity": 2.5, "owner": "page:newsbot", "discussion_group": True}
+    assert chats[1]["visibility"] == "private" and "discussion_group" not in chats[1]
+    catalog = build_topic_catalog({"Climate Change": 1.0, "health": 1.0}, chats=chats)
+    assert catalog["chats"][1]["topics"] == ["climate-change", "health"]
+    schema = json.loads((IM_REPO / "schemas" / "config" / "topic_catalog.json").read_text())
+    import jsonschema
+
+    jsonschema.validate(catalog, schema)
+    for bad in ({"chat.0.title": "x"}, {"chat.0.topic.7": "true"},
+                {"chat.0.title": "x", "chat.0.topic.7": "true", "chat.0.type": "dm"},
+                {"chat.0.title": "x", "chat.0.topic.7": "true", "chat.0.visibility": "secret"}):
+        with pytest.raises(ImClientFormError):
+            parse_chat_rows(bad, topics)
+    assert parse_chat_rows({}, topics) == []
+
+
+def test_chats_typed_in_the_editor_get_their_own_catalog_and_the_shared_one_stays_topics_only(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        from y_web import db
+        from y_web.src.models import Topic_List
+
+        topic_ids = {t.name: t.id for t in db.session.query(Topic_List).all()}
+        _post(app, env, exp, pop, **{
+            "chat.0.title": "Politics Daily", "chat.0.type": "channel", "chat.0.discussion": "true",
+            f"chat.0.topic.{topic_ids['politics']}": "true",
+        })
+        assert not [f for f in env.flashes if f[0] == "error"], env.flashes
+        folder = Path(env.im._experiment_folder(exp))
+        cfg = json.loads((folder / "client_cl-pop.json").read_text())
+        assert cfg["telegram"]["topics"]["catalog_file"] == "topic_catalog_cl.json"
+        own = json.loads((folder / "topic_catalog_cl.json").read_text())
+        assert own["chats"][0]["title"] == "Politics Daily" and own["chats"][0]["topics"] == ["politics"]
+        assert "chats" not in json.loads((folder / "topic_catalog.json").read_text())
+        # without chats the shared catalog is the one the client uses
+        _post(app, env, exp, pop, name="plain")
+        assert json.loads((folder / "client_plain-pop.json").read_text())["telegram"]["topics"]["catalog_file"] == "topic_catalog.json"
+
+
+@pytest.mark.external_repo
+def test_a_client_with_typed_chats_passes_yim_validate(app, env):
+    if not (IM_REPO / "run_server.py").is_file():
+        pytest.skip("YInstantMessaging is not installed")
+    from y_web import db
+    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.validation import validate_im_folder
+    from y_web.src.models import Topic_List
+
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        topic_ids = {t.name: t.id for t in db.session.query(Topic_List).all()}
+        _post(app, env, exp, pop, **{
+            "chat.0.title": "Politics Daily", "chat.0.type": "channel", "chat.0.discussion": "true",
+            f"chat.0.topic.{topic_ids['politics']}": "true",
+            "chat.1.title": "Health Talk", "chat.1.type": "supergroup",
+            f"chat.1.topic.{topic_ids['health']}": "true", f"chat.1.topic.{topic_ids['politics']}": "true",
+        })
+        folder = Path(env.im._experiment_folder(exp))
+        cfg = folder / "client_cl-pop.json"
+        _normalize_im_client_config(str(folder), "cl", "pop", str(cfg))
+        validate_im_folder(str(folder), str(IM_REPO), client_config=cfg.name)

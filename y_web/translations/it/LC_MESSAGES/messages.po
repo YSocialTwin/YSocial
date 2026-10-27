@@ -13915,3 +13915,36 @@ msgstr "Impostazioni del server della simulazione di messaggistica istantanea. L
 
 msgid "The run already started: reset the experiment to change these settings."
 msgstr "L'esecuzione è già iniziata: reimposta l'esperimento per modificare queste impostazioni."
+
+msgid "Add chat"
+msgstr "Aggiungi chat"
+
+msgid "Channel"
+msgstr "Canale"
+
+msgid "Chats by Topic"
+msgstr "Chat per topic"
+
+msgid "Define the channels and groups that exist at the start and the topics each one is about. Without any, IM creates them from the topics and the population: this editor is for designs that need specific chats."
+msgstr "Definisci i canali e i gruppi che esistono all'inizio e i topic di cui parla ciascuno. Senza alcuna riga, IM li crea a partire dai topic e dalla popolazione: questo editor serve ai disegni sperimentali che richiedono chat specifiche."
+
+msgid "Owner (page username, empty = automatic)"
+msgstr "Proprietario (username della pagina, vuoto = automatico)"
+
+msgid "Popularity"
+msgstr "Popolarità"
+
+msgid "Private"
+msgstr "Privata"
+
+msgid "Public"
+msgstr "Pubblica"
+
+msgid "Supergroup"
+msgstr "Supergruppo"
+
+msgid "Visibility"
+msgstr "Visibilità"
+
+msgid "With a discussion group"
+msgstr "Con gruppo di discussione"

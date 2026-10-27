@@ -12077,3 +12077,36 @@ msgstr ""
 
 msgid "The run already started: reset the experiment to change these settings."
 msgstr ""
+
+msgid "Add chat"
+msgstr ""
+
+msgid "Channel"
+msgstr ""
+
+msgid "Chats by Topic"
+msgstr ""
+
+msgid "Define the channels and groups that exist at the start and the topics each one is about. Without any, IM creates them from the topics and the population: this editor is for designs that need specific chats."
+msgstr ""
+
+msgid "Owner (page username, empty = automatic)"
+msgstr ""
+
+msgid "Popularity"
+msgstr ""
+
+msgid "Private"
+msgstr ""
+
+msgid "Public"
+msgstr ""
+
+msgid "Supergroup"
+msgstr ""
+
+msgid "Visibility"
+msgstr ""
+
+msgid "With a discussion group"
+msgstr ""

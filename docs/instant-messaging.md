@@ -20,7 +20,8 @@ result; the simulation itself and its database belong to IM.
    the other platforms: the run (length in days, start date, ticks per round, seed), the language model (the URL of
    an OpenAI-compatible service, *Fetch Models*, model, temperature, maximum tokens), agent memory (only when it is
    on in the experiment), the relevance of each agent action, topic interests, optional hourly activity, and
-   *Advanced Settings* as a structured form (scheduling, topology, topics, attention, reactive replies, discovery,
+   an optional *Chats by Topic* editor (channels and groups that exist at the start, with their topics; they are
+   written to the client's own topic catalog), and *Advanced Settings* as a structured form (scheduling, topology, topics, attention, reactive replies, discovery,
    moderation, archetypes, churn, language-model reliability, logs, and more) with the defaults of IM. The length, the
    start date and the round length are carried into the experiment's server configuration: the first client sets the
    start date and the round length, later clients must agree, and nothing but a longer run can change once the
@@ -87,5 +88,4 @@ up to 4000 characters).
 ## Limits
 
 - Local SQLite only; remote or PostgreSQL IM experiments are refused.
-- Topic-to-chat editing in the client form is not available yet; edit `topic_catalog.json` by hand.
 - Importing an IM zip creates the experiment and its inputs; clients are created again from the form.

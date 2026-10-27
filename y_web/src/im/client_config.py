@@ -54,9 +54,20 @@ def topic_id(name: str) -> str:
     return slug or "topic"
 
 
-def build_topic_catalog(topic_weights: Dict[str, float]) -> Dict[str, Any]:
-    """``topic_catalog.json`` from ``{topic name: weight}``; ids are unique and weights positive."""
-    topics, seen = [], set()
+CHAT_TYPES = ("channel", "supergroup", "group")
+CHAT_VISIBILITIES = ("public", "private")
+MAX_CHAT_ROWS = 200
+
+
+def build_topic_catalog(
+    topic_weights: Dict[str, float], chats: Optional[List[Dict[str, Any]]] = None
+) -> Dict[str, Any]:
+    """``topic_catalog.json`` from ``{topic name: weight}``; ids are unique and weights positive.
+
+    ``chats`` are the catalog chats of :func:`parse_chat_rows` (their ``topics`` are topic *names*, turned into
+    catalog ids here); they are written under ``chats`` and IM creates them when it builds the topology.
+    """
+    topics, seen, ids = [], set(), {}
     for name, weight in topic_weights.items():
         name = str(name).strip()
         if not name:
@@ -66,10 +77,70 @@ def build_topic_catalog(topic_weights: Dict[str, float]) -> Dict[str, Any]:
             tid = f"{topic_id(name)}-{n}"
             n += 1
         seen.add(tid)
+        ids[name] = tid
         topics.append({"id": tid, "label": name, "weight": max(float(weight), 0.01)})
     if not topics:
         raise ImClientFormError("the experiment has no topics: add at least one before creating a client")
-    return {"topics": topics}
+    catalog: Dict[str, Any] = {"topics": topics}
+    if chats:
+        out = []
+        for chat in chats:
+            unknown = [t for t in chat["topics"] if t not in ids]
+            if unknown:
+                raise ImClientFormError(f"chat '{chat['title']}': unknown topic {unknown[0]}")
+            out.append({**chat, "topics": [ids[t] for t in chat["topics"]]})
+        catalog["chats"] = out
+    return catalog
+
+
+def parse_chat_rows(form, topics_by_id: Dict[Any, str]) -> List[Dict[str, Any]]:
+    """The catalog chats typed in the *Chats by Topic* editor (``chat.<row>.<field>`` form fields).
+
+    Each row is a channel or a group with the topics it is about. Rows whose title and topics are both empty are
+    ignored (an untouched row); a row with a title and no topic, or the reverse, is an error that names the row.
+    Returns chats with ``topics`` as topic names, ready for :func:`build_topic_catalog`.
+    """
+    rows = sorted(
+        {int(m.group(1)) for key in form.keys() for m in [re.match(r"^chat\.(\d+)\.", str(key))] if m}
+    )
+    if len(rows) > MAX_CHAT_ROWS:
+        raise ImClientFormError(f"at most {MAX_CHAT_ROWS} chats can be defined here")
+    chats, used = [], set()
+    for position, row in enumerate(rows, start=1):
+        get = lambda field, row=row: (form.get(f"chat.{row}.{field}") or "").strip()  # noqa: E731
+        topics = [name for tid, name in topics_by_id.items() if _flag(form.get(f"chat.{row}.topic.{tid}"))]
+        title = get("title")
+        if not title and not topics:
+            continue
+        if not title or not topics:
+            raise ImClientFormError(f"chat {position}: a title and at least one topic are required")
+        kind = get("type") or "channel"
+        if kind not in CHAT_TYPES:
+            raise ImClientFormError(f"chat '{title}': type must be one of {', '.join(CHAT_TYPES)}")
+        visibility = get("visibility") or "public"
+        if visibility not in CHAT_VISIBILITIES:
+            raise ImClientFormError(f"chat '{title}': visibility must be public or private")
+        chat_id, n = "chat-" + topic_id(title), 2
+        while chat_id in used:
+            chat_id = f"chat-{topic_id(title)}-{n}"
+            n += 1
+        used.add(chat_id)
+        chat: Dict[str, Any] = {
+            "id": chat_id,
+            "type": kind,
+            "title": title,
+            "visibility": visibility,
+            "topics": topics,
+        }
+        if get("popularity"):
+            chat["popularity"] = _num(get("popularity"), f"chat '{title}': popularity", 0, 1e6, None)
+        owner = get("owner")
+        if owner:
+            chat["owner"] = owner if owner.startswith("page:") or owner == "auto" else f"page:{owner}"
+        if kind == "channel" and _flag(form.get(f"chat.{row}.discussion")):
+            chat["discussion_group"] = True
+        chats.append(chat)
+    return chats
 
 
 def split_llm_url(url: Optional[str]) -> Optional[str]:
