@@ -34,9 +34,10 @@ The file is a run artifact: it is left out of clones and downloads and removed b
 | `post_sentiment` | `annotations` of the `sentiment_*` methods with status `ok`; topic = the first topic of the message | rows exist |
 | `agent_opinion` | `agent_opinions` (`tid` is the round) | rows exist |
 | `stress_reward` | `stress_reward` (same columns) | rows exist |
+| `follow` | `chat_members` joined with `chats.owner_account_id`: a member follows the owner of the chat (`follow` at the first join, `unfollow` at the last leave when every membership with that owner ended); the owner's own row is skipped | rows exist |
 
-No table is created for emotions, recommendations or follow relations: IM has none, so those pages keep their
-normal unavailable state. The details page offers a card for a page only when its tables exist, and
+No table is created for emotions or recommendations: IM has none, so those pages keep their normal unavailable
+state. Chat membership is the only relation IM has that looks like a follow, which is why the network page can show it. The details page offers a card for a page only when its tables exist, and
 `Exps.annotations` is extended with `opinions`, `sentiment` and `toxicity` when the derived database holds them, so
 the existing checks of the opinion page pass without a special rule.
 

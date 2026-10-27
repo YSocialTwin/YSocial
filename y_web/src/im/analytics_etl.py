@@ -20,7 +20,8 @@ post_toxicity             annotations of ``toxicity_*`` methods, status ok      
 post_sentiment            annotations of ``sentiment_*`` methods, status ok      rows exist
 agent_opinion             agent_opinions                                         rows exist
 stress_reward             stress_reward (same columns)                           rows exist
-(no table)                emotions, recommendations, follow                      IM has no such data: the pages
+follow                     chat_members (member follows the chat's owner)         rows exist
+(no table)                emotions, recommendations                              IM has no such data: the pages
                                                                                  keep their normal unavailable state
 ========================  =====================================================  ==============================
 
@@ -39,7 +40,7 @@ from typing import Any, Dict, Optional
 
 ANALYTICS_FILE = "analytics_im.db"
 STATUS_FILE = "analytics_im.status.json"
-ANALYTICS_SCHEMA_VERSION = 1
+ANALYTICS_SCHEMA_VERSION = 2
 
 NEGATIVE_EMOJI = {"👎", "💩", "🤮", "🤬", "😢", "😡", "😠"}
 
@@ -263,6 +264,34 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
                 if acc in uid and mid in pid
             ),
         )
+
+        # --- follow: chat membership as "member follows the chat's owner" -------------------
+        round_ids = [r[0] for r in rounds]
+        first_round = round_ids[0] if round_ids else 0
+        round_set = set(round_ids)
+        pairs: Dict[Any, Dict[str, Any]] = {}
+        for owner, member, joined, left in q(
+            "SELECT c.owner_account_id, m.account_id, m.joined_round, m.left_round FROM chat_members m "
+            "JOIN chats c ON c.id = m.chat_id WHERE c.owner_account_id IS NOT NULL "
+            "AND m.account_id != c.owner_account_id ORDER BY m.id"
+        ):
+            if owner not in uid or member not in uid:
+                continue
+            rec = pairs.setdefault((owner, member), {"joined": None, "left": [], "open": False})
+            joined = joined if joined in round_set else first_round
+            rec["joined"] = joined if rec["joined"] is None else min(rec["joined"], joined)
+            if left is None:
+                rec["open"] = True
+            else:
+                rec["left"].append(left if left in round_set else joined)
+        follow_rows = []
+        for (owner, member), rec in sorted(pairs.items(), key=lambda kv: (kv[1]["joined"], kv[0])):
+            base = {"user_id": uid[owner], "follower_id": uid[member]}
+            follow_rows.append({**base, "round": rec["joined"], "action": "follow"})
+            if not rec["open"] and rec["left"]:
+                follow_rows.append({**base, "round": max(rec["left"]), "action": "unfollow"})
+        if round_ids:
+            put(M.Follow, follow_rows)
 
         # --- mentions -----------------------------------------------------------------------
         mention_rounds = dict(q("SELECT id, round_id FROM messages"))

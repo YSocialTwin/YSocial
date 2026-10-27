@@ -83,7 +83,7 @@ def test_tables_exist_only_when_their_data_does(tmp_path):
     tables = _tables(etl.analytics_path(str(path)))
     assert {"rounds", "user_mgmt", "post", "etl_state"} <= tables
     for absent in ("post_toxicity", "post_sentiment", "agent_opinion", "stress_reward", "post_topics",
-                   "post_hashtags", "reactions", "mentions", "post_emotions", "emotions", "recommendations", "follow"):
+                   "post_hashtags", "reactions", "mentions", "post_emotions", "emotions", "recommendations"):
         assert absent not in tables
 
 
@@ -315,3 +315,29 @@ def test_pages_carry_the_note_about_slots_and_messages(pages):
                  "network_analysis"):
         html = client.get(f"/admin/{page}/{exp_id}").data.decode()
         assert 'id="im-analytics-note"' in html and "not directly comparable" in html, page
+
+
+def test_chat_membership_becomes_follow_edges_to_the_chat_owner(folder):
+    from y_web.src.im import analytics_etl as etl
+
+    path, src, _info, _expected = folder
+    with sqlite3.connect(src) as conn:
+        conn.execute(  # the random fixture has no owners: the first member of each chat owns it
+            "UPDATE chats SET owner_account_id = (SELECT account_id FROM chat_members m "
+            "WHERE m.chat_id = chats.id ORDER BY m.id LIMIT 1)"
+        )
+        conn.commit()
+        expected = conn.execute(
+            "SELECT COUNT(*) FROM (SELECT DISTINCT c.owner_account_id, m.account_id FROM chat_members m "
+            "JOIN chats c ON c.id = m.chat_id WHERE c.owner_account_id IS NOT NULL "
+            "AND m.account_id != c.owner_account_id)"
+        ).fetchone()[0]
+    etl.refresh(path, src)
+    target = etl.analytics_path(path)
+    assert expected > 0
+    assert "follow" in _tables(target)
+    with sqlite3.connect(target) as conn:
+        edges = conn.execute("SELECT user_id, follower_id, round, action FROM follow").fetchall()
+        round_ids = {r[0] for r in conn.execute("SELECT id FROM rounds")}
+    assert len({(u, f) for u, f, _r, _a in edges}) == expected
+    assert all(u != f and r in round_ids and a in {"follow", "unfollow"} for u, f, r, a in edges)
