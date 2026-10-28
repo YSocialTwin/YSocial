@@ -929,7 +929,7 @@ def agents_dashboard():
     agent_resource_cards.extend(
         [
             {
-                "title": _("Forum RSS Feeds"),
+                "title": _("News RSS Feeds"),
                 "subtitle": _("Built-in resource"),
                 "icon": "rss",
                 "accent": "#c2410c",

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 15:04+0000\n"
+"POT-Creation-Date: 2026-10-28 15:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4350,9 +4350,6 @@ msgstr ""
 msgid "Forum RSS Feed Assignment"
 msgstr ""
 
-msgid "Forum RSS Feeds"
-msgstr ""
-
 msgid "Forum RSS Resources"
 msgstr ""
 
@@ -6490,6 +6487,9 @@ msgid "News"
 msgstr ""
 
 msgid "News Pages"
+msgstr ""
+
+msgid "News RSS Feeds"
 msgstr ""
 
 msgid "News article content"

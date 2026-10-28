@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 15:04+0000\n"
+"POT-Creation-Date: 2026-10-28 15:05+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -4829,9 +4829,6 @@ msgstr "Risorse di immagini del forum"
 msgid "Forum RSS Feed Assignment"
 msgstr "Assegnazione dei feed RSS del forum"
 
-msgid "Forum RSS Feeds"
-msgstr "Feed RSS del forum"
-
 msgid "Forum RSS Resources"
 msgstr "Risorse RSS del forum"
 
@@ -7164,6 +7161,9 @@ msgstr "Notizie"
 
 msgid "News Pages"
 msgstr "Pagine di notizie"
+
+msgid "News RSS Feeds"
+msgstr "Feed RSS notizie"
 
 msgid "News article content"
 msgstr "Contenuto di un articolo di notizie"
@@ -14873,4 +14873,7 @@ msgstr "✔️ Usa"
 
 #~ msgid "IM"
 #~ msgstr "IM"
+
+#~ msgid "Forum RSS Feeds"
+#~ msgstr "Feed RSS del forum"
 

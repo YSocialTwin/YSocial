@@ -348,4 +348,4 @@ def test_agents_dashboard_lists_flat_tagged_resources(im_app, monkeypatch):
     assert "data-agent-resource-group" not in html and "data-agent-resource-card" in html
     assert 'data-platform-tag="all"' in html  # the agent builder covers both installed platforms
     assert "Forum Image Feeds" not in html  # forum is not installed
-    assert "Forum RSS Feeds" in html  # but its feeds serve IM
+    assert "News RSS Feeds" in html  # but its feeds serve IM
