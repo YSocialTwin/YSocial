@@ -386,3 +386,42 @@ def test_derived_volumes_agree_with_the_yim_analyze_activity_report(folder):
     assert volumes["messages"] == sum(live.values())
     # the derived database keeps deleted messages, so it never counts fewer
     assert all(derived.get(r, 0) >= n for r, n in live.items())
+
+
+def test_initial_opinions_set_before_round_one_are_kept_in_the_first_round(tmp_path):
+    from y_web.src.im import analytics_etl as etl
+
+    path = tmp_path / "init"
+    path.mkdir()
+    src = str(path / "database_server.db")
+    build_random_db(src, seed=3, rounds=10, messages=50)
+    with sqlite3.connect(src) as conn:
+        account = conn.execute("SELECT id FROM accounts WHERE kind = 'agent' LIMIT 1").fetchone()[0]
+        conn.execute("INSERT OR IGNORE INTO topics (id, label, weight, status, origin) VALUES ('t-x', 'X', 1, 'catalog', 'catalog')")
+        conn.execute(
+            "INSERT INTO agent_opinions (account_id, topic_id, value, round_id, cause_message_id, model) "
+            "VALUES (?, 't-x', 0.4, 0, NULL, 'init')",
+            (account,),
+        )
+        conn.commit()
+    etl.refresh(str(path), src)
+    with sqlite3.connect(etl.analytics_path(str(path))) as conn:
+        rows = conn.execute("SELECT tid, opinion FROM agent_opinion").fetchall()
+        first = conn.execute("SELECT MIN(id) FROM rounds").fetchone()[0]
+    assert rows == [(first, 0.4)]
+
+
+def test_the_annotator_error_is_reported_for_the_page(folder, monkeypatch):
+    from y_web.src.im import analytics
+
+    path, src, info, expected = folder
+    with sqlite3.connect(src) as conn:
+        conn.execute("UPDATE annotations SET status = 'error', value = '{\"error\": \"vaderSentiment is not installed\"}' WHERE method_ref LIKE 'sentiment%'")
+        conn.commit()
+
+    class Exp:
+        db_name = "experiments/exp/database_server.db"
+
+    monkeypatch.setattr(analytics, "source_path", lambda exp: src)
+    assert "vaderSentiment is not installed" in analytics.annotation_problem(Exp(), "sentiment")
+    assert analytics.annotation_problem(Exp(), "toxicity") == ""

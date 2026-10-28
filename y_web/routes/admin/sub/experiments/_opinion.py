@@ -7570,6 +7570,16 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
 }
 
 
+def _im_annotation_problem(experiment, label):
+    """For an instant messaging experiment: the error its annotator stored (a missing library, say), else ''."""
+    try:
+        from y_web.src.im import analytics as im_analytics, is_im_experiment
+
+        return im_analytics.annotation_problem(experiment, label) if is_im_experiment(experiment) else ""
+    except Exception:  # noqa: BLE001 - an explanation is a convenience
+        return ""
+
+
 def _render_annotation_analytics_page(expid, annotation_key):
     config = _ANNOTATION_ANALYTICS_REGISTRY[annotation_key]
     declared_title = config["title"]  # declared with N_ in the registry
@@ -7596,6 +7606,15 @@ def _render_annotation_analytics_page(expid, annotation_key):
             ),
             "warning",
         )
+        problem = _im_annotation_problem(experiment, config["label"])
+        if problem:
+            flash(
+                _(
+                    "The annotator reported: %(error)s. Install or fix it in the environment that runs the simulation and restart it.",
+                    error=problem,
+                ),
+                "error",
+            )
         return redirect(url_for("experiments.experiment_details", uid=expid))
 
     max_day, max_hour = _get_annotation_max_round(db_path)

@@ -382,19 +382,25 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
         put(M.Post_Sentiment, sent)
 
         # --- opinions, stress/reward ----------------------------------------------------------
+        first_round = min(round_ids) if round_ids else 0
+
+        def opinion_round(rnd):
+            """The initial opinions (set at creation, before round 1) are placed in the first round."""
+            return rnd if rnd in round_ids else (first_round if rnd is not None and rnd < first_round else None)
+
         put(
             M.Agent_Opinion,
             (
                 {
                     "agent_id": uid[acc],
-                    "tid": rnd,
+                    "tid": opinion_round(rnd),
                     "topic_id": tid[topic],
                     "id_interacted_with": -1,
                     "id_post": pid.get(cause, -1) if cause else -1,
                     "opinion": float(value),
                 }
                 for acc, topic, value, rnd, cause in opinion_rows
-                if acc in uid and topic in tid and rnd in round_ids
+                if acc in uid and topic in tid and opinion_round(rnd) is not None
             ),
         )
         put(

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:54+0000\n"
+"POT-Creation-Date: 2026-10-28 14:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10248,6 +10248,12 @@ msgid ""
 msgstr ""
 
 msgid "The algorithm that picks the posts in your feed"
+msgstr ""
+
+#, python-format
+msgid ""
+"The annotator reported: %(error)s. Install or fix it in the environment "
+"that runs the simulation and restart it."
 msgstr ""
 
 msgid ""

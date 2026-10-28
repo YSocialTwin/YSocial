@@ -90,3 +90,32 @@ def cards(exp) -> Dict[str, Any]:
         "recsys": "recommendations" in tables,
         "state": state(exp),
     }
+
+
+def annotation_problem(exp, prefix: str) -> str:
+    """Why an annotation page has no data: the error the annotator reported in IM's database (empty when none).
+
+    Annotator errors (a missing library, an unreachable model) are stored on the annotation rows, not shown anywhere
+    else; the first distinct message of the method family is returned.
+    """
+    import json
+    import sqlite3
+
+    path = source_path(exp)
+    if not os.path.isfile(path):
+        return ""
+    try:
+        with sqlite3.connect(f"file:{path}?mode=ro", uri=True) as conn:
+            rows = conn.execute(
+                "SELECT value FROM annotations WHERE status = 'error' AND method_ref LIKE ? LIMIT 20", (prefix + "%",)
+            ).fetchall()
+    except sqlite3.Error:
+        return ""
+    for (raw,) in rows:
+        try:
+            message = json.loads(raw).get("error")
+        except (TypeError, ValueError, AttributeError):
+            message = None
+        if message:
+            return str(message)
+    return ""
