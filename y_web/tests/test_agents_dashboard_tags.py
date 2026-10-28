@@ -34,9 +34,9 @@ def tags(app, installed):
 def test_a_resource_for_every_installed_platform_is_tagged_all(app):
     result = tags(app, ["microblogging", "forum", "instant_messaging"])
     assert result["Agents"] == ["All"]
-    assert result["RSS"] == ["Forum", "IM"]
+    assert result["RSS"] == ["Forum", "Instant Messaging"]
     assert result["Images"] == ["Forum"]
-    assert result["Pages"] == ["Microblogging", "IM"]
+    assert result["Pages"] == ["Microblogging", "Instant Messaging"]
 
 
 def test_tags_only_name_installed_platforms_and_hide_unusable_resources(app):
@@ -44,7 +44,7 @@ def test_tags_only_name_installed_platforms_and_hide_unusable_resources(app):
     assert tags(app, ["microblogging", "forum"])["RSS"] == ["Forum"]
     # forum not installed: forum-only resources disappear
     result = tags(app, ["microblogging", "instant_messaging"])
-    assert "Images" not in result and result["RSS"] == ["IM"] and result["Pages"] == ["All"]
+    assert "Images" not in result and result["RSS"] == ["Instant Messaging"] and result["Pages"] == ["All"]
 
 
 def test_a_single_installed_platform_is_named_not_all(app):

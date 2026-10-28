@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 15:01+0000\n"
+"POT-Creation-Date: 2026-10-28 15:04+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -5484,9 +5484,6 @@ msgstr "Modelli ibridi"
 
 msgid "I have read this, continue"
 msgstr "Ho letto, continua"
-
-msgid "IM"
-msgstr "IM"
 
 msgid "ISTI-CNR"
 msgstr "ISTI-CNR"
@@ -14873,4 +14870,7 @@ msgstr "✔️ Usa"
 
 #~ msgid "Plugin-backed resource"
 #~ msgstr "Risorsa fornita da un plugin"
+
+#~ msgid "IM"
+#~ msgstr "IM"
 

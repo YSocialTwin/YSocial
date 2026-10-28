@@ -104,7 +104,7 @@ _PLATFORMS = {
     "microblogging": (N_("Microblogging"), (("microblogging_server", "microblogging_client"), ("hpc_simulator",))),
     "forum": (N_("Forum"), (("forum_server", "forum_client"),)),
     "photo_sharing": (N_("Photo sharing"), (("photo_sharing",),)),
-    "instant_messaging": (N_("IM"), (("instant_messaging",),)),
+    "instant_messaging": (N_("Instant Messaging"), (("instant_messaging",),)),
 }
 
 

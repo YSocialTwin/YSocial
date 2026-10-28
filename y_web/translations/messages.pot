@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 15:01+0000\n"
+"POT-Creation-Date: 2026-10-28 15:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4944,9 +4944,6 @@ msgid "Hybrid Models"
 msgstr ""
 
 msgid "I have read this, continue"
-msgstr ""
-
-msgid "IM"
 msgstr ""
 
 msgid "ISTI-CNR"
