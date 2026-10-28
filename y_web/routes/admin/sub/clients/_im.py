@@ -349,7 +349,13 @@ def create_im_client(exp, name, descr, population_id, form_data):
             json.dump(shared, handle, indent=2)
     else:
         with open(catalog_path, "r", encoding="utf-8") as handle:
-            if json.load(handle).get("topics") != shared["topics"]:
+            differs = json.load(handle).get("topics") != shared["topics"]
+        if differs and catalog_file == "topic_catalog.json":  # a client with its own catalog never reads the shared one
+            if not run_started(exp_dir) and not db.session.query(Client).filter_by(id_exp=exp.idexp).count():
+                # nothing depends on the old catalog (no run, no other client, e.g. the previous client was deleted)
+                with open(catalog_path, "w", encoding="utf-8") as handle:
+                    json.dump(shared, handle, indent=2)
+            else:
                 flash(
                     _(
                         "The experiment already has a topic catalog that differs from the current topics: it was kept, so that existing runs can resume."

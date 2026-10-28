@@ -595,3 +595,52 @@ def test_news_feeds_become_pages_and_the_mode_and_snapshot_follow_the_form(app, 
         _post(app, env, exp, pop, name="cl2", news_mode="live")
         cfg2 = json.loads(Path(folder, "client_cl2-pop.json").read_text())
         assert cfg2["telegram"]["news"]["mode"] == "live" and len(calls) == 1
+
+
+def _topic_ids(exp):
+    from y_web import db
+    from y_web.src.models import Exp_Topic, Topic_List
+
+    rows = (db.session.query(Topic_List).join(Exp_Topic, Exp_Topic.topic_id == Topic_List.id)
+            .filter(Exp_Topic.exp_id == exp.idexp).all())
+    return {t.name: t.id for t in rows}
+
+
+def _stale_catalog(env, exp):
+    folder = Path(env.im._experiment_folder(exp))
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "topic_catalog.json").write_text(json.dumps({"topics": [{"id": "old", "label": "old", "weight": 1.0}]}))
+    return folder
+
+
+def test_a_leftover_catalog_is_replaced_when_nothing_depends_on_it(app, env):
+    """The previous client was deleted and nothing ran: its catalog must not block (or warn about) the new one."""
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        folder = _stale_catalog(env, exp)
+        _post(app, env, exp, pop)
+        assert not [f for f in env.flashes if f[0] in ("error", "warning")], env.flashes
+        labels = [t["label"] for t in json.loads((folder / "topic_catalog.json").read_text())["topics"]]
+        assert labels == ["politics", "health"]
+
+
+def test_a_client_with_its_own_catalog_is_not_warned_about_the_shared_one(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _stale_catalog(env, exp)
+        politics = _topic_ids(exp)["politics"]
+        _post(app, env, exp, pop, **{"chat.0.title": "Debate", "chat.0.type": "supergroup",
+                                     f"chat.0.topic.{politics}": "true"})
+        assert not [f for f in env.flashes if f[0] in ("error", "warning")], env.flashes
+
+
+def test_the_shared_catalog_is_kept_with_a_warning_once_other_clients_use_it(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop)  # the first client writes the shared catalog
+        folder = Path(env.im._experiment_folder(exp))
+        before = (folder / "topic_catalog.json").read_text()
+        env.flashes.clear()
+        _post(app, env, exp, pop, name="cl2", **{f"topic_interest_{_topic_ids(exp)['politics']}": "40"})
+        assert any("topic catalog" in m for _, m in env.flashes), env.flashes
+        assert (folder / "topic_catalog.json").read_text() == before
