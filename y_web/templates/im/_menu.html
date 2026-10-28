@@ -65,6 +65,7 @@
         <button type="submit">{{ _('Join') }}</button>
       </form>
       {% endif %}
+      <a role="menuitem" class="im-menu-item" id="im-logout" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a>
     </div>
     {% endif %}
   </div>
