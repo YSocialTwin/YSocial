@@ -261,3 +261,26 @@ def test_memory_embeddings_are_configured_for_im_like_the_other_platforms(im_app
     saved = json.loads((exp_dir / "server_config.json").read_text())
     assert saved["memory_embeddings"] == {"service": "ollama", "host": "http://box:11434", "model": "m"}
     assert saved["memory"] == {"enabled": True}
+
+
+@pytest.mark.parametrize("switch, status", [(True, 200), (False, 302)])
+def test_stress_reward_settings_follow_the_experiment_switch(im_app, tmp_path, switch, status):
+    """The configuration page opens when the switch is on, whether or not the run has produced results yet."""
+    import json
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    from y_web import db
+    from y_web.src.models import Exps
+
+    with app.app_context():
+        uid = db.session.get(Exps, exp_id).db_name.split("/")[1]
+    folder = tmp_path / "y_web" / "experiments" / uid
+    folder.mkdir(parents=True)
+    (folder / "server_config.json").write_text(json.dumps({"stress_reward_enabled": switch}))
+    response = client.get(f"/admin/stress_reward_settings/{exp_id}")
+    assert response.status_code == status, response.data[:500]
+    if status == 302:
+        assert f"experiment_details/{exp_id}" in response.headers["Location"]
+    else:
+        assert b"Traceback" not in response.data

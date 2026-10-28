@@ -761,8 +761,14 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     return experiment, experiment_dir, None
 
 
-def _load_stress_reward_experiment_context(uid, require_manage=True):
-    """Load a stress/reward-enabled experiment and its directory."""
+def _load_stress_reward_experiment_context(uid, require_manage=True, for_settings=None):
+    """Load a stress/reward-enabled experiment and its directory.
+
+    ``for_settings`` (default: the same as ``require_manage``) tells the configuration pages from the results pages:
+    an instant messaging experiment is configured whenever its switch is on, but has results only once its derived
+    database holds stress/reward rows."""
+    if for_settings is None:
+        for_settings = require_manage
     check_privileges(current_user.username)
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
@@ -819,11 +825,17 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
     stress_enabled = bool(stress_reward_cfg.get("enabled", False))
     if experiment.platform_type == "instant_messaging":
-        # IM's own configuration decides; the page is offered when the derived database holds stress/reward rows
-        from y_web.src.im import analytics as im_analytics
+        if for_settings:
+            # the configuration page follows the switch of the experiment page (IM's own keys as fallback)
+            from y_web.src.im.experiment_config import load_server_config, read_switches
 
-        im_analytics.ensure_derived(experiment)
-        stress_enabled = im_analytics.cards(experiment)["stress_reward"]
+            stress_enabled = read_switches(load_server_config(experiment_dir))["stress_reward"]
+        else:
+            # the results are offered when the derived database holds stress/reward rows
+            from y_web.src.im import analytics as im_analytics
+
+            im_analytics.ensure_derived(experiment)
+            stress_enabled = im_analytics.cards(experiment)["stress_reward"]
     if not stress_enabled:
         flash(_("Enable stress/reward in Experiment Configuration first."), "warning")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
