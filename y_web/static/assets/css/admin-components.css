@@ -3663,3 +3663,117 @@ input:checked + .slider:before {
 .dash-section .dash-module-meta { font-size: .7rem; }
 .dash-section .dash-module-toggle { height: 1.8em; padding: 0 .65em; font-size: .72rem; }
 .dash-section .dash-module-empty { margin: 0; font-size: .78rem; }
+
+
+/* Agent resources dashboard: platform filter and resource cards (built on the analytics page cards) */
+.ys-resource-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px 16px;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+}
+
+.ys-resource-counters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.ys-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 0.7rem;
+}
+
+.ys-filter-chips-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    margin-right: 2px;
+}
+
+.ys-filter-chip {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #334155;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ys-filter-chip:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.ys-filter-chip.is-active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+}
+
+.ys-filter-chip-count {
+    opacity: 0.7;
+    font-weight: 500;
+    margin-left: 2px;
+}
+
+.ys-resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 8px;
+}
+
+.ys-resource-card {
+    align-items: flex-start;
+}
+
+.ys-resource-card .ys-analytics-page-body {
+    gap: 3px;
+}
+
+.ys-resource-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.ys-resource-tag {
+    font-size: 0.64rem;
+    font-weight: 600;
+    line-height: 1.5;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #dbeafe;
+}
+
+.ys-resource-tag.is-all {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #dcfce7;
+}
+
+.ys-resource-tag.is-plugin {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border-color: #ede9fe;
+}
+
+.ys-resource-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

@@ -8,54 +8,47 @@
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box" id="agents-dashboard-hero" style="border: 1px solid #dbe3ef;">
-                        <div class="box-content" style="padding: 10px 14px; display: flex; justify-content: space-between; gap: 10px 16px; align-items: center; flex-wrap: wrap;">
+                    <div class="dashboard-box" id="agents-dashboard-hero">
+                        <div class="ys-resource-head">
                             <div>
-                                <h2 class="title is-5" style="margin: 0; color: #0f172a;">{{ _('Agent Resources Dashboard') }}</h2>
-                                <div class="ys-text-xs-hint" style="margin-top: 2px;">{{ _('Build the agents and information sources that populate your simulations.') }}</div>
+                                <h3 class="title is-5 is-thin">{{ _('Agent Resources Dashboard') }}</h3>
+                                <p class="ys-analytics-pages-intro" style="margin-bottom: 0;">{{ _('Build the agents and information sources that populate your simulations.') }}</p>
                             </div>
-                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <div class="ys-resource-counters">
                                 <span class="badge badge-info">{{ _('%(n)s populations', n=agent_resources_summary.total_populations) }}</span>
                                 <span class="badge badge-success">{{ _('%(n)s activity profiles', n=agent_resources_summary.activity_profiles) }}</span>
                                 <span class="badge badge-warning">{{ _('%(n)s plugin types', n=agent_resources_summary.plugin_agent_types) }}</span>
                             </div>
                         </div>
+
                         {% if platform_filters|length > 1 %}
-                        <div class="box-content" id="agents-platform-filter" style="padding: 0 14px 10px 14px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-                            <span class="ys-text-xs-hint">{{ _('Platform') }}</span>
-                            <button type="button" class="button is-small is-solid primary-button" data-platform-filter="all">{{ _('All') }} ({{ agent_resource_cards|length }})</button>
+                        <div class="ys-filter-chips" id="agents-platform-filter" role="group" aria-label="{{ _('Platform') }}">
+                            <span class="ys-filter-chips-label">{{ _('Platform') }}</span>
+                            <button type="button" class="ys-filter-chip is-active" data-platform-filter="all">{{ _('All') }} <span class="ys-filter-chip-count">{{ agent_resource_cards|length }}</span></button>
                             {% for f in platform_filters %}
-                            <button type="button" class="button is-small" data-platform-filter="{{ f.key }}">{{ f.label }} ({{ f.count }})</button>
+                            <button type="button" class="ys-filter-chip" data-platform-filter="{{ f.key }}">{{ f.label }} <span class="ys-filter-chip-count">{{ f.count }}</span></button>
                             {% endfor %}
                         </div>
                         {% endif %}
-                    </div>
-                </div>
-            </div>
 
-            <div class="columns is-multiline is-variable is-2" id="agents-resource-grid">
-                {% for card in agent_resource_cards %}
-                <div class="column is-4" data-agent-resource-item data-platforms="{{ card.platforms|join(' ') }}">
-                    <div class="dashboard-box" data-agent-resource-card style="height: 100%; border: 1px solid {{ card.border }}; background: {{ card.surface }};">
-                        <div class="box-content" style="padding: 8px 10px; display: flex; flex-direction: column; height: 100%; gap: 5px;">
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; background: {{ card.accent }};">
-                                    <i data-feather="{{ card.icon }}" style="width: 12px; height: 12px; color: white;"></i>
+                        <div class="ys-resource-grid" id="agents-resource-grid">
+                            {% for card in agent_resource_cards %}
+                            <a href="{{ card.cta_href }}" class="ys-analytics-page-card ys-resource-card {{ card.tone }}" data-agent-resource-card data-agent-resource-item data-platforms="{{ card.platforms|join(' ') }}" title="{{ card.cta_label }}">
+                                <span class="ys-analytics-page-icon"><i class="mdi {{ card.icon }}"></i></span>
+                                <span class="ys-analytics-page-body">
+                                    <span class="ys-analytics-page-title">{{ card.title }}</span>
+                                    <span class="ys-resource-tags" data-platform-tags>
+                                        {% for tag in card.platform_tags %}<span class="ys-resource-tag{% if tag.key == 'all' %} is-all{% endif %}" data-platform-tag="{{ tag.key }}">{{ tag.label }}</span>{% endfor %}
+                                        {% if card.is_plugin %}<span class="ys-resource-tag is-plugin">{{ _('Plugin') }}</span>{% endif %}
+                                    </span>
+                                    <span class="ys-analytics-page-meta ys-resource-desc">{{ card.description }}</span>
                                 </span>
-                                <h3 class="title is-6" style="margin: 0; color: #0f172a; line-height: 1.2; flex: 1;">{{ card.title }}</h3>
-                                <a href="{{ card.cta_href }}" class="button is-small is-solid primary-button" style="flex: none;">{{ card.cta_label }}</a>
-                            </div>
-                            <div data-platform-tags style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                {% for tag in card.platform_tags %}
-                                <span class="badge {% if tag.key == 'all' %}badge-success{% else %}badge-info{% endif %}" data-platform-tag="{{ tag.key }}">{{ tag.label }}</span>
-                                {% endfor %}
-                                {% if card.is_plugin %}<span class="badge badge-secondary">{{ _('Plugin') }}</span>{% endif %}
-                            </div>
-                            <p class="ys-text-sm-muted" style="line-height: 1.3; margin: 0; font-size: 0.8rem;">{{ card.description }}</p>
+                                <span class="ys-analytics-page-action">{{ _('Open') }}</span>
+                            </a>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
 
             <script>
@@ -65,8 +58,7 @@
                 var items = document.querySelectorAll('[data-agent-resource-item]');
                 function apply(key) {
                     buttons.forEach(function (b) {
-                        b.classList.toggle('is-solid', b.dataset.platformFilter === key);
-                        b.classList.toggle('primary-button', b.dataset.platformFilter === key);
+                        b.classList.toggle('is-active', b.dataset.platformFilter === key);
                     });
                     items.forEach(function (item) {
                         var on = key === 'all' || (' ' + item.dataset.platforms + ' ').indexOf(' ' + key + ' ') !== -1;

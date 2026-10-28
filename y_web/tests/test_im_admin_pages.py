@@ -366,3 +366,15 @@ def test_agents_dashboard_filters_by_platform(im_app, monkeypatch):
     # with one platform there is nothing to filter
     monkeypatch.setattr(module, "_runtime_installed", lambda key: key == "instant_messaging")
     assert 'id="agents-platform-filter"' not in client.get("/admin/agents_dashboard").data.decode()
+
+
+def test_im_details_page_has_no_ad_hoc_agent_clients(im_app, monkeypatch):
+    """Plugin agents need the post/user_mgmt tables of the microblogging and forum databases; IM has others."""
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    html = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    assert "adhoc-agent-clients-section" not in html

@@ -21,7 +21,7 @@ CARDS = [
     {"title": "Agents", "deployment_tags": ["microblogging", "forum", "photo_sharing", "instant_messaging"]},
     {"title": "RSS", "deployment_tags": ["forum", "instant_messaging"]},
     {"title": "Images", "deployment_tags": ["forum"]},
-    {"title": "Pages", "deployment_tags": ["microblogging", "instant_messaging"]},
+    {"title": "Pages", "deployment_tags": ["microblogging", "forum", "photo_sharing", "instant_messaging"]},
 ]
 
 
@@ -36,7 +36,7 @@ def test_a_resource_for_every_installed_platform_is_tagged_all(app):
     assert result["Agents"] == ["All"]
     assert result["RSS"] == ["Forum", "Instant Messaging"]
     assert result["Images"] == ["Forum"]
-    assert result["Pages"] == ["Microblogging", "Instant Messaging"]
+    assert result["Pages"] == ["All"]
 
 
 def test_tags_only_name_installed_platforms_and_hide_unusable_resources(app):
@@ -48,7 +48,7 @@ def test_tags_only_name_installed_platforms_and_hide_unusable_resources(app):
 
 
 def test_a_single_installed_platform_is_named_not_all(app):
-    assert tags(app, ["forum"]) == {"Agents": ["Forum"], "RSS": ["Forum"], "Images": ["Forum"]}
+    assert tags(app, ["forum"]) == {"Agents": ["Forum"], "RSS": ["Forum"], "Images": ["Forum"], "Pages": ["Forum"]}
 
 
 def test_nothing_installed_shows_nothing(app):
@@ -61,3 +61,12 @@ def test_platforms_installed_follow_the_runtimes(monkeypatch):
     assert module._installed_platforms() == ["microblogging", "instant_messaging"]  # forum needs server and client
     monkeypatch.setattr(module, "_runtime_installed", lambda key: key == "hpc_simulator")
     assert module._installed_platforms() == ["microblogging"]
+
+
+def test_plugin_agent_types_default_to_the_platforms_with_the_tables_they_write(monkeypatch):
+    """Plugin agents write ``post`` / ``user_mgmt`` (YServer layout): microblogging and forum, not photos or IM."""
+    specs = module._plugin_agent_specs()
+    if not specs:
+        pytest.skip("agent plugins not installed")
+    for spec in specs:
+        assert set(spec["platforms"]) <= {"microblogging", "forum"}, spec["agent_type"]

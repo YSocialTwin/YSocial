@@ -108,6 +108,13 @@ _PLATFORMS = {
 }
 
 
+# Ad hoc (plugin) agents write straight into the experiment database in the YServer layout: ``post``, ``user_mgmt``,
+# ``rounds``, ``reactions``, ``follow``, ``mentions``, hashtags/topics, plus ``stress_reward``, ``agent_opinion``,
+# ``reported`` and ``sys_messages`` (created on demand). Only the microblogging and forum servers have that layout;
+# photo sharing stores ``photos`` instead of ``post`` and instant messaging owns a different schema.
+_PLUGIN_AGENT_PLATFORMS = ("microblogging", "forum")
+
+
 def _installed_platforms() -> list[str]:
     """The platforms whose runtime is installed (and visible to this admin), in a fixed order."""
     return [
@@ -207,8 +214,10 @@ def _plugin_agent_specs() -> list[dict]:
                     "parameter_sections": entry.get("parameter_sections", []) or [],
                     "repo_name": repo_name,
                     "manifest_path": str(manifest_path),
-                    # where the agent type can be deployed: the manifest's "platforms", every platform when absent
-                    "platforms": [p for p in (entry.get("platforms") or []) if p in _PLATFORMS] or list(_PLATFORMS),
+                    # where the agent type can be deployed: the manifest's "platforms", else the platforms whose
+                    # database has the tables plugin agents write to (``post``, ``user_mgmt``: microblogging, forum)
+                    "platforms": [p for p in (entry.get("platforms") or []) if p in _PLATFORMS]
+                    or list(_PLUGIN_AGENT_PLATFORMS),
                 }
             )
     return specs
@@ -275,10 +284,8 @@ def _discover_plugin_agent_types() -> list[dict]:
             {
                 "title": spec["display_name"],
                 "subtitle": _("Plugin agent type · %(repo)s", repo=spec["repo_name"]),
-                "icon": "package",
-                "accent": "#7c3aed",
-                "surface": "linear-gradient(135deg, #faf5ff 0%, #f5f3ff 55%, #ffffff 100%)",
-                "border": "#ddd6fe",
+                "icon": "mdi-puzzle-outline",
+                "tone": "is-primary",
                 "description": spec["description"],
                 "highlights": [
                     _("Type id: %(id)s", id=spec["agent_type"]),
@@ -863,10 +870,8 @@ def agents_dashboard():
         {
             "title": _("Synthetic Agents"),
             "subtitle": _("Built-in resource"),
-            "icon": "cpu",
-            "accent": "#0f766e",
-            "surface": "linear-gradient(135deg, #ecfeff 0%, #f0fdfa 55%, #ffffff 100%)",
-            "border": "#99f6e4",
+            "icon": "mdi-robot-outline",
+            "tone": "is-success",
             "description": _(
                 "Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives."
             ),
@@ -897,10 +902,8 @@ def agents_dashboard():
             {
                 "title": _("News Pages"),
                 "subtitle": _("Built-in resource"),
-                "icon": "file-text",
-                "accent": "#1d4ed8",
-                "surface": "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #ffffff 100%)",
-                "border": "#bfdbfe",
+                "icon": "mdi-newspaper-variant-outline",
+                "tone": "is-link",
                 "description": _(
                     "Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents."
                 ),
@@ -921,7 +924,7 @@ def agents_dashboard():
                     "Configure page identity, leaning, feed sources, and upload page collections in bulk."
                 ),
                 "meta": {},
-                "deployment_tags": ["microblogging", "instant_messaging"],
+                "deployment_tags": ["microblogging", "forum", "photo_sharing", "instant_messaging"],
                 "is_plugin": False,
             }
         )
@@ -931,10 +934,8 @@ def agents_dashboard():
             {
                 "title": _("News RSS Feeds"),
                 "subtitle": _("Built-in resource"),
-                "icon": "rss",
-                "accent": "#c2410c",
-                "surface": "linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%)",
-                "border": "#fdba74",
+                "icon": "mdi-rss-box",
+                "tone": "is-warning",
                 "description": _(
                     "Validate and register reusable RSS news sources. Once saved, the same feed can be assigned to multiple experiments, on every platform that shares news."
                 ),
@@ -958,10 +959,8 @@ def agents_dashboard():
             {
                 "title": _("Forum Image Feeds"),
                 "subtitle": _("Built-in resource"),
-                "icon": "image",
-                "accent": "#7c3aed",
-                "surface": "linear-gradient(135deg, #f5f3ff 0%, #faf5ff 55%, #ffffff 100%)",
-                "border": "#c4b5fd",
+                "icon": "mdi-image-multiple-outline",
+                "tone": "is-info",
                 "description": _(
                     "Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion."
                 ),

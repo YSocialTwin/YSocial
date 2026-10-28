@@ -756,6 +756,8 @@ def experiment_details(uid):
 
     has_agent_plugins_installed = (
         bool(installed_agent_plugin_names)
+        # plugin agents write to the YServer-layout tables (post, user_mgmt): microblogging and forum only
+        and experiment.platform_type in ("microblogging", "forum")
         and experiment.is_remote == 0
         and bool(llm_agents_enabled_effective)
         and not bool(configuration_update_required)
