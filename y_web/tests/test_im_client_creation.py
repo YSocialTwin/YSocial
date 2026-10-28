@@ -573,3 +573,25 @@ def test_with_opinion_dynamics_on_the_new_client_goes_to_its_opinion_page(app, e
         client = db.session.query(Client).filter_by(name="cl2").one()
         assert response.status_code == 302
         assert "opinion_configuration_im" in response.location and client.id
+
+
+def test_news_feeds_become_pages_and_the_mode_and_snapshot_follow_the_form(app, env, monkeypatch):
+    from y_web.src.im import news
+
+    calls = []
+    monkeypatch.setattr(news, "write_snapshot", lambda folder, urls, **k: calls.append(sorted(urls)) or {"articles": 3, "feeds": {}, "written": True})
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        folder = env.im._experiment_folder(exp)
+        Path(folder, "rss_feeds.json").write_text(json.dumps([{"name": "BBC", "feed_url": "http://bbc/rss"}]))
+        _post(app, env, exp, pop, news_mode="snapshot", news_pages_from_feeds="1")
+        assert not [f for f in env.flashes if f[0] == "error"], env.flashes
+        cfg = json.loads(Path(folder, "client_cl-pop.json").read_text())
+        assert cfg["telegram"]["news"]["mode"] == "snapshot"
+        pages = [a for a in json.loads(Path(folder, "pop.json").read_text())["agents"] if a.get("is_page")]
+        assert sorted(p["feed_url"] for p in pages) == ["http://bbc/rss", "http://f"]
+        assert calls == [["http://bbc/rss", "http://f"]]
+        # live mode reads the feeds at start: no snapshot is written, and no feed page without the box ticked
+        _post(app, env, exp, pop, name="cl2", news_mode="live")
+        cfg2 = json.loads(Path(folder, "client_cl2-pop.json").read_text())
+        assert cfg2["telegram"]["news"]["mode"] == "live" and len(calls) == 1

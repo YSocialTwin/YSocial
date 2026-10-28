@@ -202,6 +202,21 @@
                                 </div>
                                 {% endif %}
 
+                                {% if experiment_details_variant == 'im' %}
+                                <div class="box-line">
+                                    <span class="left">{{ _('News feeds (RSS)') }}</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="{{ _('Select RSS Feeds') }}">
+ <i class="mdi mdi-rss-box ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="{{ _('Only owner/admin/shared researchers can edit forum feeds') }}"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+
                                 {% if memory_configuration_supported and memory_module_enabled %}
                                 <div class="box-line">
                                     <span class="left">{{ _('Memory Embeddings') }}</span>

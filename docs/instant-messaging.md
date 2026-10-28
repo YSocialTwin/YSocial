@@ -116,6 +116,18 @@ How it works, and what to keep in mind:
 The researcher can write a short notice, shown once before the first entry (frontend setting *participant notice*,
 up to 4000 characters).
 
+## News from RSS feeds
+
+News pages (agents with `is_page` and a `feed_url`) share the articles of their feed in the channels. Configuration reuses the forum's RSS resources:
+
+1. Open **Feed RSS** from the experiment page and select the feeds (same page and `rss_feeds.json` as the forum; `url_feeds.txt` is not written for IM).
+2. In the client form, section **News**, choose the source: `snapshot` (fixed articles, reproducible, no network) or `live` (the runtime reads the feeds at start). Tick *News page for each selected feed* to add a page per feed next to the pages that come from the population.
+3. For `snapshot`, use **Fetch the feeds and write the snapshot** on the Feed RSS page: it writes `news_snapshot.jsonl` in the experiment folder. Once the run has started (the database exists) the news are locked: reset the experiment to change them.
+
+## Opinion dynamics
+
+IM uses the same opinion page as the other clients. Besides the model, its parameters (`epsilon`, `mu`, `theta`, `cold_start`, `evaluation_scope`) and the opinion groups, the page sets `inject_into_prompt` (show the agent its current opinion) and `topic_source` (`intended` or `annotated`; the latter needs topic annotation on).
+
 ## Limits
 
 - Local SQLite only; remote or PostgreSQL IM experiments are refused.

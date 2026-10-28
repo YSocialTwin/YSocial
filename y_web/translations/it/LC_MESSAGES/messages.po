@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:32+0000\n"
+"POT-Creation-Date: 2026-10-27 18:11+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -142,6 +142,10 @@ msgstr "%(n)s profili di attività"
 #, python-format
 msgid "%(n)s configurable values"
 msgstr "%(n)s valori configurabili"
+
+#, python-format
+msgid "%(n)s feeds selected"
+msgstr "%(n)s feed selezionati"
 
 #, python-format
 msgid "%(n)s members"
@@ -467,6 +471,9 @@ msgstr ""
 "Un round non si chiude prima di questo tempo, così che le persone abbiano"
 " modo di agire. È un limite inferiore: la simulazione non aspetta mai una"
 " persona."
+
+msgid "A snapshot exists for this experiment."
+msgstr "Per questo esperimento esiste uno snapshot."
 
 msgid "A subset of agent's interests."
 msgstr "Un sottoinsieme degli interessi dell'agente."
@@ -1175,6 +1182,9 @@ msgstr "Foto annotate"
 
 msgid "Annotated Posts"
 msgstr "Post annotati"
+
+msgid "Annotated needs topic annotation to be on. Default: intended"
+msgstr "Annotato richiede l'annotazione dei topic attiva. Predefinito: dichiarato"
 
 msgid "Annotation Volume"
 msgstr "Volume di annotazioni"
@@ -2770,6 +2780,10 @@ msgstr ""
 "Impossibile determinare la cartella dei notebook per l'esperimento con "
 "ID: %(experiment_id)s"
 
+#, python-format
+msgid "Could not write the news snapshot: %(error)s"
+msgstr "Impossibile scrivere lo snapshot delle notizie: %(error)s"
+
 msgid "Count"
 msgstr "Conteggio"
 
@@ -3324,6 +3338,9 @@ msgstr ""
 #, python-format
 msgid "Default values from %(link)s"
 msgstr "Valori predefiniti dai %(link)s"
+
+msgid "Default: yes"
+msgstr "Predefinito: sì"
 
 #, python-format
 msgid ""
@@ -4622,6 +4639,9 @@ msgstr "Recupera i modelli di visione"
 
 msgid "Fetch available vision models"
 msgstr "Recupera i modelli di visione disponibili"
+
+msgid "Fetch the feeds and write the snapshot"
+msgstr "Leggi i feed e scrivi lo snapshot"
 
 #, python-format
 msgid "Fetched %(label)s from branch %(branch)s."
@@ -6247,6 +6267,9 @@ msgstr "Lituana"
 msgid "Live signals from the current conversation"
 msgstr "Segnali in tempo reale dalla conversazione in corso"
 
+msgid "Live: read the feeds at start"
+msgstr "Live: leggi i feed all'avvio"
+
 msgid "Load"
 msgstr "Carica"
 
@@ -7061,8 +7084,40 @@ msgstr "Pagine di notizie"
 msgid "News article content"
 msgstr "Contenuto di un articolo di notizie"
 
+msgid "News feeds (RSS)"
+msgstr "Feed di notizie (RSS)"
+
+msgid ""
+"News feeds updated. Clients created from now on get a news page for each "
+"feed."
+msgstr ""
+"Feed di notizie aggiornati. I client creati da ora in poi ottengono una "
+"pagina di notizie per ogni feed."
+
 msgid "News from the Agents"
 msgstr "News from the Agents"
+
+msgid "News page for each selected feed"
+msgstr "Pagina di notizie per ogni feed selezionato"
+
+msgid ""
+"News pages share articles from their RSS feed in the channels. Pages come"
+" from the population; the feeds selected for the experiment become pages "
+"too."
+msgstr ""
+"Le pagine di notizie condividono nei canali gli articoli del loro feed "
+"RSS. Le pagine vengono dalla popolazione; anche i feed selezionati per "
+"l'esperimento diventano pagine."
+
+msgid "News snapshot"
+msgstr "Snapshot delle notizie"
+
+#, python-format
+msgid "News snapshot written: %(n)s articles from %(f)s feeds."
+msgstr "Snapshot delle notizie scritto: %(n)s articoli da %(f)s feed."
+
+msgid "News source"
+msgstr "Fonte delle notizie"
 
 msgid "News source name"
 msgstr "Nome della fonte di notizie"
@@ -7134,6 +7189,10 @@ msgstr "Nessun agente selezionato"
 
 msgid "No articles available yet."
 msgstr "Nessun articolo disponibile al momento."
+
+#, python-format
+msgid "No articles from: %(urls)s"
+msgstr "Nessun articolo da: %(urls)s"
 
 msgid "No available experiments to assign"
 msgstr "Nessun esperimento disponibile da assegnare"
@@ -7341,6 +7400,9 @@ msgstr ""
 "Non è stato trovato il file di configurazione del server per questo "
 "esperimento."
 
+msgid "No snapshot yet."
+msgstr "Nessuno snapshot per ora."
+
 msgid "No story previews are available yet."
 msgstr "Non ci sono ancora anteprime di storie disponibili."
 
@@ -7370,6 +7432,9 @@ msgstr "Ancora nessuna concessione di visibilità configurata."
 
 msgid "No visible memberships."
 msgstr "Nessuna iscrizione visibile."
+
+msgid "No: opinions evolve but the agent is not told"
+msgstr "No: le opinioni evolvono ma l'agente non ne è informato"
 
 msgid "Nodes"
 msgstr "Nodi"
@@ -7778,6 +7843,9 @@ msgstr "Opinione: %(value)s"
 
 msgid "Opinions"
 msgstr "Opinioni"
+
+msgid "Opinions in conversations"
+msgstr "Opinioni nelle conversazioni"
 
 msgid "Optional Agent Actions"
 msgstr "Azioni opzionali degli agenti"
@@ -9441,6 +9509,9 @@ msgstr "Salva le interazioni"
 msgid "Save language"
 msgstr "Salva la lingua"
 
+msgid "Save news feeds"
+msgstr "Salva i feed di notizie"
+
 msgid "Saved"
 msgstr "Salvati"
 
@@ -9816,6 +9887,17 @@ msgstr ""
 "24."
 
 msgid ""
+"Select which reusable RSS resources feed the news pages of this instant "
+"messaging experiment: each selected feed becomes a news page that shares "
+"its articles in the channels. Feed validation and creation live in the "
+"shared resource workspace."
+msgstr ""
+"Seleziona quali risorse RSS riutilizzabili alimentano le pagine di "
+"notizie di questo esperimento di messaggistica istantanea: ogni feed "
+"selezionato diventa una pagina di notizie che condivide i suoi articoli "
+"nei canali."
+
+msgid ""
 "Select which reusable RSS resources should be assigned to this forum "
 "experiment. Feed validation and creation now live in the shared forum "
 "resource workspace."
@@ -10143,6 +10225,9 @@ msgstr ""
 "Mostra i cursori di interesse / opinione nella pagina di modifica del "
 "profilo"
 
+msgid "Show the opinion to the agent"
+msgstr "Mostra l'opinione all'agente"
+
 msgid "Show the profile-setup wizard to users on their first login"
 msgstr ""
 "Mostra agli utenti la procedura guidata di configurazione del profilo al "
@@ -10308,6 +10393,9 @@ msgstr "Più lento"
 
 msgid "Small World (Watts-Strogatz)"
 msgstr "Small world (Watts-Strogatz)"
+
+msgid "Snapshot: fixed articles, reproducible, no network"
+msgstr "Snapshot: articoli fissi, riproducibile, senza rete"
 
 msgid "Social Attributes"
 msgstr "Attributi sociali"
@@ -11055,9 +11143,16 @@ msgid ""
 "yet. You are seeing the public view; come back when the experiment has "
 "been started."
 msgstr ""
-"Il server dell'esperimento non è avviato, quindi il tuo account non pu"
-"ò ancora essere creato. Stai vedendo la vista pubblica: torna quando l"
-"'esperimento sarà stato avviato."
+"Il server dell'esperimento non è avviato, quindi il tuo account non può "
+"ancora essere creato. Stai vedendo la vista pubblica: torna quando "
+"l'esperimento sarà stato avviato."
+
+msgid ""
+"The feeds returned no articles: the news pages will share nothing. You "
+"can retry from the RSS feeds page."
+msgstr ""
+"I feed non hanno restituito articoli: le pagine di notizie non "
+"condivideranno nulla. Puoi riprovare dalla pagina dei feed RSS."
 
 msgid "The feelings surfacing most in the feed"
 msgstr "Le emozioni che emergono di più nel feed"
@@ -11098,6 +11193,14 @@ msgstr ""
 "dall'utente. Per creare un file di rete personalizzato, scarica l'elenco "
 "dei nomi degli agenti con"
 
+#, python-format
+msgid ""
+"The news snapshot could not be written (%(error)s): the news pages will "
+"share nothing until it exists."
+msgstr ""
+"Impossibile scrivere lo snapshot delle notizie: le pagine di notizie non "
+"condivideranno nulla finché non esiste."
+
 msgid "The page you are looking for does not exist."
 msgstr "La pagina che cerchi non esiste."
 
@@ -11126,10 +11229,20 @@ msgstr "La pagina richiesta non è stata trovata."
 msgid "The round is closed: try again in a moment."
 msgstr "Il round è chiuso: riprova tra poco."
 
+msgid "The run already started: reset the experiment to change its news."
+msgstr "Il run è già iniziato: reimposta l'esperimento per cambiare le notizie."
+
 msgid "The run already started: reset the experiment to change these settings."
 msgstr ""
 "L'esecuzione è già iniziata: reimposta l'esperimento per modificare "
 "queste impostazioni."
+
+msgid ""
+"The run already started: the news cannot change unless the experiment is "
+"reset."
+msgstr ""
+"Il run è già iniziato: le notizie non possono cambiare se l'esperimento "
+"non viene reimpostato."
 
 msgid "The same subreddit definition can be reused safely"
 msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
@@ -11194,6 +11307,15 @@ msgid "The simulation is not running."
 msgstr "La simulazione non è in esecuzione."
 
 msgid ""
+"The snapshot is the fixed list of articles the news pages share. With a "
+"snapshot the run is reproducible and does not need the network; without "
+"one, the client reads the feeds at start (live mode)."
+msgstr ""
+"Lo snapshot è l'elenco fisso di articoli che le pagine di notizie "
+"condividono. Con uno snapshot il run è riproducibile e non richiede la "
+"rete; senza, il client legge i feed all'avvio (modalità live)."
+
+msgid ""
 "The start date and the round length belong to the experiment: the first "
 "client set them."
 msgstr ""
@@ -11205,6 +11327,12 @@ msgstr "I tre archetipi di agente hanno caratteristiche distinte:"
 
 msgid "The topic already exists."
 msgstr "L'argomento esiste già."
+
+msgid "The topic found by the annotation"
+msgstr "Il topic trovato dall'annotazione"
+
+msgid "The topic the agent meant to write about"
+msgstr "Il topic su cui l'agente voleva scrivere"
 
 msgid "The training area is not available. Please contact an administrator."
 msgstr "L'area di formazione non è disponibile. Contatta un amministratore."
@@ -11256,6 +11384,9 @@ msgstr "Caratterizzazione tematica"
 
 msgid "Themes gaining momentum right now"
 msgstr "Temi che stanno prendendo slancio in questo momento"
+
+msgid "There are no feeds to read: select some RSS feeds first."
+msgstr "Non ci sono feed da leggere: seleziona prima dei feed RSS."
 
 msgid "There is no such user."
 msgstr "Non esiste questo utente."
@@ -11369,8 +11500,10 @@ msgstr "Questo messaggio è stato eliminato."
 msgid "This module is not available for this experiment type."
 msgstr "Questo modulo non è disponibile per questo tipo di esperimento."
 
-msgid "This page is only available for forum experiments."
-msgstr "Questa pagina è disponibile solo per gli esperimenti del forum."
+msgid "This page is only available for forum and instant messaging experiments."
+msgstr ""
+"Questa pagina è disponibile solo per esperimenti forum e di messaggistica"
+" istantanea."
 
 msgid ""
 "This page is only for HPC experiments. Redirecting to standard prompts "
@@ -11592,6 +11725,9 @@ msgstr "Indicazioni sull'argomento"
 
 msgid "Topic not found."
 msgstr "Argomento non trovato."
+
+msgid "Topic of a message"
+msgstr "Topic di un messaggio"
 
 msgid "Topic-evolution tables not available"
 msgstr "Tabelle di evoluzione degli argomenti non disponibili"
@@ -12831,6 +12967,9 @@ msgstr "YSocialTwin"
 
 msgid "Yes"
 msgstr "Sì"
+
+msgid "Yes: the current opinion is part of the prompt"
+msgstr "Sì: l'opinione attuale fa parte del prompt"
 
 msgid "You already own as many chats as allowed."
 msgstr "Possiedi già il numero massimo di chat consentito."
@@ -14353,4 +14492,7 @@ msgstr "✔️ Usa"
 #~ "ancora essere creato. Stai vedendo la"
 #~ " vista pubblica: torna quando la "
 #~ "simulazione sarà avviata."
+
+#~ msgid "This page is only available for forum experiments."
+#~ msgstr "Questa pagina è disponibile solo per gli esperimenti del forum."
 

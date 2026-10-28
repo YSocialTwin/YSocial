@@ -16,9 +16,9 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">{{ _('Forum RSS Feed Assignment') }}</h3>
+                        <h3 class="title is-5 is-thin">{% if is_im %}{{ _('News feeds (RSS)') }}{% else %}{{ _('Forum RSS Feed Assignment') }}{% endif %}</h3>
                         <p class="ys-text-small">
-                            {{ _('Select which reusable RSS resources should be assigned to this forum experiment. Feed validation and creation now live in the shared forum resource workspace.') }}
+                            {% if is_im %}{{ _('Select which reusable RSS resources feed the news pages of this instant messaging experiment: each selected feed becomes a news page that shares its articles in the channels. Feed validation and creation live in the shared resource workspace.') }}{% else %}{{ _('Select which reusable RSS resources should be assigned to this forum experiment. Feed validation and creation now live in the shared forum resource workspace.') }}{% endif %}
                         </p>
 
                         <form action="/admin/update_rss_feeds/{{ experiment.idexp }}" method="POST" class="box-content">
@@ -74,6 +74,7 @@
                             </div>
                             {% endif %}
 
+                            {% if not is_im %}
                             <hr>
 
                             <h4 class="title is-6 is-thin">{{ _('Direct Article URLs') }}</h4>
@@ -82,11 +83,26 @@
                             </p>
                             <textarea name="url_feeds_text" id="url_feeds_text" class="textarea" rows="8" placeholder="https://example.com/article-1&#10;https://example.com/article-2">{{ url_feeds | join('\n') }}</textarea>
 
+                            {% endif %}
                             <div class="button-wrap ys-mt-1em">
-                                <button type="submit" class="button is-solid primary-button is-fullwidth">{{ _('Save Forum Feed Assignment') }}</button>
+                                <button type="submit" class="button is-solid primary-button is-fullwidth">{% if is_im %}{{ _('Save news feeds') }}{% else %}{{ _('Save Forum Feed Assignment') }}{% endif %}</button>
                             </div>
                         </form>
                     </div>
+                    {% if is_im %}
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">{{ _('News snapshot') }}</h3>
+                        <p class="ys-text-small">{{ _('The snapshot is the fixed list of articles the news pages share. With a snapshot the run is reproducible and does not need the network; without one, the client reads the feeds at start (live mode).') }}</p>
+                        <p class="ys-text-small">{% if snapshot.exists %}{{ _('A snapshot exists for this experiment.') }}{% else %}{{ _('No snapshot yet.') }}{% endif %}</p>
+                        {% if snapshot.locked %}
+                        <div class="notification is-light">{{ _('The run already started: the news cannot change unless the experiment is reset.') }}</div>
+                        {% else %}
+                        <form action="/admin/im_news_snapshot/{{ experiment.idexp }}" method="POST" class="box-content">
+                            <button type="submit" class="button is-solid primary-button">{{ _('Fetch the feeds and write the snapshot') }}</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="column is-4">
