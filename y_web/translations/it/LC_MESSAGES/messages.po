@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 14:05+0000\n"
+"POT-Creation-Date: 2026-10-28 15:01+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -166,10 +166,6 @@ msgstr "%(n)s prompt differiscono da quelli predefiniti."
 #, python-format
 msgid "%(n)s reactions"
 msgstr "%(n)s reazioni"
-
-#, python-format
-msgid "%(n)s resources"
-msgstr "%(n)s risorse"
 
 #, python-format
 msgid "%(n)s steps"
@@ -965,21 +961,6 @@ msgstr "Runtime dell'agente"
 msgid "Agent type"
 msgstr "Tipo di agente"
 
-msgid ""
-"Agent types that can be deployed in both microblogging and forum "
-"simulations."
-msgstr ""
-"Tipi di agente utilizzabili sia nelle simulazioni di microblogging sia in"
-" quelle di forum."
-
-msgid "Agent types that currently target forum experiments only."
-msgstr "Tipi di agente che al momento sono rivolti solo agli esperimenti di forum."
-
-msgid "Agent types that currently target microblogging experiments only."
-msgstr ""
-"Tipi di agente che al momento sono rivolti solo agli esperimenti di "
-"microblogging."
-
 msgid "Agent's political leaning"
 msgstr "Orientamento politico dell'agente"
 
@@ -1030,9 +1011,6 @@ msgstr "Gradevolezza."
 
 msgid "All"
 msgstr "Tutti"
-
-msgid "All Experiments"
-msgstr "Tutti gli esperimenti"
 
 msgid "All Friends"
 msgstr "Tutti gli amici"
@@ -2079,9 +2057,6 @@ msgid "Click to check if a newer version of YSocial is available."
 msgstr ""
 "Clicca per verificare se è disponibile una versione più recente di "
 "YSocial."
-
-msgid "Click to expand"
-msgstr "Clicca per espandere"
 
 msgid "Click to expand/collapse"
 msgstr "Clicca per espandere o comprimere"
@@ -3361,9 +3336,6 @@ msgstr "Decidere il follow secondario (sistema)"
 msgid "Decide Secondary Follow (User)"
 msgstr "Decidere il follow secondario (utente)"
 
-msgid "Dedicated creation interface"
-msgstr "Interfaccia di creazione dedicata"
-
 msgid "Default (English)"
 msgstr "Predefinita (inglese)"
 
@@ -4302,9 +4274,6 @@ msgstr ""
 msgid "Expand plot"
 msgstr "Espandi il grafico"
 
-msgid "Expanded"
-msgstr "Espanso"
-
 msgid "Expected Activity"
 msgstr "Attività prevista"
 
@@ -4856,9 +4825,6 @@ msgstr "Feed di immagini del forum"
 
 msgid "Forum Image Resources"
 msgstr "Risorse di immagini del forum"
-
-msgid "Forum Only"
-msgstr "Solo forum"
 
 msgid "Forum RSS Feed Assignment"
 msgstr "Assegnazione dei feed RSS del forum"
@@ -5518,6 +5484,9 @@ msgstr "Modelli ibridi"
 
 msgid "I have read this, continue"
 msgstr "Ho letto, continua"
+
+msgid "IM"
+msgstr "IM"
 
 msgid "ISTI-CNR"
 msgstr "ISTI-CNR"
@@ -6787,9 +6756,6 @@ msgstr "Microblogging"
 
 msgid "Microblogging (i.e., X/BlueSky)"
 msgstr "Microblogging (cioè X/BlueSky)"
-
-msgid "Microblogging Only"
-msgstr "Solo microblogging"
 
 msgid ""
 "Microblogging experiments are unavailable because neither YServer/YClient"
@@ -8319,9 +8285,6 @@ msgstr "Origine del plugin"
 #, python-format
 msgid "Plugin agent type · %(repo)s"
 msgstr "Tipo di agente del plugin · %(repo)s"
-
-msgid "Plugin-backed resource"
-msgstr "Risorsa fornita da un plugin"
 
 msgid "Plugin-defined agent type."
 msgstr "Tipo di agente definito da un plugin."
@@ -14865,4 +14828,49 @@ msgstr "✔️ Usa"
 
 #~ msgid "Set the share of activity of each hour (0 to 1)"
 #~ msgstr "Imposta la quota di attività di ogni ora (da 0 a 1)"
+
+#~ msgid "%(n)s resources"
+#~ msgstr "%(n)s risorse"
+
+#~ msgid ""
+#~ "Agent types that can be deployed "
+#~ "in both microblogging and forum "
+#~ "simulations."
+#~ msgstr ""
+#~ "Tipi di agente utilizzabili sia nelle"
+#~ " simulazioni di microblogging sia in "
+#~ "quelle di forum."
+
+#~ msgid "Agent types that currently target forum experiments only."
+#~ msgstr ""
+#~ "Tipi di agente che al momento sono"
+#~ " rivolti solo agli esperimenti di "
+#~ "forum."
+
+#~ msgid "Agent types that currently target microblogging experiments only."
+#~ msgstr ""
+#~ "Tipi di agente che al momento sono"
+#~ " rivolti solo agli esperimenti di "
+#~ "microblogging."
+
+#~ msgid "All Experiments"
+#~ msgstr "Tutti gli esperimenti"
+
+#~ msgid "Click to expand"
+#~ msgstr "Clicca per espandere"
+
+#~ msgid "Dedicated creation interface"
+#~ msgstr "Interfaccia di creazione dedicata"
+
+#~ msgid "Expanded"
+#~ msgstr "Espanso"
+
+#~ msgid "Forum Only"
+#~ msgstr "Solo forum"
+
+#~ msgid "Microblogging Only"
+#~ msgstr "Solo microblogging"
+
+#~ msgid "Plugin-backed resource"
+#~ msgstr "Risorsa fornita da un plugin"
 

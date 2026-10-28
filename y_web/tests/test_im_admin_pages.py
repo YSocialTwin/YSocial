@@ -336,3 +336,16 @@ def test_im_experiment_links_to_the_prompts_page_and_edits_only_what_changes(im_
     assert json.loads((folder / "prompts_im.json").read_text()) == {"nothing_new": "(no news)"}
     client.post(f"/admin/reset_prompts_im/{exp_id}")
     assert not (folder / "prompts_im.json").exists()
+
+
+def test_agents_dashboard_lists_flat_tagged_resources(im_app, monkeypatch):
+    import importlib
+
+    module = importlib.import_module("y_web.routes.admin.sub.agents")
+    monkeypatch.setattr(module, "_runtime_installed", lambda key: key in {"instant_messaging", "microblogging_server", "microblogging_client"})
+    app, client = im_app
+    html = client.get("/admin/agents_dashboard").data.decode()
+    assert "data-agent-resource-group" not in html and "data-agent-resource-card" in html
+    assert 'data-platform-tag="all"' in html  # the agent builder covers both installed platforms
+    assert "Forum Image Feeds" not in html  # forum is not installed
+    assert "Forum RSS Feeds" in html  # but its feeds serve IM

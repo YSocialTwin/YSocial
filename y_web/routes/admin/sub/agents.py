@@ -18,6 +18,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
 from y_web import db
+from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.src.agents.custom_features import (
     delete_agent_custom_features,
@@ -97,61 +98,42 @@ def _page_resources_available() -> bool:
     )
 
 
-def _deployment_group_key(tags: list[str]) -> str:
-    normalized = set(tags or [])
-    if {"microblogging", "forum"}.issubset(normalized):
-        return "all"
-    if normalized == {"microblogging"}:
-        return "microblogging"
-    if normalized == {"forum"}:
-        return "forum"
-    return "all"
+# platform key -> (short tag label, repositories that must all be installed for the platform to count as installed;
+# a tuple of alternatives means any one of those sets is enough)
+_PLATFORMS = {
+    "microblogging": (N_("Microblogging"), (("microblogging_server", "microblogging_client"), ("hpc_simulator",))),
+    "forum": (N_("Forum"), (("forum_server", "forum_client"),)),
+    "photo_sharing": (N_("Photo sharing"), (("photo_sharing",),)),
+    "instant_messaging": (N_("IM"), (("instant_messaging",),)),
+}
 
 
-def _group_agent_resource_cards(cards: list[dict]) -> list[dict]:
-    definitions = [
-        {
-            "key": "all",
-            "label": _("All Experiments"),
-            "description": _(
-                "Agent types that can be deployed in both microblogging and forum simulations."
-            ),
-        },
-        {
-            "key": "microblogging",
-            "label": _("Microblogging Only"),
-            "description": _(
-                "Agent types that currently target microblogging experiments only."
-            ),
-        },
-        {
-            "key": "forum",
-            "label": _("Forum Only"),
-            "description": _(
-                "Agent types that currently target forum experiments only."
-            ),
-        },
+def _installed_platforms() -> list[str]:
+    """The platforms whose runtime is installed (and visible to this admin), in a fixed order."""
+    return [
+        key
+        for key, (_label, alternatives) in _PLATFORMS.items()
+        if any(all(_runtime_installed(repo) for repo in repos) for repos in alternatives)
     ]
 
-    grouped = []
-    for definition in definitions:
-        section_cards = [
-            card
-            for card in cards
-            if _deployment_group_key(card.get("deployment_tags", []))
-            == definition["key"]
-        ]
-        if not section_cards:
+
+def _tag_agent_resource_cards(cards: list[dict], installed: list[str]) -> list[dict]:
+    """Keep the cards usable on at least one installed platform and tag each with where it can be deployed.
+
+    ``deployment_tags`` lists the platforms a card supports; only installed ones are shown, and a card that covers
+    every installed platform gets the single tag "All" (when more than one platform is installed).
+    """
+    out = []
+    for card in cards:
+        supported = [p for p in installed if p in set(card.get("deployment_tags") or _PLATFORMS)]
+        if not supported:
             continue
-        grouped.append(
-            {
-                "key": definition["key"],
-                "label": definition["label"],
-                "description": definition["description"],
-                "cards": section_cards,
-            }
-        )
-    return grouped
+        if len(installed) > 1 and supported == installed:
+            tags = [{"key": "all", "label": _("All")}]
+        else:
+            tags = [{"key": p, "label": _(_PLATFORMS[p][0])} for p in supported]
+        out.append({**card, "platform_tags": tags})
+    return out
 
 
 def _manifest_paths():
@@ -225,6 +207,8 @@ def _plugin_agent_specs() -> list[dict]:
                     "parameter_sections": entry.get("parameter_sections", []) or [],
                     "repo_name": repo_name,
                     "manifest_path": str(manifest_path),
+                    # where the agent type can be deployed: the manifest's "platforms", every platform when absent
+                    "platforms": [p for p in (entry.get("platforms") or []) if p in _PLATFORMS] or list(_PLATFORMS),
                 }
             )
     return specs
@@ -323,7 +307,7 @@ def _discover_plugin_agent_types() -> list[dict]:
                 "secondary_label": _(
                     "Configure this plugin agent from a manifest-driven custom agent page."
                 ),
-                "deployment_tags": ["microblogging", "forum"],
+                "deployment_tags": spec["platforms"],
                 "is_plugin": True,
             }
         )
@@ -903,12 +887,12 @@ def agents_dashboard():
                 "Manage existing agents, remove orphaned entries, and create fully custom profiles."
             ),
             "meta": {},
-            "deployment_tags": ["microblogging", "forum"],
+            "deployment_tags": ["microblogging", "forum", "photo_sharing", "instant_messaging"],
             "is_plugin": False,
         }
     ]
 
-    if _page_resources_available():
+    if True:  # shown when microblogging or IM is installed (the platform tags filter)
         agent_resource_cards.append(
             {
                 "title": _("News Pages"),
@@ -937,7 +921,7 @@ def agents_dashboard():
                     "Configure page identity, leaning, feed sources, and upload page collections in bulk."
                 ),
                 "meta": {},
-                "deployment_tags": ["microblogging"],
+                "deployment_tags": ["microblogging", "instant_messaging"],
                 "is_plugin": False,
             }
         )
@@ -968,7 +952,7 @@ def agents_dashboard():
                     "Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time."
                 ),
                 "meta": {},
-                "deployment_tags": ["forum"],
+                "deployment_tags": ["forum", "instant_messaging"],
                 "is_plugin": False,
             },
             {
@@ -1002,11 +986,11 @@ def agents_dashboard():
     )
 
     agent_resource_cards.extend(plugin_agent_cards)
-    agent_resource_groups = _group_agent_resource_cards(agent_resource_cards)
+    agent_resource_cards = _tag_agent_resource_cards(agent_resource_cards, _installed_platforms())
 
     return render_template(
         "admin/agents_dashboard.html",
-        agent_resource_groups=agent_resource_groups,
+        agent_resource_cards=agent_resource_cards,
         agent_resources_summary={
             "total_agents": synthetic_agent_count,
             "total_pages": page_count,

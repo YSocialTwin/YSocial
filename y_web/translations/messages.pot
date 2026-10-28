@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 14:05+0000\n"
+"POT-Creation-Date: 2026-10-28 15:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -147,10 +147,6 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s reactions"
-msgstr ""
-
-#, python-format
-msgid "%(n)s resources"
 msgstr ""
 
 #, python-format
@@ -893,17 +889,6 @@ msgstr ""
 msgid "Agent type"
 msgstr ""
 
-msgid ""
-"Agent types that can be deployed in both microblogging and forum "
-"simulations."
-msgstr ""
-
-msgid "Agent types that currently target forum experiments only."
-msgstr ""
-
-msgid "Agent types that currently target microblogging experiments only."
-msgstr ""
-
 msgid "Agent's political leaning"
 msgstr ""
 
@@ -953,9 +938,6 @@ msgid "Agreeableness."
 msgstr ""
 
 msgid "All"
-msgstr ""
-
-msgid "All Experiments"
 msgstr ""
 
 msgid "All Friends"
@@ -1897,9 +1879,6 @@ msgid ""
 msgstr ""
 
 msgid "Click to check if a newer version of YSocial is available."
-msgstr ""
-
-msgid "Click to expand"
 msgstr ""
 
 msgid "Click to expand/collapse"
@@ -2994,9 +2973,6 @@ msgstr ""
 msgid "Decide Secondary Follow (User)"
 msgstr ""
 
-msgid "Dedicated creation interface"
-msgstr ""
-
 msgid "Default (English)"
 msgstr ""
 
@@ -3850,9 +3826,6 @@ msgstr ""
 msgid "Expand plot"
 msgstr ""
 
-msgid "Expanded"
-msgstr ""
-
 msgid "Expected Activity"
 msgstr ""
 
@@ -4372,9 +4345,6 @@ msgid "Forum Image Feeds"
 msgstr ""
 
 msgid "Forum Image Resources"
-msgstr ""
-
-msgid "Forum Only"
 msgstr ""
 
 msgid "Forum RSS Feed Assignment"
@@ -4974,6 +4944,9 @@ msgid "Hybrid Models"
 msgstr ""
 
 msgid "I have read this, continue"
+msgstr ""
+
+msgid "IM"
 msgstr ""
 
 msgid "ISTI-CNR"
@@ -6129,9 +6102,6 @@ msgid "Microblogging"
 msgstr ""
 
 msgid "Microblogging (i.e., X/BlueSky)"
-msgstr ""
-
-msgid "Microblogging Only"
 msgstr ""
 
 msgid ""
@@ -7561,9 +7531,6 @@ msgstr ""
 
 #, python-format
 msgid "Plugin agent type · %(repo)s"
-msgstr ""
-
-msgid "Plugin-backed resource"
 msgstr ""
 
 msgid "Plugin-defined agent type."

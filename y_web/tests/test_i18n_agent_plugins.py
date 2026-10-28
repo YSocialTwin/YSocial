@@ -70,7 +70,6 @@ def test_adhoc_parameter_labels_and_prompt_keys(agents_app):
     [
         ("Open Agent Builder", "Apri il Builder di agenti"),
         ("Available Agents", "Agenti disponibili"),
-        ("Forum Only", "Solo forum"),
         ("Not assigned", "Non assegnato"),
         ("%(n)s populations", "%(n)s popolazioni"),
     ],
