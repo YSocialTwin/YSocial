@@ -377,6 +377,8 @@ def create_im_client(exp, name, descr, population_id, form_data):
     db.session.commit()
 
     flash(_("Instant messaging client '%(name)s' created successfully", name=name))
+    if opinions_enabled:  # as in the other platforms: the opinion configuration of the new client comes next
+        return redirect(url_for("clientsr.opinion_configuration_im", idexp=exp.idexp, client_id=client.id))
     return redirect(f"/admin/experiment_details/{exp.idexp}")
 
 

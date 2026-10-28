@@ -554,3 +554,22 @@ def test_a_client_with_typed_chats_passes_yim_validate(app, env):
         cfg = folder / "client_cl-pop.json"
         _normalize_im_client_config(str(folder), "cl", "pop", str(cfg))
         validate_im_folder(str(folder), str(IM_REPO), client_config=cfg.name)
+
+
+def test_with_opinion_dynamics_on_the_new_client_goes_to_its_opinion_page(app, env):
+    from y_web import db
+    from y_web.src.im.experiment_config import apply_experiment_switches, load_server_config, save_server_config
+    from y_web.src.models import Client
+
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        response = _post(app, env, exp, pop)  # switch off: back to the experiment
+        assert response.status_code == 302 and response.location.endswith(f"/admin/experiment_details/{exp.idexp}")
+        folder = env.im._experiment_folder(exp)
+        server = load_server_config(folder)
+        apply_experiment_switches(server, opinion=True)
+        save_server_config(folder, server)
+        response = _post(app, env, exp, pop, name="cl2")
+        client = db.session.query(Client).filter_by(name="cl2").one()
+        assert response.status_code == 302
+        assert "opinion_configuration_im" in response.location and client.id
