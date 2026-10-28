@@ -132,7 +132,7 @@ def _tag_agent_resource_cards(cards: list[dict], installed: list[str]) -> list[d
             tags = [{"key": "all", "label": _("All")}]
         else:
             tags = [{"key": p, "label": _(_PLATFORMS[p][0])} for p in supported]
-        out.append({**card, "platform_tags": tags})
+        out.append({**card, "platform_tags": tags, "platforms": supported})
     return out
 
 
@@ -936,7 +936,7 @@ def agents_dashboard():
                 "surface": "linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%)",
                 "border": "#fdba74",
                 "description": _(
-                    "Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments."
+                    "Validate and register reusable RSS news sources. Once saved, the same feed can be assigned to multiple experiments, on every platform that shares news."
                 ),
                 "highlights": [
                     _(
@@ -944,12 +944,12 @@ def agents_dashboard():
                         count=forum_rss_feed_count,
                     ),
                     _("Validation happens once in the dashboard workspace"),
-                    _("Forum experiments assign from the shared registry"),
+                    _("Experiments assign feeds from the shared registry"),
                 ],
                 "cta_label": _("Manage RSS Resources"),
                 "cta_href": "/admin/forum_rss_resources",
                 "secondary_label": _(
-                    "Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time."
+                    "Create feed entries centrally, then reuse them across simulations without revalidating the same source each time."
                 ),
                 "meta": {},
                 "deployment_tags": ["forum", "instant_messaging"],
@@ -986,11 +986,17 @@ def agents_dashboard():
     )
 
     agent_resource_cards.extend(plugin_agent_cards)
-    agent_resource_cards = _tag_agent_resource_cards(agent_resource_cards, _installed_platforms())
+    installed_platforms = _installed_platforms()
+    agent_resource_cards = _tag_agent_resource_cards(agent_resource_cards, installed_platforms)
+    platform_filters = [
+        {"key": key, "label": _(_PLATFORMS[key][0]), "count": sum(1 for c in agent_resource_cards if key in c["platforms"])}
+        for key in installed_platforms
+    ]
 
     return render_template(
         "admin/agents_dashboard.html",
         agent_resource_cards=agent_resource_cards,
+        platform_filters=platform_filters,
         agent_resources_summary={
             "total_agents": synthetic_agent_count,
             "total_pages": page_count,

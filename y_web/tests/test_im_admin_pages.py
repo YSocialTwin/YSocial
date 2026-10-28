@@ -349,3 +349,20 @@ def test_agents_dashboard_lists_flat_tagged_resources(im_app, monkeypatch):
     assert 'data-platform-tag="all"' in html  # the agent builder covers both installed platforms
     assert "Forum Image Feeds" not in html  # forum is not installed
     assert "News RSS Feeds" in html  # but its feeds serve IM
+
+
+def test_agents_dashboard_filters_by_platform(im_app, monkeypatch):
+    import importlib
+
+    module = importlib.import_module("y_web.routes.admin.sub.agents")
+    monkeypatch.setattr(module, "_runtime_installed", lambda key: key in {"instant_messaging", "forum_server", "forum_client"})
+    app, client = im_app
+    html = client.get("/admin/agents_dashboard").data.decode()
+    assert 'id="agents-platform-filter"' in html
+    assert 'data-platform-filter="forum"' in html and 'data-platform-filter="instant_messaging"' in html
+    assert 'data-platform-filter="photo_sharing"' not in html  # only installed platforms are offered
+    # the filter keys sit on the cards: the forum image feeds are forum only
+    assert 'data-platforms="forum"' in html
+    # with one platform there is nothing to filter
+    monkeypatch.setattr(module, "_runtime_installed", lambda key: key == "instant_messaging")
+    assert 'id="agents-platform-filter"' not in client.get("/admin/agents_dashboard").data.decode()

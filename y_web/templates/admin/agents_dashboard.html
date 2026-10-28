@@ -8,44 +8,42 @@
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box" id="agents-dashboard-hero" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 45%, #eef4ff 100%); border: 1px solid #dbe3ef;">
-                        <div class="box-content" style="padding: 14px 16px;">
-                            <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
-                                <div style="max-width: 760px;">
-                                    <div class="ys-text-xs-hint" style="letter-spacing: 0.08em; text-transform: uppercase; color: #2563eb; font-weight: 700;">{{ _('Agent Workspace') }}</div>
-                                    <h2 class="title is-4" style="margin: 4px 0 6px 0; color: #0f172a;">{{ _('Agent Resources Dashboard') }}</h2>
-                                    <p class="ys-text-sm-muted" style="max-width: 720px; line-height: 1.5; margin-bottom: 0;">
-                                        {{ _('Use this page as the single entry point for building the entities that populate and influence your simulations.') }}
-                                        {{ _('Synthetic agents define user behavior, while content pages define the information sources and institutional actors that shape exposure.') }}
-                                    </p>
-                                </div>
-                                <div style="display: grid; gap: 6px; min-width: 220px;">
-                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                                        <span class="badge badge-info">{{ _('%(n)s populations', n=agent_resources_summary.total_populations) }}</span>
-                                        <span class="badge badge-success">{{ _('%(n)s activity profiles', n=agent_resources_summary.activity_profiles) }}</span>
-                                        <span class="badge badge-warning">{{ _('%(n)s plugin types', n=agent_resources_summary.plugin_agent_types) }}</span>
-                                        <span class="badge badge-secondary">{{ _('%(n)s visible resources', n=agent_resources_summary.resource_cards) }}</span>
-                                    </div>
-                                    <div class="ys-text-xs-hint" style="text-align: right;">
-                                        {{ _('Choose the construction flow below based on whether you are creating actors or information sources.') }}
-                                    </div>
-                                </div>
+                    <div class="dashboard-box" id="agents-dashboard-hero" style="border: 1px solid #dbe3ef;">
+                        <div class="box-content" style="padding: 10px 14px; display: flex; justify-content: space-between; gap: 10px 16px; align-items: center; flex-wrap: wrap;">
+                            <div>
+                                <h2 class="title is-5" style="margin: 0; color: #0f172a;">{{ _('Agent Resources Dashboard') }}</h2>
+                                <div class="ys-text-xs-hint" style="margin-top: 2px;">{{ _('Build the agents and information sources that populate your simulations.') }}</div>
+                            </div>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="badge badge-info">{{ _('%(n)s populations', n=agent_resources_summary.total_populations) }}</span>
+                                <span class="badge badge-success">{{ _('%(n)s activity profiles', n=agent_resources_summary.activity_profiles) }}</span>
+                                <span class="badge badge-warning">{{ _('%(n)s plugin types', n=agent_resources_summary.plugin_agent_types) }}</span>
                             </div>
                         </div>
+                        {% if platform_filters|length > 1 %}
+                        <div class="box-content" id="agents-platform-filter" style="padding: 0 14px 10px 14px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                            <span class="ys-text-xs-hint">{{ _('Platform') }}</span>
+                            <button type="button" class="button is-small is-solid primary-button" data-platform-filter="all">{{ _('All') }} ({{ agent_resource_cards|length }})</button>
+                            {% for f in platform_filters %}
+                            <button type="button" class="button is-small" data-platform-filter="{{ f.key }}">{{ f.label }} ({{ f.count }})</button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="columns is-multiline" id="agents-resource-grid">
+            <div class="columns is-multiline is-variable is-2" id="agents-resource-grid">
                 {% for card in agent_resource_cards %}
-                <div class="column is-4">
+                <div class="column is-4" data-agent-resource-item data-platforms="{{ card.platforms|join(' ') }}">
                     <div class="dashboard-box" data-agent-resource-card style="height: 100%; border: 1px solid {{ card.border }}; background: {{ card.surface }};">
-                        <div class="box-content" style="padding: 10px 12px; display: flex; flex-direction: column; height: 100%; gap: 6px;">
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: {{ card.accent }};">
-                                    <i data-feather="{{ card.icon }}" style="width: 14px; height: 14px; color: white;"></i>
+                        <div class="box-content" style="padding: 8px 10px; display: flex; flex-direction: column; height: 100%; gap: 5px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; background: {{ card.accent }};">
+                                    <i data-feather="{{ card.icon }}" style="width: 12px; height: 12px; color: white;"></i>
                                 </span>
-                                <h3 class="title is-6" style="margin: 0; color: #0f172a; line-height: 1.25; flex: 1;">{{ card.title }}</h3>
+                                <h3 class="title is-6" style="margin: 0; color: #0f172a; line-height: 1.2; flex: 1;">{{ card.title }}</h3>
+                                <a href="{{ card.cta_href }}" class="button is-small is-solid primary-button" style="flex: none;">{{ card.cta_label }}</a>
                             </div>
                             <div data-platform-tags style="display: flex; gap: 4px; flex-wrap: wrap;">
                                 {% for tag in card.platform_tags %}
@@ -53,15 +51,37 @@
                                 {% endfor %}
                                 {% if card.is_plugin %}<span class="badge badge-secondary">{{ _('Plugin') }}</span>{% endif %}
                             </div>
-                            <p class="ys-text-sm-muted" style="line-height: 1.35; margin: 0; font-size: 0.85rem; flex: 1;">{{ card.description }}</p>
-                            <div>
-                                <a href="{{ card.cta_href }}" class="button is-solid primary-button" style="padding-top: 0.4rem; padding-bottom: 0.4rem;">{{ card.cta_label }}</a>
-                            </div>
+                            <p class="ys-text-sm-muted" style="line-height: 1.3; margin: 0; font-size: 0.8rem;">{{ card.description }}</p>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
+
+            <script>
+            (function () {
+                var buttons = document.querySelectorAll('[data-platform-filter]');
+                if (!buttons.length) return;
+                var items = document.querySelectorAll('[data-agent-resource-item]');
+                function apply(key) {
+                    buttons.forEach(function (b) {
+                        b.classList.toggle('is-solid', b.dataset.platformFilter === key);
+                        b.classList.toggle('primary-button', b.dataset.platformFilter === key);
+                    });
+                    items.forEach(function (item) {
+                        var on = key === 'all' || (' ' + item.dataset.platforms + ' ').indexOf(' ' + key + ' ') !== -1;
+                        item.style.display = on ? '' : 'none';
+                    });
+                    try { sessionStorage.setItem('ys-agents-platform', key); } catch (e) {}
+                }
+                buttons.forEach(function (b) {
+                    b.addEventListener('click', function () { apply(b.dataset.platformFilter); });
+                });
+                var saved = 'all';
+                try { saved = sessionStorage.getItem('ys-agents-platform') || 'all'; } catch (e) {}
+                apply(Array.prototype.some.call(buttons, function (b) { return b.dataset.platformFilter === saved; }) ? saved : 'all');
+            })();
+            </script>
 
         </div>
     </div>

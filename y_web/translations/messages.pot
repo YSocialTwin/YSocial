@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 15:05+0000\n"
+"POT-Creation-Date: 2026-10-28 15:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,10 +155,6 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s unread"
-msgstr ""
-
-#, python-format
-msgid "%(n)s visible resources"
 msgstr ""
 
 #, python-format
@@ -838,9 +834,6 @@ msgid "Agent Type and Population"
 msgstr ""
 
 msgid "Agent Type:"
-msgstr ""
-
-msgid "Agent Workspace"
 msgstr ""
 
 msgid "Agent age"
@@ -1586,6 +1579,9 @@ msgstr ""
 msgid "Browse recent photos, people and hashtags in this experiment."
 msgstr ""
 
+msgid "Build the agents and information sources that populate your simulations."
+msgstr ""
+
 msgid "Built-in resource"
 msgstr ""
 
@@ -1790,11 +1786,6 @@ msgid ""
 msgstr ""
 
 msgid "Choose one of the active experiments below to enter the simulation."
-msgstr ""
-
-msgid ""
-"Choose the construction flow below based on whether you are creating "
-"actors or information sources."
 msgstr ""
 
 msgid "Choose the language of the dashboard for this user."
@@ -2612,8 +2603,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Create feed entries centrally, then reuse them across forum simulations "
-"without revalidating the same source each time."
+"Create feed entries centrally, then reuse them across simulations without"
+" revalidating the same source each time."
 msgstr ""
 
 msgid ""
@@ -3976,6 +3967,9 @@ msgstr ""
 msgid "Experiments and their simulation clients."
 msgstr ""
 
+msgid "Experiments assign feeds from the shared registry"
+msgstr ""
+
 msgid ""
 "Experiments do not assume any embedding backend. Without this "
 "configuration, semantic memory features degrade gracefully to lexical "
@@ -4359,9 +4353,6 @@ msgstr ""
 msgid ""
 "Forum experiments are unavailable because YServerReddit and YClientReddit"
 " are not both present."
-msgstr ""
-
-msgid "Forum experiments assign from the shared registry"
 msgstr ""
 
 msgid "Forum feed assignments updated successfully."
@@ -9991,11 +9982,6 @@ msgstr ""
 msgid "Synthetic Populations"
 msgstr ""
 
-msgid ""
-"Synthetic agents define user behavior, while content pages define the "
-"information sources and institutional actors that shape exposure."
-msgstr ""
-
 msgid "System Settings"
 msgstr ""
 
@@ -11425,11 +11411,6 @@ msgid ""
 "feeds, limits, embeddings, and stress/reward settings."
 msgstr ""
 
-msgid ""
-"Use this page as the single entry point for building the entities that "
-"populate and influence your simulations."
-msgstr ""
-
 msgid "Used for real-time wall-hour mapping (IANA timezone)."
 msgstr ""
 
@@ -11518,8 +11499,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Validate and register reusable RSS sources for forum simulations. Once "
-"saved, the same feed can be assigned across multiple experiments."
+"Validate and register reusable RSS news sources. Once saved, the same "
+"feed can be assigned to multiple experiments, on every platform that "
+"shares news."
 msgstr ""
 
 msgid ""
