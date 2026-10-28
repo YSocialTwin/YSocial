@@ -170,7 +170,7 @@ def _participant(session, exp, ui):
         return part
     # first entry: the account is created through the gateway (never by YWeb)
     def _ensure():
-        return GatewayClient(part.exp_folder).ensure(part.key, participation.pseudonym(user))
+        return GatewayClient(part.exp_folder).ensure(part.key, participation.pseudonym(user, part.exp_folder))
 
     try:
         code, _body = _ensure()
@@ -187,7 +187,7 @@ def _participant(session, exp, ui):
     if code == 503 and offline_possible(part.exp_folder):
         # the run has no round yet (so the offline gateway has nothing to act on): the account itself can still be
         # created by the runtime, and the person enters
-        if _register_offline(exp, part, participation.pseudonym(user)):
+        if _register_offline(exp, part, participation.pseudonym(user, part.exp_folder)):
             session.rollback()
             if session.get(models.Account, part.account_id) is not None:
                 return part

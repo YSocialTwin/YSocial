@@ -156,7 +156,7 @@ def test_first_entry_creates_the_account_and_shows_the_participant_ui(stack):
 
     with s.srv.sessions() as session:
         row = session.get(m.Account, _account(s))
-        assert row is not None and row.kind == "human" and row.username == "participant-%d" % s.user_id
+        assert row is not None and row.kind == "human" and row.username == "part1"
 
 
 def test_the_account_is_derived_from_the_session_never_from_the_request(stack):
@@ -502,3 +502,16 @@ def test_join_and_leave_buttons_follow_the_membership_and_search_shows_it(stack)
     _act(s, {"type": "join", "chat_id": "c-chat", "client_action_id": "j2"})
     again = s.client.get(f"/{s.exp_id}/im/api/search?kind=chats&q={title[:3]}").get_json()
     assert next(r for r in again["results"] if r["chat_id"] == "c-chat")["joined"] is True
+
+
+def test_the_username_in_the_run_is_the_participants_own_unless_pseudonymised(tmp_path):
+    import json
+    from types import SimpleNamespace
+
+    from y_web.src.im import participant
+
+    user = SimpleNamespace(id=7, username="giulio")
+    assert participant.pseudonym(user) == "giulio"
+    assert participant.pseudonym(user, str(tmp_path)) == "giulio"  # no setting
+    (tmp_path / "server_config.json").write_text(json.dumps({"human": {"pseudonymise_usernames": True}}))
+    assert participant.pseudonym(user, str(tmp_path)) == "participant-7"
