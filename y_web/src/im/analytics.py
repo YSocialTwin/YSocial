@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 from y_web.src.im import analytics_etl as etl
 
 #: annotation switches that the pages look for in ``Exps.annotations`` and the derived table proving them
-_ANNOTATION_TABLES = {"opinions": "agent_opinion", "sentiment": "post_sentiment", "toxicity": "post_toxicity"}
+_ANNOTATION_TABLES = {"opinions": "agent_opinion", "sentiment": "post_sentiment", "emotion": "post_emotions", "toxicity": "post_toxicity"}
 
 
 def experiment_folder(exp) -> str:

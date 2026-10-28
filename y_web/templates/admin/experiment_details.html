@@ -848,7 +848,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if (emotion_annotation_enabled and experiment_details_variant != 'im') %}
+                                {% if (im_switches.emotion if experiment_details_variant == 'im' and im_switches else emotion_annotation_enabled) %}
                                 <a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="ys-analytics-page-card is-warning">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-emoticon-outline"></i></span>
                                     <span class="ys-analytics-page-body">

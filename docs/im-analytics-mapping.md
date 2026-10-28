@@ -1,7 +1,7 @@
 # Instant messaging analytics: how the derived database is filled
 
-The YSocial analytics pages (toxicity, sentiment, opinion, stress/reward, topic, hashtag, network; emotion and
-recommender pages stay unavailable) run on an instant messaging experiment through a **derived analytics database**,
+The YSocial analytics pages (toxicity, sentiment, opinion, stress/reward, topic, hashtag, network, emotion; the
+recommender page stays unavailable) run on an instant messaging experiment through a **derived analytics database**,
 `analytics_im.db`, in the experiment folder. It is owned by YWeb, has the shape of a YSocial experiment database
 (its tables are created from YSocial's own models) and is rebuilt from the run database of YInstantMessaging, which
 is only ever opened read-only. IM never reads it; YWeb never writes the run database.
@@ -32,13 +32,13 @@ The file is a run artifact: it is left out of clones and downloads and removed b
 | `hashtags`, `post_hashtags` | `hashtags`, `message_hashtags` | rows exist |
 | `post_toxicity` | `annotations` of the `toxicity_*` methods with status `ok` (the first method by name when several ran) | rows exist |
 | `post_sentiment` | `annotations` of the `sentiment_*` methods with status `ok`; topic = the first topic of the message | rows exist |
+| `emotions`, `post_emotions` | `annotations` of the `emotion*` methods with status `ok` (`{"emotions": [...]}`, one row per label; the first method by name when several ran) | rows exist |
 | `agent_opinion` | `agent_opinions` (`tid` is the round) | rows exist |
 | `stress_reward` | `stress_reward` (same columns) | rows exist |
 | `follow` | `chat_members` joined with `chats.owner_account_id`: a member follows the owner of the chat (`follow` at the first join, `unfollow` at the last leave when every membership with that owner ended); the owner's own row is skipped | rows exist |
 
-No table is created for emotions or recommendations: IM has none, so those pages keep their normal unavailable
-state. Chat membership is the only relation IM has that looks like a follow, which is why the network page can show it. The details page offers a card for a page only when its tables exist, and
-`Exps.annotations` is extended with `opinions`, `sentiment` and `toxicity` when the derived database holds them, so
+No table is created for recommendations: IM has none, so that page keeps its normal unavailable state. Chat membership is the only relation IM has that looks like a follow, which is why the network page can show it. The details page offers a card for a page only when its tables exist, and
+`Exps.annotations` is extended with `opinions`, `sentiment`, `emotion` and `toxicity` when the derived database holds them, so
 the existing checks of the opinion page pass without a special rule.
 
 ## What is not claimed

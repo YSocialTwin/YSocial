@@ -425,3 +425,35 @@ def test_the_annotator_error_is_reported_for_the_page(folder, monkeypatch):
     monkeypatch.setattr(analytics, "source_path", lambda exp: src)
     assert "vaderSentiment is not installed" in analytics.annotation_problem(Exp(), "sentiment")
     assert analytics.annotation_problem(Exp(), "toxicity") == ""
+
+
+def test_emotion_annotations_become_emotion_tables(tmp_path):
+    from y_web.src.im import analytics_etl as etl
+
+    path = tmp_path / "emo"
+    path.mkdir()
+    src = str(path / "database_server.db")
+    build_random_db(src, seed=3, rounds=10, messages=50)
+    with sqlite3.connect(src) as conn:
+        ids = [r[0] for r in conn.execute("SELECT id FROM messages ORDER BY id LIMIT 3")]
+        conn.execute(
+            "INSERT INTO annotation_methods (method_ref, method_id, version, params_hash, params) "
+            "VALUES ('emotions_llm:1:x', 'emotions_llm', '1', 'x', '{}')"
+        )
+        rows = [
+            (ids[0], '{"emotions": ["approval", "curiosity"]}', "ok"),
+            (ids[1], '{"emotions": ["approval"]}', "ok"),
+            (ids[2], '{"error": "boom"}', "error"),
+        ]
+        for mid, value, status in rows:
+            conn.execute(
+                "INSERT INTO annotations (message_id, method_ref, status, value, created_at) VALUES (?, 'emotions_llm:1:x', ?, ?, '2026-01-01')",
+                (mid, status, value),
+            )
+        conn.commit()
+    etl.refresh(str(path), src)
+    with sqlite3.connect(etl.analytics_path(str(path))) as conn:
+        names = dict(conn.execute("SELECT id, emotion FROM emotions"))
+        links = conn.execute("SELECT emotion_id FROM post_emotions").fetchall()
+    assert sorted(names.values()) == ["approval", "curiosity"]
+    assert len(links) == 3  # two labels on the first post, one on the second, none for the failed one

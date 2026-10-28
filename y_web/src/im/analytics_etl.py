@@ -18,11 +18,12 @@ interests/post_topics     topics, message_topics                                
 hashtags/post_hashtags    hashtags, message_hashtags                             rows exist
 post_toxicity             annotations of ``toxicity_*`` methods, status ok       rows exist
 post_sentiment            annotations of ``sentiment_*`` methods, status ok      rows exist
+post_emotions/emotions    annotations of ``emotion*`` methods, status ok         rows exist
 agent_opinion             agent_opinions                                         rows exist
 stress_reward             stress_reward (same columns)                           rows exist
 follow                     chat_members (member follows the chat's owner)         rows exist
-(no table)                emotions, recommendations                              IM has no such data: the pages
-                                                                                 keep their normal unavailable state
+(no table)                recommendations                                        IM has no such data: the page
+                                                                                 keeps its normal unavailable state
 ========================  =====================================================  ==============================
 
 The build is a full rebuild into a temporary file followed by an atomic replace; ``etl_state`` holds the watermark
@@ -380,6 +381,21 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
                     }
                 )
         put(M.Post_Sentiment, sent)
+
+        # emotions: one label per row (``{"emotions": ["approval", ...]}``), the first method by name wins per post
+        seen = set()
+        emotion_ids: Dict[str, int] = {}
+        emotion_links = []
+        for mid, value in annotation_rows("emotion"):
+            if mid not in pid or pid[mid] in seen:
+                continue
+            seen.add(pid[mid])
+            labels = _persona(value).get("emotions")
+            for label in dict.fromkeys(_text(x)[:20] for x in (labels if isinstance(labels, list) else []) if _text(x)):
+                emotion_ids.setdefault(label, len(emotion_ids) + 1)
+                emotion_links.append({"post_id": pid[mid], "emotion_id": emotion_ids[label]})
+        put(M.Emotions, ({"id": i, "emotion": label, "icon": ""} for label, i in emotion_ids.items()))
+        put(M.Post_emotions, emotion_links)
 
         # --- opinions, stress/reward ----------------------------------------------------------
         first_round = min(round_ids) if round_ids else 0
