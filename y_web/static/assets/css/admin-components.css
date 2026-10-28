@@ -3777,3 +3777,26 @@ input:checked + .slider:before {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* cards that are links: no underline or link colour on hover/focus (the global a:hover would underline every line) */
+.ys-analytics-page-card,
+.ys-analytics-page-card:hover,
+.ys-analytics-page-card:focus,
+.ys-analytics-page-card:focus-visible,
+.ys-analytics-page-card:hover *,
+.ys-analytics-page-card:focus * {
+    text-decoration: none;
+}
+
+.ys-analytics-page-card:hover .ys-analytics-page-title {
+    color: #1f2937;
+}
+
+.ys-analytics-page-card:hover .ys-analytics-page-meta {
+    color: #64748b;
+}
+
+.ys-analytics-page-card:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
