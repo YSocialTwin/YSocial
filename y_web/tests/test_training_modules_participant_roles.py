@@ -186,8 +186,13 @@ def test_no_hook_registered_leaves_the_flow_unchanged(core_app):
 
 # ---------------------------------------------------------------- admin forms
 def _training(monkeypatch, available):
+    # ``sub/__init__`` re-exports the Blueprint under the name ``users``,
+    # which shadows the module in dotted paths: patch the module itself.
+    import importlib
+
     monkeypatch.setattr(
-        "y_web.routes.admin.sub.users.training_modules_available",
+        importlib.import_module("y_web.routes.admin.sub.users"),
+        "training_modules_available",
         lambda: available,
     )
 
@@ -245,6 +250,11 @@ def test_users_page_hides_student_and_teacher_without_the_plugin(core_app, monke
 
 
 def test_student_accounts_are_refused_without_the_plugin(core_app, monkeypatch):
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import Admin_users
+
     _training(monkeypatch, False)
     with core_app.app_context():
         admin_id = _make_admin_user("admin").get_id()
