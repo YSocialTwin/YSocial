@@ -54,3 +54,22 @@ def test_the_training_modules_provisioning_works_for_im(tmp_path, monkeypatch):
         exp, user_id=9, username="stu", email="", password="", joined_on=0
     )
     assert user is not None and user.id.startswith("h-")
+
+
+def test_the_provisioned_hook_is_emitted_for_im_with_the_human_account(tmp_path, monkeypatch):
+    """Training Modules marks the scenario as entered from this hook, so IM must emit it too."""
+    from y_web.src.experiment import helpers
+    from y_web.src.external_runtime import plugin_hooks
+    from y_web.src.im.human_identity import human_account_id
+
+    exp, _ = _im_exp(tmp_path)
+    seen = []
+    monkeypatch.setattr(plugin_hooks, "emit_hook", lambda name, *a, **k: seen.append((name, a)))
+    user, _created = helpers.ensure_experiment_user(
+        exp, user_id=7, username="u", email="", password="", account_id=7
+    )
+    assert seen == [("experiment_user_provisioned", (exp, 7, human_account_id("uid_abc", 7), False))]
+    # no platform account given (e.g. an admin assignment): nothing is reported
+    seen.clear()
+    helpers.ensure_experiment_user(exp, user_id=7, username="u", email="", password="")
+    assert seen == []
