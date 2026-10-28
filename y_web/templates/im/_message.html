@@ -16,17 +16,29 @@
     {% if m.deleted %}
     <p class="im-text im-tombstone">{{ _('This message was deleted.') }}</p>
     {% else %}
-    <p class="im-text">{{ m.text }}</p>
+    <p class="im-text">{{ im_text_without_urls(m.text, m.urls) if m.urls else m.text }}</p>
     {% endif %}
     {% if m.media_type %}<div class="im-media">{{ _('[%(kind)s attachment]', kind=m.media_type) }}</div>{% endif %}
-    {% for u in m.urls %}<div class="im-link-card"><a href="{{ u.url }}" rel="noopener noreferrer nofollow" target="_blank">{{ u.domain or u.url }}</a><small>{{ u.url }}</small></div>{% endfor %}
+    {% set seen = [] %}
+    {% for u in m.urls %}{% if u.url not in seen %}{% set _ = seen.append(u.url) %}
+    {% set pv = im_link_preview(exp_id, u.url) %}
+    <a class="im-link-card{{ ' has-image' if pv.image }}" href="{{ u.url }}" target="_blank" rel="noopener noreferrer nofollow" title="{{ u.url }}" data-preview-url="{{ u.url }}"{% if pv.pending %} data-preview-pending="1"{% endif %}>
+      {% if pv.image %}<img class="im-link-img" src="{{ pv.image }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% endif %}
+      <span class="im-link-body">
+        <span class="im-link-domain">{{ u.domain or pv.short }}</span>
+        {% if pv.title %}<strong class="im-link-title">{{ pv.title }}</strong>{% endif %}
+        {% if pv.summary %}<span class="im-link-summary">{{ pv.summary }}</span>{% endif %}
+        <span class="im-link-url">{{ pv.short }}</span>
+      </span>
+    </a>
+    {% endif %}{% endfor %}
     {% if not m.deleted %}
     {%- set tox = ann.get('toxicity') -%}
     {% if (flags.topics and m.topics) or (flags.sentiment and ann.get('sentiment')) or (flags.toxicity and tox is not none) or (flags.emotion and ann.get('emotion')) or m.off_topic or m.hashtags or m.mentions %}
     <div class="im-chips">
       {% if flags.topics %}{% for t in m.topics or [] %}<span class="im-chip is-topic" title="{{ _('Topic') }}{{ ' · ' ~ t.source if t.source }}">{{ t.label }}</span>{% endfor %}{% endif %}
       {% for h in m.hashtags or [] %}<span class="im-chip is-tag">#{{ h }}</span>{% endfor %}
-      {% for u in m.mentions or [] %}<span class="im-chip is-mention">@{{ u }}</span>{% endfor %}
+      {% for u in m.mentions or [] %}{% set uid = (m.mention_ids or {}).get(u) %}{% if uid %}<a class="im-chip is-mention" href="/{{ exp_id }}/im/profile/{{ uid }}{{ '?' ~ (params|urlencode) if params else '' }}" title="{{ _('Open the profile') }}">@{{ u }}</a>{% else %}<span class="im-chip is-mention">@{{ u }}</span>{% endif %}{% endfor %}
       {% if flags.sentiment and ann.get('sentiment') %}<span class="im-chip is-sentiment is-{{ ann.get('sentiment').label }}" title="{{ _('Sentiment (compound score)') }}">{{ {'positive': '🙂', 'neutral': '😐', 'negative': '🙁'}.get(ann.get('sentiment').label) }} {{ '%+.2f'|format(ann.get('sentiment').compound) }}</span>{% endif %}
       {% if flags.toxicity and tox is not none %}<span class="im-chip is-tox {{ 'is-high' if tox >= 0.6 else 'is-mid' if tox >= 0.3 else 'is-low' }}" title="{{ _('Toxicity score') }}">☣ {{ '%.2f'|format(tox) }}</span>{% endif %}
       {% if flags.emotion and ann.get('emotion') %}<span class="im-chip is-emotion" title="{{ _('Emotion') }}">{{ ann.get('emotion') }}</span>{% endif %}

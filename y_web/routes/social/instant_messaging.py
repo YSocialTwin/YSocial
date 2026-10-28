@@ -20,6 +20,7 @@ from y_web.src.im import is_im_experiment
 from y_web.src.im.engine import ImReadError, open_reader
 from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, avatar_hue, latest_round, status
 from y_web.src.im.timeline import clamp_round, day_slot, ordinal
+from y_web.src.im import link_preview as previews
 from y_web.src.im import participant as participation
 from y_web.src.im.gateway_client import GatewayClient, GatewayUnavailable
 from y_web.src.im.gateway_process import is_running as gateway_running, offline_possible
@@ -575,6 +576,45 @@ def im_api_history(exp_id, chat_id):
             abort(404)
         _record_exposure(ctx, chat_id, page)
         return jsonify(page)
+
+    return _view(exp_id, handler)
+
+
+# -- link previews: the cards of the URLs in the messages ------------------------------------------
+def _folder_of(exp_id):
+    """The experiment folder of ``exp_id``, looked up once per request."""
+    cache = flask_g.setdefault("im_folders", {})
+    if exp_id not in cache:
+        exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
+        cache[exp_id] = participation.experiment_folder(exp) if exp is not None else ""
+    return cache[exp_id]
+
+
+@main.app_template_global("im_link_preview")
+def im_link_preview(exp_id, url):
+    return previews.lookup(_folder_of(exp_id), url)
+
+
+@main.app_template_global("im_text_without_urls")
+def im_text_without_urls(text, urls):
+    return previews.strip_urls(text, [u.get("url") for u in urls or []])
+
+
+@main.route("/<int:exp_id>/im/api/link-preview")
+@login_required
+def im_api_link_preview(exp_id):
+    url = (request.args.get("url") or "").strip()
+
+    def handler(session, ctx, rd):
+        known = session.execute(select(rd.m.MessageUrl.id).where(rd.m.MessageUrl.url == url).limit(1)).first()
+        if not url or known is None:
+            abort(404)  # only the addresses of this experiment's messages are ever fetched
+        folder = _folder_of(exp_id)
+        info = previews.lookup(folder, url)
+        if info["pending"]:
+            fetched = previews.fetch_remote(folder, url)
+            info = {**info, **{k: v for k, v in fetched.items() if v and k in ("title", "summary", "image") and not info.get(k)}}
+        return jsonify({k: info[k] for k in ("title", "summary", "image")})
 
     return _view(exp_id, handler)
 

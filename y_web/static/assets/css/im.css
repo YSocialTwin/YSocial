@@ -145,10 +145,17 @@ summary.im-icon-btn::-webkit-details-marker { display: none; }
 .im-fwd { font-size: 13px; color: var(--im-accent); }
 .im-text { margin: 2px 0; white-space: pre-wrap; } .im-tombstone { font-style: italic; color: var(--im-muted); }
 .im-media { max-width: 100%; border-radius: 8px; }
-.im-link-card { display: block; margin: 4px 0; padding: 6px 10px; border-left: 3px solid var(--im-accent); background: var(--im-chip-bg); border-radius: 4px; font-size: 13px; }
+.im-link-card { display: flex; flex-direction: column; margin: 6px 0; border-left: 3px solid var(--im-accent); background: var(--im-chip-bg); border-radius: 6px; font-size: 13px; overflow: hidden; color: inherit; text-decoration: none; max-width: 420px; }
+.im-link-card:hover, .im-link-card:focus-visible { filter: brightness(.97); }
+.im-link-img { display: block; width: 100%; max-height: 200px; object-fit: cover; }
+.im-link-body { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; min-width: 0; }
+.im-link-domain { color: var(--im-accent); font-size: 12px; font-weight: 600; text-transform: lowercase; }
+.im-link-title { font-size: 14px; line-height: 1.3; }
+.im-link-summary { color: var(--im-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.im-link-url { color: var(--im-accent); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .im-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
 .im-chip { font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--im-chip-bg); color: var(--im-accent); white-space: nowrap; }
-.im-chip.is-tag { background: rgba(20, 184, 166, .15); color: var(--im-teal); } .im-chip.is-mention { background: rgba(155, 89, 182, .15); color: #9b59b6; }
+.im-chip.is-tag { background: rgba(20, 184, 166, .15); color: var(--im-teal); } .im-chip.is-mention { background: rgba(155, 89, 182, .15); color: #9b59b6; } a.im-chip.is-mention { text-decoration: none; } a.im-chip.is-mention:hover, a.im-chip.is-mention:focus-visible { background: rgba(155, 89, 182, .28); text-decoration: underline; }
 .im-chip.is-sentiment.is-positive { background: rgba(46, 160, 67, .15); color: #2ea043; } .im-chip.is-sentiment.is-negative { background: rgba(218, 54, 51, .15); color: #da3633; } .im-chip.is-sentiment.is-neutral { background: var(--im-hover); color: var(--im-muted); }
 .im-chip.is-tox.is-low { background: rgba(46, 160, 67, .15); color: #2ea043; } .im-chip.is-tox.is-mid { background: rgba(230, 126, 34, .18); color: #c0661a; } .im-chip.is-tox.is-high { background: rgba(218, 54, 51, .18); color: #da3633; }
 .im-chip.is-emotion { background: rgba(241, 196, 15, .2); color: #9a7d0a; } .im-chip.is-off { background: rgba(218, 54, 51, .12); color: #da3633; } .im-chip.is-origin { background: var(--im-hover); color: var(--im-muted); }

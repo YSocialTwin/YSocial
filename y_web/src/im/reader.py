@@ -233,10 +233,14 @@ class Reader:
             .order_by(m.Hashtag.hashtag)
         ):
             out[mid].setdefault("hashtags", []).append(tag)
-        for mid, name in self.s.execute(
-            select(m.Mention.message_id, m.Mention.username).where(m.Mention.message_id.in_(ids)).order_by(m.Mention.id)
+        for mid, name, account_id in self.s.execute(
+            select(m.Mention.message_id, m.Mention.username, m.Mention.mentioned_account_id)
+            .where(m.Mention.message_id.in_(ids))
+            .order_by(m.Mention.id)
         ):
             out[mid].setdefault("mentions", []).append(name)
+            if account_id:  # the profile the tag points to (an unknown username stays plain text)
+                out[mid].setdefault("mention_ids", {})[name] = account_id
         seen = set()
         for mid, method, value in self.s.execute(
             select(m.Annotation.message_id, m.Annotation.method_ref, m.Annotation.value)

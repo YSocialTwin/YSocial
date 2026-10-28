@@ -257,3 +257,53 @@
       .catch(function () {});
   }, seconds * 1000);
 })();
+
+/* Link cards: the image (and a title, when the news snapshot has none) is read from the article page after the
+   chat is shown, so a slow or unreachable site never delays the messages. */
+(function () {
+  var exp = document.body.getAttribute('data-exp');
+  if (!exp || !window.fetch) return;
+  var queue = [], running = 0;
+  function fill(card, data) {
+    card.removeAttribute('data-preview-pending');
+    if (!data) return;
+    var body = card.querySelector('.im-link-body');
+    if (data.image && !card.querySelector('.im-link-img')) {
+      var img = document.createElement('img');
+      img.className = 'im-link-img'; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; img.src = data.image;
+      img.addEventListener('error', function () { img.remove(); card.classList.remove('has-image'); });
+      card.insertBefore(img, card.firstChild);
+      card.classList.add('has-image');
+    }
+    if (data.title && body && !card.querySelector('.im-link-title')) {
+      var t = document.createElement('strong'); t.className = 'im-link-title'; t.textContent = data.title;
+      body.insertBefore(t, card.querySelector('.im-link-url'));
+    }
+    if (data.summary && body && !card.querySelector('.im-link-summary')) {
+      var s = document.createElement('span'); s.className = 'im-link-summary'; s.textContent = data.summary;
+      body.insertBefore(s, card.querySelector('.im-link-url'));
+    }
+  }
+  function next() {
+    while (running < 2 && queue.length) {
+      var card = queue.shift();
+      running++;
+      fetch('/' + exp + '/im/api/link-preview?url=' + encodeURIComponent(card.getAttribute('data-preview-url')), { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; })
+        .then(function (data) { fill(this, data); running--; next(); }.bind(card));
+    }
+  }
+  function scan() {
+    document.querySelectorAll('.im-link-card[data-preview-pending]').forEach(function (card) {
+      card.removeAttribute('data-preview-pending'); // asked once per card
+      card.setAttribute('data-preview-asked', '1');
+      queue.push(card);
+    });
+    next();
+  }
+  var timer = null;
+  new MutationObserver(function () { clearTimeout(timer); timer = setTimeout(scan, 200); })
+    .observe(document.body, { childList: true, subtree: true });
+  scan();
+})();
