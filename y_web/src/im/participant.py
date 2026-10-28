@@ -123,8 +123,11 @@ def max_humans(exp) -> int:
     return int(human_config(experiment_folder(exp)).get("max_humans", 50))
 
 
-def pseudonym(user) -> str:
-    return display_name(user, pseudonymise=True)
+def pseudonym(user, exp_folder: Optional[str] = None) -> str:
+    """The username a participant gets in the run: their own, or ``participant-<id>`` when the experiment sets
+    ``human.pseudonymise_usernames`` in its ``server_config.json``."""
+    on = bool(exp_folder and human_config(exp_folder).get("pseudonymise_usernames", False))
+    return display_name(user, pseudonymise=on)
 
 
 # -- CSRF (the app has no global protection; these routes carry their own) -----------------------

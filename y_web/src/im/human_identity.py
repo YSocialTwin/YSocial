@@ -28,8 +28,8 @@ def experiment_uid(exp) -> str:
     return parts[1] if len(parts) > 1 else parts[0].removeprefix("experiments_")
 
 
-def display_name(user, pseudonymise: bool = True) -> str:
-    """Name shown to the simulated agents; pseudonymised by default (O-12)."""
+def display_name(user, pseudonymise: bool = False) -> str:
+    """Name shown to the simulated agents: the username, or ``participant-<id>`` when pseudonymised."""
     if pseudonymise:
         return f"participant-{int(user.id)}"
     return str(user.username)
