@@ -595,6 +595,11 @@ def test_news_feeds_become_pages_and_the_mode_and_snapshot_follow_the_form(app, 
         _post(app, env, exp, pop, name="cl2", news_mode="live")
         cfg2 = json.loads(Path(folder, "client_cl2-pop.json").read_text())
         assert cfg2["telegram"]["news"]["mode"] == "live" and len(calls) == 1
+        # the topic of each news post: the article's own by default, every channel topic on request
+        assert cfg["telegram"]["news"]["topic_mode"] == "classify"
+        _post(app, env, exp, pop, name="cl3", news_mode="live", news_topic_mode="channel")
+        cfg3 = json.loads(Path(folder, "client_cl3-pop.json").read_text())
+        assert cfg3["telegram"]["news"]["topic_mode"] == "channel"
 
 
 def _topic_ids(exp):

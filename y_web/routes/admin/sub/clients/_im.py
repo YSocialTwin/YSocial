@@ -293,6 +293,7 @@ def create_im_client(exp, name, descr, population_id, form_data):
         prompt_language=prompt_language,
     )
     config["telegram"].setdefault("news", {})["mode"] = news_mode
+    config["telegram"]["news"]["topic_mode"] = news.parse_topic_mode(form_data.get("news_topic_mode"))
     # chats typed in the editor make the client's own catalog; otherwise the shared one is used
     catalog_file = "topic_catalog.json"
     if catalog.get("chats"):

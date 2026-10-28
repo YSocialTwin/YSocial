@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:34+0000\n"
+"POT-Creation-Date: 2026-10-28 13:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3817,6 +3817,9 @@ msgstr ""
 msgid "Every prompt is the default one."
 msgstr ""
 
+msgid "Every topic of the channel"
+msgstr ""
+
 msgid "Every unlocked feature needs at least one alternative value."
 msgstr ""
 
@@ -4933,6 +4936,11 @@ msgid ""
 "How the experiment topics map onto agents and chats: whether interests "
 "come from the population or are drawn at random, how many public chats an"
 " agent joins per topic, and how often it writes off-topic."
+msgstr ""
+
+msgid ""
+"How the model is asked which topic a news article is about, or to name a "
+"new one."
 msgstr ""
 
 msgid "How the prompts work"
@@ -6551,6 +6559,9 @@ msgid "News source"
 msgstr ""
 
 msgid "News source name"
+msgstr ""
+
+msgid "News topics"
 msgstr ""
 
 msgid "News."
@@ -10473,6 +10484,11 @@ msgstr ""
 msgid "The topic found by the annotation"
 msgstr ""
 
+msgid ""
+"The topic of the article: an existing one, or a new topic drawn from its "
+"text"
+msgstr ""
+
 msgid "The topic the agent meant to write about"
 msgstr ""
 
@@ -10839,6 +10855,9 @@ msgid "Topic not found."
 msgstr ""
 
 msgid "Topic of a message"
+msgstr ""
+
+msgid "Topic of each news post"
 msgstr ""
 
 msgid "Topic-evolution tables not available"
@@ -11887,6 +11906,14 @@ msgid ""
 msgstr ""
 
 msgid "With a discussion group"
+msgstr ""
+
+msgid ""
+"With the first choice each news post is tagged only with the topic it is "
+"about. When no topic of the experiment fits, a new topic is created from "
+"the title and summary, added to the experiment and inherited as an "
+"interest by the agents who reply to, forward or react to the news (up to "
+"the limit of new topics in the advanced settings)."
 msgstr ""
 
 msgid ""

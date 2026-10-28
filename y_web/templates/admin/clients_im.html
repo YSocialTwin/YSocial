@@ -221,6 +221,18 @@
                                             </div>
                                         </div>
                                         <div class="box-line">
+                                            <span class="left">{{ _('Topic of each news post') }}</span>
+                                            <div class="select">
+                                                <select name="news_topic_mode">
+                                                    <option value="classify" selected>{{ _('The topic of the article: an existing one, or a new topic drawn from its text') }}</option>
+                                                    <option value="channel">{{ _('Every topic of the channel') }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-section-description">
+                                            {{ _('With the first choice each news post is tagged only with the topic it is about. When no topic of the experiment fits, a new topic is created from the title and summary, added to the experiment and inherited as an interest by the agents who reply to, forward or react to the news (up to the limit of new topics in the advanced settings).') }}
+                                        </div>
+                                        <div class="box-line">
                                             <span class="left">{{ _('News page for each selected feed') }}</span>
                                             <span class="right"><input type="checkbox" name="news_pages_from_feeds" value="1" {% if news_feed_count %}checked{% endif %}> <small>{{ _('%(n)s feeds selected', n=news_feed_count) }}</small></span>
                                         </div>

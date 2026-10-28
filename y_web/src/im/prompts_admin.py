@@ -32,6 +32,8 @@ GROUPS: List[Tuple[str, str, str, List[str]]] = [
       "forum_chats", "forum_line", "rename_chats", "rename_line", "create_topics", "no_weights", "role_names", "chat_type_names"]),
     ("topics", N_("Topics of the posts"), N_("How the topic and the chat of each post the agent has to write are given."),
      ["topic_header", "topic_line_any", "topic_line", "topic_line_open", "topic_off_note"]),
+    ("news", N_("News topics"), N_("How the model is asked which topic a news article is about, or to name a new one."),
+     ["news_topic_system", "news_topic_user"]),
     ("actions", N_("Action instructions"), N_("What the model is told about the fields each action needs."),
      ["help_reply", "help_react", "help_create_chat", "help_join", "help_leave", "help_read", "help_search", "help_private",
       "help_create_topic", "help_delete_topic", "help_rename_chat"]),

@@ -27,6 +27,15 @@ def parse_news_mode(value) -> str:
     return value if value in NEWS_MODES else "snapshot"
 
 
+TOPIC_MODES = ("classify", "channel")
+
+
+def parse_topic_mode(value) -> str:
+    """``classify`` (the default: each news post gets the topic of its article) or ``channel`` (all channel topics)."""
+    value = str(value or "").strip().lower()
+    return value if value in TOPIC_MODES else "classify"
+
+
 def selected_feeds(exp_folder: str) -> List[Dict[str, str]]:
     """The feeds assigned to the experiment, as ``[{"name", "feed_url"}]`` (the forum's ``rss_feeds.json``)."""
     try:

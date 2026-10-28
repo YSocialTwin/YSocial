@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:34+0000\n"
+"POT-Creation-Date: 2026-10-28 13:54+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -4265,6 +4265,9 @@ msgstr "Pesi degli eventi"
 msgid "Every prompt is the default one."
 msgstr "Ogni prompt è quello predefinito."
 
+msgid "Every topic of the channel"
+msgstr "Tutti gli argomenti del canale"
+
 msgid "Every unlocked feature needs at least one alternative value."
 msgstr "Ogni caratteristica sbloccata richiede almeno un valore alternativo."
 
@@ -5473,6 +5476,13 @@ msgstr ""
 " interessi vengono dalla popolazione o sono estratti a caso, a quante "
 "chat pubbliche un agente si iscrive per argomento e quanto spesso scrive "
 "fuori argomento."
+
+msgid ""
+"How the model is asked which topic a news article is about, or to name a "
+"new one."
+msgstr ""
+"Come si chiede al modello di quale argomento tratta un articolo di "
+"notizie, o di indicarne uno nuovo."
 
 msgid "How the prompts work"
 msgstr "Come funzionano i prompt"
@@ -7232,6 +7242,9 @@ msgstr "Fonte delle notizie"
 
 msgid "News source name"
 msgstr "Nome della fonte di notizie"
+
+msgid "News topics"
+msgstr "Argomenti delle notizie"
 
 msgid "News."
 msgstr "Notizie."
@@ -11522,6 +11535,13 @@ msgstr "L'argomento esiste già."
 msgid "The topic found by the annotation"
 msgstr "Il topic trovato dall'annotazione"
 
+msgid ""
+"The topic of the article: an existing one, or a new topic drawn from its "
+"text"
+msgstr ""
+"L'argomento dell'articolo: uno esistente, oppure un nuovo argomento "
+"ricavato dal testo"
+
 msgid "The topic the agent meant to write about"
 msgstr "Il topic su cui l'agente voleva scrivere"
 
@@ -11965,6 +11985,9 @@ msgstr "Argomento non trovato."
 
 msgid "Topic of a message"
 msgstr "Topic di un messaggio"
+
+msgid "Topic of each news post"
+msgstr "Argomento di ogni post di notizie"
 
 msgid "Topic-evolution tables not available"
 msgstr "Tabelle di evoluzione degli argomenti non disponibili"
@@ -13170,6 +13193,20 @@ msgstr ""
 
 msgid "With a discussion group"
 msgstr "Con gruppo di discussione"
+
+msgid ""
+"With the first choice each news post is tagged only with the topic it is "
+"about. When no topic of the experiment fits, a new topic is created from "
+"the title and summary, added to the experiment and inherited as an "
+"interest by the agents who reply to, forward or react to the news (up to "
+"the limit of new topics in the advanced settings)."
+msgstr ""
+"Con la prima scelta ogni post di notizie riceve solo l'argomento di cui "
+"parla. Se nessun argomento dell'esperimento è adatto, ne viene creato uno"
+" nuovo dal titolo e dal sommario, aggiunto all'esperimento ed ereditato "
+"come interesse dagli agenti che rispondono alla notizia, la inoltrano o "
+"reagiscono (entro il limite di nuovi argomenti nelle impostazioni "
+"avanzate)."
 
 msgid ""
 "With the same seed, population and settings the choices of the agents are"
