@@ -47,6 +47,10 @@
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
 
+                                    <div class="ys-note-box">
+                                        {{ _('A client is a group of agents (the population) that lives in the chats of this experiment. The sections below follow the order of the simulation: how long it runs, who writes the messages (language model, memory, actions), what is talked about and where (news, topics, chats), when the agents are active, and the advanced settings. Every optional section has sensible defaults: leave it untouched if you do not need it.') }}
+                                    </div>
+
                                     <div class="box-line">
                                         <span class="left">{{ _('Name') }}</span>
                                         <span class="right ys-w-70"><input type="text" name="name" class="input" required></span>
@@ -73,6 +77,9 @@
 
                                     <div class="tutorial-section">
                                         <div class="form-section-header">{{ _('Simulation Parameters') }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('How long the client runs and how time is divided. One round is one hour of simulated time; within a round the sessions of the agents start at different ticks, so that messages do not all appear at the same minute.') }}
+                                        </div>
                                         <div class="box-line">
                                             <span class="left">{{ _('Simulation Length (days)') }}</span>
                                             <span class="right ys-w-70"><input type="number" name="days" class="input" min="1" max="3650" step="1" value="{{ times.days if run_started or times_locked else 7 }}" required></span>
@@ -82,13 +89,15 @@
                                             <span class="right ys-w-70"><input type="date" name="start_date" class="input" value="{{ times.start_date }}" {% if times_locked %}readonly{% endif %} required>
                                             {% if times_locked %}<small>{{ _('The start date and the round length belong to the experiment: the first client set them.') }}</small>{% endif %}</span>
                                         </div>
-                                        <div class="box-line">
+                                        <div class="box-line ys-hint-text">
                                             <span class="left">{{ _('Ticks per Round') }}</span>
-                                            <span class="right ys-w-70"><input type="number" name="ticks_per_round" class="input" min="1" max="60" step="1" value="{{ times.ticks_per_round }}" {% if times_locked %}readonly{% endif %} required></span>
+                                            <span class="right ys-w-70"><input type="number" name="ticks_per_round" class="input" min="1" max="60" step="1" value="{{ times.ticks_per_round }}" {% if times_locked %}readonly{% endif %} required>
+                                            <small>{{ _('Time steps in an hour (for example 60 = one per minute). More ticks spread the messages of a round more finely; the hour itself does not change.') }}</small></span>
                                         </div>
-                                        <div class="box-line">
+                                        <div class="box-line ys-hint-text">
                                             <span class="left">{{ _('Random Seed') }}</span>
-                                            <span class="right ys-w-70"><input type="number" name="seed" class="input" min="0" step="1" placeholder="{{ _('Random if empty') }}"></span>
+                                            <span class="right ys-w-70"><input type="number" name="seed" class="input" min="0" step="1" placeholder="{{ _('Random if empty') }}">
+                                            <small>{{ _('With the same seed, population and settings the choices of the agents are drawn again in the same way: use it to repeat a run.') }}</small></span>
                                         </div>
                                     </div>
 
@@ -96,7 +105,7 @@
                                     <div class="tutorial-section">
                                         <div class="form-section-header">{{ _('Large Language Models') }}</div>
                                         <div class="form-section-description">
-                                            {{ _('Configure the LLM backend and model for agent content generation.') }}
+                                            {{ _('The language model that writes the messages of the agents and decides what they do in each session (which chat to read, whether to reply, forward or react). The temperature sets how varied the output is.') }}
                                         </div>
                                         <div class="box-line">
                                             <span class="left">{{ _('LLM Backend') }}</span>
@@ -220,7 +229,7 @@
                                     <div class="tutorial-section">
                                         <div class="form-section-header">{{ _('Topic Interest Distribution') }}</div>
                                         <div class="form-section-description">
-                                            {{ _('Specify the percentage of agents interested in each topic. Default is 100%% for all topics.') }}
+                                            {{ _('The topics are those of the experiment (see Experiment Configuration) and are shared by all clients. Here you set how widespread each one is among the agents of this client: every agent is interested in a topic with the probability you enter (100%% = every agent, 0%% = nobody; an agent always keeps at least one topic). The interests decide which public chats an agent joins and what it writes about. The percentage is also the weight of the topic when topics are drawn at random (see Topics and Chats in the advanced settings). Pages are interested in every topic above 0%%.') }}
                                         </div>
                                         <div class="topic-interest-boxes">
                                             {% for topic in topics %}
@@ -236,31 +245,57 @@
                                     <div class="tutorial-section" id="section-chats-by-topic">
                                         <div class="form-section-header ys-field-note">{{ _('Chats by Topic') }} <span>{{ _('(Optional)') }}</span></div>
                                         <div class="form-section-description">
-                                            {{ _('Define the channels and groups that exist at the start and the topics each one is about. Without any, IM creates them from the topics and the population: this editor is for designs that need specific chats.') }}
+                                            {{ _('Topics say what the agents are interested in; chats are where they talk about it. If you leave this section empty the chats are generated automatically: a channel for every page of the population, a channel for a share of the agents (about one in ten) with a discussion group for half of them, and a public group for each topic that no chat covers. Every agent then joins up to two public chats for each topic it is interested in, preferring the most popular ones. Add chats here when the design needs specific ones: the chats you define are created first, the automatic ones only fill what is left.') }}
                                         </div>
+                                        <div id="im-chat-empty" class="ys-text-xs-meta">{{ _('No chat defined: the chats are generated automatically.') }}</div>
                                         <div id="im-chat-rows"></div>
                                         <button type="button" class="button is-solid grey-button" id="im-add-chat">{{ _('Add chat') }}</button>
                                     </div>
 
-                                    <div class="tutorial-section">
+                                    <div id="section-activity-rates" class="tutorial-section">
                                         <div class="form-section-header ys-field-note">{{ _('Hourly Activity Rates') }} <span>{{ _('(Optional)') }}</span></div>
-                                        <div class="box-line">
-                                            <span class="left">{{ _('Customize hourly activity') }}</span>
-                                            <span class="right ys-w-70">
-                                                <label class="ys-flex-click">
-                                                    <input type="checkbox" name="hourly_custom" value="true" onchange="document.getElementById('im_hourly_fields').style.display = this.checked ? 'block' : 'none'">
-                                                    <span class="ys-text-brand">{{ _('Set the share of activity of each hour (0 to 1)') }}</span>
-                                                </label>
-                                            </span>
+                                        <div class="form-section-description">
+                                            {{ _('Share of the agents that are active in each hour of the day, from 0 to 1 (0.04 = 4%%). Hours left empty use the default, 0.04. An agent is also active only in the hours of its own activity profile. Leave everything empty to use the defaults.') }}
                                         </div>
-                                        <div id="im_hourly_fields" class="ys-collapsible-panel">
-                                            {% for hour in range(24) %}
-                                            <div class="box-line">
-                                                <span class="left">{{ '%02d:00' % hour }}</span>
-                                                <span class="right ys-w-70"><input type="number" name="hourly_{{ hour }}" class="input" min="0" max="1" step="0.01" placeholder="0 - 1"></span>
+
+                                        <details class="ys-mb-20">
+                                            <summary class="ys-accordion-header">
+                                                <span class="ys-inline-flex-gap">
+                                                    <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                    {{ _('Activity Rates Configuration') }}
+                                                </span>
+                                            </summary>
+                                            <div class="ys-content-panel">
+                                                <div class="network-option-card ys-card-white-mb">
+                                                    <div class="network-card-title">
+                                                        <span class="network-card-icon">📊</span>
+                                                        {{ _('Activity Rates Visualization') }}
+                                                    </div>
+                                                    <p class="ys-field-hint-sm">{{ _('Real-time preview of hourly activity distribution.') }}</p>
+                                                    <div class="ys-chart-box">
+                                                        <canvas id="activity_rates_im"></canvas>
+                                                    </div>
+                                                </div>
+
+                                                <div class="network-option-card ys-card-gray">
+                                                    <div class="network-card-title">
+                                                        <span class="network-card-icon">⏰</span>
+                                                        {{ _('Customize Hourly Rates') }}
+                                                    </div>
+                                                    <p class="ys-field-hint">{{ _('Enter custom values for specific hours (leave empty to use defaults shown in placeholders).') }}</p>
+                                                    <div class="activity-grid-create">
+                                                        {% for hour in range(24) %}
+                                                        <div class="activity-hour-create">
+                                                            <label>{{ hour }}h</label>
+                                                            <input type="number" name="hourly_{{ hour }}" min="0" max="1" step="0.001" placeholder="0.04" value="">
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            {% endfor %}
-                                        </div>
+                                        </details>
                                     </div>
 
                                     {% for gid, glabel, gdescr, gfields in adv_groups %}
@@ -284,7 +319,14 @@
 </div>
 
 <script type="application/json" id="ys-data-clients">{{ {"llmAgentsEnabled": llm_agents_enabled, "experimentMemoryEnabled": experiment_memory_enabled, "memoryConfigurationSupported": memory_configuration_supported} | tojson }}</script>
-<script type="application/json" id="ys-data-clients-im">{"topics": {{ topics | tojson }}, "T": {"title": {{ _('Title') | tojson }}, "type": {{ _('Type') | tojson }}, "visibility": {{ _('Visibility') | tojson }}, "popularity": {{ _('Popularity') | tojson }}, "owner": {{ _('Owner (page username, empty = automatic)') | tojson }}, "discussion": {{ _('With a discussion group') | tojson }}, "topics": {{ _('Topics') | tojson }}, "remove": {{ _('Remove') | tojson }}, "channel": {{ _('Channel') | tojson }}, "supergroup": {{ _('Supergroup') | tojson }}, "group": {{ _('Group') | tojson }}, "pub": {{ _('Public') | tojson }}, "priv": {{ _('Private') | tojson }}}}</script>
+<script type="application/json" id="ys-data-clients-im">{"topics": {{ topics | tojson }}, "T": {"title": {{ _('Title') | tojson }}, "type": {{ _('Type') | tojson }}, "visibility": {{ _('Visibility') | tojson }}, "popularity": {{ _('Popularity') | tojson }}, "owner": {{ _('Owner (page username, empty = automatic)') | tojson }}, "discussion": {{ _('With a discussion group') | tojson }}, "topics": {{ _('Topics') | tojson }}, "remove": {{ _('Remove') | tojson }}, "channel": {{ _('Channel') | tojson }}, "supergroup": {{ _('Supergroup') | tojson }}, "group": {{ _('Group') | tojson }}, "pub": {{ _('Public') | tojson }}, "priv": {{ _('Private') | tojson }}, "chat": {{ _('Chat') | tojson }}, "activity": {{ _('Activity') | tojson }}, "active": {{ _('Active: {pct}') | tojson }},
+"h_title": {{ _('Name of the channel or group, shown to the agents.') | tojson }},
+"h_type": {{ _('In a channel only the owner posts and the others follow it; in a group or supergroup every member can write and reply.') | tojson }},
+"h_visibility": {{ _('A private chat cannot be discovered: agents never join it on their own, so use it only for chats that stay almost empty.') | tojson }},
+"h_topics": {{ _('At least one. Agents interested in these topics join the chat and write about them in it.') | tojson }},
+"h_popularity": {{ _('Relative weight when agents choose where to join: a chat with 2 attracts twice as many members as one with 1 (default 1).') | tojson }},
+"h_owner": {{ _('Username of a page of the population that owns the chat. Empty: the agent most interested in the topics of the chat is chosen.') | tojson }},
+"h_discussion": {{ _('Channels only: also create a linked group where the followers comment on the posts.') | tojson }}}}</script>
 <script src="{{ url_for('static', filename='assets/js/admin-clients-im.js') }}"></script>
 {% include "admin/tutorials/clients_tutorial.html" %}
 <script src="{{ url_for('static', filename='assets/js/admin-clients.js') }}"></script>

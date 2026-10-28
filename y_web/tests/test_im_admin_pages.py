@@ -284,3 +284,20 @@ def test_stress_reward_settings_follow_the_experiment_switch(im_app, tmp_path, s
         assert f"experiment_details/{exp_id}" in response.headers["Location"]
     else:
         assert b"Traceback" not in response.data
+
+
+def test_client_form_explains_its_sections_and_uses_the_common_hourly_activity_layout(im_app, monkeypatch):
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    page = client.get(f"/admin/clients_im/{_make_im_experiment(app)}").data.decode()
+    # the hourly rates look like the ones of the other platforms: preview chart plus a grid of 24 inputs
+    assert 'id="activity_rates_im"' in page and page.count('class="activity-hour-create"') == 24
+    assert 'name="hourly_0"' in page and 'name="hourly_23"' in page and "hourly_custom" not in page
+    # topic interest, chats by topic and the other sections say what they do
+    assert "every agent is interested in a topic with the probability you enter" in page
+    assert "the chats you define are created first" in page
+    assert 'id="im-chat-empty"' in page and "section-activity-rates" in page
+    assert "Time steps in an hour" in page

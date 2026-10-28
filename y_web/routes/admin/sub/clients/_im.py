@@ -149,9 +149,7 @@ def _profile_name(profile_id):
 
 
 def _hourly_activity(form):
-    """``{hour: rate}`` when the researcher customised the hourly activity, else ``None`` (IM's default)."""
-    if str(form.get("hourly_custom") or "").lower() not in {"1", "true", "on", "yes"}:
-        return None
+    """``{hour: rate}`` for the hours the researcher filled in, else ``None`` (IM's default of 0.04 for every hour)."""
     rates = {}
     for hour in range(24):
         raw = form.get(f"hourly_{hour}")

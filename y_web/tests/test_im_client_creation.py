@@ -644,3 +644,27 @@ def test_the_shared_catalog_is_kept_with_a_warning_once_other_clients_use_it(app
         _post(app, env, exp, pop, name="cl2", **{f"topic_interest_{_topic_ids(exp)['politics']}": "40"})
         assert any("topic catalog" in m for _, m in env.flashes), env.flashes
         assert (folder / "topic_catalog.json").read_text() == before
+
+
+def test_filled_hourly_rates_are_used_without_a_switch_and_the_others_stay_default(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, hourly_8="0.2", hourly_9="")
+        assert not [f for f in env.flashes if f[0] == "error"], env.flashes
+        cfg = json.loads(Path(env.im._experiment_folder(exp), "client_cl-pop.json").read_text())
+        assert cfg["simulation"]["hourly_activity"] == {"8": 0.2}
+
+
+def test_no_hourly_rate_leaves_the_runtime_default(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop)
+        cfg = json.loads(Path(env.im._experiment_folder(exp), "client_cl-pop.json").read_text())
+        assert "hourly_activity" not in cfg["simulation"]
+
+
+def test_a_rate_out_of_range_is_refused(app, env):
+    with app.app_context():
+        exp, pop = _seed(app, env)
+        _post(app, env, exp, pop, hourly_3="1.5")
+        assert any(f[0] == "error" for f in env.flashes), env.flashes

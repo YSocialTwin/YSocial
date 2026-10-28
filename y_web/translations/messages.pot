@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 18:11+0000\n"
+"POT-Creation-Date: 2026-10-28 13:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -404,6 +404,15 @@ msgid "A chat with this name already exists."
 msgstr ""
 
 msgid ""
+"A client is a group of agents (the population) that lives in the chats of"
+" this experiment. The sections below follow the order of the simulation: "
+"how long it runs, who writes the messages (language model, memory, "
+"actions), what is talked about and where (news, topics, chats), when the "
+"agents are active, and the advanced settings. Every optional section has "
+"sensible defaults: leave it untouched if you do not need it."
+msgstr ""
+
+msgid ""
 "A client manages a population of agents that interact within the "
 "simulation. Each client runs independently with its own configuration and"
 " LLM settings."
@@ -431,6 +440,11 @@ msgstr ""
 msgid ""
 "A population is a group of synthetic agents that will participate in your"
 " simulation. For more advanced options, visit the %(link)s page."
+msgstr ""
+
+msgid ""
+"A private chat cannot be discovered: agents never join it on their own, "
+"so use it only for chats that stay almost empty."
 msgstr ""
 
 msgid ""
@@ -585,6 +599,10 @@ msgid "Active modules"
 msgstr ""
 
 msgid "Active propaganda topics in this experiment:"
+msgstr ""
+
+#, python-brace-format
+msgid "Active: {pct}"
 msgstr ""
 
 msgid "Activity"
@@ -1195,6 +1213,11 @@ msgstr ""
 msgid "At least one uppercase letter"
 msgstr ""
 
+msgid ""
+"At least one. Agents interested in these topics join the chat and write "
+"about them in it."
+msgstr ""
+
 msgid "At the latest messages or at the beginning of the conversation"
 msgstr ""
 
@@ -1658,6 +1681,11 @@ msgid "Channel: public, only you post"
 msgstr ""
 
 msgid "Channels"
+msgstr ""
+
+msgid ""
+"Channels only: also create a linked group where the followers comment on "
+"the posts."
 msgstr ""
 
 msgid "Character cap for injected memory context (24B/Ollama-safe default)."
@@ -2828,9 +2856,6 @@ msgstr ""
 msgid "Customize agent activity patterns by hour."
 msgstr ""
 
-msgid "Customize hourly activity"
-msgstr ""
-
 msgid "Czech"
 msgstr ""
 
@@ -3006,12 +3031,6 @@ msgstr ""
 
 #, python-format
 msgid "Define one or more %(link)s."
-msgstr ""
-
-msgid ""
-"Define the channels and groups that exist at the start and the topics "
-"each one is about. Without any, IM creates them from the topics and the "
-"population: this editor is for designs that need specific chats."
 msgstr ""
 
 #, python-format
@@ -4841,13 +4860,16 @@ msgstr ""
 msgid "How agents find chats to join or leave."
 msgstr ""
 
-msgid "How chats, channels and their owners are generated."
-msgstr ""
-
 msgid "How do you feel?"
 msgstr ""
 
 msgid "How it works"
+msgstr ""
+
+msgid ""
+"How long the client runs and how time is divided. One round is one hour "
+"of simulated time; within a round the sessions of the agents start at "
+"different ticks, so that messages do not all appear at the same minute."
 msgstr ""
 
 msgid ""
@@ -4870,7 +4892,16 @@ msgstr ""
 msgid "How often memory reflections are generated."
 msgstr ""
 
-msgid "How the experiment topics map onto agents and chats."
+msgid ""
+"How the automatic chats are generated: who owns channels, how many "
+"channels get a discussion group, and how the social network subscribes "
+"followers. Chats defined in Chats by Topic are created as you wrote them."
+msgstr ""
+
+msgid ""
+"How the experiment topics map onto agents and chats: whether interests "
+"come from the population or are drawn at random, how many public chats an"
+" agent joins per topic, and how often it writes off-topic."
 msgstr ""
 
 msgid "How to order posts when scores are equal"
@@ -4960,6 +4991,11 @@ msgid "Images are cropped to a square preview when needed."
 msgstr ""
 
 msgid "Importance Mode"
+msgstr ""
+
+msgid ""
+"In a channel only the owner posts and the others follow it; in a group or"
+" supergroup every member can write and reply."
 msgstr ""
 
 msgid ""
@@ -6218,6 +6254,9 @@ msgstr ""
 msgid "Name is required"
 msgstr ""
 
+msgid "Name of the channel or group, shown to the agents."
+msgstr ""
+
 msgid ""
 "Name of the environment variable holding the key; the key itself is never"
 " written to the configuration."
@@ -6545,6 +6584,9 @@ msgid "No available port could be assigned for the new experiment."
 msgstr ""
 
 msgid "No available port found"
+msgstr ""
+
+msgid "No chat defined: the chats are generated automatically."
 msgstr ""
 
 msgid "No chats to show for this viewpoint."
@@ -7038,6 +7080,9 @@ msgstr ""
 msgid ""
 "Open the menu to see the experiment as a single account or as a public "
 "observer."
+msgstr ""
+
+msgid "Open the profile"
 msgstr ""
 
 msgid "Openness"
@@ -8316,6 +8361,11 @@ msgstr ""
 msgid "Related:"
 msgstr ""
 
+msgid ""
+"Relative weight when agents choose where to join: a chat with 2 attracts "
+"twice as many members as one with 1 (default 1)."
+msgstr ""
+
 msgid "Remaining Time Forecast"
 msgstr ""
 
@@ -9223,9 +9273,6 @@ msgid ""
 "mean more frequent actions. Use 0 to disable an action."
 msgstr ""
 
-msgid "Set the share of activity of each hour (0 to 1)"
-msgstr ""
-
 msgid "Settings"
 msgstr ""
 
@@ -9275,6 +9322,14 @@ msgid "Share of new agents"
 msgstr ""
 
 msgid "Share of nodes contained in the largest weakly connected component by day."
+msgstr ""
+
+#, python-format
+msgid ""
+"Share of the agents that are active in each hour of the day, from 0 to 1 "
+"(0.04 = 4%%). Hours left empty use the default, 0.04. An agent is also "
+"active only in the hours of its own activity profile. Leave everything "
+"empty to use the defaults."
 msgstr ""
 
 msgid "Share the topology across clients"
@@ -10193,6 +10248,12 @@ msgid "The instant messaging configuration is not valid: %(why)s"
 msgstr ""
 
 msgid ""
+"The language model that writes the messages of the agents and decides "
+"what they do in each session (which chat to read, whether to reply, "
+"forward or react). The temperature sets how varied the output is."
+msgstr ""
+
+msgid ""
 "The language of the menus and labels of this site. Posts and comments are"
 " never translated."
 msgstr ""
@@ -10325,6 +10386,19 @@ msgid "The topic found by the annotation"
 msgstr ""
 
 msgid "The topic the agent meant to write about"
+msgstr ""
+
+#, python-format
+msgid ""
+"The topics are those of the experiment (see Experiment Configuration) and"
+" are shared by all clients. Here you set how widespread each one is among"
+" the agents of this client: every agent is interested in a topic with the"
+" probability you enter (100%% = every agent, 0%% = nobody; an agent "
+"always keeps at least one topic). The interests decide which public chats"
+" an agent joins and what it writes about. The percentage is also the "
+"weight of the topic when topics are drawn at random (see Topics and Chats"
+" in the advanced settings). Pages are interested in every topic above "
+"0%%."
 msgstr ""
 
 msgid "The training area is not available. Please contact an administrator."
@@ -10549,6 +10623,12 @@ msgstr ""
 msgid "Time Period"
 msgstr ""
 
+msgid ""
+"Time steps in an hour (for example 60 = one per minute). More ticks "
+"spread the messages of a round more finely; the hour itself does not "
+"change."
+msgstr ""
+
 msgid "Time travel for viewers"
 msgstr ""
 
@@ -10702,6 +10782,18 @@ msgid "Topics per agent"
 msgstr ""
 
 msgid "Topics per channel"
+msgstr ""
+
+msgid ""
+"Topics say what the agents are interested in; chats are where they talk "
+"about it. If you leave this section empty the chats are generated "
+"automatically: a channel for every page of the population, a channel for "
+"a share of the agents (about one in ten) with a discussion group for half"
+" of them, and a public group for each topic that no chat covers. Every "
+"agent then joins up to two public chats for each topic it is interested "
+"in, preferring the most popular ones. Add chats here when the design "
+"needs specific ones: the chats you define are created first, the "
+"automatic ones only fill what is left."
 msgstr ""
 
 msgid "Topics to Visualize"
@@ -11305,6 +11397,11 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
+msgid ""
+"Username of a page of the population that owns the chat. Empty: the agent"
+" most interested in the topics of the chat is chosen."
+msgstr ""
+
 msgid "Users"
 msgstr ""
 
@@ -11677,6 +11774,11 @@ msgid "Who are you with?"
 msgstr ""
 
 msgid "With a discussion group"
+msgstr ""
+
+msgid ""
+"With the same seed, population and settings the choices of the agents are"
+" drawn again in the same way: use it to repeat a run."
 msgstr ""
 
 msgid "Wrapped exception:"

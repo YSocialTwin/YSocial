@@ -45,7 +45,7 @@ GROUPS: List[Group] = [
     (
         "topology",
         N_("Chat Topology"),
-        N_("How chats, channels and their owners are generated."),
+        N_("How the automatic chats are generated: who owns channels, how many channels get a discussion group, and how the social network subscribes followers. Chats defined in Chats by Topic are created as you wrote them."),
         [
             ("telegram.topology.generate_if_missing", "bool", N_("Generate the topology if missing"), True, None),
             ("telegram.topology.shared_across_clients", "bool", N_("Share the topology across clients"), False, None),
@@ -58,7 +58,7 @@ GROUPS: List[Group] = [
     (
         "topics",
         N_("Topics and Chats"),
-        N_("How the experiment topics map onto agents and chats."),
+        N_("How the experiment topics map onto agents and chats: whether interests come from the population or are drawn at random, how many public chats an agent joins per topic, and how often it writes off-topic."),
         [
             ("telegram.topics.assignment", "choice", N_("Topic assignment"), "from_population", ("from_population", "assign", "merge")),
             ("telegram.topics.topics_per_agent", "int", N_("Topics per agent"), 3, (1, 1000)),
