@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:27+0000\n"
+"POT-Creation-Date: 2026-10-28 13:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -139,6 +139,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s populations"
+msgstr ""
+
+#, python-format
+msgid "%(n)s prompts differ from the defaults."
 msgstr ""
 
 #, python-format
@@ -526,6 +530,9 @@ msgstr ""
 msgid "Action Selection"
 msgstr ""
 
+msgid "Action instructions"
+msgstr ""
+
 msgid "Actions"
 msgstr ""
 
@@ -910,6 +917,9 @@ msgid "Agents"
 msgstr ""
 
 msgid "Agents Pre-prompts"
+msgstr ""
+
+msgid "Agents and pages"
 msgstr ""
 
 msgid "Agents leaving and joining during the run."
@@ -1712,6 +1722,9 @@ msgstr ""
 msgid "Chat info"
 msgstr ""
 
+msgid "Chat lists"
+msgstr ""
+
 msgid "Chat renaming likelihood"
 msgstr ""
 
@@ -2041,6 +2054,9 @@ msgid "Comic Relief Agent"
 msgstr ""
 
 msgid "Comma-separated values"
+msgstr ""
+
+msgid "Comma-separated values, in order."
 msgstr ""
 
 msgid "Comment"
@@ -3233,6 +3249,9 @@ msgstr ""
 msgid "Disabled by default"
 msgstr ""
 
+msgid "Discard every change and go back to the default prompts?"
+msgstr ""
+
 msgid "Disconnect"
 msgstr ""
 
@@ -3795,6 +3814,9 @@ msgstr ""
 msgid "Event weights"
 msgstr ""
 
+msgid "Every prompt is the default one."
+msgstr ""
+
 msgid "Every unlocked feature needs at least one alternative value."
 msgstr ""
 
@@ -4206,6 +4228,9 @@ msgstr ""
 
 #, python-format
 msgid "Field '%(replace)s' contains an invalid value."
+msgstr ""
+
+msgid "Fields you can use:"
 msgstr ""
 
 msgid ""
@@ -4863,6 +4888,9 @@ msgstr ""
 msgid "How do you feel?"
 msgstr ""
 
+msgid "How each message the agent reads is shown to it."
+msgstr ""
+
 msgid "How it works"
 msgstr ""
 
@@ -4898,10 +4926,22 @@ msgid ""
 "followers. Chats defined in Chats by Topic are created as you wrote them."
 msgstr ""
 
+msgid "How the chats the agent owns, follows or could join are listed."
+msgstr ""
+
 msgid ""
 "How the experiment topics map onto agents and chats: whether interests "
 "come from the population or are drawn at random, how many public chats an"
 " agent joins per topic, and how often it writes off-topic."
+msgstr ""
+
+msgid "How the prompts work"
+msgstr ""
+
+msgid "How the stress level is worded when stress/reward is on."
+msgstr ""
+
+msgid "How the topic and the chat of each post the agent has to write are given."
 msgstr ""
 
 msgid "How to order posts when scores are equal"
@@ -5115,6 +5155,9 @@ msgid "Instant Messaging"
 msgstr ""
 
 msgid "Instant Messaging (e.g., Telegram)"
+msgstr ""
+
+msgid "Instant Messaging LLM Prompts"
 msgstr ""
 
 msgid "Instant messaging"
@@ -6063,6 +6106,9 @@ msgid "Message:"
 msgstr ""
 
 msgid "Messages"
+msgstr ""
+
+msgid "Messages in the feed"
 msgstr ""
 
 msgid "Method:"
@@ -7960,6 +8006,10 @@ msgstr ""
 msgid "Prompt language"
 msgstr ""
 
+#, python-format
+msgid "Prompt language: %(lang)s."
+msgstr ""
+
 msgid "Prompt mode"
 msgstr ""
 
@@ -7967,6 +8017,9 @@ msgid "Prompts"
 msgstr ""
 
 msgid "Prompts (HPC)"
+msgstr ""
+
+msgid "Prompts (Instant Messaging)"
 msgstr ""
 
 msgid "Prompts Customization"
@@ -8016,7 +8069,20 @@ msgstr ""
 msgid "Prompts loaded in the selected language."
 msgstr ""
 
+#, python-format
+msgid "Prompts not saved: %(why)s"
+msgstr ""
+
+msgid "Prompts restored to the defaults of the package."
+msgstr ""
+
+msgid "Prompts saved. Clients started from now on use them."
+msgstr ""
+
 msgid "Prompts support template variables using curly braces:"
+msgstr ""
+
+msgid "Prompts that belong to no section above."
 msgstr ""
 
 msgid "Propaganda Agent"
@@ -8524,6 +8590,9 @@ msgstr ""
 msgid "Restart required: %(label)s routes are loaded at startup."
 msgstr ""
 
+msgid "Restore defaults"
+msgstr ""
+
 msgid "Restriction length (rounds)"
 msgstr ""
 
@@ -8759,6 +8828,9 @@ msgid "Save language"
 msgstr ""
 
 msgid "Save news feeds"
+msgstr ""
+
+msgid "Save prompts"
 msgstr ""
 
 msgid "Saved"
@@ -9257,6 +9329,9 @@ msgid "Server, Clients, and Analytics"
 msgstr ""
 
 msgid "Services & monitoring"
+msgstr ""
+
+msgid "Sessions"
 msgstr ""
 
 msgid "Set LLM"
@@ -10049,6 +10124,14 @@ msgstr ""
 msgid "Text (optional)"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"Text in curly braces, such as {chat_title}, is replaced with the real "
+"value when the prompt is built. You can remove a field or move it, but "
+"you cannot add one the default prompt does not offer: the save is "
+"refused."
+msgstr ""
+
 msgid "Thai"
 msgstr ""
 
@@ -10146,6 +10229,11 @@ msgid ""
 msgstr ""
 
 msgid "The agent spoken language."
+msgstr ""
+
+msgid ""
+"The agents must still answer in the JSON format the action instructions "
+"describe, so change the wording of the instructions carefully."
 msgstr ""
 
 msgid "The algorithm that picks the posts in your feed"
@@ -10453,6 +10541,15 @@ msgstr ""
 
 #, python-format
 msgid "There was an error loading the experiment files: %(error)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"These are the prompts the agents' language model receives. Only the "
+"prompts you change are saved (in %(file)s, in the experiment folder): the"
+" others keep following the package, so they improve when the package "
+"does. Clients started from now on use your changes; a running client "
+"keeps the prompts it started with."
 msgstr ""
 
 #, python-format
@@ -10776,6 +10873,9 @@ msgid "Topics and toxicity levels of generated content."
 msgstr ""
 
 msgid "Topics covered and population assignments."
+msgstr ""
+
+msgid "Topics of the posts"
 msgstr ""
 
 msgid "Topics per agent"
@@ -11714,6 +11814,14 @@ msgid ""
 "occurred?"
 msgstr ""
 
+msgid "What the model is told about the fields each action needs."
+msgstr ""
+
+msgid ""
+"What the model receives at the start of a session of an agent or a news "
+"page, and how the date is written."
+msgstr ""
+
 msgid "What you assigned to posts and comments"
 msgstr ""
 
@@ -11771,6 +11879,11 @@ msgid "Which chats an agent looks at in a session and how they are ranked."
 msgstr ""
 
 msgid "Who are you with?"
+msgstr ""
+
+msgid ""
+"Who the model is told it is: the system prompt of an agent, of a news "
+"page, and how personality traits are worded."
 msgstr ""
 
 msgid "With a discussion group"
@@ -12079,6 +12192,9 @@ msgid "branch archive"
 msgstr ""
 
 msgid "cancelled"
+msgstr ""
+
+msgid "changed"
 msgstr ""
 
 msgid "click to cancel"

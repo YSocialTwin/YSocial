@@ -301,3 +301,38 @@ def test_client_form_explains_its_sections_and_uses_the_common_hourly_activity_l
     assert "the chats you define are created first" in page
     assert 'id="im-chat-empty"' in page and "section-activity-rates" in page
     assert "Time steps in an hour" in page
+
+
+def test_im_experiment_links_to_the_prompts_page_and_edits_only_what_changes(im_app, monkeypatch, tmp_path):
+    import json
+
+    from y_web.src.im import prompts_admin as pa
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    folder = tmp_path / "exp"
+    folder.mkdir()
+    import importlib
+
+    module = importlib.import_module("y_web.routes.admin.sub.experiments._im_prompts")
+    monkeypatch.setattr(module, "_folder", lambda experiment: str(folder))
+    # the details page offers the link, and the generic /admin/prompts entry leads to it
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required", lambda exp: False, raising=False
+    )
+    assert f"/admin/prompts_im/{exp_id}" in client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    assert f"/admin/prompts_im/{exp_id}" in client.get(f"/admin/prompts/{exp_id}").headers["Location"]
+    page = client.get(f"/admin/prompts_im/{exp_id}")
+    html = page.data.decode()
+    assert page.status_code == 200 and "persona_system" in html and "{chat_title}" in html
+    # a changed prompt is the only thing written; unknown fields are refused
+    base = pa.base_templates("en")
+    form = {f"p.{k}": v for k, v in base.items() if isinstance(v, str)}
+    form["p.nothing_new"] = "(no news)"
+    client.post(f"/admin/update_prompts_im/{exp_id}", data=form)
+    assert json.loads((folder / "prompts_im.json").read_text()) == {"nothing_new": "(no news)"}
+    form["p.nothing_new"] = "(no news) {surprise}"
+    client.post(f"/admin/update_prompts_im/{exp_id}", data=form)
+    assert json.loads((folder / "prompts_im.json").read_text()) == {"nothing_new": "(no news)"}
+    client.post(f"/admin/reset_prompts_im/{exp_id}")
+    assert not (folder / "prompts_im.json").exists()

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 13:27+0000\n"
+"POT-Creation-Date: 2026-10-28 13:34+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -158,6 +158,10 @@ msgstr "%(n)s tipi di plugin"
 #, python-format
 msgid "%(n)s populations"
 msgstr "%(n)s popolazioni"
+
+#, python-format
+msgid "%(n)s prompts differ from the defaults."
+msgstr "%(n)s prompt differiscono da quelli predefiniti."
 
 #, python-format
 msgid "%(n)s reactions"
@@ -577,6 +581,9 @@ msgstr "Account"
 msgid "Action Selection"
 msgstr "Scelta dell'azione"
 
+msgid "Action instructions"
+msgstr "Istruzioni delle azioni"
+
 msgid "Actions"
 msgstr "Azioni"
 
@@ -987,6 +994,9 @@ msgstr "Agenti"
 
 msgid "Agents Pre-prompts"
 msgstr "Pre-prompt degli agenti"
+
+msgid "Agents and pages"
+msgstr "Agenti e pagine"
 
 msgid "Agents leaving and joining during the run."
 msgstr "Agenti che escono ed entrano durante l'esecuzione."
@@ -1859,6 +1869,9 @@ msgstr "Id della chat"
 msgid "Chat info"
 msgstr "Info chat"
 
+msgid "Chat lists"
+msgstr "Elenchi di chat"
+
 msgid "Chat renaming likelihood"
 msgstr "Probabilità di rinominare le chat"
 
@@ -2234,6 +2247,9 @@ msgstr "Agente comico"
 
 msgid "Comma-separated values"
 msgstr "Valori separati da virgole"
+
+msgid "Comma-separated values, in order."
+msgstr "Valori separati da virgola, in ordine."
 
 msgid "Comment"
 msgstr "Commento"
@@ -3627,6 +3643,9 @@ msgstr "Disattivato"
 msgid "Disabled by default"
 msgstr "Disattivato per impostazione predefinita"
 
+msgid "Discard every change and go back to the default prompts?"
+msgstr "Scartare ogni modifica e tornare ai prompt predefiniti?"
+
 msgid "Disconnect"
 msgstr "Disconnetti"
 
@@ -4243,6 +4262,9 @@ msgstr "Evento"
 msgid "Event weights"
 msgstr "Pesi degli eventi"
 
+msgid "Every prompt is the default one."
+msgstr "Ogni prompt è quello predefinito."
+
 msgid "Every unlocked feature needs at least one alternative value."
 msgstr "Ogni caratteristica sbloccata richiede almeno un valore alternativo."
 
@@ -4678,6 +4700,9 @@ msgstr "%(label)s scaricato dal branch %(branch)s."
 #, python-format
 msgid "Field '%(replace)s' contains an invalid value."
 msgstr "Il campo '%(replace)s' contiene un valore non valido."
+
+msgid "Fields you can use:"
+msgstr "Campi utilizzabili:"
 
 msgid ""
 "File format error: provide a csv file containing two columns with agent "
@@ -5387,6 +5412,9 @@ msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
 msgid "How do you feel?"
 msgstr "Come ti senti?"
 
+msgid "How each message the agent reads is shown to it."
+msgstr "Come viene mostrato all'agente ciascun messaggio che legge."
+
 msgid "How it works"
 msgstr "Come funziona"
 
@@ -5431,6 +5459,11 @@ msgstr ""
 "follower. Le chat definite in Chat per topic sono create come le hai "
 "scritte."
 
+msgid "How the chats the agent owns, follows or could join are listed."
+msgstr ""
+"Come sono elencate le chat che l'agente possiede, segue o a cui potrebbe "
+"iscriversi."
+
 msgid ""
 "How the experiment topics map onto agents and chats: whether interests "
 "come from the population or are drawn at random, how many public chats an"
@@ -5440,6 +5473,17 @@ msgstr ""
 " interessi vengono dalla popolazione o sono estratti a caso, a quante "
 "chat pubbliche un agente si iscrive per argomento e quanto spesso scrive "
 "fuori argomento."
+
+msgid "How the prompts work"
+msgstr "Come funzionano i prompt"
+
+msgid "How the stress level is worded when stress/reward is on."
+msgstr "Come è espresso il livello di stress quando stress/reward è attivo."
+
+msgid "How the topic and the chat of each post the agent has to write are given."
+msgstr ""
+"Come vengono indicati l'argomento e la chat di ciascun post che l'agente "
+"deve scrivere."
 
 msgid "How to order posts when scores are equal"
 msgstr "Come ordinare i post a parità di punteggio"
@@ -5684,6 +5728,9 @@ msgstr "Messaggistica istantanea"
 
 msgid "Instant Messaging (e.g., Telegram)"
 msgstr "Messaggistica istantanea (es. Telegram)"
+
+msgid "Instant Messaging LLM Prompts"
+msgstr "Prompt LLM di Instant Messaging"
 
 msgid "Instant messaging"
 msgstr "Messaggistica istantanea"
@@ -6715,6 +6762,9 @@ msgstr "Messaggio:"
 
 msgid "Messages"
 msgstr "Messaggi"
+
+msgid "Messages in the feed"
+msgstr "Messaggi nel feed"
 
 msgid "Method:"
 msgstr "Metodo:"
@@ -8753,6 +8803,10 @@ msgstr "Caratteri massimi del prompt"
 msgid "Prompt language"
 msgstr "Lingua dei prompt"
 
+#, python-format
+msgid "Prompt language: %(lang)s."
+msgstr "Lingua dei prompt: %(lang)s."
+
 msgid "Prompt mode"
 msgstr "Modalità del prompt"
 
@@ -8761,6 +8815,9 @@ msgstr "Prompt"
 
 msgid "Prompts (HPC)"
 msgstr "Prompt (HPC)"
+
+msgid "Prompts (Instant Messaging)"
+msgstr "Prompt (Instant Messaging)"
 
 msgid "Prompts Customization"
 msgstr "Personalizzazione dei prompt"
@@ -8813,8 +8870,21 @@ msgstr ""
 msgid "Prompts loaded in the selected language."
 msgstr "Prompt caricati nella lingua selezionata."
 
+#, python-format
+msgid "Prompts not saved: %(why)s"
+msgstr "Prompt non salvati: %(why)s"
+
+msgid "Prompts restored to the defaults of the package."
+msgstr "Prompt ripristinati ai valori predefiniti del pacchetto."
+
+msgid "Prompts saved. Clients started from now on use them."
+msgstr "Prompt salvati. I client avviati da ora in poi li usano."
+
 msgid "Prompts support template variables using curly braces:"
 msgstr "I prompt supportano variabili di modello tra parentesi graffe:"
+
+msgid "Prompts that belong to no section above."
+msgstr "Prompt che non rientrano in nessuna sezione sopra."
 
 msgid "Propaganda Agent"
 msgstr "Agente di propaganda"
@@ -9344,6 +9414,9 @@ msgstr "Riavvio necessario"
 msgid "Restart required: %(label)s routes are loaded at startup."
 msgstr "Riavvio necessario: le rotte di %(label)s vengono caricate all'avvio."
 
+msgid "Restore defaults"
+msgstr "Ripristina predefiniti"
+
 msgid "Restriction length (rounds)"
 msgstr "Durata della restrizione (round)"
 
@@ -9585,6 +9658,9 @@ msgstr "Salva la lingua"
 
 msgid "Save news feeds"
 msgstr "Salva i feed di notizie"
+
+msgid "Save prompts"
+msgstr "Salva prompt"
 
 msgid "Saved"
 msgstr "Salvati"
@@ -10149,6 +10225,9 @@ msgstr "Server, client e analisi"
 
 msgid "Services & monitoring"
 msgstr "Servizi e monitoraggio"
+
+msgid "Sessions"
+msgstr "Sessioni"
 
 msgid "Set LLM"
 msgstr "Imposta l'LLM"
@@ -11012,6 +11091,18 @@ msgstr "Testo"
 msgid "Text (optional)"
 msgstr "Testo (facoltativo)"
 
+#, python-brace-format
+msgid ""
+"Text in curly braces, such as {chat_title}, is replaced with the real "
+"value when the prompt is built. You can remove a field or move it, but "
+"you cannot add one the default prompt does not offer: the save is "
+"refused."
+msgstr ""
+"Il testo tra parentesi graffe, come {chat_title}, viene sostituito con il"
+" valore reale quando il prompt è costruito. Puoi togliere un campo o "
+"spostarlo, ma non aggiungerne uno che il prompt predefinito non offre: il"
+" salvataggio viene rifiutato."
+
 msgid "Thai"
 msgstr "Thailandese"
 
@@ -11118,6 +11209,14 @@ msgstr ""
 
 msgid "The agent spoken language."
 msgstr "La lingua parlata dall'agente."
+
+msgid ""
+"The agents must still answer in the JSON format the action instructions "
+"describe, so change the wording of the instructions carefully."
+msgstr ""
+"Gli agenti devono comunque rispondere nel formato JSON descritto dalle "
+"istruzioni delle azioni: modifica con cautela la formulazione delle "
+"istruzioni."
 
 msgid "The algorithm that picks the posts in your feed"
 msgstr "L'algoritmo che sceglie i post del tuo feed"
@@ -11519,6 +11618,20 @@ msgstr "Errore nel caricamento dei file dell'esperimento: %(error)s"
 
 #, python-format
 msgid ""
+"These are the prompts the agents' language model receives. Only the "
+"prompts you change are saved (in %(file)s, in the experiment folder): the"
+" others keep following the package, so they improve when the package "
+"does. Clients started from now on use your changes; a running client "
+"keeps the prompts it started with."
+msgstr ""
+"Questi sono i prompt che riceve il modello linguistico degli agenti. "
+"Vengono salvati solo quelli che modifichi (in %(file)s, nella cartella "
+"dell'esperimento): gli altri seguono il pacchetto e migliorano quando "
+"migliora il pacchetto. I client avviati da ora in poi usano le tue "
+"modifiche; un client in esecuzione mantiene i prompt con cui è partito."
+
+#, python-format
+msgid ""
 "These feeds live in the dashboard DB and can be assigned to any forum "
 "experiment from %(page)s."
 msgstr ""
@@ -11890,6 +12003,9 @@ msgstr "Argomenti e livelli di tossicità dei contenuti generati."
 
 msgid "Topics covered and population assignments."
 msgstr "Argomenti trattati e assegnazioni alle popolazioni."
+
+msgid "Topics of the posts"
+msgstr "Argomenti dei post"
 
 msgid "Topics per agent"
 msgstr "Topic per agente"
@@ -12965,6 +13081,16 @@ msgstr ""
 "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è "
 "verificato l'errore?"
 
+msgid "What the model is told about the fields each action needs."
+msgstr "Cosa viene detto al modello sui campi richiesti da ciascuna azione."
+
+msgid ""
+"What the model receives at the start of a session of an agent or a news "
+"page, and how the date is written."
+msgstr ""
+"Cosa riceve il modello all'inizio di una sessione di un agente o di una "
+"pagina di notizie e come è scritta la data."
+
 msgid "What you assigned to posts and comments"
 msgstr "Ciò che hai assegnato a post e commenti"
 
@@ -13034,6 +13160,13 @@ msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
 
 msgid "Who are you with?"
 msgstr "Con chi sei?"
+
+msgid ""
+"Who the model is told it is: the system prompt of an agent, of a news "
+"page, and how personality traits are worded."
+msgstr ""
+"Chi viene detto al modello di essere: il prompt di sistema di un agente e"
+" di una pagina di notizie, e come sono espressi i tratti di personalità."
 
 msgid "With a discussion group"
 msgstr "Con gruppo di discussione"
@@ -13366,6 +13499,9 @@ msgstr "archivio branch"
 
 msgid "cancelled"
 msgstr "annullata"
+
+msgid "changed"
+msgstr "modificato"
 
 msgid "click to cancel"
 msgstr "clicca per annullare"

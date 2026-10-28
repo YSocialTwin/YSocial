@@ -204,6 +204,13 @@
 
                                 {% if experiment_details_variant == 'im' %}
                                 <div class="box-line">
+                                    <span class="left">{{ _('Edit LLM Prompts') }}</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/prompts_im/{{ experiment.idexp }}" title="{{ _('Edit') }}">
+ <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                <div class="box-line">
                                     <span class="left">{{ _('News feeds (RSS)') }}</span>
                                     <span class="right">
                                         {% if can_manage_experiment %}
