@@ -86,7 +86,7 @@ server configuration.
 How it works, and what to keep in mind:
 
 - Each participant has a deterministic account in the run (kind *human*, origin *human*); entering twice never
-  creates two. The name shown is a pseudonym (`participant-<id>`).
+  creates two. The name shown is the participant's own username (a number is added if an agent already has it); set `human.pseudonymise_usernames` in `server_config.json` to show `participant-<id>` instead.
 - Writes go through a **gateway**, a local service started with the run (after the server, before the clients) and
   stopped first. It listens on loopback only, requires a per-run token, never lets a request choose the account (it
   comes from the session), accepts only the actions above, limits their rate and de-duplicates retries. The browser
