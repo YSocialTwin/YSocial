@@ -30,6 +30,7 @@ PARTIALS = {
     "_dating_fields",
     "clients_dating",
     "dating_settings",
+    "prompts_dating",
     "_im_analytics_note",
     "select_experiment_unused",
 }

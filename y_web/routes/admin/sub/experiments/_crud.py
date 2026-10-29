@@ -3210,6 +3210,8 @@ def prompts(uid):
     # Route to the configuration page matching the experiment type.
     if is_im_experiment(experiment):
         return redirect(url_for("experiments.prompts_im", uid=uid))
+    if is_dating_experiment(experiment):
+        return redirect(url_for("experiments.prompts_dating", uid=uid))
     if experiment.simulator_type == "HPC":
         return redirect(url_for("experiments.prompts_hpc", uid=uid))
     if experiment.platform_type == "forum":

@@ -1,0 +1,88 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Prompts (Dating)') }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">{{ _('Dating LLM Prompts') }}</h3>
+                        <p class="ys-text-small">
+                            {{ _('These are the prompts the agents\' language model receives. Only the prompts you change are saved (in %(file)s, in the experiment folder): the others keep following the package, so they improve when the package does. Clients started from now on use your changes; a running client keeps the prompts it started with.', file=wrap('code', file_name)) }}
+                        </p>
+                        <p class="ys-label-hint">
+                            {{ _('Prompt language: %(lang)s.', lang=wrap('b', language)) }}
+                            {% if customised %}{{ _('%(n)s prompts differ from the defaults.', n=customised) }}{% else %}{{ _('Every prompt is the default one.') }}{% endif %}
+                        </p>
+                        <p class="ys-label-hint">
+                            {% for l in languages %}<a href="/admin/prompts_dating/{{ experiment.idexp }}?lang={{ l }}"{% if l == language %} class="ys-bold"{% endif %}>{{ l|upper }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_prompts_dating/{{ experiment.idexp }}" method="POST">
+                                <input type="hidden" name="lang" value="{{ language }}">
+                                <div class="box-lines">
+                                    {% for section in sections %}
+                                    <details class="ys-mb-20" id="prompts-{{ section.id }}"{% if loop.first %} open{% endif %}>
+                                        <summary class="ys-accordion-header">
+                                            <span class="ys-inline-flex-gap">
+                                                <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                                {{ _(section.title) }}
+                                            </span>
+                                        </summary>
+                                        <div class="ys-content-panel">
+                                            <p class="ys-label-hint">{{ _(section.descr) }}</p>
+                                            {% for item in section['items'] %}
+                                            <div class="box-line ys-hint-text">
+                                                <span class="left"><code>{{ item.key }}</code>{% if item.modified %}<br><small>{{ _('changed') }}</small>{% endif %}</span>
+                                                <span class="right ys-w-70">
+                                                    <textarea rows="{{ item.rows }}" name="{{ prefix }}{{ item.key }}" class="textarea">{{ item.value }}</textarea>
+                                                    {% if item.fields %}<small>{{ _('Fields you can use:') }} {% for f in item.fields %}<code>{{ '{' ~ f ~ '}' }}</code> {% endfor %}</small>{% endif %}
+                                                    <small class="ys-label-hint">{{ _('Hash:') }} <code>{{ item.hash }}</code></small>
+                                                    
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                    {% endfor %}
+                                </div>
+                                <div class="ys-form-actions">
+                                    <button type="submit" class="button is-solid accent-button">{{ _('Save prompts') }}</button>
+                                </div>
+                            </form>
+                            <form action="/admin/reset_prompts_dating/{{ experiment.idexp }}" method="POST" onsubmit='return confirm({{ _('Discard every change and go back to the default prompts?')|tojson }});' style="margin-top:12px">
+                                <input type="hidden" name="lang" value="{{ language }}">
+                                <button type="submit" class="button is-solid grey-button">{{ _('Restore defaults') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <h4 class="title is-6 is-thin">{{ _('How the prompts work') }}</h4>
+                        <p class="ys-text-small">
+                            {{ _('Text in curly braces, such as {persona}, is replaced with the real value when the prompt is built. You can remove a field or move it, but you cannot add one the default prompt does not offer: the save is refused.') }}
+                        </p>
+                        <p class="ys-text-small">
+                            {{ _('The hash is the start of the SHA-256 of the prompt the run uses; the full list is recorded for every client in the experiment folder, so a run states which prompts produced it.') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "admin/footer.html" %}

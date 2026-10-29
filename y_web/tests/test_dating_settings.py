@@ -424,3 +424,39 @@ def test_the_new_templates_compile(app):
             app.jinja_env.parse((templates / name).read_text(encoding="utf-8"))
             is not None
         )
+
+
+@needs_runtime
+def test_prompt_routes_save_refuse_and_reset(app, dating_exp, monkeypatch, tmp_path):
+    from y_web.routes.admin.sub.experiments import _dating_prompts as routes
+    from y_web.src.dating import prompts_admin as pa
+
+    flashes = dating_exp.flashes
+    monkeypatch.setattr(routes, "check_privileges", lambda *_: None)
+    monkeypatch.setattr(routes, "current_user", SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        routes, "flash", lambda m, c="message": flashes.append((c, str(m)))
+    )
+    monkeypatch.setattr(routes, "url_for", lambda e, **kw: "/" + e)
+    monkeypatch.setattr(routes, "_folder", lambda exp: str(dating_exp.folder))
+    uid = dating_exp.exp.idexp
+    target = dating_exp.folder / "prompts_dating.json"
+
+    with app.test_request_context(
+        "/", method="POST", data={"lang": "en", f"{pa.PREFIX}unspecified": "n/a"}
+    ):
+        routes.update_prompts_dating.__wrapped__(uid)
+    assert json.loads(target.read_text()) == {"unspecified": "n/a"}
+
+    with app.test_request_context(
+        "/", method="POST", data={"lang": "en", f"{pa.PREFIX}opener": "{nope}"}
+    ):
+        routes.update_prompts_dating.__wrapped__(uid)
+    assert flashes[-1][0] == "error"
+    assert json.loads(target.read_text()) == {
+        "unspecified": "n/a"
+    }  # refused: unchanged
+
+    with app.test_request_context("/", method="POST", data={"lang": "en"}):
+        routes.reset_prompts_dating.__wrapped__(uid)
+    assert not target.exists()
