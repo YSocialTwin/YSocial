@@ -775,7 +775,24 @@
                     </div>
 
                     {# IM analytics stay hidden until the derived analytics database exists (plan, 5.7) #}
-                    {% set has_analytics_pages = experiment.is_remote == 0 and (experiment_details_variant != 'im' or im_analytics) %}
+                    {% set has_analytics_pages = experiment.is_remote == 0 and experiment_details_variant != 'dating' and (experiment_details_variant != 'im' or im_analytics) %}
+                    {% if experiment_details_variant == 'dating' and experiment.is_remote == 0 %}
+                    <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
+                        <h3 class="title is-5 is-thin">{{ _('Analytics Pages') }}</h3>
+                        <div class="box-content ys-flex-1">
+                            <div class="ys-analytics-pages-grid">
+                                <a href="/admin/dating_analytics/{{ experiment.idexp }}" class="ys-analytics-page-card is-primary">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-multiple-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">{{ _('Dating analytics') }}</span>
+                                        <span class="ys-analytics-page-meta">{{ _('Recommenders, matches, dates, exits, export') }}</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">{{ _('Open') }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% if has_analytics_pages %}
                     <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">{{ _('Analytics Pages') }}</h3>

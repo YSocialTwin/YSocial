@@ -1,0 +1,113 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt;
+                <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Dating analytics') }}
+                <span class="tag is-info">{{ _('Dating') }}</span>
+            </div></div></div>
+
+            {% set st = data.state %}
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <p id="dating-analytics-state">
+                    {% if st.state == 'failed' %}{{ _('Analytics data could not be built: %(message)s', message=st.message or _('unknown error')) }}
+                    {% elif st.state == 'running' %}{{ _('Analytics data are being built.') }}
+                    {% elif st.day %}{{ _('Analytics data as of day %(d)s, round %(h)s.', d=st.day, h=st.hour) }}
+                    {% else %}{{ _('Analytics data have not been built yet.') }}{% endif %}
+                </p>
+                <form method="post" action="/admin/dating_analytics/{{ experiment.idexp }}/rebuild" style="display:inline">
+                    <button type="submit" class="button is-small is-info">{{ _('Refresh analytics data') }}</button>
+                </form>
+                <a class="button is-small" href="/admin/dating_analytics/{{ experiment.idexp }}/export.zip">{{ _('Download everything (ZIP)') }}</a>
+            </div></div></div>
+
+            {% if data.summary %}
+            {% set s = data.summary %}
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <h3 class="title is-5 is-thin">{{ _('Run totals') }}</h3>
+                <table class="table is-fullwidth" id="dating-summary">
+                    <tbody>
+                        <tr><td>{{ _('Agents') }}</td><td>{{ s.agents|int }}</td></tr>
+                        <tr><td>{{ _('Matches') }}</td><td>{{ s.matches|int }} ({{ s.matches_with_messages|int }} {{ _('with messages') }})</td></tr>
+                        <tr><td>{{ _('Date proposals') }}</td><td>{{ s.date_proposals|int }} ({{ _('accepted') }} {{ '%.0f'|format(s.accept_rate * 100) }}%)</td></tr>
+                        <tr><td>{{ _('Matches with a date') }}</td><td>{{ '%.1f'|format(s.share_of_matches_with_a_date * 100) }}%</td></tr>
+                        <tr><td>{{ _('Exits for success (paired)') }}</td><td>{{ s.exits_paired|int }}</td></tr>
+                        <tr><td>{{ _('Exits for frustration (churn)') }}</td><td>{{ s.exits_churn|int }}</td></tr>
+                        <tr><td>{{ _('Profiles paused at the end') }}</td><td>{{ s.paused_now|int }}</td></tr>
+                        <tr><td>{{ _('Profile changes logged') }}</td><td>{{ s.profile_changes|int }}</td></tr>
+                    </tbody>
+                </table>
+            </div></div></div>
+
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <h3 class="title is-5 is-thin">{{ _('Recommenders') }}</h3>
+                <p class="ys-text-small">{{ _('Exposure and outcome per recommender model. The Gini coefficients go from 0 (equal) to 1 (one profile holds everything).') }}</p>
+                <div style="overflow-x:auto"><table class="table is-fullwidth" id="dating-recommenders">
+                    <thead><tr>
+                        <th>{{ _('Model') }}</th><th>{{ _('Stacks') }}</th><th>{{ _('Cards shown') }}</th><th>{{ _('Swipes') }}</th><th>{{ _('Like rate') }}</th>
+                        <th>{{ _('Gini exposure') }}</th><th>{{ _('Gini likes received') }}</th><th>{{ _('Matches') }}</th><th>{{ _('Matches per stack') }}</th><th>{{ _('With a message') }}</th>
+                    </tr></thead>
+                    <tbody>{% for r in data.recommenders %}
+                        <tr><td>{{ r.model }}</td><td>{{ r.stacks }}</td><td>{{ r.cards_shown }}</td><td>{{ r.swipes }}</td><td>{{ r.like_rate }}</td>
+                        <td>{{ r.gini_exposure }}</td><td>{{ r.gini_likes_received }}</td><td>{{ r.matches }}</td><td>{{ r.match_rate_per_stack }}</td><td>{{ r.matches_with_message_share }}</td></tr>
+                    {% else %}<tr><td colspan="10">{{ _('No recommendations recorded.') }}</td></tr>{% endfor %}</tbody>
+                </table></div>
+            </div></div></div>
+
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <h3 class="title is-5 is-thin">{{ _('Day by day') }}</h3>
+                {% set top = {'cards_shown': 1, 'likes': 1, 'matches': 1, 'messages': 1} %}
+                {% for d in data.daily %}{% for k in top %}{% if d[k] > top[k] %}{% if top.update({k: d[k]}) %}{% endif %}{% endif %}{% endfor %}{% endfor %}
+                <table class="table is-fullwidth" id="dating-daily">
+                    <thead><tr><th>{{ _('Day') }}</th><th>{{ _('Cards shown') }}</th><th>{{ _('Likes') }}</th><th>{{ _('Matches') }}</th><th>{{ _('Messages') }}</th><th>{{ _('Active agents') }}</th><th>{{ _('Dates proposed') }}</th><th>{{ _('Exits') }}</th></tr></thead>
+                    <tbody>{% for d in data.daily %}
+                        <tr><td>{{ d.day }}</td>
+                        {% for k in ['cards_shown', 'likes', 'matches', 'messages'] %}
+                        <td><span class="dating-bar" style="display:inline-block;height:.6rem;width:{{ (d[k] / top[k] * 100)|round(0) }}px;background:#e11d48;vertical-align:middle" aria-hidden="true"></span> {{ d[k] }}</td>
+                        {% endfor %}
+                        <td>{{ d.active_agents }}</td><td>{{ d.date_proposals }}</td><td>{{ d.exits }}</td></tr>
+                    {% endfor %}</tbody>
+                </table>
+            </div></div></div>
+
+            <div class="columns">
+                <div class="column is-6"><div class="dashboard-box">
+                    <h3 class="title is-5 is-thin">{{ _('Date proposals') }}</h3>
+                    <table class="table is-fullwidth" id="dating-funnel"><tbody>
+                        {% for f in data.funnel %}<tr><td>{{ f.kind }}: {{ f.key }}</td><td>{{ f.n }}</td></tr>
+                        {% else %}<tr><td>{{ _('No date proposals.') }}</td></tr>{% endfor %}
+                    </tbody></table>
+                </div></div>
+                <div class="column is-6"><div class="dashboard-box">
+                    <h3 class="title is-5 is-thin">{{ _('Exits by day and cause') }}</h3>
+                    <table class="table is-fullwidth" id="dating-exits"><tbody>
+                        {% for e in data.exits %}<tr><td>{{ _('Day') }} {{ e.day }} · {{ e.reason }}</td><td>{{ e.n }}</td></tr>
+                        {% else %}<tr><td>{{ _('Nobody left.') }}</td></tr>{% endfor %}
+                    </tbody></table>
+                </div></div>
+            </div>
+
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <h3 class="title is-5 is-thin">{{ _('Export') }}</h3>
+                <p class="ys-text-small">{{ _('Each derived table as a CSV file; the meaning of every column is in the field map inside the ZIP.') }}</p>
+                <p>{% for t in tables %}<a class="button is-small" href="/admin/dating_analytics/{{ experiment.idexp }}/export/{{ t }}.csv">{{ t }}</a> {% endfor %}</p>
+            </div></div></div>
+
+            {% if others %}
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <h3 class="title is-5 is-thin">{{ _('Compare with another experiment') }}</h3>
+                <form method="get" action="/admin/dating_analytics/compare">
+                    <input type="hidden" name="a" value="{{ experiment.idexp }}">
+                    <div class="select"><select name="b" aria-label="{{ _('Other experiment') }}">{% for o in others %}<option value="{{ o.idexp }}">{{ o.exp_name }}</option>{% endfor %}</select></div>
+                    <button type="submit" class="button is-small is-info">{{ _('Compare recommenders') }}</button>
+                </form>
+            </div></div></div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>

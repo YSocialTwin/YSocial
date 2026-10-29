@@ -1,0 +1,25 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Compare dating experiments') }}
+                <span class="tag is-info">{{ _('Dating') }}</span>
+            </div></div></div>
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <p class="ys-text-small">{{ _('Two experiments compare cleanly when they share population and seed and differ in the recommender only.') }}</p>
+                <div style="overflow-x:auto"><table class="table is-fullwidth" id="dating-compare">
+                    <thead><tr><th>{{ _('Experiment') }}</th><th>{{ _('Model') }}</th><th>{{ _('Stacks') }}</th><th>{{ _('Cards shown') }}</th><th>{{ _('Like rate') }}</th>
+                        <th>{{ _('Gini exposure') }}</th><th>{{ _('Gini likes received') }}</th><th>{{ _('Matches') }}</th><th>{{ _('Matches per stack') }}</th><th>{{ _('With a message') }}</th></tr></thead>
+                    <tbody>{% for side in sides %}{% for r in side.data.get('recommenders', []) %}
+                        <tr><td><a href="/admin/dating_analytics/{{ side.experiment.idexp }}">{{ side.experiment.exp_name }}</a></td><td>{{ r.model }}</td><td>{{ r.stacks }}</td><td>{{ r.cards_shown }}</td><td>{{ r.like_rate }}</td>
+                        <td>{{ r.gini_exposure }}</td><td>{{ r.gini_likes_received }}</td><td>{{ r.matches }}</td><td>{{ r.match_rate_per_stack }}</td><td>{{ r.matches_with_message_share }}</td></tr>
+                    {% else %}<tr><td>{{ side.experiment.exp_name }}</td><td colspan="9">{{ _('No analytics data yet.') }}</td></tr>{% endfor %}{% endfor %}</tbody>
+                </table></div>
+            </div></div></div>
+        </div>
+    </div>
+</div>
