@@ -42,6 +42,41 @@
             { selector: '[data-tut="experiment-deployments"]', title: '@heading', description: 'The experiments where this population is deployed.', position: 'auto' },
             { selector: '[data-tut="assigned-agents"]', title: '@heading', description: 'The agents that belong to the population.', position: 'auto' }
         ],
+        dating_analytics: [
+            { selector: '[data-tut="analytics-state"]', title: 'Analytics data', description: 'When the derived data were last built. Refresh them to read the latest rounds of a running experiment; the run itself is never modified.', position: 'auto' },
+            { selector: '[data-tut="run-totals"]', title: '@heading', description: 'Headline figures of the run: agents, matches, date proposals, exits and paused profiles.', position: 'auto' },
+            { selector: '[data-tut="recommenders"]', title: '@heading', description: 'Exposure and outcome of each recommender model: like rate, matches per stack and how unequal the exposure is.', position: 'auto' },
+            { selector: '[data-tut="day-by-day"]', title: '@heading', description: 'The run day by day: swipes, matches, messages and dates.', position: 'auto' },
+            { selector: '[data-tut="date-funnel"]', title: '@heading', description: 'From proposal to outcome: how many dates were proposed, accepted, declined or expired.', position: 'auto' },
+            { selector: '[data-tut="exits"]', title: '@heading', description: 'Who left and why: success (a couple formed) or frustration (churn).', position: 'auto' },
+            { selector: '[data-tut="export"]', title: '@heading', description: 'Download any derived table as CSV, or everything in one ZIP together with the field map.', position: 'auto' },
+            { selector: '[data-tut="compare"]', title: '@heading', description: 'Compare this run with another dating experiment. The comparison is clean when population and seed are the same and only the recommender differs.', position: 'auto' }
+        ],
+        dating_analytics_compare: [
+            { selector: '#dating-compare', title: 'Comparison', description: 'The two experiments side by side, metric by metric.', position: 'auto' }
+        ],
+        dating_participants: [
+            { selector: '#dating-gateway-status', title: 'Gateway', description: 'Whether the local gateway that carries the actions of the people to the run is answering.', position: 'auto' },
+            { selector: '#dating-humans', title: 'Participants', description: 'The users assigned to this experiment who can play: whether they have entered and what they have done so far.', position: 'auto' }
+        ],
+        dating_settings: [
+            { selector: '#box-dating-settings', title: '@heading', description: 'Every setting of the dating runtime, generated from its configuration schema. They are locked once the experiment has started.', position: 'auto' }
+        ],
+        clients_dating: [
+            { selector: '#box-new-client', title: '@heading', description: 'Choose the population and how long the client runs. Every advanced setting has the default of the dating runtime.', position: 'auto' }
+        ],
+        prompts_dating: [
+            { selector: '[data-tut="dating-prompts"]', title: '@heading', description: 'The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.', position: 'auto' }
+        ],
+        dating_populations: [
+            { selector: '#dating-populations-table', title: 'Dating populations', description: 'The dating populations available. Open one to inspect its agents and preview their profile cards.', position: 'auto' },
+            { selector: '#box-upload-dating-population', title: '@heading', description: 'Upload a population file. It is validated against the schema of the dating runtime and refused, with the path of the problem, if it does not fit.', position: 'auto' },
+            { selector: '#box-generate-dating-population', title: '@heading', description: 'Generate a synthetic population from a seed: the same seed always gives the same agents.', position: 'auto' }
+        ],
+        dating_population_details: [
+            { selector: '[data-tut="population-overview"]', title: '@heading', description: 'Name, size and summary of the population: ages, genders, intents and photos.', position: 'auto' },
+            { selector: '#dating-card-preview', title: '@heading', description: 'See a profile card as another user would see it; hidden attributes are not shown.', position: 'auto' }
+        ],
         download_notifications: [
             { selector: '[data-tut="notifications"]', title: '@heading', description: 'History of exports and background jobs: status, download links and the experiments involved. Mark entries as read or remove them.', position: 'auto' }
         ],

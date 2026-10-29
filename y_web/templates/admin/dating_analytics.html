@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="dating_analytics" class="dashboard-container">
         {% include "admin/dash_head.html" %}
         <div class="dashboard-body">
             <div class="columns"><div class="column is-12"><div class="dashboard-box">
@@ -12,7 +12,7 @@
             </div></div></div>
 
             {% set st = data.state %}
-            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box" data-tut="analytics-state">
                 <p id="dating-analytics-state">
                     {% if st.state == 'failed' %}{{ _('Analytics data could not be built: %(message)s', message=st.message or _('unknown error')) }}
                     {% elif st.state == 'running' %}{{ _('Analytics data are being built.') }}
@@ -27,7 +27,7 @@
 
             {% if data.summary %}
             {% set s = data.summary %}
-            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box" data-tut="run-totals">
                 <h3 class="title is-5 is-thin">{{ _('Run totals') }}</h3>
                 <table class="table is-fullwidth" id="dating-summary">
                     <tbody>
@@ -43,7 +43,7 @@
                 </table>
             </div></div></div>
 
-            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box" data-tut="recommenders">
                 <h3 class="title is-5 is-thin">{{ _('Recommenders') }}</h3>
                 <p class="ys-text-small">{{ _('Exposure and outcome per recommender model. The Gini coefficients go from 0 (equal) to 1 (one profile holds everything).') }}</p>
                 <div style="overflow-x:auto"><table class="table is-fullwidth" id="dating-recommenders">
@@ -58,7 +58,7 @@
                 </table></div>
             </div></div></div>
 
-            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box" data-tut="day-by-day">
                 <h3 class="title is-5 is-thin">{{ _('Day by day') }}</h3>
                 {% set top = {'cards_shown': 1, 'likes': 1, 'matches': 1, 'messages': 1} %}
                 {% for d in data.daily %}{% for k in top %}{% if d[k] > top[k] %}{% if top.update({k: d[k]}) %}{% endif %}{% endif %}{% endfor %}{% endfor %}
@@ -75,14 +75,14 @@
             </div></div></div>
 
             <div class="columns">
-                <div class="column is-6"><div class="dashboard-box">
+                <div class="column is-6"><div class="dashboard-box" data-tut="date-funnel">
                     <h3 class="title is-5 is-thin">{{ _('Date proposals') }}</h3>
                     <table class="table is-fullwidth" id="dating-funnel"><tbody>
                         {% for f in data.funnel %}<tr><td>{{ f.kind }}: {{ f.key }}</td><td>{{ f.n }}</td></tr>
                         {% else %}<tr><td>{{ _('No date proposals.') }}</td></tr>{% endfor %}
                     </tbody></table>
                 </div></div>
-                <div class="column is-6"><div class="dashboard-box">
+                <div class="column is-6"><div class="dashboard-box" data-tut="exits">
                     <h3 class="title is-5 is-thin">{{ _('Exits by day and cause') }}</h3>
                     <table class="table is-fullwidth" id="dating-exits"><tbody>
                         {% for e in data.exits %}<tr><td>{{ _('Day') }} {{ e.day }} · {{ e.reason }}</td><td>{{ e.n }}</td></tr>
@@ -91,14 +91,14 @@
                 </div></div>
             </div>
 
-            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box" data-tut="export">
                 <h3 class="title is-5 is-thin">{{ _('Export') }}</h3>
                 <p class="ys-text-small">{{ _('Each derived table as a CSV file; the meaning of every column is in the field map inside the ZIP.') }}</p>
                 <p>{% for t in tables %}<a class="button is-small" href="/admin/dating_analytics/{{ experiment.idexp }}/export/{{ t }}.csv">{{ t }}</a> {% endfor %}</p>
             </div></div></div>
 
             {% if others %}
-            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box" data-tut="compare">
                 <h3 class="title is-5 is-thin">{{ _('Compare with another experiment') }}</h3>
                 <form method="get" action="/admin/dating_analytics/compare">
                     <input type="hidden" name="a" value="{{ experiment.idexp }}">
@@ -111,3 +111,5 @@
         </div>
     </div>
 </div>
+
+{% include "admin/footer.html" %}

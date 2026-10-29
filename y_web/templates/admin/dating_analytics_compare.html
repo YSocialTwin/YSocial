@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="dating_analytics_compare" class="dashboard-container">
         {% include "admin/dash_head.html" %}
         <div class="dashboard-body">
             <div class="columns"><div class="column is-12"><div class="dashboard-box">
@@ -23,3 +23,5 @@
         </div>
     </div>
 </div>
+
+{% include "admin/footer.html" %}
