@@ -33,7 +33,8 @@ Typical tasks:
 ## Platforms
 
 Microblogging, forum, photo sharing and, with the YInstantMessaging runtime installed, instant messaging (see
-[Instant messaging experiments](instant-messaging.md), including how people can take part in a run).
+[Instant messaging experiments](instant-messaging.md), including how people can take part in a run) and, with the
+YDating runtime installed, dating (see [Dating experiments](dating.md)).
 
 ## Core feature areas
 

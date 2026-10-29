@@ -20,6 +20,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     server-side enforcement of the interaction settings, optional minimum round time and participant notice.
     Runs with humans are not reproducible.
   - Guide: `docs/instant-messaging.md`.
+- **Dating platform** (YDating runtime, installed from the Plugins page, group Dating)
+  - Experiment, population (standard agents with `dating.*` custom fields; upload or seeded generator) and client
+    creation, validation with the runtime's offline validator, start/stop/resume, clone, reset, download and upload.
+  - Settings and recommenders generated from the runtime's JSON Schemas, locked once the run has started; prompt page
+    with English and Italian packs, per-key overrides and a hash per prompt recorded with the run.
+  - Observer pages (researcher overview, account, public) read-only on the run database, with time travel and the
+    guarantee that reserved fields never reach the account and public views.
+  - Analytics through a derived database (`analytics_dating.db`); mapping in `docs/dating-analytics-mapping.md`;
+    comparison of two experiments.
+  - Optional human participation (off by default): entry form, notice, swipe deck, chat, dates, block and report,
+    profile and pause, through a loopback gateway with a per-run token and CSRF, server-side enforcement of the
+    interaction settings, optional minimum round time, offline entry and an admin page of participants. Runs with
+    humans are not reproducible.
+  - Guided tours for every dating admin page; Italian catalog (draft, native review pending).
+  - Guide: `docs/dating.md`.
 - Forum clients can use the Reddit-style content recommenders `HotRanking`, `TopRanking` and `MostCommented`
   (new `content_recsys` rows reserved to forums: template database, PostgreSQL seed and Alembic `0011`).
 

@@ -109,6 +109,7 @@ YSocial is a core application (`y_web`) plus optional plugins that live in `exte
 | [YSimulator](https://github.com/YSocialTwin/YSimulator) | Large-scale (HPC) simulations, distributed with Ray |
 | [YPhotoSharing](https://github.com/YSocialTwin/YPhotoSharing) | Photo-sharing runtime with an Instagram-like platform |
 | [YInstantMessaging](https://github.com/YSocialTwin/YInstantMessaging) | Instant-messaging runtime (chats, forwards, reactions), with optional human participation; see [docs/instant-messaging.md](docs/instant-messaging.md) |
+| [YDating](https://github.com/YSocialTwin/YDating) | Dating runtime (profiles, swipes, matches, conversations, dates), with optional human participation; see [docs/dating.md](docs/dating.md) |
 | [Frontend Adds-on](https://github.com/YSocialTwin/frontend_adds-on) | Optional add-ons for the participant interface, enabled per experiment |
 | [Reactive Agents](https://github.com/YSocialTwin/reactive_agents) | Agents that react to humans even when the simulation is not running |
 | [y_agents_plugins](https://github.com/YSocialTwin/y_agents_plugins) | Ready-made special-purpose agents (moderator, propaganda, stress testing and more) |
