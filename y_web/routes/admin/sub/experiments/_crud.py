@@ -45,9 +45,9 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.experiment.helpers import ensure_experiment_user
-from y_web.src.im import is_im_experiment
 from y_web.src.external_runtime import runtime_installed_and_visible
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -855,24 +855,36 @@ def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
         return redirect(request.referrer or url_for("admin.dashboard"))
 
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        return refuse(_("Instant messaging experiments are not supported with PostgreSQL."))
+        return refuse(
+            _("Instant messaging experiments are not supported with PostgreSQL.")
+        )
     try:
-        with open(os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8") as handle:
+        with open(
+            os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8"
+        ) as handle:
             config = json.load(handle)
     except (OSError, ValueError):
-        return refuse(_("The uploaded instant messaging experiment has no readable server configuration."))
+        return refuse(
+            _(
+                "The uploaded instant messaging experiment has no readable server configuration."
+            )
+        )
 
     name = exp_name_override or str(config.get("experiment_name") or "").strip()
     if not name:
         return refuse(_("The uploaded experiment has no name. Please provide one."))
     if db.session.scalars(select(Exps).filter_by(exp_name=name)).first():
         return refuse(
-            _("The experiment already exists. Please check the experiment name and try again.")
+            _(
+                "The experiment already exists. Please check the experiment name and try again."
+            )
         )
     suggested_port = get_suggested_port()
     if not suggested_port:
         return refuse(
-            _("Error: No available port found in range 5000-6000. Cannot upload experiment.")
+            _(
+                "Error: No available port found in range 5000-6000. Cannot upload experiment."
+            )
         )
 
     # an uploaded run is imported as inputs only: a database or state from another installation is dropped
@@ -880,15 +892,26 @@ def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
     try:
         validate_im_folder(exp_dir)
         for item in sorted(os.listdir(exp_dir)):
-            if item.startswith("client_") and item.endswith(".json") and ".state." not in item:
+            if (
+                item.startswith("client_")
+                and item.endswith(".json")
+                and ".state." not in item
+            ):
                 validate_im_folder(exp_dir, client_config=item)
     except ImValidationError as exc:
         return refuse(
-            _("The uploaded instant messaging experiment is not valid: %(errors)s", errors="; ".join(exc.messages))
+            _(
+                "The uploaded instant messaging experiment is not valid: %(errors)s",
+                errors="; ".join(exc.messages),
+            )
         )
-    except Exception as exc:  # yim-validate unavailable: do not register what cannot be checked
+    except (
+        Exception
+    ) as exc:  # yim-validate unavailable: do not register what cannot be checked
         current_app.logger.warning("yim-validate could not run for an upload: %s", exc)
-        return refuse(_("The uploaded instant messaging experiment could not be validated."))
+        return refuse(
+            _("The uploaded instant messaging experiment could not be validated.")
+        )
 
     folder = os.path.join(get_writable_path(), "y_web", "experiments", uid)
     rewrite_server_config(
@@ -902,7 +925,9 @@ def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
         json.dump(config, handle, indent=2)
     prompt_language = None
     try:
-        with open(os.path.join(exp_dir, "prompt_language.json"), "r", encoding="utf-8") as handle:
+        with open(
+            os.path.join(exp_dir, "prompt_language.json"), "r", encoding="utf-8"
+        ) as handle:
             prompt_language = json.load(handle).get("prompt_language")
     except (OSError, ValueError, AttributeError):
         pass
@@ -924,10 +949,14 @@ def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
     )
     db.session.add(exp)
     db.session.commit()
-    db.session.add(Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"))
+    db.session.add(
+        Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped")
+    )
     db.session.commit()
     flash(
-        _("Instant messaging experiment imported. Create its clients from the experiment page.")
+        _(
+            "Instant messaging experiment imported. Create its clients from the experiment page."
+        )
     )
     return redirect(request.referrer or url_for("admin.dashboard"))
 
@@ -2267,9 +2296,10 @@ def create_experiment():
 
     # identify db type
     db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith(
-        "postgresql"
-    ) and platform_type != "instant_messaging":
+    if (
+        current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql")
+        and platform_type != "instant_messaging"
+    ):
         db_type = "postgresql"
 
     from y_web.src.system.path_utils import get_writable_path
@@ -2438,7 +2468,10 @@ def create_experiment():
                 )
             except ImConfigError as exc:
                 shutil.rmtree(data_path, ignore_errors=True)
-                flash(_("Invalid instant messaging settings: %(why)s", why=str(exc)), "error")
+                flash(
+                    _("Invalid instant messaging settings: %(why)s", why=str(exc)),
+                    "error",
+                )
                 return redirect(url_for("admin.dashboard"))
         elif platform_type == "photo_sharing":
             config = generate_photo_sharing_config(
@@ -5429,13 +5462,17 @@ def _create_im_experiment_copy(
     db.session.add(new_exp)
     db.session.commit()
 
-    for link in db.session.scalars(select(Exp_Topic).filter_by(exp_id=source_exp.idexp)).all():
+    for link in db.session.scalars(
+        select(Exp_Topic).filter_by(exp_id=source_exp.idexp)
+    ).all():
         db.session.add(Exp_Topic(exp_id=new_exp.idexp, topic_id=link.topic_id))
     for link in db.session.scalars(
         select(Population_Experiment).filter_by(id_exp=source_exp.idexp)
     ).all():
         db.session.add(
-            Population_Experiment(id_exp=new_exp.idexp, id_population=link.id_population)
+            Population_Experiment(
+                id_exp=new_exp.idexp, id_population=link.id_population
+            )
         )
     db.session.commit()
 
@@ -5464,7 +5501,9 @@ def _create_im_experiment_copy(
             )
         )
     db.session.add(
-        Jupyter_instances(port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped")
+        Jupyter_instances(
+            port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped"
+        )
     )
     db.session.commit()
     return True

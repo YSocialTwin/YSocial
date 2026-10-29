@@ -20,7 +20,10 @@ from typing import Any, Dict, Optional
 
 # the stress/reward blocks YSocial and IM have in common, and the events IM implements
 _SHARED_BLOCKS = ("coupling", "churn", "activity_impact")
-_IM_EVENTS = {"reaction": ("like", "dislike"), "comment": ("positive", "neutral", "critical", "hostile", "supportive")}
+_IM_EVENTS = {
+    "reaction": ("like", "dislike"),
+    "comment": ("positive", "neutral", "critical", "hostile", "supportive"),
+}
 
 
 def _flag(value) -> bool:
@@ -43,7 +46,11 @@ def stress_reward_to_im(config: Optional[dict]) -> Dict[str, Any]:
         kept: Dict[str, Any] = {}
         for family, subtypes in _IM_EVENTS.items():
             if isinstance(events.get(family), dict):
-                kept[family] = {s: copy.deepcopy(events[family][s]) for s in subtypes if s in events[family]}
+                kept[family] = {
+                    s: copy.deepcopy(events[family][s])
+                    for s in subtypes
+                    if s in events[family]
+                }
         if kept:
             out["events"] = kept
     return out
@@ -52,8 +59,16 @@ def stress_reward_to_im(config: Optional[dict]) -> Dict[str, Any]:
 def stress_reward_from_im(block: Optional[dict]) -> Dict[str, Any]:
     """IM's ``telegram.stress_reward`` as the shape the settings page edits (missing parts are filled by the caller)."""
     block = block or {}
-    system = {k: copy.deepcopy(block[k]) for k in (*_SHARED_BLOCKS, "events") if isinstance(block.get(k), dict)}
-    return {"enabled": _flag(block.get("enabled")), "backward_rounds": int(block.get("backward_rounds") or 24), "system": system}
+    system = {
+        k: copy.deepcopy(block[k])
+        for k in (*_SHARED_BLOCKS, "events")
+        if isinstance(block.get(k), dict)
+    }
+    return {
+        "enabled": _flag(block.get("enabled")),
+        "backward_rounds": int(block.get("backward_rounds") or 24),
+        "system": system,
+    }
 
 
 def apply_experiment_switches(
@@ -90,12 +105,16 @@ def apply_experiment_switches(
         config["opinion_dynamics_enabled"] = bool(opinion)
     config.setdefault("opinion_dynamics_enabled", False)
     if memory is not None:
-        memory_block = config.get("memory") if isinstance(config.get("memory"), dict) else {}
+        memory_block = (
+            config.get("memory") if isinstance(config.get("memory"), dict) else {}
+        )
         memory_block["enabled"] = bool(memory)
         config["memory"] = memory_block
         simulation["memory_enabled"] = bool(memory)
     else:
-        config.setdefault("memory", {"enabled": bool(simulation.get("memory_enabled", False))})
+        config.setdefault(
+            "memory", {"enabled": bool(simulation.get("memory_enabled", False))}
+        )
 
     telegram = config.setdefault("telegram", {})
     if stress_reward_config is not None:
@@ -106,15 +125,26 @@ def apply_experiment_switches(
         config["stress_reward_enabled"] = bool(mirror.get("enabled"))
         telegram["stress_reward"] = stress_reward_to_im(mirror)
     elif stress_reward is not None:
-        mirror = config.get("stress_reward") if isinstance(config.get("stress_reward"), dict) else {}
+        mirror = (
+            config.get("stress_reward")
+            if isinstance(config.get("stress_reward"), dict)
+            else {}
+        )
         mirror["enabled"] = bool(stress_reward)
         config["stress_reward"] = mirror
         config["stress_reward_enabled"] = bool(stress_reward)
-        im_block = telegram.get("stress_reward") if isinstance(telegram.get("stress_reward"), dict) else {}
+        im_block = (
+            telegram.get("stress_reward")
+            if isinstance(telegram.get("stress_reward"), dict)
+            else {}
+        )
         im_block["enabled"] = bool(stress_reward)
         telegram["stress_reward"] = im_block
     else:
-        config.setdefault("stress_reward_enabled", bool((telegram.get("stress_reward") or {}).get("enabled", False)))
+        config.setdefault(
+            "stress_reward_enabled",
+            bool((telegram.get("stress_reward") or {}).get("enabled", False)),
+        )
     return config
 
 
@@ -133,13 +163,21 @@ def apply_switches_to_client(
     if emotion is not None:
         client_config.setdefault("simulation", {})["emotion_annotation"] = bool(emotion)
     if opinion is not None:
-        block = client_config.get("opinion_dynamics") if isinstance(client_config.get("opinion_dynamics"), dict) else {}
+        block = (
+            client_config.get("opinion_dynamics")
+            if isinstance(client_config.get("opinion_dynamics"), dict)
+            else {}
+        )
         block["enabled"] = bool(opinion)
         if opinion:
             block.setdefault("model_name", "bounded_confidence")
         client_config["opinion_dynamics"] = block
     if stress_reward is not None:
-        block = client_config.get("stress_reward") if isinstance(client_config.get("stress_reward"), dict) else {}
+        block = (
+            client_config.get("stress_reward")
+            if isinstance(client_config.get("stress_reward"), dict)
+            else {}
+        )
         block["enabled"] = bool(stress_reward)
         client_config["stress_reward"] = block
     if memory is not None:
@@ -153,11 +191,19 @@ def read_switches(config: dict) -> Dict[str, bool]:
     telegram_stress = (config.get("telegram") or {}).get("stress_reward") or {}
     memory = config.get("memory") if isinstance(config.get("memory"), dict) else {}
     return {
-        "toxicity": bool(config.get("toxicity_annotation", simulation.get("enable_toxicity", False))),
-        "sentiment": bool(config.get("sentiment_annotation", simulation.get("enable_sentiment", False))),
+        "toxicity": bool(
+            config.get("toxicity_annotation", simulation.get("enable_toxicity", False))
+        ),
+        "sentiment": bool(
+            config.get(
+                "sentiment_annotation", simulation.get("enable_sentiment", False)
+            )
+        ),
         "emotion": bool(config.get("emotion_annotation", False)),
         "opinion": bool(config.get("opinion_dynamics_enabled", False)),
-        "stress_reward": bool(config.get("stress_reward_enabled", telegram_stress.get("enabled", False))),
+        "stress_reward": bool(
+            config.get("stress_reward_enabled", telegram_stress.get("enabled", False))
+        ),
         "memory": bool(memory.get("enabled", simulation.get("memory_enabled", False))),
     }
 
@@ -187,23 +233,43 @@ def apply_time_parameters(
     telegram_time = config.setdefault("telegram", {}).setdefault("time", {})
     if run_started:
         if days is not None and int(days) > int(simulation.get("num_days", 0)):
-            raise TimeParameterError("the run already started: reset the experiment to make it longer")
-        if start_date is not None and str(start_date) != str(simulation.get("start_date")):
-            raise TimeParameterError("the run already started: the start date cannot change")
-        if ticks_per_round is not None and int(ticks_per_round) != int(telegram_time.get("ticks_per_round", 12)):
-            raise TimeParameterError("the run already started: the round length cannot change")
+            raise TimeParameterError(
+                "the run already started: reset the experiment to make it longer"
+            )
+        if start_date is not None and str(start_date) != str(
+            simulation.get("start_date")
+        ):
+            raise TimeParameterError(
+                "the run already started: the start date cannot change"
+            )
+        if ticks_per_round is not None and int(ticks_per_round) != int(
+            telegram_time.get("ticks_per_round", 12)
+        ):
+            raise TimeParameterError(
+                "the run already started: the round length cannot change"
+            )
         return config
     if days is not None:
         current = int(simulation.get("num_days", 0)) if other_clients else 0
         simulation["num_days"] = max(int(days), current)
     if other_clients:
-        if start_date is not None and str(start_date) != str(simulation.get("start_date")):
-            raise TimeParameterError("the start date is the experiment's: use the one of the existing clients")
-        if ticks_per_round is not None and int(ticks_per_round) != int(telegram_time.get("ticks_per_round", 12)):
-            raise TimeParameterError("the round length is the experiment's: use the one of the existing clients")
+        if start_date is not None and str(start_date) != str(
+            simulation.get("start_date")
+        ):
+            raise TimeParameterError(
+                "the start date is the experiment's: use the one of the existing clients"
+            )
+        if ticks_per_round is not None and int(ticks_per_round) != int(
+            telegram_time.get("ticks_per_round", 12)
+        ):
+            raise TimeParameterError(
+                "the round length is the experiment's: use the one of the existing clients"
+            )
     else:
         if start_date:
-            simulation["start_date"] = datetime.date.fromisoformat(str(start_date)).isoformat()
+            simulation["start_date"] = datetime.date.fromisoformat(
+                str(start_date)
+            ).isoformat()
         if ticks_per_round is not None:
             telegram_time["ticks_per_round"] = int(ticks_per_round)
     return config
@@ -238,13 +304,17 @@ def read_advanced_settings(exp_folder: str) -> Dict[str, Any]:
             config = json.load(handle) or {}
     human = config.get("human") if isinstance(config.get("human"), dict) else {}
     return {
-        "min_round_seconds": float((human.get("pace") or {}).get("min_round_seconds", 0) or 0),
+        "min_round_seconds": float(
+            (human.get("pace") or {}).get("min_round_seconds", 0) or 0
+        ),
         "max_humans": int(human.get("max_humans", 50) or 50),
         "locked": run_started(exp_folder),
     }
 
 
-def write_advanced_settings(exp_folder: str, *, min_round_seconds=None, max_humans=None) -> Dict[str, Any]:
+def write_advanced_settings(
+    exp_folder: str, *, min_round_seconds=None, max_humans=None
+) -> Dict[str, Any]:
     """Validate and write the advanced settings into ``server_config.json``.
 
     The server keeps a hash of its configuration, so nothing changes once a run has started (reset it first).
@@ -252,20 +322,32 @@ def write_advanced_settings(exp_folder: str, *, min_round_seconds=None, max_huma
     import json
 
     if run_started(exp_folder):
-        raise AdvancedSettingsError("the run already started: reset the experiment to change these settings")
+        raise AdvancedSettingsError(
+            "the run already started: reset the experiment to change these settings"
+        )
     try:
-        seconds = float(min_round_seconds) if min_round_seconds not in (None, "") else 0.0
+        seconds = (
+            float(min_round_seconds) if min_round_seconds not in (None, "") else 0.0
+        )
         humans = int(max_humans) if max_humans not in (None, "") else 50
     except (TypeError, ValueError):
         raise AdvancedSettingsError("the values must be numbers") from None
     if not 0 <= seconds <= 3600:
-        raise AdvancedSettingsError("minimum round duration must be between 0 and 3600 seconds")
+        raise AdvancedSettingsError(
+            "minimum round duration must be between 0 and 3600 seconds"
+        )
     if not 1 <= humans <= 1000:
-        raise AdvancedSettingsError("maximum number of participants must be between 1 and 1000")
+        raise AdvancedSettingsError(
+            "maximum number of participants must be between 1 and 1000"
+        )
     path = _server_config_path(exp_folder)
     with open(path, "r", encoding="utf-8") as handle:
         config = json.load(handle)
-    human = config.get("human") if isinstance(config.get("human"), dict) else {"enabled": True}
+    human = (
+        config.get("human")
+        if isinstance(config.get("human"), dict)
+        else {"enabled": True}
+    )
     human["enabled"] = True
     human["max_humans"] = humans
     human.setdefault("pace", {})["min_round_seconds"] = seconds
@@ -300,5 +382,10 @@ def time_parameters(config: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "days": int(simulation.get("num_days", 7) or 7),
         "start_date": str(simulation.get("start_date") or ""),
-        "ticks_per_round": int(((config.get("telegram") or {}).get("time") or {}).get("ticks_per_round", 12) or 12),
+        "ticks_per_round": int(
+            ((config.get("telegram") or {}).get("time") or {}).get(
+                "ticks_per_round", 12
+            )
+            or 12
+        ),
     }

@@ -101,7 +101,10 @@ def _page_resources_available() -> bool:
 # platform key -> (short tag label, repositories that must all be installed for the platform to count as installed;
 # a tuple of alternatives means any one of those sets is enough)
 _PLATFORMS = {
-    "microblogging": (N_("Microblogging"), (("microblogging_server", "microblogging_client"), ("hpc_simulator",))),
+    "microblogging": (
+        N_("Microblogging"),
+        (("microblogging_server", "microblogging_client"), ("hpc_simulator",)),
+    ),
     "forum": (N_("Forum"), (("forum_server", "forum_client"),)),
     "photo_sharing": (N_("Photo sharing"), (("photo_sharing",),)),
     "instant_messaging": (N_("Instant Messaging"), (("instant_messaging",),)),
@@ -120,7 +123,9 @@ def _installed_platforms() -> list[str]:
     return [
         key
         for key, (_label, alternatives) in _PLATFORMS.items()
-        if any(all(_runtime_installed(repo) for repo in repos) for repos in alternatives)
+        if any(
+            all(_runtime_installed(repo) for repo in repos) for repos in alternatives
+        )
     ]
 
 
@@ -132,7 +137,9 @@ def _tag_agent_resource_cards(cards: list[dict], installed: list[str]) -> list[d
     """
     out = []
     for card in cards:
-        supported = [p for p in installed if p in set(card.get("deployment_tags") or _PLATFORMS)]
+        supported = [
+            p for p in installed if p in set(card.get("deployment_tags") or _PLATFORMS)
+        ]
         if not supported:
             continue
         if len(installed) > 1 and supported == installed:
@@ -216,7 +223,9 @@ def _plugin_agent_specs() -> list[dict]:
                     "manifest_path": str(manifest_path),
                     # where the agent type can be deployed: the manifest's "platforms", else the platforms whose
                     # database has the tables plugin agents write to (``post``, ``user_mgmt``: microblogging, forum)
-                    "platforms": [p for p in (entry.get("platforms") or []) if p in _PLATFORMS]
+                    "platforms": [
+                        p for p in (entry.get("platforms") or []) if p in _PLATFORMS
+                    ]
                     or list(_PLUGIN_AGENT_PLATFORMS),
                 }
             )
@@ -892,7 +901,12 @@ def agents_dashboard():
                 "Manage existing agents, remove orphaned entries, and create fully custom profiles."
             ),
             "meta": {},
-            "deployment_tags": ["microblogging", "forum", "photo_sharing", "instant_messaging"],
+            "deployment_tags": [
+                "microblogging",
+                "forum",
+                "photo_sharing",
+                "instant_messaging",
+            ],
             "is_plugin": False,
         }
     ]
@@ -924,7 +938,12 @@ def agents_dashboard():
                     "Configure page identity, leaning, feed sources, and upload page collections in bulk."
                 ),
                 "meta": {},
-                "deployment_tags": ["microblogging", "forum", "photo_sharing", "instant_messaging"],
+                "deployment_tags": [
+                    "microblogging",
+                    "forum",
+                    "photo_sharing",
+                    "instant_messaging",
+                ],
                 "is_plugin": False,
             }
         )
@@ -986,9 +1005,15 @@ def agents_dashboard():
 
     agent_resource_cards.extend(plugin_agent_cards)
     installed_platforms = _installed_platforms()
-    agent_resource_cards = _tag_agent_resource_cards(agent_resource_cards, installed_platforms)
+    agent_resource_cards = _tag_agent_resource_cards(
+        agent_resource_cards, installed_platforms
+    )
     platform_filters = [
-        {"key": key, "label": _(_PLATFORMS[key][0]), "count": sum(1 for c in agent_resource_cards if key in c["platforms"])}
+        {
+            "key": key,
+            "label": _(_PLATFORMS[key][0]),
+            "count": sum(1 for c in agent_resource_cards if key in c["platforms"]),
+        }
         for key in installed_platforms
     ]
 

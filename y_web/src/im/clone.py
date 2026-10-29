@@ -76,7 +76,9 @@ def copy_im_folder(source_folder: str, new_folder: str) -> None:
     os.makedirs(os.path.join(new_folder, "logs"), exist_ok=True)
 
 
-def rewrite_server_config(new_folder: str, new_exp_name: str, new_db_uri: str, new_data_path: str) -> None:
+def rewrite_server_config(
+    new_folder: str, new_exp_name: str, new_db_uri: str, new_data_path: str
+) -> None:
     """Point the copied ``server_config.json`` at the new folder; the run configuration is unchanged."""
     path = os.path.join(new_folder, "server_config.json")
     with open(path, "r", encoding="utf-8") as handle:
@@ -142,7 +144,8 @@ def is_im_folder(folder: str) -> bool:
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         try:
             row = conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (IM_MARKER_TABLE,)
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (IM_MARKER_TABLE,),
             ).fetchone()
         finally:
             conn.close()

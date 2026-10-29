@@ -19,8 +19,6 @@ from y_web.tests.test_im_client_creation import (  # noqa: F401  (fixtures and h
 )
 
 
-
-
 def _spawn(folder, name="cl", edit=None):
     """Start the real client and return the process (the config is normalized and validated first)."""
     from y_web.src.hpc.client import _normalize_im_client_config
@@ -70,7 +68,9 @@ def _monitor():
     monitor_hpc_client_execution_logs()
 
 
-def test_execution_log_is_found_under_the_client_id_prefix(app, env, monkeypatch, tmp_path):
+def test_execution_log_is_found_under_the_client_id_prefix(
+    app, env, monkeypatch, tmp_path
+):
     from y_web.src.hpc.client import resolve_hpc_client_execution_log_path
 
     with app.app_context():
@@ -79,13 +79,22 @@ def test_execution_log_is_found_under_the_client_id_prefix(app, env, monkeypatch
         logs.mkdir(parents=True, exist_ok=True)
         (logs / "uid:cl_execution.log").write_text("")
         (logs / "other:cl2_execution.log").write_text("")
-        assert resolve_hpc_client_execution_log_path(exp, "cl", log_folder=str(logs)).endswith("uid:cl_execution.log")
-        assert resolve_hpc_client_execution_log_path(exp, "missing", log_folder=str(logs)) is None
+        assert resolve_hpc_client_execution_log_path(
+            exp, "cl", log_folder=str(logs)
+        ).endswith("uid:cl_execution.log")
+        assert (
+            resolve_hpc_client_execution_log_path(exp, "missing", log_folder=str(logs))
+            is None
+        )
         (logs / "cl_execution.log").write_text("")
-        assert resolve_hpc_client_execution_log_path(exp, "cl", log_folder=str(logs)).endswith("/cl_execution.log")
+        assert resolve_hpc_client_execution_log_path(
+            exp, "cl", log_folder=str(logs)
+        ).endswith("/cl_execution.log")
 
 
-def test_clean_completion_completes_client_experiment_and_stops_the_server(app, env, monkeypatch, tmp_path):
+def test_clean_completion_completes_client_experiment_and_stops_the_server(
+    app, env, monkeypatch, tmp_path
+):
     from y_web import db
     from y_web.src.models import Exps
 
@@ -112,17 +121,25 @@ def test_clean_completion_completes_client_experiment_and_stops_the_server(app, 
         (
             "llm_down",
             lambda d: d.update(
-                llm={"backend": "ollama", "address": "127.0.0.1", "port": 9, "model": "x", "timeout_seconds": 2,
-                     "max_concurrency": 4}
+                llm={
+                    "backend": "ollama",
+                    "address": "127.0.0.1",
+                    "port": 9,
+                    "model": "x",
+                    "timeout_seconds": 2,
+                    "max_concurrency": 4,
+                }
             ),
             5,
         ),
     ],
 )
-def test_client_failures_are_classified_with_a_readable_reason(app, env, monkeypatch, tmp_path, case, edit, code):
+def test_client_failures_are_classified_with_a_readable_reason(
+    app, env, monkeypatch, tmp_path, case, edit, code
+):
     from y_web import db
-    from y_web.src.im.failures import describe_client_failure
     from y_web.src.hpc.client import resolve_hpc_client_execution_log_path
+    from y_web.src.im.failures import describe_client_failure
 
     with app.app_context():
         hs, exp, folder = _setup(app, env, monkeypatch, tmp_path)
@@ -134,17 +151,26 @@ def test_client_failures_are_classified_with_a_readable_reason(app, env, monkeyp
             _monitor()
             db.session.expire_all()
             assert execution.terminal_state == "failed" and client.status == 0
-            log = resolve_hpc_client_execution_log_path(exp, "cl", log_folder=str(Path(folder) / "logs"))
+            log = resolve_hpc_client_execution_log_path(
+                exp, "cl", log_folder=str(Path(folder) / "logs")
+            )
             info = describe_client_failure(log)
             if code == 2:
                 # a configuration error is raised before the logs exist: YWeb stops it earlier, at launch
-                from y_web.src.im.validation import ImValidationError, validate_im_folder
+                from y_web.src.im.validation import (
+                    ImValidationError,
+                    validate_im_folder,
+                )
 
                 assert info is None
                 with pytest.raises(ImValidationError):
-                    validate_im_folder(str(folder), str(IM_REPO), client_config="client_cl-pop.json")
+                    validate_im_folder(
+                        str(folder), str(IM_REPO), client_config="client_cl-pop.json"
+                    )
             else:
-                assert info["exit_code"] == code and info["message"] and info["error_type"]
+                assert (
+                    info["exit_code"] == code and info["message"] and info["error_type"]
+                )
         finally:
             hs.stop_hpc_server(exp.idexp)
 
@@ -165,7 +191,9 @@ def test_kill_nine_is_failed_and_manual_stop_is_not(app, env, monkeypatch, tmp_p
             db.session.commit()
             _monitor()
             db.session.expire_all()
-            assert execution.terminal_state == "manual_stop"  # an operator stop is not a failure
+            assert (
+                execution.terminal_state == "manual_stop"
+            )  # an operator stop is not a failure
 
             execution.terminal_state = "running"
             client.status = 1
@@ -178,11 +206,18 @@ def test_kill_nine_is_failed_and_manual_stop_is_not(app, env, monkeypatch, tmp_p
 
 
 def test_exit_messages_cover_the_documented_codes(app):
-    from y_web.src.im.failures import describe_client_failure, exit_messages, failure_reason
+    from y_web.src.im.failures import (
+        describe_client_failure,
+        exit_messages,
+        failure_reason,
+    )
 
     with app.app_context():
         assert {1, 2, 3, 4, 5, 6, 130} <= set(exit_messages())
-    assert describe_client_failure(None) is None and failure_reason("/does/not/exist") is None
+    assert (
+        describe_client_failure(None) is None
+        and failure_reason("/does/not/exist") is None
+    )
 
 
 def test_describe_failure_reads_the_last_error_record(tmp_path):
@@ -193,8 +228,15 @@ def test_describe_failure_reads_the_last_error_record(tmp_path):
         "\n".join(
             [
                 json.dumps({"level": "INFO", "message": "Client starting"}),
-                json.dumps({"level": "ERROR", "message": "a", "error_type": "ConfigMismatchError",
-                            "error_message": "config_mismatch", "exit_code": 6}),
+                json.dumps(
+                    {
+                        "level": "ERROR",
+                        "message": "a",
+                        "error_type": "ConfigMismatchError",
+                        "error_message": "config_mismatch",
+                        "exit_code": 6,
+                    }
+                ),
                 "not json",
             ]
         )
@@ -204,7 +246,9 @@ def test_describe_failure_reads_the_last_error_record(tmp_path):
     assert "differs" in failure_reason(str(log))
 
 
-def test_metrics_tables_fill_from_the_logs_of_a_real_run(app, env, monkeypatch, tmp_path):
+def test_metrics_tables_fill_from_the_logs_of_a_real_run(
+    app, env, monkeypatch, tmp_path
+):
     from y_web import db
     from y_web.src.hpc.client import resolve_hpc_client_log_path
     from y_web.src.hpc.log_metrics import (
@@ -224,11 +268,21 @@ def test_metrics_tables_fill_from_the_logs_of_a_real_run(app, env, monkeypatch, 
             hs.stop_hpc_server(exp.idexp)
         client, execution = _register(exp, proc, expected_rounds=48)
         logs = Path(folder) / "logs"
-        assert update_server_log_metrics(exp.idexp, str(logs / "_server.log"), is_hpc=True) is not False
+        assert (
+            update_server_log_metrics(exp.idexp, str(logs / "_server.log"), is_hpc=True)
+            is not False
+        )
         client_log = resolve_hpc_client_log_path(exp, "cl", log_folder=str(logs))
-        assert update_client_log_metrics(exp.idexp, client.id, client_log, is_hpc=True) is not False
+        assert (
+            update_client_log_metrics(exp.idexp, client.id, client_log, is_hpc=True)
+            is not False
+        )
         update_client_execution_from_log(client.id, client_log)
         db.session.expire_all()
-        assert db.session.query(ServerLogMetrics).filter_by(exp_id=exp.idexp).count() > 0
-        assert db.session.query(ClientLogMetrics).filter_by(exp_id=exp.idexp).count() > 0
+        assert (
+            db.session.query(ServerLogMetrics).filter_by(exp_id=exp.idexp).count() > 0
+        )
+        assert (
+            db.session.query(ClientLogMetrics).filter_by(exp_id=exp.idexp).count() > 0
+        )
         assert execution.elapsed_time > 0 and execution.last_active_day >= 1

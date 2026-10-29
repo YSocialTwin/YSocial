@@ -151,7 +151,6 @@ def excluded_capabilities_for(platform_type: str):
 # ------------------------------------------------------------------
 from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS  # noqa: E402
 
-
 _ENUM_SETTINGS = {
     "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
     "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},

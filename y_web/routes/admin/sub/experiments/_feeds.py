@@ -43,8 +43,8 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
-from y_web.src.im import is_im_experiment
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -362,7 +362,9 @@ def rss_feeds(uid):
         from y_web.src.im.experiment_config import run_started
 
         snapshot = {
-            "exists": os.path.isfile(os.path.join(experiment_dir, "news_snapshot.jsonl")),
+            "exists": os.path.isfile(
+                os.path.join(experiment_dir, "news_snapshot.jsonl")
+            ),
             "locked": run_started(experiment_dir),
         }
     return render_template(
@@ -410,7 +412,9 @@ def update_rss_feeds(uid):
     )
     _write_experiment_rss_feed_file(experiment_dir, resources)
 
-    if not is_im_experiment(experiment):  # direct article URLs are a forum notion: IM pages read feeds
+    if not is_im_experiment(
+        experiment
+    ):  # direct article URLs are a forum notion: IM pages read feeds
         urls_text = request.form.get("url_feeds_text", "")
         urls = [line.strip() for line in urls_text.splitlines() if line.strip()]
         with open(url_feeds_path, "w") as handle:
@@ -466,7 +470,9 @@ def im_news_snapshot(uid):
         ).all()
     ]
     for link in db.session.scalars(
-        select(Page_Population).filter(Page_Population.population_id.in_(population_ids))
+        select(Page_Population).filter(
+            Page_Population.population_id.in_(population_ids)
+        )
     ).all():
         page = db.session.get(Page, link.page_id)
         if page is not None and page.feed:
@@ -477,7 +483,9 @@ def im_news_snapshot(uid):
     try:
         result = news.write_snapshot(experiment_dir, urls, replace=True)
     except Exception as exc:  # noqa: BLE001 - the page tells what happened
-        flash(_("Could not write the news snapshot: %(error)s", error=str(exc)), "error")
+        flash(
+            _("Could not write the news snapshot: %(error)s", error=str(exc)), "error"
+        )
         return back
     failed = [url for url, count in result["feeds"].items() if not count]
     flash(
@@ -490,7 +498,10 @@ def im_news_snapshot(uid):
     )
     if failed:
         flash(
-            _("No articles from: %(urls)s", urls=", ".join(failed[:3]) + (" ..." if len(failed) > 3 else "")),
+            _(
+                "No articles from: %(urls)s",
+                urls=", ".join(failed[:3]) + (" ..." if len(failed) > 3 else ""),
+            ),
             "warning",
         )
     return back
@@ -1086,7 +1097,9 @@ def embedding_settings(uid):
             else (
                 "HPC"
                 if experiment.simulator_type == "HPC"
-                else ("Forum" if experiment.platform_type == "forum" else "Microblogging")
+                else (
+                    "Forum" if experiment.platform_type == "forum" else "Microblogging"
+                )
             )
         ),
         server_label=(
@@ -1095,7 +1108,11 @@ def embedding_settings(uid):
             else (
                 "YSimulator"
                 if experiment.simulator_type == "HPC"
-                else ("YServerReddit" if experiment.platform_type == "forum" else "YServer")
+                else (
+                    "YServerReddit"
+                    if experiment.platform_type == "forum"
+                    else "YServer"
+                )
             )
         ),
     )

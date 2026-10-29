@@ -18,7 +18,9 @@ from y_web.tests.test_im_client_creation import (  # noqa: F401
 
 @pytest.mark.external_repo
 @pytest.mark.integration
-def test_real_run_counts_match_and_the_run_database_is_untouched(app, env, monkeypatch, tmp_path):
+def test_real_run_counts_match_and_the_run_database_is_untouched(
+    app, env, monkeypatch, tmp_path
+):
     if not (IM_REPO / "run_server.py").is_file():
         pytest.skip("YInstantMessaging is not installed")
     from y_web.src.hpc import server as hs
@@ -43,21 +45,36 @@ def test_real_run_counts_match_and_the_run_database_is_untouched(app, env, monke
         assert result["state"] == "fresh" and result["rebuilt"] is True, result
         assert hashlib.sha256(db_file.read_bytes()).hexdigest() == before
 
-        with sqlite3.connect(f"file:{db_file}?mode=ro", uri=True) as src, sqlite3.connect(
-            etl.analytics_path(str(folder))
-        ) as dst:
+        with (
+            sqlite3.connect(f"file:{db_file}?mode=ro", uri=True) as src,
+            sqlite3.connect(etl.analytics_path(str(folder))) as dst,
+        ):
             for source_sql, table in (
                 ("SELECT COUNT(*) FROM messages", "post"),
                 ("SELECT COUNT(*) FROM accounts", "user_mgmt"),
                 ("SELECT COUNT(*) FROM rounds", "rounds"),
             ):
-                assert src.execute(source_sql).fetchone()[0] == dst.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                assert (
+                    src.execute(source_sql).fetchone()[0]
+                    == dst.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+                )
             assert src.execute("SELECT COUNT(*) FROM messages").fetchone()[0] > 0
             for table in ("reactions", "mentions", "agent_opinion", "stress_reward"):
-                names = {r[0] for r in dst.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-                source_table = {"reactions": "reactions", "mentions": "mentions", "agent_opinion": "agent_opinions",
-                                "stress_reward": "stress_reward"}[table]
+                names = {
+                    r[0]
+                    for r in dst.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    )
+                }
+                source_table = {
+                    "reactions": "reactions",
+                    "mentions": "mentions",
+                    "agent_opinion": "agent_opinions",
+                    "stress_reward": "stress_reward",
+                }[table]
                 n = src.execute(f"SELECT COUNT(*) FROM {source_table}").fetchone()[0]
                 assert (table in names) == (n > 0), table
                 if n:
-                    assert dst.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == n
+                    assert (
+                        dst.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == n
+                    )

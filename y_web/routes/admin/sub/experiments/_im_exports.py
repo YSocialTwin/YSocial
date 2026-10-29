@@ -55,7 +55,9 @@ def im_export(idexp):
         snapshot=bool(exp.running),
     )
     if ok:
-        flash(_("Export finished. The files are listed in the Export and reports panel."))
+        flash(
+            _("Export finished. The files are listed in the Export and reports panel.")
+        )
     else:
         flash(_("Export failed: %(error)s", error=result.get("error", "")), "error")
     return redirect(back)
@@ -109,7 +111,13 @@ def im_analytics_refresh(idexp):
 
     result = analytics.ensure_derived(exp, force=True)
     if result.get("state") == "failed":
-        flash(_("Analytics data could not be built: %(message)s", message=result.get("message", "")), "error")
+        flash(
+            _(
+                "Analytics data could not be built: %(message)s",
+                message=result.get("message", ""),
+            ),
+            "error",
+        )
     elif result.get("state") == "running":
         flash(_("Analytics data are being built."), "info")
     elif result.get("state") == "never":
@@ -123,11 +131,25 @@ def im_analytics_refresh(idexp):
 # their own checks (``Exps.annotations``, table presence) see the current state (plan 4.7)
 _ANALYTICS_ENDPOINTS = frozenset(
     {
-        "opinion_evolution", "opinion_evolution_data", "stress_reward_evolution", "stress_reward_evolution_data",
-        "toxicity_evolution", "toxicity_analytics_data", "sentiment_evolution", "sentiment_analytics_data",
-        "emotion_statistics", "emotion_analytics_data", "emotion_statistics_data", "topic_evolution", "topic_evolution_data",
-        "hashtag_evolution", "hashtag_evolution_data", "recsys_evolution", "recsys_evolution_data",
-        "network_analysis", "network_analysis_data",
+        "opinion_evolution",
+        "opinion_evolution_data",
+        "stress_reward_evolution",
+        "stress_reward_evolution_data",
+        "toxicity_evolution",
+        "toxicity_analytics_data",
+        "sentiment_evolution",
+        "sentiment_analytics_data",
+        "emotion_statistics",
+        "emotion_analytics_data",
+        "emotion_statistics_data",
+        "topic_evolution",
+        "topic_evolution_data",
+        "hashtag_evolution",
+        "hashtag_evolution_data",
+        "recsys_evolution",
+        "recsys_evolution_data",
+        "network_analysis",
+        "network_analysis_data",
     }
 )
 
@@ -136,7 +158,11 @@ _ANALYTICS_ENDPOINTS = frozenset(
 def _refresh_im_analytics_before_the_pages():
     endpoint = (request.endpoint or "").rpartition(".")[2]
     expid = (request.view_args or {}).get("expid")
-    if endpoint not in _ANALYTICS_ENDPOINTS or expid is None or not current_user.is_authenticated:
+    if (
+        endpoint not in _ANALYTICS_ENDPOINTS
+        or expid is None
+        or not current_user.is_authenticated
+    ):
         return None
     exp = _im_experiment_or_none(expid)
     if exp is not None:

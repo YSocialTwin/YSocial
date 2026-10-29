@@ -61,8 +61,8 @@ def register_experiment_database(app, exp_id, db_name):
         # without applying the YSocial schema (the pages detect their tables by presence)
         from y_web.src.system.path_utils import get_writable_path
 
-        app.config["SQLALCHEMY_BINDS"][get_db_bind_key_for_exp(exp_id)] = "sqlite:///" + get_writable_path(
-            os.path.join("y_web", db_name)
+        app.config["SQLALCHEMY_BINDS"][get_db_bind_key_for_exp(exp_id)] = (
+            "sqlite:///" + get_writable_path(os.path.join("y_web", db_name))
         )
         return
 

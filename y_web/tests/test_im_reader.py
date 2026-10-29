@@ -47,7 +47,9 @@ def test_differential_visibility_against_im_feed_service_and_can_read(world):
             account = rng.choice(info["accounts"])
             chat = rng.choice(info["chats"])
             rnd = rng.randint(1, info["rounds"])
-            ctx = RoundContext(rnd, (rnd - 1) // 24 + 1, (rnd - 1) % 24 + 1, 3, 4, dt.date(2026, 1, 1))
+            ctx = RoundContext(
+                rnd, (rnd - 1) // 24 + 1, (rnd - 1) % 24 + 1, 3, 4, dt.date(2026, 1, 1)
+            )
             theirs = feed.history(session, repo, account, ctx, chat, limit=10_000)
             rd = Reader(session, Viewpoint("account", account, rnd))
             mine = _pages(rd, chat, limit=13)
@@ -55,7 +57,11 @@ def test_differential_visibility_against_im_feed_service_and_can_read(world):
                 assert mine is None, (account, chat, rnd)
             else:
                 assert mine is not None, (account, chat, rnd)
-                assert mine == [i["message_id"] for i in theirs["items"]], (account, chat, rnd)
+                assert mine == [i["message_id"] for i in theirs["items"]], (
+                    account,
+                    chat,
+                    rnd,
+                )
                 checked += 1
             # and message by message against the domain predicate itself
             sample = rng.sample(info["messages"], 5)
@@ -65,7 +71,9 @@ def test_differential_visibility_against_im_feed_service_and_can_read(world):
                     continue
                 allowed = repo.can_read(account, mid, rnd)
                 assert (mid in (mine or [])) == allowed, (account, chat, rnd, mid)
-    assert checked > 60  # the random fixture exercises readable cases, not only refusals
+    assert (
+        checked > 60
+    )  # the random fixture exercises readable cases, not only refusals
 
 
 def test_reader_never_writes(world):
@@ -73,7 +81,10 @@ def test_reader_never_writes(world):
     before = hashlib.sha256(open(path, "rb").read()).hexdigest()
     with engine.open_reader(path) as session:
         for kind in ("overview", "public", "account"):
-            rd = Reader(session, Viewpoint(kind, info["accounts"][1] if kind == "account" else None, 40))
+            rd = Reader(
+                session,
+                Viewpoint(kind, info["accounts"][1] if kind == "account" else None, 40),
+            )
             rd.chat_list()
             for chat in info["chats"]:
                 rd.history(chat)
@@ -92,11 +103,19 @@ def test_public_viewpoint_has_no_private_chats_or_deleted_messages(world):
         rd = Reader(session, Viewpoint("public", None, info["rounds"]))
         listed = rd.chat_list()
         models = engine.im_modules()[0]
-        private = {c.id for c in session.query(models.Chat) if c.visibility == "private" or c.type == "private"}
+        private = {
+            c.id
+            for c in session.query(models.Chat)
+            if c.visibility == "private" or c.type == "private"
+        }
         assert listed and not ({c["id"] for c in listed} & private)
         for chat_id in private:
             assert rd.history(chat_id) is None and rd.members(chat_id) is None
-        deleted = {m.id for m in session.query(models.Message) if m.deleted_round is not None and m.deleted_round <= info["rounds"]}
+        deleted = {
+            m.id
+            for m in session.query(models.Message)
+            if m.deleted_round is not None and m.deleted_round <= info["rounds"]
+        }
         for chat in listed:
             ids = set(_pages(rd, chat["id"]))
             assert not (ids & deleted)
@@ -117,7 +136,11 @@ def test_overview_shows_everything_and_deleted_messages_as_tombstones(world):
         assert len(seen) == len(info["messages"])
         tombs = [i for i in seen if i["deleted"]]
         assert tombs and all(i["text"] == "" for i in tombs)
-        expected = {m.id for m in session.query(models.Message) if m.deleted_round is not None and m.deleted_round <= info["rounds"]}
+        expected = {
+            m.id
+            for m in session.query(models.Message)
+            if m.deleted_round is not None and m.deleted_round <= info["rounds"]
+        }
         assert {i["id"] for i in tombs} == expected
 
 
@@ -134,7 +157,9 @@ def test_time_travel_returns_only_earlier_content(world):
                     continue
                 assert all(i["round"] <= rnd for i in page["items"])
                 ids |= {i["id"] for i in page["items"]}
-            assert previous <= ids  # the overview only grows (deleted stay as tombstones)
+            assert (
+                previous <= ids
+            )  # the overview only grows (deleted stay as tombstones)
             previous = ids
         assert reader.latest_round(session) == info["rounds"]
         assert reader.status(session, after=10)["changed"] is True
@@ -166,10 +191,18 @@ def test_unread_counts_follow_the_read_marker(world, tmp_path):
         # the account sees only its own chats
         rd = Reader(session, Viewpoint("account", info["accounts"][2], info["rounds"]))
         member_of = {
-            r.chat_id for r in session.query(models.ChatMember).filter_by(account_id=info["accounts"][2])
+            r.chat_id
+            for r in session.query(models.ChatMember).filter_by(
+                account_id=info["accounts"][2]
+            )
             if r.left_round is None and r.role not in ("banned", "left")
         }
-        assert {c["id"] for c in rd.chat_list()} <= member_of | {r.chat_id for r in session.query(models.ChatMember).filter_by(account_id=info["accounts"][2])}
+        assert {c["id"] for c in rd.chat_list()} <= member_of | {
+            r.chat_id
+            for r in session.query(models.ChatMember).filter_by(
+                account_id=info["accounts"][2]
+            )
+        }
 
 
 def test_search_only_returns_readable_messages_and_escapes_wildcards(world):
@@ -179,9 +212,13 @@ def test_search_only_returns_readable_messages_and_escapes_wildcards(world):
         hits = rd.search("text 1")
         ids = {h["id"] for h in hits}
         for h in hits:
-            assert h["id"] in set(_pages(rd, h["chat_id"], limit=100)) and h["chat_title"]
+            assert (
+                h["id"] in set(_pages(rd, h["chat_id"], limit=100)) and h["chat_title"]
+            )
         assert rd.search("%") == [] and rd.search("x") == [] and rd.search("") == []
-        assert ids <= {i for c in info["chats"] for i in (_pages(rd, c, limit=100) or [])}
+        assert ids <= {
+            i for c in info["chats"] for i in (_pages(rd, c, limit=100) or [])
+        }
 
 
 def test_invalid_viewpoints_are_refused(world):
@@ -200,14 +237,26 @@ def test_thread_members_topics_and_profile_dtos(world):
     with engine.open_reader(path) as session:
         models = engine.im_modules()[0]
         rd = Reader(session, Viewpoint("overview", None, info["rounds"]))
-        reply = session.query(models.Message).filter(models.Message.reply_to_message_id.is_not(None)).first()
+        reply = (
+            session.query(models.Message)
+            .filter(models.Message.reply_to_message_id.is_not(None))
+            .first()
+        )
         thread = rd.thread(reply.id)
         assert thread["items"][0]["id"] == reply.id
         assert rd.thread("nope") is None
         chat = info["chats"][0]
         members = rd.members(chat)
-        assert members and {"account_id", "username", "role", "joined_round", "permissions"} <= set(members[0])
-        assert rd.forum_topics(info["chats"][1]) is None or isinstance(rd.forum_topics(info["chats"][1]), list)
+        assert members and {
+            "account_id",
+            "username",
+            "role",
+            "joined_round",
+            "permissions",
+        } <= set(members[0])
+        assert rd.forum_topics(info["chats"][1]) is None or isinstance(
+            rd.forum_topics(info["chats"][1]), list
+        )
         profile = rd.profile(info["accounts"][0])
         assert profile["persona"] is None and profile["username"] == "user0"
         assert rd.profile(info["accounts"][0], include_persona=True)["persona"] == {}

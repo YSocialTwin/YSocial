@@ -5,7 +5,12 @@ from sqlalchemy import inspect, select, text
 from y_web import db
 from y_web.src.models import Exps, Population_Experiment
 
-VALID_POPULATION_TYPES = {"microblogging", "forum", "photo_sharing", "instant_messaging"}
+VALID_POPULATION_TYPES = {
+    "microblogging",
+    "forum",
+    "photo_sharing",
+    "instant_messaging",
+}
 
 
 def normalize_population_username_type(raw_value, default="microblogging"):

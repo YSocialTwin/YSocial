@@ -109,11 +109,19 @@ def generate_im_server_config(
         "telegram": {
             "time": {
                 "ticks_per_round": _int_in_range(
-                    ticks_per_round, "ticks_per_round", 1, 60, IM_DEFAULT_TICKS_PER_ROUND
+                    ticks_per_round,
+                    "ticks_per_round",
+                    1,
+                    60,
+                    IM_DEFAULT_TICKS_PER_ROUND,
                 )
             }
         },
-        "logging": {"enable_server_log": True, "enable_console_log": True, "compress_rotated": False},
+        "logging": {
+            "enable_server_log": True,
+            "enable_console_log": True,
+            "compress_rotated": False,
+        },
         "platform_type": "instant_messaging",
         "database_uri": db_uri,
         "data_path": data_path,

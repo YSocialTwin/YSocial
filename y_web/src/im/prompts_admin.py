@@ -21,30 +21,115 @@ def N_(message):
 
 # (id, title, description, keys); a key that matches no group goes to "Other"
 GROUPS: List[Tuple[str, str, str, List[str]]] = [
-    ("persona", N_("Agents and pages"), N_("Who the model is told it is: the system prompt of an agent, of a news page, and how personality traits are worded."),
-     ["persona_system", "page_system", "persona_big_five", "persona_custom"]),
-    ("session", N_("Sessions"), N_("What the model receives at the start of a session of an agent or a news page, and how the date is written."),
-     ["session_user", "page_user", "datetime_line", "weekdays", "nothing_new"]),
-    ("feed", N_("Messages in the feed"), N_("How each message the agent reads is shown to it."),
-     ["feed_item", "feed_forwarded", "feed_reply_to", "feed_addressed", "feed_thread_context", "feed_search_hit"]),
-    ("chats", N_("Chat lists"), N_("How the chats the agent owns, follows or could join are listed."),
-     ["owned_channels", "chat_line", "chat_about", "followed_chats", "followed_line", "joinable_chats", "joinable_line",
-      "forum_chats", "forum_line", "rename_chats", "rename_line", "create_topics", "no_weights", "role_names", "chat_type_names"]),
-    ("topics", N_("Topics of the posts"), N_("How the topic and the chat of each post the agent has to write are given."),
-     ["topic_header", "topic_line_any", "topic_line", "topic_line_open", "topic_off_note"]),
-    ("news", N_("News topics"), N_("How the model is asked which topic a news article is about, or to name a new one."),
-     ["news_topic_system", "news_topic_user"]),
-    ("actions", N_("Action instructions"), N_("What the model is told about the fields each action needs."),
-     ["help_reply", "help_react", "help_create_chat", "help_join", "help_leave", "help_read", "help_search", "help_private",
-      "help_create_topic", "help_delete_topic", "help_rename_chat"]),
-    ("stress", N_("Stress"), N_("How the stress level is worded when stress/reward is on."),
-     ["stress_level_none", "stress_level_slight", "stress_level_moderate", "stress_level_high", "stress_level_extreme",
-      "stress_level_block"]),
+    (
+        "persona",
+        N_("Agents and pages"),
+        N_(
+            "Who the model is told it is: the system prompt of an agent, of a news page, and how personality traits are worded."
+        ),
+        ["persona_system", "page_system", "persona_big_five", "persona_custom"],
+    ),
+    (
+        "session",
+        N_("Sessions"),
+        N_(
+            "What the model receives at the start of a session of an agent or a news page, and how the date is written."
+        ),
+        ["session_user", "page_user", "datetime_line", "weekdays", "nothing_new"],
+    ),
+    (
+        "feed",
+        N_("Messages in the feed"),
+        N_("How each message the agent reads is shown to it."),
+        [
+            "feed_item",
+            "feed_forwarded",
+            "feed_reply_to",
+            "feed_addressed",
+            "feed_thread_context",
+            "feed_search_hit",
+        ],
+    ),
+    (
+        "chats",
+        N_("Chat lists"),
+        N_("How the chats the agent owns, follows or could join are listed."),
+        [
+            "owned_channels",
+            "chat_line",
+            "chat_about",
+            "followed_chats",
+            "followed_line",
+            "joinable_chats",
+            "joinable_line",
+            "forum_chats",
+            "forum_line",
+            "rename_chats",
+            "rename_line",
+            "create_topics",
+            "no_weights",
+            "role_names",
+            "chat_type_names",
+        ],
+    ),
+    (
+        "topics",
+        N_("Topics of the posts"),
+        N_("How the topic and the chat of each post the agent has to write are given."),
+        [
+            "topic_header",
+            "topic_line_any",
+            "topic_line",
+            "topic_line_open",
+            "topic_off_note",
+        ],
+    ),
+    (
+        "news",
+        N_("News topics"),
+        N_(
+            "How the model is asked which topic a news article is about, or to name a new one."
+        ),
+        ["news_topic_system", "news_topic_user"],
+    ),
+    (
+        "actions",
+        N_("Action instructions"),
+        N_("What the model is told about the fields each action needs."),
+        [
+            "help_reply",
+            "help_react",
+            "help_create_chat",
+            "help_join",
+            "help_leave",
+            "help_read",
+            "help_search",
+            "help_private",
+            "help_create_topic",
+            "help_delete_topic",
+            "help_rename_chat",
+        ],
+    ),
+    (
+        "stress",
+        N_("Stress"),
+        N_("How the stress level is worded when stress/reward is on."),
+        [
+            "stress_level_none",
+            "stress_level_slight",
+            "stress_level_moderate",
+            "stress_level_high",
+            "stress_level_extreme",
+            "stress_level_block",
+        ],
+    ),
 ]
 
 
 def prompt_file(folder: str, language: str) -> Path:
-    return Path(folder) / ("prompts_im.json" if language == "en" else f"prompts_im.{language}.json")
+    return Path(folder) / (
+        "prompts_im.json" if language == "en" else f"prompts_im.{language}.json"
+    )
 
 
 def _runtime():
@@ -79,7 +164,9 @@ def custom_templates(folder: str, language: str) -> Dict[str, Any]:
 def fields_of(text: str) -> set:
     """The ``{fields}`` a template names (the root of each one)."""
     store, _prompts = _runtime()
-    return {m.group("root") or m.group("jroot") for m in store._FIELD.finditer(text or "")}
+    return {
+        m.group("root") or m.group("jroot") for m in store._FIELD.finditer(text or "")
+    }
 
 
 def sections(base: Dict[str, Any], custom: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -92,7 +179,14 @@ def sections(base: Dict[str, Any], custom: Dict[str, Any]) -> List[Dict[str, Any
             out.append({"id": gid, "title": title, "descr": descr, "items": items})
     rest = [_item(k, base, custom) for k in base if k not in placed]
     if rest:
-        out.append({"id": "other", "title": N_("Other"), "descr": N_("Prompts that belong to no section above."), "items": rest})
+        out.append(
+            {
+                "id": "other",
+                "title": N_("Other"),
+                "descr": N_("Prompts that belong to no section above."),
+                "items": rest,
+            }
+        )
     return out
 
 
@@ -101,11 +195,20 @@ def _item(key: str, base: Dict[str, Any], custom: Dict[str, Any]) -> Dict[str, A
     value = custom.get(key, default)
     if isinstance(default, dict):
         kind = "map"
-        value = {sub: (value.get(sub, default[sub]) if isinstance(value, dict) else default[sub]) for sub in default}
+        value = {
+            sub: (
+                value.get(sub, default[sub])
+                if isinstance(value, dict)
+                else default[sub]
+            )
+            for sub in default
+        }
         fields = set()
     elif isinstance(default, list):
         kind = "list"
-        value = value if isinstance(value, list) and len(value) == len(default) else default
+        value = (
+            value if isinstance(value, list) and len(value) == len(default) else default
+        )
         fields = set()
     else:
         kind = "text"
@@ -117,7 +220,11 @@ def _item(key: str, base: Dict[str, Any], custom: Dict[str, Any]) -> Dict[str, A
         "value": value,
         "modified": key in custom and custom[key] != default,
         "fields": sorted(fields),
-        "rows": min(10, max(2, str(value).count("\n") + 1 + len(str(value)) // 90)) if kind == "text" else 1,
+        "rows": (
+            min(10, max(2, str(value).count("\n") + 1 + len(str(value)) // 90))
+            if kind == "text"
+            else 1
+        ),
     }
 
 
@@ -130,7 +237,10 @@ def parse_form(form, base: Dict[str, Any]) -> Tuple[Dict[str, Any], List[str]]:
             got = {sub: form.get(f"{PREFIX}{key}.{sub}") for sub in default}
             if all(v is None for v in got.values()):
                 continue
-            new = {sub: (v.strip() if v is not None else default[sub]) for sub, v in got.items()}
+            new = {
+                sub: (v.strip() if v is not None else default[sub])
+                for sub, v in got.items()
+            }
             if any(not v for v in new.values()):
                 errors.append(f"{key}: no value can be empty")
             elif new != default:
@@ -141,7 +251,9 @@ def parse_form(form, base: Dict[str, Any]) -> Tuple[Dict[str, Any], List[str]]:
                 continue
             new = [x.strip() for x in raw.split(",")]
             if len(new) != len(default) or any(not x for x in new):
-                errors.append(f"{key}: {len(default)} comma-separated values are needed")
+                errors.append(
+                    f"{key}: {len(default)} comma-separated values are needed"
+                )
             elif new != default:
                 override[key] = new
         else:

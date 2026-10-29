@@ -26,7 +26,11 @@ def _python_command() -> List[str]:
     from y_web.src.simulation.server import detect_env_handler
 
     python_cmd = detect_env_handler()
-    if isinstance(python_cmd, str) and " " in python_cmd and not os.path.isabs(python_cmd):
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
         return python_cmd.split()
     return [python_cmd]
 
@@ -48,7 +52,13 @@ def run_yim_validate(
     env["PYTHONPATH"] = os.pathsep.join(
         [repo_dir] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
     )
-    cmd = _python_command() + ["-m", VALIDATE_MODULE, "--config", str(config_dir), "--json"]
+    cmd = _python_command() + [
+        "-m",
+        VALIDATE_MODULE,
+        "--config",
+        str(config_dir),
+        "--json",
+    ]
     if client_config:
         cmd += ["--client-config", str(client_config)]
     try:
@@ -67,7 +77,10 @@ def run_yim_validate(
         report = json.loads(proc.stdout)
     except ValueError:
         detail = (proc.stderr or proc.stdout or "").strip().splitlines()
-        return False, ["yim-validate gave no readable report" + (f": {detail[-1]}" if detail else "")]
+        return False, [
+            "yim-validate gave no readable report"
+            + (f": {detail[-1]}" if detail else "")
+        ]
 
     if proc.returncode == 0 and report.get("valid"):
         return True, []

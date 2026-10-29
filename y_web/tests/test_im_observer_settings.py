@@ -31,15 +31,18 @@ def _page(client, path):
 
 
 def _busy_chat(client, exp_id, info):
-    return max(info["chats"], key=lambda c: client.get(f"/{exp_id}/im/chat/{c}").data.count(b'class="im-msg'))
+    return max(
+        info["chats"],
+        key=lambda c: client.get(f"/{exp_id}/im/chat/{c}").data.count(b'class="im-msg'),
+    )
 
 
 def test_show_post_time_off_hides_times(observer):
     app, client, exp_id, info, _ = observer
     chat = _busy_chat(client, exp_id, info)
-    assert 'data-im-time' in _page(client, f"/{exp_id}/im/chat/{chat}")
+    assert "data-im-time" in _page(client, f"/{exp_id}/im/chat/{chat}")
     _set(app, exp_id, show_post_time=False)
-    assert 'data-im-time' not in _page(client, f"/{exp_id}/im/chat/{chat}")
+    assert "data-im-time" not in _page(client, f"/{exp_id}/im/chat/{chat}")
 
 
 def test_agent_type_badge_follows_annotation_agent_type(observer):
@@ -47,8 +50,13 @@ def test_agent_type_badge_follows_annotation_agent_type(observer):
     chat = _busy_chat(client, exp_id, info)
     assert 'class="im-kind"' in _page(client, f"/{exp_id}/im/chat/{chat}")
     _set(app, exp_id, annotation_agent_type=False)
-    for url in (f"/{exp_id}/im/chat/{chat}/members", f"/{exp_id}/im/profile/{info['accounts'][0]}"):
-        assert not re.search(r'<span class="im-kind">(agent|human)</span>', _page(client, url))
+    for url in (
+        f"/{exp_id}/im/chat/{chat}/members",
+        f"/{exp_id}/im/profile/{info['accounts'][0]}",
+    ):
+        assert not re.search(
+            r'<span class="im-kind">(agent|human)</span>', _page(client, url)
+        )
     chat_html = _page(client, f"/{exp_id}/im/chat/{chat}")
     assert not re.search(r'<span class="im-kind">(agent|human)</span>', chat_html)
 
@@ -57,9 +65,9 @@ def _add_reactions(path, per_chat=3):
     """The fixture database has no reactions: add a few to visible messages of every chat."""
     from sqlalchemy import select
     from sqlalchemy.orm import Session
+    from yinstantmessaging.server.db.database import make_engine_from_url
 
     from y_web.src.im.engine import im_modules
-    from yinstantmessaging.server.db.database import make_engine_from_url
 
     models = im_modules()[0]
     engine = make_engine_from_url(f"sqlite:///{path}")
@@ -68,9 +76,16 @@ def _add_reactions(path, per_chat=3):
         chats = session.scalars(select(models.Chat.id)).all()
         for chat in chats:
             for message in session.scalars(
-                select(models.Message.id).where(models.Message.chat_id == chat).order_by(models.Message.sim_ts.desc()).limit(per_chat)
+                select(models.Message.id)
+                .where(models.Message.chat_id == chat)
+                .order_by(models.Message.sim_ts.desc())
+                .limit(per_chat)
             ):
-                session.add(models.Reaction(account_id=account, message_id=message, emoji="👍", round_id=1))
+                session.add(
+                    models.Reaction(
+                        account_id=account, message_id=message, emoji="👍", round_id=1
+                    )
+                )
         session.commit()
     engine.dispose()
 
@@ -78,27 +93,38 @@ def _add_reactions(path, per_chat=3):
 def test_reactions_flag(observer):
     app, client, exp_id, info, path = observer
     _add_reactions(path)
-    on = {c: _page(client, f"/{exp_id}/im/chat/{c}").count("im-reaction") for c in info["chats"]}
+    on = {
+        c: _page(client, f"/{exp_id}/im/chat/{c}").count("im-reaction")
+        for c in info["chats"]
+    }
     assert any(on.values())
     _set(app, exp_id, im_show_reactions=False)
     for c in info["chats"]:
-        assert "im-reaction" not in _page(client, f"/{exp_id}/im/chat/{c}").split("<main")[1]
+        assert (
+            "im-reaction"
+            not in _page(client, f"/{exp_id}/im/chat/{c}").split("<main")[1]
+        )
 
 
 def _forward_one(path):
     """Mark the newest message of the first chat as forwarded from another chat; returns that chat id."""
     from sqlalchemy import select
     from sqlalchemy.orm import Session
+    from yinstantmessaging.server.db.database import make_engine_from_url
 
     from y_web.src.im.engine import im_modules
-    from yinstantmessaging.server.db.database import make_engine_from_url
 
     models = im_modules()[0]
     engine = make_engine_from_url(f"sqlite:///{path}")
     with Session(engine) as session:
         chats = session.scalars(select(models.Chat.id).order_by(models.Chat.id)).all()
         msg = session.scalars(
-            select(models.Message).where(models.Message.chat_id == chats[0], models.Message.deleted_round.is_(None)).order_by(models.Message.sim_ts.desc())
+            select(models.Message)
+            .where(
+                models.Message.chat_id == chats[0],
+                models.Message.deleted_round.is_(None),
+            )
+            .order_by(models.Message.sim_ts.desc())
         ).first()
         msg.fwd_from_chat_id = chats[1]
         msg.fwd_origin_chat_id = chats[1]
@@ -141,7 +167,12 @@ def test_posts_per_page_sizes_the_page(observer):
     assert len(re.findall(r'class="im-msg[ "]', html)) <= 3
     assert "Older messages" in html
     _set(app, exp_id, posts_per_page=100000)  # clamped, never an unbounded query
-    assert len(re.findall(r'class="im-msg[ "]', _page(client, f"/{exp_id}/im/chat/{chat}"))) <= 100
+    assert (
+        len(
+            re.findall(r'class="im-msg[ "]', _page(client, f"/{exp_id}/im/chat/{chat}"))
+        )
+        <= 100
+    )
 
 
 def test_infinite_scroll_flag_reaches_the_page(observer):
@@ -156,7 +187,9 @@ def test_default_view_start_opens_at_the_beginning_and_pages_forward(observer):
     app, client, exp_id, info, _ = observer
     chat = _busy_chat(client, exp_id, info)
     _set(app, exp_id, posts_per_page=5)
-    latest_ids = re.findall(r'id="m-([^"]+)"', _page(client, f"/{exp_id}/im/chat/{chat}"))
+    latest_ids = re.findall(
+        r'id="m-([^"]+)"', _page(client, f"/{exp_id}/im/chat/{chat}")
+    )
     _set(app, exp_id, im_default_view="start")
     html = _page(client, f"/{exp_id}/im/chat/{chat}")
     first_ids = re.findall(r'id="m-([^"]+)"', html)
@@ -168,7 +201,9 @@ def test_default_view_start_opens_at_the_beginning_and_pages_forward(observer):
         m = re.search(r'href="\?([^"]*after=[^"]+)"', html)
         if not m:
             break
-        html = _page(client, f"/{exp_id}/im/chat/{chat}?{m.group(1).replace('&amp;', '&')}")
+        html = _page(
+            client, f"/{exp_id}/im/chat/{chat}?{m.group(1).replace('&amp;', '&')}"
+        )
         ids = re.findall(r'id="m-([^"]+)"', html)
         assert not seen & set(ids)
         seen |= set(ids)
@@ -186,7 +221,11 @@ def test_time_travel_gate_for_non_staff(observer, monkeypatch):
     real_staff = instant_messaging._staff_user
     monkeypatch.setattr(instant_messaging, "_staff_user", lambda: None)
     chat = max(
-        (c for c in info["chats"] if client.get(f"/{exp_id}/im/chat/{c}?day=1&slot=3").status_code == 200),
+        (
+            c
+            for c in info["chats"]
+            if client.get(f"/{exp_id}/im/chat/{c}?day=1&slot=3").status_code == 200
+        ),
         key=lambda c: client.get(f"/{exp_id}/im/chat/{c}").data.count(b'class="im-msg'),
     )
     assert 'id="im-day"' in _page(client, f"/{exp_id}/im")
@@ -195,8 +234,12 @@ def test_time_travel_gate_for_non_staff(observer, monkeypatch):
     html = _page(client, f"/{exp_id}/im")
     assert 'id="im-day"' not in html
     closed = _page(client, f"/{exp_id}/im/chat/{chat}?day=1&slot=3")
-    assert len(re.findall(r'class="im-msg[ "]', closed)) >= len(re.findall(r'class="im-msg[ "]', early))
-    monkeypatch.setattr(instant_messaging, "_staff_user", real_staff)  # staff keep the selector whatever the setting says
+    assert len(re.findall(r'class="im-msg[ "]', closed)) >= len(
+        re.findall(r'class="im-msg[ "]', early)
+    )
+    monkeypatch.setattr(
+        instant_messaging, "_staff_user", real_staff
+    )  # staff keep the selector whatever the setting says
     assert 'id="im-day"' in _page(client, f"/{exp_id}/im")
 
 
@@ -209,7 +252,10 @@ def test_public_observer_gate(observer, monkeypatch):
     monkeypatch.setattr(instant_messaging, "_staff_user", lambda: None)
     assert client.get(f"/{exp_id}/im").status_code == 403
     assert client.get(f"/{exp_id}/im/chat/{info['chats'][0]}").status_code == 403
-    assert client.get(f"/{exp_id}/im/api/chat/{info['chats'][0]}/history").status_code == 403
+    assert (
+        client.get(f"/{exp_id}/im/api/chat/{info['chats'][0]}/history").status_code
+        == 403
+    )
 
 
 def test_poll_interval_comes_from_the_settings(observer):
@@ -223,16 +269,26 @@ def test_poll_interval_comes_from_the_settings(observer):
     assert 'data-poll="3"' in _page(client, f"/{exp_id}/im")
     _set(app, exp_id, im_participant_poll_seconds=9)
     assert 'data-poll="9"' in _page(client, f"/{exp_id}/im")
-    _set(app, exp_id, im_participant_poll_seconds=9999)  # stored by hand: still clamped when read
+    _set(
+        app, exp_id, im_participant_poll_seconds=9999
+    )  # stored by hand: still clamped when read
     assert 'data-poll="60"' in _page(client, f"/{exp_id}/im")
 
 
 def test_interaction_switches_become_css_rules_for_the_participant_controls(observer):
     app, client, exp_id, info, _ = observer
-    _set(app, exp_id, interaction_post=False, interaction_like=False, interaction_share=False)
+    _set(
+        app,
+        exp_id,
+        interaction_post=False,
+        interaction_like=False,
+        interaction_share=False,
+    )
     head = _page(client, f"/{exp_id}/im").split("</head>")[0]
     assert '[data-im-action="send"]' in head and '[data-im-action="react"]' in head
-    assert '[data-im-action="forward"]' in head and '[data-im-action="reply"]' not in head
+    assert (
+        '[data-im-action="forward"]' in head and '[data-im-action="reply"]' not in head
+    )
     _set(app, exp_id, interactions_enabled=False)
     assert "[data-im-action]" in _page(client, f"/{exp_id}/im").split("</head>")[0]
 

@@ -94,7 +94,11 @@ def _signature(path: str) -> str:
             parts.append("-")
             continue
         # an empty -wal appears when a reader opens the file: it is not a change of the data
-        parts.append("-" if suffix and stat.st_size == 0 else f"{stat.st_mtime_ns}:{stat.st_size}")
+        parts.append(
+            "-"
+            if suffix and stat.st_size == 0
+            else f"{stat.st_mtime_ns}:{stat.st_size}"
+        )
     return "|".join(parts)
 
 
@@ -102,7 +106,9 @@ def snapshot_copy(path: str) -> str:
     """A consistent copy of the database made with the SQLite backup API, cached by file signature."""
     key = hashlib.sha1(os.path.abspath(path).encode()).hexdigest()[:16]
     folder = os.path.join(snapshot_dir(), key)
-    target = os.path.join(folder, hashlib.sha1(_signature(path).encode()).hexdigest()[:16] + ".db")
+    target = os.path.join(
+        folder, hashlib.sha1(_signature(path).encode()).hexdigest()[:16] + ".db"
+    )
     with _snapshot_lock:
         if os.path.isfile(target):
             return target
@@ -112,7 +118,9 @@ def snapshot_copy(path: str) -> str:
         try:
             src = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=5)
         except sqlite3.Error:
-            src = sqlite3.connect(path, timeout=5)  # a folder where even ro opening fails
+            src = sqlite3.connect(
+                path, timeout=5
+            )  # a folder where even ro opening fails
         try:
             dst = sqlite3.connect(tmp)
             try:
@@ -133,7 +141,9 @@ def check_schema(session: Session) -> int:
     *_rest, schema_migrations = im_modules()
     tables = {
         row[0]
-        for row in session.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        for row in session.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
     }
     if not {"run_info", "schema_version"} <= tables:
         raise ImReadError("The database is not an instant messaging database.")
@@ -171,7 +181,9 @@ def open_reader(db_path: str) -> Iterator[Session]:
         try:
             engine, session = _open(snapshot_copy(db_path))
         except (sqlite3.Error, OperationalError) as exc:
-            raise ImReadError("The experiment database cannot be read right now.") from exc
+            raise ImReadError(
+                "The experiment database cannot be read right now."
+            ) from exc
     try:
         yield session
     finally:

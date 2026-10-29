@@ -9,7 +9,11 @@ import os
 import uuid
 from urllib.parse import urlencode
 
-from flask import abort, current_app, g as flask_g, jsonify, redirect, render_template, request, session as flask_session, url_for
+from flask import abort, current_app
+from flask import g as flask_g
+from flask import jsonify, redirect, render_template, request
+from flask import session as flask_session
+from flask import url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -17,13 +21,21 @@ from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.src.im import is_im_experiment
-from y_web.src.im.engine import ImReadError, open_reader
-from y_web.src.im.reader import Reader, Viewpoint, ViewpointError, avatar_hue, latest_round, status
-from y_web.src.im.timeline import clamp_round, day_slot, ordinal
 from y_web.src.im import link_preview as previews
 from y_web.src.im import participant as participation
+from y_web.src.im.engine import ImReadError, open_reader
 from y_web.src.im.gateway_client import GatewayClient, GatewayUnavailable
-from y_web.src.im.gateway_process import is_running as gateway_running, offline_possible
+from y_web.src.im.gateway_process import is_running as gateway_running
+from y_web.src.im.gateway_process import offline_possible
+from y_web.src.im.reader import (
+    Reader,
+    Viewpoint,
+    ViewpointError,
+    avatar_hue,
+    latest_round,
+    status,
+)
+from y_web.src.im.timeline import clamp_round, day_slot, ordinal
 from y_web.src.models import Exps, User_Experiment
 
 POLL_SECONDS = 10  # used when the experiment's own setting is missing
@@ -54,7 +66,11 @@ def _staff_user():
     from y_web.routes.admin.sub.experiments._helpers import _current_admin_user_or_none
 
     user = _current_admin_user_or_none()
-    return user if user is not None and getattr(user, "role", None) in ("admin", "researcher") else None
+    return (
+        user
+        if user is not None and getattr(user, "role", None) in ("admin", "researcher")
+        else None
+    )
 
 
 def _experiment_or_404(exp_id):
@@ -68,17 +84,29 @@ def _db_path(exp) -> str:
     from y_web.src.system.path_utils import get_writable_path
 
     parts = exp.db_name.split(os.sep)
-    return os.path.join(get_writable_path(), "y_web", "experiments", parts[1], "database_server.db")
+    return os.path.join(
+        get_writable_path(), "y_web", "experiments", parts[1], "database_server.db"
+    )
 
 
 class _Context:
     """What every page needs: experiment, viewpoint, round and the query string that keeps them."""
 
     def __init__(self, exp, staff, viewpoint, latest, live, ui=None, participant=None):
-        self.exp, self.staff, self.vp, self.latest, self.live = exp, staff, viewpoint, latest, live
+        self.exp, self.staff, self.vp, self.latest, self.live = (
+            exp,
+            staff,
+            viewpoint,
+            latest,
+            live,
+        )
         self.ui = ui or {}
-        self.participant = participant  # set in participant mode (plan 6.8); never from the request
-        self.pending_account = False  # participation is on but the account does not exist yet
+        self.participant = (
+            participant  # set in participant mode (plan 6.8); never from the request
+        )
+        self.pending_account = (
+            False  # participation is on but the account does not exist yet
+        )
         self.reader = None  # set by ``_view``: the sidebar of every page lists the chats of the viewpoint
         self.session = None
 
@@ -169,15 +197,20 @@ def _participant(session, exp, ui):
     models = im_modules()[0]
     if session.get(models.Account, part.account_id) is not None:
         return part
+
     # first entry: the account is created through the gateway (never by YWeb)
     def _ensure():
-        return GatewayClient(part.exp_folder).ensure(part.key, participation.pseudonym(user, part.exp_folder))
+        return GatewayClient(part.exp_folder).ensure(
+            part.key, participation.pseudonym(user, part.exp_folder)
+        )
 
     try:
         code, _body = _ensure()
     except GatewayUnavailable:
         code = None
-        if exp.running and _revive_gateway(part.exp_folder):  # the server is up but the gateway is not
+        if exp.running and _revive_gateway(
+            part.exp_folder
+        ):  # the server is up but the gateway is not
             try:
                 code, _body = _ensure()
             except GatewayUnavailable:
@@ -196,7 +229,11 @@ def _participant(session, exp, ui):
         return False
     if code != 200:
         flask_g.im_pending_reason = "refused"
-        current_app.logger.warning("IM gateway refused to create the account of %s (HTTP %s)", user.username, code)
+        current_app.logger.warning(
+            "IM gateway refused to create the account of %s (HTTP %s)",
+            user.username,
+            code,
+        )
         return False
     session.rollback()  # end the read snapshot so the new row is visible
     return part if session.get(models.Account, part.account_id) is not None else False
@@ -210,8 +247,12 @@ def _register_offline(exp, part, username):
         from y_web.src.simulation.server import detect_env_handler
         from y_web.src.system.path_utils import get_external_repo_dir
 
-        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
-        return register_offline(part.exp_folder, repo_dir, part.key, username, detect_env_handler())
+        repo_dir = get_external_repo_dir(
+            get_hpc_platform("instant_messaging").runtime_repo
+        )
+        return register_offline(
+            part.exp_folder, repo_dir, part.key, username, detect_env_handler()
+        )
     except Exception:  # noqa: BLE001
         current_app.logger.warning("IM offline registration failed", exc_info=True)
         return False
@@ -237,11 +278,19 @@ def _participant_context(session, exp, ui, part):
 
     notice = (ui.get("im_participant_notice") or "").strip()
     ack_key = participation.NOTICE_SESSION_PREFIX + str(exp.idexp)
-    if notice and not flask_session.get(ack_key) and request.endpoint != "main.im_notice":
+    if (
+        notice
+        and not flask_session.get(ack_key)
+        and request.endpoint != "main.im_notice"
+    ):
         raise _Redirect(url_for("main.im_notice", exp_id=exp.idexp))
     latest = latest_round(session)
-    viewpoint = Viewpoint("account", part.account_id, latest)  # fixed: no time travel, no other account
-    return _Context(exp, None, viewpoint, latest, bool(exp.running), ui, participant=part)
+    viewpoint = Viewpoint(
+        "account", part.account_id, latest
+    )  # fixed: no time travel, no other account
+    return _Context(
+        exp, None, viewpoint, latest, bool(exp.running), ui, participant=part
+    )
 
 
 def _annotation_flags(ctx):
@@ -249,10 +298,14 @@ def _annotation_flags(ctx):
     ui = ctx.ui
     master = ctx.staff is not None or bool(ui.get("annotations_enabled", True))
     return {
-        "topics": master and (ctx.staff is not None or bool(ui.get("annotation_topics", True))),
-        "sentiment": master and (ctx.staff is not None or bool(ui.get("annotation_sentiment", True))),
-        "toxicity": master and (ctx.staff is not None or bool(ui.get("annotation_toxicity", True))),
-        "emotion": master and (ctx.staff is not None or bool(ui.get("annotation_emotions", True))),
+        "topics": master
+        and (ctx.staff is not None or bool(ui.get("annotation_topics", True))),
+        "sentiment": master
+        and (ctx.staff is not None or bool(ui.get("annotation_sentiment", True))),
+        "toxicity": master
+        and (ctx.staff is not None or bool(ui.get("annotation_toxicity", True))),
+        "emotion": master
+        and (ctx.staff is not None or bool(ui.get("annotation_emotions", True))),
     }
 
 
@@ -272,7 +325,9 @@ def _shell(ctx, values):
     out["accounts"] = accounts or []
     viewed = None
     if ctx.vp.kind == "account":
-        viewed = next((a for a in out["accounts"] if a["id"] == ctx.vp.account_id), None) or {
+        viewed = next(
+            (a for a in out["accounts"] if a["id"] == ctx.vp.account_id), None
+        ) or {
             "id": ctx.vp.account_id,
             "username": ctx.vp.account_id,
             "kind": None,
@@ -282,7 +337,9 @@ def _shell(ctx, values):
             viewed = None  # a participant is not "viewing as" anyone
     out["viewed_account"] = viewed
     out["annotation_flags"] = _annotation_flags(ctx)
-    out["admin_links"] = [(_("Dashboard"), "/admin/dashboard")] if ctx.staff is not None else []
+    out["admin_links"] = (
+        [(_("Dashboard"), "/admin/dashboard")] if ctx.staff is not None else []
+    )
     return out
 
 
@@ -297,7 +354,9 @@ def _render(template, ctx, **values):
         params=ctx.params,
         is_staff=ctx.staff is not None,
         day_slot=ctx.day_slot(),
-        poll_seconds=_poll_seconds(ctx.ui) if (ctx.live and ctx.vp.round == ctx.latest) else 0,
+        poll_seconds=(
+            _poll_seconds(ctx.ui) if (ctx.live and ctx.vp.round == ctx.latest) else 0
+        ),
         ui=ctx.ui,
         time_travel=ctx.participant is None
         and (ctx.staff is not None or bool(ctx.ui.get("im_allow_time_travel", True))),
@@ -306,7 +365,9 @@ def _render(template, ctx, **values):
         participant=ctx.participant,
         writable=ctx.writable,
         pending_account=ctx.pending_account,
-        pending_reason=flask_g.get("im_pending_reason", "") if ctx.pending_account else "",
+        pending_reason=(
+            flask_g.get("im_pending_reason", "") if ctx.pending_account else ""
+        ),
         csrf_token=participation.csrf_token(flask_session) if ctx.participant else "",
         **shell,
         **values,
@@ -339,8 +400,15 @@ def _accounts_for_picker(session):
 
     models = im_modules()[0]
     return [
-        {"id": row.id, "username": row.username, "kind": row.kind, "hue": avatar_hue(row.id)}
-        for row in session.scalars(select(models.Account).order_by(models.Account.username))
+        {
+            "id": row.id,
+            "username": row.username,
+            "kind": row.kind,
+            "hue": avatar_hue(row.id),
+        }
+        for row in session.scalars(
+            select(models.Account).order_by(models.Account.username)
+        )
     ]
 
 
@@ -353,7 +421,9 @@ def _record_exposure(ctx, chat_id, page):
     part = ctx.participant
     if not part or not page or not ctx.live:
         return
-    ids = [item["id"] for item in page.get("items", []) if not item.get("deleted")][:200]
+    ids = [item["id"] for item in page.get("items", []) if not item.get("deleted")][
+        :200
+    ]
     if not ids:
         return
     try:
@@ -376,7 +446,9 @@ def _history(rd, ctx, chat_id, forum_topic_id=None):
     """One page of a chat, sized and opened where the experiment's settings say."""
     before = request.args.get("before") or None
     after = request.args.get("after") or None
-    from_start = before is None and after is None and ctx.ui.get("im_default_view") == "start"
+    from_start = (
+        before is None and after is None and ctx.ui.get("im_default_view") == "start"
+    )
     return rd.history(
         chat_id,
         before=before,
@@ -405,7 +477,15 @@ def im_chat(exp_id, chat_id):
             abort(404)
         _record_exposure(ctx, chat_id, page)
         topics = rd.forum_topics(chat_id)
-        return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=None, **_info(rd, chat_id))
+        return _render(
+            "im/chat.html",
+            ctx,
+            page=page,
+            chat_id=chat_id,
+            topics=topics,
+            topic=None,
+            **_info(rd, chat_id),
+        )
 
     return _view(exp_id, handler)
 
@@ -422,7 +502,15 @@ def im_chat_topic(exp_id, chat_id, topic_id):
             abort(404)
         page = _history(rd, ctx, chat_id, forum_topic_id=topic_id)
         _record_exposure(ctx, chat_id, page)
-        return _render("im/chat.html", ctx, page=page, chat_id=chat_id, topics=topics, topic=topic, **_info(rd, chat_id))
+        return _render(
+            "im/chat.html",
+            ctx,
+            page=page,
+            chat_id=chat_id,
+            topics=topics,
+            topic=topic,
+            **_info(rd, chat_id),
+        )
 
     return _view(exp_id, handler)
 
@@ -435,7 +523,9 @@ def im_members(exp_id, chat_id):
         if members is None:
             abort(404)
         title = rd.history(chat_id, limit=1)["title"]
-        return _render("im/members.html", ctx, members=members, chat_id=chat_id, title=title)
+        return _render(
+            "im/members.html", ctx, members=members, chat_id=chat_id, title=title
+        )
 
     return _view(exp_id, handler)
 
@@ -478,7 +568,11 @@ def _find_payload(ctx, rd, kind, q):
     base = f"/{ctx.exp.idexp}/im"
     need = 2 if kind == "posts" else 1
     if len(q) < need:
-        hint = _("Type at least two characters.") if kind == "posts" else _("Type to search.")
+        hint = (
+            _("Type at least two characters.")
+            if kind == "posts"
+            else _("Type to search.")
+        )
         return {"kind": kind, "q": q, "results": [], "message": hint}
     results = []
     if kind == "users":
@@ -525,7 +619,12 @@ def _find_payload(ctx, rd, kind, q):
                     "joined": c["joined"],
                 }
             )
-    return {"kind": kind, "q": q, "results": results, "message": "" if results else _("Nothing found.")}
+    return {
+        "kind": kind,
+        "q": q,
+        "results": results,
+        "message": "" if results else _("Nothing found."),
+    }
 
 
 @main.route("/<int:exp_id>/im/api/search")
@@ -535,7 +634,9 @@ def im_api_search(exp_id):
         kind = request.args.get("kind", "chats")
         if kind not in _FIND_KINDS:
             kind = "chats"
-        return jsonify(_find_payload(ctx, rd, kind, (request.args.get("q") or "").strip()))
+        return jsonify(
+            _find_payload(ctx, rd, kind, (request.args.get("q") or "").strip())
+        )
 
     return _view(exp_id, handler)
 
@@ -606,14 +707,25 @@ def im_api_link_preview(exp_id):
     url = (request.args.get("url") or "").strip()
 
     def handler(session, ctx, rd):
-        known = session.execute(select(rd.m.MessageUrl.id).where(rd.m.MessageUrl.url == url).limit(1)).first()
+        known = session.execute(
+            select(rd.m.MessageUrl.id).where(rd.m.MessageUrl.url == url).limit(1)
+        ).first()
         if not url or known is None:
-            abort(404)  # only the addresses of this experiment's messages are ever fetched
+            abort(
+                404
+            )  # only the addresses of this experiment's messages are ever fetched
         folder = _folder_of(exp_id)
         info = previews.lookup(folder, url)
         if info["pending"]:
             fetched = previews.fetch_remote(folder, url)
-            info = {**info, **{k: v for k, v in fetched.items() if v and k in ("title", "summary", "image") and not info.get(k)}}
+            info = {
+                **info,
+                **{
+                    k: v
+                    for k, v in fetched.items()
+                    if v and k in ("title", "summary", "image") and not info.get(k)
+                },
+            }
         return jsonify({k: info[k] for k in ("title", "summary", "image")})
 
     return _view(exp_id, handler)
@@ -673,24 +785,40 @@ def im_notice(exp_id):
 @login_required
 def im_act(exp_id):
     exp, ui, part = _participant_or_403(exp_id)
-    if not participation.csrf_ok(flask_session, request.headers.get(participation.CSRF_HEADER)):
+    if not participation.csrf_ok(
+        flask_session, request.headers.get(participation.CSRF_HEADER)
+    ):
         return _json_error(400, "csrf", "missing or wrong CSRF token")
     body = request.get_json(silent=True)
-    if not isinstance(body, dict) or request.content_length is None or request.content_length > 16384:
-        return _json_error(400, "invalid_request", "a JSON object (up to 16 KiB) is expected")
+    if (
+        not isinstance(body, dict)
+        or request.content_length is None
+        or request.content_length > 16384
+    ):
+        return _json_error(
+            400, "invalid_request", "a JSON object (up to 16 KiB) is expected"
+        )
     action_type = body.get("type")
     reason = participation.action_allowed(ui, action_type)
     if reason == "unknown_action":
         return _json_error(400, "invalid_request", "unknown action")
     if reason:
-        return _json_error(403, reason, "this interaction is switched off for the experiment")
-    action_id = participation.namespaced_action_id(part.account_id, body.get("client_action_id"))
+        return _json_error(
+            403, reason, "this interaction is switched off for the experiment"
+        )
+    action_id = participation.namespaced_action_id(
+        part.account_id, body.get("client_action_id")
+    )
     if action_id is None:
-        return _json_error(400, "invalid_request", "client_action_id is required (up to 64 chars)")
+        return _json_error(
+            400, "invalid_request", "client_action_id is required (up to 64 chars)"
+        )
     fields = {k: v for k, v in body.items() if k not in ("type", "client_action_id")}
     action = {"type": action_type, "client_action_id": action_id, **fields}
     try:
-        code, payload = GatewayClient(part.exp_folder).actions(part.account_id, [action])
+        code, payload = GatewayClient(part.exp_folder).actions(
+            part.account_id, [action]
+        )
     except GatewayUnavailable:
         return _json_error(503, "unavailable", "connection lost: try again in a moment")
     return jsonify(payload), code
@@ -700,7 +828,9 @@ def im_act(exp_id):
 @login_required
 def im_invite(exp_id):
     exp, ui, part = _participant_or_403(exp_id)
-    if not participation.csrf_ok(flask_session, request.headers.get(participation.CSRF_HEADER)):
+    if not participation.csrf_ok(
+        flask_session, request.headers.get(participation.CSRF_HEADER)
+    ):
         return _json_error(400, "csrf", "missing or wrong CSRF token")
     if not ui.get("interactions_enabled", True):
         return _json_error(403, "interactions_disabled")
@@ -768,4 +898,9 @@ def im_api_gateway(exp_id):
         code, payload = GatewayClient(part.exp_folder).state()
     except GatewayUnavailable:
         return jsonify({"ok": False, "online": False}), 200
-    return jsonify({"ok": code == 200, "online": code == 200, "state": payload.get("data")}), 200
+    return (
+        jsonify(
+            {"ok": code == 200, "online": code == 200, "state": payload.get("data")}
+        ),
+        200,
+    )

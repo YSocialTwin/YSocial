@@ -19,7 +19,9 @@ from y_web.tests.test_im_client_creation import (  # noqa: F401
 
 @pytest.mark.external_repo
 @pytest.mark.integration
-def test_reader_on_a_real_one_day_run_live_and_after_it(app, env, monkeypatch, tmp_path):
+def test_reader_on_a_real_one_day_run_live_and_after_it(
+    app, env, monkeypatch, tmp_path
+):
     if not (IM_REPO / "run_server.py").is_file():
         pytest.skip("YInstantMessaging is not installed")
     from y_web.src.hpc import server as hs
@@ -56,15 +58,30 @@ def test_reader_on_a_real_one_day_run_live_and_after_it(app, env, monkeypatch, t
             accounts = [a.id for a in session.query(models.Account)]
             chats = [c.id for c in session.query(models.Chat)]
             messages = session.query(models.Message).count()
-            assert accounts and chats and messages > 0, "the echo run produced no conversation"
+            assert (
+                accounts and chats and messages > 0
+            ), "the echo run produced no conversation"
             repo = Repository(session)
             tpr = 1  # tick values of a real run are small; the largest tick is used as the round's end
-            max_tick = session.query(models.Message.tick).order_by(models.Message.tick.desc()).limit(1).scalar() or 0
+            max_tick = (
+                session.query(models.Message.tick)
+                .order_by(models.Message.tick.desc())
+                .limit(1)
+                .scalar()
+                or 0
+            )
             compared = 0
             for _ in range(120):
                 account, chat = rng.choice(accounts), rng.choice(chats)
                 rnd = rng.randint(1, latest)
-                ctx = RoundContext(rnd, (rnd - 1) // 24 + 1, (rnd - 1) % 24 + 1, max_tick, max_tick + 1, dt.date(2026, 1, 1))
+                ctx = RoundContext(
+                    rnd,
+                    (rnd - 1) // 24 + 1,
+                    (rnd - 1) % 24 + 1,
+                    max_tick,
+                    max_tick + 1,
+                    dt.date(2026, 1, 1),
+                )
                 theirs = feed.history(session, repo, account, ctx, chat, limit=10_000)
                 rd = Reader(session, Viewpoint("account", account, rnd))
                 ids, cursor = [], None
@@ -80,7 +97,11 @@ def test_reader_on_a_real_one_day_run_live_and_after_it(app, env, monkeypatch, t
                 if theirs == "not_visible":
                     assert ids is None
                 else:
-                    assert ids == [i["message_id"] for i in theirs["items"]], (account, chat, rnd)
+                    assert ids == [i["message_id"] for i in theirs["items"]], (
+                        account,
+                        chat,
+                        rnd,
+                    )
                     compared += 1
             assert compared > 0
             Reader(session, Viewpoint("overview", None, latest)).chat_list()

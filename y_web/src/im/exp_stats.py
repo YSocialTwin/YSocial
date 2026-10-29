@@ -26,6 +26,7 @@ def count_run(db_path: str) -> Dict[str, int]:
     m = im_modules()[0]
     try:
         with open_reader(db_path) as s:
+
             def n(col, *where):
                 q = select(func.count()).select_from(col)
                 return int(s.scalar(q.where(*where) if where else q) or 0)

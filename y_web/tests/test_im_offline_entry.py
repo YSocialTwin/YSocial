@@ -21,4 +21,7 @@ def test_register_offline_runs_the_runtime_script(tmp_path):
 
 def test_banner_tells_why_the_account_is_pending():
     text = open("y_web/templates/im/base.html", encoding="utf-8").read()
-    assert "pending_reason == 'not_running'" in text and "pending_reason == 'refused'" in text
+    assert (
+        "pending_reason == 'not_running'" in text
+        and "pending_reason == 'refused'" in text
+    )
