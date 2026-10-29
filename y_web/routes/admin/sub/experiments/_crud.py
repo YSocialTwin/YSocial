@@ -3905,8 +3905,7 @@ def _matrix_recsys_catalog(experiment):
         for recsys in db.session.scalars(
             select(Content_Recsys).order_by(Content_Recsys.id.asc())
         ).all()
-        if recsys.enabled
-        and any(t in recsys.enabled.lower() for t in mode_tokens)
+        if recsys.enabled and any(t in recsys.enabled.lower() for t in mode_tokens)
     ]
     follow_recsys = [
         {
@@ -3918,8 +3917,7 @@ def _matrix_recsys_catalog(experiment):
         for recsys in db.session.scalars(
             select(Follow_Recsys).order_by(Follow_Recsys.id.asc())
         ).all()
-        if recsys.enabled
-        and any(t in recsys.enabled.lower() for t in mode_tokens)
+        if recsys.enabled and any(t in recsys.enabled.lower() for t in mode_tokens)
     ]
     return {"content": content_recsys, "follow": follow_recsys}
 
