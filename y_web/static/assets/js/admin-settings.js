@@ -659,7 +659,7 @@ var AdminSettings = (function() {
                       const checkbox = statusFilter === EXP_STATUS.COMPLETED ? 
                           '<input type="checkbox" class="exp-checkbox" data-exp-id="' + exp.idexp + '" \n                                  onchange="toggleExperimentSelection(' + exp.idexp + ', this)" \n                                  ' + (selectedExperiments.has(exp.idexp) ? 'checked' : '') + '\n                                  style="margin-right: 8px;" title="' + YI18n.t('Select for download') + '"/>' : '';
                     
-                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : 'Microblogging') + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.running === 'Running' ? 
+                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : exp.platform_type === 'dating' ? 'Dating' : 'Microblogging') + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.running === 'Running' ? 
                                           (exp.can_manage ? '<a href="#" onclick="stopExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Stop Server') + '"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>' : '') : 
                                           '<a href="#" onclick="startExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Start Server') + '"><i class="mdi mdi-play-box-outline" style="font-size: 18px; color: #28a745;"></i></a>') + '\n                                      ' + (exp.web === 'Loaded' ? 
                                           '<a href="/admin/select_experiment/' + exp.idexp + '" title="' + YI18n.t('Loaded (click to unload)') + '"><i class="mdi mdi-select-all" style="font-size: 18px; color: #28a745;"></i></a>' : 
@@ -1517,6 +1517,7 @@ var AdminSettings = (function() {
       const forumAvailable = !!repoAvailability.forum;
       const photoSharingAvailable = !!repoAvailability.photo_sharing;
       const instantMessagingAvailable = !!repoAvailability.instant_messaging;
+      const datingAvailable = !!repoAvailability.dating;
     
       // Handle Redis Configuration collapsible toggle
       const redisConfigHeader = document.getElementById('redis-config-header');
@@ -1549,7 +1550,8 @@ var AdminSettings = (function() {
               return;
           }
           const isInstantMessaging = platformTypeSelect.value === 'instant_messaging';
-          const isPhotoSharing = platformTypeSelect.value === 'photo_sharing' || isInstantMessaging;
+          const isDating = platformTypeSelect.value === 'dating';
+          const isPhotoSharing = platformTypeSelect.value === 'photo_sharing' || isInstantMessaging || isDating;
           if (!forumAvailable && platformTypeSelect.value === 'forum') {
               platformTypeSelect.value = 'microblogging';
           }
@@ -1635,6 +1637,10 @@ var AdminSettings = (function() {
               if (instantMessagingOption) {
                   instantMessagingOption.disabled = !instantMessagingAvailable;
               }
+              const datingOption = platformTypeSelect.querySelector('option[value="dating"]');
+              if (datingOption) {
+                  datingOption.disabled = !datingAvailable;
+              }
               const photoSharingOption = platformTypeSelect.querySelector('option[value="photo_sharing"]');
               if (photoSharingOption) {
                   photoSharingOption.disabled = !photoSharingAvailable;
@@ -1643,7 +1649,7 @@ var AdminSettings = (function() {
 
           if (isHPC) {
               hpcInfoInline.style.display = 'block';
-              redisConfigBox.style.display = isInstantMessaging ? 'none' : 'flex';
+              redisConfigBox.style.display = (isInstantMessaging || isDating) ? 'none' : 'flex';
 
               // Disable remote experiment toggle for HPC
               if (remoteExperimentToggle) {

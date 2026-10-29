@@ -6,6 +6,7 @@ social media simulation experiments including database setup, population
 assignment, and experiment lifecycle control.
 """
 
+import copy
 import json
 import os
 import pathlib
@@ -38,6 +39,7 @@ from sqlalchemy import select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -837,6 +839,8 @@ def experiment_details(uid):
         template_name = "admin/experiment_details_photo.html"
     elif is_im_experiment(experiment):
         template_name = "admin/experiment_details_im.html"
+    elif is_dating_experiment(experiment):
+        template_name = "admin/experiment_details_dating.html"
 
     return render_template(
         template_name,
@@ -1072,6 +1076,7 @@ def update_experiment_config(uid):
         "forum",
         "hpc",
         "instant_messaging",
+        "dating",
     }:
         stress_reward_enabled = _is_checked("stress_reward_enabled")
 
@@ -1110,6 +1115,11 @@ def update_experiment_config(uid):
         with open(cfg_path, "r") as f:
             config = json.load(f)
 
+        dating_stress_reward = (
+            copy.deepcopy(config.get("stress_reward"))
+            if is_dating_experiment(exp)
+            else None
+        )
         config["toxicity_annotation"] = toxicity_enabled
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
@@ -1149,6 +1159,22 @@ def update_experiment_config(uid):
                 stress_reward_config=stress_reward_config,
             )
 
+        if is_dating_experiment(exp):
+            # the dating schema is strict: keep its own stress/reward block and write the runtime keys
+            from y_web.src.dating.experiment_config import (
+                apply_experiment_switches as apply_dating_switches,
+            )
+
+            config["stress_reward"] = dating_stress_reward or {}
+            apply_dating_switches(
+                config,
+                toxicity=toxicity_enabled,
+                sentiment=sentiment_enabled,
+                emotion=emotion_enabled,
+                stress_reward=stress_reward_enabled,
+                memory=memory_config["enabled"],
+            )
+
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
 
@@ -1175,6 +1201,8 @@ def update_experiment_config(uid):
                     break
             if not client_config_file:
                 continue
+            if is_dating_experiment(exp):
+                continue  # the client switches of dating experiments are mapped with the client forms (plan S3)
 
             try:
                 with open(client_config_file, "r") as f:

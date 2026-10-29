@@ -24,6 +24,7 @@ PARTIALS = {
     "prompts_forum",
     "experiment_details_photo",
     "experiment_details_im",
+    "experiment_details_dating",
     "_im_analytics_note",
     "select_experiment_unused",
 }

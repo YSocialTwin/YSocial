@@ -4,6 +4,7 @@ import threading
 
 from sqlalchemy import create_engine, text
 
+from y_web.src.dating import DATING_MARKER_TABLE
 from y_web.src.im import IM_MARKER_TABLE
 
 _ENSURED_SCHEMAS: set[str] = set()
@@ -372,6 +373,12 @@ def ensure_sqlite_experiment_schema(db_path: str) -> bool:
                 (IM_MARKER_TABLE,),
             ).fetchone():
                 return False
+            # ... nor a dating database (its rounds/user_mgmt tables differ from YSocial's)
+            if conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (DATING_MARKER_TABLE,),
+            ).fetchone():
+                return False
             try:
                 conn.execute("PRAGMA journal_mode = WAL")
             except Exception:
@@ -437,6 +444,8 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> bool:
         with engine.begin() as conn:
             if _postgres_existing_columns(conn, IM_MARKER_TABLE):
                 return False  # an instant messaging database: never alter it
+            if _postgres_existing_columns(conn, DATING_MARKER_TABLE):
+                return False  # a dating database: never alter it
             for ddl in _POSTGRES_TABLES.values():
                 conn.execute(text(ddl))
 

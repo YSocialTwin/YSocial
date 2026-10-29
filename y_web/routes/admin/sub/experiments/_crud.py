@@ -2157,6 +2157,13 @@ def create_experiment():
         )
         return redirect(url_for("admin.dashboard"))
 
+    if platform_type == "dating" and not repo_availability.get("dating"):
+        flash(
+            _("Dating experiments are unavailable because YDating is not present."),
+            "error",
+        )
+        return redirect(url_for("admin.dashboard"))
+
     if platform_type == "microblogging":
         if simulator_type == "HPC":
             if not repo_availability["hpc"]:
@@ -2182,7 +2189,7 @@ def create_experiment():
                         "error",
                     )
                     return redirect(url_for("admin.dashboard"))
-    elif platform_type in {"photo_sharing", "instant_messaging"}:
+    elif platform_type in {"photo_sharing", "instant_messaging", "dating"}:
         simulator_type = "HPC"
 
     if platform_type == "forum":
@@ -2294,14 +2301,27 @@ def create_experiment():
                 "Instant messaging experiments use SQLite even if the platform uses PostgreSQL"
             )
 
+    if platform_type == "dating":
+        # dating has no opinion dynamics; toxicity uses the local model (no Perspective key) and the
+        # annotations are the runtime's own (plan S1)
+        opinion_dynamics_enabled = False
+        perspective_api = None
+        redis_enabled = False
+        if is_remote:
+            flash(_("Remote dating experiments are not supported."), "error")
+            return redirect(url_for("admin.dashboard"))
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            current_app.logger.info(
+                "Dating experiments use SQLite even if the platform uses PostgreSQL"
+            )
+
     topics = request.form.get("tags").split(",")
 
     # identify db type
     db_type = "sqlite"
-    if (
-        current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql")
-        and platform_type != "instant_messaging"
-    ):
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith(
+        "postgresql"
+    ) and platform_type not in {"instant_messaging", "dating"}:
         db_type = "postgresql"
 
     from y_web.src.system.path_utils import get_writable_path
@@ -2316,8 +2336,8 @@ def create_experiment():
     db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
-    if platform_type == "instant_messaging":
-        pass  # IM creates its own database on first server start: nothing to copy or ensure
+    if platform_type in {"instant_messaging", "dating"}:
+        pass  # the runtime creates its own database on first server start: nothing to copy or ensure
     elif platform_type in {"microblogging", "forum", "photo_sharing"}:
         if db_type == "sqlite":
             # Only Standard experiments get a pre-created database
@@ -2472,6 +2492,30 @@ def create_experiment():
                 shutil.rmtree(data_path, ignore_errors=True)
                 flash(
                     _("Invalid instant messaging settings: %(why)s", why=str(exc)),
+                    "error",
+                )
+                return redirect(url_for("admin.dashboard"))
+        elif platform_type == "dating":
+            from y_web.src.dating.experiment_config import (
+                DatingConfigError,
+                generate_dating_server_config,
+            )
+
+            try:
+                config = generate_dating_server_config(
+                    exp_name=exp_name,
+                    db_uri=db_uri,
+                    data_path=data_path,
+                    is_remote=is_remote,
+                    seed=request.form.get("seed"),
+                    toxicity_annotation=toxicity_annotation,
+                    sentiment_annotation=sentiment_annotation,
+                    emotion_annotation=emotion_annotation,
+                )
+            except DatingConfigError as exc:
+                shutil.rmtree(data_path, ignore_errors=True)
+                flash(
+                    _("Invalid dating settings: %(why)s", why=str(exc)),
                     "error",
                 )
                 return redirect(url_for("admin.dashboard"))

@@ -42,6 +42,19 @@ def _is_im_experiment_id(exp_id) -> bool:
     return is_im_platform(platform)
 
 
+def _is_dating_experiment_id(exp_id) -> bool:
+    """Whether ``exp_id`` is a dating experiment (False when it cannot be told)."""
+    from y_web.src.dating import is_dating_platform
+
+    try:
+        from y_web.src.models import Exps
+
+        platform = db.session.scalar(select(Exps.platform_type).filter_by(idexp=exp_id))
+    except Exception:
+        return False
+    return is_dating_platform(platform)
+
+
 def register_experiment_database(app, exp_id, db_name):
     """
     Register an experiment database in the app's SQLALCHEMY_BINDS.
@@ -64,6 +77,10 @@ def register_experiment_database(app, exp_id, db_name):
         app.config["SQLALCHEMY_BINDS"][get_db_bind_key_for_exp(exp_id)] = (
             "sqlite:///" + get_writable_path(os.path.join("y_web", db_name))
         )
+        return
+
+    # A dating experiment owns its database too: it is read by the observer in read-only mode, never bound.
+    if _is_dating_experiment_id(exp_id):
         return
 
     bind_key = get_db_bind_key_for_exp(exp_id)

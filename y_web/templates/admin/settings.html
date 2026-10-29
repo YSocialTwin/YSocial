@@ -102,6 +102,7 @@
                                                     <option value="microblogging">{{ _('Microblogging (i.e., X/BlueSky)') }}</option>
                                                     <option value="photo_sharing" {% if not repo_availability.photo_sharing %}disabled{% endif %}>{{ _('Photo Sharing (e.g., Instagram)') }}{% if not repo_availability.photo_sharing %} - {{ _('Unavailable') }}{% endif %}</option>
                                                     <option value="instant_messaging" {% if not repo_availability.instant_messaging %}disabled{% endif %}>{{ _('Instant Messaging (e.g., Telegram)') }}{% if not repo_availability.instant_messaging %} - {{ _('Unavailable') }}{% endif %}</option>
+                                                    <option value="dating" {% if not repo_availability.dating %}disabled{% endif %}>{{ _('Dating (swipe-based matching)') }}{% if not repo_availability.dating %} - {{ _('Unavailable') }}{% endif %}</option>
                                                     <option value="forum" {% if not repo_availability.forum %}disabled{% endif %}>{{ _('Forum (i.e., Reddit)') }}{% if not repo_availability.forum %} - {{ _('Unavailable') }}{% endif %}</option>
                                                 </select>
                                             </div>

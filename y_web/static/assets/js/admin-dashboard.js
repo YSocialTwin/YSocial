@@ -350,7 +350,7 @@ var AdminDashboard = (function() {
       const ownerBadge = exp.owner ? 
           '<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Owner') + '">' + exp.owner + '</span>' : '';
 
-      const platformBadge = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Platform') + '">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : 'Microblogging') + '</span>';
+      const platformBadge = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Platform') + '">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : exp.platform_type === 'dating' ? 'Dating' : 'Microblogging') + '</span>';
     
       const hpcBadge = exp.simulator_type === 'HPC' ?
           '<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('HPC') + '">' + YI18n.t('HPC') + '</span>' : '';
@@ -405,7 +405,7 @@ var AdminDashboard = (function() {
       const ownerBadgeFull = exp.owner ?
           '<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Experiment owner') + '">' + exp.owner + '</span>' : '';
 
-      const platformBadgeFull = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Platform') + '">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : 'Microblogging') + '</span>';
+      const platformBadgeFull = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Platform') + '">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : exp.platform_type === 'dating' ? 'Dating' : 'Microblogging') + '</span>';
     
       const hpcBadgeFull = exp.simulator_type === 'HPC' ?
           '<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('HPC Simulator') + '">' + YI18n.t('HPC') + '</span>' : '';

@@ -20,6 +20,9 @@
                         {% if experiment_details_variant == 'im' %}
  <span class="tag is-info">{{ _('Instant Messaging') }}</span>
                         {% endif %}
+                        {% if experiment_details_variant == 'dating' %}
+ <span class="tag is-info">{{ _('Dating') }}</span>
+                        {% endif %}
                         {% if has_infinite_client %}
  <span class="ys-badge-success2" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">{{ _('∞ Infinite') }}</span>
                         {% endif %}
@@ -120,6 +123,7 @@
                                                 <span>{{ _('Sentiment') }}</span>
                                             </div>
                                             {% endif %}
+                                            {% if experiment_details_variant != 'dating' %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" name="opinion_dynamics_enabled" {% if opinion_dynamics_enabled %}checked{% endif %}>
@@ -127,7 +131,8 @@
                                                 </label>
                                                 <span>{{ _('Opinion Dynamics') }}</span>
                                             </div>
-                                            {% if experiment.platform_type in ["microblogging", "hpc", "instant_messaging"] %}
+                                            {% endif %}
+                                            {% if experiment.platform_type in ["microblogging", "hpc", "instant_messaging", "dating"] %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" name="stress_reward_enabled" {% if stress_reward_enabled %}checked{% endif %}>
@@ -192,7 +197,7 @@
  <div class="ys-content-panel">
  <p class="ys-label-hint">{{ _('Adjust experiment prompts and supporting configuration.') }}</p>
 
-                                {% if len(clients)>0 and experiment_details_variant != 'im' %}
+                                {% if len(clients)>0 and experiment_details_variant not in ['im', 'dating'] %}
                                 <div class="box-line">
                                     <span class="left">{{ _('Edit LLM Prompts') }}</span>
                                     <span class="right">
