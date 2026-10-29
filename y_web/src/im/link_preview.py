@@ -35,8 +35,16 @@ def normalize(url: str) -> str:
         p = urlparse((url or "").strip())
     except ValueError:
         return (url or "").strip()
-    query = urlencode([(k, v) for k, v in parse_qsl(p.query) if not k.lower().startswith("utm_") and k.lower() != "fbclid"])
-    return urlunparse((p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), "", query, ""))
+    query = urlencode(
+        [
+            (k, v)
+            for k, v in parse_qsl(p.query)
+            if not k.lower().startswith("utm_") and k.lower() != "fbclid"
+        ]
+    )
+    return urlunparse(
+        (p.scheme.lower(), p.netloc.lower(), p.path.rstrip("/"), "", query, "")
+    )
 
 
 def short_url(url: str, limit: int = 46) -> str:
@@ -93,7 +101,10 @@ def _snapshot(folder: str) -> Dict[str, Dict[str, str]]:
                 except ValueError:
                     continue
                 if row.get("link"):
-                    rows[normalize(row["link"])] = {"title": _clean(row.get("title"), 160), "summary": _clean(row.get("summary"))}
+                    rows[normalize(row["link"])] = {
+                        "title": _clean(row.get("title"), 160),
+                        "summary": _clean(row.get("summary")),
+                    }
     except OSError:
         return {}
     _snapshot_cache[path] = (mtime, rows)
@@ -127,7 +138,9 @@ def lookup(folder: str, url: str) -> Dict[str, Any]:
     cached = _read_cache(folder).get(key, {}) if folder else {}
     image = cached.get("image") or ""
     failed = cached.get("failed") or 0
-    pending = not image and not (failed and time.time() - failed < RETRY_AFTER) and bool(url)
+    pending = (
+        not image and not (failed and time.time() - failed < RETRY_AFTER) and bool(url)
+    )
     return {
         "title": known.get("title") or cached.get("title") or "",
         "summary": known.get("summary") or cached.get("summary") or "",
@@ -147,7 +160,9 @@ def _public_host(host: str) -> bool:
 
 def _meta(soup, *names) -> str:
     for name in names:
-        tag = soup.find("meta", property=name) or soup.find("meta", attrs={"name": name})
+        tag = soup.find("meta", property=name) or soup.find(
+            "meta", attrs={"name": name}
+        )
         if tag and tag.get("content"):
             return tag["content"].strip()
     return ""
@@ -166,22 +181,38 @@ def fetch_remote(folder: str, url: str, *, get=None) -> Dict[str, Any]:
         response = None
         for _ in range(MAX_REDIRECTS + 1):
             p = urlparse(current)
-            if p.scheme not in ("http", "https") or not p.hostname or not _public_host(p.hostname):
+            if (
+                p.scheme not in ("http", "https")
+                or not p.hostname
+                or not _public_host(p.hostname)
+            ):
                 raise ValueError("address not allowed")
             response = get(
                 current,
-                headers={"User-Agent": "Mozilla/5.0 (compatible; YSocial link preview)"},
+                headers={
+                    "User-Agent": "Mozilla/5.0 (compatible; YSocial link preview)"
+                },
                 timeout=TIMEOUT,
                 allow_redirects=False,
                 stream=True,
             )
-            if response.status_code in (301, 302, 303, 307, 308) and response.headers.get("Location"):
+            if response.status_code in (
+                301,
+                302,
+                303,
+                307,
+                308,
+            ) and response.headers.get("Location"):
                 current = urljoin(current, response.headers["Location"])
                 continue
             break
         if response is None or not response.ok:
             raise ValueError("no page")
-        body = response.raw.read(MAX_BYTES, decode_content=True) if hasattr(response, "raw") and response.raw else response.content[:MAX_BYTES]
+        body = (
+            response.raw.read(MAX_BYTES, decode_content=True)
+            if hasattr(response, "raw") and response.raw
+            else response.content[:MAX_BYTES]
+        )
         soup = BeautifulSoup(body, "html.parser")
         image = _meta(soup, "og:image", "og:image:url", "twitter:image")
         if image:
@@ -189,11 +220,19 @@ def fetch_remote(folder: str, url: str, *, get=None) -> Dict[str, Any]:
             if urlparse(image).scheme not in ("http", "https"):
                 image = ""
         result = {
-            "title": _clean(_meta(soup, "og:title", "twitter:title") or (soup.title.string if soup.title else ""), 160),
-            "summary": _clean(_meta(soup, "og:description", "description", "twitter:description")),
+            "title": _clean(
+                _meta(soup, "og:title", "twitter:title")
+                or (soup.title.string if soup.title else ""),
+                160,
+            ),
+            "summary": _clean(
+                _meta(soup, "og:description", "description", "twitter:description")
+            ),
             "image": image,
         }
-    except Exception:  # noqa: BLE001 - offline, blocked, malformed: the card simply stays without image
+    except (
+        Exception
+    ):  # noqa: BLE001 - offline, blocked, malformed: the card simply stays without image
         result = {"title": "", "summary": "", "image": "", "failed": time.time()}
     if folder:
         data = _read_cache(folder)

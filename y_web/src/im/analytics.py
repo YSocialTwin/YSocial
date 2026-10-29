@@ -10,7 +10,12 @@ from typing import Any, Dict, Optional
 from y_web.src.im import analytics_etl as etl
 
 #: annotation switches that the pages look for in ``Exps.annotations`` and the derived table proving them
-_ANNOTATION_TABLES = {"opinions": "agent_opinion", "sentiment": "post_sentiment", "emotion": "post_emotions", "toxicity": "post_toxicity"}
+_ANNOTATION_TABLES = {
+    "opinions": "agent_opinion",
+    "sentiment": "post_sentiment",
+    "emotion": "post_emotions",
+    "toxicity": "post_toxicity",
+}
 
 
 def experiment_folder(exp) -> str:
@@ -31,7 +36,9 @@ def derived_db_name(exp) -> str:
 
 
 def is_derived_db_name(db_name) -> bool:
-    return str(db_name or "").replace("\\", "/").rsplit("/", 1)[-1] == etl.ANALYTICS_FILE
+    return (
+        str(db_name or "").replace("\\", "/").rsplit("/", 1)[-1] == etl.ANALYTICS_FILE
+    )
 
 
 def ensure_derived(exp, force: bool = False) -> Dict[str, Any]:
@@ -47,7 +54,9 @@ def _sync_annotations(exp, counts: Dict[str, int]) -> None:
     try:
         from y_web import db
 
-        present = {tok for tok, table in _ANNOTATION_TABLES.items() if counts.get(table)}
+        present = {
+            tok for tok, table in _ANNOTATION_TABLES.items() if counts.get(table)
+        }
         current = [t for t in (exp.annotations or "").split(",") if t]
         missing = [t for t in sorted(present) if t not in current]
         if missing:
@@ -74,7 +83,12 @@ def derived_tables(exp) -> set:
         return set()
     try:
         with sqlite3.connect(f"file:{path}?mode=ro", uri=True) as conn:
-            return {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+            return {
+                row[0]
+                for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                )
+            }
     except sqlite3.Error:
         return set()
 
@@ -107,7 +121,8 @@ def annotation_problem(exp, prefix: str) -> str:
     try:
         with sqlite3.connect(f"file:{path}?mode=ro", uri=True) as conn:
             rows = conn.execute(
-                "SELECT value FROM annotations WHERE status = 'error' AND method_ref LIKE ? LIMIT 20", (prefix + "%",)
+                "SELECT value FROM annotations WHERE status = 'error' AND method_ref LIKE ? LIMIT 20",
+                (prefix + "%",),
             ).fetchall()
     except sqlite3.Error:
         return ""

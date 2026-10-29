@@ -17,7 +17,11 @@ def test_instant_messaging_spec_is_a_private_official_runtime():
     assert spec.group == "instant_messaging"
     assert spec.is_private is True
     assert spec.validate_import == "yinstantmessaging"
-    assert tuple(spec.validate_entrypoints) == ("run_server.py", "run_client.py", "requirements.txt")
+    assert tuple(spec.validate_entrypoints) == (
+        "run_server.py",
+        "run_client.py",
+        "requirements.txt",
+    )
 
 
 def test_instant_messaging_group_is_listed_after_photo_sharing():

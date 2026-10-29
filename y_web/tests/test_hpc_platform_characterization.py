@@ -53,7 +53,9 @@ def _patch_common(monkeypatch, module, layout):
     monkeypatch.setattr(module, "get_base_path", lambda: str(layout.base))
     monkeypatch.setattr(module, "get_writable_path", lambda: str(layout.writable))
     monkeypatch.setattr(module, "build_subprocess_env", lambda: {})
-    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr(
+        "y_web.src.simulation.server.detect_env_handler", lambda: "python"
+    )
     monkeypatch.setattr(module.db.session, "commit", lambda: None)
 
 
@@ -151,7 +153,9 @@ def test_unknown_server_platform_names_the_platform(monkeypatch, layout):
 
     _patch_common(monkeypatch, hs, layout)
     monkeypatch.setattr(
-        hs, "current_app", SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite://"})
+        hs,
+        "current_app",
+        SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite://"}),
     )
     with pytest.raises(NotImplementedError, match="no_such_platform"):
         hs.start_hpc_server(_exp("no_such_platform"))
@@ -162,7 +166,9 @@ def test_missing_server_script_names_the_runtime_repository(monkeypatch, layout)
 
     _patch_common(monkeypatch, hs, layout)
     monkeypatch.setattr(
-        hs, "current_app", SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite://"})
+        hs,
+        "current_app",
+        SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite://"}),
     )
     (layout.base / "external" / "YPhotoSharing" / "run_server.py").unlink()
     with pytest.raises(FileNotFoundError, match="external/YPhotoSharing"):
@@ -193,7 +199,9 @@ def _start_client(monkeypatch, layout, platform, frozen=False):
     (folder / "server_config.json").write_text(
         json.dumps({"namespace": "ns1", "server_name": "srv1"})
     )
-    (folder / "client_cl-pop.json").write_text(json.dumps({"logging": {}, "simulation": {}}))
+    (folder / "client_cl-pop.json").write_text(
+        json.dumps({"logging": {}, "simulation": {}})
+    )
     (folder / "pop.json").write_text("{}")
     prompts = "prompts_ygram.json" if platform == "photo_sharing" else "prompts.json"
     (folder / prompts).write_text("{}")
@@ -254,7 +262,12 @@ def test_frozen_client_commands(monkeypatch, layout):
 def test_frozen_photo_client_command(monkeypatch, layout):
     call = _start_client(monkeypatch, layout, "photo_sharing", frozen=True)
     script = str(layout.base / "external" / "YPhotoSharing" / "run_client.py")
-    assert call.cmd == [sys.executable, script, "--config", str(layout.exp_folder / "client_cl-pop.json")]
+    assert call.cmd == [
+        sys.executable,
+        script,
+        "--config",
+        str(layout.exp_folder / "client_cl-pop.json"),
+    ]
 
 
 def test_unknown_client_platform_names_the_platform(monkeypatch, layout):
@@ -265,7 +278,11 @@ def test_unknown_client_platform_names_the_platform(monkeypatch, layout):
 # -- names and files tied to the platform -----------------------------------------------------------
 @pytest.mark.parametrize(
     "platform,expected",
-    [("photo_sharing", "prompts_ygram.json"), ("microblogging", "prompts.json"), ("forum", "prompts.json")],
+    [
+        ("photo_sharing", "prompts_ygram.json"),
+        ("microblogging", "prompts.json"),
+        ("forum", "prompts.json"),
+    ],
 )
 def test_hpc_prompts_filename(platform, expected):
     from y_web.routes.admin.sub.experiments._crud import _hpc_prompts_filename

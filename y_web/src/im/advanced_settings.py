@@ -37,36 +37,136 @@ GROUPS: List[Group] = [
         N_("Scheduling"),
         N_("How many sessions an agent may open in a round."),
         [
-            ("telegram.scheduling.multi_session_min_level", "int", N_("Minimum activity level for several sessions"), 4, (0, 100)),
-            ("telegram.scheduling.extra_session_rate", "float", N_("Extra session rate"), 0.5, (0, 100)),
-            ("telegram.scheduling.max_sessions_per_round", "int", N_("Maximum sessions per round"), 3, (1, 100)),
+            (
+                "telegram.scheduling.multi_session_min_level",
+                "int",
+                N_("Minimum activity level for several sessions"),
+                4,
+                (0, 100),
+            ),
+            (
+                "telegram.scheduling.extra_session_rate",
+                "float",
+                N_("Extra session rate"),
+                0.5,
+                (0, 100),
+            ),
+            (
+                "telegram.scheduling.max_sessions_per_round",
+                "int",
+                N_("Maximum sessions per round"),
+                3,
+                (1, 100),
+            ),
         ],
     ),
     (
         "topology",
         N_("Chat Topology"),
-        N_("How the automatic chats are generated: who owns channels, how many channels get a discussion group, and how the social network subscribes followers. Chats defined in Chats by Topic are created as you wrote them."),
+        N_(
+            "How the automatic chats are generated: who owns channels, how many channels get a discussion group, and how the social network subscribes followers. Chats defined in Chats by Topic are created as you wrote them."
+        ),
         [
-            ("telegram.topology.generate_if_missing", "bool", N_("Generate the topology if missing"), True, None),
-            ("telegram.topology.shared_across_clients", "bool", N_("Share the topology across clients"), False, None),
-            ("telegram.topology.max_owned_chats", "int", N_("Maximum chats owned by an agent"), 2, (1, 1000)),
-            ("telegram.topology.channel_owner_share", "float", N_("Share of agents owning a channel"), 0.1, (0, 1)),
-            ("telegram.topology.discussion_share", "float", N_("Share of channels with a discussion group"), 0.5, (0, 1)),
-            ("telegram.topology.network_ignores_topics", "bool", N_("Ignore topics when building the network"), False, None),
+            (
+                "telegram.topology.generate_if_missing",
+                "bool",
+                N_("Generate the topology if missing"),
+                True,
+                None,
+            ),
+            (
+                "telegram.topology.shared_across_clients",
+                "bool",
+                N_("Share the topology across clients"),
+                False,
+                None,
+            ),
+            (
+                "telegram.topology.max_owned_chats",
+                "int",
+                N_("Maximum chats owned by an agent"),
+                2,
+                (1, 1000),
+            ),
+            (
+                "telegram.topology.channel_owner_share",
+                "float",
+                N_("Share of agents owning a channel"),
+                0.1,
+                (0, 1),
+            ),
+            (
+                "telegram.topology.discussion_share",
+                "float",
+                N_("Share of channels with a discussion group"),
+                0.5,
+                (0, 1),
+            ),
+            (
+                "telegram.topology.network_ignores_topics",
+                "bool",
+                N_("Ignore topics when building the network"),
+                False,
+                None,
+            ),
         ],
     ),
     (
         "topics",
         N_("Topics and Chats"),
-        N_("How the experiment topics map onto agents and chats: whether interests come from the population or are drawn at random, how many public chats an agent joins per topic, and how often it writes off-topic."),
+        N_(
+            "How the experiment topics map onto agents and chats: whether interests come from the population or are drawn at random, how many public chats an agent joins per topic, and how often it writes off-topic."
+        ),
         [
-            ("telegram.topics.assignment", "choice", N_("Topic assignment"), "from_population", ("from_population", "assign", "merge")),
-            ("telegram.topics.topics_per_agent", "int", N_("Topics per agent"), 3, (1, 1000)),
-            ("telegram.topics.on_unmapped", "choice", N_("Unmapped topics"), "warn_drop", ("warn_drop", "error")),
-            ("telegram.topics.chats_per_topic", "int", N_("Chats per topic"), 2, (1, 1000)),
-            ("telegram.topics.channel_topics_k", "int", N_("Topics per channel"), 2, (1, 1000)),
-            ("telegram.topics.auto_topic_group", "bool", N_("Create a group for each topic"), True, None),
-            ("telegram.topics.off_topic_rate", "float", N_("Off-topic rate"), 0.05, (0, 1)),
+            (
+                "telegram.topics.assignment",
+                "choice",
+                N_("Topic assignment"),
+                "from_population",
+                ("from_population", "assign", "merge"),
+            ),
+            (
+                "telegram.topics.topics_per_agent",
+                "int",
+                N_("Topics per agent"),
+                3,
+                (1, 1000),
+            ),
+            (
+                "telegram.topics.on_unmapped",
+                "choice",
+                N_("Unmapped topics"),
+                "warn_drop",
+                ("warn_drop", "error"),
+            ),
+            (
+                "telegram.topics.chats_per_topic",
+                "int",
+                N_("Chats per topic"),
+                2,
+                (1, 1000),
+            ),
+            (
+                "telegram.topics.channel_topics_k",
+                "int",
+                N_("Topics per channel"),
+                2,
+                (1, 1000),
+            ),
+            (
+                "telegram.topics.auto_topic_group",
+                "bool",
+                N_("Create a group for each topic"),
+                True,
+                None,
+            ),
+            (
+                "telegram.topics.off_topic_rate",
+                "float",
+                N_("Off-topic rate"),
+                0.05,
+                (0, 1),
+            ),
         ],
     ),
     (
@@ -74,12 +174,48 @@ GROUPS: List[Group] = [
         N_("Attention"),
         N_("Which chats an agent looks at in a session and how they are ranked."),
         [
-            ("telegram.attention.max_chats_per_session", "int", N_("Maximum chats per session"), 5, (1, 1000)),
-            ("telegram.attention.notifications_always_offered", "bool", N_("Always offer chats with notifications"), True, None),
-            ("telegram.attention.owned_always", "bool", N_("Always offer owned chats"), True, None),
-            ("telegram.attention.weights.notifications", "float", N_("Weight of notifications"), 3.0, (0, _P)),
-            ("telegram.attention.weights.topic_affinity", "float", N_("Weight of topic affinity"), 2.0, (0, _P)),
-            ("telegram.attention.weights.recent_activity", "float", N_("Weight of recent activity"), 1.0, (0, _P)),
+            (
+                "telegram.attention.max_chats_per_session",
+                "int",
+                N_("Maximum chats per session"),
+                5,
+                (1, 1000),
+            ),
+            (
+                "telegram.attention.notifications_always_offered",
+                "bool",
+                N_("Always offer chats with notifications"),
+                True,
+                None,
+            ),
+            (
+                "telegram.attention.owned_always",
+                "bool",
+                N_("Always offer owned chats"),
+                True,
+                None,
+            ),
+            (
+                "telegram.attention.weights.notifications",
+                "float",
+                N_("Weight of notifications"),
+                3.0,
+                (0, _P),
+            ),
+            (
+                "telegram.attention.weights.topic_affinity",
+                "float",
+                N_("Weight of topic affinity"),
+                2.0,
+                (0, _P),
+            ),
+            (
+                "telegram.attention.weights.recent_activity",
+                "float",
+                N_("Weight of recent activity"),
+                1.0,
+                (0, _P),
+            ),
         ],
     ),
     (
@@ -87,17 +223,83 @@ GROUPS: List[Group] = [
         N_("Reactive Replies"),
         N_("Replies and reactions triggered by the activity of other agents."),
         [
-            ("telegram.reactive.enabled", "bool", N_("Enable reactive replies"), True, None),
-            ("telegram.reactive.probability", "float", N_("Probability of reacting"), 0.7, (0, 1)),
-            ("telegram.reactive.median_minutes", "float", N_("Median reaction delay (minutes)"), 8.0, (0, 10080)),
-            ("telegram.reactive.sigma", "float", N_("Spread of the reaction delay"), 1.0, (0, 100)),
-            ("telegram.reactive.max_per_round", "int", N_("Maximum reactions per round"), 3, (0, 1000)),
-            ("telegram.reactive.max_chain_depth", "int", N_("Maximum chain depth"), 6, (1, 1000)),
-            ("telegram.reactive.max_wait_rounds", "int", N_("Maximum wait (rounds)"), 24, (1, 100000)),
-            ("telegram.reactive.actions_likelihood.reply", "float", N_("Reactive reply likelihood"), 4.0, (0, _P)),
-            ("telegram.reactive.actions_likelihood.react", "float", N_("Reactive reaction likelihood"), 3.0, (0, _P)),
-            ("telegram.reactive.actions_likelihood.forward", "float", N_("Reactive forward likelihood"), 1.0, (0, _P)),
-            ("telegram.reactive.actions_likelihood.post", "float", N_("Reactive post likelihood"), 0.5, (0, _P)),
+            (
+                "telegram.reactive.enabled",
+                "bool",
+                N_("Enable reactive replies"),
+                True,
+                None,
+            ),
+            (
+                "telegram.reactive.probability",
+                "float",
+                N_("Probability of reacting"),
+                0.7,
+                (0, 1),
+            ),
+            (
+                "telegram.reactive.median_minutes",
+                "float",
+                N_("Median reaction delay (minutes)"),
+                8.0,
+                (0, 10080),
+            ),
+            (
+                "telegram.reactive.sigma",
+                "float",
+                N_("Spread of the reaction delay"),
+                1.0,
+                (0, 100),
+            ),
+            (
+                "telegram.reactive.max_per_round",
+                "int",
+                N_("Maximum reactions per round"),
+                3,
+                (0, 1000),
+            ),
+            (
+                "telegram.reactive.max_chain_depth",
+                "int",
+                N_("Maximum chain depth"),
+                6,
+                (1, 1000),
+            ),
+            (
+                "telegram.reactive.max_wait_rounds",
+                "int",
+                N_("Maximum wait (rounds)"),
+                24,
+                (1, 100000),
+            ),
+            (
+                "telegram.reactive.actions_likelihood.reply",
+                "float",
+                N_("Reactive reply likelihood"),
+                4.0,
+                (0, _P),
+            ),
+            (
+                "telegram.reactive.actions_likelihood.react",
+                "float",
+                N_("Reactive reaction likelihood"),
+                3.0,
+                (0, _P),
+            ),
+            (
+                "telegram.reactive.actions_likelihood.forward",
+                "float",
+                N_("Reactive forward likelihood"),
+                1.0,
+                (0, _P),
+            ),
+            (
+                "telegram.reactive.actions_likelihood.post",
+                "float",
+                N_("Reactive post likelihood"),
+                0.5,
+                (0, _P),
+            ),
         ],
     ),
     (
@@ -105,8 +307,20 @@ GROUPS: List[Group] = [
         N_("Chat Discovery"),
         N_("How agents find chats to join or leave."),
         [
-            ("telegram.discovery.mode", "choice", N_("Discovery mode"), "llm", ("llm", "rule")),
-            ("telegram.discovery.leave_prob", "float", N_("Probability of leaving a chat"), 0.05, (0, 1)),
+            (
+                "telegram.discovery.mode",
+                "choice",
+                N_("Discovery mode"),
+                "llm",
+                ("llm", "rule"),
+            ),
+            (
+                "telegram.discovery.leave_prob",
+                "float",
+                N_("Probability of leaving a chat"),
+                0.05,
+                (0, 1),
+            ),
         ],
     ),
     (
@@ -114,16 +328,76 @@ GROUPS: List[Group] = [
         N_("Optional Agent Actions"),
         N_("Actions an agent may take besides posting, replying and reacting."),
         [
-            ("telegram.agent_actions.forwarding.enabled", "bool", N_("Allow forwarding"), True, None),
-            ("telegram.agent_actions.search.enabled", "bool", N_("Allow search"), True, None),
-            ("telegram.agent_actions.search.likelihood", "float", N_("Search likelihood"), 0.5, (0, _P)),
-            ("telegram.agent_actions.private_message.enabled", "bool", N_("Allow private messages"), True, None),
-            ("telegram.agent_actions.private_message.likelihood", "float", N_("Private message likelihood"), 0.5, (0, _P)),
-            ("telegram.agent_actions.forum_topics.enabled", "bool", N_("Allow forum topics"), True, None),
-            ("telegram.agent_actions.forum_topics.create_likelihood", "float", N_("Forum topic creation likelihood"), 0.2, (0, _P)),
-            ("telegram.agent_actions.forum_topics.delete_likelihood", "float", N_("Forum topic deletion likelihood"), 0.05, (0, _P)),
-            ("telegram.agent_actions.rename_chat.enabled", "bool", N_("Allow owners to rename their chats"), True, None),
-            ("telegram.agent_actions.rename_chat.likelihood", "float", N_("Chat renaming likelihood"), 0.05, (0, _P)),
+            (
+                "telegram.agent_actions.forwarding.enabled",
+                "bool",
+                N_("Allow forwarding"),
+                True,
+                None,
+            ),
+            (
+                "telegram.agent_actions.search.enabled",
+                "bool",
+                N_("Allow search"),
+                True,
+                None,
+            ),
+            (
+                "telegram.agent_actions.search.likelihood",
+                "float",
+                N_("Search likelihood"),
+                0.5,
+                (0, _P),
+            ),
+            (
+                "telegram.agent_actions.private_message.enabled",
+                "bool",
+                N_("Allow private messages"),
+                True,
+                None,
+            ),
+            (
+                "telegram.agent_actions.private_message.likelihood",
+                "float",
+                N_("Private message likelihood"),
+                0.5,
+                (0, _P),
+            ),
+            (
+                "telegram.agent_actions.forum_topics.enabled",
+                "bool",
+                N_("Allow forum topics"),
+                True,
+                None,
+            ),
+            (
+                "telegram.agent_actions.forum_topics.create_likelihood",
+                "float",
+                N_("Forum topic creation likelihood"),
+                0.2,
+                (0, _P),
+            ),
+            (
+                "telegram.agent_actions.forum_topics.delete_likelihood",
+                "float",
+                N_("Forum topic deletion likelihood"),
+                0.05,
+                (0, _P),
+            ),
+            (
+                "telegram.agent_actions.rename_chat.enabled",
+                "bool",
+                N_("Allow owners to rename their chats"),
+                True,
+                None,
+            ),
+            (
+                "telegram.agent_actions.rename_chat.likelihood",
+                "float",
+                N_("Chat renaming likelihood"),
+                0.05,
+                (0, _P),
+            ),
         ],
     ),
     (
@@ -131,7 +405,13 @@ GROUPS: List[Group] = [
         N_("Baseline Activity"),
         N_("Background activity that does not come from the agents."),
         [
-            ("telegram.baseline.policy", "choice", N_("Baseline policy"), "none", ("none", "static", "reactive")),
+            (
+                "telegram.baseline.policy",
+                "choice",
+                N_("Baseline policy"),
+                "none",
+                ("none", "static", "reactive"),
+            ),
             ("telegram.baseline.beta", "float", N_("Baseline strength"), 0.5, (0, _P)),
         ],
     ),
@@ -140,9 +420,27 @@ GROUPS: List[Group] = [
         N_("Moderation"),
         N_("Automatic restrictions on the chats."),
         [
-            ("telegram.moderation.policy", "choice", N_("Moderation policy"), "none", ("none", "rate_limit")),
-            ("telegram.moderation.rate_limit_posts", "int", N_("Posts allowed before the limit"), 5, (2, 100000)),
-            ("telegram.moderation.restrict_rounds", "int", N_("Restriction length (rounds)"), 24, (1, 100000)),
+            (
+                "telegram.moderation.policy",
+                "choice",
+                N_("Moderation policy"),
+                "none",
+                ("none", "rate_limit"),
+            ),
+            (
+                "telegram.moderation.rate_limit_posts",
+                "int",
+                N_("Posts allowed before the limit"),
+                5,
+                (2, 100000),
+            ),
+            (
+                "telegram.moderation.restrict_rounds",
+                "int",
+                N_("Restriction length (rounds)"),
+                24,
+                (1, 100000),
+            ),
         ],
     ),
     (
@@ -151,11 +449,35 @@ GROUPS: List[Group] = [
         N_("Chats that appear during the run."),
         [
             ("telegram.emergence.enabled", "bool", N_("Let chats emerge"), False, None),
-            ("telegram.emergence.open_slot_rate", "float", N_("Open slot rate"), 0.02, (0, 1)),
-            ("telegram.chat_creation.enabled", "bool", N_("Let agents create chats"), False, None),
-            ("telegram.chat_creation.likelihood", "float", N_("Chat creation likelihood"), 0.1, (0, _P)),
+            (
+                "telegram.emergence.open_slot_rate",
+                "float",
+                N_("Open slot rate"),
+                0.02,
+                (0, 1),
+            ),
+            (
+                "telegram.chat_creation.enabled",
+                "bool",
+                N_("Let agents create chats"),
+                False,
+                None,
+            ),
+            (
+                "telegram.chat_creation.likelihood",
+                "float",
+                N_("Chat creation likelihood"),
+                0.1,
+                (0, _P),
+            ),
             ("telegram.forum.enabled", "bool", N_("Enable forum chats"), False, None),
-            ("telegram.forum.min_topics", "int", N_("Minimum topics of a forum"), 2, (2, 1000)),
+            (
+                "telegram.forum.min_topics",
+                "int",
+                N_("Minimum topics of a forum"),
+                2,
+                (2, 1000),
+            ),
         ],
     ),
     (
@@ -164,12 +486,42 @@ GROUPS: List[Group] = [
         N_("Agents leaving and joining during the run."),
         [
             ("agents.churn.enabled", "bool", N_("Enable churn"), False, None),
-            ("agents.churn.churn_probability", "float", N_("Churn probability"), 0.01, (0, 1)),
-            ("agents.churn.inactivity_threshold", "int", N_("Inactivity threshold (rounds)"), 5, (1, 100000)),
-            ("agents.churn.churn_percentage", "float", N_("Maximum share of agents that churn"), 0.1, (0, 1)),
+            (
+                "agents.churn.churn_probability",
+                "float",
+                N_("Churn probability"),
+                0.01,
+                (0, 1),
+            ),
+            (
+                "agents.churn.inactivity_threshold",
+                "int",
+                N_("Inactivity threshold (rounds)"),
+                5,
+                (1, 100000),
+            ),
+            (
+                "agents.churn.churn_percentage",
+                "float",
+                N_("Maximum share of agents that churn"),
+                0.1,
+                (0, 1),
+            ),
             ("agents.new_agents.enabled", "bool", N_("Enable new agents"), False, None),
-            ("agents.new_agents.probability_new_agents", "float", N_("New agents probability"), 0.01, (0, 1)),
-            ("agents.new_agents.percentage_new_agents", "float", N_("Share of new agents"), 0.01, (0, 1)),
+            (
+                "agents.new_agents.probability_new_agents",
+                "float",
+                N_("New agents probability"),
+                0.01,
+                (0, 1),
+            ),
+            (
+                "agents.new_agents.percentage_new_agents",
+                "float",
+                N_("Share of new agents"),
+                0.01,
+                (0, 1),
+            ),
         ],
     ),
     (
@@ -177,15 +529,45 @@ GROUPS: List[Group] = [
         N_("Language Model Reliability"),
         N_("Concurrency, timeouts and the failure guard of the language model calls."),
         [
-            ("llm.max_concurrency", "int", N_("Maximum concurrent requests"), 8, (1, 1024)),
+            (
+                "llm.max_concurrency",
+                "int",
+                N_("Maximum concurrent requests"),
+                8,
+                (1, 1024),
+            ),
             ("llm.timeout_seconds", "float", N_("Timeout (seconds)"), 120.0, (1, 3600)),
             ("llm.max_retries", "int", N_("Maximum retries"), 3, (0, 100)),
             ("llm.pass_seed", "bool", N_("Pass the seed to the model"), True, None),
             ("llm.record_responses", "bool", N_("Record the responses"), False, None),
-            ("llm.max_failed_session_ratio", "float", N_("Maximum share of failed sessions"), 0.5, (0, 1)),
-            ("llm.failure_window_sessions", "int", N_("Failure window (sessions)"), 20, (1, 100000)),
-            ("llm.failure_min_sessions", "int", N_("Failure minimum (sessions)"), 5, (1, 100000)),
-            ("simulation.emotion_batch_size", "int", N_("Emotion annotation batch size"), 10, (1, 10000)),
+            (
+                "llm.max_failed_session_ratio",
+                "float",
+                N_("Maximum share of failed sessions"),
+                0.5,
+                (0, 1),
+            ),
+            (
+                "llm.failure_window_sessions",
+                "int",
+                N_("Failure window (sessions)"),
+                20,
+                (1, 100000),
+            ),
+            (
+                "llm.failure_min_sessions",
+                "int",
+                N_("Failure minimum (sessions)"),
+                5,
+                (1, 100000),
+            ),
+            (
+                "simulation.emotion_batch_size",
+                "int",
+                N_("Emotion annotation batch size"),
+                10,
+                (1, 10000),
+            ),
         ],
     ),
     (
@@ -193,12 +575,42 @@ GROUPS: List[Group] = [
         N_("Client Runtime"),
         N_("Timeouts and polling of the client process."),
         [
-            ("ready_timeout_seconds", "float", N_("Ready timeout (seconds)"), 180.0, (1, 86400)),
-            ("server_call_timeout_seconds", "float", N_("Server call timeout (seconds)"), 120.0, (1, 86400)),
+            (
+                "ready_timeout_seconds",
+                "float",
+                N_("Ready timeout (seconds)"),
+                180.0,
+                (1, 86400),
+            ),
+            (
+                "server_call_timeout_seconds",
+                "float",
+                N_("Server call timeout (seconds)"),
+                120.0,
+                (1, 86400),
+            ),
             ("max_server_retries", "int", N_("Maximum server retries"), 3, (0, 1000)),
-            ("shutdown_grace_seconds", "float", N_("Shutdown grace (seconds)"), 3.0, (0, 3600)),
-            ("heartbeat_interval", "float", N_("Heartbeat interval (seconds)"), 5.0, (0.1, 3600)),
-            ("barrier_poll_seconds", "float", N_("Barrier poll (seconds)"), 0.2, (0.01, 60)),
+            (
+                "shutdown_grace_seconds",
+                "float",
+                N_("Shutdown grace (seconds)"),
+                3.0,
+                (0, 3600),
+            ),
+            (
+                "heartbeat_interval",
+                "float",
+                N_("Heartbeat interval (seconds)"),
+                5.0,
+                (0.1, 3600),
+            ),
+            (
+                "barrier_poll_seconds",
+                "float",
+                N_("Barrier poll (seconds)"),
+                0.2,
+                (0.01, 60),
+            ),
         ],
     ),
 ]
@@ -219,22 +631,100 @@ ACTIONS: List[Field] = [
 
 # the details of the agents' memory, in the section "Agent Memory"
 MEMORY: List[Field] = [
-    ("agents.memory_backend", "choice", N_("Memory backend"), "hybrid_semantic", ("hybrid_semantic", "simple_recent")),
+    (
+        "agents.memory_backend",
+        "choice",
+        N_("Memory backend"),
+        "hybrid_semantic",
+        ("hybrid_semantic", "simple_recent"),
+    ),
     ("agents.memory_prompt_mode", "text", N_("Prompt mode"), "subtle_forum", None),
-    ("agents.memory_vote_signal_only", "bool", N_("Votes only as a signal"), True, None),
-    ("agents.memory_reply_context_max_chars", "int", N_("Reply context (characters)"), 280, (1, 100000)),
-    ("agents.memory_total_max_chars", "int", N_("Total memory in the prompt (characters)"), 1400, (0, 100000)),
-    ("agents.memory_cross_thread_callback_min_score", "float", N_("Minimum score to recall another thread"), 0.8, (0, 1)),
-    ("agents.memory_rehydrate_rounds", "int", N_("Rehydrate window (rounds)"), 72, (0, 100000)),
-    ("agents.memory_forget_deleted", "bool", N_("Forget deleted messages"), False, None),
-    ("agents.memory_high_affect_enabled", "bool", N_("Recall emotionally charged episodes"), False, None),
-    ("agents.memory_high_affect_rule_threshold", "float", N_("Rule threshold"), 0.55, (0, 1)),
-    ("agents.memory_high_affect_uncertain_low", "float", N_("Uncertain band, low"), 0.35, (0, 1)),
-    ("agents.memory_high_affect_uncertain_high", "float", N_("Uncertain band, high"), 0.7, (0, 1)),
+    (
+        "agents.memory_vote_signal_only",
+        "bool",
+        N_("Votes only as a signal"),
+        True,
+        None,
+    ),
+    (
+        "agents.memory_reply_context_max_chars",
+        "int",
+        N_("Reply context (characters)"),
+        280,
+        (1, 100000),
+    ),
+    (
+        "agents.memory_total_max_chars",
+        "int",
+        N_("Total memory in the prompt (characters)"),
+        1400,
+        (0, 100000),
+    ),
+    (
+        "agents.memory_cross_thread_callback_min_score",
+        "float",
+        N_("Minimum score to recall another thread"),
+        0.8,
+        (0, 1),
+    ),
+    (
+        "agents.memory_rehydrate_rounds",
+        "int",
+        N_("Rehydrate window (rounds)"),
+        72,
+        (0, 100000),
+    ),
+    (
+        "agents.memory_forget_deleted",
+        "bool",
+        N_("Forget deleted messages"),
+        False,
+        None,
+    ),
+    (
+        "agents.memory_high_affect_enabled",
+        "bool",
+        N_("Recall emotionally charged episodes"),
+        False,
+        None,
+    ),
+    (
+        "agents.memory_high_affect_rule_threshold",
+        "float",
+        N_("Rule threshold"),
+        0.55,
+        (0, 1),
+    ),
+    (
+        "agents.memory_high_affect_uncertain_low",
+        "float",
+        N_("Uncertain band, low"),
+        0.35,
+        (0, 1),
+    ),
+    (
+        "agents.memory_high_affect_uncertain_high",
+        "float",
+        N_("Uncertain band, high"),
+        0.7,
+        (0, 1),
+    ),
     ("agents.memory_high_affect_search_k", "int", N_("Search top-k"), 12, (1, 1000)),
     ("agents.memory_high_affect_max_items", "int", N_("Maximum items"), 6, (1, 1000)),
-    ("agents.memory_high_affect_max_chars", "int", N_("Maximum characters"), 900, (1, 100000)),
-    ("agents.memory_high_affect_llm_fallback", "bool", N_("Ask the language model when uncertain"), True, None),
+    (
+        "agents.memory_high_affect_max_chars",
+        "int",
+        N_("Maximum characters"),
+        900,
+        (1, 100000),
+    ),
+    (
+        "agents.memory_high_affect_llm_fallback",
+        "bool",
+        N_("Ask the language model when uncertain"),
+        True,
+        None,
+    ),
 ]
 
 
@@ -293,16 +783,22 @@ def _parse_one(form, field: Field, label_of=lambda text: text):
             raise AdvancedSettingsError(f"{label_of(label)}: not a number") from None
         lo, hi = bounds
         if not lo <= value <= hi:
-            raise AdvancedSettingsError(f"{label_of(label)}: must be between {lo} and {hi}")
+            raise AdvancedSettingsError(
+                f"{label_of(label)}: must be between {lo} and {hi}"
+            )
         return value
     if kind == "choice":
         if raw not in bounds:
-            raise AdvancedSettingsError(f"{label_of(label)}: must be one of {', '.join(bounds)}")
+            raise AdvancedSettingsError(
+                f"{label_of(label)}: must be one of {', '.join(bounds)}"
+            )
         return raw
     return raw  # text
 
 
-def parse_fields(form, *, memory: bool = False, label_of=lambda text: text) -> Dict[str, Any]:
+def parse_fields(
+    form, *, memory: bool = False, label_of=lambda text: text
+) -> Dict[str, Any]:
     """The nested configuration fragment submitted by the structured form (absent fields are left out).
 
     ``memory`` says whether the agent memory fields are read: they are ignored when the experiment has memory
@@ -322,11 +818,15 @@ def _cross_checks(fragment: dict, label_of) -> None:
     high = _get_path(fragment, "agents.memory_high_affect_uncertain_high")
     if low is not None and high is not None and low > high:
         raise AdvancedSettingsError(
-            label_of(N_("The lower bound of the uncertain band cannot exceed the upper one"))
+            label_of(
+                N_("The lower bound of the uncertain band cannot exceed the upper one")
+            )
         )
 
 
-def values_from_config(config: Optional[dict], *, memory: bool = True) -> Dict[str, Any]:
+def values_from_config(
+    config: Optional[dict], *, memory: bool = True
+) -> Dict[str, Any]:
     """``{path: value}`` for every field, taking the value from ``config`` and the default otherwise."""
     config = config or {}
     return {

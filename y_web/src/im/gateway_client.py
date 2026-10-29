@@ -44,7 +44,9 @@ class GatewayClient:
         self.session = session or requests
 
     def _base(self) -> Tuple[str, str]:
-        state, token = read_gateway_state(self.exp_folder), read_gateway_token(self.exp_folder)
+        state, token = read_gateway_state(self.exp_folder), read_gateway_token(
+            self.exp_folder
+        )
         if not state or not token:
             raise GatewayUnavailable("gateway is not running")
         return f"http://{state.get('host', '127.0.0.1')}:{int(state['port'])}", token
@@ -69,7 +71,9 @@ class GatewayClient:
         from y_web.src.simulation.server import detect_env_handler
         from y_web.src.system.path_utils import get_external_repo_dir
 
-        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
+        repo_dir = get_external_repo_dir(
+            get_hpc_platform("instant_messaging").runtime_repo
+        )
         return offline_request(
             self.exp_folder,
             repo_dir,
@@ -108,7 +112,9 @@ class GatewayClient:
         )
 
     def actions(self, account_id: str, actions: list):
-        return self.request("POST", "/v1/actions", {"account_id": account_id, "actions": actions})
+        return self.request(
+            "POST", "/v1/actions", {"account_id": account_id, "actions": actions}
+        )
 
     def chats(self, account_id: str):
         return self.request("GET", "/v1/chats", params={"account_id": account_id})
@@ -126,7 +132,9 @@ class GatewayClient:
         return self.request("GET", "/v1/search", params=params)
 
     def notifications(self, account_id: str):
-        return self.request("GET", "/v1/notifications", params={"account_id": account_id})
+        return self.request(
+            "GET", "/v1/notifications", params={"account_id": account_id}
+        )
 
     def invite(self, account_id: str, chat_id: str, usage_limit=None):
         return self.request(
@@ -141,10 +149,17 @@ class GatewayClient:
             params["cursor"] = cursor
         return self.request("GET", "/v1/events", params=params)
 
-    def exposures(self, account_id: str, chat_id: str, message_ids: list, request_id: str):
+    def exposures(
+        self, account_id: str, chat_id: str, message_ids: list, request_id: str
+    ):
         """Record what a page showed to a participant (the pages read the database, not the gateway)."""
         return self.request(
             "POST",
             "/v1/exposures",
-            {"account_id": account_id, "chat_id": chat_id, "message_ids": message_ids, "request_id": request_id},
+            {
+                "account_id": account_id,
+                "chat_id": chat_id,
+                "message_ids": message_ids,
+                "request_id": request_id,
+            },
         )

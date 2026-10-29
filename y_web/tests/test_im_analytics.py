@@ -21,7 +21,9 @@ def _dump(path):
     """Every row of every table of the derived database except the build timestamp, in a stable order."""
     conn = sqlite3.connect(path)
     out = {}
-    for (name,) in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"):
+    for (name,) in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+    ):
         rows = sorted(conn.execute(f"SELECT * FROM {name}").fetchall(), key=repr)
         if name == "etl_state":
             rows = [tuple(r[:-1]) for r in rows]  # built_at differs between builds
@@ -42,7 +44,10 @@ def folder(tmp_path):
 
 def _tables(path):
     with sqlite3.connect(path) as conn:
-        return {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+        return {
+            r[0]
+            for r in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        }
 
 
 def _count(path, table, where=""):
@@ -58,18 +63,39 @@ def test_counts_match_the_source(folder):
     result = etl.refresh(path, src)
     assert result["state"] == "fresh" and result["rebuilt"] is True
     target = etl.analytics_path(path)
-    for table in ("rounds", "user_mgmt", "post", "reactions", "mentions", "post_topics", "post_hashtags",
-                  "post_toxicity", "post_sentiment", "agent_opinion", "stress_reward"):
+    for table in (
+        "rounds",
+        "user_mgmt",
+        "post",
+        "reactions",
+        "mentions",
+        "post_topics",
+        "post_hashtags",
+        "post_toxicity",
+        "post_sentiment",
+        "agent_opinion",
+        "stress_reward",
+    ):
         assert _count(target, table) == expected[table], table
-    assert _count(target, "reactions", "WHERE type = 'like'") == expected["reactions_positive"]
-    assert _count(target, "reactions", "WHERE type = 'dislike'") == expected["reactions_negative"]
+    assert (
+        _count(target, "reactions", "WHERE type = 'like'")
+        == expected["reactions_positive"]
+    )
+    assert (
+        _count(target, "reactions", "WHERE type = 'dislike'")
+        == expected["reactions_negative"]
+    )
     with sqlite3.connect(src) as source:
-        replies = source.execute("SELECT COUNT(*) FROM messages WHERE reply_to_message_id IS NOT NULL").fetchone()[0]
+        replies = source.execute(
+            "SELECT COUNT(*) FROM messages WHERE reply_to_message_id IS NOT NULL"
+        ).fetchone()[0]
     assert _count(target, "post", "WHERE comment_to != -1") == replies
     assert _count(target, "post", "WHERE comment_to = -1") == expected["post"] - replies
     # a round keeps its day and its slot (the pages call the slot "hour")
     with sqlite3.connect(target) as conn:
-        assert conn.execute("SELECT day, hour FROM rounds WHERE id = 30").fetchone() == (2, 6)
+        assert conn.execute(
+            "SELECT day, hour FROM rounds WHERE id = 30"
+        ).fetchone() == (2, 6)
 
 
 def test_tables_exist_only_when_their_data_does(tmp_path):
@@ -78,12 +104,25 @@ def test_tables_exist_only_when_their_data_does(tmp_path):
     path = tmp_path / "bare"
     path.mkdir()
     src = str(path / "database_server.db")
-    build_random_db(src, seed=3, rounds=10, messages=50)  # no annotations, topics, opinions, stress
+    build_random_db(
+        src, seed=3, rounds=10, messages=50
+    )  # no annotations, topics, opinions, stress
     etl.refresh(str(path), src)
     tables = _tables(etl.analytics_path(str(path)))
     assert {"rounds", "user_mgmt", "post", "etl_state"} <= tables
-    for absent in ("post_toxicity", "post_sentiment", "agent_opinion", "stress_reward", "post_topics",
-                   "post_hashtags", "reactions", "mentions", "post_emotions", "emotions", "recommendations"):
+    for absent in (
+        "post_toxicity",
+        "post_sentiment",
+        "agent_opinion",
+        "stress_reward",
+        "post_topics",
+        "post_hashtags",
+        "reactions",
+        "mentions",
+        "post_emotions",
+        "emotions",
+        "recommendations",
+    ):
         assert absent not in tables
 
 
@@ -93,7 +132,9 @@ def test_annotations_with_status_error_are_not_copied(folder):
     path, src, info, expected = folder
     etl.refresh(path, src)
     with sqlite3.connect(src) as source:
-        total = source.execute("SELECT COUNT(*) FROM annotations WHERE method_ref LIKE 'sentiment%'").fetchone()[0]
+        total = source.execute(
+            "SELECT COUNT(*) FROM annotations WHERE method_ref LIKE 'sentiment%'"
+        ).fetchone()[0]
     assert expected["post_sentiment"] <= total
 
 
@@ -115,13 +156,19 @@ def test_source_change_rebuilds_and_equals_a_fresh_full_build(folder, tmp_path):
     path, src, info, expected = folder
     etl.refresh(path, src)
     from sqlalchemy.orm import Session
-
     from yinstantmessaging.server.db.database import make_engine_from_url
 
     models = im_modules()[0]
     engine = make_engine_from_url(f"sqlite:///{src}")
     with Session(engine) as s:
-        s.add(models.Reaction(account_id=info["accounts"][0], message_id="m0001", emoji="👍", round_id=30))
+        s.add(
+            models.Reaction(
+                account_id=info["accounts"][0],
+                message_id="m0001",
+                emoji="👍",
+                round_id=30,
+            )
+        )
         s.commit()
     engine.dispose()
     assert etl.is_fresh(path, src) is False
@@ -195,7 +242,12 @@ def pages(im_app, tmp_path, monkeypatch):
     # these modules bound get_writable_path at import time: point them at this test's folder
     for module in (_opinion, _helpers):
         if hasattr(module, "get_writable_path"):
-            monkeypatch.setattr(module, "get_writable_path", lambda p="": os.path.join(str(tmp_path), p) if p else str(tmp_path), raising=False)
+            monkeypatch.setattr(
+                module,
+                "get_writable_path",
+                lambda p="": os.path.join(str(tmp_path), p) if p else str(tmp_path),
+                raising=False,
+            )
     monkeypatch.setattr(
         "y_web.src.system.path_utils.get_writable_path",
         lambda p="": os.path.join(str(tmp_path), p) if p else str(tmp_path),
@@ -215,8 +267,15 @@ def pages(im_app, tmp_path, monkeypatch):
     return app, client, exp_id, str(folder), src
 
 
-AVAILABLE = ("toxicity_evolution", "sentiment_evolution", "opinion_evolution", "stress_reward_evolution",
-             "topic_evolution", "hashtag_evolution", "network_analysis")
+AVAILABLE = (
+    "toxicity_evolution",
+    "sentiment_evolution",
+    "opinion_evolution",
+    "stress_reward_evolution",
+    "topic_evolution",
+    "hashtag_evolution",
+    "network_analysis",
+)
 UNAVAILABLE = ("emotion_statistics", "recsys_evolution")
 
 
@@ -235,14 +294,24 @@ def test_every_page_with_data_renders_and_the_source_is_untouched(pages):
         annotations = db.session.get(Exps, exp_id).annotations
     assert {"opinions", "sentiment", "toxicity"} <= set(annotations.split(","))
     # IM's own database is never bound as an experiment database; only the derived one is
-    assert app.config["SQLALCHEMY_BINDS"].get(f"db_exp_{exp_id}", "").endswith("analytics_im.db")
+    assert (
+        app.config["SQLALCHEMY_BINDS"]
+        .get(f"db_exp_{exp_id}", "")
+        .endswith("analytics_im.db")
+    )
 
 
 def test_data_endpoints_answer_json_for_available_pages(pages):
     app, client, exp_id, folder, src = pages
-    for page in ("toxicity_evolution_data", "sentiment_evolution_data", "opinion_evolution_data",
-                 "stress_reward_evolution_data", "topic_evolution_data", "hashtag_evolution_data",
-                 "network_analysis_data"):
+    for page in (
+        "toxicity_evolution_data",
+        "sentiment_evolution_data",
+        "opinion_evolution_data",
+        "stress_reward_evolution_data",
+        "topic_evolution_data",
+        "hashtag_evolution_data",
+        "network_analysis_data",
+    ):
         r = client.get(f"/admin/{page}/{exp_id}")
         assert r.status_code == 200 and r.get_json() is not None, (page, r.status_code)
 
@@ -259,20 +328,47 @@ def test_pages_without_their_tables_show_the_normal_unavailable_state(pages):
 
 def test_details_page_cards_follow_the_derived_tables(pages):
     app, client, exp_id, folder, src = pages
-    from y_web.src.im.experiment_config import apply_experiment_switches, load_server_config, save_server_config
+    from y_web.src.im.experiment_config import (
+        apply_experiment_switches,
+        load_server_config,
+        save_server_config,
+    )
 
     html = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
-    assert "Analytics data as of day 2, slot 6" in html and "Refresh analytics data" in html
-    for link in ("topic_evolution", "hashtag_evolution", "network_analysis"):  # always meaningful
+    assert (
+        "Analytics data as of day 2, slot 6" in html
+        and "Refresh analytics data" in html
+    )
+    for link in (
+        "topic_evolution",
+        "hashtag_evolution",
+        "network_analysis",
+    ):  # always meaningful
         assert f"/admin/{link}/{exp_id}" in html, link
-    for link in ("toxicity_evolution", "sentiment_evolution", "opinion_evolution", "stress_reward_evolution"):
-        assert f"/admin/{link}/{exp_id}" not in html, link  # optional: only when the experiment enables them
+    for link in (
+        "toxicity_evolution",
+        "sentiment_evolution",
+        "opinion_evolution",
+        "stress_reward_evolution",
+    ):
+        assert (
+            f"/admin/{link}/{exp_id}" not in html
+        ), link  # optional: only when the experiment enables them
     config = apply_experiment_switches(
-        load_server_config(folder), toxicity=True, sentiment=True, opinion=True, stress_reward=True
+        load_server_config(folder),
+        toxicity=True,
+        sentiment=True,
+        opinion=True,
+        stress_reward=True,
     )
     save_server_config(folder, config)
     html = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
-    for link in ("toxicity_evolution", "sentiment_evolution", "opinion_evolution", "stress_reward_evolution"):
+    for link in (
+        "toxicity_evolution",
+        "sentiment_evolution",
+        "opinion_evolution",
+        "stress_reward_evolution",
+    ):
         assert f"/admin/{link}/{exp_id}" in html, link
     assert f"/admin/emotion_statistics/{exp_id}" not in html
     assert f"/admin/recsys_evolution/{exp_id}" not in html
@@ -284,7 +380,10 @@ def test_refresh_action_rebuilds_and_redirects(pages):
     target = os.path.join(folder, "analytics_im.db")
     stamp = os.stat(target).st_mtime_ns
     r = client.post(f"/admin/im/analytics/{exp_id}/refresh")
-    assert r.status_code == 302 and f"/admin/experiment_details/{exp_id}" in r.headers["Location"]
+    assert (
+        r.status_code == 302
+        and f"/admin/experiment_details/{exp_id}" in r.headers["Location"]
+    )
     assert os.stat(target).st_mtime_ns != stamp  # forced rebuild
     assert client.post("/admin/im/analytics/99999/refresh").status_code == 302
 
@@ -296,17 +395,34 @@ def test_other_platforms_keep_their_resolution(im_app):
 
     app, client = im_app
     with app.app_context():
-        mb = Exps(exp_name="mb2", platform_type="microblogging", simulator_type="HPC",
-                  db_name="experiments/abc/database_server.db", owner="adm", exp_descr="d", status=0, port=5097,
-                  server="127.0.0.1", prompt_language="en")
+        mb = Exps(
+            exp_name="mb2",
+            platform_type="microblogging",
+            simulator_type="HPC",
+            db_name="experiments/abc/database_server.db",
+            owner="adm",
+            exp_descr="d",
+            status=0,
+            port=5097,
+            server="127.0.0.1",
+            prompt_language="en",
+        )
         db.session.add(mb)
         db.session.commit()
-        assert _opinion._resolve_opinion_experiment_db_name(mb).endswith("database_server.db")
+        assert _opinion._resolve_opinion_experiment_db_name(mb).endswith(
+            "database_server.db"
+        )
 
 
-def test_derived_files_are_run_artifacts_left_out_of_clones_and_downloads(folder, tmp_path):
+def test_derived_files_are_run_artifacts_left_out_of_clones_and_downloads(
+    folder, tmp_path
+):
     from y_web.src.im import analytics_etl as etl
-    from y_web.src.im.clone import clear_im_run_artifacts, is_run_artifact, snapshot_for_download
+    from y_web.src.im.clone import (
+        clear_im_run_artifacts,
+        is_run_artifact,
+        snapshot_for_download,
+    )
 
     path, src, info, expected = folder
     etl.refresh(path, src)
@@ -321,10 +437,17 @@ def test_derived_files_are_run_artifacts_left_out_of_clones_and_downloads(folder
 
 def test_pages_carry_the_note_about_slots_and_messages(pages):
     app, client, exp_id, folder, src = pages
-    for page in ("toxicity_evolution", "opinion_evolution", "stress_reward_evolution", "topic_evolution",
-                 "network_analysis"):
+    for page in (
+        "toxicity_evolution",
+        "opinion_evolution",
+        "stress_reward_evolution",
+        "topic_evolution",
+        "network_analysis",
+    ):
         html = client.get(f"/admin/{page}/{exp_id}").data.decode()
-        assert 'id="im-analytics-note"' in html and "not directly comparable" in html, page
+        assert (
+            'id="im-analytics-note"' in html and "not directly comparable" in html
+        ), page
 
 
 def test_chat_membership_becomes_follow_edges_to_the_chat_owner(folder):
@@ -347,10 +470,15 @@ def test_chat_membership_becomes_follow_edges_to_the_chat_owner(folder):
     assert expected > 0
     assert "follow" in _tables(target)
     with sqlite3.connect(target) as conn:
-        edges = conn.execute("SELECT user_id, follower_id, round, action FROM follow").fetchall()
+        edges = conn.execute(
+            "SELECT user_id, follower_id, round, action FROM follow"
+        ).fetchall()
         round_ids = {r[0] for r in conn.execute("SELECT id FROM rounds")}
     assert len({(u, f) for u, f, _r, _a in edges}) == expected
-    assert all(u != f and r in round_ids and a in {"follow", "unfollow"} for u, f, r, a in edges)
+    assert all(
+        u != f and r in round_ids and a in {"follow", "unfollow"}
+        for u, f, r, a in edges
+    )
 
 
 @pytest.mark.external_repo
@@ -380,7 +508,9 @@ def test_derived_volumes_agree_with_the_yim_analyze_activity_report(folder):
         derived = dict(conn.execute("SELECT round, COUNT(*) FROM post GROUP BY round"))
     with sqlite3.connect(src) as conn:
         live = dict(
-            conn.execute("SELECT round_id, COUNT(*) FROM messages WHERE deleted_round IS NULL GROUP BY round_id")
+            conn.execute(
+                "SELECT round_id, COUNT(*) FROM messages WHERE deleted_round IS NULL GROUP BY round_id"
+            )
         )
     assert {int(k): v for k, v in volumes["per_round"].items() if v} == live
     assert volumes["messages"] == sum(live.values())
@@ -396,8 +526,12 @@ def test_initial_opinions_set_before_round_one_are_kept_in_the_first_round(tmp_p
     src = str(path / "database_server.db")
     build_random_db(src, seed=3, rounds=10, messages=50)
     with sqlite3.connect(src) as conn:
-        account = conn.execute("SELECT id FROM accounts WHERE kind = 'agent' LIMIT 1").fetchone()[0]
-        conn.execute("INSERT OR IGNORE INTO topics (id, label, weight, status, origin) VALUES ('t-x', 'X', 1, 'catalog', 'catalog')")
+        account = conn.execute(
+            "SELECT id FROM accounts WHERE kind = 'agent' LIMIT 1"
+        ).fetchone()[0]
+        conn.execute(
+            "INSERT OR IGNORE INTO topics (id, label, weight, status, origin) VALUES ('t-x', 'X', 1, 'catalog', 'catalog')"
+        )
         conn.execute(
             "INSERT INTO agent_opinions (account_id, topic_id, value, round_id, cause_message_id, model) "
             "VALUES (?, 't-x', 0.4, 0, NULL, 'init')",
@@ -416,14 +550,18 @@ def test_the_annotator_error_is_reported_for_the_page(folder, monkeypatch):
 
     path, src, info, expected = folder
     with sqlite3.connect(src) as conn:
-        conn.execute("UPDATE annotations SET status = 'error', value = '{\"error\": \"vaderSentiment is not installed\"}' WHERE method_ref LIKE 'sentiment%'")
+        conn.execute(
+            "UPDATE annotations SET status = 'error', value = '{\"error\": \"vaderSentiment is not installed\"}' WHERE method_ref LIKE 'sentiment%'"
+        )
         conn.commit()
 
     class Exp:
         db_name = "experiments/exp/database_server.db"
 
     monkeypatch.setattr(analytics, "source_path", lambda exp: src)
-    assert "vaderSentiment is not installed" in analytics.annotation_problem(Exp(), "sentiment")
+    assert "vaderSentiment is not installed" in analytics.annotation_problem(
+        Exp(), "sentiment"
+    )
     assert analytics.annotation_problem(Exp(), "toxicity") == ""
 
 
@@ -435,7 +573,9 @@ def test_emotion_annotations_become_emotion_tables(tmp_path):
     src = str(path / "database_server.db")
     build_random_db(src, seed=3, rounds=10, messages=50)
     with sqlite3.connect(src) as conn:
-        ids = [r[0] for r in conn.execute("SELECT id FROM messages ORDER BY id LIMIT 3")]
+        ids = [
+            r[0] for r in conn.execute("SELECT id FROM messages ORDER BY id LIMIT 3")
+        ]
         conn.execute(
             "INSERT INTO annotation_methods (method_ref, method_id, version, params_hash, params) "
             "VALUES ('emotions_llm:1:x', 'emotions_llm', '1', 'x', '{}')"
@@ -456,4 +596,6 @@ def test_emotion_annotations_become_emotion_tables(tmp_path):
         names = dict(conn.execute("SELECT id, emotion FROM emotions"))
         links = conn.execute("SELECT emotion_id FROM post_emotions").fetchall()
     assert sorted(names.values()) == ["approval", "curiosity"]
-    assert len(links) == 3  # two labels on the first post, one on the second, none for the failed one
+    assert (
+        len(links) == 3
+    )  # two labels on the first post, one on the second, none for the failed one

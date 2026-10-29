@@ -48,7 +48,9 @@ def selected_feeds(exp_folder: str) -> List[Dict[str, str]]:
         url = str((item or {}).get("feed_url") or "").strip()
         if url and url not in seen:
             seen.add(url)
-            out.append({"name": str((item or {}).get("name") or "").strip(), "feed_url": url})
+            out.append(
+                {"name": str((item or {}).get("name") or "").strip(), "feed_url": url}
+            )
     return out
 
 
@@ -82,7 +84,10 @@ def feed_pages(
         names.append(username)
         urls.add(url)
         page = SimpleNamespace(
-            id=f"rss-{hashlib.sha1(url.encode()).hexdigest()[:8]}", name=username, leaning="", feed=url
+            id=f"rss-{hashlib.sha1(url.encode()).hexdigest()[:8]}",
+            name=username,
+            leaning="",
+            feed=url,
         )
         out.append(build_page(page, topics=topics, activity_profile=activity_profile))
     return out
@@ -113,5 +118,11 @@ def write_snapshot(
         os.remove(path)
     service = NewsFeedService("live", path, fetch=fetch)
     service.load(urls)
-    counts = {url: len(service._articles.get(url, [])) for url in urls}  # noqa: SLF001 - the runtime's own loader
-    return {"articles": sum(counts.values()), "feeds": counts, "written": os.path.exists(path)}
+    counts = {
+        url: len(service._articles.get(url, [])) for url in urls
+    }  # noqa: SLF001 - the runtime's own loader
+    return {
+        "articles": sum(counts.values()),
+        "feeds": counts,
+        "written": os.path.exists(path),
+    }

@@ -9,17 +9,28 @@ from typing import Any, Dict, Optional
 
 _TAIL_BYTES = 262144
 
+
 def exit_messages():
     """Message per exit code of the client, in the words an administrator needs (translated)."""
     from y_web.i18n import gettext as _
 
     return {
         1: _("Unexpected error in the client: see the execution log."),
-        2: _("Invalid configuration or a missing required plugin: fix the client settings and start again."),
-        3: _("The server was not ready or not reachable, or its actor is dead: start the experiment server first."),
-        4: _("The database is unusable, a migration failed or its schema is newer than the installed runtime."),
-        5: _("Too many language-model sessions failed in a round: check that the LLM server and model are reachable. The client resumes from the round it did not close."),
-        6: _("The configuration differs from the one recorded when the run started: restore the original files or reset the experiment."),
+        2: _(
+            "Invalid configuration or a missing required plugin: fix the client settings and start again."
+        ),
+        3: _(
+            "The server was not ready or not reachable, or its actor is dead: start the experiment server first."
+        ),
+        4: _(
+            "The database is unusable, a migration failed or its schema is newer than the installed runtime."
+        ),
+        5: _(
+            "Too many language-model sessions failed in a round: check that the LLM server and model are reachable. The client resumes from the round it did not close."
+        ),
+        6: _(
+            "The configuration differs from the one recorded when the run started: restore the original files or reset the experiment."
+        ),
         130: _("The client was interrupted."),
     }
 
@@ -37,7 +48,9 @@ def _tail(path: str):
     return lines[1:] if size > _TAIL_BYTES and lines else lines
 
 
-def describe_client_failure(execution_log_path: Optional[str]) -> Optional[Dict[str, Any]]:
+def describe_client_failure(
+    execution_log_path: Optional[str],
+) -> Optional[Dict[str, Any]]:
     """The last ERROR record that carries an exit code, as ``exit_code``, ``error_type``, ``detail``, ``message``."""
     if not execution_log_path:
         return None
@@ -49,7 +62,10 @@ def describe_client_failure(execution_log_path: Optional[str]) -> Optional[Dict[
             continue
         if not isinstance(entry, dict):
             continue
-        if str(entry.get("level", "")).upper() != "ERROR" or entry.get("exit_code") is None:
+        if (
+            str(entry.get("level", "")).upper() != "ERROR"
+            or entry.get("exit_code") is None
+        ):
             continue
         found = entry
     if found is None:

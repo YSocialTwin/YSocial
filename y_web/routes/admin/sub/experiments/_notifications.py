@@ -36,7 +36,6 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import func, select
 
 from y_web import db  # , app
-from y_web.src.im import is_im_experiment
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
@@ -45,6 +44,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,

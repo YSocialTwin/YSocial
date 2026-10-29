@@ -146,7 +146,10 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
     from sqlalchemy import create_engine, insert
 
     from y_web.src import models as M
-    from y_web.src.im.engine import open_reader, check_schema  # noqa: F401  (check_schema used by open_reader)
+    from y_web.src.im.engine import (  # noqa: F401  (check_schema used by open_reader)
+        check_schema,
+        open_reader,
+    )
 
     engine = create_engine(f"sqlite:///{target_path}")
     counts: Dict[str, int] = {}
@@ -180,10 +183,20 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
         uid = {}
         first_round = {
             a: r
-            for a, r in q("SELECT sender_account_id, MIN(round_id) FROM messages GROUP BY sender_account_id")
+            for a, r in q(
+                "SELECT sender_account_id, MIN(round_id) FROM messages GROUP BY sender_account_id"
+            )
         }
         users = []
-        for index, (acc_id, kind, username, language, persona, archetype, activity) in enumerate(accounts, 1):
+        for index, (
+            acc_id,
+            kind,
+            username,
+            language,
+            persona,
+            archetype,
+            activity,
+        ) in enumerate(accounts, 1):
             uid[acc_id] = index
             p = _persona(persona)
             big5 = p.get("big_five") if isinstance(p.get("big_five"), dict) else {}
@@ -228,10 +241,14 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
             if row[3] in uid:
                 pid[row[0]] = len(kept) + 1
                 kept.append(row)
-        reaction_counts = dict(q("SELECT message_id, COUNT(*) FROM reactions GROUP BY message_id"))
+        reaction_counts = dict(
+            q("SELECT message_id, COUNT(*) FROM reactions GROUP BY message_id")
+        )
         posts = []
         for row in kept:
-            mid, text, rnd, sender, reply_to, root, fwd_origin, fwd_from, action_id = row
+            mid, text, rnd, sender, reply_to, root, fwd_origin, fwd_from, action_id = (
+                row
+            )
             me = pid[mid]
             posts.append(
                 {
@@ -242,7 +259,11 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
                     "comment_to": pid.get(reply_to, -1) if reply_to else -1,
                     "thread_id": pid.get(root, me) if root else me,
                     "client_action_id": action_id,
-                    "shared_from": pid.get(fwd_origin or fwd_from, -1) if (fwd_origin or fwd_from) else -1,
+                    "shared_from": (
+                        pid.get(fwd_origin or fwd_from, -1)
+                        if (fwd_origin or fwd_from)
+                        else -1
+                    ),
                     "reaction_count": reaction_counts.get(mid, 0),
                     "created_at": datetime(2000, 1, 1),
                 }
@@ -278,19 +299,27 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
         ):
             if owner not in uid or member not in uid:
                 continue
-            rec = pairs.setdefault((owner, member), {"joined": None, "left": [], "open": False})
+            rec = pairs.setdefault(
+                (owner, member), {"joined": None, "left": [], "open": False}
+            )
             joined = joined if joined in round_set else first_round
-            rec["joined"] = joined if rec["joined"] is None else min(rec["joined"], joined)
+            rec["joined"] = (
+                joined if rec["joined"] is None else min(rec["joined"], joined)
+            )
             if left is None:
                 rec["open"] = True
             else:
                 rec["left"].append(left if left in round_set else joined)
         follow_rows = []
-        for (owner, member), rec in sorted(pairs.items(), key=lambda kv: (kv[1]["joined"], kv[0])):
+        for (owner, member), rec in sorted(
+            pairs.items(), key=lambda kv: (kv[1]["joined"], kv[0])
+        ):
             base = {"user_id": uid[owner], "follower_id": uid[member]}
             follow_rows.append({**base, "round": rec["joined"], "action": "follow"})
             if not rec["open"] and rec["left"]:
-                follow_rows.append({**base, "round": max(rec["left"]), "action": "unfollow"})
+                follow_rows.append(
+                    {**base, "round": max(rec["left"]), "action": "unfollow"}
+                )
         if round_ids:
             put(M.Follow, follow_rows)
 
@@ -299,8 +328,15 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
         put(
             M.Mentions,
             (
-                {"user_id": uid[acc], "post_id": pid[mid], "round": mention_rounds.get(mid, 0), "answered": 0}
-                for mid, acc in q("SELECT message_id, mentioned_account_id FROM mentions ORDER BY id")
+                {
+                    "user_id": uid[acc],
+                    "post_id": pid[mid],
+                    "round": mention_rounds.get(mid, 0),
+                    "answered": 0,
+                }
+                for mid, acc in q(
+                    "SELECT message_id, mentioned_account_id FROM mentions ORDER BY id"
+                )
                 if acc in uid and mid in pid
             ),
         )
@@ -310,31 +346,51 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
         tid = {t[0]: i for i, t in enumerate(topics, 1)}
         links = [
             (mid, topic)
-            for mid, topic in q("SELECT message_id, topic_id FROM message_topics ORDER BY id")
+            for mid, topic in q(
+                "SELECT message_id, topic_id FROM message_topics ORDER BY id"
+            )
             if mid in pid and topic in tid
         ]
         used_topics = {t for _m, t in links}
-        opinion_rows = q("SELECT account_id, topic_id, value, round_id, cause_message_id FROM agent_opinions ORDER BY id")
+        opinion_rows = q(
+            "SELECT account_id, topic_id, value, round_id, cause_message_id FROM agent_opinions ORDER BY id"
+        )
         used_topics |= {r[1] for r in opinion_rows if r[1] in tid}
         if used_topics:
             put(
                 M.Interests,
-                ({"iid": tid[t[0]], "interest": _text(t[1])[:20]} for t in topics if t[0] in used_topics),
+                (
+                    {"iid": tid[t[0]], "interest": _text(t[1])[:20]}
+                    for t in topics
+                    if t[0] in used_topics
+                ),
             )
-        put(M.Post_topics, ({"post_id": pid[mid], "topic_id": tid[t]} for mid, t in links))
+        put(
+            M.Post_topics,
+            ({"post_id": pid[mid], "topic_id": tid[t]} for mid, t in links),
+        )
         hashtags = q("SELECT id, hashtag FROM hashtags ORDER BY id")
         hid = {h[0]: i for i, h in enumerate(hashtags, 1)}
         hlinks = [
             (mid, h)
-            for mid, h in q("SELECT message_id, hashtag_id FROM message_hashtags ORDER BY message_id, hashtag_id")
+            for mid, h in q(
+                "SELECT message_id, hashtag_id FROM message_hashtags ORDER BY message_id, hashtag_id"
+            )
             if mid in pid and h in hid
         ]
         if hlinks:
             put(
                 M.Hashtags,
-                ({"id": hid[h[0]], "hashtag": _text(h[1])[:20]} for h in hashtags if h[0] in {x for _m, x in hlinks}),
+                (
+                    {"id": hid[h[0]], "hashtag": _text(h[1])[:20]}
+                    for h in hashtags
+                    if h[0] in {x for _m, x in hlinks}
+                ),
             )
-        put(M.Post_hashtags, ({"post_id": pid[mid], "hashtag_id": hid[h]} for mid, h in hlinks))
+        put(
+            M.Post_hashtags,
+            ({"post_id": pid[mid], "hashtag_id": hid[h]} for mid, h in hlinks),
+        )
 
         # --- annotations ----------------------------------------------------------------------
         def annotation_rows(prefix):
@@ -348,12 +404,29 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
         seen = set()
         tox = []
         for mid, value in annotation_rows("toxicity"):
-            if mid in pid and pid[mid] not in seen:  # the first method (by name) wins when several ran
+            if (
+                mid in pid and pid[mid] not in seen
+            ):  # the first method (by name) wins when several ran
                 seen.add(pid[mid])
                 v = _persona(value)
-                tox.append({"post_id": pid[mid], **{k: float(v.get(k, 0) or 0) for k in (
-                    "toxicity", "severe_toxicity", "identity_attack", "insult", "profanity", "threat",
-                    "sexually_explicit", "flirtation")}})
+                tox.append(
+                    {
+                        "post_id": pid[mid],
+                        **{
+                            k: float(v.get(k, 0) or 0)
+                            for k in (
+                                "toxicity",
+                                "severe_toxicity",
+                                "identity_attack",
+                                "insult",
+                                "profanity",
+                                "threat",
+                                "sexually_explicit",
+                                "flirtation",
+                            )
+                        },
+                    }
+                )
         put(M.Post_Toxicity, tox)
         seen = set()
         sent = []
@@ -391,10 +464,22 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
                 continue
             seen.add(pid[mid])
             labels = _persona(value).get("emotions")
-            for label in dict.fromkeys(_text(x)[:20] for x in (labels if isinstance(labels, list) else []) if _text(x)):
+            for label in dict.fromkeys(
+                _text(x)[:20]
+                for x in (labels if isinstance(labels, list) else [])
+                if _text(x)
+            ):
                 emotion_ids.setdefault(label, len(emotion_ids) + 1)
-                emotion_links.append({"post_id": pid[mid], "emotion_id": emotion_ids[label]})
-        put(M.Emotions, ({"id": i, "emotion": label, "icon": ""} for label, i in emotion_ids.items()))
+                emotion_links.append(
+                    {"post_id": pid[mid], "emotion_id": emotion_ids[label]}
+                )
+        put(
+            M.Emotions,
+            (
+                {"id": i, "emotion": label, "icon": ""}
+                for label, i in emotion_ids.items()
+            ),
+        )
         put(M.Post_emotions, emotion_links)
 
         # --- opinions, stress/reward ----------------------------------------------------------
@@ -402,7 +487,11 @@ def _build(source_path: str, target_path: str) -> Dict[str, int]:
 
         def opinion_round(rnd):
             """The initial opinions (set at creation, before round 1) are placed in the first round."""
-            return rnd if rnd in round_ids else (first_round if rnd is not None and rnd < first_round else None)
+            return (
+                rnd
+                if rnd in round_ids
+                else (first_round if rnd is not None and rnd < first_round else None)
+            )
 
         put(
             M.Agent_Opinion,
@@ -476,7 +565,11 @@ def is_fresh(exp_folder: str, source_path: str) -> bool:
             ).fetchone()
     except sqlite3.Error:
         return False
-    return bool(row) and row[0] == source_signature(source_path) and row[1] == ANALYTICS_SCHEMA_VERSION
+    return (
+        bool(row)
+        and row[0] == source_signature(source_path)
+        and row[1] == ANALYTICS_SCHEMA_VERSION
+    )
 
 
 def refresh(exp_folder: str, source_path: str, force: bool = False) -> Dict[str, Any]:
@@ -501,12 +594,25 @@ def refresh(exp_folder: str, source_path: str, force: bool = False) -> Dict[str,
         try:
             counts = _build(source_path, temp)
             os.replace(temp, target)
-        except Exception as exc:  # a message for the admin, not a stack trace; the old file stays
+        except (
+            Exception
+        ) as exc:  # a message for the admin, not a stack trace; the old file stays
             if os.path.exists(temp):
                 os.remove(temp)
-            _write_status(exp_folder, state="failed", message=str(exc) or exc.__class__.__name__)
-            return {"state": "failed", "message": str(exc) or exc.__class__.__name__, "rebuilt": False}
+            _write_status(
+                exp_folder, state="failed", message=str(exc) or exc.__class__.__name__
+            )
+            return {
+                "state": "failed",
+                "message": str(exc) or exc.__class__.__name__,
+                "rebuilt": False,
+            }
         _write_status(exp_folder, state="ok")
-        return {"state": "fresh", "rebuilt": True, "counts": counts, "seconds": round(time.time() - started, 3)}
+        return {
+            "state": "fresh",
+            "rebuilt": True,
+            "counts": counts,
+            "seconds": round(time.time() - started, 3),
+        }
     finally:
         lock.release()

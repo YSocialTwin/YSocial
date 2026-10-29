@@ -12,7 +12,12 @@ from dataclasses import dataclass
 from typing import Optional
 
 from y_web.src.im.gateway_process import human_config, human_enabled
-from y_web.src.im.human_identity import display_name, experiment_uid, human_account_id, human_key
+from y_web.src.im.human_identity import (
+    display_name,
+    experiment_uid,
+    human_account_id,
+    human_key,
+)
 
 PARTICIPANT_ROLES = ("user", "student")
 CSRF_SESSION_KEY = "im_csrf"
@@ -55,8 +60,12 @@ class Participant:
     key: str
     account_id: str
     exp_folder: str
-    edits: bool = False  # the run allows editing and deleting own messages (``telegram.edits.enabled``)
-    create_chats: bool = True  # ``human.chat_creation.enabled``: the person may start channels, groups and chats
+    edits: bool = (
+        False  # the run allows editing and deleting own messages (``telegram.edits.enabled``)
+    )
+    create_chats: bool = (
+        True  # ``human.chat_creation.enabled``: the person may start channels, groups and chats
+    )
     private_groups: bool = True  # ... invite-only groups
     direct_chats: bool = True  # ... one-to-one chats
 
@@ -64,7 +73,9 @@ class Participant:
 def experiment_folder(exp) -> str:
     from y_web.src.system.path_utils import get_writable_path
 
-    return os.path.join(get_writable_path(), "y_web", "experiments", experiment_uid(exp))
+    return os.path.join(
+        get_writable_path(), "y_web", "experiments", experiment_uid(exp)
+    )
 
 
 def participation_on(exp, ui) -> bool:
@@ -95,7 +106,8 @@ def _chat_creation_options(folder: str) -> dict:
     except (OSError, ValueError, AttributeError):
         block = {}
     return {
-        "create_chats": bool(block.get("enabled", True)) and int(block.get("max_owned_chats", 5)) > 0,
+        "create_chats": bool(block.get("enabled", True))
+        and int(block.get("max_owned_chats", 5)) > 0,
         "private_groups": bool(block.get("allow_private_groups", True)),
         "direct_chats": bool(block.get("allow_direct", True)),
     }
@@ -103,7 +115,11 @@ def _chat_creation_options(folder: str) -> dict:
 
 def participant_for(exp, user, ui, assigned: bool) -> Optional[Participant]:
     """The participant behind ``user`` for this experiment, or ``None`` (observer only)."""
-    if user is None or getattr(user, "role", None) not in PARTICIPANT_ROLES or not assigned:
+    if (
+        user is None
+        or getattr(user, "role", None) not in PARTICIPANT_ROLES
+        or not assigned
+    ):
         return None
     if not participation_on(exp, ui):
         return None
@@ -126,7 +142,9 @@ def max_humans(exp) -> int:
 def pseudonym(user, exp_folder: Optional[str] = None) -> str:
     """The username a participant gets in the run: their own, or ``participant-<id>`` when the experiment sets
     ``human.pseudonymise_usernames`` in its ``server_config.json``."""
-    on = bool(exp_folder and human_config(exp_folder).get("pseudonymise_usernames", False))
+    on = bool(
+        exp_folder and human_config(exp_folder).get("pseudonymise_usernames", False)
+    )
     return display_name(user, pseudonymise=on)
 
 
@@ -160,7 +178,10 @@ def exposure_request_id(account_id: str, round_id, chat_id: str) -> str:
     The server records a message once per request id, so a refresh of the same chat in the same round counts
     once, while a message that arrives later, or the same chat in a later round, counts again.
     """
-    return "yweb-" + hashlib.sha256(f"{account_id}|{round_id}|{chat_id}".encode()).hexdigest()[:40]
+    return (
+        "yweb-"
+        + hashlib.sha256(f"{account_id}|{round_id}|{chat_id}".encode()).hexdigest()[:40]
+    )
 
 
 def action_allowed(ui, action_type: str) -> Optional[str]:

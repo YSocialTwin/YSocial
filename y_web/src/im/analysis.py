@@ -18,7 +18,13 @@ EXPORT_TIMEOUT_SECONDS = 600
 EXPORT_FORMATS = ("parquet", "csv")
 # reports that need no extra model and no second run; the others stay on the command line
 REPORT_COMMANDS = (
-    "activity", "cascades", "network", "homogeneity", "emergence", "created-chats", "stress-reward",
+    "activity",
+    "cascades",
+    "network",
+    "homogeneity",
+    "emergence",
+    "created-chats",
+    "stress-reward",
 )
 REPORT_MODULE = "yinstantmessaging.cli.analyze"
 REPORT_TIMEOUT_SECONDS = 900
@@ -66,7 +72,14 @@ def run_export(
         from y_web.src.system.path_utils import get_external_repo_dir
 
         repo_dir = get_external_repo_dir("YInstantMessaging")
-    cmd = _python_command() + ["-m", EXPORT_MODULE, "--config", str(folder), "--format", fmt]
+    cmd = _python_command() + [
+        "-m",
+        EXPORT_MODULE,
+        "--config",
+        str(folder),
+        "--format",
+        fmt,
+    ]
     if no_text:
         cmd.append("--no-text")
     if snapshot:
@@ -84,7 +97,13 @@ def run_export(
         return False, {"error": f"yim-export could not be run: {exc}"}
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip().splitlines()
-        return False, {"error": detail[-1] if detail else f"yim-export exited with code {proc.returncode}"}
+        return False, {
+            "error": (
+                detail[-1]
+                if detail
+                else f"yim-export exited with code {proc.returncode}"
+            )
+        }
     try:
         return True, json.loads(proc.stdout)
     except ValueError:
@@ -106,14 +125,24 @@ def run_report(
         cmd.append("--snapshot")
     try:
         proc = subprocess.run(
-            cmd, cwd=repo_dir, env=_env(repo_dir), capture_output=True, text=True,
+            cmd,
+            cwd=repo_dir,
+            env=_env(repo_dir),
+            capture_output=True,
+            text=True,
             timeout=REPORT_TIMEOUT_SECONDS,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, {"error": f"yim-analyze could not be run: {exc}"}
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip().splitlines()
-        return False, {"error": detail[-1] if detail else f"yim-analyze exited with code {proc.returncode}"}
+        return False, {
+            "error": (
+                detail[-1]
+                if detail
+                else f"yim-analyze exited with code {proc.returncode}"
+            )
+        }
     try:
         return True, json.loads(proc.stdout)
     except ValueError:
@@ -132,7 +161,9 @@ def list_artifacts(folder: str) -> Dict[str, List[Dict[str, Any]]]:
                     path = os.path.join(dirpath, name)
                     rel = os.path.relpath(path, root).replace(os.sep, "/")
                     stat = os.stat(path)
-                    rows.append({"name": rel, "size": stat.st_size, "mtime": stat.st_mtime})
+                    rows.append(
+                        {"name": rel, "size": stat.st_size, "mtime": stat.st_mtime}
+                    )
         out[kind] = sorted(rows, key=lambda r: (-r["mtime"], r["name"]))
     return out
 

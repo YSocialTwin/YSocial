@@ -17,8 +17,8 @@ from typing import Optional
 from y_web.src.im.gateway_client import (
     STATE_FILE,
     TOKEN_FILE,
-    GatewayUnavailable,
     GatewayClient,
+    GatewayUnavailable,
     read_gateway_state,
 )
 
@@ -29,7 +29,9 @@ START_TIMEOUT_SECONDS = 40
 def human_config(exp_folder: str) -> dict:
     """The ``human`` section of the experiment's ``server_config.json`` (empty when absent)."""
     try:
-        with open(os.path.join(exp_folder, "server_config.json"), encoding="utf-8") as fh:
+        with open(
+            os.path.join(exp_folder, "server_config.json"), encoding="utf-8"
+        ) as fh:
             cfg = json.load(fh)
     except (OSError, ValueError):
         return {}
@@ -64,7 +66,9 @@ def _remove(exp_folder: str, *names: str) -> None:
             pass
 
 
-def start_gateway(exp_folder: str, repo_dir: str, python_cmd: Optional[str] = None) -> Optional[int]:
+def start_gateway(
+    exp_folder: str, repo_dir: str, python_cmd: Optional[str] = None
+) -> Optional[int]:
     """Start the gateway if human participation is on; return its pid, or ``None`` (with a warning)."""
     if not human_enabled(exp_folder):
         return None
@@ -80,8 +84,12 @@ def start_gateway(exp_folder: str, repo_dir: str, python_cmd: Optional[str] = No
     script = os.path.join(repo_dir, "run_gateway.py")
     try:
         if not os.path.exists(script):
-            raise FileNotFoundError(f"{script} not found: update the instant messaging runtime")
-        kwargs = {"start_new_session": True} if not sys.platform.startswith("win") else {}
+            raise FileNotFoundError(
+                f"{script} not found: update the instant messaging runtime"
+            )
+        kwargs = (
+            {"start_new_session": True} if not sys.platform.startswith("win") else {}
+        )
         process = subprocess.Popen(
             [python_cmd or sys.executable, script, exp_folder],
             cwd=repo_dir,
@@ -100,7 +108,9 @@ def start_gateway(exp_folder: str, repo_dir: str, python_cmd: Optional[str] = No
         if process.poll() is not None:
             break
         time.sleep(0.5)
-    logger.warning("Human gateway did not become ready; the simulation continues without it")
+    logger.warning(
+        "Human gateway did not become ready; the simulation continues without it"
+    )
     stop_gateway(exp_folder, pid=process.pid)
     return None
 
@@ -141,7 +151,13 @@ def gateway_status(exp_folder: str) -> dict:
     return {"status": "running", "state": body.get("data")}
 
 
-def register_offline(exp_folder: str, repo_dir: str, key: str, username: str, python_cmd: Optional[str] = None) -> bool:
+def register_offline(
+    exp_folder: str,
+    repo_dir: str,
+    key: str,
+    username: str,
+    python_cmd: Optional[str] = None,
+) -> bool:
     """Create a human account while the server is down, through the runtime's own script; ``True`` on success."""
     script = os.path.join(repo_dir, "run_register_human.py")
     if not os.path.exists(script):
@@ -155,7 +171,9 @@ def register_offline(exp_folder: str, repo_dir: str, key: str, username: str, py
         stdin=subprocess.DEVNULL,
     )
     if done.returncode != 0:
-        logger.warning("Offline human registration failed: %s", (done.stderr or "").strip())
+        logger.warning(
+            "Offline human registration failed: %s", (done.stderr or "").strip()
+        )
     return done.returncode == 0
 
 
@@ -169,14 +187,18 @@ def offline_possible(exp_folder: str) -> bool:
     return human_enabled(exp_folder) and not server_up(exp_folder)
 
 
-def offline_request(exp_folder: str, repo_dir: str, request: dict, python_cmd: Optional[str] = None):
+def offline_request(
+    exp_folder: str, repo_dir: str, request: dict, python_cmd: Optional[str] = None
+):
     """Run one gateway request through the runtime's offline gateway; returns ``(status, payload)``.
 
     Raises ``GatewayUnavailable`` when the runtime script is missing or does not answer.
     """
     script = os.path.join(repo_dir, "run_offline_gateway.py")
     if not os.path.exists(script):
-        raise GatewayUnavailable("the instant messaging runtime has no offline gateway: update it")
+        raise GatewayUnavailable(
+            "the instant messaging runtime has no offline gateway: update it"
+        )
     try:
         done = subprocess.run(
             [python_cmd or sys.executable, script, exp_folder],
@@ -188,5 +210,11 @@ def offline_request(exp_folder: str, repo_dir: str, request: dict, python_cmd: O
         )
         answer = json.loads((done.stdout or "").strip().splitlines()[-1])
         return int(answer["status"]), answer["payload"]
-    except (OSError, ValueError, IndexError, KeyError, subprocess.SubprocessError) as exc:
+    except (
+        OSError,
+        ValueError,
+        IndexError,
+        KeyError,
+        subprocess.SubprocessError,
+    ) as exc:
         raise GatewayUnavailable(f"offline gateway failed: {exc}") from exc

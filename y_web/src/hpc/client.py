@@ -577,10 +577,11 @@ def _start_im_human_gateway(exp_folder: str) -> None:
     try:
         from y_web.src.im.gateway_process import start_gateway
         from y_web.src.simulation.server import detect_env_handler
-
         from y_web.src.system.path_utils import get_external_repo_dir
 
-        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
+        repo_dir = get_external_repo_dir(
+            get_hpc_platform("instant_messaging").runtime_repo
+        )
         start_gateway(exp_folder, repo_dir, detect_env_handler())
     except Exception as exc:  # noqa: BLE001
         print(f"Warning: human gateway not started: {exc}")
@@ -642,7 +643,11 @@ def start_hpc_client(exp, cli, population):
         agents_file = os.path.join(exp_folder, f"{population.name}.json")
         prompts_file = os.path.join(
             exp_folder,
-            "prompts_im.json" if exp.platform_type == "instant_messaging" else "prompts.json",
+            (
+                "prompts_im.json"
+                if exp.platform_type == "instant_messaging"
+                else "prompts.json"
+            ),
         )
 
     _launch_spec = find_hpc_platform(exp.platform_type)

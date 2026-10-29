@@ -28,6 +28,8 @@ def avatar_hue(key: str) -> int:
     import hashlib
 
     return int(hashlib.sha1(str(key).encode("utf-8")).hexdigest()[:6], 16) % 360
+
+
 REPLY_PREVIEW_CHARS = 160
 DEFAULT_PAGE = 30
 MAX_PAGE = 100
@@ -42,7 +44,9 @@ class ViewpointError(ValueError):
 class Viewpoint:
     kind: str = "public"
     account_id: Optional[str] = None
-    round: int = 0  # 0 = nothing exists yet; the routes pass the latest round when none is requested
+    round: int = (
+        0  # 0 = nothing exists yet; the routes pass the latest round when none is requested
+    )
 
     def __post_init__(self):
         if self.kind not in VIEWPOINT_KINDS:
@@ -66,7 +70,13 @@ def status(session: Session, after: int = 0) -> Dict[str, Any]:
     latest = latest_round(session)
     lifecycle = session.scalar(select(m.RunInfo.lifecycle).limit(1))
     day, slot = day_slot(latest) if latest else (0, 0)
-    return {"round": latest, "day": day, "slot": slot, "lifecycle": lifecycle, "changed": latest > after}
+    return {
+        "round": latest,
+        "day": day,
+        "slot": slot,
+        "lifecycle": lifecycle,
+        "changed": latest > after,
+    }
 
 
 class Reader:
@@ -79,7 +89,10 @@ class Reader:
         from yinstantmessaging.server.db.repository import Repository
 
         self.repo = Repository(session)
-        if viewpoint.kind == "account" and self.repo.account_view(viewpoint.account_id) is None:
+        if (
+            viewpoint.kind == "account"
+            and self.repo.account_view(viewpoint.account_id) is None
+        ):
             raise ViewpointError("unknown account")
         self._chats: Dict[str, Any] = {}
 
@@ -122,7 +135,9 @@ class Reader:
             self.repo.account_view(self.vp.account_id),
             self.repo.chat_view(chat.id),
             self.repo.member_view(chat.id, self.vp.account_id),
-            self.views.MessageView(msg.id, msg.chat_id, msg.round_id, msg.deleted_round),
+            self.views.MessageView(
+                msg.id, msg.chat_id, msg.round_id, msg.deleted_round
+            ),
             r,
         )
         return "visible" if ok else None
@@ -157,7 +172,9 @@ class Reader:
                 return original
         return msg.text or ""
 
-    def _item(self, msg, state, accounts, titles, reactions, urls, parents, extras=None) -> Dict[str, Any]:
+    def _item(
+        self, msg, state, accounts, titles, reactions, urls, parents, extras=None
+    ) -> Dict[str, Any]:
         day, slot = day_slot(msg.round_id)
         sender = accounts.get(msg.sender_account_id)
         parent = parents.get(msg.reply_to_message_id)
@@ -170,22 +187,32 @@ class Reader:
             "day": day,
             "slot": slot,
             "hour": slot - 1,
-            "minute": int(msg.sim_minute or 0) % 60,  # the start of the interval (tick) it was posted in: an estimate
+            "minute": int(msg.sim_minute or 0)
+            % 60,  # the start of the interval (tick) it was posted in: an estimate
             "sim_ts": msg.sim_ts.isoformat() if msg.sim_ts else None,
             "sender": (
-                {"id": sender.id, "username": sender.username, "kind": sender.kind, "hue": avatar_hue(sender.id)}
+                {
+                    "id": sender.id,
+                    "username": sender.username,
+                    "kind": sender.kind,
+                    "hue": avatar_hue(sender.id),
+                }
                 if sender is not None
                 else None
             ),
             "posted_as": titles.get(msg.posted_as_chat_id),
             "text": "" if tomb else self._text_as_of(msg),
             "deleted": tomb,
-            "edited": bool(msg.edited_round is not None and msg.edited_round <= self.vp.round),
+            "edited": bool(
+                msg.edited_round is not None and msg.edited_round <= self.vp.round
+            ),
             "media_type": msg.media_type if msg.media_type != "none" else None,
             "reply_to": (
                 {
                     "id": parent.id,
-                    "author": getattr(accounts.get(parent.sender_account_id), "username", None),
+                    "author": getattr(
+                        accounts.get(parent.sender_account_id), "username", None
+                    ),
                     "text": (parent.text or "")[:REPLY_PREVIEW_CHARS],
                 }
                 if parent is not None and parent.round_id <= self.vp.round
@@ -195,7 +222,10 @@ class Reader:
                 {
                     "chat": titles.get(msg.fwd_from_chat_id) or titles.get(origin),
                     "origin_chat": titles.get(origin),
-                    "chained": bool(msg.fwd_from_message_id and msg.fwd_from_message_id != msg.fwd_origin_message_id),
+                    "chained": bool(
+                        msg.fwd_from_message_id
+                        and msg.fwd_from_message_id != msg.fwd_origin_message_id
+                    ),
                 }
                 if (msg.fwd_from_message_id or origin)
                 else None
@@ -216,16 +246,25 @@ class Reader:
         m = self.m
         out: Dict[str, Dict[str, Any]] = {i: {} for i in ids}
         topic_rows = self.s.execute(
-            select(m.MessageTopic.message_id, m.Topic.label, m.TopicCandidate.label, m.MessageTopic.source)
+            select(
+                m.MessageTopic.message_id,
+                m.Topic.label,
+                m.TopicCandidate.label,
+                m.MessageTopic.source,
+            )
             .outerjoin(m.Topic, m.Topic.id == m.MessageTopic.topic_id)
-            .outerjoin(m.TopicCandidate, m.TopicCandidate.id == m.MessageTopic.candidate_id)
+            .outerjoin(
+                m.TopicCandidate, m.TopicCandidate.id == m.MessageTopic.candidate_id
+            )
             .where(m.MessageTopic.message_id.in_(ids))
             .order_by(m.MessageTopic.id)
         )
         for mid, label, candidate, source in topic_rows:
             name = label or candidate
             if name:
-                out[mid].setdefault("topics", []).append({"label": name, "source": source})
+                out[mid].setdefault("topics", []).append(
+                    {"label": name, "source": source}
+                )
         for mid, tag in self.s.execute(
             select(m.MessageHashtag.message_id, m.Hashtag.hashtag)
             .join(m.Hashtag, m.Hashtag.id == m.MessageHashtag.hashtag_id)
@@ -234,12 +273,16 @@ class Reader:
         ):
             out[mid].setdefault("hashtags", []).append(tag)
         for mid, name, account_id in self.s.execute(
-            select(m.Mention.message_id, m.Mention.username, m.Mention.mentioned_account_id)
+            select(
+                m.Mention.message_id, m.Mention.username, m.Mention.mentioned_account_id
+            )
             .where(m.Mention.message_id.in_(ids))
             .order_by(m.Mention.id)
         ):
             out[mid].setdefault("mentions", []).append(name)
-            if account_id:  # the profile the tag points to (an unknown username stays plain text)
+            if (
+                account_id
+            ):  # the profile the tag points to (an unknown username stays plain text)
                 out[mid].setdefault("mention_ids", {})[name] = account_id
         seen = set()
         for mid, method, value in self.s.execute(
@@ -247,7 +290,14 @@ class Reader:
             .where(m.Annotation.message_id.in_(ids), m.Annotation.status == "ok")
             .order_by(m.Annotation.method_ref)
         ):
-            kind = next((k for k in ("toxicity", "sentiment", "emotion") if str(method).startswith(k)), None)
+            kind = next(
+                (
+                    k
+                    for k in ("toxicity", "sentiment", "emotion")
+                    if str(method).startswith(k)
+                ),
+                None,
+            )
             if kind is None or (mid, kind) in seen or not isinstance(value, dict):
                 continue
             seen.add((mid, kind))  # the first method by name wins when several ran
@@ -259,14 +309,25 @@ class Reader:
             elif kind == "sentiment":
                 compound = value.get("compound")
                 if isinstance(compound, (int, float)):
-                    label = "positive" if compound >= 0.05 else "negative" if compound <= -0.05 else "neutral"
-                    ann["sentiment"] = {"label": label, "compound": round(float(compound), 3)}
+                    label = (
+                        "positive"
+                        if compound >= 0.05
+                        else "negative" if compound <= -0.05 else "neutral"
+                    )
+                    ann["sentiment"] = {
+                        "label": label,
+                        "compound": round(float(compound), 3),
+                    }
             else:
                 emotion = value.get("emotion") or value.get("label")
-                if not emotion and isinstance(value.get("emotions"), list):  # the LLM annotator's labels
+                if not emotion and isinstance(
+                    value.get("emotions"), list
+                ):  # the LLM annotator's labels
                     emotion = ", ".join(str(e) for e in value["emotions"][:3]) or None
                 if not emotion:
-                    scores = {k: v for k, v in value.items() if isinstance(v, (int, float))}
+                    scores = {
+                        k: v for k, v in value.items() if isinstance(v, (int, float))
+                    }
                     emotion = max(scores, key=scores.get) if scores else None
                 if emotion:
                     ann["emotion"] = str(emotion)
@@ -278,14 +339,24 @@ class Reader:
             return []
         msgs = [m for m, _state in rows]
         ids = [m.id for m in msgs]
-        parents = {
-            p.id: p
-            for p in self.s.scalars(
-                select(self.m.Message).where(
-                    self.m.Message.id.in_({m.reply_to_message_id for m in msgs if m.reply_to_message_id})
+        parents = (
+            {
+                p.id: p
+                for p in self.s.scalars(
+                    select(self.m.Message).where(
+                        self.m.Message.id.in_(
+                            {
+                                m.reply_to_message_id
+                                for m in msgs
+                                if m.reply_to_message_id
+                            }
+                        )
+                    )
                 )
-            )
-        } if any(m.reply_to_message_id for m in msgs) else {}
+            }
+            if any(m.reply_to_message_id for m in msgs)
+            else {}
+        )
         everyone = msgs + list(parents.values())
         accounts = self._accounts(x.sender_account_id for x in everyone)
         titles = self._titles(
@@ -296,15 +367,25 @@ class Reader:
         reactions: Dict[str, Dict[str, int]] = {}
         for message_id, emoji, count in self.s.execute(
             select(self.m.Reaction.message_id, self.m.Reaction.emoji, func.count())
-            .where(self.m.Reaction.message_id.in_(ids), self.m.Reaction.round_id <= self.vp.round)
+            .where(
+                self.m.Reaction.message_id.in_(ids),
+                self.m.Reaction.round_id <= self.vp.round,
+            )
             .group_by(self.m.Reaction.message_id, self.m.Reaction.emoji)
         ):
             reactions.setdefault(message_id, {})[emoji] = count
         urls: Dict[str, List[Dict[str, Any]]] = {}
-        for row in self.s.scalars(select(self.m.MessageUrl).where(self.m.MessageUrl.message_id.in_(ids))):
-            urls.setdefault(row.message_id, []).append({"url": row.url, "domain": row.domain})
+        for row in self.s.scalars(
+            select(self.m.MessageUrl).where(self.m.MessageUrl.message_id.in_(ids))
+        ):
+            urls.setdefault(row.message_id, []).append(
+                {"url": row.url, "domain": row.domain}
+            )
         extras = self._extras(ids)
-        return [self._item(m, state, accounts, titles, reactions, urls, parents, extras) for m, state in rows]
+        return [
+            self._item(m, state, accounts, titles, reactions, urls, parents, extras)
+            for m, state in rows
+        ]
 
     # -- chat list -------------------------------------------------------------------------
     def _member_counts(self, chat_ids: List[str]) -> Dict[str, int]:
@@ -322,20 +403,39 @@ class Reader:
         )
         return {cid: n for cid, n in rows}
 
-    def _readable_after(self, chat, ordered_desc: bool, limit: int, after_key=None, skip_own=False):
+    def _readable_after(
+        self, chat, ordered_desc: bool, limit: int, after_key=None, skip_own=False
+    ):
         """Readable messages of a chat newest (or oldest) first, optionally after a (sim_ts, id) key."""
         m = self.m
-        query = select(m.Message).where(m.Message.chat_id == chat.id, m.Message.round_id <= self.vp.round)
+        query = select(m.Message).where(
+            m.Message.chat_id == chat.id, m.Message.round_id <= self.vp.round
+        )
         if after_key is not None:
             ts, mid = after_key
-            query = query.where(or_(m.Message.sim_ts > ts, and_(m.Message.sim_ts == ts, m.Message.id > mid)))
-        order = (m.Message.sim_ts.desc(), m.Message.id.desc()) if ordered_desc else (m.Message.sim_ts, m.Message.id)
+            query = query.where(
+                or_(
+                    m.Message.sim_ts > ts,
+                    and_(m.Message.sim_ts == ts, m.Message.id > mid),
+                )
+            )
+        order = (
+            (m.Message.sim_ts.desc(), m.Message.id.desc())
+            if ordered_desc
+            else (m.Message.sim_ts, m.Message.id)
+        )
         out = []
-        for row in self.s.scalars(query.order_by(*order).execution_options(yield_per=100)):
+        for row in self.s.scalars(
+            query.order_by(*order).execution_options(yield_per=100)
+        ):
             state = self._message_state(chat, row)
             if state is None:
                 continue
-            if skip_own and self.vp.kind == "account" and row.sender_account_id == self.vp.account_id:
+            if (
+                skip_own
+                and self.vp.kind == "account"
+                and row.sender_account_id == self.vp.account_id
+            ):
                 continue
             out.append((row, state))
             if limit and len(out) >= limit:
@@ -349,10 +449,15 @@ class Reader:
             member_of = {
                 row.chat_id
                 for row in self.s.scalars(
-                    select(m.ChatMember).where(m.ChatMember.account_id == self.vp.account_id)
+                    select(m.ChatMember).where(
+                        m.ChatMember.account_id == self.vp.account_id
+                    )
                 )
                 if self.visibility.is_active_member(
-                    self.views.MemberView(row.role, {}, row.joined_round, row.left_round), self.vp.round
+                    self.views.MemberView(
+                        row.role, {}, row.joined_round, row.left_round
+                    ),
+                    self.vp.round,
                 )
             }
             chats = [c for c in chats if c.id in member_of]
@@ -363,7 +468,9 @@ class Reader:
             markers = {
                 row.chat_id: row
                 for row in self.s.scalars(
-                    select(m.ReadMarker).where(m.ReadMarker.account_id == self.vp.account_id)
+                    select(m.ReadMarker).where(
+                        m.ReadMarker.account_id == self.vp.account_id
+                    )
                 )
             }
         out = []
@@ -396,7 +503,10 @@ class Reader:
             if self.vp.kind == "account":
                 item["unread"] = self._unread(chat, markers.get(chat.id))
             out.append(item)
-        out.sort(key=lambda i: (i["last"]["round"] if i["last"] else 0, i["id"]), reverse=True)
+        out.sort(
+            key=lambda i: (i["last"]["round"] if i["last"] else 0, i["id"]),
+            reverse=True,
+        )
         return out
 
     def _unread(self, chat, marker) -> int:
@@ -408,9 +518,15 @@ class Reader:
         return len(self._readable_after(chat, False, 0, key, skip_own=True))
 
     # -- history ---------------------------------------------------------------------------
-    def history(self, chat_id: str, before: Optional[str] = None, limit: int = DEFAULT_PAGE,
-                forum_topic_id: Optional[int] = None, after: Optional[str] = None,
-                from_start: bool = False) -> Optional[Dict[str, Any]]:
+    def history(
+        self,
+        chat_id: str,
+        before: Optional[str] = None,
+        limit: int = DEFAULT_PAGE,
+        forum_topic_id: Optional[int] = None,
+        after: Optional[str] = None,
+        from_start: bool = False,
+    ) -> Optional[Dict[str, Any]]:
         """A page of the chat, newest first (the page is shown oldest first by the template).
 
         ``None`` when the chat does not exist or the viewpoint cannot open it; ``before`` is the id of the
@@ -423,7 +539,9 @@ class Reader:
             return None
         limit = max(1, min(int(limit), MAX_PAGE))
         m = self.m
-        query = select(m.Message).where(m.Message.chat_id == chat_id, m.Message.round_id <= self.vp.round)
+        query = select(m.Message).where(
+            m.Message.chat_id == chat_id, m.Message.round_id <= self.vp.round
+        )
         if forum_topic_id is not None:
             query = query.where(m.Message.forum_topic_id == forum_topic_id)
         if before is not None:
@@ -431,14 +549,19 @@ class Reader:
             if pivot is None or pivot.chat_id != chat_id:
                 return None
             query = query.where(
-                or_(m.Message.sim_ts < pivot.sim_ts, and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id < pivot.id))
+                or_(
+                    m.Message.sim_ts < pivot.sim_ts,
+                    and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id < pivot.id),
+                )
             )
         if from_start or after is not None:
             return self._history_forward(chat, query, limit, after)
         picked: List[Tuple[Any, str]] = []
         exhausted = True
         for row in self.s.scalars(
-            query.order_by(m.Message.sim_ts.desc(), m.Message.id.desc()).execution_options(yield_per=100)
+            query.order_by(
+                m.Message.sim_ts.desc(), m.Message.id.desc()
+            ).execution_options(yield_per=100)
         ):
             if len(picked) == limit:
                 exhausted = False
@@ -462,12 +585,17 @@ class Reader:
             if pivot is None or pivot.chat_id != chat.id:
                 return None
             query = query.where(
-                or_(m.Message.sim_ts > pivot.sim_ts, and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id > pivot.id))
+                or_(
+                    m.Message.sim_ts > pivot.sim_ts,
+                    and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id > pivot.id),
+                )
             )
         picked: List[Tuple[Any, str]] = []
         exhausted = True
         for row in self.s.scalars(
-            query.order_by(m.Message.sim_ts.asc(), m.Message.id.asc()).execution_options(yield_per=100)
+            query.order_by(
+                m.Message.sim_ts.asc(), m.Message.id.asc()
+            ).execution_options(yield_per=100)
         ):
             if len(picked) == limit:
                 exhausted = False
@@ -500,7 +628,10 @@ class Reader:
                 select(m.Message)
                 .where(
                     m.Message.id != root.id,
-                    or_(m.Message.thread_root_id == root.thread_root_id, m.Message.discussion_root_of == root.id),
+                    or_(
+                        m.Message.thread_root_id == root.thread_root_id,
+                        m.Message.discussion_root_of == root.id,
+                    ),
                     m.Message.round_id <= self.vp.round,
                 )
                 .order_by(m.Message.sim_ts, m.Message.id)
@@ -546,7 +677,9 @@ class Reader:
                     "role": role,
                     "joined_round": row.joined_round,
                     "left_round": row.left_round if left else None,
-                    "permissions": sorted(k for k, v in (row.permissions or {}).items() if v),
+                    "permissions": sorted(
+                        k for k, v in (row.permissions or {}).items() if v
+                    ),
                 }
             )
         return out
@@ -557,7 +690,11 @@ class Reader:
         if not self._chat_visible(chat):
             return None
         m = self.m
-        owner = self.s.get(m.Account, chat.owner_account_id) if chat.owner_account_id else None
+        owner = (
+            self.s.get(m.Account, chat.owner_account_id)
+            if chat.owner_account_id
+            else None
+        )
         topics = [
             label
             for (label,) in self.s.execute(
@@ -568,7 +705,9 @@ class Reader:
             )
         ]
         discussion = (
-            self.s.get(m.Chat, chat.linked_discussion_chat_id) if chat.linked_discussion_chat_id else None
+            self.s.get(m.Chat, chat.linked_discussion_chat_id)
+            if chat.linked_discussion_chat_id
+            else None
         )
         return {
             "id": chat.id,
@@ -581,7 +720,11 @@ class Reader:
             "origin": chat.origin,
             "created_round": chat.created_round,
             "members": self._member_counts([chat.id]).get(chat.id, 0),
-            "owner": {"id": owner.id, "username": owner.username} if owner is not None else None,
+            "owner": (
+                {"id": owner.id, "username": owner.username}
+                if owner is not None
+                else None
+            ),
             "topics": topics,
             "discussion": (
                 {"id": discussion.id, "title": discussion.title or discussion.id}
@@ -600,14 +743,23 @@ class Reader:
         r = self.vp.round
         out = []
         for row in self.s.scalars(
-            select(m.ForumTopic).where(m.ForumTopic.chat_id == chat_id).order_by(m.ForumTopic.topic_number)
+            select(m.ForumTopic)
+            .where(m.ForumTopic.chat_id == chat_id)
+            .order_by(m.ForumTopic.topic_number)
         ):
             if row.created_round is not None and row.created_round > r:
                 continue
             deleted = row.deleted_round is not None and row.deleted_round <= r
             if deleted and self.vp.kind != "overview":
                 continue
-            out.append({"id": row.id, "number": row.topic_number, "title": row.title, "deleted": deleted})
+            out.append(
+                {
+                    "id": row.id,
+                    "number": row.topic_number,
+                    "title": row.title,
+                    "deleted": deleted,
+                }
+            )
         return out
 
     # -- search ----------------------------------------------------------------------------
@@ -617,12 +769,19 @@ class Reader:
         if len(query) < 2:
             return []
         m = self.m
-        pattern = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        pattern = (
+            "%"
+            + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            + "%"
+        )
         limit = max(1, min(int(limit), MAX_SEARCH))
         picked: List[Tuple[Any, str]] = []
         stmt = (
             select(m.Message)
-            .where(m.Message.round_id <= self.vp.round, m.Message.text.ilike(pattern, escape="\\"))
+            .where(
+                m.Message.round_id <= self.vp.round,
+                m.Message.text.ilike(pattern, escape="\\"),
+            )
             .order_by(m.Message.sim_ts.desc(), m.Message.id.desc())
             .execution_options(yield_per=100)
         )
@@ -642,9 +801,18 @@ class Reader:
         return items
 
     def _like(self, query: str) -> str:
-        return "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        return (
+            "%"
+            + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            + "%"
+        )
 
-    def find_chats(self, query: str, kinds: Tuple[str, ...] = ("channel", "supergroup", "group"), limit: int = 20):
+    def find_chats(
+        self,
+        query: str,
+        kinds: Tuple[str, ...] = ("channel", "supergroup", "group"),
+        limit: int = 20,
+    ):
         """Chats the viewpoint can open whose title, @username or description contain ``query``.
 
         Unlike the chat list, an account's search also finds public chats it has not joined.
@@ -666,14 +834,18 @@ class Reader:
             )
             .order_by(m.Chat.title, m.Chat.id)
         )
-        found = [c for c in self.s.scalars(stmt) if self._chat_visible(c)][: max(1, min(int(limit), 50))]
+        found = [c for c in self.s.scalars(stmt) if self._chat_visible(c)][
+            : max(1, min(int(limit), 50))
+        ]
         counts = self._member_counts([c.id for c in found])
         mine = set()
         if self.vp.kind == "account":
             mine = {
                 row.chat_id
                 for row in self.s.scalars(
-                    select(m.ChatMember).where(m.ChatMember.account_id == self.vp.account_id)
+                    select(m.ChatMember).where(
+                        m.ChatMember.account_id == self.vp.account_id
+                    )
                 )
                 if row.role not in ("banned", "left")
                 and row.joined_round <= self.vp.round
@@ -702,7 +874,9 @@ class Reader:
         pattern = self._like(query)
         rows = []
         for acc in self.s.scalars(
-            select(m.Account).where(m.Account.username.ilike(pattern, escape="\\")).order_by(m.Account.username)
+            select(m.Account)
+            .where(m.Account.username.ilike(pattern, escape="\\"))
+            .order_by(m.Account.username)
         ):
             if acc.status == "removed":
                 continue
@@ -713,17 +887,27 @@ class Reader:
         for acc in rows:
             chats = self.s.scalars(
                 select(m.ChatMember.chat_id).where(
-                    m.ChatMember.account_id == acc.id, m.ChatMember.role.notin_(("banned", "left"))
+                    m.ChatMember.account_id == acc.id,
+                    m.ChatMember.role.notin_(("banned", "left")),
                 )
             ).all()
             if any(self._chat_visible(self._chat(cid)) for cid in chats):
-                out.append({"id": acc.id, "username": acc.username, "kind": acc.kind, "hue": avatar_hue(acc.id)})
+                out.append(
+                    {
+                        "id": acc.id,
+                        "username": acc.username,
+                        "kind": acc.kind,
+                        "hue": avatar_hue(acc.id),
+                    }
+                )
             if len(out) >= max(1, min(int(limit), 50)):
                 break
         return out
 
     # -- profile ---------------------------------------------------------------------------
-    def profile(self, account_id: str, include_persona: bool = False) -> Optional[Dict[str, Any]]:
+    def profile(
+        self, account_id: str, include_persona: bool = False
+    ) -> Optional[Dict[str, Any]]:
         account = self.s.get(self.m.Account, account_id)
         if account is None:
             return None
@@ -733,10 +917,23 @@ class Reader:
             select(self.m.ChatMember).where(self.m.ChatMember.account_id == account_id)
         ):
             chat = self._chat(row.chat_id)
-            active = row.joined_round <= r and (row.left_round is None or row.left_round > r)
-            if not active or row.role in ("banned", "left") or not self._chat_visible(chat):
+            active = row.joined_round <= r and (
+                row.left_round is None or row.left_round > r
+            )
+            if (
+                not active
+                or row.role in ("banned", "left")
+                or not self._chat_visible(chat)
+            ):
                 continue
-            chats.append({"id": chat.id, "title": chat.title or chat.id, "type": chat.type, "role": row.role})
+            chats.append(
+                {
+                    "id": chat.id,
+                    "title": chat.title or chat.id,
+                    "type": chat.type,
+                    "role": row.role,
+                }
+            )
         return {
             "id": account.id,
             "username": account.username,
@@ -773,8 +970,15 @@ class Reader:
         for variable, series in rows.items():
             series = series[-points:]
             n = max(1, len(series) - 1)
-            spark = " ".join(f"{(i / n * 100):.1f},{(22 - v * 20):.1f}" for i, (_t, v) in enumerate(series))
-            out[variable] = {"value": round(series[-1][1], 3), "round": series[-1][0], "spark": spark if len(series) > 1 else ""}
+            spark = " ".join(
+                f"{(i / n * 100):.1f},{(22 - v * 20):.1f}"
+                for i, (_t, v) in enumerate(series)
+            )
+            out[variable] = {
+                "value": round(series[-1][1], 3),
+                "round": series[-1][0],
+                "spark": spark if len(series) > 1 else "",
+            }
         return out
 
     def _opinions(self, account_id: str) -> List[Dict[str, Any]]:
@@ -782,10 +986,22 @@ class Reader:
         m = self.m
         latest: Dict[str, Any] = {}
         for topic_id, label, value, rnd in self.s.execute(
-            select(m.AgentOpinion.topic_id, m.Topic.label, m.AgentOpinion.value, m.AgentOpinion.round_id)
+            select(
+                m.AgentOpinion.topic_id,
+                m.Topic.label,
+                m.AgentOpinion.value,
+                m.AgentOpinion.round_id,
+            )
             .join(m.Topic, m.Topic.id == m.AgentOpinion.topic_id)
-            .where(m.AgentOpinion.account_id == account_id, m.AgentOpinion.round_id <= self.vp.round)
+            .where(
+                m.AgentOpinion.account_id == account_id,
+                m.AgentOpinion.round_id <= self.vp.round,
+            )
             .order_by(m.AgentOpinion.round_id, m.AgentOpinion.id)
         ):
-            latest[topic_id] = {"topic": label, "value": round(float(value), 3), "round": rnd}
+            latest[topic_id] = {
+                "topic": label,
+                "value": round(float(value), 3),
+                "round": rnd,
+            }
         return sorted(latest.values(), key=lambda o: o["topic"])

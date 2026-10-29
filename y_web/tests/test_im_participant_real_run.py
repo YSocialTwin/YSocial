@@ -50,7 +50,13 @@ def _prepare(app, env):
     cfg = json.loads(cfg_path.read_text())
     cfg["human"] = {"enabled": True, "max_humans": 3}
     cfg_path.write_text(json.dumps(cfg))
-    user = Admin_users(username="pp", email="pp@x.test", password="x", last_seen="2026-01-01", role="user")
+    user = Admin_users(
+        username="pp",
+        email="pp@x.test",
+        password="x",
+        last_seen="2026-01-01",
+        role="user",
+    )
     db.session.add(user)
     db.session.commit()
     db.session.add(User_Experiment(user_id=user.id, exp_id=exp.idexp))
@@ -61,14 +67,18 @@ def _prepare(app, env):
 def _rounds(folder):
     conn = sqlite3.connect(str(Path(folder) / "database_server.db"))
     try:
-        return conn.execute("SELECT COUNT(*) FROM rounds WHERE status='closed'").fetchone()[0]
+        return conn.execute(
+            "SELECT COUNT(*) FROM rounds WHERE status='closed'"
+        ).fetchone()[0]
     finally:
         conn.close()
 
 
 @pytest.mark.external_repo
 @pytest.mark.integration
-def test_a_participant_writes_during_a_live_run_and_the_run_completes(app, env, monkeypatch, tmp_path):
+def test_a_participant_writes_during_a_live_run_and_the_run_completes(
+    app, env, monkeypatch, tmp_path
+):
     """The gateway process, the Ray server and the simulated agents, with a person writing in between.
 
     The routes are exercised against an in-process server in ``test_im_participant.py``; here the pieces
@@ -94,34 +104,75 @@ def test_a_participant_writes_during_a_live_run_and_the_run_completes(app, env, 
             assert gp.gateway_status(str(folder))["status"] == "running"
             client = _start_client(folder, "cl")
             code, body = gw.ensure(human_key(uid, user.id), "participant-%d" % user.id)
-            assert code == 200 and body["data"]["account_id"] == human_account_id(uid, user.id)
+            assert code == 200 and body["data"]["account_id"] == human_account_id(
+                uid, user.id
+            )
             account = body["data"]["account_id"]
             sent, deadline, last, refused = None, time.time() + 150, None, None
             while client.poll() is None and time.time() < deadline and sent is None:
                 target = _first_public_message(folder)
                 if target:
                     chat_id, message_id = target
-                    gw.actions(account, [{"type": "join", "chat_id": chat_id, "client_action_id": "j1"}])
-                    if refused is None:  # a channel does not let members post: IM's permission service says no
+                    gw.actions(
+                        account,
+                        [
+                            {
+                                "type": "join",
+                                "chat_id": chat_id,
+                                "client_action_id": "j1",
+                            }
+                        ],
+                    )
+                    if (
+                        refused is None
+                    ):  # a channel does not let members post: IM's permission service says no
                         code, body = gw.actions(
                             account,
-                            [{"type": "post", "chat_id": chat_id, "text": "not allowed here", "client_action_id": "p0"}],
+                            [
+                                {
+                                    "type": "post",
+                                    "chat_id": chat_id,
+                                    "text": "not allowed here",
+                                    "client_action_id": "p0",
+                                }
+                            ],
                         )
-                        refused = code == 200 and body["data"]["outcomes"][0]["ok"] is False
+                        refused = (
+                            code == 200 and body["data"]["outcomes"][0]["ok"] is False
+                        )
                     code, body = gw.actions(
-                        account, [{"type": "react", "message_id": message_id, "emoji": "👍", "client_action_id": "r1"}]
+                        account,
+                        [
+                            {
+                                "type": "react",
+                                "message_id": message_id,
+                                "emoji": "👍",
+                                "client_action_id": "r1",
+                            }
+                        ],
                     )
                     last = (code, body)
                     if code == 200 and body["data"]["outcomes"][0]["ok"]:
                         sent = message_id
                 time.sleep(0.3)
-            assert client.wait(timeout=150) == 0, "the simulation did not complete with a human in the run"
-            assert sent, f"the participant could not act during the live run: {last} {_chat_kinds(folder)}"
+            assert (
+                client.wait(timeout=150) == 0
+            ), "the simulation did not complete with a human in the run"
+            assert (
+                sent
+            ), f"the participant could not act during the live run: {last} {_chat_kinds(folder)}"
             assert refused is True
             conn = sqlite3.connect(str(Path(folder) / "database_server.db"))
-            reaction = conn.execute("SELECT emoji FROM reactions WHERE account_id=? AND message_id=?", (account, sent)).fetchone()
-            kind = conn.execute("SELECT kind FROM accounts WHERE id=?", (account,)).fetchone()
-            posted = conn.execute("SELECT count(*) FROM messages WHERE text=?", ("not allowed here",)).fetchone()[0]
+            reaction = conn.execute(
+                "SELECT emoji FROM reactions WHERE account_id=? AND message_id=?",
+                (account, sent),
+            ).fetchone()
+            kind = conn.execute(
+                "SELECT kind FROM accounts WHERE id=?", (account,)
+            ).fetchone()
+            posted = conn.execute(
+                "SELECT count(*) FROM messages WHERE text=?", ("not allowed here",)
+            ).fetchone()[0]
             conn.close()
             assert reaction == ("👍",) and kind == ("human",) and posted == 0
             assert _rounds(folder) >= 24
@@ -164,10 +215,15 @@ def test_a_dead_gateway_does_not_stop_the_simulation(app, env, monkeypatch, tmp_
             assert pid
             client = _start_client(folder, "cl")
             time.sleep(2)
-            os.kill(read_gateway_state(str(folder))["pid"], signal.SIGKILL)  # the gateway crashes mid-run
+            os.kill(
+                read_gateway_state(str(folder))["pid"], signal.SIGKILL
+            )  # the gateway crashes mid-run
             assert client.wait(timeout=150) == 0
             assert _rounds(folder) >= 24
-            assert gp.gateway_status(str(folder))["status"] in ("stopped", "unreachable")
+            assert gp.gateway_status(str(folder))["status"] in (
+                "stopped",
+                "unreachable",
+            )
         finally:
             if client is not None and client.poll() is None:
                 client.kill()
@@ -178,14 +234,18 @@ def test_a_dead_gateway_does_not_stop_the_simulation(app, env, monkeypatch, tmp_
 def _chat_kinds(folder):
     conn = sqlite3.connect(str(Path(folder) / "database_server.db"))
     try:
-        return conn.execute("SELECT type, visibility, count(*) FROM chats GROUP BY 1,2").fetchall()
+        return conn.execute(
+            "SELECT type, visibility, count(*) FROM chats GROUP BY 1,2"
+        ).fetchall()
     finally:
         conn.close()
 
 
 @pytest.mark.external_repo
 @pytest.mark.integration
-def test_round_pacing_is_a_lower_bound_and_the_run_still_completes(app, env, monkeypatch, tmp_path):
+def test_round_pacing_is_a_lower_bound_and_the_run_still_completes(
+    app, env, monkeypatch, tmp_path
+):
     """Pilot of ``human.pace.min_round_seconds`` (O-15): 24 rounds of at least 1.5 s each, nobody waited for."""
     if not (IM_REPO / "run_server.py").is_file():
         pytest.skip("YInstantMessaging is not installed")

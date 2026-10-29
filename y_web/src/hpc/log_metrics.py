@@ -1428,7 +1428,10 @@ def monitor_hpc_client_execution_logs():
                                 f"PID {getattr(client, 'pid', None)} no longer alive "
                                 f"for client {client.name}"
                             )
-                            if getattr(exp, "platform_type", None) == "instant_messaging":
+                            if (
+                                getattr(exp, "platform_type", None)
+                                == "instant_messaging"
+                            ):
                                 from y_web.src.im.failures import failure_reason
 
                                 logged = failure_reason(execution_log_path)

@@ -20,21 +20,38 @@ IM_REPO = ROOT / "external" / "YInstantMessaging"
 def test_generated_server_config_has_the_documented_keys():
     from y_web.routes.admin.sub.experiments._im import generate_im_server_config
 
-    cfg = generate_im_server_config("exp", "/x/database_server.db", "/x/", False, 3, "2026-02-01", 6)
+    cfg = generate_im_server_config(
+        "exp", "/x/database_server.db", "/x/", False, 3, "2026-02-01", 6
+    )
     assert cfg["server_name"] == "orchestrator_server"
     assert cfg["namespace"] == "yinstantmessaging"
     assert cfg["min_to_start"] == 1
     assert cfg["timeout_seconds"] == cfg["ready_timeout_seconds"] == 180
     assert cfg["database"] == {"type": "sqlite"}
-    assert cfg["simulation"]["num_days"] == 3 and cfg["simulation"]["start_date"] == "2026-02-01"
-    assert cfg["simulation"]["enable_toxicity"] is False and cfg["simulation"]["memory_enabled"] is False
+    assert (
+        cfg["simulation"]["num_days"] == 3
+        and cfg["simulation"]["start_date"] == "2026-02-01"
+    )
+    assert (
+        cfg["simulation"]["enable_toxicity"] is False
+        and cfg["simulation"]["memory_enabled"] is False
+    )
     assert cfg["telegram"]["time"] == {"ticks_per_round": 6}
     assert cfg["telegram"]["stress_reward"]["enabled"] is False
     # the switches the experiment page reads, and the lock until the researcher confirms them
-    assert cfg["toxicity_annotation"] is False and cfg["opinion_dynamics_enabled"] is False
-    assert cfg["memory"] == {"enabled": False} and cfg["experiment_configuration_confirmed"] is False
+    assert (
+        cfg["toxicity_annotation"] is False and cfg["opinion_dynamics_enabled"] is False
+    )
+    assert (
+        cfg["memory"] == {"enabled": False}
+        and cfg["experiment_configuration_confirmed"] is False
+    )
     # humans can register at any time: the gateway is always part of the experiment
-    assert cfg["human"] == {"enabled": True, "max_humans": 50, "pace": {"min_round_seconds": 0.0}}
+    assert cfg["human"] == {
+        "enabled": True,
+        "max_humans": 50,
+        "pace": {"min_round_seconds": 0.0},
+    }
     assert cfg["logging"]["enable_server_log"] is True
     assert cfg["platform_type"] == "instant_messaging"
     assert cfg["experiment_name"] == "exp" and cfg["is_remote"] is False
@@ -50,7 +67,10 @@ def test_generated_server_config_has_the_documented_keys():
     ],
 )
 def test_generator_rejects_out_of_range_values(kwargs):
-    from y_web.routes.admin.sub.experiments._im import ImConfigError, generate_im_server_config
+    from y_web.routes.admin.sub.experiments._im import (
+        ImConfigError,
+        generate_im_server_config,
+    )
 
     with pytest.raises(ImConfigError):
         generate_im_server_config("e", "/x/db", "/x/", **kwargs)
@@ -72,7 +92,11 @@ def test_generated_folder_passes_yim_validate(tmp_path):
     if not (IM_REPO / "yinstantmessaging").is_dir():
         pytest.skip("YInstantMessaging is not installed")
     from y_web.routes.admin.sub.experiments._im import generate_im_server_config
-    from y_web.src.im.validation import ImValidationError, run_yim_validate, validate_im_folder
+    from y_web.src.im.validation import (
+        ImValidationError,
+        run_yim_validate,
+        validate_im_folder,
+    )
 
     folder = tmp_path / "exp"
     folder.mkdir()
@@ -98,7 +122,9 @@ def test_run_yim_validate_reports_unreadable_output(monkeypatch, tmp_path):
     monkeypatch.setattr(
         validation.subprocess,
         "run",
-        lambda *a, **k: SimpleNamespace(returncode=1, stdout="", stderr="Traceback\nboom"),
+        lambda *a, **k: SimpleNamespace(
+            returncode=1, stdout="", stderr="Traceback\nboom"
+        ),
     )
     valid, messages = validation.run_yim_validate(str(tmp_path), str(tmp_path))
     assert valid is False and "boom" in messages[0]
@@ -130,10 +156,14 @@ def test_im_server_command_and_validation_gate(monkeypatch, tmp_path):
     monkeypatch.setattr(hs, "get_base_path", lambda: str(base))
     monkeypatch.setattr(hs, "get_writable_path", lambda: str(writable))
     monkeypatch.setattr(hs, "build_subprocess_env", lambda: {})
-    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr(
+        "y_web.src.simulation.server.detect_env_handler", lambda: "python"
+    )
     monkeypatch.setattr(hs.db.session, "commit", lambda: None)
     monkeypatch.setattr(
-        hs, "current_app", SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite://"})
+        hs,
+        "current_app",
+        SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite://"}),
     )
     popen_calls = []
     proc = MagicMock()
@@ -153,14 +183,18 @@ def test_im_server_command_and_validation_gate(monkeypatch, tmp_path):
 
     from y_web.src.im import validation
 
-    monkeypatch.setattr(validation, "run_yim_validate", lambda *a, **k: (False, ["bad"]))
+    monkeypatch.setattr(
+        validation, "run_yim_validate", lambda *a, **k: (False, ["bad"])
+    )
     with pytest.raises(validation.ImValidationError):
         hs.start_hpc_server(exp)
     assert popen_calls == []
 
     monkeypatch.setattr(validation, "run_yim_validate", lambda *a, **k: (True, []))
     hs.start_hpc_server(exp)
-    assert popen_calls == [["python", str(repo / "run_server.py"), "--config", str(folder)]]
+    assert popen_calls == [
+        ["python", str(repo / "run_server.py"), "--config", str(folder)]
+    ]
     assert exp.server_pid == 4242
 
 
@@ -172,15 +206,23 @@ def create_env(app, monkeypatch, tmp_path):
     monkeypatch.setattr(_crud, "check_privileges", lambda *_: None)
     monkeypatch.setattr(_crud, "current_user", SimpleNamespace(username="admin", id=1))
     monkeypatch.setattr(_crud, "get_suggested_port", lambda: 5099)
-    monkeypatch.setattr("y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path))
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path)
+    )
     monkeypatch.setattr(_crud, "url_for", lambda endpoint, **kw: f"/{endpoint}")
     flashes = []
-    monkeypatch.setattr(_crud, "flash", lambda msg, cat="message": flashes.append((cat, str(msg))))
+    monkeypatch.setattr(
+        _crud, "flash", lambda msg, cat="message": flashes.append((cat, str(msg)))
+    )
     monkeypatch.setattr("y_web.src.telemetry.Telemetry", lambda **kw: MagicMock())
     # the test schema is built from the models, where ``process`` is NOT NULL (the shipped database is not)
     import functools
 
-    monkeypatch.setattr(_crud, "Jupyter_instances", functools.partial(_crud.Jupyter_instances, process=0))
+    monkeypatch.setattr(
+        _crud,
+        "Jupyter_instances",
+        functools.partial(_crud.Jupyter_instances, process=0),
+    )
     return SimpleNamespace(crud=_crud, flashes=flashes, tmp=tmp_path)
 
 
@@ -199,7 +241,13 @@ def _post_create(app, env, availability, **form):
         return env.crud.create_experiment.__wrapped__()
 
 
-AVAILABLE = {"microblogging": True, "hpc": True, "forum": True, "photo_sharing": True, "instant_messaging": True}
+AVAILABLE = {
+    "microblogging": True,
+    "hpc": True,
+    "forum": True,
+    "photo_sharing": True,
+    "instant_messaging": True,
+}
 
 
 def test_create_im_experiment_writes_config_and_no_database(app, create_env):
@@ -208,14 +256,22 @@ def test_create_im_experiment_writes_config_and_no_database(app, create_env):
 
     with app.app_context():
         # the form has no IM-specific fields: run length and start date come from the client form
-        _post_create(app, create_env, AVAILABLE, im_num_days="5", im_start_date="2026-03-01")
+        _post_create(
+            app, create_env, AVAILABLE, im_num_days="5", im_start_date="2026-03-01"
+        )
         exp = db.session.query(Exps).one()
         assert exp.platform_type == "instant_messaging" and exp.simulator_type == "HPC"
         assert exp.db_name.endswith("database_server.db") and exp.annotations == ""
         folder = create_env.tmp / "y_web" / Path(exp.db_name).parent
         cfg = json.loads((folder / "server_config.json").read_text())
-        assert cfg["simulation"]["num_days"] == 7 and cfg["simulation"]["start_date"] != "2026-03-01"
-        assert cfg["human"]["enabled"] is True and cfg["experiment_configuration_confirmed"] is False
+        assert (
+            cfg["simulation"]["num_days"] == 7
+            and cfg["simulation"]["start_date"] != "2026-03-01"
+        )
+        assert (
+            cfg["human"]["enabled"] is True
+            and cfg["experiment_configuration_confirmed"] is False
+        )
         assert not (folder / "database_server.db").exists()
         assert not (folder / "config_server.json").exists()
 
@@ -236,7 +292,10 @@ def _table_names(db_file):
 
     conn = sqlite3.connect(db_file)
     try:
-        return {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        return {
+            r[0]
+            for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        }
     finally:
         conn.close()
 
@@ -260,15 +319,23 @@ def test_real_im_server_start_stop_cycles(app, monkeypatch, tmp_path):
     folder.mkdir(parents=True)
     (folder / "server_config.json").write_text(
         json.dumps(
-            generate_im_server_config("cycle", str(folder / "database_server.db"), str(folder) + os.sep, num_days=1)
+            generate_im_server_config(
+                "cycle",
+                str(folder / "database_server.db"),
+                str(folder) + os.sep,
+                num_days=1,
+            )
         )
     )
     monkeypatch.setattr(hs, "get_writable_path", lambda *a: str(tmp_path))
     monkeypatch.setattr(hs, "get_base_path", lambda: str(ROOT))
     monkeypatch.setattr(hs, "build_subprocess_env", lambda: dict(os.environ))
-    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: sys.executable)
     monkeypatch.setattr(
-        "y_web.src.system.path_utils.get_external_repo_dir", lambda name: str(ROOT / "external" / name)
+        "y_web.src.simulation.server.detect_env_handler", lambda: sys.executable
+    )
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_external_repo_dir",
+        lambda name: str(ROOT / "external" / name),
     )
     cycles = int(os.environ.get("YSOCIAL_IM_CYCLES", "5"))
 
@@ -304,13 +371,20 @@ def test_real_im_server_start_stop_cycles(app, monkeypatch, tmp_path):
             assert "run_info" in tables and not {"user_mgmt", "post"} & tables
 
             # the YWeb guards must leave the running IM database alone
-            from y_web.src.experiment.schema import ensure_experiment_schema_for_uri, ensure_sqlite_experiment_schema
+            from y_web.src.experiment.schema import (
+                ensure_experiment_schema_for_uri,
+                ensure_sqlite_experiment_schema,
+            )
 
             assert ensure_sqlite_experiment_schema(str(db_file)) is False
             conn = sqlite3.connect(str(db_file))
             fingerprints.add(
                 hashlib.sha256(
-                    repr(conn.execute("SELECT name, sql FROM sqlite_master ORDER BY name").fetchall()).encode()
+                    repr(
+                        conn.execute(
+                            "SELECT name, sql FROM sqlite_master ORDER BY name"
+                        ).fetchall()
+                    ).encode()
                 ).hexdigest()
             )
             conn.close()
@@ -321,7 +395,10 @@ def test_real_im_server_start_stop_cycles(app, monkeypatch, tmp_path):
             db.session.expire_all()
             exp = db.session.get(Exps, exp_id)
             assert exp.server_pid is None and exp.running == 0
-            assert not any((folder / m).exists() for m in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"))
+            assert not any(
+                (folder / m).exists()
+                for m in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp")
+            )
             import psutil
 
             try:  # a zombie is a finished child that nobody waited for: not alive

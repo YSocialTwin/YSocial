@@ -9,22 +9,34 @@ from y_web import db
 from y_web.src.im.engine import ImReadError, im_modules, open_reader
 from y_web.src.im.gateway_process import gateway_status, human_config, human_enabled
 from y_web.src.im.human_identity import experiment_uid, human_account_id
-from y_web.src.models import Admin_users, User_Experiment
 from y_web.src.im.participant import experiment_folder
+from y_web.src.models import Admin_users, User_Experiment
 
 
 def humans_overview(exp) -> Dict[str, Any]:
     """``{"enabled", "config", "gateway", "humans"}``; ``None``-safe for experiments without humans."""
     folder = experiment_folder(exp)
     if not human_enabled(folder):
-        return {"enabled": False, "humans": [], "gateway": {"status": "off"}, "config": {}}
+        return {
+            "enabled": False,
+            "humans": [],
+            "gateway": {"status": "off"},
+            "config": {},
+        }
     uid = experiment_uid(exp)
-    assigned = db.session.execute(
-        select(Admin_users)
-        .join(User_Experiment, User_Experiment.user_id == Admin_users.id)
-        .where(User_Experiment.exp_id == exp.idexp, Admin_users.role.in_(("user", "student")))
-        .order_by(Admin_users.username)
-    ).scalars().all()
+    assigned = (
+        db.session.execute(
+            select(Admin_users)
+            .join(User_Experiment, User_Experiment.user_id == Admin_users.id)
+            .where(
+                User_Experiment.exp_id == exp.idexp,
+                Admin_users.role.in_(("user", "student")),
+            )
+            .order_by(Admin_users.username)
+        )
+        .scalars()
+        .all()
+    )
     rows: List[Dict[str, Any]] = [
         {
             "user": u.username,
@@ -48,7 +60,9 @@ def humans_overview(exp) -> Dict[str, Any]:
                         session.scalar(
                             select(func.count())
                             .select_from(models.Message)
-                            .where(models.Message.sender_account_id == row["account_id"])
+                            .where(
+                                models.Message.sender_account_id == row["account_id"]
+                            )
                         )
                         or 0
                     )

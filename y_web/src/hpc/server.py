@@ -552,7 +552,10 @@ def _start_im_gateway_when_ready(exp):
 
     def _run():
         try:
-            from y_web.src.hpc.client import _start_im_human_gateway, _wait_for_hpc_server_ready
+            from y_web.src.hpc.client import (
+                _start_im_human_gateway,
+                _wait_for_hpc_server_ready,
+            )
 
             _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
             _start_im_human_gateway(exp_folder)

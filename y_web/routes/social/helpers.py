@@ -688,9 +688,9 @@ def _forum_resolve_back_url(exp_id):
 # ---------------------------------------------------------------------------
 # Frontend UI settings — loaded per experiment for public-facing pages
 # ---------------------------------------------------------------------------
-from y_web.src.experiment.frontend_defaults import (  # noqa: E402
+from y_web.src.experiment.frontend_defaults import (
     DEFAULT_SETTINGS as _UI_DEFAULTS,
-)
+)  # noqa: E402
 
 
 def _load_ui_settings(exp_id: int) -> dict:

@@ -80,14 +80,18 @@ def build_topic_catalog(
         ids[name] = tid
         topics.append({"id": tid, "label": name, "weight": max(float(weight), 0.01)})
     if not topics:
-        raise ImClientFormError("the experiment has no topics: add at least one before creating a client")
+        raise ImClientFormError(
+            "the experiment has no topics: add at least one before creating a client"
+        )
     catalog: Dict[str, Any] = {"topics": topics}
     if chats:
         out = []
         for chat in chats:
             unknown = [t for t in chat["topics"] if t not in ids]
             if unknown:
-                raise ImClientFormError(f"chat '{chat['title']}': unknown topic {unknown[0]}")
+                raise ImClientFormError(
+                    f"chat '{chat['title']}': unknown topic {unknown[0]}"
+                )
             out.append({**chat, "topics": [ids[t] for t in chat["topics"]]})
         catalog["chats"] = out
     return catalog
@@ -101,25 +105,42 @@ def parse_chat_rows(form, topics_by_id: Dict[Any, str]) -> List[Dict[str, Any]]:
     Returns chats with ``topics`` as topic names, ready for :func:`build_topic_catalog`.
     """
     rows = sorted(
-        {int(m.group(1)) for key in form.keys() for m in [re.match(r"^chat\.(\d+)\.", str(key))] if m}
+        {
+            int(m.group(1))
+            for key in form.keys()
+            for m in [re.match(r"^chat\.(\d+)\.", str(key))]
+            if m
+        }
     )
     if len(rows) > MAX_CHAT_ROWS:
         raise ImClientFormError(f"at most {MAX_CHAT_ROWS} chats can be defined here")
     chats, used = [], set()
     for position, row in enumerate(rows, start=1):
-        get = lambda field, row=row: (form.get(f"chat.{row}.{field}") or "").strip()  # noqa: E731
-        topics = [name for tid, name in topics_by_id.items() if _flag(form.get(f"chat.{row}.topic.{tid}"))]
+        get = lambda field, row=row: (
+            form.get(f"chat.{row}.{field}") or ""
+        ).strip()  # noqa: E731
+        topics = [
+            name
+            for tid, name in topics_by_id.items()
+            if _flag(form.get(f"chat.{row}.topic.{tid}"))
+        ]
         title = get("title")
         if not title and not topics:
             continue
         if not title or not topics:
-            raise ImClientFormError(f"chat {position}: a title and at least one topic are required")
+            raise ImClientFormError(
+                f"chat {position}: a title and at least one topic are required"
+            )
         kind = get("type") or "channel"
         if kind not in CHAT_TYPES:
-            raise ImClientFormError(f"chat '{title}': type must be one of {', '.join(CHAT_TYPES)}")
+            raise ImClientFormError(
+                f"chat '{title}': type must be one of {', '.join(CHAT_TYPES)}"
+            )
         visibility = get("visibility") or "public"
         if visibility not in CHAT_VISIBILITIES:
-            raise ImClientFormError(f"chat '{title}': visibility must be public or private")
+            raise ImClientFormError(
+                f"chat '{title}': visibility must be public or private"
+            )
         chat_id, n = "chat-" + topic_id(title), 2
         while chat_id in used:
             chat_id = f"chat-{topic_id(title)}-{n}"
@@ -133,10 +154,16 @@ def parse_chat_rows(form, topics_by_id: Dict[Any, str]) -> List[Dict[str, Any]]:
             "topics": topics,
         }
         if get("popularity"):
-            chat["popularity"] = _num(get("popularity"), f"chat '{title}': popularity", 0, 1e6, None)
+            chat["popularity"] = _num(
+                get("popularity"), f"chat '{title}': popularity", 0, 1e6, None
+            )
         owner = get("owner")
         if owner:
-            chat["owner"] = owner if owner.startswith("page:") or owner == "auto" else f"page:{owner}"
+            chat["owner"] = (
+                owner
+                if owner.startswith("page:") or owner == "auto"
+                else f"page:{owner}"
+            )
         if kind == "channel" and _flag(form.get(f"chat.{row}.discussion")):
             chat["discussion_group"] = True
         chats.append(chat)
@@ -173,7 +200,9 @@ def parse_client_form(form, label_of=lambda text: text) -> Dict[str, Any]:
         raise ImClientFormError(f"llm_backend must be one of {', '.join(LLM_BACKENDS)}")
     api_key_env = (form.get("llm_api_key_env") or "").strip() or None
     if api_key_env and not _ENV_NAME.match(api_key_env):
-        raise ImClientFormError("llm_api_key_env must be an environment variable name, not a key")
+        raise ImClientFormError(
+            "llm_api_key_env must be an environment variable name, not a key"
+        )
     seed = _num(form.get("seed"), "seed", 0, 2**31 - 1, None, int)
     start_date = (form.get("start_date") or "").strip() or None
     if start_date:
@@ -183,29 +212,49 @@ def parse_client_form(form, label_of=lambda text: text) -> Dict[str, Any]:
             raise ImClientFormError("start_date must be a date (YYYY-MM-DD)") from None
     memory_enabled = _flag(form.get("memory_enabled"))
     try:
-        advanced = advanced_settings.parse_fields(form, memory=memory_enabled, label_of=label_of)
+        advanced = advanced_settings.parse_fields(
+            form, memory=memory_enabled, label_of=label_of
+        )
     except advanced_settings.AdvancedSettingsError as exc:
         raise ImClientFormError(str(exc)) from None
     # the model of the form is the one picked after "Fetch Models" (``llm_model``); "model" is kept as a fallback
     model = (form.get("llm_model") or form.get("user_type") or "").strip() or None
-    address = split_llm_url(form.get("llm")) or (form.get("llm_address") or "").strip() or None
+    address = (
+        split_llm_url(form.get("llm"))
+        or (form.get("llm_address") or "").strip()
+        or None
+    )
     return {
         "days": _num(form.get("days"), "days", 1, 3650, 1, int),
         "start_date": start_date,
-        "ticks_per_round": _num(form.get("ticks_per_round"), "ticks_per_round", 1, 60, None, int),
+        "ticks_per_round": _num(
+            form.get("ticks_per_round"), "ticks_per_round", 1, 60, None, int
+        ),
         "seed": seed if seed is not None else random.randint(1, 2**31 - 1),
         "backend": backend,
         "model": model,
         "address": address,
         "port": _num(form.get("llm_port"), "llm_port", 1, 65535, None, int),
         "temperature": _num(form.get("llm_temperature"), "llm_temperature", 0, 5, None),
-        "max_tokens": _num(form.get("llm_max_tokens"), "llm_max_tokens", -1, 100000, None, int),
-        "max_concurrency": _num(form.get("llm_max_concurrency"), "llm_max_concurrency", 1, 1024, None, int),
-        "timeout_seconds": _num(form.get("llm_timeout_seconds"), "llm_timeout_seconds", 1, 3600, None),
+        "max_tokens": _num(
+            form.get("llm_max_tokens"), "llm_max_tokens", -1, 100000, None, int
+        ),
+        "max_concurrency": _num(
+            form.get("llm_max_concurrency"), "llm_max_concurrency", 1, 1024, None, int
+        ),
+        "timeout_seconds": _num(
+            form.get("llm_timeout_seconds"), "llm_timeout_seconds", 1, 3600, None
+        ),
         "api_key_env": api_key_env,
         "memory_enabled": memory_enabled,
-        "stress_reward": _flag(form.get("experiment_stress_reward_enabled") or form.get("stress_reward_enabled")),
-        "opinion_enabled": _flag(form.get("experiment_opinion_dynamics_enabled") or form.get("opinion_enabled")),
+        "stress_reward": _flag(
+            form.get("experiment_stress_reward_enabled")
+            or form.get("stress_reward_enabled")
+        ),
+        "opinion_enabled": _flag(
+            form.get("experiment_opinion_dynamics_enabled")
+            or form.get("opinion_enabled")
+        ),
         "opinion_model": (form.get("opinion_model") or "bounded_confidence").strip(),
         "emotion_annotation": _flag(form.get("experiment_emotion_annotation")),
         "advanced": advanced or None,
@@ -244,7 +293,9 @@ def build_client_config(
     if settings.get("emotion_annotation"):
         simulation["emotion_annotation"] = True
     if hourly_activity:
-        simulation["hourly_activity"] = {str(h): float(v) for h, v in hourly_activity.items()}
+        simulation["hourly_activity"] = {
+            str(h): float(v) for h, v in hourly_activity.items()
+        }
 
     config: Dict[str, Any] = {
         "client_name": client_name,
@@ -286,7 +337,9 @@ def schema_errors(config: dict, schema_file: str) -> List[str]:
     validator = jsonschema.Draft7Validator(schema)
     return [
         f"{'/'.join(str(p) for p in error.absolute_path) or 'config'}: {error.message}"
-        for error in sorted(validator.iter_errors(config), key=lambda e: list(e.absolute_path))
+        for error in sorted(
+            validator.iter_errors(config), key=lambda e: list(e.absolute_path)
+        )
     ]
 
 
@@ -294,7 +347,14 @@ def _present(value) -> bool:
     return value not in (None, "")
 
 
-def build_agent(agent, *, interests: Iterable[str], activity_profile: str, structured: Optional[dict] = None, opinions_enabled: bool = False) -> Dict[str, Any]:
+def build_agent(
+    agent,
+    *,
+    interests: Iterable[str],
+    activity_profile: str,
+    structured: Optional[dict] = None,
+    opinions_enabled: bool = False,
+) -> Dict[str, Any]:
     """One entry of the IM population from a YWeb ``Agent`` row (any object with the same attributes).
 
     Only the fields IM reads are written: others would be kept in the agent's ``extra`` and end up in the
@@ -361,7 +421,11 @@ def check_unique(accounts: List[Dict[str, Any]]) -> None:
     for key in ("id", "username"):
         seen = set()
         for account in accounts:
-            value = str(account[key]).strip().lower() if key == "username" else account[key]
+            value = (
+                str(account[key]).strip().lower() if key == "username" else account[key]
+            )
             if value in seen:
-                raise ImClientFormError(f"duplicate {key} in the population: {account[key]}")
+                raise ImClientFormError(
+                    f"duplicate {key} in the population: {account[key]}"
+                )
             seen.add(value)

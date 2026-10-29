@@ -37,7 +37,6 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
-from y_web.src.im import is_im_experiment
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -47,6 +46,7 @@ from y_web.src.experiment.access import (
 from y_web.src.external_runtime import load_plugins_index
 from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -591,7 +591,9 @@ def experiment_details(uid):
                 if info:
                     client_failures[row.client_id] = info
         except Exception:
-            current_app.logger.warning("Could not read IM client failures", exc_info=True)
+            current_app.logger.warning(
+                "Could not read IM client failures", exc_info=True
+            )
 
     # HPC reset availability: only stopped experiments that already started once.
     has_started_once = _experiment_has_started_once(experiment, clients=clients)
@@ -722,7 +724,11 @@ def experiment_details(uid):
             memory_cfg = config.get("memory")
             if isinstance(memory_cfg, dict):
                 memory_module_enabled = bool(memory_cfg.get("enabled"))
-            if experiment.platform_type in {"forum", "microblogging", "instant_messaging"}:
+            if experiment.platform_type in {
+                "forum",
+                "microblogging",
+                "instant_messaging",
+            }:
                 persisted_embedding = config.get("memory_embeddings")
                 if isinstance(persisted_embedding, dict):
                     embedding_settings = {
@@ -794,7 +800,6 @@ def experiment_details(uid):
     if is_im_experiment(experiment):
         try:
             from y_web.src.im.experiment_config import read_advanced_settings
-
             from y_web.src.system.path_utils import get_writable_path
 
             im_advanced = read_advanced_settings(
@@ -819,7 +824,9 @@ def experiment_details(uid):
             from y_web.src.im.experiment_config import load_server_config, read_switches
             from y_web.src.im.participant import experiment_folder
 
-            im_switches = read_switches(load_server_config(experiment_folder(experiment)))
+            im_switches = read_switches(
+                load_server_config(experiment_folder(experiment))
+            )
         except Exception:
             im_switches = None
 
@@ -868,7 +875,6 @@ def experiment_details(uid):
         forum_avatar_settings=forum_avatar_settings,
         forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
-        
         im_analytics=im_analytics,
         im_switches=im_switches,
         im_advanced=im_advanced,

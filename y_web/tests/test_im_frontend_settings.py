@@ -25,7 +25,9 @@ IM_KEYS = {
 
 
 def _get(client, exp_id):
-    return client.get(f"/admin/frontend_settings/get_settings?exp_id={exp_id}").get_json()
+    return client.get(
+        f"/admin/frontend_settings/get_settings?exp_id={exp_id}"
+    ).get_json()
 
 
 def _save(client, exp_id, settings):
@@ -50,7 +52,12 @@ def test_defaults_and_capabilities(suites_app, logged):
     assert data["platform_type"] == "instant_messaging"
     caps = set(data["capabilities"])
     assert set(IM_KEYS) <= caps
-    assert {"interaction_post", "interaction_comment", "interaction_like", "interaction_share"} <= caps
+    assert {
+        "interaction_post",
+        "interaction_comment",
+        "interaction_like",
+        "interaction_share",
+    } <= caps
     for absent in (
         "interaction_dislike",
         "show_trending_hashtags",

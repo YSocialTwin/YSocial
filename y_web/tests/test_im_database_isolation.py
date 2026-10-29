@@ -38,7 +38,9 @@ def test_sqlite_schema_ensure_leaves_im_database_untouched(tmp_path):
     assert _fingerprint(db) == before
     names = {
         r[0]
-        for r in sqlite3.connect(db).execute("SELECT name FROM sqlite_master WHERE type='table'")
+        for r in sqlite3.connect(db).execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
     }
     assert names == {"run_info"}
 
@@ -50,7 +52,9 @@ def test_sqlite_schema_ensure_still_builds_a_ysocial_database(tmp_path):
     assert ensure_sqlite_experiment_schema(db) is True
     names = {
         r[0]
-        for r in sqlite3.connect(db).execute("SELECT name FROM sqlite_master WHERE type='table'")
+        for r in sqlite3.connect(db).execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
     }
     assert "rounds" in names and "run_info" not in names
 
@@ -61,11 +65,19 @@ def test_open_experiment_session_does_not_create_tables_for_im(tmp_path, monkeyp
     db = str(tmp_path / "im.db")
     _make_im_db(db)
     before = _fingerprint(db)
-    monkeypatch.setattr(helpers, "_experiment_engine_uri", lambda exp: f"sqlite:///{db}")
+    monkeypatch.setattr(
+        helpers, "_experiment_engine_uri", lambda exp: f"sqlite:///{db}"
+    )
     called = []
-    monkeypatch.setattr(helpers, "_ensure_experiment_orm_tables", lambda e: called.append(1))
-    monkeypatch.setattr(helpers, "_ensure_photo_sharing_orm_tables", lambda *a: called.append(2))
-    monkeypatch.setattr(helpers, "ensure_experiment_schema_for_uri", lambda u: called.append(3))
+    monkeypatch.setattr(
+        helpers, "_ensure_experiment_orm_tables", lambda e: called.append(1)
+    )
+    monkeypatch.setattr(
+        helpers, "_ensure_photo_sharing_orm_tables", lambda *a: called.append(2)
+    )
+    monkeypatch.setattr(
+        helpers, "ensure_experiment_schema_for_uri", lambda u: called.append(3)
+    )
     session, engine = helpers.open_experiment_session(
         SimpleNamespace(platform_type="instant_messaging")
     )

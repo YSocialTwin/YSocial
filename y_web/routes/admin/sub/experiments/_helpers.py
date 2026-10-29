@@ -40,7 +40,6 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db
-from y_web.src.im import is_im_experiment  # , app
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -55,6 +54,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment  # , app
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -691,7 +691,9 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
     if experiment.platform_type not in ("forum", "instant_messaging"):
         flash(
-            _("This page is only available for forum and instant messaging experiments."),
+            _(
+                "This page is only available for forum and instant messaging experiments."
+            ),
             "warning",
         )
         return (
@@ -730,7 +732,9 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
-    if experiment and not (agent_memory_plugin_installed() or is_im_experiment(experiment)):
+    if experiment and not (
+        agent_memory_plugin_installed() or is_im_experiment(experiment)
+    ):
         flash(_("The Agent Memory plugin is not installed."), "error")
         return (
             None,
@@ -832,7 +836,9 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
             # the configuration page follows the switch of the experiment page (IM's own keys as fallback)
             from y_web.src.im.experiment_config import load_server_config, read_switches
 
-            stress_enabled = read_switches(load_server_config(experiment_dir))["stress_reward"]
+            stress_enabled = read_switches(load_server_config(experiment_dir))[
+                "stress_reward"
+            ]
         else:
             # the results are offered when the derived database holds stress/reward rows
             from y_web.src.im import analytics as im_analytics

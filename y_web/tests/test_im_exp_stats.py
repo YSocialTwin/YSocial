@@ -20,7 +20,9 @@ def test_counts_match_the_database_and_leave_it_untouched(tmp_path):
     with sqlite3.connect(src) as conn:
         one = lambda q: conn.execute(q).fetchone()[0] or 0  # noqa: E731
         assert counts["rounds"] == one("SELECT MAX(id) FROM rounds")
-        assert counts["agents"] == one("SELECT COUNT(*) FROM accounts WHERE kind='agent'")
+        assert counts["agents"] == one(
+            "SELECT COUNT(*) FROM accounts WHERE kind='agent'"
+        )
         assert counts["posts"] == one("SELECT COUNT(*) FROM messages") > 0
         assert counts["reactions"] == one("SELECT COUNT(*) FROM reactions")
         assert counts["mentions"] == one("SELECT COUNT(*) FROM mentions")

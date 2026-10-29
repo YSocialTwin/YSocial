@@ -811,7 +811,8 @@ def _persist_im_opinion_dynamics(context):
                 "model_name": update_rule,
                 "parameters": parameters,
                 "opinion_groups": _build_opinion_groups_dict(),
-                "inject_into_prompt": request.form.get("im_inject_into_prompt", "1") != "0",
+                "inject_into_prompt": request.form.get("im_inject_into_prompt", "1")
+                != "0",
                 "topic_source": (
                     "annotated"
                     if request.form.get("im_topic_source") == "annotated"

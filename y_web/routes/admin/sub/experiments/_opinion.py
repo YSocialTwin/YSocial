@@ -4356,7 +4356,9 @@ def _network_graph_metrics(graph):
 def _available_network_analysis_types(db_path):
     available = []
     if not db_path or not os.path.exists(db_path):
-        return available  # nothing built yet: the page shows its normal unavailable state
+        return (
+            available  # nothing built yet: the page shows its normal unavailable state
+        )
     with sqlite3.connect(db_path) as conn:
         table_names = {
             row["name"] if isinstance(row, sqlite3.Row) else row[0]
@@ -7573,9 +7575,14 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
 def _im_annotation_problem(experiment, label):
     """For an instant messaging experiment: the error its annotator stored (a missing library, say), else ''."""
     try:
-        from y_web.src.im import analytics as im_analytics, is_im_experiment
+        from y_web.src.im import analytics as im_analytics
+        from y_web.src.im import is_im_experiment
 
-        return im_analytics.annotation_problem(experiment, label) if is_im_experiment(experiment) else ""
+        return (
+            im_analytics.annotation_problem(experiment, label)
+            if is_im_experiment(experiment)
+            else ""
+        )
     except Exception:  # noqa: BLE001 - an explanation is a convenience
         return ""
 
