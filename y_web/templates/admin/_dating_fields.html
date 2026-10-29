@@ -1,0 +1,23 @@
+{# Controls generated from a JSON Schema of the dating runtime. f: schema_forms.Field; values: text of every control by path. #}
+{% macro dating_field(f, values, disabled=False) %}
+<div class="box-line" title="{{ f.description }}">
+    <span class="left">{{ f.path.split('.')[-1] | replace('_', ' ') | capitalize }}</span>
+    <span class="right ys-w-70">
+    {%- if f.kind == 'bool' -%}
+        <input type="hidden" name="{{ f.name }}__present" value="1">
+        <input type="checkbox" name="{{ f.name }}" value="true" {% if values[f.path] == 'True' %}checked{% endif %} {% if disabled %}disabled{% endif %}>
+    {%- elif f.kind == 'choice' -%}
+        <div class="select"><select name="{{ f.name }}" {% if disabled %}disabled{% endif %}>
+            {% for choice in f.choices %}<option value="{{ choice }}" {% if choice|string == values[f.path] %}selected{% endif %}>{{ choice }}</option>{% endfor %}
+        </select></div>
+    {%- elif f.kind in ('int', 'float') -%}
+        <input type="number" name="{{ f.name }}" class="input" step="{{ '1' if f.kind == 'int' else 'any' }}" {% if f.minimum is not none %}min="{{ f.minimum }}"{% endif %} {% if f.maximum is not none %}max="{{ f.maximum }}"{% endif %} value="{{ values[f.path] }}" {% if disabled %}disabled{% endif %}>
+    {%- elif f.kind == 'json' -%}
+        <textarea name="{{ f.name }}" class="textarea" rows="2" {% if disabled %}disabled{% endif %}>{{ values[f.path] }}</textarea>
+    {%- else -%}
+        <input type="text" name="{{ f.name }}" class="input" value="{{ values[f.path] }}" {% if disabled %}disabled{% endif %}>
+    {%- endif -%}
+    </span>
+</div>
+<p class="ys-label-hint">{{ f.description }}</p>
+{% endmacro %}

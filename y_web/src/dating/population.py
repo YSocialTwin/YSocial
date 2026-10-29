@@ -147,7 +147,8 @@ def read_upload(raw: bytes) -> Any:
 
 def clean_name(value: Optional[str]) -> str:
     name = re.sub(r"\s+", " ", (value or "").strip())
-    return name[:50]
+    name = "".join(ch for ch in name if ch not in '/\\:*?"<>|')
+    return name[:50].strip()
 
 
 def store(base_dir: str, population_id: int, data: Dict[str, Any]) -> str:

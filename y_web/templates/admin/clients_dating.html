@@ -1,0 +1,89 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+{% from "admin/_dating_fields.html" import dating_field %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }}
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a>
+                        &gt; {{ _('Create New Dating Client') }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box" id="box-new-client">
+                        <h3 class="title is-5 is-thin">{{ _('New Dating Client') }}</h3>
+                        <div class="box-content">
+                            <form action="/admin/create_dating_client" method="POST" onsubmit="showLoading('Creating dating client...');">
+                                <div class="box-lines">
+                                    <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
+                                    <div class="ys-note-box">
+                                        {{ _('A client is a group of agents (the population) that swipe, match and talk in this experiment. Choose the population and how long it runs; every advanced setting below has a default taken from the dating runtime: leave it untouched if you do not need it. The slot length, the recommender and the quotas are experiment settings.') }}
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Name') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="name" class="input" required maxlength="50"></span>
+                                    </div>
+{% set prompt_scope = 'client' %}{% include 'admin/_prompt_language.html' %}
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Description') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="descr" class="input"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Population') }}</span>
+                                        <span class="right ys-w-70">
+                                            <div class="select is-fullwidth"><select name="population_id" required>
+                                                {% for p in populations %}<option value="{{ p.id }}">{{ p.name }} ({{ p.size }})</option>{% endfor %}
+                                            </select></div>
+                                        </span>
+                                    </div>
+                                    {% if not populations %}
+                                    <p class="ys-label-hint">{{ _('No dating population is available.') }} <a href="/admin/dating_populations">{{ _('Dating populations') }}</a>
+                                    {% if incompatible_population_count %}({{ _('%(n)s populations for other platforms are hidden.', n=incompatible_population_count) }}){% endif %}</p>
+                                    {% endif %}
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Days') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="num_days" class="input" min="-1" value="1" required></span>
+                                    </div>
+                                    <p class="ys-label-hint">{{ _('One day has %(n)s slots (a round each). -1 runs until stopped.', n=slots_per_day) }}</p>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Memory') }}</span>
+                                        <span class="right ys-w-70">{{ _('On') if switches.memory else _('Off') }} ({{ _('Experiment Configuration') }})</span>
+                                    </div>
+
+                                    <h4 class="title is-6">{{ _('Advanced settings') }}</h4>
+                                    <p class="ys-label-hint">{{ _('Generated from the configuration schema of the dating runtime.') }}</p>
+                                    {% for group, group_fields in adv_groups.items() %}
+                                    <details class="ys-adv-group" id="adv-{{ group }}">
+                                        <summary>{{ group | replace('_', ' ') | capitalize }}</summary>
+                                        {% for f in group_fields %}{{ dating_field(f, adv_values) }}{% endfor %}
+                                    </details>
+                                    {% endfor %}
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" {% if not populations %}disabled{% endif %}>{{ _('Create client') }}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="sidebar-box">
+                        <h3>{{ _('Experiment settings') }}</h3>
+                        <p class="ys-label-hint">{{ _('Recommender, daily quotas, lifecycle and conversation parameters belong to the experiment.') }}</p>
+                        <a class="button is-solid primary-button is-fullwidth" href="/admin/dating_settings/{{ experiment.idexp }}">{{ _('Open advanced settings') }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

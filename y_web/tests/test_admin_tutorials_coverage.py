@@ -27,6 +27,9 @@ PARTIALS = {
     "experiment_details_dating",
     "dating_populations",
     "dating_population_details",
+    "_dating_fields",
+    "clients_dating",
+    "dating_settings",
     "_im_analytics_note",
     "select_experiment_unused",
 }

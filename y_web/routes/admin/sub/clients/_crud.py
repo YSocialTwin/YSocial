@@ -1734,6 +1734,8 @@ def clients(idexp):
     if experiment_mode == "hpc":
         if getattr(exp, "platform_type", None) == "instant_messaging":
             return redirect(url_for("clientsr.clients_im", idexp=idexp))
+        if getattr(exp, "platform_type", None) == "dating":
+            return redirect(url_for("clientsr.clients_dating", idexp=idexp))
         if getattr(exp, "platform_type", None) == "photo_sharing":
             return redirect(url_for("clientsr.clients_photo", idexp=idexp))
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
@@ -1809,6 +1811,8 @@ def clients_hpc(idexp):
         return redirect(url_for("experiments.settings"))
     if exp.platform_type == "instant_messaging":
         return redirect(url_for("clientsr.clients_im", idexp=idexp))
+    if exp.platform_type == "dating":
+        return redirect(url_for("clientsr.clients_dating", idexp=idexp))
     if exp.platform_type == "photo_sharing":
         return redirect(url_for("clientsr.clients_photo", idexp=idexp))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
@@ -6441,6 +6445,8 @@ def create_hpc_client_route():
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
     if exp.platform_type == "instant_messaging":
         return redirect(url_for("clientsr.clients_im", idexp=exp_id))
+    if exp.platform_type == "dating":
+        return redirect(url_for("clientsr.clients_dating", idexp=exp_id))
     if exp.platform_type == "photo_sharing" and not population_id:
         flash(_("Select a valid population."), "error")
         return redirect(url_for("clientsr.clients_photo", idexp=exp_id))

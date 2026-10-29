@@ -1,0 +1,73 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+{% from "admin/_dating_fields.html" import dating_field %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }}
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a>
+                        &gt; {{ _('Dating advanced settings') }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-9">
+                    <div class="dashboard-box" id="box-dating-settings">
+                        <h3 class="title is-5 is-thin">{{ _('Advanced settings') }}</h3>
+                        {% if locked %}
+                        <div class="ys-note-box" id="dating-settings-locked">{{ _('The experiment has started: the settings that shape the run are locked. To change them, clone the experiment or reset it.') }}</div>
+                        {% endif %}
+                        <div class="box-content">
+                            <form action="/admin/update_dating_settings/{{ experiment.idexp }}" method="POST">
+                                <div class="box-lines">
+                                    <h4 class="title is-6">{{ _('Recommender') }}</h4>
+                                    <p class="ys-label-hint">{{ _('The model that proposes the cards. Agents may have their own model in the population; the others use this one.') }}</p>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Default model') }}</span>
+                                        <span class="right ys-w-70">
+                                            <div class="select is-fullwidth"><select name="matching_default_model" {% if locked or not can_manage %}disabled{% endif %}>
+                                                {% for m in models %}<option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
+                                            </select></div>
+                                        </span>
+                                    </div>
+                                    <details>
+                                        <summary>{{ _('Common parameters') }}</summary>
+                                        {% for f in common %}{{ dating_field(f, values, locked or not can_manage) }}{% endfor %}
+                                    </details>
+                                    {% for m in models %}
+                                    {% if model_fields[m] %}
+                                    <details id="recsys-{{ m }}">
+                                        <summary>{{ _('Parameters of %(m)s', m=m) }}</summary>
+                                        {% for f in model_fields[m] %}{{ dating_field(f, values, locked or not can_manage) }}{% endfor %}
+                                    </details>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                    {% for group, group_fields in groups.items() %}
+                                    <details id="srv-{{ group }}">
+                                        <summary>{{ group | replace('_', ' ') | capitalize }}</summary>
+                                        {% for f in group_fields %}{{ dating_field(f, values, locked or not can_manage) }}{% endfor %}
+                                    </details>
+                                    {% endfor %}
+                                </div>
+                                {% if can_manage %}
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" {% if locked %}disabled{% endif %}>{{ _('Save') }}</button>
+                                </div>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}
