@@ -1032,9 +1032,11 @@ def delete_population(uid):
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
 
     if population.username_type == "dating":
-        from y_web.src.dating.population import remove as remove_dating_population
+        from y_web.src.dating.population import remove_agents
 
-        remove_dating_population(_dating_base_dir(), population.id)
+        remove_agents(
+            population.id
+        )  # the agents of the population and their custom features
 
     db.session.delete(population)
     db.session.commit()
@@ -1632,14 +1634,9 @@ def merge_populations():
 
 
 # ---------------------------------------------------------------------------------------------------
-# Dating populations (plan S2, IR-D-05): a validated JSON document in a file plus one ``population`` row
+# Dating populations (plan S2, IR-D-05, decision D-10): one ``population`` row, standard ``agents`` rows and the
+# dating-only fields as custom features of the agents; no file
 # ---------------------------------------------------------------------------------------------------
-def _dating_base_dir():
-    from y_web.src.system.path_utils import get_writable_path
-
-    return get_writable_path()
-
-
 def _dating_population_or_none(uid):
     from y_web.src.dating.population import is_dating_population
 
@@ -1658,7 +1655,7 @@ def _unique_population_name(base_name):
 
 
 def _register_dating_population(name, descr, data):
-    """Create the ``population`` row and the file of a validated dating population."""
+    """Create the ``population`` row and the agents (with their custom features) of a validated population."""
     from y_web.src.dating import population as dp
 
     size, age_min, age_max = dp.population_row_values(data)
@@ -1675,7 +1672,13 @@ def _register_dating_population(name, descr, data):
     )
     db.session.add(row)
     db.session.commit()
-    dp.store(_dating_base_dir(), row.id, data)
+    try:
+        dp.store_agents(row.id, data)
+    except Exception:
+        db.session.rollback()
+        db.session.delete(row)
+        db.session.commit()
+        raise
     return row
 
 
@@ -1772,9 +1775,9 @@ def dating_population_details(uid):
     if pop is None:
         flash(_("Population not found."), "error")
         return redirect("/admin/populations")
-    data = dp.load(_dating_base_dir(), uid)
+    data = dp.load_document(uid)
     if data is None:
-        flash(_("The population file is missing."), "error")
+        flash(_("The population has no agents."), "error")
         return redirect("/admin/dating_populations")
     agents = data.get("agents") or []
     index = request.args.get("agent", type=int, default=0) or 0
@@ -1800,14 +1803,14 @@ def dating_population_details(uid):
 @population.route("/admin/dating_population/<int:uid>/download")
 @login_required
 def download_dating_population(uid):
-    """Download the stored document (the same file that is uploaded back)."""
+    """Export the population as a YDating document (the same file that can be uploaded back)."""
     check_privileges(current_user.username)
     from flask import Response
 
     from y_web.src.dating import population as dp
 
     pop = _dating_population_or_none(uid)
-    data = dp.load(_dating_base_dir(), uid) if pop is not None else None
+    data = dp.load_document(uid) if pop is not None else None
     if data is None:
         flash(_("Population not found."), "error")
         return redirect("/admin/dating_populations")

@@ -122,10 +122,21 @@ def create_dating_client():
             "error",
         )
         return redirect(back)
-    base_dir = get_writable_path()
-    pop_data = dp.load(base_dir, population.id)
+    pop_data = dp.load_document(population.id)
     if pop_data is None:
-        flash(_("The population file is missing."), "error")
+        flash(_("The population has no agents."), "error")
+        return redirect(back)
+    problems = dp.validate_population(pop_data)
+    if (
+        problems
+    ):  # the custom features of the agents were edited into something the runtime would refuse
+        flash(
+            _(
+                "The population is not valid for dating: %(why)s",
+                why=" | ".join(problems[:5]),
+            ),
+            "error",
+        )
         return redirect(back)
 
     repo = get_external_repo_dir("YDating")

@@ -45,6 +45,7 @@
                             <p>{% for k, v in summary.interests.items() %}{{ k }}: {{ v }}{% if not loop.last %} &middot; {% endif %}{% else %}&mdash;{% endfor %}</p>
                         </div>
                         <div class="button-wrap">
+                            <p class="ys-text-small">{{ _('The agents of this population are standard agents; what is specific to dating (location, genders sought, photos, latent variables) is kept in their custom fields, named "dating.*", and can be edited like any custom field.') }}</p>
                             <a class="button is-solid primary-button" href="/admin/dating_population/{{ population.id }}/download">{{ _('Download') }}</a>
                         </div>
                     </div>

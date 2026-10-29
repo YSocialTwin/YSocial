@@ -1,11 +1,11 @@
 """Dating populations: validation, storage and summary (plan S2, IR-D-05).
 
-A dating population is not made of YSocial ``Agent`` rows (a profile has a location, the genders sought,
-photos and latent variables that YSocial's agent table does not have). It is a JSON document that satisfies
-the population schema of YDating, stored in a file; the ``population`` table of the admin database keeps one
-row for it (name, description, size, ``username_type`` ``dating``) so that populations are listed, assigned
-to experiments and deleted like the others. The module has no Flask and no database access except where a
-function says so.
+A dating population is stored like any other: a ``population`` row (``username_type`` ``dating``) and standard
+``agents`` rows, with the dating-only fields (location, genders sought, photos, latent variables ...) in the
+custom features of the agents (``y_web.src.dating.agent_fields``, decision D-10). The document that satisfies
+the population schema of YDating is rebuilt from those tables (``load_document``) when the runtime needs its
+input file and for export; uploads and generated populations are validated against the schema and then stored
+as agents. No file keeps the population. The functions without a database import are pure.
 """
 
 import json
@@ -38,15 +38,6 @@ def _repo_dir(repo_dir: Optional[str] = None) -> str:
     from y_web.src.system.path_utils import get_external_repo_dir
 
     return get_external_repo_dir("YDating")
-
-
-def population_dir(base_dir: str) -> str:
-    """Folder of the stored dating populations inside the writable area."""
-    return os.path.join(base_dir, "y_web", "dating_populations")
-
-
-def population_path(base_dir: str, population_id: int) -> str:
-    return os.path.join(population_dir(base_dir), f"{int(population_id)}.json")
 
 
 def _location(error) -> str:
@@ -151,30 +142,186 @@ def clean_name(value: Optional[str]) -> str:
     return name[:50].strip()
 
 
-def store(base_dir: str, population_id: int, data: Dict[str, Any]) -> str:
-    os.makedirs(population_dir(base_dir), exist_ok=True)
-    path = population_path(base_dir, population_id)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as handle:
-        json.dump(data, handle, indent=2, ensure_ascii=False)
-        handle.write("\n")
-    os.replace(tmp, path)
-    return path
-
-
-def load(base_dir: str, population_id: int) -> Optional[Dict[str, Any]]:
+# -- storage in the standard agent tables (decision D-10) -----------------------------------------------
+def _schema(repo_dir: Optional[str] = None) -> Optional[Dict[str, Any]]:
     try:
-        with open(population_path(base_dir, population_id), "r", encoding="utf-8") as h:
-            return json.load(h)
+        with open(
+            os.path.join(_repo_dir(repo_dir), POPULATION_SCHEMA_FILE),
+            "r",
+            encoding="utf-8",
+        ) as handle:
+            return json.load(handle)
     except (OSError, ValueError):
         return None
 
 
-def remove(base_dir: str, population_id: int) -> None:
-    try:
-        os.remove(population_path(base_dir, population_id))
-    except OSError:
-        pass
+def _prepare_fields(repo_dir: Optional[str] = None) -> Dict[str, str]:
+    """Column limits of ``agents`` and the JSON types of the dating fields (both read, not copied)."""
+    from y_web.src.dating import agent_fields
+    from y_web.src.models import Agent
+
+    agent_fields.set_limits(
+        {
+            c.name: c.type.length
+            for c in Agent.__table__.columns
+            if getattr(c.type, "length", None)
+        }
+    )
+    return agent_fields.field_types(_schema(repo_dir))
+
+
+def store_agents(population_id: int, data: Dict[str, Any]) -> int:
+    """Create the ``agents`` rows of a validated population document and link them to ``population_id``.
+
+    One standard agent per document agent, its interests as ``interest`` features and the dating-only fields as
+    ``custom`` features (``dating.*``). Returns the number of agents.
+    """
+    from sqlalchemy import insert
+
+    from y_web import db
+    from y_web.src.dating import agent_fields
+    from y_web.src.models import Agent, Agent_Custom_Feature, Agent_Population
+
+    _prepare_fields()
+    agents, extras = [], []
+    for doc in data["agents"]:
+        columns, interests, custom = agent_fields.agent_to_rows(doc)
+        agents.append(Agent(**columns))
+        extras.append((interests, custom))
+    db.session.add_all(agents)
+    db.session.flush()
+    db.session.execute(
+        insert(Agent_Population),
+        [{"agent_id": a.id, "population_id": population_id} for a in agents],
+    )
+    rows = []
+    for agent, (interests, custom) in zip(agents, extras):
+        for interest in interests:
+            rows.append(
+                {
+                    "agent_id": agent.id,
+                    "feature_type": "interest",
+                    "key": interest,
+                    "value": None,
+                }
+            )
+        for item in custom:
+            rows.append(
+                {
+                    "agent_id": agent.id,
+                    "feature_type": "custom",
+                    "key": item["key"],
+                    "value": item["value"],
+                }
+            )
+    if rows:
+        db.session.execute(insert(Agent_Custom_Feature), rows)
+    db.session.commit()
+    return len(agents)
+
+
+def _linked_agents(population_id: int):
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import Agent, Agent_Population
+
+    return (
+        db.session.execute(
+            select(Agent)
+            .join(Agent_Population, Agent_Population.agent_id == Agent.id)
+            .where(Agent_Population.population_id == population_id)
+            .order_by(Agent.id)
+        )
+        .scalars()
+        .all()
+    )
+
+
+def load_document(
+    population_id: int, repo_dir: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
+    """The population document rebuilt from the agent tables (``None`` when the population has no agents).
+
+    Used wherever the runtime needs its input file (client creation), for the details page and for the export.
+    The interest catalogue is the union of the agents' interests in order of first appearance.
+    """
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.dating import agent_fields
+    from y_web.src.models import Agent_Custom_Feature
+
+    types = _prepare_fields(repo_dir)
+    agents = _linked_agents(population_id)
+    if not agents:
+        return None
+    interests: Dict[int, List[str]] = {a.id: [] for a in agents}
+    custom: Dict[int, Dict[str, Optional[str]]] = {a.id: {} for a in agents}
+    ids = list(interests)
+    for start in range(0, len(ids), 500):
+        chunk = ids[start : start + 500]
+        for row in db.session.scalars(
+            select(Agent_Custom_Feature)
+            .where(Agent_Custom_Feature.agent_id.in_(chunk))
+            .order_by(Agent_Custom_Feature.id)
+        ):
+            if row.feature_type == "interest":
+                if row.key not in interests[row.agent_id]:
+                    interests[row.agent_id].append(row.key)
+            elif row.feature_type == "custom":
+                custom[row.agent_id][row.key] = row.value
+    columns_of = list(agent_fields.COLUMN_FIELDS.values()) + list(
+        agent_fields.PERSONALITY
+    )
+    docs, catalogue = [], []
+    for agent in agents:
+        columns = {c: getattr(agent, c) for c in columns_of}
+        doc = agent_fields.rows_to_agent(
+            columns, interests[agent.id], custom[agent.id], types
+        )
+        docs.append(doc)
+        for interest in doc.get("interests", []):
+            if interest not in catalogue:
+                catalogue.append(interest)
+    return {"interests": catalogue, "agents": docs}
+
+
+def remove_agents(population_id: int) -> int:
+    """Delete the agents of a dating population that belong to no other population, with their features."""
+    from sqlalchemy import delete, func, select
+
+    from y_web import db
+    from y_web.src.models import (
+        Agent,
+        Agent_Custom_Feature,
+        Agent_Ext,
+        Agent_Population,
+        Agent_Profile,
+    )
+
+    own = []
+    for agent in _linked_agents(population_id):
+        others = db.session.scalar(
+            select(func.count())
+            .select_from(Agent_Population)
+            .where(
+                Agent_Population.agent_id == agent.id,
+                Agent_Population.population_id != population_id,
+            )
+        )
+        if not others:
+            own.append(agent.id)
+    for start in range(0, len(own), 500):
+        chunk = own[start : start + 500]
+        for model in (Agent_Custom_Feature, Agent_Ext, Agent_Profile):
+            db.session.execute(delete(model).where(model.agent_id.in_(chunk)))
+        db.session.execute(
+            delete(Agent_Population).where(Agent_Population.agent_id.in_(chunk))
+        )
+        db.session.execute(delete(Agent).where(Agent.id.in_(chunk)))
+    db.session.commit()
+    return len(own)
 
 
 def generate(

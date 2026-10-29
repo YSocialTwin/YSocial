@@ -86,14 +86,104 @@ def test_the_public_card_never_carries_the_latent_variables(example):
     assert "latent" not in json.dumps(dp.summarize(example))
 
 
-def test_store_load_remove_roundtrip(tmp_path, example):
-    from y_web.src.dating import population as dp
+def _normal(doc):
+    """A document without the empty lists and objects the schema defaults to, and with the catalogue sorted."""
+    out = {"interests": sorted(doc.get("interests") or []), "agents": []}
+    for agent in doc["agents"]:
+        item = {k: v for k, v in agent.items() if v not in ([], {}, "")}
+        out["agents"].append(item)
+    return out
 
-    dp.store(str(tmp_path), 7, example)
-    assert dp.load(str(tmp_path), 7) == example
-    dp.remove(str(tmp_path), 7)
-    assert dp.load(str(tmp_path), 7) is None
-    dp.remove(str(tmp_path), 7)  # idempotent
+
+def test_agent_fields_roundtrip_every_shape_of_agent():
+    from y_web.src.dating import agent_fields as af
+
+    types = {
+        "id": "string",
+        "profile.age_min": "integer",
+        "profile.max_distance_km": "number",
+        "profile.seeking_genders": "array",
+        "profile.city": "string",
+        "profile.prompt_answers": "object",
+        "latent.attractiveness": "number",
+        "appearance.glasses": "boolean",
+        "appearance.height_cm": "integer",
+        "photos": "array",
+    }
+    agent = {
+        "id": "abc",
+        "username": "u1",
+        "age": 31,
+        "gender": "non-binary-extended",  # longer than the column of agents
+        "language": "it",
+        "personality": {"oe": "high", "ne": "low"},
+        "match_recsys": "preference_similarity",
+        "daily_activity_level": 2,
+        "profile": {
+            "seeking_genders": ["man", "woman"],
+            "age_min": 20,
+            "max_distance_km": 12.5,
+            "city": "123",
+            "bio": "",
+            "prompt_answers": {"a": "b"},
+        },
+        "interests": ["art", "gaming"],
+        "photos": [{"caption": "x"}, {"caption": "y", "subject": "s"}],
+        "appearance": {"glasses": False, "height_cm": 180},
+        "latent": {"attractiveness": 0.5},
+    }
+    af.set_limits({"gender": 10})
+    try:
+        columns, interests, custom = af.agent_to_rows(agent)
+        assert columns["gender"] == "non-binary" and columns["name"] == "u1"
+        assert all(c["key"].startswith("dating.") for c in custom)
+        back = af.rows_to_agent(
+            columns, interests, {c["key"]: c["value"] for c in custom}, types
+        )
+    finally:
+        af.set_limits({})
+    assert back == agent
+
+
+@needs_runtime
+def test_a_population_is_stored_as_agents_with_custom_features(app, example):
+    from y_web import db
+    from y_web.src.dating import population as dp
+    from y_web.src.models import (
+        Agent,
+        Agent_Custom_Feature,
+        Agent_Population,
+        Population,
+    )
+
+    with app.app_context():
+        row = Population(name="rt", descr="", size=10, username_type="dating")
+        db.session.add(row)
+        db.session.commit()
+        assert dp.store_agents(row.id, example) == 10
+        agents = (
+            db.session.query(Agent)
+            .join(Agent_Population)
+            .filter(Agent_Population.population_id == row.id)
+        )
+        assert agents.count() == 10
+        first = agents.order_by(Agent.id).first()
+        assert first.name == "user_01" and first.age == 30 and first.gender == "woman"
+        keys = {
+            f.key
+            for f in db.session.query(Agent_Custom_Feature).filter_by(agent_id=first.id)
+            if f.feature_type == "custom"
+        }
+        assert "dating.profile.city" in keys and "dating.latent.attractiveness" in keys
+        assert "dating.photos" in keys
+        back = dp.load_document(row.id, str(REPO))
+        assert _normal(back) == _normal(example)
+        assert dp.validate_population(back, str(REPO)) == []
+        # deleting the population removes its agents and their features
+        assert dp.remove_agents(row.id) == 10
+        assert db.session.query(Agent).count() == 0
+        assert db.session.query(Agent_Custom_Feature).count() == 0
+        assert dp.load_document(row.id, str(REPO)) is None
 
 
 @needs_runtime
@@ -136,7 +226,6 @@ def routes(app, monkeypatch, tmp_path):
     monkeypatch.setattr(mod, "check_privileges", lambda *_: None)
     monkeypatch.setattr(mod, "current_user", SimpleNamespace(username="admin", id=1))
     monkeypatch.setattr(mod, "ensure_population_username_type_column", lambda: None)
-    monkeypatch.setattr(mod, "_dating_base_dir", lambda: str(tmp_path))
     flashes = []
     monkeypatch.setattr(
         mod, "flash", lambda msg, cat="message": flashes.append((cat, str(msg)))
@@ -158,7 +247,7 @@ def _upload(app, routes, payload: bytes, name="pop.json", **form):
 @needs_runtime
 def test_upload_valid_population_stores_file_and_row(app, routes):
     from y_web import db
-    from y_web.src.models import Population
+    from y_web.src.models import Agent, Population
 
     with app.app_context():
         response = _upload(app, routes, EXAMPLE.read_bytes(), pop_name="Pisa 10")
@@ -167,7 +256,7 @@ def test_upload_valid_population_stores_file_and_row(app, routes):
             row.username_type == "dating" and row.size == 10 and row.name == "Pisa 10"
         )
         assert response.location == f"/admin/dating_population/{row.id}"
-        assert (routes.tmp / "y_web" / "dating_populations" / f"{row.id}.json").exists()
+        assert db.session.query(Agent).count() == 10
         # a second import with the same name gets a suffix
         _upload(app, routes, EXAMPLE.read_bytes(), pop_name="Pisa 10")
         assert sorted(p.name for p in db.session.query(Population)) == [
@@ -193,7 +282,7 @@ def test_upload_invalid_population_is_refused_with_the_path(app, routes, example
 @needs_runtime
 def test_details_download_and_delete(app, routes, monkeypatch):
     from y_web import db
-    from y_web.src.models import Population
+    from y_web.src.models import Agent, Population
 
     with app.app_context():
         _upload(app, routes, EXAMPLE.read_bytes(), pop_name="P")
@@ -220,11 +309,11 @@ def test_details_download_and_delete(app, routes, monkeypatch):
             resp = routes.mod.population_details.__wrapped__(row.id)
             assert resp.location == f"/admin/dating_population/{row.id}"
         monkeypatch.setattr(routes.mod, "populations", lambda: "listed")
-        path = routes.tmp / "y_web" / "dating_populations" / f"{row.id}.json"
-        assert path.exists()
+        assert db.session.query(Agent).count() == 10
         with app.test_request_context(f"/admin/delete_population/{row.id}"):
             routes.mod.delete_population.__wrapped__(row.id)
-        assert not path.exists() and db.session.query(Population).count() == 0
+        assert db.session.query(Population).count() == 0
+        assert db.session.query(Agent).count() == 0  # the agents go with it
 
 
 @needs_runtime

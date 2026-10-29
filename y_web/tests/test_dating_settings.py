@@ -359,7 +359,7 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
         pop = Population(name="Pisa", descr="", size=10, username_type="dating")
         db.session.add(pop)
         db.session.commit()
-        dp.store(str(tmp_path), pop.id, json.loads(EXAMPLE.read_text()))
+        dp.store_agents(pop.id, json.loads(EXAMPLE.read_text()))
         with app.test_request_context(
             "/admin/create_dating_client",
             method="POST",
