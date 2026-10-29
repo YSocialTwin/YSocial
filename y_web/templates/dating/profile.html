@@ -1,0 +1,23 @@
+{% extends "dating/base.html" %}
+{% from "dating/_avatar.html" import avatar %}
+{% set nav = 'home' %}
+{% block title %}{{ profile.username }}{% endblock %}
+{% block content %}
+<article class="dt-profile">
+  <header class="dt-profile-head">{{ avatar(profile, 'xl') }}
+    <div><h2 class="dt-h">{{ profile.username }}{% if profile.age %}, {{ profile.age }}{% endif %}</h2>
+    <p class="dt-meta">{% if profile.city %}{{ profile.city }}{% endif %}{% if profile.intent %} · {{ profile.intent }}{% endif %}</p></div></header>
+  {% if profile.bio %}<p class="dt-bio">{{ profile.bio }}</p>{% endif %}
+  {% if profile.prompts %}<dl class="dt-prompts">{% for q, a in profile.prompts.items() %}<div><dt>{{ q }}</dt><dd>{{ a }}</dd></div>{% endfor %}</dl>{% endif %}
+  {% if profile.interests %}<ul class="dt-tags">{% for i in profile.interests %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+  {% if profile.photos %}<ul class="dt-photolist" aria-label="{{ _('Photos') }}">{% for ph in profile.photos %}<li>{{ ph.caption or _('Photo %(n)s', n=loop.index) }}</li>{% endfor %}</ul>{% endif %}
+  {% if profile.overview %}
+  <section class="dt-extra-block" aria-label="{{ _('Researcher only') }}">
+    <h3>{{ _('Researcher only') }}</h3>
+    {% if profile.overview.latent %}<dl class="dt-extra">{% for k, v in profile.overview.latent.items() %}<div><dt>{{ k }}</dt><dd>{{ v }}</dd></div>{% endfor %}</dl>{% endif %}
+    <p>{{ _('Blocks made: %(n)s', n=profile.overview.blocks_made) }}</p>
+    <p><a class="dt-btn" href="/{{ exp.idexp }}/dating?vp=overview&acc={{ profile.id }}{{ '&round=%d' % ctx.vp.round if ctx.vp.round != ctx.latest else '' }}">{{ _('Deck of this account') }}</a></p>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

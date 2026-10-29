@@ -1,0 +1,25 @@
+{% from "dating/_avatar.html" import avatar %}
+{#- A profile card: public fields only. ``extra`` is the overview block, shown only to researchers. -#}
+{% macro card(p, link, decision=None, extra=None, position=None) %}
+<article class="dt-card" aria-label="{{ p.username }}">
+  <div class="dt-card-photo" style="--dt-hue: {{ p.hue }}">
+    {{ avatar(p, 'xl') }}
+    {% if decision %}<span class="dt-stamp dt-stamp-{{ decision|lower }}" role="img" aria-label="{{ _('Decision: %(d)s', d=decision) }}">{{ _('LIKE') if decision == 'LIKE' else _('PASS') }}</span>{% endif %}
+    {% if p.photos|length > 1 %}<span class="dt-photos">{{ p.photos|length }} {{ _('photos') }}</span>{% endif %}
+  </div>
+  <div class="dt-card-body">
+    <h3><a href="{{ link('/profile/' ~ p.id) }}">{{ p.username }}</a>{% if p.age %}<span class="dt-age">, {{ p.age }}</span>{% endif %}</h3>
+    <p class="dt-meta">{% if p.city %}{{ p.city }}{% endif %}{% if p.intent %} · {{ p.intent }}{% endif %}</p>
+    {% if p.bio %}<p class="dt-bio">{{ p.bio }}</p>{% endif %}
+    {% if p.interests %}<ul class="dt-tags">{% for i in p.interests[:6] %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+    {% if extra %}
+    <dl class="dt-extra" aria-label="{{ _('Recommender internals (researcher only)') }}">
+      <div><dt>{{ _('Model') }}</dt><dd>{{ extra.model }}</dd></div>
+      <div><dt>{{ _('Score') }}</dt><dd>{{ '%.3f'|format(extra.score) if extra.score is not none else '–' }}</dd></div>
+      {% if extra.mode %}<div><dt>{{ _('Decided by') }}</dt><dd>{{ extra.mode }}</dd></div>{% endif %}
+      {% if extra.reason %}<div class="dt-wide"><dt>{{ _('Reason') }}</dt><dd>{{ extra.reason }}</dd></div>{% endif %}
+    </dl>
+    {% endif %}
+  </div>
+</article>
+{% endmacro %}

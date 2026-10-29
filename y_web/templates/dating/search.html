@@ -1,0 +1,14 @@
+{% extends "dating/base.html" %}
+{% from "dating/_card.html" import card %}
+{% set nav = 'search' %}
+{% block content %}
+<h2 class="dt-h">{{ _('Search') }}</h2>
+<form method="get" action="/{{ exp.idexp }}/dating/search" class="dt-form dt-inline" role="search">
+  {% for k, v in params.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  <label for="dt-q" class="dt-sr">{{ _('Search profiles') }}</label>
+  <input id="dt-q" name="q" value="{{ term }}" placeholder="{{ _('name, city, intent, bio') }}" autocomplete="off">
+  <button class="dt-btn" type="submit">{{ _('Search') }}</button>
+</form>
+{% if term %}{% if results %}<div class="dt-grid">{% for p in results %}{{ card(p, link) }}{% endfor %}</div>
+{% else %}<p class="dt-empty">{{ _('Nothing found.') }}</p>{% endif %}{% endif %}
+{% endblock %}

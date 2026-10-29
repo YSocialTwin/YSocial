@@ -1,0 +1,14 @@
+{% extends "dating/base.html" %}
+{% set nav = 'matches' %}
+{% block content %}
+<h2 class="dt-h">{% if ctx.vp.kind == 'overview' %}{{ chat.a.name }} ↔ {{ chat.b.name }}{% else %}{{ (chat.b.name if chat.a.id == ctx.vp.account_id else chat.a.name) }}{% endif %}</h2>
+<p><a href="{{ link('/matches') }}">‹ {{ _('Matches') }}</a></p>
+{% if chat.messages %}
+<ol class="dt-chat" aria-label="{{ _('Conversation') }}">{% for m in chat.messages %}
+  <li class="dt-msg{{ ' is-mine' if m.mine }}{{ ' is-deleted' if m.deleted }}">
+    <span class="dt-msg-by">{{ m.sender }} <small>{{ _('day %(d)s, round %(h)s', d=m.day, h=m.hour) }}</small></span>
+    {% if m.deleted and ctx.vp.kind != 'overview' %}<em>{{ _('Message removed') }}</em>
+    {% else %}<p>{{ m.text }}</p>{% if m.deleted %}<small class="dt-flag">{{ _('Deleted (researcher only)') }}</small>{% endif %}{% endif %}
+  </li>{% endfor %}</ol>
+{% else %}<p class="dt-empty">{{ _('No messages yet.') }}</p>{% endif %}
+{% endblock %}

@@ -728,6 +728,33 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             </div>
           </div>
 
+          <!-- ══ BOX — Dating pages ══ -->
+          <div class="misc-compact-box" id="box-dating" data-cap-any="dating_allow_time_travel dating_public_observer_enabled dating_poll_seconds">
+            <h3>{{ _('Dating pages') }}</h3>
+            <div class="box-content">
+              <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
+                {{ _('Choose what the dating pages of this experiment show and who can open them.') }}
+              </p>
+              <div class="ys-toggle-row" data-cap="dating_allow_time_travel">
+                <span class="ys-toggle-label">{{ _('Time travel for viewers') }} <small>{{ _('Let non-staff viewers look at a past round') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="dating_allow_time_travel"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="dating_public_observer_enabled">
+                <span class="ys-toggle-label">{{ _('Public observer pages') }} <small>{{ _('The public profiles can be browsed by people who are not in the experiment') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="dating_public_observer_enabled"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="dating_poll_seconds">
+                <span class="ys-toggle-label">{{ _('Refresh interval (seconds)') }} <small>{{ _('How often an open page looks for new rounds (1 to 60)') }}</small></span>
+                <input type="number" id="dating_poll_seconds" min="1" max="60" value="10"
+                       style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
+              </div>
+              <div class="ys-fs-save-row">
+                <button class="button is-solid primary-button" onclick="saveSection(event,'dating')">{{ _('Save dating pages') }}</button>
+                <span class="ys-fs-save-status" id="status-dating"></span>
+              </div>
+            </div>
+          </div>
+
           <!-- ══ BOX 5+ — Frontend plugin suites (group="frontend_plugins") ══ -->
           {% for suite in frontend_plugin_suites %}
           <div class="misc-compact-box" id="box-suite-{{ suite.repo_key }}" style="display:none;">
@@ -1031,6 +1058,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled','language_switch_allowed',
       'im_show_forward_origin','im_show_reactions','im_show_member_roles','im_allow_time_travel','im_public_observer_enabled','im_participant_mode_enabled',
+      'dating_allow_time_travel','dating_public_observer_enabled',
     ];
     boolIds.forEach(key => {
       const el = document.getElementById(key);
@@ -1066,6 +1094,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       if (el && s[key]) el.value = s[key];
     });
     { const el = document.getElementById('im_participant_poll_seconds'); if (el) el.value = s['im_participant_poll_seconds'] != null ? s['im_participant_poll_seconds'] : 3; }
+    { const el = document.getElementById('dating_poll_seconds'); if (el) el.value = s['dating_poll_seconds'] != null ? s['dating_poll_seconds'] : 10; }
     { const el = document.getElementById('im_participant_notice'); if (el) el.value = s['im_participant_notice'] || ''; }
     syncFilterBubbleSection();
 
@@ -1143,12 +1172,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled','language_switch_allowed',
       'im_show_forward_origin','im_show_reactions','im_show_member_roles','im_allow_time_travel','im_public_observer_enabled','im_participant_mode_enabled',
+      'dating_allow_time_travel','dating_public_observer_enabled',
     ];
     const out = {};
     boolIds.forEach(id => { const el = document.getElementById(id); out[id] = el ? el.checked : true; });
     // Numeric settings
     { const el = document.getElementById('posts_per_page'); out['posts_per_page'] = el ? parseInt(el.value, 10) || 10 : 10; }
     { const el = document.getElementById('im_participant_poll_seconds'); out['im_participant_poll_seconds'] = el ? parseInt(el.value, 10) || 3 : 3; }
+    { const el = document.getElementById('dating_poll_seconds'); out['dating_poll_seconds'] = el ? parseInt(el.value, 10) || 10 : 10; }
     { const el = document.getElementById('im_participant_notice'); out['im_participant_notice'] = el ? el.value : ''; }
     // FilterBubble float fields
     ['filter_bubble_alpha','filter_bubble_beta','filter_bubble_gamma',

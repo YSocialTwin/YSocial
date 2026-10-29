@@ -1,0 +1,5 @@
+{#- Placeholder avatar: initials on a deterministic hue; the photo is shown only when the run has a media URL. -#}
+{% macro avatar(p, size='md') %}
+{% set photo = p.photos[0].url if p.photos and p.photos[0].url else None %}
+<span class="dt-avatar dt-avatar-{{ size }}" style="--dt-hue: {{ p.hue }}" aria-hidden="true">{% if photo %}<img src="{{ photo }}" alt="" loading="lazy" decoding="async">{% else %}{{ p.initials }}{% endif %}</span>
+{% endmacro %}

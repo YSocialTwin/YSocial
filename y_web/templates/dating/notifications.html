@@ -1,0 +1,10 @@
+{% extends "dating/base.html" %}
+{% set nav = 'notifications' %}
+{% block content %}
+<h2 class="dt-h">{{ _('Notifications') }}</h2>
+{% if items %}<ul class="dt-list">{% for n in items %}
+  <li><a class="dt-row" href="{{ link('/chat/' ~ n.match_id) }}"><span class="dt-row-main">
+    <strong>{% if n.kind == 'match' %}{{ _('New match with %(n)s', n=n.other) }}{% else %}{{ _('New message from %(n)s', n=n.other) }}{% endif %}</strong>
+    <small>{{ _('day %(d)s, round %(h)s', d=n.day, h=n.hour) }}</small></span></a></li>{% endfor %}</ul>
+{% else %}<p class="dt-empty">{{ _('Nothing new.') }}</p>{% endif %}
+{% endblock %}

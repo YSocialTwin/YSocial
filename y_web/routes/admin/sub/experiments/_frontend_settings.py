@@ -32,12 +32,19 @@ from ._blueprint import experiments
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
 # ------------------------------------------------------------------
-SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging")
+SUPPORTED_PLATFORMS = (
+    "microblogging",
+    "forum",
+    "photo_sharing",
+    "instant_messaging",
+    "dating",
+)
 PLATFORM_LABELS = {
     "microblogging": N_("Microblogging"),
     "forum": N_("Forum"),
     "photo_sharing": N_("Photo sharing"),
     "instant_messaging": N_("Instant messaging"),
+    "dating": N_("Dating"),
 }
 
 _COMMON_CAPABILITIES = {
@@ -104,6 +111,13 @@ PLATFORM_CAPABILITIES = {
         "im_participant_notice",
         "im_participant_poll_seconds",
     },
+    "dating": {
+        "language",
+        "language_switch_allowed",
+        "dating_allow_time_travel",
+        "dating_public_observer_enabled",
+        "dating_poll_seconds",
+    },
 }
 
 # Platform-specific feed orderings that replace the microblogging recommenders.
@@ -158,7 +172,10 @@ _ENUM_SETTINGS = {
 }
 
 # integer settings with a server-side range: (low, high)
-_INT_RANGES = {"im_participant_poll_seconds": (1, 60)}
+_INT_RANGES = {
+    "im_participant_poll_seconds": (1, 60),
+    "dating_poll_seconds": (1, 60),
+}
 
 
 def _language_choices() -> set:

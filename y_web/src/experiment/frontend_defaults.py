@@ -59,5 +59,8 @@ DEFAULT_SETTINGS = {
     "im_public_observer_enabled": True,  # public chats readable without a participant login
     "im_participant_mode_enabled": True,  # human participants may take part (phase 9)
     "im_participant_notice": "",  # text shown once before a participant's first entry (plan 5.8, O-12)
+    "dating_allow_time_travel": True,  # let non-staff viewers pick a past round of a dating experiment
+    "dating_public_observer_enabled": True,  # public profile showcase readable without a login
+    "dating_poll_seconds": 10,  # interval of the "new rounds" check of the dating pages, clamped to 1-60
     "im_participant_poll_seconds": 3,  # polling interval of the chat page, clamped to 1-60
 }

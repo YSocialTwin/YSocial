@@ -1,0 +1,14 @@
+{% extends "dating/base.html" %}
+{% from "dating/_avatar.html" import avatar %}
+{% set nav = 'matches' %}
+{% block content %}
+<h2 class="dt-h">{{ _('Matches') }} <small>{{ matches|length }}</small></h2>
+{% if matches %}
+<ul class="dt-list">{% for m in matches %}
+  <li><a class="dt-row" href="{{ link('/chat/' ~ m.id) }}">
+    {{ avatar({'hue': m.hue, 'initials': m.initials, 'photos': []}) }}
+    <span class="dt-row-main"><strong>{% if ctx.vp.kind == 'overview' %}{{ m.a }} ↔ {{ m.b }}{% else %}{{ m.other }}{% endif %}</strong>
+      <small>{{ _('Active') if m.active else _('Ended') }}{% if m.ended_by %} · {{ _('ended by %(n)s', n=m.ended_by) }}{% endif %}</small></span>
+  </a></li>{% endfor %}</ul>
+{% else %}<p class="dt-empty">{{ _('No matches up to this round.') }}</p>{% endif %}
+{% endblock %}
