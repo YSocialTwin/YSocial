@@ -24,6 +24,8 @@ class HpcPlatform:
     client_config_only: bool = False
     # the config argument of the client is the per-client JSON (normalized) instead of the folder
     normalizes_client_config: bool = False
+    # the folder is passed as --config and the per-client JSON as --client-config
+    client_config_file_arg: bool = False
     prompts_filename: str = "prompts.json"
     # Ray actor names used to stop a client
     orchestrator_actor: str = "Orchestrator"
@@ -82,8 +84,9 @@ HPC_PLATFORMS = {
         normalizes_client_config=True,
         prompts_filename="prompts_dating.json",
         orchestrator_actor="Orchestrator",
-        # the offline validator and the prompt files arrive with the stages that need them (S4, S5)
-        validates_config=False,
+        client_config_file_arg=True,
+        # the offline validator is YDating.cli.validate; the prompt files arrive with S5
+        validates_config=True,
         syncs_client_config=False,
         requires_prompts_file=False,
     ),

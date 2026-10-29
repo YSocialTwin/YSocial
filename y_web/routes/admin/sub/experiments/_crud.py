@@ -39,6 +39,7 @@ from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
+from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -683,6 +684,9 @@ def join_experiment(exp_id):
     if is_im_experiment(exp):
         # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
         return redirect(f"/{exp.idexp}/im")
+    if is_dating_experiment(exp):
+        # the observer (S6) is the only way in: dating has no per-user feed row either
+        return redirect(f"/{exp.idexp}/dating")
 
     user_id = current_user.id
     user_email = str(getattr(current_user, "email", "") or "")
@@ -769,8 +773,8 @@ def change_active_experiment(exp_id):
         # Register the experiment database dynamically
         from y_web.src.experiment.context import register_experiment_database
 
-        if is_im_experiment(exp):
-            # IM owns its database and has no YWeb participant row: nothing to bind or provision here
+        if is_im_experiment(exp) or is_dating_experiment(exp):
+            # IM and dating own their database and have no YWeb participant row: nothing to bind or provision here
             user_exp = (
                 db.session.query(User_Experiment)
                 .filter_by(user_id=admin_user_id, exp_id=exp_id)
@@ -963,6 +967,108 @@ def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
     return redirect(request.referrer or url_for("admin.dashboard"))
 
 
+def _import_dating_upload(exp_dir, uid, exp_name_override, exp_group):
+    """Register an uploaded dating experiment: validated, never given the YSocial schema.
+
+    Inputs only (a database or lock from another installation is dropped). The client files are checked
+    one by one; clients and populations are created again from the admin pages.
+    """
+    from y_web.src.dating import DATING_PLATFORM
+    from y_web.src.dating.clone import clear_dating_run_artifacts, rewrite_server_config
+    from y_web.src.dating.validation import (
+        DatingValidationError,
+        validate_dating_folder,
+    )
+    from y_web.src.system.path_utils import get_writable_path
+
+    def refuse(message):
+        shutil.rmtree(exp_dir, ignore_errors=True)
+        flash(message)
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return refuse(_("Dating experiments are not supported with PostgreSQL."))
+    try:
+        with open(
+            os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8"
+        ) as handle:
+            config = json.load(handle)
+    except (OSError, ValueError):
+        return refuse(
+            _("The uploaded dating experiment has no readable server configuration.")
+        )
+
+    name = exp_name_override or str(config.get("experiment_name") or "").strip()
+    if not name:
+        return refuse(_("The uploaded experiment has no name. Please provide one."))
+    if db.session.scalars(select(Exps).filter_by(exp_name=name)).first():
+        return refuse(
+            _(
+                "The experiment already exists. Please check the experiment name and try again."
+            )
+        )
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        return refuse(
+            _(
+                "Error: No available port found in range 5000-6000. Cannot upload experiment."
+            )
+        )
+
+    clear_dating_run_artifacts(exp_dir)
+    try:
+        validate_dating_folder(exp_dir)
+        for item in sorted(os.listdir(exp_dir)):
+            if item.startswith("client_") and item.endswith(".json"):
+                validate_dating_folder(exp_dir, client_config=item)
+    except DatingValidationError as exc:
+        return refuse(
+            _(
+                "The uploaded dating experiment is not valid: %(errors)s",
+                errors="; ".join(exc.messages),
+            )
+        )
+    except (
+        Exception
+    ) as exc:  # validator unavailable: do not register what cannot be checked
+        current_app.logger.warning(
+            "dating validator could not run for an upload: %s", exc
+        )
+        return refuse(_("The uploaded dating experiment could not be validated."))
+
+    folder = os.path.join(get_writable_path(), "y_web", "experiments", uid)
+    rewrite_server_config(
+        exp_dir, name, os.path.join(folder, "database_server.db"), folder + os.sep
+    )
+    exp = Exps(
+        exp_name=name,
+        db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+        prompt_language=prompt_packs.resolve(None),
+        owner=current_user.username,
+        exp_descr="",
+        status=0,
+        running=0,
+        port=suggested_port,
+        server="127.0.0.1",
+        platform_type=DATING_PLATFORM,
+        llm_agents_enabled=1,
+        simulator_type="HPC",
+        exp_group=exp_group,
+    )
+    db.session.add(exp)
+    db.session.commit()
+    db.session.add(
+        Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped")
+    )
+    db.session.commit()
+    flash(
+        _(
+            "Dating experiment imported. Create its populations and clients from the experiment page."
+        )
+    )
+    return redirect(request.referrer or url_for("admin.dashboard"))
+
+
 @experiments.route("/admin/upload_experiment", methods=["POST"])
 @login_required
 def upload_experiment():
@@ -1021,6 +1127,11 @@ def upload_experiment():
 
     if is_im_folder(exp_dir):
         return _import_im_upload(exp_dir, uid, exp_name_override, exp_group)
+
+    from y_web.src.dating.clone import is_dating_folder
+
+    if is_dating_folder(exp_dir):
+        return _import_dating_upload(exp_dir, uid, exp_name_override, exp_group)
 
     # Determine database type
     db_type = "sqlite"
@@ -2936,6 +3047,23 @@ def start_experiment(uid):
         except ImValidationError as exc:
             flash(
                 _("The instant messaging configuration is not valid: %(why)s")
+                % {"why": "; ".join(exc.messages[:5])},
+                "error",
+            )
+            return experiment_details(uid)
+
+    if is_dating_experiment(exp):
+        from y_web.src.dating.validation import (
+            DatingValidationError,
+            validate_dating_folder,
+        )
+        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+
+        try:
+            validate_dating_folder(_resolve_hpc_experiment_folder(exp))
+        except DatingValidationError as exc:
+            flash(
+                _("The dating configuration is not valid: %(why)s")
                 % {"why": "; ".join(exc.messages[:5])},
                 "error",
             )
@@ -5450,12 +5578,30 @@ def _matrix_describe_experiment_copy_failure(source_exp):
     return None
 
 
+def _slots_per_day_of(folder, experiment):
+    """Rounds per day: 24 for instant messaging, the configured slots for dating."""
+    from y_web.src.dating import is_dating_experiment as _is_dating
+
+    if not _is_dating(experiment):
+        return 24
+    from y_web.src.dating.clone import slots_per_day
+
+    return slots_per_day(folder)
+
+
 def _create_im_experiment_copy(
     source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
-    """Clone an instant messaging experiment: inputs only, no database, state or logs (plan, 5.6)."""
-    from y_web.src.im.clone import copy_im_folder, new_uid, rewrite_server_config
+    """Clone an instant messaging or dating experiment: inputs only, no database, state or logs (plan, 5.6)."""
+    from y_web.src.dating import is_dating_experiment as _is_dating
+    from y_web.src.im.clone import rewrite_server_config
     from y_web.src.system.path_utils import get_writable_path
+
+    if _is_dating(source_exp):
+        from y_web.src.dating.clone import copy_dating_folder as copy_im_folder
+        from y_web.src.dating.clone import new_uid
+    else:
+        from y_web.src.im.clone import copy_im_folder, new_uid
 
     if config_variations:
         current_app.logger.warning(
@@ -5545,7 +5691,8 @@ def _create_im_experiment_copy(
                 client_id=new_client.id,
                 last_active_hour=-1,
                 last_active_day=-1,
-                expected_duration_rounds=max(int(source_client.days or 0), 0) * 24,
+                expected_duration_rounds=max(int(source_client.days or 0), 0)
+                * _slots_per_day_of(new_folder, source_exp),
             )
         )
     db.session.add(
@@ -5573,7 +5720,9 @@ def _create_single_experiment_copy(
     Returns:
         bool: True if successful, False otherwise
     """
-    if is_im_experiment(source_exp):
+    from y_web.src.dating import is_dating_experiment as _is_dating_src
+
+    if is_im_experiment(source_exp) or _is_dating_src(source_exp):
         return _create_im_experiment_copy(
             source_exp, new_exp_name, exp_group, config_variations, exp_descr
         )

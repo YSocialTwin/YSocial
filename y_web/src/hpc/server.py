@@ -229,9 +229,22 @@ def start_hpc_server(exp):
     script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_server.py")
 
     if spec.validates_config:
-        from y_web.src.im.validation import validate_im_folder
+        if spec.key == "dating":
+            from y_web.src.dating.validation import validate_dating_folder
 
-        validate_im_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+            validate_dating_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+        else:
+            from y_web.src.im.validation import validate_im_folder
+
+            validate_im_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+    if spec.key == "dating":
+        # the settings that shape the run are fixed from the first start (S3 lock)
+        from y_web.src.dating import server_settings
+
+        with open(
+            os.path.join(exp_folder, "server_config.json"), "r", encoding="utf-8"
+        ) as handle:
+            server_settings.write_lock(exp_folder, json.load(handle))
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     # Check multiple PyInstaller indicators

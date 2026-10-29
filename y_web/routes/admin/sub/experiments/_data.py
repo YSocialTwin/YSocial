@@ -1626,6 +1626,15 @@ def clear_experiment_logs(uid):
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
+def _reset_slots_per_day(exp, folder):
+    """Rounds per day used for the expected duration of a client: 24, or the dating slots."""
+    if not is_dating_experiment(exp):
+        return 24
+    from y_web.src.dating.clone import slots_per_day
+
+    return slots_per_day(folder)
+
+
 @experiments.route("/admin/reset_hpc_experiment/<int:uid>", methods=["POST"])
 @login_required
 def reset_hpc_experiment(uid):
@@ -1694,6 +1703,10 @@ def reset_hpc_experiment(uid):
             from y_web.src.im.clone import clear_im_run_artifacts
 
             deleted_count, failed_paths = clear_im_run_artifacts(exp_folder)
+        elif is_dating_experiment(exp):
+            from y_web.src.dating.clone import clear_dating_run_artifacts
+
+            deleted_count, failed_paths = clear_dating_run_artifacts(exp_folder)
         else:
             deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
         if failed_paths:
@@ -1711,7 +1724,11 @@ def reset_hpc_experiment(uid):
                     )
 
         for client in clients:
-            expected_rounds = -1 if client.days == -1 else max(int(client.days), 0) * 24
+            expected_rounds = (
+                -1
+                if client.days == -1
+                else max(int(client.days), 0) * _reset_slots_per_day(exp, exp_folder)
+            )
             client_exec = db.session.scalars(
                 select(Client_Execution).filter_by(client_id=client.id)
             ).first()

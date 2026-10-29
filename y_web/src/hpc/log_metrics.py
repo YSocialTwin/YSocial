@@ -59,7 +59,7 @@ _FATAL_CLIENT_ERROR_MARKERS = {
 }
 
 
-def _elapsed_time_from_hourly_summary(day, slot):
+def _elapsed_time_from_hourly_summary(day, slot, slots_per_day=24):
     """
     Convert an hourly summary position into a 1-based elapsed round count.
 
@@ -74,8 +74,8 @@ def _elapsed_time_from_hourly_summary(day, slot):
     day = int(day)
     slot = int(slot)
     if day <= 0 or slot <= 0:
-        return day * 24 + slot + 1
-    return (day - 1) * 24 + slot
+        return day * slots_per_day + slot + 1
+    return (day - 1) * slots_per_day + slot
 
 
 def _read_execution_log_tail(execution_log_path, tail_bytes: int = 65536):
@@ -612,7 +612,9 @@ def get_latest_hourly_summary_from_client_log(client_log_path):
                         slot = log_entry.get("slot")
 
                         if day is not None and slot is not None:
-                            elapsed_time = _elapsed_time_from_hourly_summary(day, slot)
+                            elapsed_time = _elapsed_time_from_hourly_summary(
+                                day, slot, int(log_entry.get("slots_per_day") or 24)
+                            )
 
                             latest_hourly = {
                                 "day": day,
@@ -1329,6 +1331,15 @@ def monitor_hpc_client_execution_logs():
                     )
 
                     print(f"[HPC Monitor] Looking for client log: {client_log_path}")
+
+                    if (
+                        not (client_log_path and os.path.exists(client_log_path))
+                        and getattr(exp, "platform_type", None) == "dating"
+                    ):
+                        # the dating client writes its progress records to the execution log
+                        client_log_path = os.path.join(
+                            exp_folder, "logs", f"{client.name}_execution.log"
+                        )
 
                     if client_log_path and os.path.exists(client_log_path):
                         print(

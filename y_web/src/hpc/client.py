@@ -222,9 +222,34 @@ def _normalize_im_client_config(
         json.dump(client_config, handle, indent=2)
 
 
+def _normalize_dating_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Check that a dating client file still matches its client and its population file.
+
+    Nothing is rewritten (the file is the one the form wrote, and its content is part of what a resumed
+    run is compared with); a mismatch stops the start with a clear message.
+    """
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+    if client_config.get("client_name") != client_name:
+        raise ValueError(
+            f"{os.path.basename(client_config_path)} is for client "
+            f"{client_config.get('client_name')!r}, not {client_name!r}"
+        )
+    population_file = client_config.get("population_file") or ""
+    if not population_file or not os.path.isfile(
+        os.path.join(exp_folder, population_file)
+    ):
+        raise FileNotFoundError(
+            f"population file {population_file!r} of client {client_name!r} not found"
+        )
+
+
 _CLIENT_NORMALIZERS = {
     "photo_sharing": _normalize_photo_sharing_client_config,
     "instant_messaging": _normalize_im_client_config,
+    "dating": _normalize_dating_client_config,
 }
 
 
@@ -758,20 +783,24 @@ def start_hpc_client(exp, cli, population):
     runtime_config_dir = exp_folder
     script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_client.py")
     if spec.normalizes_client_config:
-        runtime_config_dir = client_config
+        if not spec.client_config_file_arg:
+            runtime_config_dir = client_config
 
         try:
             _CLIENT_NORMALIZERS[spec.key](
                 exp_folder, cli.name, population.name, client_config
             )
         except Exception:
-            if spec.key == "instant_messaging":
-                raise  # IM must not start with a client config that could not be aligned
+            if spec.key in ("instant_messaging", "dating"):
+                raise  # these must not start with a client config that could not be aligned
 
     if spec.validates_config:
-        from y_web.src.im.validation import validate_im_folder
+        if spec.key == "dating":
+            from y_web.src.dating.validation import validate_dating_folder as _validate
+        else:
+            from y_web.src.im.validation import validate_im_folder as _validate
 
-        validate_im_folder(
+        _validate(
             exp_folder,
             _external_repo_dir(spec.runtime_repo),
             client_config=os.path.basename(client_config),
@@ -798,6 +827,13 @@ def start_hpc_client(exp, cli, population):
 
     def _client_args():
         if spec.client_config_only:
+            if spec.client_config_file_arg:
+                return [
+                    "--config",
+                    runtime_config_dir,
+                    "--client-config",
+                    os.path.basename(client_config),
+                ]
             return ["--config", runtime_config_dir]
         return [
             "--config",

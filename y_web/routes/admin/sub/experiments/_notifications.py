@@ -38,6 +38,7 @@ from sqlalchemy import func, select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -218,8 +219,11 @@ def _build_single_experiment_zip(eid, output_zip_path):
     )
     if os.path.exists(f"{output_base}.zip"):
         os.remove(f"{output_base}.zip")
-    if is_im_experiment(experiment):
-        from y_web.src.im.clone import snapshot_for_download
+    if is_im_experiment(experiment) or is_dating_experiment(experiment):
+        if is_dating_experiment(experiment):
+            from y_web.src.dating.clone import snapshot_for_download
+        else:
+            from y_web.src.im.clone import snapshot_for_download
 
         staging = f"{output_base}_im_snapshot"
         try:
@@ -272,8 +276,11 @@ def _build_bulk_experiments_zip(exp_ids, output_zip_path):
             used_names.add(safe_exp_name)
 
             exp_zip_path = os.path.join(bulk_download_dir, safe_exp_name)
-            if is_im_experiment(experiment):
-                from y_web.src.im.clone import snapshot_for_download
+            if is_im_experiment(experiment) or is_dating_experiment(experiment):
+                if is_dating_experiment(experiment):
+                    from y_web.src.dating.clone import snapshot_for_download
+                else:
+                    from y_web.src.im.clone import snapshot_for_download
 
                 staging = f"{exp_zip_path}_im_snapshot"
                 try:
