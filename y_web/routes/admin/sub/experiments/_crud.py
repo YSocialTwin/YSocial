@@ -3893,6 +3893,8 @@ def _matrix_recsys_catalog(experiment):
     """Return mode-filtered content and follow recsys choices."""
     mode = _matrix_get_experiment_mode(experiment)
     mode_lower = mode.lower()
+    # forum experiments use the "Standard" catalogue plus the forum-only recommenders
+    mode_tokens = ("standard", "forum") if mode_lower == "forum" else (mode_lower,)
     content_recsys = [
         {
             "name": recsys.name,
@@ -3903,7 +3905,8 @@ def _matrix_recsys_catalog(experiment):
         for recsys in db.session.scalars(
             select(Content_Recsys).order_by(Content_Recsys.id.asc())
         ).all()
-        if recsys.enabled and mode_lower in recsys.enabled.lower()
+        if recsys.enabled
+        and any(t in recsys.enabled.lower() for t in mode_tokens)
     ]
     follow_recsys = [
         {
@@ -3915,7 +3918,8 @@ def _matrix_recsys_catalog(experiment):
         for recsys in db.session.scalars(
             select(Follow_Recsys).order_by(Follow_Recsys.id.asc())
         ).all()
-        if recsys.enabled and mode_lower in recsys.enabled.lower()
+        if recsys.enabled
+        and any(t in recsys.enabled.lower() for t in mode_tokens)
     ]
     return {"content": content_recsys, "follow": follow_recsys}
 

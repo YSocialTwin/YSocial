@@ -1509,13 +1509,18 @@ def _build_client_creation_context(idexp, recsys_mode):
 
     crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
-    recsys_mode_lower = str(recsys_mode or "").lower()
-    crecsys = [
-        r for r in crecsys_all if r.enabled and recsys_mode_lower in r.enabled.lower()
-    ]
-    frecsys = [
-        r for r in frecsys_all if r.enabled and recsys_mode_lower in r.enabled.lower()
-    ]
+    # ``recsys_mode`` is one simulator name or several (forum clients get the "Standard"
+    # catalogue plus the recommenders reserved to forums, e.g. HotRanking).
+    if isinstance(recsys_mode, str) or recsys_mode is None:
+        recsys_mode = (recsys_mode,)
+    recsys_modes_lower = [str(m or "").lower() for m in recsys_mode]
+
+    def _enabled_for_modes(row):
+        enabled = (row.enabled or "").lower()
+        return bool(enabled) and any(m in enabled for m in recsys_modes_lower)
+
+    crecsys = [r for r in crecsys_all if _enabled_for_modes(r)]
+    frecsys = [r for r in frecsys_all if _enabled_for_modes(r)]
 
     experiment_clock = {
         "mode": "simulated",
@@ -1768,7 +1773,7 @@ def clients_forum(idexp):
     """Render the dedicated forum client creation page."""
     check_privileges(current_user.username)
 
-    context = _build_client_creation_context(idexp, "Standard")
+    context = _build_client_creation_context(idexp, ("Standard", "Forum"))
     exp = context["experiment"]
     if exp is None:
         flash(_("Experiment not found."), "error")

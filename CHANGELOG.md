@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Added
+
+- Forum clients can use the Reddit-style content recommenders `HotRanking`, `TopRanking` and `MostCommented`
+  (new `content_recsys` rows reserved to forums: template database, PostgreSQL seed and Alembic `0011`).
+
+### Fixed
+
+- Forum clients: the *Content RecSys* menu (client creation, client details, experiment matrix) offers the
+  "Standard" recommenders plus the forum-only ones; every listed recommender now exists in YClientReddit.
+- Forum client details: the content recommender selection is preselected also for uncategorized entries
+  (the template compared it with the friendship recommender).
+
 ## [4.0.0] - 2026-10-23
 
 YSocial 4.0.0 turns the web application into an installable product: a Python
