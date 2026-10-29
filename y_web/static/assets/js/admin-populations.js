@@ -24,6 +24,7 @@ var AdminPopulations = (function() {
       if (platformType === 'forum') return YI18n.t('Forum');
       if (platformType === 'photo_sharing') return YI18n.t('Photo Sharing');
       if (platformType === 'instant_messaging') return YI18n.t('Instant Messaging');
+      if (platformType === 'dating') return YI18n.t('Dating');
       return YI18n.t('Microblogging');
   };
 

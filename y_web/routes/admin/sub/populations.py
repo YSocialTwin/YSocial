@@ -8,6 +8,7 @@ association with experiments and pages.
 
 import json
 import os
+import re
 
 from flask import (
     Blueprint,
@@ -676,6 +677,8 @@ def population_details(uid):
     check_privileges(current_user.username)
     # get population details
     population = db.session.scalars(select(Population).filter_by(id=uid)).first()
+    if population is not None and population.username_type == "dating":
+        return redirect(f"/admin/dating_population/{uid}")
 
     # get experiment populations along with experiment names and ids
     experiment_populations = (
@@ -1028,6 +1031,11 @@ def delete_population(uid):
                 )
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
 
+    if population.username_type == "dating":
+        from y_web.src.dating.population import remove as remove_dating_population
+
+        remove_dating_population(_dating_base_dir(), population.id)
+
     db.session.delete(population)
     db.session.commit()
 
@@ -1058,6 +1066,8 @@ def download_population(uid):
     """Download population."""
     check_privileges(current_user.username)
     ensure_population_username_type_column()
+    if _dating_population_or_none(uid) is not None:
+        return redirect(f"/admin/dating_population/{uid}/download")
 
     # get all agents in the population
     agents = (
@@ -1619,3 +1629,191 @@ def merge_populations():
         )
     )
     return populations()
+
+
+# ---------------------------------------------------------------------------------------------------
+# Dating populations (plan S2, IR-D-05): a validated JSON document in a file plus one ``population`` row
+# ---------------------------------------------------------------------------------------------------
+def _dating_base_dir():
+    from y_web.src.system.path_utils import get_writable_path
+
+    return get_writable_path()
+
+
+def _dating_population_or_none(uid):
+    from y_web.src.dating.population import is_dating_population
+
+    pop = db.session.scalars(select(Population).filter_by(id=uid)).first()
+    return pop if pop is not None and is_dating_population(pop) else None
+
+
+def _unique_population_name(base_name):
+    name = base_name
+    suffix = 0
+    while db.session.scalars(select(Population).filter_by(name=name)).first():
+        suffix += 1
+        tail = f"_{suffix}"
+        name = f"{base_name[: 50 - len(tail)]}{tail}"
+    return name
+
+
+def _register_dating_population(name, descr, data):
+    """Create the ``population`` row and the file of a validated dating population."""
+    from y_web.src.dating import population as dp
+
+    size, age_min, age_max = dp.population_row_values(data)
+    summary = dp.summarize(data)
+    row = Population(
+        name=_unique_population_name(name),
+        descr=(descr or "")[:200],
+        size=size,
+        age_min=age_min,
+        age_max=age_max,
+        interests=",".join(list(summary["interests"])[:30])[:300],
+        languages=",".join(summary["languages"])[:100],
+        username_type="dating",
+    )
+    db.session.add(row)
+    db.session.commit()
+    dp.store(_dating_base_dir(), row.id, data)
+    return row
+
+
+@population.route("/admin/dating_populations")
+@login_required
+def dating_populations():
+    """Dating populations: upload, generation and the list with their compatibility label."""
+    check_privileges(current_user.username)
+    ensure_population_username_type_column()
+    rows = db.session.scalars(
+        select(Population).filter_by(username_type="dating").order_by(Population.name)
+    ).all()
+    return render_template("admin/dating_populations.html", populations=rows)
+
+
+@population.route("/admin/dating_populations/upload", methods=["POST"])
+@login_required
+def upload_dating_population():
+    """Validate an uploaded document against the YDating population schema and store it."""
+    check_privileges(current_user.username)
+    ensure_population_username_type_column()
+    from y_web.src.dating import population as dp
+
+    upload = request.files.get("population_file")
+    if upload is None or not upload.filename:
+        flash(_("Choose a population file first."), "error")
+        return redirect("/admin/dating_populations")
+    try:
+        data = dp.read_upload(upload.read(dp.MAX_UPLOAD_BYTES + 1))
+        problems = dp.validate_population(data)
+        if problems:
+            raise dp.DatingPopulationError(problems)
+    except dp.DatingPopulationError as exc:
+        flash(
+            _(
+                "The population is not valid for dating: %(why)s",
+                why=" | ".join(exc.problems[:5]),
+            ),
+            "error",
+        )
+        return redirect("/admin/dating_populations")
+    default_name = os.path.splitext(os.path.basename(upload.filename))[0]
+    row = _register_dating_population(
+        dp.clean_name(request.form.get("pop_name"))
+        or dp.clean_name(default_name)
+        or "dating",
+        request.form.get("pop_descr"),
+        data,
+    )
+    flash(_("Dating population '%(name)s' imported.", name=row.name), "success")
+    return redirect(f"/admin/dating_population/{row.id}")
+
+
+@population.route("/admin/dating_populations/generate", methods=["POST"])
+@login_required
+def generate_dating_population():
+    """Generate a synthetic dating population with the generator of YDating."""
+    check_privileges(current_user.username)
+    ensure_population_username_type_column()
+    from y_web.src.dating import population as dp
+
+    try:
+        data = dp.generate(
+            request.form.get("n_agents"),
+            seed=request.form.get("seed"),
+            language=(request.form.get("language") or "").strip() or None,
+        )
+    except dp.DatingPopulationError as exc:
+        flash(
+            _(
+                "The population could not be generated: %(why)s",
+                why=" | ".join(exc.problems[:5]),
+            ),
+            "error",
+        )
+        return redirect("/admin/dating_populations")
+    row = _register_dating_population(
+        dp.clean_name(request.form.get("pop_name")) or "dating",
+        request.form.get("pop_descr"),
+        data,
+    )
+    flash(_("Dating population '%(name)s' generated.", name=row.name), "success")
+    return redirect(f"/admin/dating_population/{row.id}")
+
+
+@population.route("/admin/dating_population/<int:uid>")
+@login_required
+def dating_population_details(uid):
+    """Summary of a dating population and the public card of one of its agents."""
+    check_privileges(current_user.username)
+    from y_web.src.dating import population as dp
+
+    pop = _dating_population_or_none(uid)
+    if pop is None:
+        flash(_("Population not found."), "error")
+        return redirect("/admin/populations")
+    data = dp.load(_dating_base_dir(), uid)
+    if data is None:
+        flash(_("The population file is missing."), "error")
+        return redirect("/admin/dating_populations")
+    agents = data.get("agents") or []
+    index = request.args.get("agent", type=int, default=0) or 0
+    index = max(0, min(index, len(agents) - 1))
+    exps = [
+        (p[1].exp_name, p[1].idexp)
+        for p in db.session.query(Population_Experiment, Exps)
+        .join(Exps)
+        .filter(Population_Experiment.id_population == uid)
+        .all()
+    ]
+    return render_template(
+        "admin/dating_population_details.html",
+        population=pop,
+        summary=dp.summarize(data),
+        card=dp.profile_card(agents[index]),
+        index=index,
+        names=[a["username"] for a in agents[:500]],
+        experiments=exps,
+    )
+
+
+@population.route("/admin/dating_population/<int:uid>/download")
+@login_required
+def download_dating_population(uid):
+    """Download the stored document (the same file that is uploaded back)."""
+    check_privileges(current_user.username)
+    from flask import Response
+
+    from y_web.src.dating import population as dp
+
+    pop = _dating_population_or_none(uid)
+    data = dp.load(_dating_base_dir(), uid) if pop is not None else None
+    if data is None:
+        flash(_("Population not found."), "error")
+        return redirect("/admin/dating_populations")
+    filename = re.sub(r"[^A-Za-z0-9_.-]+", "_", pop.name) or "population"
+    return Response(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        mimetype="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+    )

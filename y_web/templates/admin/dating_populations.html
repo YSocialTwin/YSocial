@@ -1,0 +1,115 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Dating populations') }}
+                        <span class="tag is-info">{{ _('Dating') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">{{ _('Dating populations') }}</h3>
+                        <p class="ys-text-small">{{ _('Populations for dating experiments. They can only be assigned to dating experiments, and dating experiments only accept them.') }}</p>
+                        <div class="box-content">
+                            {% if populations %}
+                            <table class="table is-fullwidth" id="dating-populations-table">
+                                <thead>
+                                    <tr>
+                                        <th>{{ _('Name') }}</th>
+                                        <th>{{ _('Agents') }}</th>
+                                        <th>{{ _('Ages') }}</th>
+                                        <th>{{ _('Compatible with') }}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in populations %}
+                                    <tr>
+                                        <td>{{ p.name }}</td>
+                                        <td>{{ p.size }}</td>
+                                        <td>{{ p.age_min }}&ndash;{{ p.age_max }}</td>
+                                        <td><span class="tag is-info">{{ _('Dating') }}</span></td>
+                                        <td>
+                                            <a href="/admin/dating_population/{{ p.id }}">{{ _('Details') }}</a>
+                                            &middot; <a href="/admin/dating_population/{{ p.id }}/download">{{ _('Download') }}</a>
+                                            &middot; <a href="/admin/delete_population/{{ p.id }}">{{ _('Delete') }}</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p class="ys-label-hint">{{ _('No dating populations yet. Upload one or generate a synthetic one.') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="sidebar-box" id="box-upload-dating-population">
+                        <h3>{{ _('Load population from file') }}</h3>
+                        <p class="ys-label-hint">{{ _('The file is checked against the population schema of the dating runtime; a file that does not satisfy it is refused with the path of the problem.') }}</p>
+                        <form action="/admin/dating_populations/upload" enctype="multipart/form-data" method="POST">
+                            <div class="box-line">
+                                <span class="left">{{ _('Population file') }}</span>
+                                <span class="right"><input type="file" name="population_file" accept=".json" class="input" required></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">{{ _('Name') }}</span>
+                                <span class="right"><input type="text" name="pop_name" class="input" maxlength="50" placeholder="{{ _('Optional') }}"></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">{{ _('Description') }}</span>
+                                <span class="right"><input type="text" name="pop_descr" class="input" maxlength="200"></span>
+                            </div>
+                            <div class="button-wrap">
+                                <button class="button is-solid primary-button is-fullwidth">{{ _('Upload') }}</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="sidebar-box" id="box-generate-dating-population">
+                        <h3>{{ _('Generate synthetic population') }}</h3>
+                        <p class="ys-label-hint">{{ _('The same seed always generates the same population.') }}</p>
+                        <form action="/admin/dating_populations/generate" method="POST">
+                            <div class="box-line">
+                                <span class="left">{{ _('Name') }}</span>
+                                <span class="right"><input type="text" name="pop_name" class="input" maxlength="50" required></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">{{ _('Description') }}</span>
+                                <span class="right"><input type="text" name="pop_descr" class="input" maxlength="200"></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">{{ _('Agents') }}</span>
+                                <span class="right"><input type="number" name="n_agents" class="input" value="100" min="2" max="20000" required></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">{{ _('Seed') }}</span>
+                                <span class="right"><input type="number" name="seed" class="input" value="42" min="0"></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">{{ _('Language') }}</span>
+                                <span class="right"><input type="text" name="language" class="input" value="en" maxlength="10"></span>
+                            </div>
+                            <div class="button-wrap">
+                                <button class="button is-solid primary-button is-fullwidth">{{ _('Generate') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

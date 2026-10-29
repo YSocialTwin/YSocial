@@ -25,6 +25,8 @@ PARTIALS = {
     "experiment_details_photo",
     "experiment_details_im",
     "experiment_details_dating",
+    "dating_populations",
+    "dating_population_details",
     "_im_analytics_note",
     "select_experiment_unused",
 }
