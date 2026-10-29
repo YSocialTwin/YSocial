@@ -106,6 +106,8 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
         query = base_query.filter(Exps.platform_type == "photo_sharing")
     elif group_key == "instant_messaging":
         query = base_query.filter(Exps.platform_type == "instant_messaging")
+    elif group_key == "dating":
+        query = base_query.filter(Exps.platform_type == "dating")
     elif group_key == "forum":
         query = base_query.filter(Exps.platform_type == "forum")
     elif group_key == "hpc":

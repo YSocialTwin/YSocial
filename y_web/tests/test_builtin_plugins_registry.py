@@ -35,7 +35,7 @@ def _normalise(spec: ExternalRuntimeSpec) -> dict:
 
 
 def test_built_in_specs_are_identical_to_the_previous_hard_coded_ones():
-    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging)."""
+    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging and dating)."""
     assert [g["key"] for g in GOLDEN] == list(SUPPORTED_EXTERNAL_REPOS)
     for expected in GOLDEN:
         assert _normalise(SUPPORTED_EXTERNAL_REPOS[expected["key"]]) == expected
@@ -63,6 +63,7 @@ def test_seeded_directories_are_the_simulation_runtimes():
         "YSimulator",
         "YPhotoSharing",
         "YInstantMessaging",
+        "YDating",
     ]
 
 

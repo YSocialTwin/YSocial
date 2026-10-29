@@ -73,6 +73,20 @@ HPC_PLATFORMS = {
         syncs_client_config=False,
         requires_prompts_file=False,
     ),
+    "dating": HpcPlatform(
+        key="dating",
+        runtime_repo="YDating",
+        supports_gunicorn=False,
+        frozen_server_runs_script=True,
+        client_config_only=True,
+        normalizes_client_config=True,
+        prompts_filename="prompts_dating.json",
+        orchestrator_actor="Orchestrator",
+        # the offline validator and the prompt files arrive with the stages that need them (S4, S5)
+        validates_config=False,
+        syncs_client_config=False,
+        requires_prompts_file=False,
+    ),
 }
 
 

@@ -240,6 +240,41 @@
     "min_ysocial_version": null
   },
   {
+    "key": "dating",
+    "group": "dating",
+    "group_label": "Dating",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YDating",
+    "path": "YDating",
+    "github_repo": "YSocialTwin/YDating",
+    "repo_url": "https://github.com/YSocialTwin/YDating.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "YDating",
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Simulation runtime for Tinder-like dating experiments: profiles, swipes, mutual matches, private conversations and interchangeable matching recommenders.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
     "key": "agent_plugins",
     "group": "agent_plugins",
     "group_label": "Agent Plugins",

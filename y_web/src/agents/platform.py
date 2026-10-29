@@ -10,6 +10,7 @@ VALID_POPULATION_TYPES = {
     "forum",
     "photo_sharing",
     "instant_messaging",
+    "dating",
 }
 
 
