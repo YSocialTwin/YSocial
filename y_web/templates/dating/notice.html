@@ -1,0 +1,12 @@
+{% extends "dating/base.html" %}
+{% block title %}{{ _('Before you start') }} · {{ exp.exp_name }}{% endblock %}
+{% block content %}
+<section class="dt-panel dt-narrow" aria-labelledby="dt-notice-h">
+  <h2 class="dt-h" id="dt-notice-h">{{ _('Before you start') }}</h2>
+  <div class="dt-notice">{{ notice }}</div>
+  <form method="post" action="/{{ exp.idexp }}/dating/notice">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="dt-btn" type="submit">{{ _('I have read this, continue') }}</button>
+  </form>
+</section>
+{% endblock %}

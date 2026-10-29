@@ -7,7 +7,7 @@
   <link rel="icon" href="{{ url_for('static', filename='assets/img/vector/logo/YSocial_l_teal.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/dating.css') }}">
 </head>
-<body class="dt-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest }}" data-status-url="/{{ exp.idexp }}/dating/api/status">
+<body class="dt-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest }}" data-status-url="/{{ exp.idexp }}/dating/api/status"{% if participant %} data-act-url="/{{ exp.idexp }}/dating/api/act" data-leave-url="/{{ exp.idexp }}/dating/api/leave" data-csrf="{{ csrf_token }}" data-t-lost="{{ _('Connection lost: try again in a moment.') }}"{% endif %}>
 <a class="dt-skip" href="#dt-main">{{ _('Skip to content') }}</a>
 <div class="dt-app">
   <header class="dt-top">
@@ -15,6 +15,7 @@
     <nav class="dt-nav" aria-label="{{ _('Sections') }}">
       <a href="{{ link('') }}"{% if nav == 'home' %} aria-current="page"{% endif %}>{{ _('Discover') if ctx.vp.kind != 'public' else _('Profiles') }}</a>
       {% if ctx.vp.kind != 'public' %}<a href="{{ link('/matches') }}"{% if nav == 'matches' %} aria-current="page"{% endif %}>{{ _('Matches') }}</a>{% endif %}
+      {% if participant %}<a href="{{ link('/me') }}"{% if nav == 'me' %} aria-current="page"{% endif %}>{{ _('Profile') }}</a>{% endif %}
       {% if ctx.vp.kind == 'account' %}<a href="{{ link('/notifications') }}"{% if nav == 'notifications' %} aria-current="page"{% endif %}>{{ _('Notifications') }}</a>{% endif %}
       <a href="{{ link('/search') }}"{% if nav == 'search' %} aria-current="page"{% endif %}>{{ _('Search') }}</a>
     </nav>
@@ -25,10 +26,11 @@
   </header>
   <div class="dt-banner dt-banner-sim" role="note">{{ _('This is a simulation: all people, photos and messages are fictional.') }}</div>
   {% if ctx.vp.kind == 'overview' %}<div class="dt-banner is-overview" role="note">{{ _('Researcher overview: everything the run recorded is shown, including private chats, deleted messages and the recommender internals. This is not what a user sees.') }}</div>
+  {% elif participant %}<div class="dt-banner is-account" role="note">{{ _('You are playing as %(name)s. Simulated users and other people see your profile and your messages.', name=participant.username) }}</div>
   {% elif ctx.vp.kind == 'account' %}<div class="dt-banner is-account" role="note">{{ _('Viewing as %(name)s: exactly what this account could see at this round.', name=(viewed.username if viewed else ctx.vp.account_id)) }}</div>{% endif %}
   {% if ctx.vp.round != ctx.latest %}<div class="dt-banner is-past" role="note">{{ _('Time travel: showing the state at day %(d)s, round %(h)s.', d=day, h=hour) }}</div>{% endif %}
   <div id="dt-live" class="dt-banner is-live" hidden role="status"><span>{{ _('New rounds are available.') }}</span> <a href="">{{ _('Refresh') }}</a></div>
-  <div class="dt-layout">
+  <div class="dt-layout{{ ' is-single' if not (is_staff or (time_travel and ctx.latest)) }}">
     <aside class="dt-side" aria-label="{{ _('Viewpoint and time') }}">
       {% if is_staff %}
       <section class="dt-panel">
@@ -69,5 +71,6 @@
 {% include "shared/language_switcher.html" %}
 {% include "shared/plugin_loader.html" %}
 <script src="{{ url_for('static', filename='assets/js/dating.js') }}"></script>
+{% if participant %}<script src="{{ url_for('static', filename='assets/js/dating-participant.js') }}"></script>{% endif %}
 </body>
 </html>

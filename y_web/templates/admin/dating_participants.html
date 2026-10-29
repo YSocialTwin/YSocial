@@ -1,0 +1,49 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt;
+                <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Participants') }}
+                <span class="tag is-info">{{ _('Dating') }}</span>
+            </div></div></div>
+
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                {% if not data.enabled %}
+                <p id="dating-humans-off">{{ _('Human participation is off for this experiment. Turn it on in the server settings (section Human participants) before the run starts.') }}</p>
+                {% else %}
+                <p class="notification is-warning is-light" id="dating-humans-nonrepro">{{ _('A run with human participants is not reproducible: what happens depends on what the people do and when.') }}</p>
+                <table class="table is-fullwidth" id="dating-humans-config"><tbody>
+                    <tr><td>{{ _('Gateway') }}</td><td id="dating-gateway-status">{{ {'running': _('Running'), 'stopped': _('Stopped'), 'unreachable': _('Not answering'), 'off': _('Off')}[data.gateway.status] }}</td></tr>
+                    <tr><td>{{ _('Maximum participants') }}</td><td>{{ data.config.get('max_humans', 200) }}</td></tr>
+                    <tr><td>{{ _('Minimum round time (seconds)') }}</td><td>{{ (data.config.get('pace') or {}).get('min_round_seconds', 0) }}</td></tr>
+                    <tr><td>{{ _('Interactions switched off') }}</td><td>{% set off = [] %}{% for k, v in (data.config.get('interactions') or {}).items() if v is false %}{% set _ = off.append(k) %}{% endfor %}{{ off|join(', ') or '–' }}</td></tr>
+                </tbody></table>
+                <p><a href="/admin/dating_settings/{{ experiment.idexp }}">{{ _('Change the human participation settings') }}</a></p>
+                {% endif %}
+            </div></div></div>
+
+            {% if data.enabled %}
+            <div class="columns"><div class="column is-12"><div class="dashboard-box">
+                <h3 class="title is-5 is-thin">{{ _('People assigned to this experiment') }}</h3>
+                {% if data.humans %}
+                <table class="table is-fullwidth" id="dating-humans">
+                    <thead><tr><th>{{ _('User') }}</th><th>{{ _('Account') }}</th><th>{{ _('Status') }}</th><th>{{ _('Swipes') }}</th><th>{{ _('Matches') }}</th><th>{{ _('Messages') }}</th><th>{{ _('Reports') }}</th></tr></thead>
+                    <tbody>{% for h in data.humans %}
+                    <tr><td>{{ h.user }}</td>
+                        <td>{{ _('created') if h.created else _('not entered yet') }}</td>
+                        <td>{{ h.status or '–' }}{% if h.left_reason %} ({{ h.left_reason }}){% endif %}</td>
+                        <td>{{ h.swipes if h.created else '–' }}</td><td>{{ h.matches if h.created else '–' }}</td>
+                        <td>{{ h.messages if h.created else '–' }}</td><td>{{ h.reports if h.created else '–' }}</td></tr>
+                    {% endfor %}</tbody>
+                </table>
+                {% else %}<p>{{ _('No user with the role user or student is assigned to this experiment.') }}</p>{% endif %}
+            </div></div></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

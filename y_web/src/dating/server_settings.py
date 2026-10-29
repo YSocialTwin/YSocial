@@ -38,6 +38,8 @@ INTERNAL: Dict[str, str] = {
     "annotations.sentiment": "the annotation switches of the experiment configuration",
     "annotations.toxicity": "the annotation switches of the experiment configuration",
     "annotations.emotions": "the annotation switches of the experiment configuration",
+    "human.gateway.host": "loopback only; chosen by YWeb when it starts the gateway",
+    "human.gateway.port": "chosen by YWeb when it starts the gateway",
     "stress_reward.enabled": "the stress/reward switch of the experiment configuration",
     "stress_reward.system": "the stress/reward settings page",
     "platform_type": "host metadata of YSocial",
@@ -56,6 +58,7 @@ INTERNAL: Dict[str, str] = {
 
 # top-level keys that do not shape the run: they may change after it started
 UNLOCKED = {
+    "human",  # people take part under their own conditions: such a run is not reproducible anyway
     "logging",
     "platform_type",
     "experiment_name",

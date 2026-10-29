@@ -8,13 +8,15 @@ Pages for the ``public`` and ``account`` viewpoints are built from the reader's 
 
 import os
 
-from flask import abort, jsonify, redirect, render_template, request, url_for
+from flask import abort, jsonify, redirect, render_template, request
+from flask import session as flask_session
+from flask import url_for
 from sqlalchemy import select
 
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
-from y_web.src.dating import is_dating_experiment
+from y_web.src.dating import human, is_dating_experiment
 from y_web.src.dating.reader import (
     ACCOUNT,
     OVERVIEW,
@@ -24,7 +26,7 @@ from y_web.src.dating.reader import (
     ViewpointError,
     open_reader,
 )
-from y_web.src.models import Exps
+from y_web.src.models import Exps, User_Experiment
 
 POLL_SECONDS = 10
 PAGE_SIZE = 24
@@ -63,9 +65,33 @@ def _db_path(exp) -> str:
     )
 
 
+class _Redirect(Exception):
+    """Raised inside a context to send the person somewhere else (entry form, notice)."""
+
+    def __init__(self, url):
+        self.url = url
+
+
+def participant_of(exp, ui):
+    """The participant behind the session (``human.Participant``), or ``None`` (observer only)."""
+    from flask_login import current_user
+
+    user = current_user if current_user.is_authenticated else None
+    if user is None:
+        return None
+    assigned = (
+        db.session.scalars(
+            select(User_Experiment).filter_by(user_id=user.id, exp_id=exp.idexp)
+        ).first()
+        is not None
+    )
+    return human.participant_for(exp, user, ui, assigned)
+
+
 class _Context:
-    def __init__(self, exp, staff, vp, latest, ui, focus=None):
+    def __init__(self, exp, staff, vp, latest, ui, focus=None, participant=None):
         self.exp, self.staff, self.vp, self.latest, self.ui = exp, staff, vp, latest, ui
+        self.participant = participant
         self.live = bool(exp.running)
         self.focus = (
             focus  # overview only: account whose deck the researcher is looking at
@@ -98,6 +124,9 @@ def _open_context(reader, exp_id):
     if staff is not None and not user_can_view_experiment(staff, exp):
         abort(403)
     ui = _ui(exp_id)
+    part = participant_of(exp, ui) if staff is None else None
+    if part is not None:
+        return _participant_context(reader, exp, ui, part)
     if staff is None and not ui.get("dating_public_observer_enabled", True):
         abort(403)
     kind = request.args.get("vp") or (OVERVIEW if staff is not None else PUBLIC)
@@ -116,6 +145,29 @@ def _open_context(reader, exp_id):
         abort(400)
     focus = acc if kind == OVERVIEW else None
     return _Context(exp, staff, vp, latest, ui, focus)
+
+
+def _participant_context(reader, exp, ui, part):
+    """A person plays: their own account, the latest round, no time travel, no other account."""
+    if not reader.has_account(part.account_id):
+        raise _Redirect(url_for("main.dating_join", exp_id=exp.idexp))
+    notice = (ui.get("dating_participant_notice") or "").strip()
+    ack_key = human.NOTICE_SESSION_PREFIX + str(exp.idexp)
+    if (
+        notice
+        and not flask_session.get(ack_key)
+        and request.endpoint != "main.dating_notice"
+    ):
+        raise _Redirect(url_for("main.dating_notice", exp_id=exp.idexp))
+    latest = reader.latest_round()
+    return _Context(
+        exp,
+        None,
+        Viewpoint(ACCOUNT, part.account_id, latest),
+        latest,
+        ui,
+        participant=part,
+    )
 
 
 def _poll_seconds(ctx):
@@ -144,8 +196,8 @@ def _render(template, ctx, reader, **values):
     viewed = None
     if ctx.vp.kind == ACCOUNT:
         viewed = next((a for a in accounts if a["id"] == ctx.vp.account_id), None)
-    time_travel = ctx.staff is not None or bool(
-        ctx.ui.get("dating_allow_time_travel", True)
+    time_travel = ctx.participant is None and (
+        ctx.staff is not None or bool(ctx.ui.get("dating_allow_time_travel", True))
     )
     return render_template(
         template,
@@ -154,6 +206,8 @@ def _render(template, ctx, reader, **values):
         params=ctx.params,
         link=_linker(ctx),
         is_staff=ctx.staff is not None,
+        participant=ctx.participant,
+        csrf_token=human.csrf_token(flask_session) if ctx.participant else "",
         day=day,
         hour=hour,
         accounts=accounts,
@@ -174,6 +228,8 @@ def _view(exp_id, handler):
         with open_reader(_db_path(exp)) as reader:
             ctx = _open_context(reader, exp_id)
             return handler(ctx, reader)
+    except _Redirect as moved:
+        return redirect(moved.url)
     except ViewpointError:
         abort(400)
     except DatingReadError as exc:
@@ -186,6 +242,8 @@ def _view(exp_id, handler):
 @main.route("/<int:exp_id>/dating")
 def dating_home(exp_id):
     def handler(ctx, reader):
+        if ctx.participant is not None:
+            return _render("dating/play.html", ctx, reader)
         page = max(_int(request.args.get("page"), 1), 1)
         deck = None
         showcase = None
@@ -227,8 +285,19 @@ def dating_chat(exp_id, match_id):
         if chat is None:
             abort(404)
         items = reader.matches(ctx.vp.account_id, ctx.vp)
+        convo = None
+        if ctx.participant is not None:
+            from y_web.routes.social.dating_participant import conversation_for
+
+            convo = conversation_for(ctx.exp, ctx.participant, match_id)
         return _render(
-            "dating/chat.html", ctx, reader, chat=chat, matches=items, match_id=match_id
+            "dating/chat.html",
+            ctx,
+            reader,
+            chat=chat,
+            matches=items,
+            match_id=match_id,
+            convo=convo,
         )
 
     return _view(exp_id, handler)

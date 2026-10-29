@@ -11,6 +11,14 @@
   {% if profile.prompts %}<dl class="dt-prompts">{% for q, a in profile.prompts.items() %}<div><dt>{{ q }}</dt><dd>{{ a }}</dd></div>{% endfor %}</dl>{% endif %}
   {% if profile.interests %}<ul class="dt-tags">{% for i in profile.interests %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
   {% if profile.photos %}<ul class="dt-photolist" aria-label="{{ _('Photos') }}">{% for ph in profile.photos %}<li>{{ ph.caption or _('Photo %(n)s', n=loop.index) }}</li>{% endfor %}</ul>{% endif %}
+  {% if participant and profile.id != participant.account_id %}
+  <p class="dt-danger">
+    <button type="button" class="dt-btn dt-btn-ghost" data-act="BLOCK" data-confirm="{{ _('Block this person?') }}" data-payload='{{ {"target_id": profile.id}|tojson|forceescape }}'>{{ _('Block') }}</button>
+    <label class="dt-sr" for="dt-reason">{{ _('Reason') }}</label>
+    <select id="dt-reason" name="reason">{% for r in ('HARASSMENT', 'SPAM', 'FAKE', 'INAPPROPRIATE') %}<option value="{{ r }}">{{ {'HARASSMENT': _('Harassment'), 'SPAM': _('Spam'), 'FAKE': _('Fake profile'), 'INAPPROPRIATE': _('Inappropriate') }[r] }}</option>{% endfor %}</select>
+    <button type="button" class="dt-btn dt-btn-ghost" data-act="REPORT" data-from="dt-reason" data-confirm="{{ _('Report this person?') }}" data-payload='{{ {"target_id": profile.id}|tojson|forceescape }}'>{{ _('Report') }}</button>
+  </p>
+  {% endif %}
   {% if profile.overview %}
   <section class="dt-extra-block" aria-label="{{ _('Researcher only') }}">
     <h3>{{ _('Researcher only') }}</h3>

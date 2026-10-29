@@ -1,0 +1,20 @@
+{% extends "dating/base.html" %}
+{% set nav = 'home' %}
+{% block content %}
+<h2 class="dt-h">{{ _('Discover') }} <small id="dt-quota" aria-live="polite"></small></h2>
+<div id="dt-play" class="dt-play"
+     data-deck-url="/{{ exp.idexp }}/dating/api/deck" data-matches-url="/{{ exp.idexp }}/dating/matches"
+     data-t-match="{{ _('It is a match!') }}" data-t-open="{{ _('Open chat') }}"
+     data-t-lost="{{ _('Connection lost: try again in a moment.') }}" data-t-off="{{ _('Swiping is switched off for this experiment.') }}"
+     data-t-likes="{{ _('likes left') }}" data-t-supers="{{ _('super likes left') }}"
+     data-t-away="{{ _('away') }}" data-t-super-from="{{ _('Super liked you') }}">
+  <div id="dt-stage" class="dt-stage" aria-live="polite"></div>
+  <div class="dt-actions" role="group" aria-label="{{ _('Decide') }}">
+    <button id="dt-pass" type="button" class="dt-btn dt-btn-ghost" disabled>{{ _('Pass') }} <kbd>←</kbd></button>
+    <button id="dt-super" type="button" class="dt-btn dt-btn-ghost" disabled>{{ _('Super like') }} <kbd>↑</kbd></button>
+    <button id="dt-like" type="button" class="dt-btn" disabled>{{ _('Like') }} <kbd>→</kbd></button>
+  </div>
+  <p id="dt-empty" class="dt-empty" hidden>{{ _('No more profiles for now.') }} <button id="dt-more" type="button" class="dt-btn dt-btn-ghost">{{ _('Look again') }}</button></p>
+  <p class="dt-hint">{{ _('Drag the card, use the buttons or the arrow keys. Simulated users and other people answer as the experiment runs.') }}</p>
+</div>
+{% endblock %}

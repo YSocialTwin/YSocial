@@ -88,3 +88,25 @@
   .dt-msg { max-width: 92%; }
 }
 @media (prefers-reduced-motion: no-preference) { .dt-btn, .dt-pick { transition: background .15s; } }
+
+/* Participant mode (IR-D-22): swipe deck, forms and chat tools */
+.dt-layout.is-single { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+.dt-narrow { max-width: 560px; }
+.dt-fields { display: grid; gap: 8px; }
+.dt-fields input, .dt-fields select, .dt-fields textarea, .dt-compose input, .dt-compose textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--dt-border); border-radius: 10px; background: var(--dt-surface); color: var(--dt-text); }
+.dt-fields fieldset { border: 1px solid var(--dt-border); border-radius: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
+.dt-pair { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.dt-error { padding: 8px 12px; border-radius: 10px; background: var(--dt-warn-bg); color: var(--dt-warn-ink); }
+.dt-notice { white-space: pre-wrap; margin-bottom: 12px; }
+.dt-play { max-width: 440px; margin: 0 auto; }
+.dt-stage { min-height: 260px; touch-action: pan-y; }
+.dt-swipe { cursor: grab; transition: transform .15s ease; user-select: none; }
+.dt-actions { display: flex; justify-content: center; gap: 12px; margin: 12px 0; }
+.dt-actions kbd { font-size: 11px; opacity: .7; }
+.dt-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 8px; }
+.dt-compose label { grid-column: 1 / -1; }
+.dt-danger { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.dt-danger select { font: inherit; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--dt-border); background: var(--dt-surface); color: var(--dt-text); }
+.dt-date { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+@media (max-width: 640px) { .dt-pair { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .dt-swipe { transition: none; } }

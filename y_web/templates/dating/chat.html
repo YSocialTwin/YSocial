@@ -11,4 +11,36 @@
     {% else %}<p>{{ m.text }}</p>{% if m.deleted %}<small class="dt-flag">{{ _('Deleted (researcher only)') }}</small>{% endif %}{% endif %}
   </li>{% endfor %}</ol>
 {% else %}<p class="dt-empty">{{ _('No messages yet.') }}</p>{% endif %}
+{% if participant and convo %}
+{% set me_id = participant.account_id %}
+<section class="dt-panel dt-tools-panel" id="dt-chat-tools" aria-label="{{ _('Reply and options') }}">
+  {% if convo.can_open or convo.n_messages %}
+  <form data-act="{{ 'REPLY' if chat.messages and chat.messages[-1].sender_id != me_id else 'SEND_MESSAGE' }}" data-payload='{{ {"match_id": chat.id}|tojson|forceescape }}' class="dt-compose">
+    <label class="dt-sr" for="dt-text">{{ _('Message') }}</label>
+    <textarea id="dt-text" name="text" rows="2" maxlength="500" required></textarea>
+    <button class="dt-btn" type="submit">{{ _('Send') }}</button>
+  </form>
+  {% endif %}
+  {% if convo.date.pending_for_me %}
+  <div class="dt-date"><p>{{ _('Date proposal') }}: <em>{{ convo.date.pending_for_me.text }}</em></p>
+    <button type="button" class="dt-btn" data-act="ACCEPT_DATE" data-payload='{{ {"proposal_id": convo.date.pending_for_me.proposal_id}|tojson|forceescape }}'>{{ _('Accept') }}</button>
+    <button type="button" class="dt-btn dt-btn-ghost" data-act="DECLINE_DATE" data-payload='{{ {"proposal_id": convo.date.pending_for_me.proposal_id}|tojson|forceescape }}'>{{ _('Decline') }}</button></div>
+  {% elif convo.date.awaiting_their_answer %}<p class="dt-hint">{{ _('Waiting for an answer to your date proposal.') }}</p>
+  {% elif convo.date.can_propose %}
+  <form data-act="PROPOSE_DATE" data-payload='{{ {"match_id": chat.id}|tojson|forceescape }}' class="dt-compose">
+    <label for="dt-date-text">{{ _('Propose a date') }}</label>
+    <input id="dt-date-text" name="text" maxlength="500" required>
+    <button class="dt-btn dt-btn-ghost" type="submit">{{ _('Propose') }}</button>
+  </form>
+  {% endif %}
+  <div class="dt-danger">
+    <button type="button" class="dt-btn dt-btn-ghost" data-act="UNMATCH" data-confirm="{{ _('End this match?') }}" data-payload='{{ {"match_id": chat.id}|tojson|forceescape }}'>{{ _('Unmatch') }}</button>
+    <button type="button" class="dt-btn dt-btn-ghost" data-act="BLOCK" data-confirm="{{ _('Block this person?') }}" data-payload='{{ {"target_id": convo.partner_id}|tojson|forceescape }}'>{{ _('Block') }}</button>
+    <label class="dt-sr" for="dt-reason">{{ _('Reason') }}</label>
+    <select id="dt-reason" name="reason">{% for r in ('HARASSMENT', 'SPAM', 'FAKE', 'INAPPROPRIATE') %}<option value="{{ r }}">{{ {'HARASSMENT': _('Harassment'), 'SPAM': _('Spam'), 'FAKE': _('Fake profile'), 'INAPPROPRIATE': _('Inappropriate') }[r] }}</option>{% endfor %}</select>
+    <button type="button" class="dt-btn dt-btn-ghost" data-act="REPORT" data-from="dt-reason" data-confirm="{{ _('Report this person?') }}" data-payload='{{ {"target_id": convo.partner_id}|tojson|forceescape }}'>{{ _('Report') }}</button>
+  </div>
+</section>
+{% elif participant %}<p class="dt-hint">{{ _('This conversation is closed or not reachable right now.') }}</p>
+{% endif %}
 {% endblock %}

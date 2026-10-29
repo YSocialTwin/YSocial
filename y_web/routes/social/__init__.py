@@ -16,6 +16,7 @@ platform views.  The sub-package is assembled from:
 from . import (  # side-effect: registers routes
     common,
     dating,
+    dating_participant,
     forum,
     helpers,
     instant_messaging,

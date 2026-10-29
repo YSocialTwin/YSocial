@@ -1,0 +1,38 @@
+{% extends "dating/base.html" %}
+{% set nav = 'me' %}
+{% block content %}
+<h2 class="dt-h">{{ _('Your profile') }}</h2>
+{% if me %}
+<section class="dt-panel dt-narrow">
+  <h3>{{ _('About you') }}</h3>
+  <form data-act="UPDATE_PROFILE" class="dt-fields">
+    <label for="dt-me-bio">{{ _('About you') }}</label>
+    <textarea id="dt-me-bio" name="bio" rows="4" maxlength="500">{{ me.preferences.bio }}</textarea>
+    <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Save') }}</button>
+  </form>
+</section>
+<section class="dt-panel dt-narrow">
+  <h3>{{ _('Who you see') }}</h3>
+  <form data-act="UPDATE_PREFERENCES" data-int="age_min,age_max" data-float="max_distance_km" class="dt-fields">
+    <div class="dt-pair">
+      <label>{{ _('Youngest') }} <input name="age_min" type="number" min="18" max="120" value="{{ me.preferences.age_min }}"></label>
+      <label>{{ _('Oldest') }} <input name="age_max" type="number" min="18" max="120" value="{{ me.preferences.age_max }}"></label>
+      <label>{{ _('Distance (km)') }} <input name="max_distance_km" type="number" min="1" value="{{ me.preferences.max_distance_km|int }}"></label>
+    </div>
+    <label for="dt-me-intent">{{ _('What are you looking for?') }}</label>
+    <select id="dt-me-intent" name="intent">{% for i in intents %}<option value="{{ i }}" {{ 'selected' if me.preferences.intent == i }}>{{ i }}</option>{% endfor %}</select>
+    <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Save') }}</button>
+  </form>
+</section>
+<section class="dt-panel dt-narrow">
+  <h3>{{ _('Pause or leave') }}</h3>
+  <p class="dt-hint">{{ _('A paused profile is hidden from everyone until you resume it. Leaving ends your matches and cannot be undone.') }}</p>
+  {% if me.account_status == 'paused' %}
+  <button class="dt-btn" type="button" data-act="RESUME_PROFILE"{% if not me.interactions.pause %} disabled{% endif %}>{{ _('Resume profile') }}</button>
+  {% elif me.account_status == 'active' %}
+  <button class="dt-btn dt-btn-ghost" type="button" data-act="PAUSE_PROFILE"{% if not me.interactions.pause %} disabled{% endif %}>{{ _('Pause profile') }}</button>
+  <button class="dt-btn dt-btn-ghost" type="button" data-leave="1" data-confirm="{{ _('Leave the platform? Your matches will end.') }}">{{ _('Leave the platform') }}</button>
+  {% else %}<p>{{ _('You have left this platform.') }}</p>{% endif %}
+</section>
+{% else %}<p class="dt-empty">{{ _('Your profile is not reachable right now. Try again in a moment.') }}</p>{% endif %}
+{% endblock %}

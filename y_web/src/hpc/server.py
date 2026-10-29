@@ -624,6 +624,16 @@ def stop_hpc_server(exp_id):
             except Exception as exc:  # noqa: BLE001
                 print(f"Warning: human gateway not stopped cleanly: {exc}")
 
+        if exp.platform_type == "dating":
+            try:  # reverse of the start order: gateway first, then the server
+                from y_web.src.dating.gateway import (
+                    stop_gateway as _stop_dating_gateway,
+                )
+
+                _stop_dating_gateway(exp_folder)
+            except Exception as exc:  # noqa: BLE001
+                print(f"Warning: human gateway not stopped cleanly: {exc}")
+
         pid = exp.server_pid
         print(f"Terminating HPC server process with PID {pid}...")
 

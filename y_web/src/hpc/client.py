@@ -743,6 +743,10 @@ def start_hpc_client(exp, cli, population):
 
     if exp.platform_type == "instant_messaging":
         _start_im_human_gateway(exp_folder)  # server -> gateway -> clients (plan 4.8)
+    elif exp.platform_type == "dating":
+        from y_web.src.dating.gateway import start_for_experiment
+
+        start_for_experiment(exp_folder)  # server -> gateway -> clients (IR-D-22)
 
     # Remove completion log entries from actor log if restarting
     # Actor logs are in logs/{client_name}_actor.log

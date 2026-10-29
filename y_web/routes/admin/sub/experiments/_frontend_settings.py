@@ -116,6 +116,8 @@ PLATFORM_CAPABILITIES = {
         "language_switch_allowed",
         "dating_allow_time_travel",
         "dating_public_observer_enabled",
+        "dating_participant_mode_enabled",
+        "dating_participant_notice",
         "dating_poll_seconds",
     },
 }
@@ -456,7 +458,7 @@ def frontend_settings_save():
             value = str(new_settings[k])
             allowed = _language_choices() if k == "language" else _ENUM_SETTINGS.get(k)
             safe[k] = value if allowed is None or value in allowed else default
-            if k == "im_participant_notice":
+            if k in ("im_participant_notice", "dating_participant_notice"):
                 safe[k] = value.strip()[:4000]
 
     if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):

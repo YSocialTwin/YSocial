@@ -166,6 +166,31 @@ class DatingReader:
         ).fetchall()
         return {r["id"]: r for r in rows}
 
+    def has_account(self, user_id: str) -> bool:
+        """The account exists in the run (a person who has not entered yet has none)."""
+        return (
+            self.c.execute(
+                "SELECT 1 FROM user_mgmt WHERE id = ?", (user_id,)
+            ).fetchone()
+            is not None
+        )
+
+    def vocabulary(self) -> Dict[str, List[str]]:
+        """Genders and interests present in the run: suggestions for the entry form of a person."""
+        genders = [
+            r[0]
+            for r in self.c.execute(
+                "SELECT DISTINCT gender FROM user_mgmt WHERE gender IS NOT NULL AND gender != '' ORDER BY gender"
+            )
+        ]
+        interests = [
+            r[0]
+            for r in self.c.execute(
+                "SELECT interest FROM interests ORDER BY interest LIMIT 200"
+            )
+        ]
+        return {"genders": genders, "interests": interests}
+
     def accounts(self, ordinal: int) -> List[Dict[str, Any]]:
         """Accounts present at the round (picker of the account viewpoint)."""
         return [

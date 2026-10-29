@@ -33,6 +33,7 @@ PARTIALS = {
     "prompts_dating",
     "dating_analytics",
     "dating_analytics_compare",
+    "dating_participants",
     "_im_analytics_note",
     "select_experiment_unused",
 }
