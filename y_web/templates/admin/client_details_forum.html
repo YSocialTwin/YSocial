@@ -326,7 +326,7 @@
                                                 
                                                 {% if uncategorized %}
                                                     {% for recsys in uncategorized %}
-                                                    <option value="{{ recsys.name }}" {% if client.frecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if client.crecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 {% endif %}
                                             </select>

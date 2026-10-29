@@ -20,12 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     server-side enforcement of the interaction settings, optional minimum round time and participant notice.
     Runs with humans are not reproducible.
   - Guide: `docs/instant-messaging.md`.
+- Forum clients can use the Reddit-style content recommenders `HotRanking`, `TopRanking` and `MostCommented`
+  (new `content_recsys` rows reserved to forums: template database, PostgreSQL seed and Alembic `0011`).
 
 ### Fixed
 
 - Documentation of the backend plugin hooks lists all five (`staff_experiment_access` and `experiment_page_widget`
   were missing).
 - Italian: "turno passato" now follows the glossary ("round passato").
+- Forum clients: the *Content RecSys* menu (client creation, client details, experiment matrix) offers the
+  "Standard" recommenders plus the forum-only ones; every listed recommender now exists in YClientReddit.
+- Forum client details: the content recommender selection is preselected also for uncategorized entries
+  (the template compared it with the friendship recommender).
 
 ## [4.0.0] - 2026-10-23
 

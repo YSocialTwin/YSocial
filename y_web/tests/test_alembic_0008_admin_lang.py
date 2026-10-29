@@ -34,7 +34,7 @@ def _run(engine, filename):
 
 def test_the_revision_chain_is_linear_and_ends_with_the_language_column():
     script = _script_dir()
-    assert script.get_heads() == ["0010_add_prompt_language"]
+    assert script.get_heads() == ["0011_add_forum_recsys_rows"]
     assert (
         script.get_revision("0009_add_signup_tables").down_revision
         == "0008_add_admin_users_lang"
@@ -80,7 +80,7 @@ def test_application_start_applies_the_migration(core_app):  # noqa: F811
                 .scalars()
                 .all()
             )
-        assert "0010_add_prompt_language" in head
+        assert "0011_add_forum_recsys_rows" in head
 
 
 def test_filter_bubble_row_migration_tolerates_a_database_without_the_table():

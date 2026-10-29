@@ -187,7 +187,12 @@ def client_details_forum(uid):
     frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
     crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
-    crecsys = [r for r in crecsys_all if r.enabled and "Standard" in r.enabled]
+    # forum clients also get the recommenders reserved to forums (Hot, Top, Most commented)
+    crecsys = [
+        r
+        for r in crecsys_all
+        if r.enabled and ("Standard" in r.enabled or "Forum" in r.enabled)
+    ]
 
     forum_action_weights = {
         "post": client.post,
