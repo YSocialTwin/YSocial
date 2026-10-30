@@ -1596,7 +1596,6 @@ var AdminPopulations = (function() {
       toggleProfessionTag,
       togglePhotoSharingConfigPanel,
       togglePlatformFields,
-      toggleDatingPopulationSections,
       togglePhotoFavoriteFilterTag,
       addPhotoFavoriteFilter,
       updatePhotoAttentionBudgetDistributionParams,

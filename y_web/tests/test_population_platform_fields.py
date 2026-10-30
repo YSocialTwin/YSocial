@@ -190,3 +190,18 @@ def test_an_uploaded_dating_document_is_recognised_without_choosing_a_platform(a
             routes.mod.upload_population.__wrapped__()
         row = db.session.query(Population).one()
         assert row.name == "Up" and row.size == 10
+
+
+def test_every_name_the_populations_page_exports_to_window_is_defined():
+    """A name exported but no longer defined throws at load time and none of the page's handlers is registered."""
+    import re
+    from pathlib import Path
+
+    js = (
+        Path(__file__).resolve().parents[1] / "static" / "assets" / "js" / "admin-populations.js"
+    ).read_text(encoding="utf-8")
+    block = re.search(r"Object\.assign\(window, \{(.*?)\}\);", js, re.S).group(1)
+    names = [n.strip().split(":")[0] for n in block.split(",") if n.strip()]
+    assert names
+    for name in names:
+        assert re.search(rf"(function\s+{name}\b|(?:const|let|var)\s+{name}\b)", js), name
