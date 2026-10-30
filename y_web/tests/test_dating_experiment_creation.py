@@ -268,3 +268,26 @@ def test_dating_invalid_seed_is_refused_and_leaves_no_folder(app, create_env):
         _post_create(app, create_env, AVAILABLE, seed="-5")
         assert db.session.query(Exps).count() == 0
         assert any("Invalid dating settings" in m for _, m in create_env.flashes)
+
+
+def test_create_dating_experiment_without_topics(app, create_env):
+    """The topics field is hidden for dating: the form sends no value and no topic is stored."""
+    from y_web import db
+    from y_web.src.models import Exp_Topic, Exps
+
+    with app.app_context():
+        env = create_env
+        env.crud._external_repo_availability = lambda: AVAILABLE
+        data = {
+            "exp_name": "no topics",
+            "exp_descr": "d",
+            "platform_type": "dating",
+            "simulator_type": "Standard",
+            "llm_agents_enabled": "true",
+        }
+        with app.test_request_context(
+            "/admin/create_experiment", method="POST", data=data
+        ):
+            env.crud.create_experiment.__wrapped__()
+        assert db.session.query(Exps).count() == 1
+        assert db.session.query(Exp_Topic).count() == 0

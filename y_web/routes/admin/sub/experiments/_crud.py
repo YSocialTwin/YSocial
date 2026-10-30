@@ -2426,7 +2426,8 @@ def create_experiment():
                 "Dating experiments use SQLite even if the platform uses PostgreSQL"
             )
 
-    topics = request.form.get("tags").split(",")
+    # the dating platform has no topics (the field is hidden in the form)
+    topics = (request.form.get("tags") or "").split(",")
 
     # identify db type
     db_type = "sqlite"

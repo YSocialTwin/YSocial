@@ -1386,7 +1386,9 @@ var AdminSettings = (function() {
   function updateButtonState() {
       const createBtn = document.getElementById('create-experiment-btn');
       if (createBtn) {
-          if (tagList.length > 0) {
+          // Dating has no topics: the experiment can be created without them
+          const platformSelect = document.getElementById('platform_type_select');
+          if (tagList.length > 0 || (platformSelect && platformSelect.value === 'dating')) {
               createBtn.disabled = false;
           } else {
               createBtn.disabled = true;
@@ -1551,6 +1553,12 @@ var AdminSettings = (function() {
           }
           const isInstantMessaging = platformTypeSelect.value === 'instant_messaging';
           const isDating = platformTypeSelect.value === 'dating';
+          // The simulation topics are not used by the dating platform: hide the field
+          const topicsBox = document.getElementById('simulation-topics-box');
+          if (topicsBox) {
+              topicsBox.style.display = isDating ? 'none' : '';
+          }
+          updateButtonState();
           const isPhotoSharing = platformTypeSelect.value === 'photo_sharing' || isInstantMessaging || isDating;
           if (!forumAvailable && platformTypeSelect.value === 'forum') {
               platformTypeSelect.value = 'microblogging';
