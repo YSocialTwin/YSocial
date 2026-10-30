@@ -312,3 +312,4 @@ def test_view_as_account_finds_accounts_by_username(observer):
     by_id = client.get(f"/{exp_id}/dating?vp=account&acc={uid}").data.decode()
     assert by_id.count("dt-dk-tile") >= 3 and by_name.count("dt-dk-tile") == by_id.count("dt-dk-tile")
     assert 'data-deck-filter' in by_id  # the redesigned deck, not the old one-card slider
+    assert "not rated yet" in by_id  # nobody has answered the account in the fixture: shown as such, not as a pass

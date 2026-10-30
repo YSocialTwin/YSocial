@@ -1,6 +1,6 @@
 {% from "dating/_avatar.html" import avatar %}
 {#- A profile card: public fields only. ``extra`` is the overview block, shown only to researchers. -#}
-{% macro card(p, link, decision=None, extra=None, position=None) %}
+{% macro card(p, link, decision=None, extra=None, position=None, theirs=None) %}
 {% set photos = p.photos | selectattr('url') | list %}
 <article class="dt-card{{ ' has-photo' if photos }}" aria-label="{{ p.username }}">
   <div class="dt-card-photo" style="--dt-hue: {{ p.hue }}">
@@ -14,6 +14,7 @@
     <p class="dt-meta">{% if p.city %}{{ p.city }}{% endif %}{% if p.intent %} · {{ p.intent }}{% endif %}</p>
     {% if p.bio %}<p class="dt-bio">{{ p.bio }}</p>{% endif %}
     {% if p.interests %}<ul class="dt-tags">{% for i in p.interests[:6] %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+    {% if theirs is not none %}<p class="dt-them is-{{ theirs|lower }}">{{ {'LIKE': _('This person liked the account'), 'SUPERLIKE': _('This person super liked the account'), 'PASS': _('This person passed on the account'), 'NONE': _('This person has not rated the account yet')}[theirs] }}</p>{% endif %}
     {% if extra %}
     <dl class="dt-extra" aria-label="{{ _('Recommender internals (researcher only)') }}">
       <div><dt>{{ _('Model') }}</dt><dd>{{ extra.model }}</dd></div>

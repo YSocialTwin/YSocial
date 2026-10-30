@@ -49,6 +49,7 @@
     {% set dec = c.decision or 'NONE' %}
     <button type="button" class="dt-tile dt-dk-tile has-dec-{{ dec|lower }}{{ ' has-photo' if photos }}" data-dec="{{ 'LIKE' if dec == 'SUPERLIKE' else dec }}" data-peek="{{ loop.index0 }}" style="--dt-hue: {{ p.hue }}" aria-label="{{ p.username }}{% if p.age %}, {{ p.age }}{% endif %}">
       {% if photos %}<img class="dt-tile-img" src="{{ dating_media(photos[0].url) }}" alt="" loading="lazy" decoding="async">{% else %}<span class="dt-tile-initials" aria-hidden="true">{{ p.initials or p.username[:1]|upper }}</span>{% endif %}
+      {% set th = c.theirs or 'NONE' %}<span class="dt-dk-them is-{{ th|lower }}" title="{{ _('What this person answered about the account') }}">{{ {'LIKE': _('liked back'), 'SUPERLIKE': _('super liked back'), 'PASS': _('passed on it'), 'NONE': _('not rated yet')}[th] }}</span>
       <span class="dt-dk-pos">{{ c.position + 1 }}</span>
       <span class="dt-dk-dec is-{{ dec|lower }}">{{ {'LIKE': _('LIKE'), 'SUPERLIKE': _('SUPER'), 'PASS': _('PASS'), 'NONE': _('undecided')}[dec] }}</span>
       <span class="dt-tile-info"><strong>{{ p.username }}{% if p.age %}<span>, {{ p.age }}</span>{% endif %}</strong>
@@ -57,7 +58,7 @@
     </button>
     {% endfor %}
   </div>
-  {% for c in cards %}<template data-peek-tpl="{{ loop.index0 }}">{{ card(c.profile, link, c.decision, c.overview) }}</template>{% endfor %}
+  {% for c in cards %}<template data-peek-tpl="{{ loop.index0 }}">{{ card(c.profile, link, c.decision, c.overview, none, c.theirs or 'NONE') }}</template>{% endfor %}
   <div class="dt-peek" id="dt-peek" role="dialog" aria-modal="true" aria-label="{{ _('Card') }}" hidden>
     <button type="button" class="dt-lb-close" data-peek-close aria-label="{{ _('Close') }}">&times;</button>
     <button type="button" class="dt-lb-nav is-prev" data-peek-nav="-1" aria-label="{{ _('Previous card') }}">&lsaquo;</button>

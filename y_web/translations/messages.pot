@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 13:07+0000\n"
+"POT-Creation-Date: 2026-10-30 13:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -12464,6 +12464,18 @@ msgid ""
 "no effect until you switch it on there."
 msgstr ""
 
+msgid "This person has not rated the account yet"
+msgstr ""
+
+msgid "This person liked the account"
+msgstr ""
+
+msgid "This person passed on the account"
+msgstr ""
+
+msgid "This person super liked the account"
+msgstr ""
+
 msgid ""
 "This plugin comes from the community plugin registry and is not "
 "maintained by the YSocial team. Its code runs on this computer when it is"
@@ -13818,6 +13830,9 @@ msgstr ""
 msgid "What the server writes in its log files."
 msgstr ""
 
+msgid "What this person answered about the account"
+msgstr ""
+
 msgid "What this view shows"
 msgstr ""
 
@@ -14469,6 +14484,9 @@ msgstr ""
 msgid "liked"
 msgstr ""
 
+msgid "liked back"
+msgstr ""
+
 msgid "likes left"
 msgstr ""
 
@@ -14517,6 +14535,9 @@ msgstr ""
 msgid "not entered yet"
 msgstr ""
 
+msgid "not rated yet"
+msgstr ""
+
 msgid "not sent"
 msgstr ""
 
@@ -14533,6 +14554,9 @@ msgid "or unlimited"
 msgstr ""
 
 msgid "passed"
+msgstr ""
+
+msgid "passed on it"
 msgstr ""
 
 msgid "photos"
@@ -14619,6 +14643,9 @@ msgid "success"
 msgstr ""
 
 msgid "super liked"
+msgstr ""
+
+msgid "super liked back"
 msgstr ""
 
 msgid "super likes left"

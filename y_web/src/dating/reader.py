@@ -477,6 +477,15 @@ class DatingReader:
                 (cut, viewer_id),
             )
         }
+        # what each candidate answered about the viewer (their latest standing decision, at the cut)
+        theirs = {}
+        for r in self.c.execute(
+            "SELECT sw.swiper_id, sw.decision FROM swipes sw "
+            "JOIN rounds r ON r.id = sw.round_id AND r.day * 10000 + r.hour <= ? "
+            "WHERE sw.target_id = ? AND COALESCE(sw.undone, 0) = 0 ORDER BY r.day, r.hour",
+            (cut, viewer_id),
+        ):
+            theirs[r["swiper_id"]] = r["decision"]
         cards = []
         for rec in recs:
             base = active.get(rec["candidate_id"])
@@ -484,6 +493,7 @@ class DatingReader:
                 continue
             decision = decisions.get(rec["id"])
             card = {
+                "theirs": theirs.get(rec["candidate_id"]) or "NONE",
                 "profile": self._public_profile(rec["candidate_id"], cut, base),
                 "position": rec["position"],
                 "decision": (

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 13:07+0000\n"
+"POT-Creation-Date: 2026-10-30 13:08+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -13745,6 +13745,18 @@ msgstr ""
 "Questa parte è disattivata nella Configurazione dell'esperimento, quindi "
 "queste impostazioni non hanno effetto finché non la attivi lì."
 
+msgid "This person has not rated the account yet"
+msgstr "Questa persona non ha ancora valutato l'account"
+
+msgid "This person liked the account"
+msgstr "Questa persona ha messo like all'account"
+
+msgid "This person passed on the account"
+msgstr "Questa persona ha scartato l'account"
+
+msgid "This person super liked the account"
+msgstr "Questa persona ha messo super like all'account"
+
 msgid ""
 "This plugin comes from the community plugin registry and is not "
 "maintained by the YSocial team. Its code runs on this computer when it is"
@@ -15294,6 +15306,9 @@ msgstr ""
 msgid "What the server writes in its log files."
 msgstr "Cosa scrive il server nei suoi file di log."
 
+msgid "What this person answered about the account"
+msgstr "Cosa ha risposto questa persona sull'account"
+
 msgid "What this view shows"
 msgstr "Cosa mostra questa vista"
 
@@ -16009,6 +16024,9 @@ msgstr "km"
 msgid "liked"
 msgstr "piaciuti"
 
+msgid "liked back"
+msgstr "ha ricambiato il like"
+
 msgid "likes left"
 msgstr "like rimasti"
 
@@ -16057,6 +16075,9 @@ msgstr "nessuna pubblicata"
 msgid "not entered yet"
 msgstr "non ancora entrato"
 
+msgid "not rated yet"
+msgstr "non ancora valutato"
+
 msgid "not sent"
 msgstr "non inviato"
 
@@ -16074,6 +16095,9 @@ msgstr "oppure illimitato"
 
 msgid "passed"
 msgstr "scartati"
+
+msgid "passed on it"
+msgstr "l'ha scartato"
 
 msgid "photos"
 msgstr "foto"
@@ -16162,6 +16186,9 @@ msgstr "riuscita"
 
 msgid "super liked"
 msgstr "super like"
+
+msgid "super liked back"
+msgstr "ha ricambiato il super like"
 
 msgid "super likes left"
 msgstr "super like rimasti"
