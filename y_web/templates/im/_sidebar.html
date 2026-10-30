@@ -43,7 +43,7 @@
       {% for c in sidebar_chats %}
       <li class="im-chat-row{{ ' is-active' if active_chat_id == c.id }}">
         <a href="/{{ exp.idexp }}/im/chat/{{ c.id }}{{ '?' ~ (params|urlencode) if params else '' }}"{% if active_chat_id == c.id %} aria-current="page"{% endif %}>
-          {{ avatar(c.title, c.hue, 'lg') }}
+          {{ avatar(c.avatar_user or c.title, c.hue, 'lg') }}
           <span class="im-chat-main">
             <span class="im-chat-line">
               <span class="im-chat-title"><span class="im-type" title="{{ c.type }}">{{ {'private': '✉', 'group': '👥', 'supergroup': '👥', 'channel': '📢'}.get(c.type, '💬') }}</span>{{ c.title }}{% if c.visibility == 'private' %} <span class="im-flag">{{ _('private') }}</span>{% endif %}</span>

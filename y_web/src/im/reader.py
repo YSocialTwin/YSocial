@@ -442,6 +442,39 @@ class Reader:
                 break
         return out
 
+    def _avatar_owners(self, chats) -> Dict[str, str]:
+        """Username of the agent whose profile picture identifies each chat.
+
+        A personal channel is identified by its owner; a private chat by the other participant (seen
+        from an account) or by its first participant (any other viewpoint). Groups have no owner picture.
+        """
+        m = self.m
+        out: Dict[str, str] = {}
+        private = []
+        for chat in chats:
+            if chat.type == "channel" and chat.owner_account_id:
+                acc = self.s.get(m.Account, chat.owner_account_id)
+                if acc is not None:
+                    out[chat.id] = acc.username
+            elif chat.type == "private":
+                private.append(chat.id)
+        if private:
+            me = self.vp.account_id if self.vp.kind == "account" else None
+            rows = self.s.execute(
+                select(m.ChatMember.chat_id, m.Account.id, m.Account.username)
+                .join(m.Account, m.Account.id == m.ChatMember.account_id)
+                .where(m.ChatMember.chat_id.in_(private))
+                .order_by(m.Account.username)
+            ).all()
+            by_chat: Dict[str, list] = {}
+            for chat_id, acc_id, username in rows:
+                by_chat.setdefault(chat_id, []).append((acc_id, username))
+            for chat_id, people in by_chat.items():
+                others = [u for a, u in people if a != me] or [u for _, u in people]
+                if others:
+                    out[chat_id] = others[0]
+        return out
+
     def chat_list(self) -> List[Dict[str, Any]]:
         m = self.m
         chats = list(self.s.scalars(select(m.Chat).order_by(m.Chat.title, m.Chat.id)))
@@ -463,6 +496,7 @@ class Reader:
             chats = [c for c in chats if c.id in member_of]
         visible = [c for c in chats if self._chat_visible(c)]
         counts = self._member_counts([c.id for c in visible])
+        owners = self._avatar_owners(visible)
         markers = {}
         if self.vp.kind == "account":
             markers = {
@@ -486,6 +520,7 @@ class Reader:
                 "members": counts.get(chat.id, 0),
                 "last": None,
                 "hue": avatar_hue(chat.id),
+                "avatar_user": owners.get(chat.id),
             }
             if last:
                 row, state = last[0]
@@ -732,6 +767,7 @@ class Reader:
                 else None
             ),
             "hue": avatar_hue(chat.id),
+            "avatar_user": self._avatar_owners([chat]).get(chat.id),
         }
 
     # -- forum topics ----------------------------------------------------------------------
@@ -851,11 +887,13 @@ class Reader:
                 and row.joined_round <= self.vp.round
                 and (row.left_round is None or row.left_round > self.vp.round)
             }
+        owners = self._avatar_owners(found)
         return [
             {
                 "id": c.id,
                 "title": c.title or c.id,
                 "type": c.type,
+                "avatar_user": owners.get(c.id),
                 "username": c.username,
                 "visibility": c.visibility,
                 "members": counts.get(c.id, 0),

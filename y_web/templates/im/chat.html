@@ -9,7 +9,7 @@
 <section class="im-conversation" aria-labelledby="im-conv-h" data-infinite="{{ 1 if ui.get('infinite_scroll_enabled', True) else 0 }}" data-history-url="/{{ exp.idexp }}/im/api/chat/{{ chat_id }}/history">
   <header class="im-conv-head im-panel">
     <a class="im-back im-icon-btn" href="/{{ exp.idexp }}/im{{ '?' ~ (params|urlencode) if params else '' }}" aria-label="{{ _('Chats') }}">←</a>
-    {{ avatar(page.title, info.hue if info else 210, 'md') }}
+    {{ avatar((info.avatar_user if info and info.avatar_user else page.title), info.hue if info else 210, 'md') }}
     <div class="im-conv-title">
       <h2 id="im-conv-h">{{ page.title }}{% if topic %} · {{ topic.title }}{% endif %}</h2>
       <p>{% if info %}{{ info.type }}{% if info.visibility == 'private' %} · {{ _('private') }}{% endif %} · {{ _('%(n)s members', n=info.members) }}{% endif %}</p>
@@ -70,7 +70,7 @@
   </header>
   <div class="im-info-body">
     <div class="im-info-hero">
-      {{ avatar(info.title, info.hue, 'xl') }}
+      {{ avatar(info.avatar_user or info.title, info.hue, 'xl') }}
       <h4>{{ info.title }}</h4>
       <p>{{ _('%(n)s members', n=info.members) }}</p>
     </div>

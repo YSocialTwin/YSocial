@@ -21,6 +21,8 @@ needs_runtime = pytest.mark.skipif(
 
 @pytest.fixture
 def example():
+    if not EXAMPLE.exists():
+        pytest.skip("YDating is not present")
     return json.loads(EXAMPLE.read_text())
 
 

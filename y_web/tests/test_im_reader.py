@@ -261,3 +261,37 @@ def test_thread_members_topics_and_profile_dtos(world):
         assert profile["persona"] is None and profile["username"] == "user0"
         assert rd.profile(info["accounts"][0], include_persona=True)["persona"] == {}
         assert rd.profile("ghost") is None
+
+
+def test_channels_and_private_chats_are_identified_by_an_agent(world):
+    """A personal channel carries its owner, a private chat its counterpart; groups carry no agent."""
+    path, info = world
+    with engine.open_reader(path) as session:
+        models = engine.im_modules()[0]
+        rd = Reader(session, Viewpoint("overview", None, info["rounds"]))
+        listed = {c["id"]: c for c in rd.chat_list()}
+        for chat in session.query(models.Chat):
+            item = listed.get(chat.id)
+            if item is None:
+                continue
+            if chat.type == "channel" and chat.owner_account_id:
+                owner = session.get(models.Account, chat.owner_account_id)
+                assert item["avatar_user"] == owner.username
+            elif chat.type in ("group", "supergroup"):
+                assert item["avatar_user"] is None
+            assert rd.chat_info(chat.id)["avatar_user"] == item["avatar_user"]
+        # a private chat seen from one participant shows the other one
+        private = [c for c in session.query(models.Chat) if c.type == "private"]
+        for chat in private[:3]:
+            members = [
+                session.get(models.Account, mm.account_id).username
+                for mm in session.query(models.ChatMember).filter_by(chat_id=chat.id)
+            ]
+            if len(members) != 2:
+                continue
+            for me in session.query(models.ChatMember).filter_by(chat_id=chat.id):
+                vp = Viewpoint("account", me.account_id, info["rounds"])
+                mine = {c["id"]: c for c in Reader(session, vp).chat_list()}
+                if chat.id in mine:
+                    other = [m for m in members if m != session.get(models.Account, me.account_id).username]
+                    assert mine[chat.id]["avatar_user"] in other

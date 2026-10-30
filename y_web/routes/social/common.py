@@ -39,7 +39,10 @@ from y_web.routes.social.helpers import (
     get_safe_profile_pic,
     is_admin,
 )
-from y_web.src.agents.custom_features import summarize_agent_custom_features
+from y_web.src.agents.custom_features import (
+    platform_agnostic_custom_features,
+    summarize_agent_custom_features,
+)
 from y_web.src.content.cover_images import (
     DEFAULT_COVER_IMAGE_PATH,
     available_cover_image_urls,
@@ -448,6 +451,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             )
         except Exception:
             agent_custom_features = {}
+        agent_custom_features = platform_agnostic_custom_features(agent_custom_features)
 
     # Other functions as before
     rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)
