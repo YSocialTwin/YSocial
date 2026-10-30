@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 12:42+0000\n"
+"POT-Creation-Date: 2026-10-30 13:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1332,12 +1332,10 @@ msgstr ""
 msgid "Armenian"
 msgstr ""
 
-msgid ""
-"Arrow keys move between the cards of this round. This view only observes:"
-" decisions are taken by the simulated user."
+msgid "Articles'"
 msgstr ""
 
-msgid "Articles'"
+msgid "As account"
 msgstr ""
 
 msgid "Ask the agent about their experiences, decisions, or relationships..."
@@ -1905,10 +1903,10 @@ msgstr ""
 msgid "Cannot remove experiments from a running group"
 msgstr ""
 
-msgid "Cards decided per session"
+msgid "Card"
 msgstr ""
 
-msgid "Cards of this round"
+msgid "Cards decided per session"
 msgstr ""
 
 msgid "Cards per request"
@@ -2159,6 +2157,11 @@ msgstr ""
 msgid ""
 "Click \"Validate Model\" to verify minicpm-v:latest is available. This "
 "enables image-related actions."
+msgstr ""
+
+msgid ""
+"Click a card to read it; arrow keys move between cards. This view only "
+"observes: decisions are taken by the simulated user."
 msgstr ""
 
 msgid ""
@@ -3505,6 +3508,9 @@ msgstr ""
 
 #, python-format
 msgid "Decision: %(d)s"
+msgstr ""
+
+msgid "Decisions on the cards of this round"
 msgstr ""
 
 msgid "Deck of this account"
@@ -4934,6 +4940,9 @@ msgid "Filter by group (all = all groups)"
 msgstr ""
 
 msgid "Filter experiments by group"
+msgstr ""
+
+msgid "Filter the cards"
 msgstr ""
 
 msgid "Filters"
@@ -6670,6 +6679,9 @@ msgstr ""
 msgid "Like threshold"
 msgstr ""
 
+msgid "Liked"
+msgstr ""
+
 msgid "Likes"
 msgstr ""
 
@@ -7671,6 +7683,9 @@ msgstr ""
 msgid "No URL provided"
 msgstr ""
 
+msgid "No account with that name."
+msgstr ""
+
 msgid "No active communities detected yet."
 msgstr ""
 
@@ -8569,6 +8584,9 @@ msgid "Pass"
 msgstr ""
 
 msgid "Pass the seed to the model"
+msgstr ""
+
+msgid "Passed"
 msgstr ""
 
 msgid "Password"
@@ -10175,6 +10193,9 @@ msgstr ""
 msgid "Romanian"
 msgstr ""
 
+msgid "Round"
+msgstr ""
+
 msgid "Rounds to wait before replying to the same user again"
 msgstr ""
 
@@ -10420,6 +10441,9 @@ msgid "Search Window (rounds)"
 msgstr ""
 
 msgid "Search a Hashtag"
+msgstr ""
+
+msgid "Search a username"
 msgstr ""
 
 msgid "Search agents"
@@ -12536,11 +12560,10 @@ msgid ""
 "change."
 msgstr ""
 
-msgid "Time travel for viewers"
+msgid "Time travel"
 msgstr ""
 
-#, python-format
-msgid "Time travel: showing the state at day %(d)s, round %(h)s."
+msgid "Time travel for viewers"
 msgstr ""
 
 #, python-format
@@ -12965,6 +12988,9 @@ msgid "Uncertain band, high"
 msgstr ""
 
 msgid "Uncertain band, low"
+msgstr ""
+
+msgid "Undecided"
 msgstr ""
 
 msgid "Unexpected error in the client: see the execution log."
@@ -13792,6 +13818,9 @@ msgstr ""
 msgid "What the server writes in its log files."
 msgstr ""
 
+msgid "What this view shows"
+msgstr ""
+
 msgid "What you assigned to posts and comments"
 msgstr ""
 
@@ -14437,6 +14466,9 @@ msgstr ""
 msgid "km"
 msgstr ""
 
+msgid "liked"
+msgstr ""
+
 msgid "likes left"
 msgstr ""
 
@@ -14498,6 +14530,9 @@ msgid "opened by this agent"
 msgstr ""
 
 msgid "or unlimited"
+msgstr ""
+
+msgid "passed"
 msgstr ""
 
 msgid "photos"
@@ -14583,6 +14618,9 @@ msgstr ""
 msgid "success"
 msgstr ""
 
+msgid "super liked"
+msgstr ""
+
 msgid "super likes left"
 msgstr ""
 
@@ -14602,6 +14640,9 @@ msgid "to compare simulation scenarios"
 msgstr ""
 
 msgid "today."
+msgstr ""
+
+msgid "undecided"
 msgstr ""
 
 msgid "unknown error"

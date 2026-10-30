@@ -27,42 +27,8 @@
       <button type="button" class="dt-btn dt-btn-ghost" id="dt-theme" aria-label="{{ _('Switch light or dark theme') }}">◐</button>
     </div>
   </header>
-  {% if ctx.vp.kind == 'overview' %}<div class="dt-banner is-overview" role="note">{{ _('Researcher overview: everything the run recorded is shown, including private chats, deleted messages and the recommender internals. This is not what a user sees.') }}</div>
-  {% elif participant %}{# a person who plays sees no banner #}
-  {% elif ctx.vp.kind == 'account' %}<div class="dt-banner is-account" role="note">{{ _('Viewing as %(name)s: exactly what this account could see at this round.', name=(viewed.username if viewed else ctx.vp.account_id)) }}</div>{% endif %}
-  {% if ctx.vp.round != ctx.latest %}<div class="dt-banner is-past" role="note">{{ _('Time travel: showing the state at day %(d)s, round %(h)s.', d=day, h=hour) }}</div>{% endif %}
-  <div id="dt-live" class="dt-banner is-live" hidden role="status"><span>{{ _('New rounds are available.') }}</span> <a href="">{{ _('Refresh') }}</a></div>
-  <div class="dt-layout{{ ' is-single' if not (is_staff or (time_travel and ctx.latest)) }}">
-    <aside class="dt-side" aria-label="{{ _('Viewpoint and time') }}">
-      {% if is_staff %}
-      <section class="dt-panel">
-        <h2>{{ _('Viewpoint') }}</h2>
-        <a class="dt-pick{{ ' is-active' if ctx.vp.kind == 'overview' and not ctx.focus }}" href="/{{ exp.idexp }}/dating?vp=overview{{ '&round=%d' % ctx.vp.round if ctx.vp.round != ctx.latest else '' }}">{{ _('Researcher overview') }}</a>
-        <a class="dt-pick{{ ' is-active' if ctx.vp.kind == 'public' }}" href="/{{ exp.idexp }}/dating?vp=public{{ '&round=%d' % ctx.vp.round if ctx.vp.round != ctx.latest else '' }}">{{ _('Public observer') }}</a>
-        <form method="get" action="/{{ exp.idexp }}/dating" class="dt-form">
-          <input type="hidden" name="vp" value="account">
-          {% if ctx.vp.round != ctx.latest %}<input type="hidden" name="round" value="{{ ctx.vp.round }}">{% endif %}
-          <label for="dt-acc">{{ _('View as account') }}</label>
-          <input id="dt-acc" name="acc" list="dt-accounts" value="{{ ctx.vp.account_id or '' }}" autocomplete="off" required>
-          <datalist id="dt-accounts">{% for a in accounts %}<option value="{{ a.id }}">{{ a.username }}</option>{% endfor %}</datalist>
-          <button class="dt-btn" type="submit">{{ _('Open') }}</button>
-        </form>
-      </section>
-      {% endif %}
-      {% if time_travel and ctx.latest %}
-      {% set r = ctx.vp.round %}
-      <section class="dt-panel">
-        <h2>{{ _('Time') }}</h2>
-        <p class="dt-now"><strong>{{ _('Day %(d)s', d=day) }}</strong> · {{ _('round %(h)s', h=hour) }}
-          <span class="dt-pill{{ ' is-live' if r == ctx.latest else '' }}">{{ _('Latest') if r == ctx.latest else _('Past') }}</span></p>
-        <div class="dt-step">
-          {% if r > 1 %}<a class="dt-btn dt-btn-ghost" href="{{ link(request.path[(('/%s/dating' % exp.idexp)|length):], round=r-1) }}" rel="prev">‹ {{ _('Previous') }}</a>{% else %}<span></span>{% endif %}
-          {% if r < ctx.latest %}<a class="dt-btn dt-btn-ghost" href="{{ link(request.path[(('/%s/dating' % exp.idexp)|length):], round=r+1) }}" rel="next">{{ _('Next') }} ›</a>{% endif %}
-        </div>
-        {% if r != ctx.latest %}<a class="dt-btn" href="{{ link(request.path[(('/%s/dating' % exp.idexp)|length):], round=None) }}">{{ _('Back to the latest') }}</a>{% endif %}
-      </section>
-      {% endif %}
-    </aside>
+  {% if is_staff or (time_travel and ctx.latest) %}{% include "dating/_bar.html" %}{% else %}<div id="dt-live" class="dt-livechip is-float" hidden role="status"><span>{{ _('New rounds are available.') }}</span> <a href="">{{ _('Refresh') }}</a></div>{% endif %}
+  <div class="dt-layout is-single{{ ' is-wide' if is_staff }}">
     <main id="dt-main" class="dt-main" tabindex="-1">
       <h1 class="dt-sr">{{ exp.exp_name }}</h1>
       {% block content %}{% endblock %}
@@ -73,6 +39,7 @@
 {% include "shared/language_switcher.html" %}
 {% include "shared/plugin_loader.html" %}
 <script src="{{ url_for('static', filename='assets/js/dating.js') }}"></script>
+{% if is_staff or (time_travel and ctx.latest) %}<script src="{{ url_for('static', filename='assets/js/dating-bar.js') }}"></script>{% endif %}
 {% if participant %}<script src="{{ url_for('static', filename='assets/js/dating-participant.js') }}"></script>{% endif %}
 {% block scripts %}{% endblock %}
 </body>

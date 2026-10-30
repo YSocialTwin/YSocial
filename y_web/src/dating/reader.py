@@ -205,6 +205,46 @@ class DatingReader:
             for r in self._active_ids(self._cut(ordinal)).values()
         ]
 
+    def account_brief(self, user_id: Optional[str], ordinal: int) -> Optional[Dict[str, Any]]:
+        """One account for the viewpoint bar: name, initials, colour and first picture."""
+        if not user_id:
+            return None
+        row = self.c.execute(
+            "SELECT id, username FROM user_mgmt WHERE id = ?", (user_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        return self._brief(row, self._cut(ordinal))
+
+    def _brief(self, row, cut: int) -> Dict[str, Any]:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            **_avatar(row["id"], row["username"], self._photo_url(row["id"], cut)),
+        }
+
+    def find_accounts(self, term: str, ordinal: int, limit: int = 8) -> List[Dict[str, Any]]:
+        """Accounts whose username contains ``term`` (case-insensitive; prefix matches first)."""
+        cut = self._cut(ordinal)
+        needle = (term or "").strip().lower()
+        rows = list(self._active_ids(cut).values())
+        if needle:
+            rows = [r for r in rows if needle in (r["username"] or "").lower()]
+            rows.sort(key=lambda r: (not (r["username"] or "").lower().startswith(needle), r["username"] or ""))
+        return [self._brief(r, cut) for r in rows[: max(1, min(limit, 20))]]
+
+    def resolve_account(self, value: Optional[str]) -> Optional[str]:
+        """The id of an account given as an id or as a username (None when there is no such account)."""
+        value = (value or "").strip()
+        if not value:
+            return None
+        row = self.c.execute(
+            "SELECT id FROM user_mgmt WHERE id = ? OR username = ? COLLATE NOCASE "
+            "ORDER BY (id = ?) DESC LIMIT 1",
+            (value, value, value),
+        ).fetchone()
+        return row["id"] if row else None
+
     def _profile_at(self, user_id: str, cut: int, base: sqlite3.Row) -> Dict[str, Any]:
         profile = {f: base[f] for f in PROFILE_FIELDS}
         later = self.c.execute(

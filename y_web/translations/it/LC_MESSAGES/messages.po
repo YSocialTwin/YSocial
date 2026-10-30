@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 12:42+0000\n"
+"POT-Creation-Date: 2026-10-30 13:01+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1465,15 +1465,11 @@ msgstr "Argentina"
 msgid "Armenian"
 msgstr "Armena"
 
-msgid ""
-"Arrow keys move between the cards of this round. This view only observes:"
-" decisions are taken by the simulated user."
-msgstr ""
-"I tasti freccia scorrono le carte di questo round. Questa vista osserva "
-"soltanto: le decisioni sono prese dall'utente simulato."
-
 msgid "Articles'"
 msgstr "articoli"
+
+msgid "As account"
+msgstr "Come account"
 
 msgid "Ask the agent about their experiences, decisions, or relationships..."
 msgstr "Chiedi all'agente delle sue esperienze, decisioni o relazioni..."
@@ -2071,11 +2067,11 @@ msgstr ""
 msgid "Cannot remove experiments from a running group"
 msgstr "Impossibile rimuovere esperimenti da un gruppo in esecuzione"
 
+msgid "Card"
+msgstr "Card"
+
 msgid "Cards decided per session"
 msgstr "Carte decise per sessione"
-
-msgid "Cards of this round"
-msgstr "Carte di questo round"
 
 msgid "Cards per request"
 msgstr "Carte per richiesta"
@@ -2357,6 +2353,13 @@ msgid ""
 msgstr ""
 "Clicca su «Convalida il modello» per verificare che minicpm-v:latest sia "
 "disponibile. Questo attiva le azioni sulle immagini."
+
+msgid ""
+"Click a card to read it; arrow keys move between cards. This view only "
+"observes: decisions are taken by the simulated user."
+msgstr ""
+"Clicca una card per leggerla; le frecce spostano tra le card. Questa "
+"vista osserva soltanto: le decisioni sono prese dall'utente simulato."
 
 msgid ""
 "Click on dimensions to add or remove them from segmentation. Active "
@@ -3906,6 +3909,9 @@ msgstr "Deciso da"
 #, python-format
 msgid "Decision: %(d)s"
 msgstr "Decisione: %(d)s"
+
+msgid "Decisions on the cards of this round"
+msgstr "Decisioni sulle card di questo round"
 
 msgid "Deck of this account"
 msgstr "Mazzo di questo account"
@@ -5469,6 +5475,9 @@ msgstr "Filtra per gruppo (tutti = tutti i gruppi)"
 
 msgid "Filter experiments by group"
 msgstr "Filtra gli esperimenti per gruppo"
+
+msgid "Filter the cards"
+msgstr "Filtra le card"
 
 msgid "Filters"
 msgstr "Filtri"
@@ -7386,6 +7395,9 @@ msgstr "Tasso di like"
 msgid "Like threshold"
 msgstr "Soglia del like"
 
+msgid "Liked"
+msgstr "Piaciuti"
+
 msgid "Likes"
 msgstr "Mi piace"
 
@@ -8450,6 +8462,9 @@ msgstr "Nessun esperimento attivo"
 msgid "No URL provided"
 msgstr "Nessun URL fornito"
 
+msgid "No account with that name."
+msgstr "Nessun account con questo nome."
+
 msgid "No active communities detected yet."
 msgstr "Nessuna community attiva rilevata finora."
 
@@ -9416,6 +9431,9 @@ msgstr "Salta"
 
 msgid "Pass the seed to the model"
 msgstr "Passa il seed al modello"
+
+msgid "Passed"
+msgstr "Scartati"
 
 msgid "Password"
 msgstr "Password"
@@ -11125,6 +11143,9 @@ msgstr "Gioco di ruolo (semplice)"
 msgid "Romanian"
 msgstr "Rumena"
 
+msgid "Round"
+msgstr "Round"
+
 msgid "Rounds to wait before replying to the same user again"
 msgstr "Round da attendere prima di rispondere di nuovo allo stesso utente"
 
@@ -11385,6 +11406,9 @@ msgstr "Finestra di ricerca (round)"
 
 msgid "Search a Hashtag"
 msgstr "Cerca un hashtag"
+
+msgid "Search a username"
+msgstr "Cerca uno username"
 
 msgid "Search agents"
 msgstr "Cerca agenti"
@@ -13831,12 +13855,11 @@ msgstr ""
 "distribuiscono i messaggi di un round in modo più fine; l'ora in sé non "
 "cambia."
 
+msgid "Time travel"
+msgstr "Viaggio nel tempo"
+
 msgid "Time travel for viewers"
 msgstr "Viaggio nel tempo per gli osservatori"
-
-#, python-format
-msgid "Time travel: showing the state at day %(d)s, round %(h)s."
-msgstr "Viaggio nel tempo: stato al giorno %(d)s, round %(h)s."
 
 #, python-format
 msgid "Time travel: showing the state at day %(d)s, slot %(s)s."
@@ -14296,6 +14319,9 @@ msgstr "Banda di incertezza, limite superiore"
 
 msgid "Uncertain band, low"
 msgstr "Banda di incertezza, limite inferiore"
+
+msgid "Undecided"
+msgstr "Indecisi"
 
 msgid "Unexpected error in the client: see the execution log."
 msgstr "Errore inatteso nel client: consulta il log di esecuzione."
@@ -15268,6 +15294,9 @@ msgstr ""
 msgid "What the server writes in its log files."
 msgstr "Cosa scrive il server nei suoi file di log."
 
+msgid "What this view shows"
+msgstr "Cosa mostra questa vista"
+
 msgid "What you assigned to posts and comments"
 msgstr "Ciò che hai assegnato a post e commenti"
 
@@ -15977,6 +16006,9 @@ msgstr "iscritto"
 msgid "km"
 msgstr "km"
 
+msgid "liked"
+msgstr "piaciuti"
+
 msgid "likes left"
 msgstr "like rimasti"
 
@@ -16039,6 +16071,9 @@ msgstr "aperte da questo agente"
 
 msgid "or unlimited"
 msgstr "oppure illimitato"
+
+msgid "passed"
+msgstr "scartati"
 
 msgid "photos"
 msgstr "foto"
@@ -16125,6 +16160,9 @@ msgstr "slot %(s)s"
 msgid "success"
 msgstr "riuscita"
 
+msgid "super liked"
+msgstr "super like"
+
 msgid "super likes left"
 msgstr "super like rimasti"
 
@@ -16145,6 +16183,9 @@ msgstr "per confrontare scenari di simulazione"
 
 msgid "today."
 msgstr "oggi."
+
+msgid "undecided"
+msgstr "indecisi"
 
 msgid "unknown error"
 msgstr "errore sconosciuto"
@@ -18247,4 +18288,21 @@ msgstr "✔️ Usa"
 
 #~ msgid "Your photos"
 #~ msgstr "Le tue foto"
+
+#~ msgid ""
+#~ "Arrow keys move between the cards "
+#~ "of this round. This view only "
+#~ "observes: decisions are taken by the "
+#~ "simulated user."
+#~ msgstr ""
+#~ "I tasti freccia scorrono le carte "
+#~ "di questo round. Questa vista osserva"
+#~ " soltanto: le decisioni sono prese "
+#~ "dall'utente simulato."
+
+#~ msgid "Cards of this round"
+#~ msgstr "Carte di questo round"
+
+#~ msgid "Time travel: showing the state at day %(d)s, round %(h)s."
+#~ msgstr "Viaggio nel tempo: stato al giorno %(d)s, round %(h)s."
 

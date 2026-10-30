@@ -139,6 +139,8 @@ def _open_context(reader, exp_id):
         if requested is not None:
             rnd = min(max(requested, 1), latest) if latest else 0
     acc = request.args.get("acc") or None
+    if acc and staff is not None:
+        acc = reader.resolve_account(acc) or acc  # a username is accepted as well as an id
     try:
         vp = Viewpoint(kind, acc, rnd)
     except ViewpointError:
@@ -192,10 +194,9 @@ def _linker(ctx):
 
 def _render(template, ctx, reader, **values):
     day, hour = reader.day_hour(ctx.vp.round)
-    accounts = reader.accounts(ctx.vp.round) if ctx.staff is not None else []
     viewed = None
-    if ctx.vp.kind == ACCOUNT:
-        viewed = next((a for a in accounts if a["id"] == ctx.vp.account_id), None)
+    if ctx.staff is not None and (ctx.vp.account_id or ctx.focus):
+        viewed = reader.account_brief(ctx.vp.account_id or ctx.focus, ctx.vp.round)
     time_travel = ctx.participant is None and (
         ctx.staff is not None or bool(ctx.ui.get("dating_allow_time_travel", True))
     )
@@ -212,7 +213,6 @@ def _render(template, ctx, reader, **values):
         csrf_token=human.csrf_token(flask_session) if ctx.participant else "",
         day=day,
         hour=hour,
-        accounts=accounts,
         viewed=viewed,
         time_travel=time_travel,
         poll_seconds=_poll_seconds(ctx),
@@ -394,6 +394,40 @@ def dating_notifications(exp_id):
         return _render("dating/notifications.html", ctx, reader, items=items)
 
     return _view(exp_id, handler)
+
+
+@main.route("/<int:exp_id>/dating/api/accounts")
+def dating_api_accounts(exp_id):
+    """Accounts by username for the viewpoint bar (staff only): ``?q=ann`` -> name and small picture."""
+    exp = _experiment_or_404(exp_id)
+    staff = _staff_user()
+    if staff is None:
+        abort(403)
+    from y_web.src.experiment.access import user_can_view_experiment
+
+    if not user_can_view_experiment(staff, exp):
+        abort(403)
+    try:
+        with open_reader(_db_path(exp)) as reader:
+            ordinal = _int(request.args.get("round")) or reader.latest_round()
+            found = reader.find_accounts(request.args.get("q", ""), ordinal)
+    except DatingReadError:
+        return jsonify({"accounts": []})
+    media = current_app.jinja_env.globals["dating_media"]
+    return jsonify(
+        {
+            "accounts": [
+                {
+                    "id": a["id"],
+                    "username": a["username"],
+                    "initials": a["initials"],
+                    "hue": a["hue"],
+                    "photo": media(a["photo"]) if a.get("photo") else "",
+                }
+                for a in found
+            ]
+        }
+    )
 
 
 @main.route("/<int:exp_id>/dating/api/status")

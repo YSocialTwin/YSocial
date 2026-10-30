@@ -15,20 +15,57 @@
   </nav>{% endif %}
   {% else %}<p class="dt-empty">{{ _('No profiles at this round yet.') }}</p>{% endif %}
 {% else %}
-  <h2 class="dt-h">{{ _('Discover') }}
-    {% if deck.round %}<small>{{ _('Day %(d)s, round %(h)s', d=deck.round.day, h=deck.round.hour) }}</small>{% endif %}</h2>
-  {% if deck.cards %}
-  <div class="dt-deck" id="dt-deck" data-count="{{ deck.cards|length }}">
-    {% for c in deck.cards %}
-    <div class="dt-slide" data-index="{{ loop.index0 }}"{% if not loop.first %} hidden{% endif %}>{{ card(c.profile, link, c.decision, c.overview) }}</div>
+  {% set who = viewed %}
+  {% set cards = deck.cards %}
+  {% set n_like = cards|selectattr('decision', 'equalto', 'LIKE')|list|length %}
+  {% set n_super = cards|selectattr('decision', 'equalto', 'SUPERLIKE')|list|length %}
+  {% set n_pass = cards|selectattr('decision', 'equalto', 'PASS')|list|length %}
+  {% set n_open = cards|length - n_like - n_super - n_pass %}
+  <section class="dt-dk-head" style="--dt-hue: {{ who.hue if who else 340 }}">
+    <span class="dt-dk-avatar">{% if who and who.photo %}<img src="{{ dating_media(who.photo) }}" alt="">{% else %}<span aria-hidden="true">{{ who.initials if who else '?' }}</span>{% endif %}</span>
+    <div class="dt-dk-id">
+      <h2>{{ who.username if who else _('Discover') }}
+        <small>{{ _('Discover') }}{% if deck.round %} · {{ _('Day %(d)s, round %(h)s', d=deck.round.day, h=deck.round.hour) }}{% endif %}</small></h2>
+      {% if cards %}
+      <ul class="dt-dk-stats" aria-label="{{ _('Decisions on the cards of this round') }}">
+        <li class="is-like"><b>{{ n_like }}</b> {{ _('liked') }}</li>
+        <li class="is-super"><b>{{ n_super }}</b> {{ _('super liked') }}</li>
+        <li class="is-pass"><b>{{ n_pass }}</b> {{ _('passed') }}</li>
+        <li class="is-open"><b>{{ n_open }}</b> {{ _('undecided') }}</li>
+      </ul>{% endif %}
+    </div>
+    {% if who %}<a class="dt-btn dt-btn-ghost" href="{{ link('/profile/' ~ who.id) }}">{{ _('Profile') }}</a>{% endif %}
+  </section>
+  {% if cards %}
+  <div class="dt-seg dt-dk-filter" role="group" aria-label="{{ _('Filter the cards') }}" data-deck-filter>
+    <button type="button" class="is-on" data-f="all">{{ _('All') }} <small>{{ cards|length }}</small></button>
+    <button type="button" data-f="LIKE">{{ _('Liked') }} <small>{{ n_like + n_super }}</small></button>
+    <button type="button" data-f="PASS">{{ _('Passed') }} <small>{{ n_pass }}</small></button>
+    <button type="button" data-f="NONE">{{ _('Undecided') }} <small>{{ n_open }}</small></button>
+  </div>
+  <div class="dt-tiles dt-dk-grid" id="dt-deckgrid" data-deck-grid>
+    {% for c in cards %}
+    {% set p = c.profile %}{% set photos = p.photos | selectattr('url') | list %}
+    {% set dec = c.decision or 'NONE' %}
+    <button type="button" class="dt-tile dt-dk-tile has-dec-{{ dec|lower }}{{ ' has-photo' if photos }}" data-dec="{{ 'LIKE' if dec == 'SUPERLIKE' else dec }}" data-peek="{{ loop.index0 }}" style="--dt-hue: {{ p.hue }}" aria-label="{{ p.username }}{% if p.age %}, {{ p.age }}{% endif %}">
+      {% if photos %}<img class="dt-tile-img" src="{{ dating_media(photos[0].url) }}" alt="" loading="lazy" decoding="async">{% else %}<span class="dt-tile-initials" aria-hidden="true">{{ p.initials or p.username[:1]|upper }}</span>{% endif %}
+      <span class="dt-dk-pos">{{ c.position + 1 }}</span>
+      <span class="dt-dk-dec is-{{ dec|lower }}">{{ {'LIKE': _('LIKE'), 'SUPERLIKE': _('SUPER'), 'PASS': _('PASS'), 'NONE': _('undecided')}[dec] }}</span>
+      <span class="dt-tile-info"><strong>{{ p.username }}{% if p.age %}<span>, {{ p.age }}</span>{% endif %}</strong>
+        <small>{{ p.city or '' }}{% if p.intent %}{{ ' · ' if p.city }}{{ p.intent }}{% endif %}</small></span>
+      {% if c.overview and c.overview.score is not none %}<span class="dt-dk-score" title="{{ _('Score') }}">{{ '%.2f'|format(c.overview.score) }}</span>{% endif %}
+    </button>
     {% endfor %}
   </div>
-  <div class="dt-deck-nav" role="group" aria-label="{{ _('Cards of this round') }}">
-    <button type="button" class="dt-btn dt-btn-ghost" id="dt-prev" aria-label="{{ _('Previous card') }}">‹</button>
-    <span id="dt-counter" aria-live="polite">1 / {{ deck.cards|length }}</span>
-    <button type="button" class="dt-btn dt-btn-ghost" id="dt-next" aria-label="{{ _('Next card') }}">›</button>
+  {% for c in cards %}<template data-peek-tpl="{{ loop.index0 }}">{{ card(c.profile, link, c.decision, c.overview) }}</template>{% endfor %}
+  <div class="dt-peek" id="dt-peek" role="dialog" aria-modal="true" aria-label="{{ _('Card') }}" hidden>
+    <button type="button" class="dt-lb-close" data-peek-close aria-label="{{ _('Close') }}">&times;</button>
+    <button type="button" class="dt-lb-nav is-prev" data-peek-nav="-1" aria-label="{{ _('Previous card') }}">&lsaquo;</button>
+    <div class="dt-peek-body" data-peek-body></div>
+    <button type="button" class="dt-lb-nav is-next" data-peek-nav="1" aria-label="{{ _('Next card') }}">&rsaquo;</button>
   </div>
-  <p class="dt-hint">{{ _('Arrow keys move between the cards of this round. This view only observes: decisions are taken by the simulated user.') }}</p>
+  <p class="dt-hint">{{ _('Click a card to read it; arrow keys move between cards. This view only observes: decisions are taken by the simulated user.') }}</p>
   {% else %}<p class="dt-empty">{{ _('No cards were shown to this account up to this round.') }}</p>{% endif %}
 {% endif %}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='assets/js/dating-observe.js') }}"></script>{% endblock %}

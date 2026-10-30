@@ -89,6 +89,8 @@ comparison is clean when population and seed are the same and only the recommend
 *Dating pages* in the experiment's frontend settings: time travel for viewers, public observer pages, participant mode,
 the participant notice (up to 4,000 characters) and the refresh interval of open pages.
 
+The viewpoint and the time travel live in one bar under the navigation: choose Overview, Public or *As account* (type a username; the list shows each account's picture), then move the slider or the arrows to any past round. In *As account* the Discover page shows that account's deck for the chosen round with the decisions taken, filterable by Liked / Passed / Undecided; cards open in a reader and nothing is written.
+
 ## Human participation
 
 Always available: people can play on the same platform as the agents in every dating experiment (`human.enabled` is
