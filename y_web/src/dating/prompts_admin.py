@@ -62,6 +62,7 @@ GROUPS: List[Tuple[str, str, str, List[str]]] = [
         [
             "opener",
             "reply",
+            "reply_variety_hint",
             "unmatch_decision",
             "date_proposal",
             "date_response",
