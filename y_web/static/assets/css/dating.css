@@ -577,3 +577,5 @@ a.dt-ico:hover { border-color: var(--dt-accent); } .dt-ico.is-off { opacity: .35
 .dt-dk-them.is-like, .dt-dk-them.is-superlike { background: rgba(21,128,61,.85); } .dt-dk-them.is-pass { background: rgba(71,85,105,.85); }
 .dt-them { margin: 8px 0 0; font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 10px; background: var(--dt-surface-2); color: var(--dt-muted); }
 .dt-them.is-like, .dt-them.is-superlike { color: #15803d; } .dt-them.is-pass { color: var(--dt-muted); }
+.dt-dk-match { position: absolute; top: 62px; right: 8px; z-index: 2; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--dt-accent); color: var(--dt-accent-ink); }
+.dt-dk-them.is-match { background: rgba(225,29,72,.85); } .dt-them.is-match { color: var(--dt-accent); }

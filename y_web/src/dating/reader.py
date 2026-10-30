@@ -486,6 +486,16 @@ class DatingReader:
             (cut, viewer_id),
         ):
             theirs[r["swiper_id"]] = r["decision"]
+        # a match needs a like from both sides: when no swipe of theirs is on record the pair is still shown
+        # as matched (a data gap worth knowing about) instead of as "not rated"
+        matched = set()
+        for r in self.c.execute(
+            "SELECT m.user_a, m.user_b FROM matches m "
+            "JOIN rounds r ON r.id = m.created_round AND r.day * 10000 + r.hour <= ? "
+            "WHERE m.user_a = ? OR m.user_b = ?",
+            (cut, viewer_id, viewer_id),
+        ):
+            matched.add(r["user_b"] if r["user_a"] == viewer_id else r["user_a"])
         cards = []
         for rec in recs:
             base = active.get(rec["candidate_id"])
@@ -493,7 +503,9 @@ class DatingReader:
                 continue
             decision = decisions.get(rec["id"])
             card = {
-                "theirs": theirs.get(rec["candidate_id"]) or "NONE",
+                "theirs": theirs.get(rec["candidate_id"])
+                or ("MATCH" if rec["candidate_id"] in matched else "NONE"),
+                "matched": rec["candidate_id"] in matched,
                 "profile": self._public_profile(rec["candidate_id"], cut, base),
                 "position": rec["position"],
                 "decision": (

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 13:08+0000\n"
+"POT-Creation-Date: 2026-10-30 13:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -6924,6 +6924,9 @@ msgid ""
 "interactions have been recorded up to the selected time."
 msgstr ""
 
+msgid "Match"
+msgstr ""
+
 msgid "Match ended"
 msgstr ""
 
@@ -12276,6 +12279,9 @@ msgstr ""
 msgid "The training area is not available. Please contact an administrator."
 msgstr ""
 
+msgid "The two accounts are matched"
+msgstr ""
+
 msgid ""
 "The updated forum feed assignment has been saved. Running clients will "
 "use the new feeds after they are restarted."
@@ -14503,6 +14509,9 @@ msgid "manifest invalid"
 msgstr ""
 
 msgid "manifest valid"
+msgstr ""
+
+msgid "matched"
 msgstr ""
 
 msgid "max"
