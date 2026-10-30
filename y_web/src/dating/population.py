@@ -342,6 +342,56 @@ def remove_agents(population_id: int) -> int:
     return len(own)
 
 
+_PLACEHOLDER_NAME = re.compile(r"^user_\d+$")
+
+
+def give_names(
+    data: Dict[str, Any], used_names: Optional[set] = None, seed: Optional[int] = None
+) -> Dict[str, Any]:
+    """Replace the placeholder usernames of a generated population (``user_03``) with names of real-looking people.
+
+    The name follows the nationality (the locales of the other platforms) and the gender of the agent, is unique
+    among the agents of the document and of ``used_names`` and is reproducible for the same ``seed``. A username
+    that is not a placeholder is kept; the photo captions that mention the placeholder follow the new name.
+    ``data`` is changed in place and returned.
+    """
+    import faker
+
+    from y_web.src.agents import population as std
+
+    locales = getattr(std, "__locales", {})
+    used = set(used_names or ())
+    used.update(a["username"] for a in data.get("agents") or [])
+    for index, agent in enumerate(data.get("agents") or []):
+        old = agent["username"]
+        if not _PLACEHOLDER_NAME.match(old):
+            continue
+        try:
+            fake = faker.Faker(locales.get(agent.get("nationality") or "", "en_US"))
+        except (AttributeError, ImportError):
+            fake = faker.Faker("en_US")
+        if seed is not None:
+            fake.seed_instance(int(seed) * 100003 + index)
+        gender = str(agent.get("gender") or "").lower()
+        kind = (
+            "female"
+            if gender in ("woman", "female", "f")
+            else "male" if gender in ("man", "male", "m") else None
+        )
+        if (
+            kind is None
+        ):  # no binary gender: alternate, the name is not an attribute of the agent
+            kind = "female" if index % 2 else "male"
+        name = std._generate_unique_name(fake, kind, used)[:50]
+        used.discard(old)
+        used.add(name)
+        agent["username"] = name
+        for photo in agent.get("photos") or []:
+            if old in str(photo.get("caption") or ""):
+                photo["caption"] = photo["caption"].replace(old, name)
+    return data
+
+
 def generate(
     n_agents: int,
     seed: Optional[int] = None,

@@ -87,6 +87,9 @@ LABELS: Dict[str, str] = {
     "profile_generation.captions": N_("Write a caption for every photo"),
     "profile_generation.images.enabled": N_("Generate the profile photos"),
     "profile_generation.images.style": N_("Look of the photos"),
+    "profile_generation.images.use_caption": N_(
+        "Draw the agent in the scene of the caption"
+    ),
     "profile_generation.images.background": N_(
         "Generate them while the simulation runs"
     ),

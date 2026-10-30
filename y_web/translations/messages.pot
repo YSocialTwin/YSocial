@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 10:30+0000\n"
+"POT-Creation-Date: 2026-10-30 10:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1741,6 +1741,9 @@ msgid ""
 msgstr ""
 
 msgid "Block"
+msgstr ""
+
+msgid "Block or report"
 msgstr ""
 
 msgid "Block this person?"
@@ -3861,6 +3864,9 @@ msgid ""
 "other people answer as the experiment runs."
 msgstr ""
 
+msgid "Draw the agent in the scene of the caption"
+msgstr ""
+
 msgid "Drinks"
 msgstr ""
 
@@ -5793,6 +5799,9 @@ msgstr ""
 msgid ""
 "In instant messaging the agent evaluates the opinion of the interlocutor "
 "only."
+msgstr ""
+
+msgid "In their words"
 msgstr ""
 
 msgid "In-Degree CCDF"
@@ -8157,6 +8166,10 @@ msgstr ""
 msgid "Open experiment settings"
 msgstr ""
 
+#, python-format
+msgid "Open photo %(n)s"
+msgstr ""
+
 msgid "Open profile"
 msgstr ""
 
@@ -8565,8 +8578,7 @@ msgstr ""
 msgid "PhD Student in AI"
 msgstr ""
 
-#, python-format
-msgid "Photo %(n)s"
+msgid "Photo"
 msgstr ""
 
 msgid "Photo Sharing"

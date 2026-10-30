@@ -251,6 +251,49 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     return user, created
 
 
+def _required_unmapped_columns(engine: Engine) -> Dict[str, object]:
+    """NOT NULL columns of ``user_mgmt`` without a default that the ``User_mgmt`` model does not map, with a neutral
+    value for each (``""`` for text, ``0`` for numbers). Empty for every database YWeb itself creates.
+    """
+    from sqlalchemy import inspect
+
+    try:
+        columns = inspect(engine).get_columns("user_mgmt")
+    except Exception:
+        return {}
+    mapped = {c.name for c in User_mgmt.__table__.columns}
+    extra: Dict[str, object] = {}
+    for col in columns:
+        if col["name"] in mapped or col.get("nullable", True):
+            continue
+        if col.get("default") is not None or col.get("autoincrement") is True:
+            continue
+        kind = str(col.get("type", "")).upper()
+        extra[col["name"]] = (
+            0 if any(t in kind for t in ("INT", "REAL", "FLOAT", "NUM", "BOOL")) else ""
+        )
+    return extra
+
+
+def _insert_user_with_extra_columns(
+    engine: Engine, user: User_mgmt, extra: Dict[str, object]
+) -> None:
+    """Insert ``user`` (an unsaved ``User_mgmt``) with the extra columns of :func:`_required_unmapped_columns`."""
+    from sqlalchemy import MetaData, Table
+
+    table = Table("user_mgmt", MetaData(), autoload_with=engine)
+    values: Dict[str, object] = {}
+    for col in User_mgmt.__table__.columns:
+        value = getattr(user, col.key, None)
+        if value is None and col.default is not None and col.default.is_scalar:
+            value = col.default.arg
+        if value is not None and col.name in table.c:
+            values[col.name] = value
+    values.update(extra)
+    with engine.begin() as connection:
+        connection.execute(table.insert().values(**values))
+
+
 def _ensure_experiment_user(
     experiment: Exps,
     *,
@@ -323,6 +366,14 @@ def _ensure_experiment_user(
             joined_on=joined_on,
             cover_image=cover_image,
         )
+        extra = _required_unmapped_columns(engine)
+        if extra:
+            # a runtime that owns the table (Dating) has NOT NULL columns the YWeb model does not know: insert the
+            # row with them, taking the defaults of the model for everything else
+            _insert_user_with_extra_columns(engine, new_user, extra)
+            db_session.expire_all()
+            new_user = db_session.query(User_mgmt).filter_by(username=username).first()
+            return new_user, True
         db_session.add(new_user)
         db_session.commit()
         db_session.refresh(new_user)

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 10:30+0000\n"
+"POT-Creation-Date: 2026-10-30 10:47+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1896,6 +1896,9 @@ msgstr ""
 
 msgid "Block"
 msgstr "Blocca"
+
+msgid "Block or report"
+msgstr "Blocca o segnala"
 
 msgid "Block this person?"
 msgstr "Bloccare questa persona?"
@@ -4297,6 +4300,9 @@ msgstr ""
 "Trascina la carta, usa i pulsanti o i tasti freccia. Gli utenti simulati "
 "e le altre persone rispondono mentre l'esperimento procede."
 
+msgid "Draw the agent in the scene of the caption"
+msgstr "Disegna l'agente nella scena della didascalia"
+
 msgid "Drinks"
 msgstr "Beve"
 
@@ -6433,6 +6439,9 @@ msgid ""
 msgstr ""
 "Nella messaggistica istantanea l'agente valuta solo l'opinione "
 "dell'interlocutore."
+
+msgid "In their words"
+msgstr "Con le sue parole"
 
 msgid "In-Degree CCDF"
 msgstr "CCDF del grado entrante"
@@ -8980,6 +8989,10 @@ msgstr "Apri la chat"
 msgid "Open experiment settings"
 msgstr "Apri le impostazioni dell'esperimento"
 
+#, python-format
+msgid "Open photo %(n)s"
+msgstr "Apri la foto %(n)s"
+
 msgid "Open profile"
 msgstr "Apri il profilo"
 
@@ -9417,9 +9430,8 @@ msgstr "Dottorato"
 msgid "PhD Student in AI"
 msgstr "Dottorando in IA"
 
-#, python-format
-msgid "Photo %(n)s"
-msgstr "Foto %(n)s"
+msgid "Photo"
+msgstr "Foto"
 
 msgid "Photo Sharing"
 msgstr "Condivisione di foto"
@@ -18010,4 +18022,7 @@ msgstr "✔️ Usa"
 #~ " di ciascuna ora indicata sopra. Per"
 #~ " cambiare i profili, modifica la "
 #~ "popolazione."
+
+#~ msgid "Photo %(n)s"
+#~ msgstr "Foto %(n)s"
 

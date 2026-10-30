@@ -134,3 +134,12 @@ people assigned with what each has done.
 - Default rates of the runtime (for example the share of agents that leave as couples) are not calibrated: see the
   YDating documentation before comparing figures with the literature.
 - Italian texts of the interface are a draft until a native speaker reviews them.
+
+## Names, photos and the profile page
+
+A generated dating population gives its agents names of real-looking people that follow the nationality and the
+gender (the same locales as the other platforms), not `user_N`; a population uploaded from a file keeps the names
+of the file. With `profile_generation.images.use_caption` (on by default) each image shows the agent (age, gender,
+nationality and looks) inside the scene its photo caption describes. The profile page of the frontend shows the
+profile with a hero, cards that fade in, a photo gallery with a lightbox and, for researchers, bars for the latent
+variables.

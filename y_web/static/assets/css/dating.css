@@ -168,3 +168,63 @@
 .dt-count { color: var(--dt-muted); margin: 0 0 8px; }
 #dt-results.is-loading { opacity: .55; transition: opacity .15s; }
 @media (max-width: 760px) { .dt-chat-head { top: 0; } .dt-brand-exp { display: none; } .dt-bubble { max-width: 84%; } }
+
+/* Profile page: hero, cards that fade in, gallery with a lightbox, bars for the researcher block */
+.dt-pf { padding: 0; overflow: hidden; }
+.dt-pf-hero { position: relative; }
+.dt-pf-cover { height: 120px; background: linear-gradient(120deg, hsl(var(--dt-hue) 80% 62%), hsl(calc(var(--dt-hue) + 40) 85% 70%) 55%, var(--dt-accent-soft)); background-size: 200% 100%; }
+.dt-pf-id { display: flex; align-items: flex-end; gap: 18px; padding: 0 24px 16px; margin-top: -48px; flex-wrap: wrap; }
+.dt-pf-avatar .dt-avatar { width: 112px; height: 112px; border: 4px solid var(--dt-surface); box-shadow: var(--dt-shadow); }
+.dt-pf-name { min-width: 0; padding-bottom: 4px; }
+.dt-pf-title { margin: 0; font-size: clamp(22px, 3.4vw, 30px); line-height: 1.15; overflow-wrap: anywhere; }
+.dt-pf-age { font-weight: 400; color: var(--dt-muted); }
+.dt-pf-facts { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; color: var(--dt-muted); }
+.dt-pf-facts li { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; background: var(--dt-surface-2); border: 1px solid var(--dt-border); }
+.dt-pf-facts svg { width: 14px; height: 14px; color: var(--dt-accent); }
+.dt-pf-facts .dt-pf-intent { background: var(--dt-accent-soft); color: var(--dt-accent); border-color: transparent; font-weight: 600; }
+.dt-pf-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; padding: 8px 24px 24px; align-items: start; }
+.dt-pf-main, .dt-pf-side, .dt-pf-prompts { display: grid; gap: 14px; align-content: start; }
+.dt-pf-side { position: sticky; top: 12px; }
+.dt-pf-card { background: var(--dt-surface-2); border: 1px solid var(--dt-border); border-radius: 14px; padding: 16px 18px; }
+.dt-pf-h { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dt-muted); }
+.dt-pf-bio { margin: 0; font-size: 17px; line-height: 1.6; max-width: 68ch; }
+.dt-pf-prompt h4 { margin: 0 0 4px; font-size: 13px; color: var(--dt-accent); font-weight: 700; }
+.dt-pf-prompt p { margin: 0; font-size: 16px; line-height: 1.55; max-width: 68ch; }
+.dt-pf-tags { margin: 0; }
+.dt-pf-gallery { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.dt-pf-photo { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 12px; overflow: hidden; cursor: zoom-in; background: var(--dt-surface); }
+.dt-pf-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+.dt-pf-cap { position: absolute; inset: auto 0 0 0; padding: 22px 10px 8px; text-align: left; font-size: 12px; line-height: 1.3; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.72)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; }
+.dt-pf-photo:hover img, .dt-pf-photo:focus-visible img { transform: scale(1.06); }
+.dt-pf-photo:hover .dt-pf-cap, .dt-pf-photo:focus-visible .dt-pf-cap { opacity: 1; transform: none; }
+.dt-pf-bars { display: grid; gap: 8px; margin: 0 0 10px; }
+.dt-pf-bars div { display: grid; grid-template-columns: 1fr; gap: 3px; }
+.dt-pf-bars dt { font-size: 13px; color: var(--dt-muted); text-transform: capitalize; }
+.dt-pf-bars dd { margin: 0; display: flex; align-items: center; gap: 8px; }
+.dt-pf-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--dt-border); overflow: hidden; }
+.dt-pf-bar i { display: block; height: 100%; width: var(--v); border-radius: inherit; background: linear-gradient(90deg, var(--dt-accent), hsl(calc(var(--dt-hue) + 30) 85% 60%)); transform-origin: left; }
+.dt-pf-research { background: var(--dt-warn-bg); color: var(--dt-warn-ink); border-color: transparent; }
+.dt-pf-research .dt-pf-h { color: inherit; opacity: .8; } .dt-pf-research .dt-pf-bars dt { color: inherit; opacity: .8; }
+.dt-pf-note { margin: 0 0 10px; font-size: 14px; }
+.dt-pf-safety summary { cursor: pointer; font-weight: 600; color: var(--dt-muted); }
+.dt-pf-safety .dt-danger { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+.dt-lightbox { position: fixed; inset: 0; z-index: 60; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 16px; background: rgba(2,6,23,.86); }
+.dt-lightbox[hidden] { display: none; }
+.dt-lightbox figure { margin: 0; text-align: center; color: #fff; min-width: 0; }
+.dt-lightbox img { max-width: 100%; max-height: 76vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.dt-lightbox figcaption { margin: 12px auto 0; max-width: 62ch; font-size: 15px; line-height: 1.5; }
+.dt-lb-nav, .dt-lb-close { border: 0; width: 44px; height: 44px; border-radius: 50%; font-size: 28px; line-height: 1; cursor: pointer; background: rgba(255,255,255,.14); color: #fff; }
+.dt-lb-close { position: absolute; top: 14px; right: 14px; }
+@media (max-width: 860px) { .dt-pf-grid { grid-template-columns: 1fr; padding: 8px 14px 18px; } .dt-pf-side { position: static; } .dt-pf-id { padding: 0 14px 14px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .dt-pf-cover { animation: dt-pf-flow 14s ease-in-out infinite alternate; }
+  .dt-pf-avatar .dt-avatar { animation: dt-pf-pop .55s cubic-bezier(.2,1.3,.4,1) both; }
+  .dt-reveal { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; transition-delay: calc(var(--i, 0) * 70ms); }
+  .dt-reveal.is-in { opacity: 1; transform: none; }
+  .dt-pf-tags li { animation: dt-pf-pop .45s cubic-bezier(.2,1.3,.4,1) both; animation-delay: calc(var(--i, 0) * 40ms + 200ms); }
+  .dt-pf-bar i { transform: scaleX(0); transition: transform .9s cubic-bezier(.2,.8,.2,1); }
+  .is-in .dt-pf-bar i { transform: scaleX(1); }
+  .dt-lightbox:not([hidden]) img { animation: dt-pf-pop .3s ease both; }
+}
+@keyframes dt-pf-flow { to { background-position: 100% 0; } }
+@keyframes dt-pf-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }

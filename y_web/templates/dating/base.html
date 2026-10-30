@@ -74,5 +74,6 @@
 {% include "shared/plugin_loader.html" %}
 <script src="{{ url_for('static', filename='assets/js/dating.js') }}"></script>
 {% if participant %}<script src="{{ url_for('static', filename='assets/js/dating-participant.js') }}"></script>{% endif %}
+{% block scripts %}{% endblock %}
 </body>
 </html>

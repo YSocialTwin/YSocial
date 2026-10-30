@@ -243,3 +243,19 @@ def test_matches_and_chat_carry_what_an_avatar_needs(tmp_path):
         assert {"photo", "hue", "initials"} <= set(match) and "a_avatar" in match
         chat = reader.chat(info["match"], vp)
         assert {"photo", "hue", "initials"} <= set(chat["a"])
+
+
+def test_the_profile_page_has_the_gallery_and_the_reveal_script():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    page = (root / "templates" / "dating" / "profile.html").read_text(encoding="utf-8")
+    for marker in ("dt-pf-hero", "data-lightbox", "dt-reveal", "dating-profile.js"):
+        assert marker in page
+    assert "{% block scripts %}" in (
+        root / "templates" / "dating" / "base.html"
+    ).read_text(encoding="utf-8")
+    script = (root / "static" / "assets" / "js" / "dating-profile.js").read_text(
+        encoding="utf-8"
+    )
+    assert "IntersectionObserver" in script and "Escape" in script

@@ -1873,6 +1873,11 @@ def _generate_dating_population():
             "error",
         )
         return redirect("/admin/populations")
+    dp.give_names(
+        data,
+        {a for (a,) in db.session.query(Agent.name).all()},
+        request.form.get("seed") or None,
+    )
     row = _register_dating_population(
         dp.clean_name(request.form.get("pop_name")) or "dating",
         request.form.get("pop_descr"),

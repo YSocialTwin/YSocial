@@ -667,3 +667,32 @@ def test_generated_agents_live_in_a_city_of_their_nationality(app, routes):
             assert a["profile"]["city"] in (
                 french if a["nationality"] == "French" else japanese
             )
+
+
+def test_generated_placeholders_become_names_of_people():
+    from y_web.src.dating import population as dp
+
+    def doc():
+        return {
+            "agents": [
+                {
+                    "username": f"user_{i:02d}",
+                    "gender": g,
+                    "nationality": n,
+                    "photos": [{"caption": f"photo 1 of user_{i:02d}"}],
+                }
+                for i, (g, n) in enumerate(
+                    [("woman", "Italian"), ("man", "Italian"), ("man", "")], 1
+                )
+            ]
+            + [{"username": "kept", "gender": "man", "photos": []}]
+        }
+
+    data = dp.give_names(doc(), {"Taken"}, seed=3)
+    names = [a["username"] for a in data["agents"]]
+    assert len(set(names)) == 4 and names[3] == "kept"
+    assert not any(n.startswith("user_") for n in names[:3])
+    assert data["agents"][0]["photos"][0]["caption"] == f"photo 1 of {names[0]}"
+    assert [
+        a["username"] for a in dp.give_names(doc(), {"Taken"}, seed=3)["agents"]
+    ] == names
