@@ -667,6 +667,7 @@ def populations():
         age_classes=age_classes,
         activity_profiles=activity_profiles,
         profession_backgrounds=profession_backgrounds,
+        **_dating_form_context(),
     )
 
 
@@ -1682,6 +1683,32 @@ def _register_dating_population(name, descr, data):
     return row
 
 
+def _dating_form_context():
+    """Lists the Dating creation form offers next to the free-text weights (same catalogues as the standard form)."""
+    from y_web.src.dating import population as dp
+
+    return {
+        "dating_available": dp.runtime_available(current_user),
+        "dating_nationalities": [
+            r.nationality for r in db.session.scalars(select(Nationalities)).all()
+        ],
+        "dating_education_levels": [
+            r.education_level for r in db.session.scalars(select(Education)).all()
+        ],
+        "dating_leanings": [
+            r.leaning for r in db.session.scalars(select(Leanings)).all()
+        ],
+        "dating_languages": [
+            r.language for r in db.session.scalars(select(Languages)).all()
+        ],
+        "dating_professions": [
+            r.profession
+            for r in db.session.scalars(select(Profession).limit(200)).all()
+        ],
+        "dating_appearance_labels": dp.APPEARANCE_LABELS,
+    }
+
+
 @population.route("/admin/dating_populations")
 @login_required
 def dating_populations():
@@ -1691,7 +1718,11 @@ def dating_populations():
     rows = db.session.scalars(
         select(Population).filter_by(username_type="dating").order_by(Population.name)
     ).all()
-    return render_template("admin/dating_populations.html", populations=rows)
+    return render_template(
+        "admin/dating_populations.html",
+        populations=rows,
+        **_dating_form_context(),
+    )
 
 
 @population.route("/admin/dating_populations/upload", methods=["POST"])
@@ -1745,6 +1776,7 @@ def generate_dating_population():
             request.form.get("n_agents"),
             seed=request.form.get("seed"),
             language=(request.form.get("language") or "").strip() or None,
+            config=dp.config_from_form(request.form),
         )
     except dp.DatingPopulationError as exc:
         flash(

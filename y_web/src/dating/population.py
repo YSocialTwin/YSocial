@@ -330,8 +330,12 @@ def generate(
     language: Optional[str] = None,
     repo_dir: Optional[str] = None,
     tmp_dir: Optional[str] = None,
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Generate a synthetic population with the generator of YDating (``scripts/generate_population.py``).
+
+    ``config`` holds the other generator parameters (``schemas/population/generator.json``; see
+    ``config_from_form``); ``n_agents``, ``seed`` and ``language`` take precedence.
 
     Run as a child process, so that the runtime's dependencies never need to be importable by YWeb. The output
     is validated like an upload.
@@ -358,11 +362,15 @@ def generate(
                 cmd += ["--seed", str(int(seed))]
             except (TypeError, ValueError):
                 raise DatingPopulationError(["seed: must be an integer"]) from None
-        cfg_path = None
+        params = dict(config or {})
+        for own in ("n_agents", "seed"):
+            params.pop(own, None)
         if language:
+            params["language"] = str(language)
+        if params:
             cfg_path = os.path.join(work, "generator.json")
             with open(cfg_path, "w", encoding="utf-8") as handle:
-                json.dump({"language": str(language)}, handle)
+                json.dump(params, handle)
             cmd += ["--config", cfg_path]
         try:
             proc = subprocess.run(
@@ -387,6 +395,239 @@ def generate(
     if problems:
         raise DatingPopulationError(problems)
     return data
+
+
+# ------------------------------------------------------------------ generator form
+
+# appearance attributes drawn from label weights (same names as the population schema)
+APPEARANCE_LABELS = (
+    "hair_color",
+    "hair_length",
+    "hair_style",
+    "eye_color",
+    "skin_tone",
+    "build",
+    "facial_hair",
+    "distinctive_features",
+    "mood",
+    "photo_style",
+)
+PERSONALITY_TRAITS = ("oe", "co", "ex", "ag", "ne")
+AFFECTIVE_TRAITS = (
+    "sensitivity",
+    "reward_sensitivity",
+    "resilience",
+    "visibility_need",
+)
+LATENT_VARIABLES = ("attractiveness", "selectivity", "responsiveness")
+WEIGHT_FIELDS = (  # form field -> generator key
+    ("genders", "genders"),
+    ("intents", "intents"),
+    ("nationalities", "nationalities"),
+    ("education_levels", "education_levels"),
+    ("leanings", "leanings"),
+    ("professions", "professions"),
+    ("match_recsys", "match_recsys"),
+)
+
+
+def parse_weights(text: Any, field: str, separator: str = ",") -> Dict[str, float]:
+    """``"a=2, b=1"`` -> ``{"a": 2.0, "b": 1.0}``; a label without ``=`` weighs 1 (empty text gives ``{}``)."""
+    out: Dict[str, float] = {}
+    for part in str(text or "").replace("\n", separator).split(separator):
+        part = part.strip()
+        if not part:
+            continue
+        label, _eq, raw = part.rpartition("=") if "=" in part else (part, "", "1")
+        label = label.strip()
+        try:
+            weight = float(raw)
+        except ValueError:
+            raise DatingPopulationError(
+                [f"{field}: {part!r} is not label=weight"]
+            ) from None
+        if not label or weight < 0 or weight != weight or weight == float("inf"):
+            raise DatingPopulationError(
+                [f"{field}: {part!r} is not label=weight with weight >= 0"]
+            )
+        out[label] = weight
+    if out and not any(out.values()):
+        raise DatingPopulationError(
+            [f"{field}: at least one weight must be greater than zero"]
+        )
+    return out
+
+
+def _number(raw: Any, field: str, kind=float, low=None, high=None):
+    text = str(raw if raw is not None else "").strip()
+    if text == "":
+        return None
+    try:
+        value = kind(text)
+    except ValueError:
+        raise DatingPopulationError([f"{field}: must be a number"]) from None
+    if (low is not None and value < low) or (high is not None and value > high):
+        raise DatingPopulationError([f"{field}: must be between {low} and {high}"])
+    return value
+
+
+def _pair(form, field: str, kind=float, low=None, high=None):
+    """The range ``[<field>_min, <field>_max]`` of a form (both empty = not given; one empty = error)."""
+    lo = _number(form.get(f"{field}_min"), f"{field}_min", kind, low, high)
+    hi = _number(form.get(f"{field}_max"), f"{field}_max", kind, low, high)
+    if lo is None and hi is None:
+        return None
+    if lo is None or hi is None:
+        raise DatingPopulationError([f"{field}: give both the minimum and the maximum"])
+    if lo > hi:
+        raise DatingPopulationError(
+            [f"{field}: the minimum is greater than the maximum"]
+        )
+    return [lo, hi]
+
+
+def _seeking(text: Any) -> Dict[str, Dict[str, float]]:
+    """Lines ``gender: set=weight, set=weight`` where a set lists genders joined by ``+``."""
+    out: Dict[str, Dict[str, float]] = {}
+    for line in str(text or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        gender, colon, rest = line.partition(":")
+        if not colon or not gender.strip():
+            raise DatingPopulationError(
+                [f"seeking: {line!r} is not 'gender: set=weight, ...'"]
+            )
+        weights = parse_weights(rest, f"seeking/{gender.strip()}")
+        out[gender.strip()] = {k.replace("+", ","): v for k, v in weights.items()}
+    return out
+
+
+def _cities(text: Any) -> List[Dict[str, Any]]:
+    """Lines ``name, latitude, longitude[, weight]``."""
+    out = []
+    for line in str(text or "").splitlines():
+        if not line.strip():
+            continue
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) not in (3, 4) or not parts[0]:
+            raise DatingPopulationError(
+                [f"cities: {line.strip()!r} is not 'name, lat, lon[, weight]'"]
+            )
+        try:
+            city = {"name": parts[0], "lat": float(parts[1]), "lon": float(parts[2])}
+            if len(parts) == 4:
+                city["weight"] = float(parts[3])
+        except ValueError:
+            raise DatingPopulationError(
+                [f"cities: {line.strip()!r} has a value that is not a number"]
+            ) from None
+        out.append(city)
+    return out
+
+
+def config_from_form(form) -> Dict[str, Any]:
+    """The generator parameters (``schemas/population/generator.json``) described by the admin form.
+
+    Every field that is empty is left out so that the generator's documented default applies; ``n_agents``,
+    ``seed`` and ``language`` are read by the caller. Raises ``DatingPopulationError`` for a malformed value; the
+    final validation against the generator schema is made by the generator itself.
+    """
+    cfg: Dict[str, Any] = {}
+    age = {
+        key: v
+        for key, v in (
+            ("mean", _number(form.get("age_mean"), "age_mean", float)),
+            ("std", _number(form.get("age_std"), "age_std", float, 0)),
+            ("min", _number(form.get("age_min"), "age_min", int, 18, 120)),
+            ("max", _number(form.get("age_max"), "age_max", int, 18, 120)),
+        )
+        if v is not None
+    }
+    if age:
+        cfg["age"] = age
+    for field, key in WEIGHT_FIELDS:
+        weights = parse_weights(form.get(field), field)
+        if weights:
+            cfg[key] = weights
+    seeking = _seeking(form.get("seeking"))
+    if seeking:
+        cfg["seeking"] = seeking
+    latent = {}
+    for name in LATENT_VARIABLES:
+        a = _number(form.get(f"latent_{name}_a"), f"latent_{name}_a", float, 0.0001)
+        b = _number(form.get(f"latent_{name}_b"), f"latent_{name}_b", float, 0.0001)
+        if (a is None) != (b is None):
+            raise DatingPopulationError([f"latent/{name}: give both a and b"])
+        if a is not None:
+            latent[name] = [a, b]
+    if latent:
+        cfg["latent"] = latent
+    affective = {}
+    for trait in AFFECTIVE_TRAITS:
+        pair = _pair(form, f"affective_{trait}", float, 0)
+        if pair:
+            affective[trait] = pair
+    if affective:
+        cfg["affective_traits"] = affective
+    cities = _cities(form.get("cities"))
+    if cities:
+        cfg["cities"] = cities
+    radius = _number(form.get("city_radius_km"), "city_radius_km", float, 0)
+    if radius is not None:
+        cfg["city_radius_km"] = radius
+    for field, kind, low in (
+        ("max_distance_km", float, 0),
+        ("age_window", int, 0),
+        ("interests_per_agent", int, 1),
+        ("photos_per_agent", int, 0),
+        ("daily_activity_level", int, 1),
+    ):
+        pair = _pair(form, field, kind, low)
+        if pair:
+            cfg[field] = pair
+    interests = [
+        i.strip()
+        for i in str(form.get("interests") or "").replace("\n", ",").split(",")
+        if i.strip()
+    ]
+    if interests:
+        cfg["interests"] = list(dict.fromkeys(interests))
+    personality = {}
+    for trait in PERSONALITY_TRAITS:
+        weights = parse_weights(
+            form.get(f"personality_{trait}"), f"personality_{trait}"
+        )
+        if weights:
+            personality[trait] = weights
+    if personality:
+        cfg["personality"] = personality
+    appearance: Dict[str, Any] = {}
+    for key in APPEARANCE_LABELS:
+        weights = parse_weights(form.get(f"appearance_{key}"), f"appearance_{key}")
+        if weights:
+            appearance[key] = weights
+    height = _pair(form, "appearance_height_cm", int, 100, 250)
+    if height:
+        appearance["height_cm"] = height
+    glasses = _number(
+        form.get("appearance_glasses"), "appearance_glasses", float, 0, 100
+    )
+    if glasses is not None:
+        appearance["glasses"] = glasses / 100.0
+    if appearance:
+        cfg["appearance"] = appearance
+    return cfg
+
+
+def runtime_available(user=None) -> bool:
+    """Whether the YDating runtime is installed (and visible to this admin): the Dating forms are offered only then."""
+    try:
+        from y_web.src.external_runtime import runtime_installed_and_visible
+
+        return bool(runtime_installed_and_visible(DATING_PLATFORM, user))
+    except Exception:
+        return False
 
 
 def population_row_values(data: Dict[str, Any]) -> Tuple[int, int, int]:
