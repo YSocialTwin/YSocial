@@ -7,7 +7,9 @@ from y_web.tests.test_training_modules_baseline_auth import (  # noqa: F401
 )
 
 
-def test_choosing_a_dating_experiment_lands_on_the_play_view_and_stays_logged_in(core_app):
+def test_choosing_a_dating_experiment_lands_on_the_play_view_and_stays_logged_in(
+    core_app,
+):
     from y_web import db
     from y_web.src.dating import DATING_PLATFORM
     from y_web.src.models import User_Experiment
