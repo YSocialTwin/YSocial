@@ -198,7 +198,16 @@ def build_dating_db(path, sentinel=False, users=6, days=3, slots=4):
         )
     c.execute(
         "INSERT INTO date_proposals VALUES (?,?,?,?,?,?,?,?)",
-        (_id(), match, uids[1], "coffee?", "accepted", "NEGATIVE", rounds[7], rounds[5]),
+        (
+            _id(),
+            match,
+            uids[1],
+            "coffee?",
+            "accepted",
+            "NEGATIVE",
+            rounds[7],
+            rounds[5],
+        ),
     )
     c.execute(
         "INSERT INTO blocks VALUES (?,?,?,?)", (_id(), uids[2], uids[0], rounds[6])

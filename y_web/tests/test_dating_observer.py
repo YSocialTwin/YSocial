@@ -275,7 +275,9 @@ def test_matches_report_how_each_match_went_and_staff_get_lifecycle_stats(tmp_pa
     with ctx as reader:
         cut = reader._cut(12)
         j = next(iter(reader.journeys(cut).values()))
-        assert "date_bad" in [c["code"] for c in j["chips"]]  # decided not to continue off-platform
+        assert "date_bad" in [
+            c["code"] for c in j["chips"]
+        ]  # decided not to continue off-platform
         assert j["dates"][0]["text"] == "coffee?"
         # the outcome (round 8 = day 2 hour 4) is not known on day 2 hour 1
         before = next(iter(reader.journeys(20001).values()))
