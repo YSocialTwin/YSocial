@@ -336,3 +336,22 @@ def test_client_creation_pages_do_not_filter_populations_by_platform():
         text = page.read_text()
         assert "incompatible_population" not in text and "username type" not in text, page.name
         assert "populations for other platforms" not in text, page.name
+
+
+def test_the_image_model_offers_the_alternatives_of_the_dating_client(app):
+    import jinja2
+    from pathlib import Path
+
+    from y_web.src.agents import profile_pictures as pp
+    from y_web.src.dating.settings_ui import DIFFUSION_MODELS
+
+    root = Path(__file__).resolve().parents[1] / "templates"
+    env = app.jinja_env.overlay(loader=jinja2.FileSystemLoader(str(root)))
+    with app.test_request_context("/"):
+        html = env.get_template("admin/_population_appearance.html").render(
+            _=lambda text, **kw: text % kw if kw else text, appearance_defaults=pp.defaults(), images_available=False
+        )
+    for model, _label in DIFFUSION_MODELS:
+        assert f'<option value="{model}"' in html
+    assert len(DIFFUSION_MODELS) >= 4 and 'value="__other__"' in html
+    assert 'name="pictures_model"' in html and "data-diffusion-select" in html

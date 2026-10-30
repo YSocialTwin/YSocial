@@ -53,10 +53,14 @@
             <div class="box-line">
                 <span class="left">{{ _('Image model (diffusion)') }}</span>
                 <span class="right ys-w-70">
-                    <input type="text" name="pictures_model" class="input" list="pictures-models" value="{{ ad.model }}">
-                    <datalist id="pictures-models">
-                        {% for model in pictures_models %}<option value="{{ model }}">{% endfor %}
-                    </datalist>
+                    {% set known = ad.models|map(attribute=0)|list %}
+                    <div class="dating-diffusion">
+                        <div class="select is-fullwidth"><select data-diffusion-select>
+                            {% for m, label in ad.models %}<option value="{{ m }}" {% if m == ad.model %}selected{% endif %}>{{ _(label) }}</option>{% endfor %}
+                            <option value="__other__" {% if ad.model not in known %}selected{% endif %}>{{ _('Other (a Hugging Face model id)') }}</option>
+                        </select></div>
+                        <input type="text" class="input" name="pictures_model" value="{{ ad.model }}" data-diffusion-text {% if ad.model in known %}hidden{% endif %}>
+                    </div>
                     <small class="ys-label-hint">{{ _('A Hugging Face diffusers model, downloaded on first use.') }}</small>
                 </span>
             </div>

@@ -102,8 +102,10 @@ def available() -> bool:
 def defaults() -> Dict[str, Any]:
     """Values proposed by the form (the weights of the generator of the Dating platform)."""
     from y_web.src.dating import population as dp
+    from y_web.src.dating.settings_ui import DIFFUSION_MODELS
 
     return {
+        "models": DIFFUSION_MODELS,  # the alternatives offered by the YDating client
         "appearance": dp.APPEARANCE_DEFAULTS,
         "appearance_options": dp.APPEARANCE_OPTIONS,
         "height": dp.HEIGHT_DEFAULT_RANGE,

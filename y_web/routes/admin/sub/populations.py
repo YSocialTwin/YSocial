@@ -1878,12 +1878,6 @@ def _appearance_form_context():
     return {
         "appearance_defaults": pp.defaults(),
         "images_available": pp.available(),
-        "pictures_models": [
-            "segmind/tiny-sd",
-            "nota-ai/bk-sdm-tiny",
-            "nota-ai/bk-sdm-small",
-            "stabilityai/sd-turbo",
-        ],
     }
 
 

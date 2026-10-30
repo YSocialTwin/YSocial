@@ -1519,6 +1519,14 @@ var AdminPopulations = (function() {
       renderPhotoFavoriteFilters();
       datingDefaults();
       appearanceDefaults();
+      // image model: one of the YDating alternatives or any Hugging Face model id
+      document.querySelectorAll('[data-diffusion-select]').forEach(select => {
+          const text = select.closest('.dating-diffusion').querySelector('[data-diffusion-text]');
+          select.addEventListener('change', () => {
+              if (select.value === '__other__') { text.hidden = false; text.value = ''; text.focus(); }
+              else { text.value = select.value; text.hidden = true; }
+          });
+      });
       togglePlatformFields();
   });
 

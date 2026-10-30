@@ -3821,3 +3821,4 @@ input:checked + .slider:before {
 .ys-opt-title { font-weight: 600; }
 .ys-opt-body { padding: 4px 16px 14px; }
 .ys-opt-body.d-none { display: none; }
+.dating-diffusion .input { margin-top: .4rem; }
