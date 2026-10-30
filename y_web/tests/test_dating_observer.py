@@ -304,14 +304,26 @@ def test_notifications_count_only_what_is_still_to_read(tmp_path):
 
 def test_view_as_account_finds_accounts_by_username(observer):
     app, client, exp_id, info = observer
-    found = client.get(f"/{exp_id}/dating/api/accounts?q=USER_01").get_json()["accounts"]
+    found = client.get(f"/{exp_id}/dating/api/accounts?q=USER_01").get_json()[
+        "accounts"
+    ]
     assert [a["username"] for a in found] == ["user_01"]
     assert set(found[0]) >= {"id", "username", "initials", "hue", "photo"}
-    assert len(client.get(f"/{exp_id}/dating/api/accounts?q=").get_json()["accounts"]) >= 5
+    assert (
+        len(client.get(f"/{exp_id}/dating/api/accounts?q=").get_json()["accounts"]) >= 5
+    )
     # a username in the address opens the same page as the id
-    uid = client.get(f"/{exp_id}/dating/api/accounts?q=user_00").get_json()["accounts"][0]["id"]
+    uid = client.get(f"/{exp_id}/dating/api/accounts?q=user_00").get_json()["accounts"][
+        0
+    ]["id"]
     by_name = client.get(f"/{exp_id}/dating?vp=account&acc=user_00").data.decode()
     by_id = client.get(f"/{exp_id}/dating?vp=account&acc={uid}").data.decode()
-    assert by_id.count("dt-dk-tile") >= 3 and by_name.count("dt-dk-tile") == by_id.count("dt-dk-tile")
-    assert 'data-deck-filter' in by_id  # the redesigned deck, not the old one-card slider
-    assert "not rated yet" in by_id  # nobody has answered the account in the fixture: shown as such, not as a pass
+    assert by_id.count("dt-dk-tile") >= 3 and by_name.count(
+        "dt-dk-tile"
+    ) == by_id.count("dt-dk-tile")
+    assert (
+        "data-deck-filter" in by_id
+    )  # the redesigned deck, not the old one-card slider
+    assert (
+        "not rated yet" in by_id
+    )  # nobody has answered the account in the fixture: shown as such, not as a pass

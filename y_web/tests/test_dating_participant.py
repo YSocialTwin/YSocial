@@ -483,14 +483,23 @@ def test_an_administrator_resets_the_credits_of_a_person(stack, monkeypatch):
     _enter(s)
     deck = s.client.get(f"/{s.exp_id}/dating/api/deck").get_json()
     target = deck["cards"][0]["candidate_id"]
-    assert _act(s, [{"type": "LIKE", "payload": {"target_id": target}}]).get_json()["outcomes"][0][
-        "success"
-    ]
+    assert _act(s, [{"type": "LIKE", "payload": {"target_id": target}}]).get_json()[
+        "outcomes"
+    ][0]["success"]
     hid = next(iter(s.core.world.humans))
-    assert s.core.dating.remaining(hid, s.core.day)[0] == s.core.dating.likes_per_day - 1
+    assert (
+        s.core.dating.remaining(hid, s.core.day)[0] == s.core.dating.likes_per_day - 1
+    )
     admin = SimpleNamespace(
-        is_authenticated=True, is_active=True, is_anonymous=False, id=999, username="adm",
-        role="admin", telemetry_enabled=0, get_id=lambda: "999", email="a@x.test",
+        is_authenticated=True,
+        is_active=True,
+        is_anonymous=False,
+        id=999,
+        username="adm",
+        role="admin",
+        telemetry_enabled=0,
+        get_id=lambda: "999",
+        email="a@x.test",
     )
     monkeypatch.setattr("flask_login.utils._get_user", lambda: admin)
     monkeypatch.setattr(
@@ -507,7 +516,8 @@ def test_an_administrator_resets_the_credits_of_a_person(stack, monkeypatch):
     assert s.core.dating.remaining(hid, s.core.day)[0] == s.core.dating.likes_per_day
     # a stranger account is ignored
     r = s.client.post(
-        f"/admin/dating_participants/{s.exp_id}/reset_credits", data={"account": "nobody"}
+        f"/admin/dating_participants/{s.exp_id}/reset_credits",
+        data={"account": "nobody"},
     )
     assert r.status_code == 302
 

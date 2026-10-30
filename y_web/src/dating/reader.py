@@ -215,7 +215,9 @@ class DatingReader:
             for r in self._active_ids(self._cut(ordinal)).values()
         ]
 
-    def account_brief(self, user_id: Optional[str], ordinal: int) -> Optional[Dict[str, Any]]:
+    def account_brief(
+        self, user_id: Optional[str], ordinal: int
+    ) -> Optional[Dict[str, Any]]:
         """One account for the viewpoint bar: name, initials, colour and first picture."""
         if not user_id:
             return None
@@ -233,14 +235,21 @@ class DatingReader:
             **_avatar(row["id"], row["username"], self._photo_url(row["id"], cut)),
         }
 
-    def find_accounts(self, term: str, ordinal: int, limit: int = 8) -> List[Dict[str, Any]]:
+    def find_accounts(
+        self, term: str, ordinal: int, limit: int = 8
+    ) -> List[Dict[str, Any]]:
         """Accounts whose username contains ``term`` (case-insensitive; prefix matches first)."""
         cut = self._cut(ordinal)
         needle = (term or "").strip().lower()
         rows = list(self._active_ids(cut).values())
         if needle:
             rows = [r for r in rows if needle in (r["username"] or "").lower()]
-            rows.sort(key=lambda r: (not (r["username"] or "").lower().startswith(needle), r["username"] or ""))
+            rows.sort(
+                key=lambda r: (
+                    not (r["username"] or "").lower().startswith(needle),
+                    r["username"] or "",
+                )
+            )
         return [self._brief(r, cut) for r in rows[: max(1, min(limit, 20))]]
 
     def resolve_account(self, value: Optional[str]) -> Optional[str]:

@@ -140,7 +140,9 @@ def _open_context(reader, exp_id):
             rnd = min(max(requested, 1), latest) if latest else 0
     acc = request.args.get("acc") or None
     if acc and staff is not None:
-        acc = reader.resolve_account(acc) or acc  # a username is accepted as well as an id
+        acc = (
+            reader.resolve_account(acc) or acc
+        )  # a username is accepted as well as an id
     try:
         vp = Viewpoint(kind, acc, rnd)
     except ViewpointError:
