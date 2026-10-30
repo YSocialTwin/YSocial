@@ -47,7 +47,7 @@
                 <small class="ys-label-hint">{{ _('One line per gender: the weights of the sets of genders sought (a set joins genders with +).') }}</small>
             </span>
         </div>
-        {{ dline(_('Nationalities'), 'nationalities', _('Weights of the nationalities. Known values: %(values)s', values=dating_nationalities[:12]|join(', ')), '', 'text') }}
+        {{ dline(_('Nationalities'), 'nationalities', _('Weights of the nationalities; every agent lives in a city of its nationality (see Cities). Known values: %(values)s', values=dating_nationalities|join(', ')), 'Italian=1', 'text') }}
         {{ dline(_('Education levels'), 'education_levels', _('Weights of the education levels. Known values: %(values)s', values=dating_education_levels|join(', ')), '', 'text') }}
         {{ dline(_('Political leanings'), 'leanings', _('Weights of the political leanings. Known values: %(values)s', values=dating_leanings|join(', ')), '', 'text') }}
         {{ dline(_('Professions'), 'professions', _('Weights of the professions. Known values: %(values)s', values=dating_professions[:12]|join(', ')), '', 'text') }}
@@ -69,8 +69,8 @@
         <div class="box-line">
             <span class="left">{{ _('Cities') }}</span>
             <span class="right ys-w-70">
-                <textarea name="cities" class="textarea" rows="3" placeholder="{{ 'Pisa, 43.7228, 10.4017, 1' }}"></textarea>
-                <small class="ys-label-hint">{{ _('One line per city: name, latitude, longitude and optionally the weight. Default: Pisa.') }}</small>
+                <textarea name="cities" class="textarea" rows="3" placeholder="{{ 'Pisa, 43.7228, 10.4017, 1, Italian' }}"></textarea>
+                <small class="ys-label-hint">{{ _('Leave empty to use the main cities of each nationality. To choose them, write one line per city: name, latitude, longitude and, optionally, the weight and the nationality that lives there (without a nationality the city is used for everybody).') }}</small>
             </span>
         </div>
         {{ dline(_('City radius (km)'), 'city_radius_km', _('Radius around the city centre in which agents are placed. Default 15.'), '', 'number', 'min="0" step="any"') }}

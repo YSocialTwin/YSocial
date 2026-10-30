@@ -522,20 +522,22 @@ def _seeking(text: Any) -> Dict[str, Dict[str, float]]:
 
 
 def _cities(text: Any) -> List[Dict[str, Any]]:
-    """Lines ``name, latitude, longitude[, weight]``."""
+    """Lines ``name, latitude, longitude[, weight[, nationality]]``."""
     out = []
     for line in str(text or "").splitlines():
         if not line.strip():
             continue
         parts = [p.strip() for p in line.split(",")]
-        if len(parts) not in (3, 4) or not parts[0]:
+        if len(parts) not in (3, 4, 5) or not parts[0]:
             raise DatingPopulationError(
-                [f"cities: {line.strip()!r} is not 'name, lat, lon[, weight]'"]
+                [f"cities: {line.strip()!r} is not 'name, lat, lon[, weight[, nationality]]'"]
             )
         try:
             city = {"name": parts[0], "lat": float(parts[1]), "lon": float(parts[2])}
-            if len(parts) == 4:
+            if len(parts) >= 4 and parts[3]:
                 city["weight"] = float(parts[3])
+            if len(parts) == 5 and parts[4]:
+                city["nationality"] = parts[4]
         except ValueError:
             raise DatingPopulationError(
                 [f"cities: {line.strip()!r} has a value that is not a number"]

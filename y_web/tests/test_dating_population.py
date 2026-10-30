@@ -518,3 +518,35 @@ def test_dating_runtime_availability_follows_the_registry(monkeypatch):
 
     monkeypatch.setattr(er, "runtime_installed_and_visible", boom)
     assert dp.runtime_available(object()) is False
+
+
+def test_cities_of_the_form_can_name_the_nationality_that_lives_there():
+    from y_web.src.dating import population as dp
+
+    cfg = dp.config_from_form({"cities": "Lyon, 45.7, 4.8, 2, French\nRoma, 41.9, 12.5, , Italian\nOslo, 59.9, 10.7"})
+    assert cfg["cities"] == [
+        {"name": "Lyon", "lat": 45.7, "lon": 4.8, "weight": 2.0, "nationality": "French"},
+        {"name": "Roma", "lat": 41.9, "lon": 12.5, "nationality": "Italian"},
+        {"name": "Oslo", "lat": 59.9, "lon": 10.7},
+    ]
+
+
+@needs_runtime
+def test_generated_agents_live_in_a_city_of_their_nationality(app, routes):
+    from y_web import db
+    from y_web.src.dating import population as dp
+    from y_web.src.models import Population
+
+    with app.app_context():
+        with app.test_request_context(
+            "/admin/dating_populations/generate",
+            method="POST",
+            data={"pop_name": "Nat", "n_agents": "30", "seed": "4", "nationalities": "French=1, Japanese=1"},
+        ):
+            routes.mod.generate_dating_population.__wrapped__()
+        row = db.session.query(Population).one()
+        doc = dp.load_document(row.id)
+        french = {"Paris", "Lyon", "Marseille", "Toulouse", "Lille", "Bordeaux"}
+        japanese = {"Tokyo", "Osaka", "Nagoya", "Fukuoka", "Sapporo"}
+        for a in doc["agents"]:
+            assert a["profile"]["city"] in (french if a["nationality"] == "French" else japanese)
