@@ -280,6 +280,30 @@
                                     {% endif %}
                                 </div>
 
+                                <form method="post" action="/admin/update_forum_avatar_mode/{{ experiment.idexp }}" style="margin: 0 0 0.9em 0;">
+                                    <input type="hidden" name="force_placeholder_present" value="1">
+                                    <div class="box-line" style="align-items: center;">
+                                        <span class="left">{{ _('Force placeholders') }}</span>
+                                        <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <label class="switch-small">
+                                            <input type="checkbox" name="force_placeholder_avatars" value="1" {% if forum_avatar_settings.force_placeholder %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="slider-small round"></span>
+                                        </label>
+                                        {% else %}
+                                        <i class="mdi mdi-lock ys-icon-muted" title="{{ _('Only owner/admin/shared researchers can edit avatar mode') }}"></i>
+                                        {% endif %}
+                                        </span>
+                                    </div>
+                                </form>
+                                <div style="font-size: 0.8em; color: #777; margin: -0.8em 0 0.9em 0;">
+                                    {% if forum_avatar_settings.force_placeholder %}
+                                    {{ _('Pictures generated for the agents are ignored: every actor gets a placeholder.') }}
+                                    {% else %}
+                                    {{ _('Pictures generated for the agents are used; the others follow the setting above.') }}
+                                    {% endif %}
+                                </div>
+
                                 {% if forum_feed_health %}
                                 <div style="margin: 0.2em 0 1em 0; padding: 0.75em 0.85em; border: 1px solid #e4e7eb; border-radius: 10px; background: #fafbfc;">
                                     <div style="font-size: 0.85em; font-weight: 600; color: #2f3a4a; margin-bottom: 0.55em;">{{ _('Feed Health') }}</div>

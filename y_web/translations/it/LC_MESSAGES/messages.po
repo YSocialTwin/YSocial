@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:32+0000\n"
+"POT-Creation-Date: 2026-10-30 14:42+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -166,6 +166,10 @@ msgid "%(n)s days"
 msgstr "%(n)s giorni"
 
 #, python-format
+msgid "%(n)s distinct values"
+msgstr "%(n)s valori distinti"
+
+#, python-format
 msgid "%(n)s feeds selected"
 msgstr "%(n)s feed selezionati"
 
@@ -220,6 +224,12 @@ msgstr "Agenti %(name)s"
 #, python-format
 msgid "%(network_title)s Ego Network Over Time"
 msgstr "%(network_title)s ego-network nel tempo"
+
+#, python-format
+msgid "%(num)d field"
+msgid_plural "%(num)d fields"
+msgstr[0] "%(num)d campo"
+msgstr[1] "%(num)d campi"
 
 #, python-format
 msgid "%(num)d file"
@@ -991,6 +1001,9 @@ msgstr "Impostazioni avanzate e recommender"
 msgid "Advanced settings updated."
 msgstr "Impostazioni avanzate aggiornate."
 
+msgid "Affective traits"
+msgstr "Tratti affettivi"
+
 msgid "Age"
 msgstr "Età"
 
@@ -1012,6 +1025,9 @@ msgstr "Classe di età non trovata."
 
 msgid "Age from"
 msgstr "Età da"
+
+msgid "Age range"
+msgstr "Fascia di età"
 
 msgid "Age range must fit both ways"
 msgstr "La fascia d'età deve valere per entrambi"
@@ -1176,6 +1192,9 @@ msgstr "Gli agenti riscrivono la bio"
 
 msgid "Agents talk to their matches"
 msgstr "Gli agenti parlano con i loro match"
+
+msgid "Agents that have this field"
+msgstr "Agenti che hanno questo campo"
 
 msgid "Agents update opinions based on similarity with others"
 msgstr "Gli agenti aggiornano le opinioni in base alla somiglianza con gli altri"
@@ -1572,6 +1591,9 @@ msgstr "Attenzione"
 msgid "Attention Budget"
 msgstr "Budget di attenzione"
 
+msgid "Attention budget"
+msgstr "Budget di attenzione"
+
 msgid "Attractiveness"
 msgstr "Attrattività"
 
@@ -1875,6 +1897,9 @@ msgstr "Modellazione comportamentale degli utenti"
 
 msgid "Behavioral patterns and activity characteristics."
 msgstr "Schemi comportamentali e caratteristiche di attività."
+
+msgid "Behaviour and attributes"
+msgstr "Comportamento e attributi"
 
 msgid "Belgian"
 msgstr "Belga"
@@ -3433,6 +3458,9 @@ msgstr "Qui non è possibile creare chat."
 msgid "Creator Tier %%"
 msgstr "Livello creatore %%"
 
+msgid "Creator tier"
+msgstr "Livello creator"
+
 msgid "Credits"
 msgstr "Crediti"
 
@@ -3642,6 +3670,9 @@ msgstr ""
 "Istruzioni comportamentali personalizzate per una simulazione degli "
 "agenti più accurata."
 
+msgid "Custom fields"
+msgstr "Campi personalizzati"
+
 msgid "Customize Hourly Rates"
 msgstr "Personalizza i tassi orari"
 
@@ -3829,6 +3860,9 @@ msgstr "Popolazione dating '%(name)s' generata."
 #, python-format
 msgid "Dating population '%(name)s' imported."
 msgstr "Popolazione dating '%(name)s' importata."
+
+msgid "Dating profile"
+msgstr "Profilo Dating"
 
 msgid "Dating profiles"
 msgstr "Profili dating"
@@ -5388,6 +5422,9 @@ msgstr "Più veloce"
 msgid "Favorite Filters"
 msgstr "Filtri preferiti"
 
+msgid "Favourite filters"
+msgstr "Filtri preferiti"
+
 msgid "Feature-rich Modeling"
 msgstr "Modellazione ricca di funzionalità"
 
@@ -5461,6 +5498,17 @@ msgstr "%(label)s scaricato dal branch %(branch)s."
 #, python-format
 msgid "Field '%(replace)s' contains an invalid value."
 msgstr "Il campo '%(replace)s' contiene un valore non valido."
+
+msgid ""
+"Fields stored with the agents that only some platforms read, in groups: "
+"appearance, Dating and Photo Sharing fields, and any other custom field. "
+"Each card shows how many agents have the field and how its values are "
+"distributed."
+msgstr ""
+"Campi salvati con gli agenti che solo alcune piattaforme leggono, in "
+"gruppi: aspetto, campi Dating e Photo Sharing e qualsiasi altro campo "
+"personalizzato. Ogni scheda mostra quanti agenti hanno il campo e come "
+"sono distribuiti i valori."
 
 msgid "Fields you can use:"
 msgstr "Campi utilizzabili:"
@@ -5615,6 +5663,9 @@ msgstr "Per te (consigliati)"
 
 msgid "Forbidden"
 msgstr "Vietato"
+
+msgid "Force placeholders"
+msgstr "Forza i segnaposto"
 
 msgid "Forget deleted messages"
 msgstr "Dimentica i messaggi eliminati"
@@ -6092,6 +6143,9 @@ msgstr "Pre-prompt del gestore"
 
 msgid "Harassment"
 msgstr "Molestie"
+
+msgid "Has a biography"
+msgstr "Ha una biografia"
 
 msgid "Hash:"
 msgstr "Hash:"
@@ -7271,6 +7325,9 @@ msgstr "Variabili latenti e tratti affettivi"
 
 msgid "Latent traits"
 msgstr "Tratti latenti"
+
+msgid "Latent variables"
+msgstr "Variabili latenti"
 
 msgid ""
 "Latent variables follow a Beta(a, b) distribution; they drive the rule-"
@@ -9344,8 +9401,14 @@ msgstr "Altro"
 msgid "Other (a Hugging Face model id)"
 msgstr "Altro (un id di modello Hugging Face)"
 
+msgid "Other Dating fields"
+msgstr "Altri campi Dating"
+
 msgid "Other attributes"
 msgstr "Altri attributi"
+
+msgid "Other custom fields"
+msgstr "Altri campi personalizzati"
 
 msgid "Other experiment"
 msgstr "Altro esperimento"
@@ -9368,6 +9431,9 @@ msgstr "Limite complessivo del contesto di memoria inserito, su tutti i livelli.
 #, python-format
 msgid "Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
 msgstr "Si sovrappone a '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
+
+msgid "Overview"
+msgstr "Panoramica"
 
 msgid "Own Recsys"
 msgstr "Raccomandazione propria"
@@ -9682,6 +9748,20 @@ msgstr ""
 #, python-format
 msgid "Picture %(n)s"
 msgstr "Immagine %(n)s"
+
+msgid ""
+"Pictures generated for the agents are ignored: every actor gets a "
+"placeholder."
+msgstr ""
+"Le immagini generate per gli agenti sono ignorate: ogni attore riceve un "
+"segnaposto."
+
+msgid ""
+"Pictures generated for the agents are used; the others follow the setting"
+" above."
+msgstr ""
+"Le immagini generate per gli agenti sono usate; gli altri seguono "
+"l'impostazione qui sopra."
 
 msgid "Placeholder"
 msgstr "Segnaposto"
@@ -10099,6 +10179,9 @@ msgstr "Responsabile scientifico"
 
 msgid "Private"
 msgstr "Privata"
+
+msgid "Private account"
+msgstr "Account privato"
 
 msgid "Private chat"
 msgstr "Chat privata"
@@ -11484,6 +11567,9 @@ msgstr "Cerca..."
 msgid "Sections"
 msgstr "Sezioni"
 
+msgid "Sections of the page"
+msgstr "Sezioni della pagina"
+
 msgid "Security"
 msgstr "Sicurezza"
 
@@ -12521,6 +12607,9 @@ msgstr "Visibilità delle storie %%"
 
 msgid "Story details"
 msgstr "Dettagli della storia"
+
+msgid "Story visibility"
+msgstr "Visibilità delle storie"
 
 msgid "Stress"
 msgstr "Stress"
@@ -14933,6 +15022,9 @@ msgstr ""
 "sono quelli indicati sopra; gli interessi sono quelli di Interessi e "
 "opinioni."
 
+msgid "Verified account"
+msgstr "Account verificato"
+
 msgid "Version"
 msgstr "Versione"
 
@@ -16089,6 +16181,12 @@ msgstr "in match"
 msgid "max"
 msgstr "max"
 
+msgid "mean"
+msgstr "media"
+
+msgid "median"
+msgstr "mediana"
+
 msgid "memes or https://www.reddit.com/r/memes/"
 msgstr "memes oppure https://www.reddit.com/r/memes/"
 
@@ -16100,6 +16198,9 @@ msgstr "min"
 
 msgid "missing"
 msgstr "mancante"
+
+msgid "most frequent"
+msgstr "più frequente"
 
 msgid "multiple clients"
 msgstr "più client"

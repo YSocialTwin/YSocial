@@ -104,6 +104,13 @@ def normalize_forum_avatar_mode(value: str) -> str:
     return DEFAULT_FORUM_AVATAR_MODE
 
 
+def normalize_force_placeholder(value) -> bool:
+    """Normalize the "force placeholders" flag (off by default)."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "on", "yes"}
+
+
 def _get_experiment_uid_from_db_name(db_name: str) -> str:
     if not db_name:
         return ""
@@ -132,8 +139,9 @@ def _forum_experiment_config_path(exp_id: int) -> str:
     return os.path.join(base_dir, "y_web", "experiments", uid, "config_server.json")
 
 
-def get_forum_avatar_mode(exp_id: int | None = None) -> str:
-    """Load forum avatar mode from config_server.json with a lightweight mtime cache."""
+def _forum_settings(exp_id: int | None = None) -> dict:
+    """Avatar settings of a forum experiment from config_server.json (mtime cached)."""
+    default = {"mode": DEFAULT_FORUM_AVATAR_MODE, "force_placeholder": False}
     if exp_id is None:
         try:
             from y_web.src.experiment.context import get_current_experiment_id
@@ -145,41 +153,56 @@ def get_forum_avatar_mode(exp_id: int | None = None) -> str:
     try:
         exp_id = int(exp_id or 0)
     except Exception:
-        return DEFAULT_FORUM_AVATAR_MODE
+        return default
 
     if exp_id <= 0:
-        return DEFAULT_FORUM_AVATAR_MODE
+        return default
 
     config_path = _forum_experiment_config_path(exp_id)
     if not config_path:
-        return DEFAULT_FORUM_AVATAR_MODE
+        return default
 
     try:
         mtime = os.path.getmtime(config_path)
     except OSError:
-        return DEFAULT_FORUM_AVATAR_MODE
+        return default
 
     cache_key = (exp_id, config_path)
     cached = _FORUM_AVATAR_MODE_CACHE.get(cache_key)
     if cached and cached.get("mtime") == mtime:
-        return cached["mode"]
+        return cached["settings"]
 
-    mode = DEFAULT_FORUM_AVATAR_MODE
+    settings = dict(default)
     try:
         with open(config_path, "r", encoding="utf-8") as handle:
             config = json.load(handle)
-        mode = normalize_forum_avatar_mode(config.get("avatar_mode"))
+        settings["mode"] = normalize_forum_avatar_mode(config.get("avatar_mode"))
+        settings["force_placeholder"] = normalize_force_placeholder(
+            config.get("force_placeholder_avatars")
+        )
     except Exception:
-        mode = DEFAULT_FORUM_AVATAR_MODE
+        settings = dict(default)
 
-    _FORUM_AVATAR_MODE_CACHE[cache_key] = {"mtime": mtime, "mode": mode}
-    return mode
+    _FORUM_AVATAR_MODE_CACHE[cache_key] = {"mtime": mtime, "settings": settings}
+    return settings
+
+
+def get_forum_avatar_mode(exp_id: int | None = None) -> str:
+    """Load forum avatar mode from config_server.json with a lightweight mtime cache."""
+    return _forum_settings(exp_id)["mode"]
+
+
+def get_forum_force_placeholder(exp_id: int | None = None) -> bool:
+    """True when the experiment forces the placeholders even for agents with a generated picture."""
+    return bool(_forum_settings(exp_id)["force_placeholder"])
 
 
 def resolve_forum_profile_pic(user, exp_id: int | None = None) -> str:
     """
     Resolve a forum actor avatar according to experiment avatar mode.
 
+    A picture generated for an agent is used unless the experiment forces the placeholders
+    (``force_placeholder_avatars``, off by default).
     In placeholder mode, every actor gets a deterministic Reddit-style avatar.
     In actual mode, page logos / agent profile pics / admin profile pics are used.
     """
@@ -190,10 +213,13 @@ def resolve_forum_profile_pic(user, exp_id: int | None = None) -> str:
     if not username:
         return ""
 
-    if not bool(getattr(user, "is_page", False)):
+    if not bool(getattr(user, "is_page", False)) and not get_forum_force_placeholder(
+        exp_id
+    ):
         from y_web.src.agents.profile_pictures import picture_of_username
 
-        generated = picture_of_username(username)  # the picture generated for the agent, whatever the mode
+        # the picture generated for the agent wins, whatever the mode, unless the placeholders are forced
+        generated = picture_of_username(username)
         if generated:
             return generated
 

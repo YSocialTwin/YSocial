@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:32+0000\n"
+"POT-Creation-Date: 2026-10-30 14:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -144,6 +144,10 @@ msgid "%(n)s days"
 msgstr ""
 
 #, python-format
+msgid "%(n)s distinct values"
+msgstr ""
+
+#, python-format
 msgid "%(n)s feeds selected"
 msgstr ""
 
@@ -198,6 +202,12 @@ msgstr ""
 #, python-format
 msgid "%(network_title)s Ego Network Over Time"
 msgstr ""
+
+#, python-format
+msgid "%(num)d field"
+msgid_plural "%(num)d fields"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-format
 msgid "%(num)d file"
@@ -891,6 +901,9 @@ msgstr ""
 msgid "Advanced settings updated."
 msgstr ""
 
+msgid "Affective traits"
+msgstr ""
+
 msgid "Age"
 msgstr ""
 
@@ -911,6 +924,9 @@ msgid "Age class not found."
 msgstr ""
 
 msgid "Age from"
+msgstr ""
+
+msgid "Age range"
 msgstr ""
 
 msgid "Age range must fit both ways"
@@ -1073,6 +1089,9 @@ msgid "Agents rewrite their bio"
 msgstr ""
 
 msgid "Agents talk to their matches"
+msgstr ""
+
+msgid "Agents that have this field"
 msgstr ""
 
 msgid "Agents update opinions based on similarity with others"
@@ -1426,6 +1445,9 @@ msgstr ""
 msgid "Attention Budget"
 msgstr ""
 
+msgid "Attention budget"
+msgstr ""
+
 msgid "Attractiveness"
 msgstr ""
 
@@ -1715,6 +1737,9 @@ msgid "Behavioral User Modeling"
 msgstr ""
 
 msgid "Behavioral patterns and activity characteristics."
+msgstr ""
+
+msgid "Behaviour and attributes"
 msgstr ""
 
 msgid "Belgian"
@@ -3070,6 +3095,9 @@ msgstr ""
 msgid "Creator Tier %%"
 msgstr ""
 
+msgid "Creator tier"
+msgstr ""
+
 msgid "Credits"
 msgstr ""
 
@@ -3248,6 +3276,9 @@ msgstr ""
 msgid "Custom behavioral instructions for enhanced agent simulation."
 msgstr ""
 
+msgid "Custom fields"
+msgstr ""
+
 msgid "Customize Hourly Rates"
 msgstr ""
 
@@ -3422,6 +3453,9 @@ msgstr ""
 
 #, python-format
 msgid "Dating population '%(name)s' imported."
+msgstr ""
+
+msgid "Dating profile"
 msgstr ""
 
 msgid "Dating profiles"
@@ -4855,6 +4889,9 @@ msgstr ""
 msgid "Favorite Filters"
 msgstr ""
 
+msgid "Favourite filters"
+msgstr ""
+
 msgid "Feature-rich Modeling"
 msgstr ""
 
@@ -4925,6 +4962,13 @@ msgstr ""
 
 #, python-format
 msgid "Field '%(replace)s' contains an invalid value."
+msgstr ""
+
+msgid ""
+"Fields stored with the agents that only some platforms read, in groups: "
+"appearance, Dating and Photo Sharing fields, and any other custom field. "
+"Each card shows how many agents have the field and how its values are "
+"distributed."
 msgstr ""
 
 msgid "Fields you can use:"
@@ -5062,6 +5106,9 @@ msgid "For you (recommended)"
 msgstr ""
 
 msgid "Forbidden"
+msgstr ""
+
+msgid "Force placeholders"
 msgstr ""
 
 msgid "Forget deleted messages"
@@ -5503,6 +5550,9 @@ msgid "Handler Pre-prompts"
 msgstr ""
 
 msgid "Harassment"
+msgstr ""
+
+msgid "Has a biography"
 msgstr ""
 
 msgid "Hash:"
@@ -6563,6 +6613,9 @@ msgid "Latent Variables and Affective Traits"
 msgstr ""
 
 msgid "Latent traits"
+msgstr ""
+
+msgid "Latent variables"
 msgstr ""
 
 msgid ""
@@ -8494,7 +8547,13 @@ msgstr ""
 msgid "Other (a Hugging Face model id)"
 msgstr ""
 
+msgid "Other Dating fields"
+msgstr ""
+
 msgid "Other attributes"
+msgstr ""
+
+msgid "Other custom fields"
 msgstr ""
 
 msgid "Other experiment"
@@ -8517,6 +8576,9 @@ msgstr ""
 
 #, python-format
 msgid "Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
+msgstr ""
+
+msgid "Overview"
 msgstr ""
 
 msgid "Own Recsys"
@@ -8807,6 +8869,16 @@ msgstr ""
 
 #, python-format
 msgid "Picture %(n)s"
+msgstr ""
+
+msgid ""
+"Pictures generated for the agents are ignored: every actor gets a "
+"placeholder."
+msgstr ""
+
+msgid ""
+"Pictures generated for the agents are used; the others follow the setting"
+" above."
 msgstr ""
 
 msgid "Placeholder"
@@ -9192,6 +9264,9 @@ msgid "Principal Investigator"
 msgstr ""
 
 msgid "Private"
+msgstr ""
+
+msgid "Private account"
 msgstr ""
 
 msgid "Private chat"
@@ -10519,6 +10594,9 @@ msgstr ""
 msgid "Sections"
 msgstr ""
 
+msgid "Sections of the page"
+msgstr ""
+
 msgid "Security"
 msgstr ""
 
@@ -11456,6 +11534,9 @@ msgid "Story Visibility %%"
 msgstr ""
 
 msgid "Story details"
+msgstr ""
+
+msgid "Story visibility"
 msgstr ""
 
 msgid "Stress"
@@ -13521,6 +13602,9 @@ msgid ""
 "Interests & Opinions."
 msgstr ""
 
+msgid "Verified account"
+msgstr ""
+
 msgid "Version"
 msgstr ""
 
@@ -14546,6 +14630,12 @@ msgstr ""
 msgid "max"
 msgstr ""
 
+msgid "mean"
+msgstr ""
+
+msgid "median"
+msgstr ""
+
 msgid "memes or https://www.reddit.com/r/memes/"
 msgstr ""
 
@@ -14556,6 +14646,9 @@ msgid "min"
 msgstr ""
 
 msgid "missing"
+msgstr ""
+
+msgid "most frequent"
 msgstr ""
 
 msgid "multiple clients"

@@ -11,12 +11,29 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" data-tut="population-overview">
-                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}{% if dating %} <span class="tag is-info">{{ _('Dating') }}</span>{% endif %}
+                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}{% for f in platform_fields %} <span class="ys-plat-badge is-{{ 'photo' if f == 'photo_sharing' else f }}">{{ _('Photo Sharing') if f == 'photo_sharing' else _('Dating') }}</span>{% endfor %}
                     </div>
                 </div>
             </div>
 
-            <div class="columns">
+            <div class="ys-pd-kpis">
+                <div class="ys-pd-kpi"><span class="ys-pd-kpi-n">{{ kpis.agents }}</span><span class="ys-pd-kpi-l">{{ _('Agents') }}</span></div>
+                <div class="ys-pd-kpi"><span class="ys-pd-kpi-n">{{ kpis.age_range }}</span><span class="ys-pd-kpi-l">{{ _('Age range') }}</span></div>
+                <div class="ys-pd-kpi"><span class="ys-pd-kpi-n">{{ kpis.nationalities }}</span><span class="ys-pd-kpi-l">{{ _('Nationalities') }}</span></div>
+                <div class="ys-pd-kpi"><span class="ys-pd-kpi-n">{{ kpis.languages }}</span><span class="ys-pd-kpi-l">{{ _('Languages') }}</span></div>
+                <div class="ys-pd-kpi"><span class="ys-pd-kpi-n">{{ kpis.experiments }}</span><span class="ys-pd-kpi-l">{{ _('Experiments') }}</span></div>
+                <div class="ys-pd-kpi"><span class="ys-pd-kpi-n">{{ kpis.fields }}</span><span class="ys-pd-kpi-l">{{ _('Custom fields') }}</span></div>
+            </div>
+
+            <nav class="ys-pd-nav" aria-label="{{ _('Sections of the page') }}">
+                <a href="#sec-overview">{{ _('Overview') }}</a>
+                {% if dating %}<a href="#dating-population-details">{{ _('Dating profiles') }}</a>{% endif %}
+                <a href="#sec-demographics">{{ _('Demographics') }}</a>
+                <a href="#sec-behaviour">{{ _('Behaviour and attributes') }}</a>
+                {% if custom_fields %}<a href="#sec-custom">{{ _('Custom fields') }}</a>{% endif %}
+            </nav>
+
+            <div class="columns" id="sec-overview">
                 <!--Dashboard column-->
                 <div class="column is-6">
 
@@ -164,6 +181,8 @@
                 </div>
             </div>
 
+            <h4 class="ys-pd-sec" id="sec-demographics"><i class="mdi mdi-account-group-outline"></i> {{ _('Demographics') }}</h4>
+
             <!-- Demographics Row 1 -->
             <div class="columns">
                 <div class="column is-4">
@@ -224,6 +243,7 @@
                 </div>
             </div>
 
+            <h4 class="ys-pd-sec" id="sec-behaviour"><i class="mdi mdi-chart-timeline-variant"></i> {{ _('Behaviour and attributes') }}</h4>
             <!-- Attributes Row -->
             <div class="columns">
                 <div class="column is-4">
@@ -266,9 +286,53 @@
                 </div>
             </div>
 
+{% if custom_fields %}
+            <div class="columns" id="sec-custom">
+                <div class="column is-12">
+                    <hr style="margin: 2em 0;">
+                    <h3 class="title is-5 is-thin text-center">{{ _('Custom fields') }}</h3>
+                    <p class="ys-pd-lead">{{ _('Fields stored with the agents that only some platforms read, in groups: appearance, Dating and Photo Sharing fields, and any other custom field. Each card shows how many agents have the field and how its values are distributed.') }}</p>
+                    <div class="ys-cf-nav">
+                        {% for g in custom_fields %}
+                        <a class="ys-cf-chip" href="#cf-{{ g.id }}">{% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ _('Dating') if g.badge == 'dating' else _('Photo Sharing') }}</span>{% endif %}{{ _(g.title) }}<span class="ys-cf-chip-n">{{ g.count }}</span></a>
+                        {% endfor %}
+                    </div>
+                    {% for g in custom_fields %}
+                    <details class="ys-cf-group" id="cf-{{ g.id }}" data-cf-group="{{ g.id }}" {% if loop.index <= 2 %}open{% endif %}>
+                        <summary>
+                            <span class="ys-cf-title">{{ _(g.title) }}</span>
+                            {% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ _('Dating') if g.badge == 'dating' else _('Photo Sharing') }}</span>{% endif %}
+                            <span class="ys-cf-count">{{ ngettext('%(num)d field', '%(num)d fields', g.count) }}</span>
+                        </summary>
+                        <div class="ys-cf-grid">
+                            {% for b in g.blocks %}
+                            <div class="dashboard-box ys-cf-card">
+                                <div class="ys-cf-head"><b>{{ _(b.title) }}</b><span class="ys-cf-cov" title="{{ _('Agents that have this field') }}">{{ b.n }}/{{ b.total }}</span></div>
+                                <div class="ys-cf-bar" aria-hidden="true"><span style="width: {{ b.coverage }}%"></span></div>
+                                <div class="ys-cf-chart"><canvas id="cf_{{ g.id }}_{{ loop.index0 }}"></canvas></div>
+                                <div class="ys-cf-foot">
+                                    {% if b.kind == 'numeric' %}
+                                    <span>{{ _('min') }} <b>{{ b.summary.min }}</b></span>
+                                    <span>{{ _('median') }} <b>{{ b.summary.median }}</b></span>
+                                    <span>{{ _('mean') }} <b>{{ b.summary.mean }}</b></span>
+                                    <span>{{ _('max') }} <b>{{ b.summary.max }}</b></span>
+                                    {% else %}
+                                    <span>{{ _('%(n)s distinct values', n=b.distinct) }}</span>
+                                    {% if b.top %}<span>{{ _('most frequent') }} <b>{{ b.top }}</b></span>{% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 </div>
 
 <script>
+var YS_CUSTOM_FIELDS = {{ custom_fields|tojson }};
 var YS_DATA_POP_DETAILS = {
     ages: { data: {{ data["age"]["total"] }}, labels: {{ data["age"]["age"]|tojson }} },
     gender: { data: {{ data["gender"]["total"] }}, labels: {{ data["gender"]["genders"]|tojson }} },
@@ -283,4 +347,5 @@ var YS_DATA_POP_DETAILS = {
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-populations.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/admin-population-fields.js') }}"></script>
 {% include "admin/footer.html" %}

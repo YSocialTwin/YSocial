@@ -37,7 +37,10 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
-from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.content.avatars import (
+    normalize_force_placeholder,
+    normalize_forum_avatar_mode,
+)
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -1201,11 +1204,15 @@ def update_forum_avatar_mode(uid):
         str(request.form.get("use_actual_profile_pics") or "").strip().lower()
     )
     requested_mode = request.form.get("avatar_mode")
-    mode = normalize_forum_avatar_mode(requested_mode)
-    if enabled_flag in {"1", "true", "on", "yes"}:
-        mode = "actual"
-
-    config["avatar_mode"] = mode
+    if requested_mode is not None or enabled_flag:
+        mode = normalize_forum_avatar_mode(requested_mode)
+        if enabled_flag in {"1", "true", "on", "yes"}:
+            mode = "actual"
+        config["avatar_mode"] = mode
+    if request.form.get("force_placeholder_present"):  # the switch is part of this submission
+        config["force_placeholder_avatars"] = normalize_force_placeholder(
+            request.form.get("force_placeholder_avatars")
+        )
 
     with open(config_path, "w") as handle:
         json.dump(config, handle, indent=2)

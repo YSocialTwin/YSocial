@@ -38,7 +38,10 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
-from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.content.avatars import (
+    normalize_force_placeholder,
+    normalize_forum_avatar_mode,
+)
 from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -756,6 +759,9 @@ def experiment_details(uid):
                     }
                 forum_avatar_settings["mode"] = normalize_forum_avatar_mode(
                     config.get("avatar_mode")
+                )
+                forum_avatar_settings["force_placeholder"] = (
+                    normalize_force_placeholder(config.get("force_placeholder_avatars"))
                 )
     except Exception:
         current_perspective_api = ""

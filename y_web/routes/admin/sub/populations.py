@@ -1086,8 +1086,28 @@ def population_details(uid):
     crecsys = db.session.scalars(select(Content_Recsys)).all()
     frecsys = db.session.scalars(select(Follow_Recsys)).all()
 
+    from y_web.src.agents.custom_field_stats import collect
+
+    custom_fields = collect([a[0].id for a in agents])
+    kpis = {
+        "agents": len(agents),
+        "age_range": (
+            f"{min(a[0].age for a in agents if a[0].age is not None)}–"
+            f"{max(a[0].age for a in agents if a[0].age is not None)}"
+            if any(a[0].age is not None for a in agents)
+            else "—"
+        ),
+        "nationalities": len([n for n in dd["nationalities"]["nationalities"] if n]),
+        "languages": len([n for n in dd["languages"]["languages"] if n]),
+        "experiments": len(exps),
+        "fields": sum(g["count"] for g in custom_fields),
+    }
+
     return render_template(
         "admin/population_details.html",
+        custom_fields=custom_fields,
+        kpis=kpis,
+        platform_fields=population_platform_fields(population_row),
         population=population,
         population_experiments=exps,
         agents=agents,
@@ -2030,9 +2050,12 @@ def _dating_details(uid, population):
     """What the details page adds for a dating population: the counts of the runtime summary and a profile card."""
     from y_web.src.dating import population as dp
 
-    if population is None or population.username_type != "dating":
+    if population is None or not dp.has_dating_fields(population):
         return None
-    data = dp.load_document(uid)
+    try:
+        data = dp.load_document(uid)
+    except Exception:  # the runtime that describes the fields is not installed: no card, the statistics remain
+        return None
     agents = (data or {}).get("agents") or []
     if not agents:
         return None
