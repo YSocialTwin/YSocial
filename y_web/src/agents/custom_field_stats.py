@@ -46,6 +46,18 @@ FIELD_LABELS = {
 }
 PHOTO_FIELDS = tuple(FIELD_LABELS)
 _BLOBS = {"photos": N_("Photos per agent")}
+# readable names of the fields of the Appearance, the latent variables and the affective traits (as in the form)
+NAME_LABELS = {
+    "hair_color": N_("Hair colour"), "hair_length": N_("Hair length"), "hair_style": N_("Hair style"),
+    "eye_color": N_("Eye colour"), "skin_tone": N_("Skin tone"), "build": N_("Build"),
+    "facial_hair": N_("Facial hair"), "distinctive_features": N_("Distinctive features"),
+    "mood": N_("Mood in photos"), "photo_style": N_("Photo style"), "height_cm": N_("Height (cm)"),
+    "glasses": N_("Wearing glasses"), "attractiveness": N_("Attractiveness"), "selectivity": N_("Selectivity"),
+    "responsiveness": N_("Responsiveness"), "sensitivity": N_("Sensitivity"),
+    "reward_sensitivity": N_("Reward sensitivity"), "resilience": N_("Resilience"),
+    "visibility_need": N_("Need for visibility"),
+}  # fmt: skip
+_LABELLED = ("appearance", "dating_latent", "dating_affective")
 _FLAGS = {"true", "false"}
 
 
@@ -204,13 +216,13 @@ def build(
                     block["n"] = len(lists)
                     block["coverage"] = round(100 * len(lists) / total) if total else 0
             else:
-                block = describe(name, [_parse(r) for r in custom[key].values()], total)
+                block = describe(name, [_parse(r) for r in custom[key].values()], total, title=NAME_LABELS.get(name) if gid in _LABELLED else None)
         if block:
             if gid == "other" and "." in key:
                 block["title"] = key.replace("_", " ").replace(".", " · ")
             grouped[gid].append(block)
     for name in sorted(seen_appearance):
-        block = describe(name, [_parse(r) for r in seen_appearance[name].values()], total)
+        block = describe(name, [_parse(r) for r in seen_appearance[name].values()], total, title=NAME_LABELS.get(name))
         if block:
             grouped["appearance"].append(block)
     for name in PHOTO_FIELDS:
@@ -264,3 +276,78 @@ def collect(agent_ids: Iterable[int]) -> List[Dict[str, Any]]:
         ):
             ext.setdefault(name, {})[agent_id] = value
     return build(custom, ext, len(ids))
+
+
+_LONG = 140  # longer texts are shown as a paragraph
+_UNIT_FIELDS = ("dating_latent", "dating_affective")  # values in 0..1 are drawn as a bar
+
+
+def _pretty(name: str) -> str:
+    return name.replace("_", " ").replace(".", " · ").capitalize()
+
+
+def _field(name: str, raw: Any, label: Optional[str] = None, unit: bool = False) -> Optional[Dict[str, Any]]:
+    """One field of one agent: ``kind`` is text, flag, number, bar (0..1), chips or long."""
+    if raw is None or str(raw).strip() == "":
+        return None
+    entry: Dict[str, Any] = {"name": name, "label": label or _pretty(name)}
+    items = _list_values(raw)
+    if items is not None:
+        if not items:
+            return None
+        entry.update(kind="chips", tags=items)
+        return entry
+    value = _parse(raw)
+    if isinstance(value, bool):
+        entry.update(kind="flag", value=value)
+    elif isinstance(value, float):
+        shown = f"{value:g}"
+        if unit and 0.0 <= value <= 1.0:
+            entry.update(kind="bar", value=shown, pct=round(value * 100))
+        else:
+            entry.update(kind="number", value=shown)
+    else:
+        text = str(value)
+        entry.update(kind="long" if len(text) > _LONG else "text", value=text)
+    return entry
+
+
+def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The custom attributes of one agent in the ordered groups of the population statistics.
+
+    ``custom`` is ``{key: value}`` of its custom features and ``ext`` the same for its Photo Sharing extensions; the
+    result is ``[{id, title, badge, fields}]`` for the groups that have something to show.
+    """
+    grouped: Dict[str, List[Dict[str, Any]]] = {gid: [] for gid, _t, _b in GROUPS}
+    appearance: Dict[str, Any] = {}
+    for key in sorted(custom):
+        gid, name = classify(key)
+        if gid == "appearance":  # the generic traits win over the Dating ones
+            if key.startswith("appearance.") or name not in appearance:
+                appearance[name] = custom[key]
+            continue
+        if gid == "dating_other" and name in _BLOBS:
+            try:
+                loaded = json.loads(custom[key])
+                count = len(loaded) if isinstance(loaded, list) else None
+            except (TypeError, ValueError):
+                count = None
+            entry = _field(name, count, _BLOBS[name]) if count is not None else _field(name, custom[key])
+        else:
+            entry = _field(name, custom[key], NAME_LABELS.get(name) if gid in _LABELLED else None, unit=gid in _UNIT_FIELDS)
+        if entry:
+            grouped[gid].append(entry)
+    for name in sorted(appearance):
+        entry = _field(name, appearance[name], NAME_LABELS.get(name))
+        if entry:
+            grouped["appearance"].append(entry)
+    for name in PHOTO_FIELDS:
+        if name in ext:
+            entry = _field(name, ext[name], FIELD_LABELS[name])
+            if entry:
+                grouped["photo_sharing"].append(entry)
+    return [
+        {"id": gid, "title": title, "badge": badge, "fields": grouped[gid]}
+        for gid, title, badge in GROUPS
+        if grouped[gid]
+    ]

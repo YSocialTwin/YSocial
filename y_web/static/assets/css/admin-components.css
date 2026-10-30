@@ -3852,3 +3852,35 @@ input:checked + .slider:before {
 .ys-cf-chart { position: relative; height: 200px; }
 .ys-cf-foot { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .78rem; color: #6b7280; }
 .ys-cf-foot b { color: #374151; font-weight: 600; }
+
+/* ---- agent details: hero and custom attributes ---- */
+.ys-ad-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.ys-ad-photo { display: block; width: 112px; height: 112px; border-radius: 50%; overflow: hidden; border: 3px solid #fff; box-shadow: 0 0 0 1px #d9dee5, 0 4px 12px rgba(0,0,0,.12); flex: none; }
+.ys-ad-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ys-ad-name { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px; color: #2f3a4a; }
+.ys-ad-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ys-ad-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #eef0f4; color: #374151; font-size: .8rem; line-height: 1.6; }
+.ys-ad-chip-link { background: #ede9fe; color: #6d28d9; }
+.ys-ad-chip-soft { background: #f1f5f9; }
+.ys-ad-chip-warn { background: #fef3c7; color: #92400e; }
+.ys-ad-chip-yes { background: #dcfce7; color: #166534; }
+.ys-ad-chip-no { background: #f3f4f6; color: #6b7280; }
+.ys-ad-chip-dating { background: #fce7f3; color: #9d174d; font-size: .7rem; vertical-align: middle; }
+.ys-ad-chip-photo { background: #e0f2fe; color: #075985; font-size: .7rem; vertical-align: middle; }
+.ys-ad-grid { align-items: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-top: 12px; }
+.ys-ad-card { border: 1px solid #e4e7eb; border-radius: 12px; background: #fafbfc; padding: 12px 16px; }
+.ys-ad-card-title { font-size: .95rem; font-weight: 600; margin: 0 0 8px; color: #374151; }
+.ys-ad-fields { margin: 0; }
+.ys-ad-field { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-top: 1px solid #eceff3; }
+.ys-ad-field:first-child { border-top: 0; }
+.ys-ad-field dt { color: #6b7280; font-size: .85rem; flex: none; }
+.ys-ad-field dd { margin: 0; text-align: right; font-weight: 500; word-break: break-word; }
+.ys-ad-k-long, .ys-ad-k-chips { flex-direction: column; }
+.ys-ad-k-chips dd { text-align: left; }
+.ys-ad-k-long dd { text-align: left; font-weight: 400; line-height: 1.45; }
+.ys-ad-bar { display: inline-block; width: 90px; height: 6px; border-radius: 4px; background: #eceff3; vertical-align: middle; overflow: hidden; }
+.ys-ad-bar > span { display: block; height: 100%; background: #8b5cf6; }
+.ys-ad-num { font-variant-numeric: tabular-nums; margin-left: 6px; }
+.ys-ad-list { list-style: none; margin: 0; padding: 0; }
+.ys-ad-list li { padding: 5px 0; border-top: 1px solid #eceff3; }
+.ys-ad-list li:first-child { border-top: 0; }

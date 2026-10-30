@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:42+0000\n"
+"POT-Creation-Date: 2026-10-30 14:45+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -212,6 +212,10 @@ msgstr "%(n)s da leggere"
 #, python-format
 msgid "%(n)s unread"
 msgstr "%(n)s non letti"
+
+#, python-format
+msgid "%(n)s years"
+msgstr "%(n)s anni"
 
 #, python-format
 msgid "%(name)s Parameters"
@@ -949,9 +953,6 @@ msgstr "Aggiungi alla popolazione"
 
 msgid "Additional Configuration"
 msgstr "Configurazione aggiuntiva"
-
-msgid "Additional fields persisted outside the core agent schema."
-msgstr "Campi aggiuntivi salvati al di fuori dello schema di base dell'agente."
 
 msgid "Additional settings exposed by the selected plugin agent type."
 msgstr "Impostazioni aggiuntive esposte dal tipo di agente del plugin selezionato."
@@ -3665,6 +3666,9 @@ msgstr "Tipo di agente personalizzato non trovato."
 msgid "Custom agents"
 msgstr "Agenti personalizzati"
 
+msgid "Custom attributes"
+msgstr "Attributi personalizzati"
+
 msgid "Custom behavioral instructions for enhanced agent simulation."
 msgstr ""
 "Istruzioni comportamentali personalizzate per una simulazione degli "
@@ -5021,6 +5025,15 @@ msgstr "Tutti gli argomenti del canale"
 
 msgid "Every unlocked feature needs at least one alternative value."
 msgstr "Ogni caratteristica sbloccata richiede almeno un valore alternativo."
+
+msgid ""
+"Everything stored with the agent beyond the core profile, in groups: "
+"appearance, interests and opinions, platform-specific fields and other "
+"custom data."
+msgstr ""
+"Tutto ciò che è salvato con l'agente oltre al profilo di base, in gruppi:"
+" aspetto, interessi e opinioni, campi specifici delle piattaforme e altri"
+" dati personalizzati."
 
 msgid "Evidence Tail Max"
 msgstr "Massimo della coda di evidenze"
@@ -6865,13 +6878,6 @@ msgstr ""
 "Gli interessi restano parte della risorsa riutilizzabile, così lo stesso "
 "subreddit si comporta in modo coerente quando è riusato in più "
 "simulazioni del forum."
-
-msgid ""
-"Interests, opinion hints, and custom key-value data stored in the "
-"dashboard database."
-msgstr ""
-"Interessi, indicazioni di opinione e dati chiave-valore personalizzati "
-"salvati nel database della dashboard."
 
 msgid "Interface language"
 msgstr "Lingua dell'interfaccia"
@@ -9347,10 +9353,6 @@ msgstr "Scala delle opinioni non ancora configurata."
 
 msgid "Opinion width (α)"
 msgstr "Ampiezza di opinione (α)"
-
-#, python-format
-msgid "Opinion: %(value)s"
-msgstr "Opinione: %(value)s"
 
 msgid "Opinions"
 msgstr "Opinioni"
@@ -12681,9 +12683,6 @@ msgstr "Metriche strutturali nel tempo"
 
 msgid "Structure, density, components"
 msgstr "Struttura, densità, componenti"
-
-msgid "Structured Features"
-msgstr "Caratteristiche strutturate"
 
 msgid "Structured Models"
 msgstr "Modelli strutturati"
@@ -18626,4 +18625,22 @@ msgstr "✔️ Usa"
 
 #~ msgid "No dating population is available."
 #~ msgstr "Nessuna popolazione dating disponibile."
+
+#~ msgid "Additional fields persisted outside the core agent schema."
+#~ msgstr "Campi aggiuntivi salvati al di fuori dello schema di base dell'agente."
+
+#~ msgid ""
+#~ "Interests, opinion hints, and custom "
+#~ "key-value data stored in the "
+#~ "dashboard database."
+#~ msgstr ""
+#~ "Interessi, indicazioni di opinione e "
+#~ "dati chiave-valore personalizzati salvati "
+#~ "nel database della dashboard."
+
+#~ msgid "Opinion: %(value)s"
+#~ msgstr "Opinione: %(value)s"
+
+#~ msgid "Structured Features"
+#~ msgstr "Caratteristiche strutturate"
 

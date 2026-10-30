@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:42+0000\n"
+"POT-Creation-Date: 2026-10-30 14:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -189,6 +189,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s unread"
+msgstr ""
+
+#, python-format
+msgid "%(n)s years"
 msgstr ""
 
 #, python-format
@@ -850,9 +854,6 @@ msgid "Add to Population"
 msgstr ""
 
 msgid "Additional Configuration"
-msgstr ""
-
-msgid "Additional fields persisted outside the core agent schema."
 msgstr ""
 
 msgid "Additional settings exposed by the selected plugin agent type."
@@ -3273,6 +3274,9 @@ msgstr ""
 msgid "Custom agents"
 msgstr ""
 
+msgid "Custom attributes"
+msgstr ""
+
 msgid "Custom behavioral instructions for enhanced agent simulation."
 msgstr ""
 
@@ -4508,6 +4512,12 @@ msgid "Every topic of the channel"
 msgstr ""
 
 msgid "Every unlocked feature needs at least one alternative value."
+msgstr ""
+
+msgid ""
+"Everything stored with the agent beyond the core profile, in groups: "
+"appearance, interests and opinions, platform-specific fields and other "
+"custom data."
 msgstr ""
 
 msgid "Evidence Tail Max"
@@ -6179,11 +6189,6 @@ msgstr ""
 msgid ""
 "Interests remain part of the reusable resource so the same subreddit "
 "behaves consistently when reused across forum simulations."
-msgstr ""
-
-msgid ""
-"Interests, opinion hints, and custom key-value data stored in the "
-"dashboard database."
 msgstr ""
 
 msgid "Interface language"
@@ -8497,10 +8502,6 @@ msgid "Opinion scale not yet configured."
 msgstr ""
 
 msgid "Opinion width (α)"
-msgstr ""
-
-#, python-format
-msgid "Opinion: %(value)s"
 msgstr ""
 
 msgid "Opinions"
@@ -11600,9 +11601,6 @@ msgid "Structural Metrics Over Time"
 msgstr ""
 
 msgid "Structure, density, components"
-msgstr ""
-
-msgid "Structured Features"
 msgstr ""
 
 msgid "Structured Models"

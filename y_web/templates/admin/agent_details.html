@@ -22,6 +22,28 @@
             </div>
 
             <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box ys-ad-hero" data-tut="agent-picture">
+                        {% if agent.profile_pic %}
+                        <a href="{{ agent.profile_pic }}" target="_blank" rel="noopener" class="ys-ad-photo" title="{{ _('Profile picture') }}"><img src="{{ agent.profile_pic }}" alt="{{ _('Profile picture') }}"></a>
+                        {% endif %}
+                        <div class="ys-ad-id">
+                            <h2 class="ys-ad-name">{{ agent.name }}</h2>
+                            <div class="ys-ad-tags">
+                                {% if agent.ag_type %}<span class="ys-ad-chip">{{ agent.ag_type }}</span>{% endif %}
+                                {% if agent.age is not none %}<span class="ys-ad-chip">{{ _('%(n)s years', n=agent.age) }}</span>{% endif %}
+                                {% if agent.gender %}<span class="ys-ad-chip">{{ agent.gender }}</span>{% endif %}
+                                {% if agent.nationality %}<span class="ys-ad-chip">{{ agent.nationality }}</span>{% endif %}
+                                {% if agent.language %}<span class="ys-ad-chip">{{ agent.language }}</span>{% endif %}
+                                {% if agent.profession %}<span class="ys-ad-chip">{{ agent.profession }}</span>{% endif %}
+                                {% if agent_custom_groups %}<a class="ys-ad-chip ys-ad-chip-link" href="#ad-custom">{{ _('Custom attributes') }}</a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
                 <!--Dashboard column-->
                 <div class="column is-6">
 
@@ -161,55 +183,6 @@
                                 </div>
                                 {% endif %}
                                 {% endif %}
-                                {% if agent_ext_features %}
-                                <hr>
-                                <h4><b>{{ _('Plugin Extensions') }}</b></h4>
-                                <p class="ys-label-hint">{{ _('Additional fields persisted outside the core agent schema.') }}</p>
-                                {% for feature_name, feature_value in agent_ext_features.items() %}
-                                <div class="box-line">
-                                    <span class="left">{{ feature_name.replace('_', ' ').title() }}</span>
-                                    <span class="right">{{ feature_value }}</span>
-                                </div>
-                                {% endfor %}
-                                {% endif %}
-                                {% if agent_structured_features and (agent_structured_features.interests or agent_structured_features.custom_features) %}
-                                <hr>
-                                <h4><b>{{ _('Structured Features') }}</b></h4>
-                                <p class="ys-label-hint">{{ _('Interests, opinion hints, and custom key-value data stored in the dashboard database.') }}</p>
-                                {% if agent_structured_features.interests %}
-                                <div class="box-line" style="align-items: flex-start;">
-                                    <span class="left">{{ _('Interests & Opinions') }}</span>
-                                    <span class="right" style="text-align: right;">
-                                        {% for interest in agent_structured_features.interests %}
-                                        <div style="margin-bottom: 6px;">
-                                            <strong>{{ interest }}</strong>
-                                            {% if agent_structured_features.opinion_groups.get(interest) %}
-                                            <div class="ys-label-hint" style="margin-top: 2px;">
-                                                {{ _('Opinion: %(value)s', value=agent_structured_features.opinion_groups.get(interest)) }}
-                                                {% if interest in agent_structured_features.stubborn_topics %}
-                                                · {{ _('Stubborn') }}
-                                                {% endif %}
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        {% endfor %}
-                                    </span>
-                                </div>
-                                {% endif %}
-                                {% if agent_structured_features.custom_features %}
-                                <div class="box-line" style="align-items: flex-start;">
-                                    <span class="left">{{ _('Custom Fields') }}</span>
-                                    <span class="right" style="text-align: right;">
-                                        {% for feature_name, feature_value in agent_structured_features.custom_features.items() %}
-                                        <div style="margin-bottom: 6px;">
-                                            <strong>{{ feature_name }}</strong>: {{ feature_value }}
-                                        </div>
-                                        {% endfor %}
-                                    </span>
-                                </div>
-                                {% endif %}
-                                {% endif %}
-
                                 {% if has_roleplay %}
                                 <hr>
                                 <h4><b>{{ _('Advanced Role-Playing Profile') }}</b></h4>
@@ -234,20 +207,7 @@
                 <!--Dashboard column-->
                 <div class="column is-6">
                     <!--Box-->
-                    {% if agent.profile_pic != "" %}
                     <div class="dashboard-box" data-tut="population-memberships">
-
-
-                        <div class="box-content">
- <div class="box-lines ys-flex-center">
- <img src="{{ agent.profile_pic }}" alt="{{ _('Logo') }}" class="ys-w-50-auto">
-                            </div>
-
-                        </div>
-                    </div>
-                     {% endif %}
-
-                    <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">{{ _('Population Memberships') }}</h3>
  <p class="ys-text-small">
                             {{ _('Populations where this agent is currently deployed.') }}
@@ -310,6 +270,63 @@
                     </div>
                 </div>
             </div>
+            {% set has_interests = agent_structured_features and agent_structured_features.interests %}
+            {% if agent_custom_groups or has_interests or agent_ext_features %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="ad-custom" data-tut="custom-attributes">
+                        <h3 class="title is-5 is-thin">{{ _('Custom attributes') }}</h3>
+                        <p class="ys-text-small">{{ _('Everything stored with the agent beyond the core profile, in groups: appearance, interests and opinions, platform-specific fields and other custom data.') }}</p>
+                        <div class="ys-ad-grid">
+                            {% if has_interests %}
+                            <section class="ys-ad-card">
+                                <h4 class="ys-ad-card-title">{{ _('Interests & Opinions') }}</h4>
+                                <ul class="ys-ad-list">
+                                    {% for interest in agent_structured_features.interests %}
+                                    <li>
+                                        <strong>{{ interest }}</strong>
+                                        {% if agent_structured_features.opinion_groups.get(interest) %}
+                                        <span class="ys-ad-chip ys-ad-chip-soft">{{ agent_structured_features.opinion_groups.get(interest) }}</span>
+                                        {% endif %}
+                                        {% if interest in agent_structured_features.stubborn_topics %}<span class="ys-ad-chip ys-ad-chip-warn">{{ _('Stubborn') }}</span>{% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </section>
+                            {% endif %}
+                            {% for g in agent_custom_groups %}
+                            <section class="ys-ad-card">
+                                <h4 class="ys-ad-card-title">{{ _(g.title) }}{% if g.badge == 'dating' %} <span class="ys-ad-chip ys-ad-chip-dating">Dating</span>{% elif g.badge == 'photo' %} <span class="ys-ad-chip ys-ad-chip-photo">Photo Sharing</span>{% endif %}</h4>
+                                <dl class="ys-ad-fields">
+                                    {% for f in g.fields %}
+                                    <div class="ys-ad-field ys-ad-k-{{ f.kind }}">
+                                        <dt>{{ _(f.label) }}</dt>
+                                        <dd>
+                                            {% if f.kind == 'flag' %}<span class="ys-ad-chip {{ 'ys-ad-chip-yes' if f.value else 'ys-ad-chip-no' }}">{{ _('Yes') if f.value else _('No') }}</span>
+                                            {% elif f.kind == 'bar' %}<span class="ys-ad-bar"><span style="width: {{ f.pct }}%"></span></span> <span class="ys-ad-num">{{ f.value }}</span>
+                                            {% elif f.kind == 'chips' %}{% for item in f.tags %}<span class="ys-ad-chip ys-ad-chip-soft">{{ item }}</span> {% endfor %}
+                                            {% else %}{{ f.value }}{% endif %}
+                                        </dd>
+                                    </div>
+                                    {% endfor %}
+                                </dl>
+                            </section>
+                            {% endfor %}
+                            {% if agent_ext_features %}
+                            <section class="ys-ad-card">
+                                <h4 class="ys-ad-card-title">{{ _('Plugin Extensions') }}</h4>
+                                <dl class="ys-ad-fields">
+                                    {% for feature_name, feature_value in agent_ext_features.items() %}
+                                    <div class="ys-ad-field"><dt>{{ feature_name.replace('_', ' ').capitalize() }}</dt><dd>{{ feature_value }}</dd></div>
+                                    {% endfor %}
+                                </dl>
+                            </section>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 

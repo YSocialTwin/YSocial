@@ -111,3 +111,35 @@ def test_details_route_passes_the_custom_fields_when_present(app, routes, monkey
 def test_details_route_without_custom_fields(app, routes, monkeypatch):  # noqa: F811
     seen = _details_context(app, routes, monkeypatch, False)
     assert seen["custom_fields"] == [] and seen["kpis"]["fields"] == 0
+
+
+def test_agent_attributes_are_grouped_for_the_details_page():
+    from y_web.src.agents import custom_field_stats as cf
+
+    custom = {
+        "appearance.hair_color": "red",
+        "dating.appearance.hair_color": "black",
+        "dating.appearance.glasses": "true",
+        "dating.latent.selectivity": "0.25",
+        "dating.photos": json.dumps([{"f": 1}, {"f": 2}]),
+        "dating.profile.headline": "x" * 200,
+        "dating.profile.empty": "",
+        "extra.note": "hello",
+    }
+    groups = {g["id"]: g for g in cf.agent_groups(custom, {"creator_tier": "gold", "other_ext": "z"})}
+    assert list(groups) == ["appearance", "dating_profile", "dating_latent", "dating_other", "photo_sharing", "other"]
+    hair = groups["appearance"]["fields"][[f["name"] for f in groups["appearance"]["fields"]].index("hair_color")]
+    assert hair["value"] == "red" and hair["label"] == "Hair colour"
+    assert any(f["kind"] == "flag" and f["value"] is True for f in groups["appearance"]["fields"])
+    assert groups["dating_latent"]["fields"][0] == {"name": "selectivity", "label": "Selectivity", "kind": "bar", "value": "0.25", "pct": 25}
+    assert groups["dating_other"]["fields"][0]["value"] == "2"
+    assert [f["kind"] for f in groups["dating_profile"]["fields"]] == ["long"]
+    assert groups["photo_sharing"]["fields"][0]["value"] == "gold"
+    assert cf.agent_groups({}, {}) == []
+
+
+def test_agent_details_page_shows_the_picture_and_the_groups():
+    from pathlib import Path
+
+    page = (Path(__file__).resolve().parents[1] / "templates" / "admin" / "agent_details.html").read_text()
+    assert "{% if agent.profile_pic %}" in page and 'id="ad-custom"' in page and "agent_custom_groups" in page

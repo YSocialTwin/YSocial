@@ -22,7 +22,8 @@
         agent_details: [
             { selector: '[data-tut="agent-profile"]', title: '@heading', description: 'Full profile of the agent: identity, demographics, interests, personality traits and the behaviour settings it was generated with.', position: 'auto' },
             { selector: '[data-tut="population-memberships"]', title: '@heading', description: 'The populations this agent belongs to. Click a population to open it.', position: 'auto' },
-            { selector: '[data-tut="add-to-population"]', title: '@heading', description: 'Add this agent to another population: choose the population and confirm.', position: 'auto' }
+            { selector: '[data-tut="add-to-population"]', title: '@heading', description: 'Add this agent to another population: choose the population and confirm.', position: 'auto' },
+            { selector: '[data-tut="custom-attributes"]', title: '@heading', description: 'Interests, appearance, platform-specific fields and other custom data stored with the agent, in ordered groups.', position: 'auto' }
         ],
         annotation_analytics: [
             { selector: '[data-tut="temporal-controls"]', title: '@heading', description: 'Replay the simulation over time: press play, change the speed, and every chart follows the selected moment.', position: 'auto' },
