@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 11:18+0000\n"
+"POT-Creation-Date: 2026-10-30 11:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11599,6 +11599,9 @@ msgstr ""
 msgid "Telemetry:"
 msgstr ""
 
+msgid "Tell us about you"
+msgstr ""
+
 msgid "Temperature"
 msgstr ""
 
@@ -13728,6 +13731,9 @@ msgid ""
 "whole experiment and are set in the experiment settings."
 msgstr ""
 
+msgid "Who are you looking for?"
+msgstr ""
+
 msgid "Who are you with?"
 msgstr ""
 
@@ -13746,6 +13752,9 @@ msgid ""
 msgstr ""
 
 msgid "Who writes the messages"
+msgstr ""
+
+msgid "Who you look for"
 msgstr ""
 
 msgid "Who you see"
@@ -13889,6 +13898,9 @@ msgid "Yes"
 msgstr ""
 
 msgid "Yes: the current opinion is part of the prompt"
+msgstr ""
+
+msgid "You"
 msgstr ""
 
 msgid "You already own as many chats as allowed."
@@ -14084,6 +14096,9 @@ msgstr ""
 msgid "Your session expired: reload the page."
 msgstr ""
 
+msgid "Your story"
+msgstr ""
+
 msgid "ZIP File"
 msgstr ""
 
@@ -14270,6 +14285,9 @@ msgid "in context."
 msgstr ""
 
 msgid "joined"
+msgstr ""
+
+msgid "km"
 msgstr ""
 
 msgid "likes left"

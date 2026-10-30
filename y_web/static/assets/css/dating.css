@@ -275,7 +275,7 @@
 .dt-round:disabled { opacity: .4; cursor: default; }
 .dt-empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 28px 16px; color: var(--dt-muted); }
 .dt-empty-ico { font-size: 54px; color: var(--dt-accent); animation: dt-beat 1.6s ease-in-out infinite; }
-.dt-hint { text-align: center; font-size: 13px; color: var(--dt-muted); margin: 6px 0 0; }
+.dt-play .dt-hint { text-align: center; font-size: 13px; color: var(--dt-muted); margin: 6px 0 0; }
 .dt-stage:has(.dt-card2) ~ .dt-empty { display: none; }
 .dt-match { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(15,23,42,.72); backdrop-filter: blur(6px); animation: dt-fade .25s ease both; }
 .dt-match[hidden] { display: none; }
@@ -287,3 +287,70 @@
 @keyframes dt-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dt-pop { from { opacity: 0; transform: scale(.6) rotate(-4deg); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .dt-card2, .dt-round, .dt-c-detail, .dt-empty-ico, .dt-match-hearts, .dt-match-box, .dt-match { transition: none !important; animation: none !important; } }
+
+/* Join: a four-step profile builder (the steps are all visible when the script does not run) */
+.dt-join { max-width: 560px; margin: 8px auto 40px; }
+.dt-join-head { text-align: center; margin-bottom: 16px; }
+.dt-join-heart { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; font-size: 28px; color: #fff; background: linear-gradient(135deg, var(--dt-accent), #f97316); box-shadow: 0 10px 24px rgba(225,29,72,.35); animation: dt-beat 2.2s ease-in-out infinite; }
+.dt-join-title { margin: 12px 0 4px; font-size: 28px; font-weight: 800; }
+.dt-join-lead { margin: 0 auto; max-width: 46ch; color: var(--dt-muted); font-size: 14px; }
+.dt-steps { display: none; list-style: none; margin: 18px 0 8px; padding: 0; justify-content: space-between; gap: 6px; }
+.dt-steps-bar { display: none; height: 4px; border-radius: 4px; background: var(--dt-border); overflow: hidden; margin-bottom: 18px; }
+.dt-steps-bar i { display: block; height: 100%; width: 25%; background: linear-gradient(90deg, var(--dt-accent), #f97316); border-radius: 4px; transition: width .4s cubic-bezier(.3,.9,.4,1); }
+.dt-join:has(.is-wizard) .dt-steps { display: flex; } .dt-join:has(.is-wizard) .dt-steps-bar { display: block; }
+.dt-steps li { flex: 1; display: grid; justify-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--dt-muted); text-align: center; }
+.dt-steps li b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--dt-border); background: var(--dt-surface); transition: all .3s ease; }
+.dt-steps li.is-on b { border-color: var(--dt-accent); color: var(--dt-accent); transform: scale(1.12); box-shadow: 0 0 0 4px var(--dt-accent-soft); }
+.dt-steps li.is-done b { background: var(--dt-accent); border-color: var(--dt-accent); color: #fff; }
+.dt-steps li.is-on span { color: var(--dt-text); }
+.dt-join-form { background: var(--dt-surface); border: 1px solid var(--dt-border); border-radius: 22px; padding: 22px; box-shadow: var(--dt-shadow); }
+.dt-join-form.is-wizard .dt-step { display: none; }
+.dt-join-form.is-wizard .dt-step.is-on { display: grid; animation: dt-step-in .35s cubic-bezier(.3,.9,.4,1) both; }
+.dt-join-form.is-wizard .dt-step.is-on.from-left { animation-name: dt-step-in-left; }
+.dt-step { display: grid; gap: 16px; } .dt-step h3 { margin: 0; font-size: 20px; }
+.dt-step + .dt-step { margin-top: 24px; } .dt-join-form.is-wizard .dt-step + .dt-step { margin-top: 0; }
+.dt-field { display: grid; gap: 6px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.dt-field > label, .dt-field > legend { font-weight: 700; font-size: 14px; padding: 0; display: flex; justify-content: space-between; gap: 8px; }
+.dt-field input:not([type=radio]):not([type=range]):not([type=file]), .dt-field textarea { font: inherit; padding: 11px 14px; border-radius: 12px; border: 1.5px solid var(--dt-border); background: var(--dt-surface-2); color: var(--dt-text); width: 100%; box-sizing: border-box; transition: border-color .15s, box-shadow .15s; }
+.dt-field input:focus, .dt-field textarea:focus { outline: none; border-color: var(--dt-accent); box-shadow: 0 0 0 4px var(--dt-accent-soft); }
+.dt-field .is-bad, .dt-drop .is-bad { border-color: #ef4444 !important; box-shadow: 0 0 0 4px rgba(239,68,68,.15) !important; }
+.dt-field input[type=range] { width: 100%; accent-color: var(--dt-accent); }
+.dt-count { font-weight: 500; color: var(--dt-muted); }
+.dt-pair-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dt-tag { font: inherit; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: 1.5px solid var(--dt-border); background: var(--dt-surface); color: var(--dt-text); cursor: pointer; transition: transform .12s ease, background .15s, border-color .15s, color .15s; }
+.dt-tag:hover { transform: translateY(-1px); border-color: var(--dt-accent); }
+.dt-tag.is-on { background: var(--dt-accent); border-color: var(--dt-accent); color: var(--dt-accent-ink); animation: dt-pop-sm .25s ease both; }
+.dt-choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.dt-choice { position: relative; cursor: pointer; }
+.dt-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.dt-choice span { display: inline-block; padding: 9px 16px; border-radius: 12px; border: 1.5px solid var(--dt-border); background: var(--dt-surface-2); font-weight: 600; text-transform: capitalize; transition: all .15s ease; }
+.dt-choice:hover span { border-color: var(--dt-accent); }
+.dt-choice input:checked + span { background: var(--dt-accent-soft); border-color: var(--dt-accent); color: var(--dt-accent); box-shadow: 0 0 0 3px var(--dt-accent-soft); }
+.dt-choice input:focus-visible + span { outline: 3px solid var(--dt-accent); outline-offset: 2px; }
+.dt-intents .dt-choice { flex: 1 1 120px; } .dt-intents .dt-choice span { display: block; text-align: center; }
+.dt-drops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.dt-drop { display: grid; gap: 8px; align-content: start; }
+.dt-drop-zone { position: relative; display: grid; place-items: center; align-content: center; gap: 2px; aspect-ratio: 3 / 4; border-radius: 16px; border: 2px dashed var(--dt-border); background: var(--dt-surface-2); color: var(--dt-muted); cursor: pointer; overflow: hidden; transition: border-color .15s, background .15s, transform .15s; }
+.dt-drop-zone:hover, .dt-drop.is-over .dt-drop-zone { border-color: var(--dt-accent); background: var(--dt-accent-soft); transform: translateY(-2px); }
+.dt-drop-plus { font-size: 34px; line-height: 1; color: var(--dt-accent); } .dt-drop-label { font-size: 12px; font-weight: 600; }
+.dt-drop-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dt-drop.has-file .dt-drop-zone { border-style: solid; border-color: var(--dt-accent); }
+.dt-drop.has-file .dt-drop-plus, .dt-drop.has-file .dt-drop-label { display: none; }
+.dt-drop-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.dt-drop > input[name^=photo_caption] { font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--dt-border); background: var(--dt-surface-2); color: var(--dt-text); width: 100%; box-sizing: border-box; }
+.dt-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.dt-join-nav { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.dt-join-nav [hidden] { display: none !important; }
+.dt-join-nav .dt-btn { min-width: 110px; padding: 11px 22px; transition: transform .15s ease, box-shadow .15s ease; }
+.dt-join-nav .dt-btn:not(.dt-btn-ghost):hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(225,29,72,.35); }
+.dt-join-nav #dt-back { margin-right: auto; }
+.dt-join-nav .is-busy { opacity: .6; }
+.shake { animation: dt-shake .35s ease; }
+@keyframes dt-step-in { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+@keyframes dt-step-in-left { from { opacity: 0; transform: translateX(-26px); } to { opacity: 1; transform: none; } }
+@keyframes dt-pop-sm { from { transform: scale(.85); } to { transform: scale(1); } }
+@keyframes dt-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@media (max-width: 520px) { .dt-drops { grid-template-columns: 1fr 1fr 1fr; gap: 8px; } .dt-join-form { padding: 16px; } .dt-steps li span { display: none; } }
+@media (prefers-reduced-motion: reduce) { .dt-join-heart, .dt-join-form .dt-step, .dt-tag, .shake, .dt-steps-bar i { animation: none !important; transition: none !important; } }
+.dt-choice-row.dt-intents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

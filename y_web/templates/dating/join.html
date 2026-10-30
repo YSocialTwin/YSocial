@@ -1,49 +1,95 @@
 {% extends "dating/base.html" %}
 {% block title %}{{ _('Join') }} · {{ exp.exp_name }}{% endblock %}
 {% block content %}
-<section class="dt-panel dt-narrow" aria-labelledby="dt-join-h">
-  <h2 class="dt-h" id="dt-join-h">{{ _('Create your profile') }}</h2>
-  <p class="dt-hint">{{ _('You take part as yourself, next to simulated users. Other people and simulated users will see this profile. Do not share contact details or real names you want to keep private.') }}</p>
+<section class="dt-join" aria-labelledby="dt-join-h">
+  <header class="dt-join-head">
+    <span class="dt-join-heart" aria-hidden="true">♥</span>
+    <h2 class="dt-join-title" id="dt-join-h">{{ _('Create your profile') }}</h2>
+    <p class="dt-join-lead">{{ _('You take part as yourself, next to simulated users. Other people and simulated users will see this profile. Do not share contact details or real names you want to keep private.') }}</p>
+  </header>
   {% if error %}<p class="dt-error" role="alert">{{ error }}</p>{% endif %}
-  <form method="post" action="/{{ exp.idexp }}/dating/join" class="dt-fields" enctype="multipart/form-data">
+  <ol class="dt-steps" id="dt-steps" aria-hidden="true">
+    <li class="is-on"><b>1</b><span>{{ _('You') }}</span></li>
+    <li><b>2</b><span>{{ _('Who you look for') }}</span></li>
+    <li><b>3</b><span>{{ _('Your story') }}</span></li>
+    <li><b>4</b><span>{{ _('Photos') }}</span></li>
+  </ol>
+  <div class="dt-steps-bar" aria-hidden="true"><i id="dt-steps-fill"></i></div>
+  <form method="post" action="/{{ exp.idexp }}/dating/join" class="dt-join-form" id="dt-join-form" enctype="multipart/form-data"
+        data-t-next="{{ _('Next') }}" data-t-back="{{ _('Back') }}" data-t-start="{{ _('Start') }}"
+        data-t-km="{{ _('km') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <fieldset><legend>{{ _('Name shown to others') }}</legend>
-      <label><input type="radio" name="name_mode" value="username" {{ 'checked' if form.get('name_mode', 'username') != 'pseudonym' }}> {{ participant.username }}</label>
-      <label><input type="radio" name="name_mode" value="pseudonym" {{ 'checked' if form.get('name_mode') == 'pseudonym' }}> {{ pseudonym }}</label>
-    </fieldset>
-    <label for="dt-age">{{ _('Age') }}</label>
-    <input id="dt-age" name="age" type="number" min="18" max="120" required value="{{ form.get('age', '') }}">
-    <label for="dt-gender">{{ _('Gender') }}</label>
-    <input id="dt-gender" name="gender" list="dt-genders" required maxlength="40" value="{{ form.get('gender', '') }}">
-    <datalist id="dt-genders">{% for g in vocab.genders %}<option value="{{ g }}">{% endfor %}</datalist>
-    <label for="dt-seeking">{{ _('Looking for (separate with commas)') }}</label>
-    <input id="dt-seeking" name="seeking" list="dt-genders" maxlength="200" value="{{ form.get('seeking', '') }}">
-    <div class="dt-pair">
-      <label>{{ _('Youngest') }} <input name="age_min" type="number" min="18" max="120" value="{{ form.get('age_min', 18) }}"></label>
-      <label>{{ _('Oldest') }} <input name="age_max" type="number" min="18" max="120" value="{{ form.get('age_max', 99) }}"></label>
-      <label>{{ _('Distance (km)') }} <input name="max_distance_km" type="number" min="0" value="{{ form.get('max_distance_km', 50) }}"></label>
-    </div>
-    <label for="dt-intent">{{ _('What are you looking for?') }}</label>
-    <select id="dt-intent" name="intent">{% for i in intents %}<option value="{{ i }}" {{ 'selected' if form.get('intent', 'unsure') == i }}>{{ i }}</option>{% endfor %}</select>
-    <label for="dt-city">{{ _('City') }}</label>
-    <input id="dt-city" name="city" maxlength="80" value="{{ form.get('city', '') }}">
-    <label for="dt-bio">{{ _('About you') }}</label>
-    <textarea id="dt-bio" name="bio" rows="4" maxlength="500">{{ form.get('bio', '') }}</textarea>
-    <label for="dt-interests">{{ _('Interests (separate with commas)') }}</label>
-    <input id="dt-interests" name="interests" list="dt-interest-list" maxlength="400" value="{{ form.get('interests', '') }}">
-    <datalist id="dt-interest-list">{% for i in vocab.interests %}<option value="{{ i }}">{% endfor %}</datalist>
-    <fieldset class="dt-photos-fs"><legend>{{ _('Photos (optional)') }}</legend>
-      <p class="dt-hint">{{ _('A photo needs a description: the simulated users decide on the description. Pictures are PNG, JPEG or WebP, up to 5 MB; they are re-encoded and their metadata is removed. Add or remove photos later from your profile.') }}</p>
-      {% for n in (1, 2, 3) %}
-      <div class="dt-photo-row">
-        <label for="dt-photo-file-{{ n }}">{{ _('Picture %(n)s', n=n) }}</label>
-        <input id="dt-photo-file-{{ n }}" name="photo_file_{{ n }}" type="file" accept="image/png,image/jpeg,image/webp">
-        <label for="dt-photo-caption-{{ n }}">{{ _('Description of picture %(n)s', n=n) }}</label>
-        <input id="dt-photo-caption-{{ n }}" name="photo_caption_{{ n }}" maxlength="500" value="{{ form.get('photo_caption_' ~ n, '') }}">
+
+    <section class="dt-step is-on" data-step="1" aria-labelledby="dt-s1">
+      <h3 id="dt-s1">{{ _('Tell us about you') }}</h3>
+      <fieldset class="dt-field"><legend>{{ _('Name shown to others') }}</legend>
+        <div class="dt-choice-row">
+          <label class="dt-choice"><input type="radio" name="name_mode" value="username" {{ 'checked' if form.get('name_mode', 'username') != 'pseudonym' }}><span>{{ participant.username }}</span></label>
+          <label class="dt-choice"><input type="radio" name="name_mode" value="pseudonym" {{ 'checked' if form.get('name_mode') == 'pseudonym' }}><span>{{ pseudonym }}</span></label>
+        </div>
+      </fieldset>
+      <div class="dt-field"><label for="dt-age">{{ _('Age') }}</label>
+        <input id="dt-age" name="age" type="number" min="18" max="120" required value="{{ form.get('age', '') }}"></div>
+      <div class="dt-field"><label for="dt-gender">{{ _('Gender') }}</label>
+        <input id="dt-gender" name="gender" list="dt-genders" required maxlength="40" value="{{ form.get('gender', '') }}" autocomplete="off">
+        <div class="dt-chips" data-fill="dt-gender" data-single="1">{% for g in vocab.genders %}<button type="button" class="dt-tag" data-value="{{ g }}">{{ g }}</button>{% endfor %}</div>
+        <datalist id="dt-genders">{% for g in vocab.genders %}<option value="{{ g }}">{% endfor %}</datalist></div>
+    </section>
+
+    <section class="dt-step" data-step="2" aria-labelledby="dt-s2">
+      <h3 id="dt-s2">{{ _('Who are you looking for?') }}</h3>
+      <div class="dt-field"><label for="dt-seeking">{{ _('Looking for (separate with commas)') }}</label>
+        <input id="dt-seeking" name="seeking" list="dt-genders" maxlength="200" value="{{ form.get('seeking', '') }}" autocomplete="off">
+        <div class="dt-chips" data-fill="dt-seeking">{% for g in vocab.genders %}<button type="button" class="dt-tag" data-value="{{ g }}">{{ g }}</button>{% endfor %}</div></div>
+      <div class="dt-pair dt-pair-2">
+        <div class="dt-field"><label for="dt-amin">{{ _('Youngest') }}</label><input id="dt-amin" name="age_min" type="number" min="18" max="120" value="{{ form.get('age_min', 18) }}"></div>
+        <div class="dt-field"><label for="dt-amax">{{ _('Oldest') }}</label><input id="dt-amax" name="age_max" type="number" min="18" max="120" value="{{ form.get('age_max', 99) }}"></div>
       </div>
+      <div class="dt-field"><label for="dt-dist">{{ _('Distance (km)') }} <output id="dt-dist-out" for="dt-dist">{{ form.get('max_distance_km', 50) }}</output></label>
+        <input id="dt-dist" name="max_distance_km" type="range" min="0" max="500" step="5" value="{{ form.get('max_distance_km', 50) }}"></div>
+      <fieldset class="dt-field"><legend>{{ _('What are you looking for?') }}</legend>
+        <div class="dt-choice-row dt-intents">{% for i in intents %}
+          <label class="dt-choice dt-choice-card"><input type="radio" name="intent" value="{{ i }}" {{ 'checked' if form.get('intent', 'unsure') == i }}><span>{{ i }}</span></label>{% endfor %}</div>
+      </fieldset>
+    </section>
+
+    <section class="dt-step" data-step="3" aria-labelledby="dt-s3">
+      <h3 id="dt-s3">{{ _('Your story') }}</h3>
+      <div class="dt-field"><label for="dt-city">{{ _('City') }}</label>
+        <input id="dt-city" name="city" maxlength="80" value="{{ form.get('city', '') }}"></div>
+      <div class="dt-field"><label for="dt-bio">{{ _('About you') }} <small class="dt-count" id="dt-bio-count" aria-live="off"></small></label>
+        <textarea id="dt-bio" name="bio" rows="4" maxlength="500">{{ form.get('bio', '') }}</textarea></div>
+      <div class="dt-field"><label for="dt-interests">{{ _('Interests (separate with commas)') }}</label>
+        <input id="dt-interests" name="interests" list="dt-interest-list" maxlength="400" value="{{ form.get('interests', '') }}" autocomplete="off">
+        <div class="dt-chips" data-fill="dt-interests">{% for i in vocab.interests %}<button type="button" class="dt-tag" data-value="{{ i }}">{{ i }}</button>{% endfor %}</div>
+        <datalist id="dt-interest-list">{% for i in vocab.interests %}<option value="{{ i }}">{% endfor %}</datalist></div>
+    </section>
+
+    <section class="dt-step" data-step="4" aria-labelledby="dt-s4">
+      <h3 id="dt-s4">{{ _('Photos (optional)') }}</h3>
+      <p class="dt-hint">{{ _('A photo needs a description: the simulated users decide on the description. Pictures are PNG, JPEG or WebP, up to 5 MB; they are re-encoded and their metadata is removed. Add or remove photos later from your profile.') }}</p>
+      <div class="dt-drops">
+      {% for n in (1, 2, 3) %}
+        <div class="dt-drop" data-photo="{{ n }}">
+          <label class="dt-drop-zone" for="dt-photo-file-{{ n }}">
+            <span class="dt-drop-plus" aria-hidden="true">+</span>
+            <span class="dt-drop-label">{{ _('Picture %(n)s', n=n) }}</span>
+            <img class="dt-drop-img" alt="" hidden>
+          </label>
+          <input id="dt-photo-file-{{ n }}" name="photo_file_{{ n }}" type="file" accept="image/png,image/jpeg,image/webp" class="dt-drop-input">
+          <label for="dt-photo-caption-{{ n }}" class="dt-visually-hidden">{{ _('Description of picture %(n)s', n=n) }}</label>
+          <input id="dt-photo-caption-{{ n }}" name="photo_caption_{{ n }}" maxlength="500" placeholder="{{ _('Description of picture %(n)s', n=n) }}" value="{{ form.get('photo_caption_' ~ n, '') }}">
+        </div>
       {% endfor %}
-    </fieldset>
-    <button class="dt-btn" type="submit">{{ _('Start') }}</button>
+      </div>
+    </section>
+
+    <div class="dt-join-nav">
+      <button type="button" class="dt-btn dt-btn-ghost" id="dt-back" hidden>{{ _('Back') }}</button>
+      <button type="button" class="dt-btn" id="dt-next">{{ _('Next') }}</button>
+      <button class="dt-btn" type="submit" id="dt-submit">{{ _('Start') }}</button>
+    </div>
   </form>
 </section>
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='assets/js/dating-join.js') }}"></script>{% endblock %}

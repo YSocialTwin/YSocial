@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 11:18+0000\n"
+"POT-Creation-Date: 2026-10-30 11:21+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -12684,6 +12684,9 @@ msgstr ""
 msgid "Telemetry:"
 msgstr "Telemetria:"
 
+msgid "Tell us about you"
+msgstr "Parlaci di te"
+
 msgid "Temperature"
 msgstr "Temperatura"
 
@@ -15221,6 +15224,9 @@ msgstr ""
 "condivisi da tutto l'esperimento e si impostano nelle impostazioni "
 "dell'esperimento."
 
+msgid "Who are you looking for?"
+msgstr "Chi stai cercando?"
+
 msgid "Who are you with?"
 msgstr "Con chi sei?"
 
@@ -15244,6 +15250,9 @@ msgstr ""
 
 msgid "Who writes the messages"
 msgstr "Chi scrive i messaggi"
+
+msgid "Who you look for"
+msgstr "Chi cerchi"
 
 msgid "Who you see"
 msgstr "Chi vedi"
@@ -15404,6 +15413,9 @@ msgstr "Sì"
 
 msgid "Yes: the current opinion is part of the prompt"
 msgstr "Sì: l'opinione attuale fa parte del prompt"
+
+msgid "You"
+msgstr "Tu"
 
 msgid "You already own as many chats as allowed."
 msgstr "Possiedi già il numero massimo di chat consentito."
@@ -15614,6 +15626,9 @@ msgstr "Il tuo sistema di raccomandazione"
 msgid "Your session expired: reload the page."
 msgstr "La sessione è scaduta: ricarica la pagina."
 
+msgid "Your story"
+msgstr "La tua storia"
+
 msgid "ZIP File"
 msgstr "File ZIP"
 
@@ -15807,6 +15822,9 @@ msgstr "nel suo contesto."
 
 msgid "joined"
 msgstr "iscritto"
+
+msgid "km"
+msgstr "km"
 
 msgid "likes left"
 msgstr "like rimasti"
@@ -18057,4 +18075,10 @@ msgstr "✔️ Usa"
 #~ "utenti simulati e le altre persone "
 #~ "vedono il tuo profilo e i tuoi "
 #~ "messaggi."
+
+#~ msgid "Add a photo"
+#~ msgstr ""
+
+#~ msgid "Please fill in the highlighted fields."
+#~ msgstr ""
 
