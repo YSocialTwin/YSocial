@@ -1,43 +1,129 @@
-{# Controls generated from a JSON Schema of the dating runtime.
-   item: {"f": schema_forms.Field, "label": text}; values: text of every control by path. #}
+{# Controls generated from a JSON Schema of the dating runtime, drawn with the widgets of the other admin pages:
+   switches, tags, the 0-10 importance scale, sliders and the hourly chart. See settings_ui.widget_of.
+   item: {"f": schema_forms.Field, "label": text, "widget": name, "advanced": bool, "suggestions": list};
+   values: text of every control by path. #}
+{% macro dating_control(item, values, disabled=False) %}
+{%- set f = item.f -%}
+{%- set value = values[f.path] -%}
+{%- if item.widget == 'toggle' -%}
+    <input type="hidden" name="{{ f.name }}__present" value="1">
+    <label class="switch-small">
+        <input type="checkbox" name="{{ f.name }}" value="true" {% if value == 'True' %}checked{% endif %} {% if disabled %}disabled{% endif %}>
+        <span class="slider-small round"></span>
+    </label>
+{%- elif item.widget == 'segmented' -%}
+    <div class="dating-segmented" role="radiogroup">
+        {% for choice in f.choices %}
+        <label class="dating-segment"><input type="radio" name="{{ f.name }}" value="{{ choice }}" {% if choice|string == value %}checked{% endif %} {% if disabled %}disabled{% endif %}><span>{{ choice }}</span></label>
+        {% endfor %}
+    </div>
+{%- elif item.widget == 'select' -%}
+    <div class="select"><select name="{{ f.name }}" {% if disabled %}disabled{% endif %}>
+        {% for choice in f.choices %}<option value="{{ choice }}" {% if choice|string == value %}selected{% endif %}>{{ choice }}</option>{% endfor %}
+    </select></div>
+{%- elif item.widget == 'slider' -%}
+    <div class="dating-slider">
+        <input type="range" name="{{ f.name }}" min="0" max="1" step="0.01" value="{{ value }}" data-dating-slider {% if disabled %}disabled{% endif %}>
+        <output class="dating-slider-value">{{ value }}</output>
+    </div>
+{%- elif item.widget == 'importance' -%}
+    <div class="scale-wrapper dating-importance" data-step="0.05">
+        <div class="number-scale">
+            {% for n in range(11) %}<div class="number-box" data-value="{{ n }}">{{ n }}</div>{% endfor %}
+        </div>
+        <input type="hidden" name="{{ f.name }}" value="{{ value }}" {% if disabled %}disabled{% endif %}>
+    </div>
+{%- elif item.widget == 'hourly' -%}
+    <div class="dating-hourly" data-hourly>
+        <div class="ys-chart-box dating-hourly-chart"><canvas></canvas></div>
+        <div class="activity-grid-create">
+            {% for h in range(24) %}
+            <div class="activity-hour-create"><label>{{ h }}h</label><input type="number" min="0" step="0.01" data-hour="{{ h }}" {% if disabled %}disabled{% endif %}></div>
+            {% endfor %}
+        </div>
+        <input type="hidden" name="{{ f.name }}" value="{{ value }}" {% if disabled %}disabled{% endif %}>
+    </div>
+{%- elif item.widget == 'taglist' -%}
+    <div class="dating-taglist" data-taglist data-options='{{ (item.suggestions or [])|tojson }}'>
+        <div class="profession-tags-container dating-taglist-tags"></div>
+        <div class="dating-taglist-add">
+            <input type="text" class="input" maxlength="60" placeholder="{{ _('Add another value...') }}" {% if disabled %}disabled{% endif %}>
+            <button type="button" class="button is-light" {% if disabled %}disabled{% endif %}>{{ _('Add') }}</button>
+        </div>
+        <input type="hidden" name="{{ f.name }}" value="{{ value }}" {% if disabled %}disabled{% endif %}>
+    </div>
+{%- elif item.widget == 'number' -%}
+    <input type="number" name="{{ f.name }}" class="input" step="{{ '1' if f.kind == 'int' else 'any' }}" {% if f.minimum is not none %}min="{{ f.minimum }}"{% endif %} {% if f.maximum is not none %}max="{{ f.maximum }}"{% endif %} value="{{ value }}" {% if disabled %}disabled{% endif %}>
+{%- elif item.widget == 'json' -%}
+    <textarea name="{{ f.name }}" class="textarea" rows="3" {% if disabled %}disabled{% endif %}>{{ value }}</textarea>
+{%- else -%}
+    <input type="text" name="{{ f.name }}" class="input" value="{{ value }}" {% if disabled %}disabled{% endif %}>
+{%- endif -%}
+{% endmacro %}
+
 {% macro dating_field(item, values, disabled=False) %}
 {%- set f = item.f -%}
-<div class="box-line ys-hint-text" id="field-{{ f.name }}">
+<div class="box-line ys-hint-text{% if item.advanced %} dating-adv{% endif %}" id="field-{{ f.name }}"{% if item.advanced %} data-advanced="1"{% endif %}>
     <span class="left">{{ _(item.label) }}</span>
     <span class="right ys-w-70">
-    {%- if f.kind == 'bool' -%}
-        <input type="hidden" name="{{ f.name }}__present" value="1">
-        <input type="checkbox" name="{{ f.name }}" value="true" {% if values[f.path] == 'True' %}checked{% endif %} {% if disabled %}disabled{% endif %}>
-    {%- elif f.kind == 'choice' -%}
-        <div class="select"><select name="{{ f.name }}" {% if disabled %}disabled{% endif %}>
-            {% for choice in f.choices %}<option value="{{ choice }}" {% if choice|string == values[f.path] %}selected{% endif %}>{{ choice }}</option>{% endfor %}
-        </select></div>
-    {%- elif f.kind in ('int', 'float') -%}
-        <input type="number" name="{{ f.name }}" class="input" step="{{ '1' if f.kind == 'int' else 'any' }}" {% if f.minimum is not none %}min="{{ f.minimum }}"{% endif %} {% if f.maximum is not none %}max="{{ f.maximum }}"{% endif %} value="{{ values[f.path] }}" {% if disabled %}disabled{% endif %}>
-    {%- elif f.kind == 'json' -%}
-        <textarea name="{{ f.name }}" class="textarea" rows="3" {% if disabled %}disabled{% endif %}>{{ values[f.path] }}</textarea>
-    {%- else -%}
-        <input type="text" name="{{ f.name }}" class="input" value="{{ values[f.path] }}" {% if disabled %}disabled{% endif %}>
-    {%- endif -%}
-    <small>{{ f.description }}</small>
+        {{ dating_control(item, values, disabled) }}
+        <small>{{ f.description }}</small>
     </span>
 </div>
 {% endmacro %}
 
-{# Sections of a page: sections come from settings_ui.layout; experiment_id links to the Experiment Configuration. #}
+{# The body of a section: the sub-headings and their fields. #}
+{% macro dating_section_body(s, values, experiment_id, disabled=False) %}
+{% if s.inactive %}
+<div class="ys-note-box">{{ _('This part is off in the Experiment Configuration, so these settings have no effect until you switch it on there.') }}
+    <a href="/admin/experiment_details/{{ experiment_id }}">{{ _('Experiment Configuration') }}</a></div>
+{% endif %}
+{% for b in s.blocks %}
+{% if b.heading %}<h4 class="title is-6 dating-subheading">{{ _(b.heading) }}</h4>{% endif %}
+{% for item in b.fields %}{{ dating_field(item, values, disabled) }}{% endfor %}
+{% endfor %}
+{% endmacro %}
+
+{# The switch that shows the advanced settings of the page. #}
+{% macro dating_advanced_toggle() %}
+<div class="box-line dating-advanced-toggle">
+    <span class="left">{{ _('Show advanced settings') }}</span>
+    <span class="right ys-w-70">
+        <label class="switch-small">
+            <input type="checkbox" id="dating-show-advanced">
+            <span class="slider-small round"></span>
+        </label>
+        <small>{{ _('Fine tuning that the defaults of the runtime already cover.') }}</small>
+    </span>
+</div>
+{% endmacro %}
+
+{# Sections of a page inside ONE form (creation of a client): same look as the other client pages. #}
 {% macro dating_sections(sections, values, experiment_id, disabled=False) %}
 {% for s in sections %}
-<div class="tutorial-section" id="sec-{{ s.id }}">
+<div class="tutorial-section{% if s.advanced_only %} dating-adv{% endif %}" id="sec-{{ s.id }}"{% if s.advanced_only %} data-advanced="1"{% endif %}>
     <div class="form-section-header">{{ _(s.title) }}</div>
     <div class="form-section-description">{{ _(s.description) }}</div>
-    {% if s.inactive %}
-    <div class="ys-note-box">{{ _('This part is off in the Experiment Configuration, so these settings have no effect until you switch it on there.') }}
-        <a href="/admin/experiment_details/{{ experiment_id }}">{{ _('Experiment Configuration') }}</a></div>
-    {% endif %}
-    {% for b in s.blocks %}
-    {% if b.heading %}<h4 class="title is-6">{{ _(b.heading) }}</h4>{% endif %}
-    {% for item in b.fields %}{{ dating_field(item, values, disabled) }}{% endfor %}
-    {% endfor %}
+    {{ dating_section_body(s, values, experiment_id, disabled) }}
 </div>
 {% endfor %}
+{% endmacro %}
+
+{# One section as its own dashboard box with its own form and Save button (the layout of the YSimulator client page).
+   Only the controls of the box are submitted: every other setting keeps its value. #}
+{% macro dating_box(s, values, experiment_id, action, disabled=False, locked=False) %}
+<div class="dashboard-box{% if s.advanced_only %} dating-adv{% endif %}" id="box-{{ s.id }}"{% if s.advanced_only %} data-advanced="1"{% endif %}>
+    <h3 class="title is-5 is-thin">{{ _(s.title) }}</h3>
+    <p class="ys-text-small">{{ _(s.description) }}</p>
+    <div class="box-content">
+        <form action="{{ action }}" method="POST">
+            <div class="box-lines">
+                {{ dating_section_body(s, values, experiment_id, disabled) }}
+            </div>
+            <div class="button-wrap">
+                <button class="button is-solid primary-button is-fullwidth" {% if disabled or locked %}disabled{% endif %}>{{ _('Save') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endmacro %}

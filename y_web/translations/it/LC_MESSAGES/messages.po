@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 09:07+0000\n"
+"POT-Creation-Date: 2026-10-30 09:12+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -500,6 +500,14 @@ msgstr "Un agente di dating ha bisogno di un'età numerica."
 msgid "A discussion thread."
 msgstr "Una discussione."
 
+msgid ""
+"A group of agents (the population) that swipe, match and talk in this "
+"experiment. Several clients can run in the same experiment."
+msgstr ""
+"Un gruppo di agenti (la popolazione) che fanno swipe, match e "
+"conversazioni in questo esperimento. Più client possono girare nello "
+"stesso esperimento."
+
 #, python-format
 msgid "A new %(display_name)s population name is required."
 msgstr "È necessario un nuovo nome di popolazione %(display_name)s."
@@ -931,6 +939,9 @@ msgid "Advanced Role-Playing Profile"
 msgstr "Profilo di gioco di ruolo avanzato"
 
 msgid "Advanced Settings"
+msgstr "Impostazioni avanzate"
+
+msgid "Advanced settings"
 msgstr "Impostazioni avanzate"
 
 msgid "Advanced settings and recommender"
@@ -2238,6 +2249,13 @@ msgstr "Scegli la lingua della dashboard per questo utente."
 
 msgid "Choose the language of the interface."
 msgstr "Scegli la lingua dell'interfaccia."
+
+msgid ""
+"Choose the model that proposes the cards; the parameters of the chosen "
+"model appear below it."
+msgstr ""
+"Scegli il modello che propone le carte; i parametri del modello scelto "
+"compaiono sotto."
 
 msgid "Choose two dating experiments to compare."
 msgstr "Scegli due esperimenti dating da confrontare."
@@ -4838,6 +4856,13 @@ msgstr "Evento"
 msgid "Event weights"
 msgstr "Pesi degli eventi"
 
+msgid ""
+"Every box has its own Save button: only the settings of that box are "
+"changed."
+msgstr ""
+"Ogni riquadro ha il proprio pulsante Salva: vengono modificate solo le "
+"impostazioni di quel riquadro."
+
 msgid "Every prompt is the default one."
 msgstr "Ogni prompt è quello predefinito."
 
@@ -5016,6 +5041,9 @@ msgstr "Esperimento non trovato: %(exp_id)s"
 #, python-format
 msgid "Experiment not found: %(expid)s"
 msgstr "Esperimento non trovato: %(expid)s"
+
+msgid "Experiment or client?"
+msgstr "Esperimento o client?"
 
 msgid "Experiment owner"
 msgstr "Proprietario dell'esperimento"
@@ -5347,6 +5375,16 @@ msgstr "Filtra per gruppo (tutti = tutti i gruppi)"
 
 msgid "Filter experiments by group"
 msgstr "Filtra gli esperimenti per gruppo"
+
+msgid ""
+"Fine tuning that the defaults of the runtime already cover is hidden "
+"until you switch it on."
+msgstr ""
+"La messa a punto già coperta dai valori predefiniti del runtime resta "
+"nascosta finché non la attivi."
+
+msgid "Fine tuning that the defaults of the runtime already cover."
+msgstr "Messa a punto già coperta dai valori predefiniti del runtime."
 
 msgid "Finnish"
 msgstr "Finlandese"
@@ -6345,6 +6383,9 @@ msgstr "Immagini"
 msgid "Images are cropped to a square preview when needed."
 msgstr "Le immagini vengono ritagliate in un'anteprima quadrata quando serve."
 
+msgid "Importance 0-10"
+msgstr "Importanza 0-10"
+
 msgid "Importance Mode"
 msgstr "Modalità di importanza"
 
@@ -7208,6 +7249,13 @@ msgid "Let participants change the language"
 msgstr "Permetti ai partecipanti di cambiare lingua"
 
 msgid ""
+"Let people play next to the agents. The participants are managed on the "
+"Participants page."
+msgstr ""
+"Permetti alle persone di giocare accanto agli agenti. I partecipanti si "
+"gestiscono nella pagina Partecipanti."
+
+msgid ""
 "Let people play next to the agents: how many, how fast, what they may do "
 "and the limits that protect the server. The participants are managed on "
 "the Participants page."
@@ -7319,6 +7367,9 @@ msgstr "Chiusura triadica locale"
 
 msgid "Local models and notes on these settings."
 msgstr "Modelli locali e note su queste impostazioni."
+
+msgid "Locked settings"
+msgstr "Impostazioni bloccate"
 
 msgid "Log"
 msgstr "Log"
@@ -8804,6 +8855,13 @@ msgstr ""
 
 msgid "Onboarding screen"
 msgstr "Schermata di onboarding"
+
+msgid ""
+"Once the run has started, the settings that shape it are locked. Clone "
+"the experiment to try other values."
+msgstr ""
+"Una volta avviata la simulazione, le impostazioni che la determinano sono"
+" bloccate. Clona l'esperimento per provare altri valori."
 
 #, python-format
 msgid "One day has %(n)s slots (a round each). -1 runs until stopped."
@@ -11803,6 +11861,9 @@ msgstr ""
 "contenuti del partecipante e una spiegazione in linguaggio semplice del "
 "suo funzionamento"
 
+msgid "Show advanced settings"
+msgstr "Mostra impostazioni avanzate"
+
 msgid "Show less"
 msgstr "Mostra meno"
 
@@ -12792,6 +12853,13 @@ msgstr ""
 "Le modifiche sono salvate direttamente nel tuo profilo dell'esperimento "
 "senza lasciare questa pagina."
 
+msgid ""
+"The chart shows how likely the agents are to open the app in each hour of"
+" the day (the slots of a day are mapped on the hours)."
+msgstr ""
+"Il grafico mostra quanto è probabile che gli agenti aprano l'app in ogni "
+"ora del giorno (gli slot di un giorno sono associati alle ore)."
+
 msgid "The client is running: stop it to change its settings."
 msgstr "Il client è in esecuzione: fermalo per cambiarne le impostazioni."
 
@@ -13073,6 +13141,14 @@ msgstr "La pagina richiesta non è stata trovata."
 msgid "The round is closed: try again in a moment."
 msgstr "Il round è chiuso: riprova tra poco."
 
+msgid ""
+"The rules of the platform are set here once and apply to every client; "
+"how a group of agents behaves is set in its client."
+msgstr ""
+"Le regole della piattaforma si impostano qui una sola volta e valgono per"
+" ogni client; il comportamento di un gruppo di agenti si imposta nel suo "
+"client."
+
 msgid "The run already started: reset the experiment to change its news."
 msgstr "Il run è già iniziato: reimposta l'esperimento per cambiare le notizie."
 
@@ -13277,6 +13353,15 @@ msgid ""
 msgstr ""
 "Il nome utente deve avere da 3 a 15 caratteri: lettere, cifre, punti, "
 "trattini o underscore."
+
+msgid ""
+"The weights of the swiping utility use the same 0 to 10 scale as the "
+"actions of the other platforms: 0 means that factor is ignored, and the "
+"values are relative to each other."
+msgstr ""
+"I pesi dell'utilità dello swipe usano la stessa scala da 0 a 10 delle "
+"azioni delle altre piattaforme: 0 significa che il fattore è ignorato e i"
+" valori sono relativi tra loro."
 
 msgid "Thematic Characterization"
 msgstr "Caratterizzazione tematica"
@@ -14931,6 +15016,9 @@ msgstr "Che cos'è un client?"
 msgid "What is a Population?"
 msgstr "Che cos'è una popolazione?"
 
+msgid "What is a client?"
+msgstr "Che cos'è un client?"
+
 msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
@@ -15131,6 +15219,13 @@ msgstr ""
 "Con lo stesso seed, la stessa popolazione e le stesse impostazioni le "
 "scelte degli agenti sono estratte di nuovo allo stesso modo: usalo per "
 "ripetere una run."
+
+msgid ""
+"With the stub backend nothing is called: answers come from a "
+"deterministic fake, enough for tests and large runs."
+msgstr ""
+"Con il backend stub non viene chiamato nulla: le risposte arrivano da un "
+"finto deterministico, sufficiente per test e grandi simulazioni."
 
 msgid "Wrapped exception:"
 msgstr "Eccezione incapsulata:"

@@ -1644,3 +1644,23 @@ details[open] .details-arrow {
     border-color: #22c55e;
     box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
 }
+
+/* Dating client and experiment settings: widgets drawn from the schema (IR-D-05) */
+[data-advanced][hidden] { display: none !important; }
+.dating-segmented { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.dating-segment { cursor: pointer; margin: 0; }
+.dating-segment input { position: absolute; opacity: 0; pointer-events: none; }
+.dating-segment span {
+    display: inline-block; padding: 5px 14px; border-radius: 4px; font-size: 0.85em;
+    background: #e5e7eb; color: #6b7280; border: 2px solid #d1d5db; transition: all 0.2s;
+}
+.dating-segment input:checked + span { background: #e0457b; border-color: #e0457b; color: #fff; }
+.dating-segment input:focus-visible + span { outline: 2px solid #e0457b; outline-offset: 2px; }
+.dating-segment input:disabled + span { opacity: 0.6; cursor: not-allowed; }
+.dating-slider { display: flex; align-items: center; gap: 12px; }
+.dating-slider input[type="range"] { flex: 1; accent-color: #e0457b; }
+.dating-slider-value { min-width: 3em; text-align: right; font-variant-numeric: tabular-nums; }
+.dating-hourly-chart { height: 180px; margin-bottom: 10px; }
+.dating-taglist-add { display: flex; gap: 8px; margin-top: 6px; }
+.dating-subheading { margin: 14px 0 4px; }
+.dating-advanced-toggle { margin-bottom: 8px; }

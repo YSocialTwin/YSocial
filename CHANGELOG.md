@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Dating admin pages aligned with YSimulator**: the dating population is created in the standard population form
+  (platform *Dating*, also for file upload); client and experiment settings use switches, tags, the 0-10 importance
+  scale, sliders, an hourly activity chart, a quick reference guide and an advanced-settings switch.
 - **Instant messaging platform** (YInstantMessaging runtime, installed from the Plugins page)
   - Experiment, population and client creation, validation with `yim-validate`, start/stop/resume, clone, reset,
     download, upload, export and reports.

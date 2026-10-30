@@ -71,6 +71,85 @@ def test_sections_render():
     assert "adv__profile_generation__images__background" in html
 
 
+def _env():
+    import jinja2
+
+    from y_web.tests.test_dating_settings import ROOT
+
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
+    )
+    env.globals["_"] = lambda s, **kw: s
+    return env
+
+
+def _widgets(fields):
+    return {f.path: ui.widget_of(f) for f in fields}
+
+
+def test_the_client_page_has_no_server_setting():
+    """The client page shows settings of the client schema only; the names it shares with the server schema are
+    the three that mean something of their own in each (logs of the process, seed, namespace).
+    """
+    client = {f.path for f in dcc.form_fields(REPO)}
+    server = {f.path for f in srv.form_fields(REPO)}
+    layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS)
+    shown = {i["f"].path for s in layout for b in s["blocks"] for i in b["fields"]}
+    assert shown <= client
+    assert shown & server <= {"logging.enable_console_log", "namespace", "seed"}
+    # nothing of the rules of the platform is offered on the client page
+    for prefix in ("conversations.", "human.", "matching.", "archetypes."):
+        assert not [p for p in shown if p.startswith(prefix)]
+
+
+def test_settings_use_the_widgets_of_the_other_pages():
+    client = _widgets(dcc.form_fields(REPO))
+    server = _widgets(srv.form_fields(REPO))
+    for key in ui.IMPORTANCE:
+        assert client[key] == "importance"
+    assert client["activity.hourly_activity"] == "hourly"
+    assert client["swipe.mode"] == "segmented"
+    assert client["conversation.enabled"] == "toggle"
+    assert client["conversation.check_probability"] == "slider"
+    assert client["llm.temperature"] == "number"
+    assert server["conversations.opener_genders"] == "taglist"
+    assert server["human.interactions.swipe"] == "toggle"
+    assert "bool" not in {
+        f.kind for f in dcc.form_fields(REPO) if client[f.path] != "toggle"
+    }
+
+
+def test_advanced_settings_are_marked_and_the_rest_is_not():
+    layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS)
+    items = {i["f"].path: i for s in layout for b in s["blocks"] for i in b["fields"]}
+    assert items["llm.timeout_seconds"]["advanced"]
+    assert items["swipe.noise_std"]["advanced"]
+    assert not items["swipe.w_attr"]["advanced"]
+    assert not items["llm.model"]["advanced"]
+    runtime = next(s for s in layout if s["id"] == "runtime")
+    assert runtime["advanced_only"]
+    assert not next(s for s in layout if s["id"] == "swipe")["advanced_only"]
+
+
+def test_a_box_posts_only_its_own_settings():
+    layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS)
+    values = dcc.values_for_form(REPO)
+    tpl = _env().from_string(
+        "{% from 'admin/_dating_fields.html' import dating_box %}"
+        "{{ dating_box(s, values, 7, '/admin/update_dating_client/3', False) }}"
+    )
+    swipe = next(s for s in layout if s["id"] == "swipe")
+    html = tpl.render(s=swipe, values=values)
+    assert 'id="box-swipe"' in html and 'action="/admin/update_dating_client/3"' in html
+    assert html.count("<form") == 1
+    assert "dating-importance" in html and "adv__swipe__w_attr" in html
+    assert "adv__llm__model" not in html
+    activity = next(s for s in layout if s["id"] == "activity")
+    html = tpl.render(s=activity, values=values)
+    assert "data-hourly" in html and "adv__activity__hourly_activity" in html
+    assert "adv__activity__session_probability" in html and "data-dating-slider" in html
+
+
 def test_remaining_days_for_a_restart():
     f = dcc.remaining_days
     assert f(3, -1, -1, 24) == 3  # never ran

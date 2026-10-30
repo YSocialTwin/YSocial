@@ -1,6 +1,8 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_sections %}
+{% from "admin/_dating_fields.html" import dating_box, dating_advanced_toggle %}
+{% set save_action = '/admin/update_dating_client/' ~ client.id %}
+{% set left_ids = 'llm memory lifecycle stress_reward annotations runtime'.split() %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="client_details_dating" class="dashboard-container">
@@ -19,7 +21,7 @@
             </div>
 
             <div class="columns">
-                <div class="column is-4">
+                <div class="column is-5">
                     <div class="dashboard-box" id="box-client-overview">
                         <h3 class="title is-5 is-thin">{{ _('Client Overview') }}</h3>
                         <div class="box-content">
@@ -55,28 +57,28 @@
                             </form>
                         </div>
                     </div>
+
+                    {% for s in sections if s.id in left_ids %}
+                    {{ dating_box(s, values, experiment.idexp, save_action, running) }}
+                    {% endfor %}
                 </div>
 
-                <div class="column is-8">
+                <div class="column is-7">
                     <div class="dashboard-box" id="box-client-settings">
                         <h3 class="title is-5 is-thin">{{ _('Client settings') }}</h3>
                         {% if running %}
                         <div class="ys-note-box">{{ _('The client is running: stop it to change its settings.') }}</div>
                         {% endif %}
-                        <div class="box-content">
-                            <form action="/admin/update_dating_client/{{ client.id }}" method="POST">
-                                <div class="box-lines">
-                                    {{ dating_sections(sections, values, experiment.idexp, running) }}
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth" {% if running %}disabled{% endif %}>{{ _('Save') }}</button>
-                                </div>
-                            </form>
-                        </div>
+                        <p class="ys-text-small">{{ _('Every box has its own Save button: only the settings of that box are changed.') }}</p>
+                        <div class="box-content"><div class="box-lines">{{ dating_advanced_toggle() }}</div></div>
                     </div>
+                    {% for s in sections if s.id not in left_ids %}
+                    {{ dating_box(s, values, experiment.idexp, save_action, running) }}
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='assets/js/admin-dating-fields.js') }}"></script>
 {% include "admin/footer.html" %}

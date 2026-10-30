@@ -37,7 +37,11 @@ writes of a person go through the runtime's gateway.
    is installed) stores them as `dating.*` custom fields, which the other platforms ignore; assign the agent to a
    dating population to use it in a dating simulation.
 4. Create a **client** (population, days, then the sections that tune its agents: language model, memory, activity,
-   swiping, conversations, profile texts and photos, behaviour over time). The page follows the other client pages;
+   swiping, conversations, profile texts and photos, behaviour over time). The page follows the other client pages: switches for yes/no settings, tags for a few choices, the 0 to 10
+   importance scale for the weights of the swiping utility, sliders for probabilities, a bar chart for the hourly
+   activity, a guide on the side and a switch that shows the advanced settings; on the client page every section is a
+   box with its own Save button, and it shows only settings of the client (the rules of the platform are in the
+   experiment settings);
    rules shared by all clients are in the experiment settings. The client page (*Client details*) shows the state,
    extends the simulation (days are added to the total; start the client again and it runs what is left) and edits the
    settings while the client is stopped. Profile images are generated in the background by default: the simulation

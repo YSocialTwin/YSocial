@@ -1,6 +1,6 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_sections %}
+{% from "admin/_dating_fields.html" import dating_sections, dating_advanced_toggle %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="clients_dating" class="dashboard-container">
@@ -58,6 +58,7 @@
                                     <p class="ys-label-hint">{{ _('One day has %(n)s slots (a round each). -1 runs until stopped.', n=slots_per_day) }}</p>
                                     </div>
                                     
+                                    {{ dating_advanced_toggle() }}
                                     {{ dating_sections(sections, adv_values, experiment.idexp) }}
                                 </div>
                                 <div class="button-wrap">
@@ -68,6 +69,16 @@
                     </div>
                 </div>
                 <div class="column is-4">
+                    <div class="sidebar-box" data-tut="quick-reference-guide">
+                        <h3>{{ _('Quick Reference Guide') }}</h3>
+                        <div class="help-block">
+                            <p><b>{{ _('What is a client?') }}</b><br>{{ _('A group of agents (the population) that swipe, match and talk in this experiment. Several clients can run in the same experiment.') }}</p>
+                            <p><b>{{ _('Importance 0-10') }}</b><br>{{ _('The weights of the swiping utility use the same 0 to 10 scale as the actions of the other platforms: 0 means that factor is ignored, and the values are relative to each other.') }}</p>
+                            <p><b>{{ _('Activity') }}</b><br>{{ _('The chart shows how likely the agents are to open the app in each hour of the day (the slots of a day are mapped on the hours).') }}</p>
+                            <p><b>{{ _('Language model') }}</b><br>{{ _('With the stub backend nothing is called: answers come from a deterministic fake, enough for tests and large runs.') }}</p>
+                            <p><b>{{ _('Advanced settings') }}</b><br>{{ _('Fine tuning that the defaults of the runtime already cover is hidden until you switch it on.') }}</p>
+                        </div>
+                    </div>
                     <div class="sidebar-box">
                         <h3>{{ _('Experiment settings') }}</h3>
                         <p class="ys-label-hint">{{ _('The recommender, the daily quotas, the rules of chats and dates and human participation are shared by every client: set them once for the experiment.') }}</p>
@@ -78,4 +89,5 @@
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='assets/js/admin-dating-fields.js') }}"></script>
 {% include "admin/footer.html" %}

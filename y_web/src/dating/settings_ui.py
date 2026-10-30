@@ -533,6 +533,129 @@ def label_of(path: str) -> str:
     return last[:1].upper() + last[1:]
 
 
+# --------------------------------------------------------------------------------------------- widgets
+# How a setting is drawn (the page templates know these names):
+#   toggle      a switch (boolean)
+#   segmented   one tag out of a few (a choice of up to four values)
+#   slider      a probability, from 0 to 1, with its value shown
+#   importance  the 0-10 scale the other admin pages use for relative weights (one step is IMPORTANCE_STEP)
+#   hourly      the 24 hourly rates with a bar chart
+#   taglist     a list of words edited as tags
+#   json        a structured value (advanced)
+IMPORTANCE = (
+    "swipe.w_attr",
+    "swipe.w_sim",
+    "swipe.w_age",
+    "swipe.w_dist",
+    "swipe.w_intent",
+    "swipe.w_vis",
+)
+IMPORTANCE_STEP = 0.05
+TAGLISTS: Dict[str, List[str]] = {
+    "conversations.opener_genders": ["woman", "man", "non-binary"],
+}
+# Settings that most people never touch: hidden behind "Show advanced settings".
+ADVANCED = (
+    "llm.api_key_env",
+    "llm.timeout_seconds",
+    "llm.retries",
+    "llm.max_workers",
+    "llm.max_tokens",
+    "swipe.noise_std",
+    "swipe.theta_selectivity",
+    "swipe.stress_threshold_shift",
+    "swipe.quota_slack",
+    "swipe.superlike_margin",
+    "activity.profiles",
+    "conversation.sub_ticks",
+    "conversation.interest_floor",
+    "conversation.stress_effect",
+    "conversation.min_messages_before_unmatch",
+    "conversation.max_message_chars",
+    "conversation.date_accept_base",
+    "profile_generation.images.model",
+    "profile_generation.images.inference_steps",
+    "profile_generation.images.folder",
+    "memory.language",
+    "memory.persist",
+    "memory.prompt_mode",
+    "memory.reply_context_max_chars",
+    "memory.cross_thread_callback_min_score",
+    "memory.high_affect_llm_fallback",
+    "memory.nuance_enabled",
+    "memory.nuance_cues_max_chars",
+    "memory.pair_history_limit",
+    "memory.thread_history_limit",
+    "memory.search_k",
+    "memory.search_max_chars",
+    "memory.search_time_window_rounds",
+    "annotations.",
+    "heartbeat_interval",
+    "poll_interval",
+    "logging.",
+    "lifecycle.outcome.",
+    "lifecycle.outcome_delay_slots",
+    "archetypes.transitions",
+    "conversations.history_messages",
+    "conversations.max_message_chars",
+    "conversations.ghosting_threshold_slots",
+    "human.limits.",
+    "human.pace.",
+    "memory_embeddings.",
+    "stress_reward.backward_rounds",
+    "stress_reward.streak_days",
+    "stress_reward.base_stress",
+    "stress_reward.base_reward",
+    "matching.common.candidate_pool_size",
+    "matching.common.exploration_rate",
+    "matching.common.max_exposure_per_day",
+    "matching.common.newcomer_boost_days",
+    "matching.common.newcomer_boost",
+    "matching.common.pass_cooldown_days",
+    "matching.common.bidirectional_age",
+)
+
+
+def is_advanced(path: str) -> bool:
+    return any(_matches(path, key) for key in ADVANCED)
+
+
+def widget_of(f: Any) -> str:
+    """The widget a setting is drawn with (see the table above)."""
+    if f.path in IMPORTANCE:
+        return "importance"
+    if f.path in TAGLISTS:
+        return "taglist"
+    if f.kind == "numlist" and f.length == 24:
+        return "hourly"
+    if f.kind == "bool":
+        return "toggle"
+    if f.kind == "choice":
+        return "segmented" if len(f.choices) <= 4 else "select"
+    if (
+        f.kind == "float"
+        and f.minimum == 0
+        and f.maximum == 1
+        and f.exclusive_minimum is None
+    ):
+        return "slider"
+    if f.kind == "json":
+        return "json"
+    if f.kind in ("int", "float"):
+        return "number"
+    return "text"
+
+
+def _item(f: Any) -> Dict[str, Any]:
+    return {
+        "f": f,
+        "label": label_of(f.path),
+        "widget": widget_of(f),
+        "advanced": is_advanced(f.path),
+        "suggestions": TAGLISTS.get(f.path),
+    }
+
+
 def placed_paths(sections: Iterable[Section]) -> List[str]:
     return [
         key for _i, _t, _d, subs, _s in sections for _h, keys in subs for key in keys
@@ -559,7 +682,7 @@ def layout(
             for key in keys:
                 for f in fields:
                     if f.path not in taken and _matches(f.path, key):
-                        chosen.append({"f": f, "label": label_of(f.path)})
+                        chosen.append(_item(f))
                         taken.add(f.path)
             if chosen:
                 blocks.append({"heading": heading, "fields": chosen})
@@ -572,6 +695,9 @@ def layout(
                     "blocks": blocks,
                     "switch": switch,
                     "inactive": bool(switch) and not switches.get(switch, False),
+                    "advanced_only": all(
+                        item["advanced"] for b in blocks for item in b["fields"]
+                    ),
                 }
             )
     rest = [f for f in fields if f.path not in taken]
@@ -585,11 +711,12 @@ def layout(
                 "blocks": [
                     {
                         "heading": None,
-                        "fields": [{"f": f, "label": label_of(f.path)} for f in rest],
+                        "fields": [_item(f) for f in rest],
                     }
                 ],
                 "switch": None,
                 "inactive": False,
+                "advanced_only": False,
             }
         )
     return out

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 09:07+0000\n"
+"POT-Creation-Date: 2026-10-30 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -457,6 +457,11 @@ msgstr ""
 msgid "A discussion thread."
 msgstr ""
 
+msgid ""
+"A group of agents (the population) that swipe, match and talk in this "
+"experiment. Several clients can run in the same experiment."
+msgstr ""
+
 #, python-format
 msgid "A new %(display_name)s population name is required."
 msgstr ""
@@ -844,6 +849,9 @@ msgid "Advanced Role-Playing Profile"
 msgstr ""
 
 msgid "Advanced Settings"
+msgstr ""
+
+msgid "Advanced settings"
 msgstr ""
 
 msgid "Advanced settings and recommender"
@@ -2061,6 +2069,11 @@ msgid "Choose the language of the dashboard for this user."
 msgstr ""
 
 msgid "Choose the language of the interface."
+msgstr ""
+
+msgid ""
+"Choose the model that proposes the cards; the parameters of the chosen "
+"model appear below it."
 msgstr ""
 
 msgid "Choose two dating experiments to compare."
@@ -4359,6 +4372,11 @@ msgstr ""
 msgid "Event weights"
 msgstr ""
 
+msgid ""
+"Every box has its own Save button: only the settings of that box are "
+"changed."
+msgstr ""
+
 msgid "Every prompt is the default one."
 msgstr ""
 
@@ -4526,6 +4544,9 @@ msgstr ""
 
 #, python-format
 msgid "Experiment not found: %(expid)s"
+msgstr ""
+
+msgid "Experiment or client?"
 msgstr ""
 
 msgid "Experiment owner"
@@ -4840,6 +4861,14 @@ msgid "Filter by group (all = all groups)"
 msgstr ""
 
 msgid "Filter experiments by group"
+msgstr ""
+
+msgid ""
+"Fine tuning that the defaults of the runtime already cover is hidden "
+"until you switch it on."
+msgstr ""
+
+msgid "Fine tuning that the defaults of the runtime already cover."
 msgstr ""
 
 msgid "Finnish"
@@ -5735,6 +5764,9 @@ msgstr ""
 msgid "Images are cropped to a square preview when needed."
 msgstr ""
 
+msgid "Importance 0-10"
+msgstr ""
+
 msgid "Importance Mode"
 msgstr ""
 
@@ -6516,6 +6548,11 @@ msgid "Let participants change the language"
 msgstr ""
 
 msgid ""
+"Let people play next to the agents. The participants are managed on the "
+"Participants page."
+msgstr ""
+
+msgid ""
 "Let people play next to the agents: how many, how fast, what they may do "
 "and the limits that protect the server. The participants are managed on "
 "the Participants page."
@@ -6621,6 +6658,9 @@ msgid "Local Triadic Closure"
 msgstr ""
 
 msgid "Local models and notes on these settings."
+msgstr ""
+
+msgid "Locked settings"
 msgstr ""
 
 msgid "Log"
@@ -8024,6 +8064,11 @@ msgid ""
 msgstr ""
 
 msgid "Onboarding screen"
+msgstr ""
+
+msgid ""
+"Once the run has started, the settings that shape it are locked. Clone "
+"the experiment to try other values."
 msgstr ""
 
 #, python-format
@@ -10792,6 +10837,9 @@ msgid ""
 "system and a plain-language explanation of how it works"
 msgstr ""
 
+msgid "Show advanced settings"
+msgstr ""
+
 msgid "Show less"
 msgstr ""
 
@@ -11696,6 +11744,11 @@ msgid ""
 " this page."
 msgstr ""
 
+msgid ""
+"The chart shows how likely the agents are to open the app in each hour of"
+" the day (the slots of a day are mapped on the hours)."
+msgstr ""
+
 msgid "The client is running: stop it to change its settings."
 msgstr ""
 
@@ -11920,6 +11973,11 @@ msgstr ""
 msgid "The round is closed: try again in a moment."
 msgstr ""
 
+msgid ""
+"The rules of the platform are set here once and apply to every client; "
+"how a group of agents behaves is set in its client."
+msgstr ""
+
 msgid "The run already started: reset the experiment to change its news."
 msgstr ""
 
@@ -12071,6 +12129,12 @@ msgstr ""
 msgid ""
 "The username must have 3 to 15 characters: letters, digits, dots, dashes "
 "or underscores."
+msgstr ""
+
+msgid ""
+"The weights of the swiping utility use the same 0 to 10 scale as the "
+"actions of the other platforms: 0 means that factor is ignored, and the "
+"values are relative to each other."
 msgstr ""
 
 msgid "Thematic Characterization"
@@ -13503,6 +13567,9 @@ msgstr ""
 msgid "What is a Population?"
 msgstr ""
 
+msgid "What is a client?"
+msgstr ""
+
 msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
@@ -13660,6 +13727,11 @@ msgstr ""
 msgid ""
 "With the same seed, population and settings the choices of the agents are"
 " drawn again in the same way: use it to repeat a run."
+msgstr ""
+
+msgid ""
+"With the stub backend nothing is called: answers come from a "
+"deterministic fake, enough for tests and large runs."
 msgstr ""
 
 msgid "Wrapped exception:"
