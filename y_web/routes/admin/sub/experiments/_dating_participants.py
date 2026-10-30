@@ -6,8 +6,7 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.i18n import gettext as _
-from y_web.src.dating import is_dating_experiment
-from y_web.src.dating import human
+from y_web.src.dating import human, is_dating_experiment
 from y_web.src.dating.gateway import GatewayClient, GatewayUnavailable
 from y_web.src.dating.humans_admin import humans_overview
 from y_web.src.models import Exps
@@ -29,7 +28,9 @@ def dating_participants(idexp):
     )
 
 
-@experiments.route("/admin/dating_participants/<int:idexp>/reset_credits", methods=["POST"])
+@experiments.route(
+    "/admin/dating_participants/<int:idexp>/reset_credits", methods=["POST"]
+)
 @login_required
 def dating_participants_reset_credits(idexp):
     """Give the likes and super likes of the day back to one person, or to every person (``account=all``)."""
@@ -47,7 +48,10 @@ def dating_participants_reset_credits(idexp):
     known = [h["account_id"] for h in overview["humans"] if h.get("created")]
     targets = known if wanted == "all" else [a for a in known if a == wanted]
     if not targets:
-        flash(_("Nobody to reset: the person has not entered the experiment yet."), "error")
+        flash(
+            _("Nobody to reset: the person has not entered the experiment yet."),
+            "error",
+        )
         return redirect(back)
     client = GatewayClient(human.experiment_folder(exp))
     done = 0
@@ -56,10 +60,18 @@ def dating_participants_reset_credits(idexp):
             status, _payload = client.reset_quota(account)
             done += 1 if status == 200 else 0
     except GatewayUnavailable:
-        flash(_("The server cannot be reached right now: try again in a moment."), "error")
+        flash(
+            _("The server cannot be reached right now: try again in a moment."), "error"
+        )
         return redirect(back)
     if done:
-        flash(_("Credits reset for %(n)s person(s): likes and super likes of the day are back.", n=done), "success")
+        flash(
+            _(
+                "Credits reset for %(n)s person(s): likes and super likes of the day are back.",
+                n=done,
+            ),
+            "success",
+        )
     else:
         flash(_("The credits could not be reset."), "error")
     return redirect(back)
