@@ -814,3 +814,8 @@ def test_the_username_in_the_run_is_the_participants_own_unless_pseudonymised(tm
         json.dumps({"human": {"pseudonymise_usernames": True}})
     )
     assert participant.pseudonym(user, str(tmp_path)) == "participant-7"
+
+
+def test_the_participant_menu_has_a_logout_entry(stack):
+    html = _enter(stack)
+    assert 'id="im-logout"' in html and "/logout" in html
