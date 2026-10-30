@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 10:47+0000\n"
+"POT-Creation-Date: 2026-10-30 11:18+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -3780,6 +3780,11 @@ msgstr "Giorni"
 msgid "Days a new profile is boosted"
 msgstr "Giorni di spinta di un profilo nuovo"
 
+msgid "Days before a decided profile can be judged again (0 = never)"
+msgstr ""
+"Giorni dopo i quali un profilo già valutato può essere rivalutato (0 = "
+"mai)"
+
 msgid "Days before a passed profile returns (0 = never)"
 msgstr "Giorni prima che un profilo scartato ritorni (0 = mai)"
 
@@ -4293,12 +4298,8 @@ msgstr "Trascina qui le popolazioni"
 msgid "Drag profiles here to assign them"
 msgstr "Trascina qui i profili per assegnarli"
 
-msgid ""
-"Drag the card, use the buttons or the arrow keys. Simulated users and "
-"other people answer as the experiment runs."
-msgstr ""
-"Trascina la carta, usa i pulsanti o i tasti freccia. Gli utenti simulati "
-"e le altre persone rispondono mentre l'esperimento procede."
+msgid "Drag the card, use the buttons or the arrow keys."
+msgstr "Trascina la card, usa i pulsanti o le frecce."
 
 msgid "Draw the agent in the scene of the caption"
 msgstr "Disegna l'agente nella scena della didascalia"
@@ -6980,6 +6981,9 @@ msgstr ""
 " i limiti solo se ti serve una maggiore varietà di temi o insiemi di "
 "contenuti più duraturi."
 
+msgid "Keep swiping"
+msgstr "Continua a scorrere"
+
 msgid "Keep the memory between runs"
 msgstr "Conserva la memoria tra le esecuzioni"
 
@@ -7943,6 +7947,9 @@ msgstr ""
 msgid "Mood in photos"
 msgstr "Espressione nelle foto"
 
+msgid "More"
+msgstr "Altro"
+
 msgid "Most Commented"
 msgstr "Più commentati"
 
@@ -8004,6 +8011,9 @@ msgstr "Il mio profilo"
 
 msgid "My profile"
 msgstr "Il mio profilo"
+
+msgid "NOPE"
+msgstr "NO"
 
 msgid "Name"
 msgstr "Nome"
@@ -11061,6 +11071,9 @@ msgstr "Interazioni SA"
 
 msgid "SHOW"
 msgstr "MOSTRA"
+
+msgid "SUPER"
+msgstr "SUPER"
 
 msgid "Same as the experiment"
 msgstr "Come l'esperimento"
@@ -14983,6 +14996,9 @@ msgstr "Peso degli interessi in comune"
 msgid "Weight of the conversation tone"
 msgstr "Peso del tono della conversazione"
 
+msgid "Weight of the earlier decision on a profile seen again"
+msgstr "Peso della decisione precedente su un profilo rivisto"
+
 msgid "Weight of the visual match"
 msgstr "Peso dell'affinità visiva"
 
@@ -15408,14 +15424,6 @@ msgid "You are not assigned to any experiments. Please contact an administrator.
 msgstr "Non sei assegnato ad alcun esperimento. Contatta un amministratore."
 
 #, python-format
-msgid ""
-"You are playing as %(name)s. Simulated users and other people see your "
-"profile and your messages."
-msgstr ""
-"Stai partecipando come %(name)s. Gli utenti simulati e le altre persone "
-"vedono il tuo profilo e i tuoi messaggi."
-
-#, python-format
 msgid "You can add to your population %(pages)s and %(agents)s."
 msgstr "Puoi aggiungere alla tua popolazione %(pages)s e %(agents)s."
 
@@ -15518,6 +15526,9 @@ msgstr "Hai partecipato alla discussione"
 
 msgid "You posted on this topic"
 msgstr "Hai pubblicato su questo argomento"
+
+msgid "You saw this profile before"
+msgstr "Hai già visto questo profilo"
 
 #, python-format
 msgid "You see the chats of %(name)s, and nothing else."
@@ -18025,4 +18036,25 @@ msgstr "✔️ Usa"
 
 #~ msgid "Photo %(n)s"
 #~ msgstr "Foto %(n)s"
+
+#~ msgid ""
+#~ "Drag the card, use the buttons or"
+#~ " the arrow keys. Simulated users and"
+#~ " other people answer as the "
+#~ "experiment runs."
+#~ msgstr ""
+#~ "Trascina la carta, usa i pulsanti "
+#~ "o i tasti freccia. Gli utenti "
+#~ "simulati e le altre persone rispondono"
+#~ " mentre l'esperimento procede."
+
+#~ msgid ""
+#~ "You are playing as %(name)s. Simulated"
+#~ " users and other people see your "
+#~ "profile and your messages."
+#~ msgstr ""
+#~ "Stai partecipando come %(name)s. Gli "
+#~ "utenti simulati e le altre persone "
+#~ "vedono il tuo profilo e i tuoi "
+#~ "messaggi."
 

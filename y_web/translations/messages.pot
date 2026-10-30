@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 10:47+0000\n"
+"POT-Creation-Date: 2026-10-30 11:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3386,6 +3386,9 @@ msgstr ""
 msgid "Days a new profile is boosted"
 msgstr ""
 
+msgid "Days before a decided profile can be judged again (0 = never)"
+msgstr ""
+
 msgid "Days before a passed profile returns (0 = never)"
 msgstr ""
 
@@ -3859,9 +3862,7 @@ msgstr ""
 msgid "Drag profiles here to assign them"
 msgstr ""
 
-msgid ""
-"Drag the card, use the buttons or the arrow keys. Simulated users and "
-"other people answer as the experiment runs."
+msgid "Drag the card, use the buttons or the arrow keys."
 msgstr ""
 
 msgid "Draw the agent in the scene of the caption"
@@ -6295,6 +6296,9 @@ msgid ""
 " you need broader topical variety or longer-running content pools."
 msgstr ""
 
+msgid "Keep swiping"
+msgstr ""
+
 msgid "Keep the memory between runs"
 msgstr ""
 
@@ -7183,6 +7187,9 @@ msgstr ""
 msgid "Mood in photos"
 msgstr ""
 
+msgid "More"
+msgstr ""
+
 msgid "Most Commented"
 msgstr ""
 
@@ -7239,6 +7246,9 @@ msgid "My Profile"
 msgstr ""
 
 msgid "My profile"
+msgstr ""
+
+msgid "NOPE"
 msgstr ""
 
 msgid "Name"
@@ -10111,6 +10121,9 @@ msgid "SA Interactions"
 msgstr ""
 
 msgid "SHOW"
+msgstr ""
+
+msgid "SUPER"
 msgstr ""
 
 msgid "Same as the experiment"
@@ -13534,6 +13547,9 @@ msgstr ""
 msgid "Weight of the conversation tone"
 msgstr ""
 
+msgid "Weight of the earlier decision on a profile seen again"
+msgstr ""
+
 msgid "Weight of the visual match"
 msgstr ""
 
@@ -13894,12 +13910,6 @@ msgid "You are not assigned to any experiments. Please contact an administrator.
 msgstr ""
 
 #, python-format
-msgid ""
-"You are playing as %(name)s. Simulated users and other people see your "
-"profile and your messages."
-msgstr ""
-
-#, python-format
 msgid "You can add to your population %(pages)s and %(agents)s."
 msgstr ""
 
@@ -13995,6 +14005,9 @@ msgid "You joined the discussion"
 msgstr ""
 
 msgid "You posted on this topic"
+msgstr ""
+
+msgid "You saw this profile before"
 msgstr ""
 
 #, python-format

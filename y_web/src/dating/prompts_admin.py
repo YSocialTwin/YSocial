@@ -46,6 +46,7 @@ GROUPS: List[Tuple[str, str, str, List[str]]] = [
         N_("What the model reads to decide on a card and to order candidates."),
         [
             "swipe_decision",
+            "swipe_seen_before",
             "swipe_options_plain",
             "swipe_options_superlike",
             "history_me",

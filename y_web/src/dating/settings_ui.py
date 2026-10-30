@@ -47,6 +47,7 @@ LABELS: Dict[str, str] = {
     "swipe.w_intent": N_("Weight of compatible intent"),
     "swipe.w_vis": N_("Weight of the visual match"),
     "swipe.noise_std": N_("Noise on the utility"),
+    "swipe.revisit_inertia": N_("Weight of the earlier decision on a profile seen again"),
     "swipe.theta_base": N_("Like threshold"),
     "swipe.theta_selectivity": N_("Effect of selectivity on the threshold"),
     "swipe.stress_threshold_shift": N_("Effect of stress on the threshold"),
@@ -213,6 +214,9 @@ LABELS: Dict[str, str] = {
     "matching.common.pass_cooldown_days": N_(
         "Days before a passed profile returns (0 = never)"
     ),
+    "matching.common.revisit_after_days": N_(
+        "Days before a decided profile can be judged again (0 = never)"
+    ),
     "matching.common.likes_seen_visible": N_("Profiles that liked you come first"),
 }
 
@@ -294,6 +298,7 @@ CLIENT_SECTIONS: List[Section] = [
                 N_("Threshold and noise"),
                 [
                     "swipe.noise_std",
+                    "swipe.revisit_inertia",
                     "swipe.theta_base",
                     "swipe.theta_selectivity",
                     "swipe.stress_threshold_shift",

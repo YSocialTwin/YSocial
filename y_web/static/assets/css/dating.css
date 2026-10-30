@@ -228,3 +228,62 @@
 }
 @keyframes dt-pf-flow { to { background-position: 100% 0; } }
 @keyframes dt-pf-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+/* Discover: a compact photo card that is really swiped (left pass, right like, up super like) */
+.dt-play { max-width: 400px; padding-bottom: 16px; }
+.dt-quota { display: flex; justify-content: center; gap: 8px; margin: 4px 0 12px; }
+.dt-pill { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 999px; background: var(--dt-surface); border: 1px solid var(--dt-border); color: var(--dt-muted); }
+.dt-pill-like { color: var(--dt-accent); } .dt-pill-super { color: #2563eb; }
+.dt-stage { position: relative; height: min(66vh, 540px); min-height: 360px; touch-action: pan-y; perspective: 900px; }
+.dt-card2 { position: absolute; inset: 0; border-radius: 22px; overflow: hidden; background: var(--dt-surface); border: 1px solid var(--dt-border);
+  box-shadow: 0 2px 4px rgba(15,23,42,.08), 0 18px 40px rgba(15,23,42,.18), 0 0 0 0 var(--dt-glow, transparent), inset 0 0 70px var(--dt-glow, transparent);
+  transition: transform .3s cubic-bezier(.3,.9,.4,1), opacity .25s ease; will-change: transform; user-select: none; touch-action: none; }
+.dt-card2:not(.is-top) { pointer-events: none; }
+.dt-card2.is-top { cursor: grab; } .dt-card2.is-top:active { cursor: grabbing; }
+.dt-c-photo { position: absolute; inset: 0; display: grid; place-items: center; background: hsl(var(--dt-hue, 340) 55% 80%); }
+[data-theme="dark"] .dt-c-photo { background: hsl(var(--dt-hue, 340) 35% 24%); }
+.dt-c-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+.dt-c-img.is-on { opacity: 1; }
+.dt-c-photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 62%; background: linear-gradient(transparent, rgba(0,0,0,.78)); pointer-events: none; }
+.dt-c-dots { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; gap: 5px; z-index: 2; pointer-events: none; }
+.dt-c-dots i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.4); } .dt-c-dots i.is-on { background: #fff; }
+.dt-c-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 14px 16px 16px; color: #fff; display: grid; gap: 4px; max-height: 80%; }
+.dt-c-info h3 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 800; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+.dt-c-age { font-weight: 500; opacity: .95; }
+.dt-c-meta { margin: 0; font-size: 14px; opacity: .92; }
+.dt-c-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dt-chip { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.22); backdrop-filter: blur(6px); color: #fff; }
+.dt-chip-super { background: rgba(37,99,235,.85); }
+.dt-c-detail { overflow: hidden; max-height: 2.9em; transition: max-height .35s ease; display: grid; gap: 6px; }
+.dt-c-bio, .dt-c-ans { margin: 0; font-size: 14px; line-height: 1.45; opacity: .95; }
+.dt-card2.is-open .dt-c-detail { max-height: 46vh; overflow-y: auto; }
+.dt-c-detail:not(:has(*)) { display: none; }
+.dt-c-tags { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.dt-c-tags li { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.2); }
+.dt-c-more { justify-self: start; background: none; border: 0; padding: 2px 0; color: #fff; font: inherit; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; opacity: .9; }
+.dt-c-stamp { position: absolute; z-index: 4; top: 26px; padding: 4px 14px; border: 4px solid; border-radius: 10px; font-size: 28px; font-weight: 900; letter-spacing: 2px; opacity: 0; pointer-events: none; background: rgba(0,0,0,.12); }
+.dt-c-stamp-like { left: 20px; color: #22c55e; transform: rotate(-14deg); }
+.dt-c-stamp-nope { right: 20px; color: #ef4444; transform: rotate(14deg); }
+.dt-c-stamp-super { left: 50%; top: 36%; color: #3b82f6; transform: translateX(-50%) rotate(-6deg); font-size: 34px; }
+.dt-actions { display: flex; justify-content: center; align-items: center; gap: 18px; margin: 18px 0 6px; }
+.dt-round { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; border: 0; background: var(--dt-surface); box-shadow: var(--dt-shadow), 0 0 0 1px var(--dt-border); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, background .15s; }
+.dt-round svg { width: 28px; height: 28px; }
+.dt-round-pass { color: #ef4444; } .dt-round-like { color: var(--dt-accent); width: 66px; height: 66px; } .dt-round-super { color: #3b82f6; width: 50px; height: 50px; }
+.dt-round-super svg { width: 22px; height: 22px; }
+.dt-round:hover:not(:disabled) { transform: translateY(-3px) scale(1.07); box-shadow: 0 8px 22px rgba(15,23,42,.2), 0 0 0 1px currentColor; }
+.dt-round:active:not(:disabled) { transform: scale(.94); }
+.dt-round:disabled { opacity: .4; cursor: default; }
+.dt-empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 28px 16px; color: var(--dt-muted); }
+.dt-empty-ico { font-size: 54px; color: var(--dt-accent); animation: dt-beat 1.6s ease-in-out infinite; }
+.dt-hint { text-align: center; font-size: 13px; color: var(--dt-muted); margin: 6px 0 0; }
+.dt-stage:has(.dt-card2) ~ .dt-empty { display: none; }
+.dt-match { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(15,23,42,.72); backdrop-filter: blur(6px); animation: dt-fade .25s ease both; }
+.dt-match[hidden] { display: none; }
+.dt-match-box { text-align: center; padding: 28px 32px; border-radius: 24px; background: var(--dt-surface); box-shadow: var(--dt-shadow); max-width: 320px; animation: dt-pop .5s cubic-bezier(.2,1.5,.4,1) both; }
+.dt-match-box h3 { margin: 6px 0 2px; font-size: 26px; color: var(--dt-accent); } .dt-match-box p { margin: 0 0 16px; font-weight: 600; }
+.dt-match-hearts { font-size: 34px; color: var(--dt-accent); letter-spacing: 6px; animation: dt-beat 1s ease-in-out infinite; }
+.dt-match-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+@keyframes dt-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+@keyframes dt-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dt-pop { from { opacity: 0; transform: scale(.6) rotate(-4deg); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dt-card2, .dt-round, .dt-c-detail, .dt-empty-ico, .dt-match-hearts, .dt-match-box, .dt-match { transition: none !important; animation: none !important; } }

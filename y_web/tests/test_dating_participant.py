@@ -276,7 +276,8 @@ def test_the_participant_ui_is_fixed_to_the_own_account(stack):
     other = s.client.get(
         f"/{s.exp_id}/dating?vp=overview&acc={s.agents[0].id}"
     ).data.decode()
-    assert "You are playing as part1" in other and "Researcher overview" not in other
+    assert "You are playing as" not in html + other  # no banner for a person who plays
+    assert "Researcher overview" not in other
 
 
 def test_actions_need_the_csrf_token_and_a_known_type(stack):

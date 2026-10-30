@@ -28,7 +28,7 @@
     </div>
   </header>
   {% if ctx.vp.kind == 'overview' %}<div class="dt-banner is-overview" role="note">{{ _('Researcher overview: everything the run recorded is shown, including private chats, deleted messages and the recommender internals. This is not what a user sees.') }}</div>
-  {% elif participant %}<div class="dt-banner is-account" role="note">{{ _('You are playing as %(name)s. Simulated users and other people see your profile and your messages.', name=participant.username) }}</div>
+  {% elif participant %}{# a person who plays sees no banner #}
   {% elif ctx.vp.kind == 'account' %}<div class="dt-banner is-account" role="note">{{ _('Viewing as %(name)s: exactly what this account could see at this round.', name=(viewed.username if viewed else ctx.vp.account_id)) }}</div>{% endif %}
   {% if ctx.vp.round != ctx.latest %}<div class="dt-banner is-past" role="note">{{ _('Time travel: showing the state at day %(d)s, round %(h)s.', d=day, h=hour) }}</div>{% endif %}
   <div id="dt-live" class="dt-banner is-live" hidden role="status"><span>{{ _('New rounds are available.') }}</span> <a href="">{{ _('Refresh') }}</a></div>

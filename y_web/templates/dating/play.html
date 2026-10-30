@@ -1,20 +1,33 @@
 {% extends "dating/base.html" %}
 {% set nav = 'home' %}
 {% block content %}
-<h2 class="dt-h">{{ _('Discover') }} <small id="dt-quota" aria-live="polite"></small></h2>
 <div id="dt-play" class="dt-play"
      data-media="/{{ exp.idexp }}/dating/media/" data-deck-url="/{{ exp.idexp }}/dating/api/deck" data-matches-url="/{{ exp.idexp }}/dating/matches"
-     data-t-match="{{ _('It is a match!') }}" data-t-open="{{ _('Open chat') }}"
+     data-t-match="{{ _('It is a match!') }}" data-t-open="{{ _('Open chat') }}" data-t-keep="{{ _('Keep swiping') }}"
      data-t-lost="{{ _('Connection lost: try again in a moment.') }}" data-t-off="{{ _('Swiping is switched off for this experiment.') }}"
      data-t-likes="{{ _('likes left') }}" data-t-supers="{{ _('super likes left') }}"
-     data-t-away="{{ _('away') }}" data-t-super-from="{{ _('Super liked you') }}">
+     data-t-away="{{ _('away') }}" data-t-super-from="{{ _('Super liked you') }}"
+     data-t-like="{{ _('LIKE') }}" data-t-nope="{{ _('NOPE') }}" data-t-super="{{ _('SUPER') }}"
+     data-t-more="{{ _('More') }}" data-t-less="{{ _('Less') }}" data-t-seen="{{ _('You saw this profile before') }}">
+  <div class="dt-quota" id="dt-quota" aria-live="polite"></div>
   <div id="dt-stage" class="dt-stage" aria-live="polite"></div>
   <div class="dt-actions" role="group" aria-label="{{ _('Decide') }}">
-    <button id="dt-pass" type="button" class="dt-btn dt-btn-ghost" disabled>{{ _('Pass') }} <kbd>←</kbd></button>
-    <button id="dt-super" type="button" class="dt-btn dt-btn-ghost" disabled>{{ _('Super like') }} <kbd>↑</kbd></button>
-    <button id="dt-like" type="button" class="dt-btn" disabled>{{ _('Like') }} <kbd>→</kbd></button>
+    <button id="dt-pass" type="button" class="dt-round dt-round-pass" aria-label="{{ _('Pass') }}" title="{{ _('Pass') }} (←)" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+    </button>
+    <button id="dt-super" type="button" class="dt-round dt-round-super" aria-label="{{ _('Super like') }}" title="{{ _('Super like') }} (↑)" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 17l-5.4 3 1.2-6L3.3 9.8l6.1-.7z" fill="currentColor"/></svg>
+    </button>
+    <button id="dt-like" type="button" class="dt-round dt-round-like" aria-label="{{ _('Like') }}" title="{{ _('Like') }} (→)" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.3C1.7 8 3.6 5 6.7 5c1.9 0 3.5 1 4.3 2.6C11.8 6 13.4 5 15.3 5c3.1 0 5 3 3.9 6.2-1.7 4.7-7.2 9.3-7.2 9.3z" fill="currentColor"/></svg>
+    </button>
   </div>
-  <p id="dt-empty" class="dt-empty" hidden>{{ _('No more profiles for now.') }} <button id="dt-more" type="button" class="dt-btn dt-btn-ghost">{{ _('Look again') }}</button></p>
-  <p class="dt-hint">{{ _('Drag the card, use the buttons or the arrow keys. Simulated users and other people answer as the experiment runs.') }}</p>
+  <p id="dt-empty" class="dt-empty" hidden>
+    <span class="dt-empty-ico" aria-hidden="true">♡</span>
+    {{ _('No more profiles for now.') }}
+    <button id="dt-more" type="button" class="dt-btn dt-btn-ghost">{{ _('Look again') }}</button>
+  </p>
+  <p class="dt-hint">{{ _('Drag the card, use the buttons or the arrow keys.') }}</p>
+  <div id="dt-match" class="dt-match" hidden role="dialog" aria-live="assertive"></div>
 </div>
 {% endblock %}
