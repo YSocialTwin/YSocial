@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 11:50+0000\n"
+"POT-Creation-Date: 2026-10-30 12:33+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -172,10 +172,6 @@ msgid "%(n)s populations for other platforms are hidden."
 msgstr "%(n)s popolazioni di altre piattaforme sono nascoste."
 
 #, python-format
-msgid "%(n)s profiles"
-msgstr "%(n)s profili"
-
-#, python-format
 msgid "%(n)s profiles found"
 msgstr "%(n)s profili trovati"
 
@@ -190,6 +186,10 @@ msgstr "%(n)s reazioni"
 #, python-format
 msgid "%(n)s steps"
 msgstr "%(n)s passi"
+
+#, python-format
+msgid "%(n)s to read"
+msgstr "%(n)s da leggere"
 
 #, python-format
 msgid "%(n)s unread"
@@ -872,6 +872,9 @@ msgstr "Aggiungi un commento..."
 
 msgid "Add a new filter tag"
 msgstr "Aggiungi un nuovo tag di filtro"
+
+msgid "Add a photo"
+msgstr "Aggiungi una foto"
 
 msgid "Add another value..."
 msgstr "Aggiungi un altro valore..."
@@ -5451,6 +5454,9 @@ msgstr "Filtra per gruppo (tutti = tutti i gruppi)"
 msgid "Filter experiments by group"
 msgstr "Filtra gli esperimenti per gruppo"
 
+msgid "Filters"
+msgstr "Filtri"
+
 msgid ""
 "Fine tuning that the defaults of the runtime already cover sits in the "
 "panels called Advanced parameters: open one to change it."
@@ -7211,6 +7217,9 @@ msgstr "Ultima comparsa"
 msgid "Latent Variables and Affective Traits"
 msgstr "Variabili latenti e tratti affettivi"
 
+msgid "Latent traits"
+msgstr "Tratti latenti"
+
 msgid ""
 "Latent variables follow a Beta(a, b) distribution; they drive the rule-"
 "based matching and the metrics and are never shown to the agents. "
@@ -7297,6 +7306,9 @@ msgstr "Lasciare la piattaforma? I tuoi match termineranno."
 
 msgid "Leaving the platform"
 msgstr "Lasciare la piattaforma"
+
+msgid "Left"
+msgstr "Uscito"
 
 msgid "Left (round)"
 msgstr "Uscito (round)"
@@ -9588,9 +9600,6 @@ msgstr ""
 "un profilo e usa \"Mazzo di questo account\" per vederne le "
 "raccomandazioni con i dettagli interni del recommender."
 
-msgid "Picture"
-msgstr "Immagine"
-
 #, python-format
 msgid "Picture %(n)s"
 msgstr "Immagine %(n)s"
@@ -10179,6 +10188,9 @@ msgstr "Anteprima della carta del profilo"
 
 msgid "Profile changes logged"
 msgstr "Modifiche del profilo registrate"
+
+msgid "Profile completeness"
+msgstr "Completezza del profilo"
 
 msgid "Profile photos"
 msgstr "Foto del profilo"
@@ -11280,6 +11292,9 @@ msgstr ""
 "Salvare questa pagina scrive comunque il file standard %(file)s "
 "dell'esperimento, quindi il runtime del forum esistente non cambia."
 
+msgid "Say what you are looking for"
+msgstr "Indica cosa cerchi"
+
 msgid "Scale Free (Barabási-Albert)"
 msgstr "Scale-free (Barabási-Albert)"
 
@@ -11411,6 +11426,9 @@ msgstr "Vedi tutte le foto."
 
 msgid "See full discussion thread"
 msgstr "Vedi l'intera discussione"
+
+msgid "See how others see you"
+msgstr "Vedi come ti vedono gli altri"
 
 msgid "Seed"
 msgstr "Seed"
@@ -11851,6 +11869,9 @@ msgstr ""
 "Imposta le probabilità relative (0-10) per ogni tipo di azione. Valori "
 "più alti significano azioni più frequenti. Usa 0 per disattivare "
 "un'azione."
+
+msgid "Set who you see"
+msgstr "Imposta chi vuoi vedere"
 
 msgid "Settings"
 msgstr "Impostazioni"
@@ -13824,6 +13845,12 @@ msgstr ""
 "Per analizzare i dati della tua simulazione usa %(link)s, una libreria "
 "Python per semplificare l'analisi dei dati generati da YSocial"
 
+msgid "To do"
+msgstr "Da fare"
+
+msgid "To read"
+msgstr "Da leggere"
+
 msgid "Toggle chat panel"
 msgstr "Mostra o nascondi il pannello della chat"
 
@@ -15160,6 +15187,9 @@ msgstr ""
 "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è "
 "verificato l'errore?"
 
+msgid "What makes you, you? Others read this first."
+msgstr "Cosa ti rende unico? È la prima cosa che gli altri leggono."
+
 #, python-format
 msgid ""
 "What the agents look for on the app. The values proposed are the defaults"
@@ -15387,6 +15417,9 @@ msgstr "Eccezione incapsulata:"
 msgid "Write a caption for every photo"
 msgstr "Scrivi una didascalia per ogni foto"
 
+msgid "Write a few lines about you"
+msgstr "Scrivi qualche riga su di te"
+
 msgid "Write a message..."
 msgstr "Scrivi un messaggio..."
 
@@ -15605,9 +15638,6 @@ msgstr[1] "Hai accesso a %(num)s esperimenti attivi"
 msgid "You have left this platform."
 msgstr "Hai lasciato questa piattaforma."
 
-msgid "You have no photos yet."
-msgstr "Non hai ancora foto."
-
 msgid "You have not posted in any community yet."
 msgstr "Non hai ancora pubblicato in nessuna community."
 
@@ -15692,11 +15722,11 @@ msgstr "L'archivio multiplo degli esperimenti è pronto per il download."
 msgid "Your experiment archive is ready to download."
 msgstr "L'archivio dell'esperimento è pronto per il download."
 
-msgid "Your photos"
-msgstr "Le tue foto"
-
 msgid "Your profile"
 msgstr "Il tuo profilo"
+
+msgid "Your profile is complete."
+msgstr "Il tuo profilo è completo."
 
 msgid "Your profile is not reachable right now. Try again in a moment."
 msgstr "Il tuo profilo non è raggiungibile in questo momento. Riprova tra poco."
@@ -18168,4 +18198,16 @@ msgstr "✔️ Usa"
 
 #~ msgid "Please fill in the highlighted fields."
 #~ msgstr ""
+
+#~ msgid "%(n)s profiles"
+#~ msgstr "%(n)s profili"
+
+#~ msgid "Picture"
+#~ msgstr "Immagine"
+
+#~ msgid "You have no photos yet."
+#~ msgstr "Non hai ancora foto."
+
+#~ msgid "Your photos"
+#~ msgstr "Le tue foto"
 

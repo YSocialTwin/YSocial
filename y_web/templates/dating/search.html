@@ -1,15 +1,17 @@
 {% extends "dating/base.html" %}
 {% set nav = 'search' %}
 {% block content %}
-<h2 class="dt-h">{{ _('Search') }} <small>{{ _('%(n)s profiles', n=facets.total) }}</small></h2>
+{% set nf = filters.genders|length + filters.intents|length + (1 if filters.city else 0) + (1 if filters.interest else 0) + (1 if filters.photo else 0) + (1 if filters.age_min is defined else 0) + (1 if filters.age_max is defined else 0) %}
 <form method="get" action="/{{ exp.idexp }}/dating/search" class="dt-search" id="dt-search" role="search" data-partial="/{{ exp.idexp }}/dating/search">
   {% for k, v in params.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
-  <div class="dt-search-bar">
+  <div class="dt-searchbox">
+    <svg class="dt-searchbox-ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <label for="dt-q" class="dt-sr">{{ _('Search profiles') }}</label>
-    <input id="dt-q" name="q" value="{{ term }}" type="search" placeholder="{{ _('name, city, intent, bio, interest') }}" autocomplete="off" autofocus>
-    <button class="dt-btn" type="submit">{{ _('Search') }}</button>
+    <input id="dt-q" name="q" value="{{ term }}" type="search" placeholder="{{ _('name, city, intent, bio, interest') }}" autocomplete="off">
+    <button type="button" class="dt-filter-toggle" id="dt-filter-toggle" aria-expanded="{{ 'true' if nf else 'false' }}" aria-controls="dt-filters">{{ _('Filters') }}{% if nf %} <b id="dt-filter-n">{{ nf }}</b>{% else %} <b id="dt-filter-n" hidden>0</b>{% endif %}</button>
+    <button class="dt-sr" type="submit">{{ _('Search') }}</button>
   </div>
-  <div class="dt-filters">
+  <div class="dt-filters" id="dt-filters"{% if not nf %} hidden{% endif %}>
     {% if facets.genders %}<fieldset class="dt-chipset"><legend>{{ _('Gender') }}</legend>
       {% for g in facets.genders %}<label class="dt-chip"><input type="checkbox" name="gender" value="{{ g }}" {% if g in filters.genders %}checked{% endif %}><span>{{ g }}</span></label>{% endfor %}</fieldset>{% endif %}
     {% if facets.intents %}<fieldset class="dt-chipset"><legend>{{ _('Looking for') }}</legend>
@@ -20,10 +22,10 @@
       <label>{{ _('City') }} <input name="city" list="dt-cities" value="{{ filters.city }}" autocomplete="off"></label>
       <datalist id="dt-cities">{% for c in facets.cities %}<option value="{{ c }}">{% endfor %}</datalist>
       <label>{{ _('Interest') }} <input name="interest" value="{{ filters.interest }}" autocomplete="off"></label>
-      <label class="dt-chip"><input type="checkbox" name="photo" value="1" {% if filters.photo %}checked{% endif %}><span>{{ _('With photo') }}</span></label>
       <label>{{ _('Sort by') }} <select name="sort">
         {% for k, t in (('relevance', _('Relevance')), ('name', _('Name')), ('age', _('Age, youngest first')), ('age_desc', _('Age, oldest first')), ('newest', _('Most recent'))) %}<option value="{{ k }}" {% if sort == k %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
-      <a class="dt-btn dt-btn-ghost" href="/{{ exp.idexp }}/dating/search" id="dt-reset">{{ _('Reset') }}</a>
+      <label class="dt-chip"><input type="checkbox" name="photo" value="1" {% if filters.photo %}checked{% endif %}><span>{{ _('With photo') }}</span></label>
+      <a class="dt-reset" href="/{{ exp.idexp }}/dating/search" id="dt-reset">{{ _('Reset') }}</a>
     </div>
   </div>
 </form>

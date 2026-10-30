@@ -17,7 +17,7 @@
   <small class="dt-chat-count">{{ _('%(n)s messages', n=chat.messages|length) }}</small>
 </header>
 {% if chat.messages %}
-<ol class="dt-chat" id="dt-chat-log" aria-label="{{ _('Conversation') }}">{% set ns = namespace(day=None) %}{% for m in chat.messages %}
+<ol class="dt-chat" id="dt-chat-log"{% if participant and chat.messages %} data-open-match="{{ chat.id }}"{% endif %} aria-label="{{ _('Conversation') }}">{% set ns = namespace(day=None) %}{% for m in chat.messages %}
   {% if ns.day != m.day %}{% set ns.day = m.day %}<li class="dt-daysep" role="separator"><span>{{ _('Day %(d)s', d=m.day) }}</span></li>{% endif %}
   {% set who = chat.a if m.sender_id == chat.a.id else chat.b %}
   <li class="dt-msg{{ ' is-mine' if m.mine }}{{ ' is-deleted' if m.deleted }}">
@@ -31,7 +31,7 @@
 {% else %}<p class="dt-empty">{{ _('No messages yet.') }}</p>{% endif %}
 {% if chat.events %}
 <ul class="dt-outcomes" aria-label="{{ _('How this match went') }}">{% for e in chat.events %}
-  <li class="dt-chip dt-chip-{{ e.tone }}">{{ outcome_label(e.code) }}{% if e.day %} <small>{{ _('Day %(d)s', d=e.day) }} · {{ _('round %(h)s', h=e.hour) }}</small>{% endif %}</li>{% endfor %}</ul>
+  <li class="dt-outc dt-outc-{{ e.tone }}">{{ outcome_label(e.code) }}{% if e.day %} <small>{{ _('Day %(d)s', d=e.day) }} · {{ _('round %(h)s', h=e.hour) }}</small>{% endif %}</li>{% endfor %}</ul>
 {% endif %}
 {% if participant and convo %}
 {% set me_id = participant.account_id %}

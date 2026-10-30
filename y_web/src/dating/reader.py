@@ -476,7 +476,11 @@ class DatingReader:
         )
 
     def journeys(
-        self, cut: int, account_id: Optional[str] = None, detail: bool = True
+        self,
+        cut: int,
+        account_id: Optional[str] = None,
+        detail: bool = True,
+        match_id: Optional[str] = None,
     ) -> Dict[str, Dict[str, Any]]:
         """What became of every match (of ``account_id``, else of all) at the cut: the dates and their
         outcomes, whether the conversation was left unanswered (ghosting) and how the match ended.
@@ -491,13 +495,18 @@ class DatingReader:
             "JOIN rounds cr ON cr.id = m.created_round AND cr.day * 10000 + cr.hour <= :cut "
         )
         params: Dict[str, Any] = {"cut": cut}
-        if account_id:
+        if match_id:
+            sql += "WHERE m.id = :mid"
+            params["mid"] = match_id
+        elif account_id:
             sql += "WHERE m.user_a = :v OR m.user_b = :v"
             params["v"] = account_id
         matches = self.c.execute(sql, params).fetchall()
         if not matches:
             return {}
         ids = {m["id"] for m in matches}
+        scoped = bool(match_id or account_id)  # read only the messages of the matches asked for
+        marks = ",".join("?" * len(ids)) if scoped and len(ids) <= 500 else None
         keys = {
             r["id"]: r["k"]
             for r in self.c.execute("SELECT id, day * 10000 + hour AS k FROM rounds")
@@ -511,8 +520,10 @@ class DatingReader:
         for r in self.c.execute(
             "SELECT ms.match_id, ms.sender_id, rr.day * 10000 + rr.hour AS k FROM messages ms "
             "JOIN rounds rr ON rr.id = ms.round_id AND rr.day * 10000 + rr.hour <= ? "
-            "WHERE ms.deleted = 0 ORDER BY rr.day, rr.hour, ms.minute, ms.id",
-            (cut,),
+            "WHERE ms.deleted = 0 "
+            + ("AND ms.match_id IN (%s) " % marks if marks else "")
+            + "ORDER BY rr.day, rr.hour, ms.minute, ms.id",
+            (cut, *(sorted(ids) if marks else ())),
         ):
             if r["match_id"] in ids:
                 last[r["match_id"]] = r
@@ -782,7 +793,7 @@ class DatingReader:
                 item["text"] = ""
             msgs.append(item)
         journey = self.journeys(
-            cut, vp.account_id if vp.kind == ACCOUNT else None, detail=vp.kind == OVERVIEW
+            cut, vp.account_id if vp.kind == ACCOUNT else None, detail=vp.kind == OVERVIEW, match_id=m["id"]
         ).get(m["id"])
         events: List[Dict[str, Any]] = []
         if journey:
@@ -829,47 +840,70 @@ class DatingReader:
     def notifications(
         self, viewer_id: str, vp: Viewpoint, limit: int = 50
     ) -> List[Dict[str, Any]]:
-        """New matches and messages addressed to the account, newest first (what its app would notify)."""
+        """New matches and messages addressed to the account, newest first (what its app would notify).
+
+        ``unread`` is true for a message the account has not opened yet and for a match nobody has written
+        in. Only the matches of the account are read, through their indexes.
+        """
         cut = self._cut(vp.round)
-        names = {
-            r["id"]: r["username"]
-            for r in self.c.execute("SELECT id, username FROM user_mgmt")
-        }
-        items = []
-        for m in self.c.execute(
+        matches = self.c.execute(
             "SELECT m.id, m.user_a, m.user_b, r.day, r.hour FROM matches m "
             "JOIN rounds r ON r.id = m.created_round AND r.day * 10000 + r.hour <= ? "
             "WHERE m.user_a = ? OR m.user_b = ?",
             (cut, viewer_id, viewer_id),
-        ):
-            other = m["user_b"] if m["user_a"] == viewer_id else m["user_a"]
+        ).fetchall()
+        if not matches:
+            return []
+        others = {m["id"]: (m["user_b"] if m["user_a"] == viewer_id else m["user_a"]) for m in matches}
+        names = {
+            r["id"]: r["username"]
+            for r in self.c.execute(
+                "SELECT id, username FROM user_mgmt WHERE id IN (%s)" % ",".join("?" * len(set(others.values()))),
+                tuple(set(others.values())),
+            )
+        }
+        written = set()
+        items: List[Dict[str, Any]] = []
+        ids = list(others)
+        for i in range(0, len(ids), 400):  # SQLite caps the number of parameters
+            chunk = ids[i : i + 400]
+            marks = ",".join("?" * len(chunk))
+            for ms in self.c.execute(
+                "SELECT ms.match_id, ms.sender_id, ms.read_round, ms.deleted, rr.day, rr.hour FROM messages ms "
+                "JOIN rounds rr ON rr.id = ms.round_id AND rr.day * 10000 + rr.hour <= ? "
+                "WHERE ms.match_id IN (%s)" % marks,
+                (cut, *chunk),
+            ):
+                written.add(ms["match_id"])
+                if ms["sender_id"] == viewer_id or ms["deleted"]:
+                    continue
+                items.append(
+                    {
+                        "kind": "message",
+                        "match_id": ms["match_id"],
+                        "other": names.get(ms["sender_id"], "?"),
+                        "day": ms["day"],
+                        "hour": ms["hour"],
+                        "unread": ms["read_round"] is None,
+                    }
+                )
+        for m in matches:
             items.append(
                 {
                     "kind": "match",
                     "match_id": m["id"],
-                    "other": names.get(other, "?"),
+                    "other": names.get(others[m["id"]], "?"),
                     "day": m["day"],
                     "hour": m["hour"],
+                    "unread": m["id"] not in written,
                 }
             )
-        for ms in self.c.execute(
-            "SELECT ms.match_id, ms.sender_id, rr.day, rr.hour FROM messages ms "
-            "JOIN matches m ON m.id = ms.match_id AND (m.user_a = :v OR m.user_b = :v) "
-            "JOIN rounds rr ON rr.id = ms.round_id AND rr.day * 10000 + rr.hour <= :cut "
-            "WHERE ms.sender_id != :v AND ms.deleted = 0",
-            {"v": viewer_id, "cut": cut},
-        ):
-            items.append(
-                {
-                    "kind": "message",
-                    "match_id": ms["match_id"],
-                    "other": names.get(ms["sender_id"], "?"),
-                    "day": ms["day"],
-                    "hour": ms["hour"],
-                }
-            )
-        items.sort(key=lambda i: (i["day"], i["hour"]), reverse=True)
+        items.sort(key=lambda i: (i["unread"], i["day"], i["hour"]), reverse=True)
         return items[:limit]
+
+    def unread_count(self, viewer_id: str, vp: Viewpoint) -> int:
+        """How many notifications of the account are still to be read (a badge on every page)."""
+        return sum(1 for n in self.notifications(viewer_id, vp, limit=10**6) if n["unread"])
 
     # ------------------------------------------------------------------ overview: history
     def history(self, vp: Viewpoint) -> List[Dict[str, Any]]:

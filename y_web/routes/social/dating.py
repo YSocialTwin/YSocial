@@ -199,8 +199,10 @@ def _render(template, ctx, reader, **values):
     time_travel = ctx.participant is None and (
         ctx.staff is not None or bool(ctx.ui.get("dating_allow_time_travel", True))
     )
+    unread = reader.unread_count(ctx.vp.account_id, ctx.vp) if ctx.vp.kind == ACCOUNT else 0
     return render_template(
         template,
+        unread=unread,
         exp=ctx.exp,
         ctx=ctx,
         params=ctx.params,

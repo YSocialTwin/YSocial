@@ -5,112 +5,117 @@
 {% block content %}
 {% set photos = profile.photos | selectattr('url') | list %}
 <article class="dt-profile dt-pf" style="--dt-hue: {{ profile.hue }}" data-pf>
-  <header class="dt-pf-hero">
-    <div class="dt-pf-cover" aria-hidden="true"></div>
-    <div class="dt-pf-id">
-      <span class="dt-pf-avatar">{{ avatar(profile, 'xl') }}</span>
-      <div class="dt-pf-name">
-        <h2 class="dt-pf-title">{{ profile.username }}{% if profile.age %}<span class="dt-pf-age">, {{ profile.age }}</span>{% endif %}</h2>
-        <ul class="dt-pf-facts">
-          {% if profile.city %}<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9.5A2.5 2.5 0 1 1 12 7.5a2.5 2.5 0 0 1 0 5z" fill="currentColor"/></svg>{{ profile.city }}</li>{% endif %}
-          {% if profile.intent %}<li class="dt-pf-intent">{{ profile.intent }}</li>{% endif %}
-          {% if photos %}<li>{{ photos|length }} {{ _('photos') }}</li>{% endif %}
-        </ul>
+  <header class="dt-pf-hero dt-pf-hero2{{ ' has-photo' if photos }}">
+    <div class="dt-pf-gal" data-gallery>
+      {% if photos %}
+      <div class="dt-pf-track" data-track>
+        {% for ph in photos %}
+        <button type="button" class="dt-pf-slide" data-lightbox="{{ dating_media(ph.url) }}" data-caption="{{ ph.caption }}" aria-label="{{ _('Open photo %(n)s', n=loop.index) }}">
+          <img src="{{ dating_media(ph.url) }}" alt="{{ ph.caption }}" {{ 'loading=lazy' if not loop.first }} decoding="async">
+        </button>
+        {% endfor %}
       </div>
+      {% if photos|length > 1 %}
+      <button type="button" class="dt-pf-arrow is-prev" data-go="prev" aria-label="{{ _('Previous') }}">&lsaquo;</button>
+      <button type="button" class="dt-pf-arrow is-next" data-go="next" aria-label="{{ _('Next') }}">&rsaquo;</button>
+      <div class="dt-pf-dots" data-dots>{% for ph in photos %}<i{{ ' class=is-on' if loop.first }}></i>{% endfor %}</div>
+      {% endif %}
+      <p class="dt-pf-cap2" data-cap>{{ photos[0].caption }}</p>
+      {% else %}
+      <div class="dt-pf-nophoto"><span class="dt-pf-avatar">{{ avatar(profile, 'xl') }}</span></div>
+      {% endif %}
+    </div>
+    <div class="dt-pf-idcard">
+      <h2 class="dt-pf-title">{{ profile.username }}{% if profile.age %}<span class="dt-pf-age">, {{ profile.age }}</span>{% endif %}</h2>
+      <ul class="dt-pf-facts">
+        {% if profile.city %}<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9.5A2.5 2.5 0 1 1 12 7.5a2.5 2.5 0 0 1 0 5z" fill="currentColor"/></svg>{{ profile.city }}</li>{% endif %}
+        {% if profile.intent %}<li class="dt-pf-intent">{{ profile.intent }}</li>{% endif %}
+        {% if photos %}<li>{{ photos|length }} {{ _('photos') }}</li>{% endif %}
+      </ul>
+      {% if profile.bio %}<p class="dt-pf-bio" aria-label="{{ _('About') }}">{{ profile.bio }}</p>{% endif %}
+      {% if profile.interests %}
+      <ul class="dt-tags dt-pf-tags" aria-label="{{ _('Interests') }}">{% for i in profile.interests %}<li style="--i: {{ loop.index0 }}">{{ i }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if photos|length > 1 %}
+      <div class="dt-pf-thumbs" data-thumbs role="tablist" aria-label="{{ _('Photos') }}">
+        {% for ph in photos %}<button type="button" role="tab" data-thumb="{{ loop.index0 }}" class="dt-pf-thumb{{ ' is-on' if loop.first }}" aria-label="{{ _('Open photo %(n)s', n=loop.index) }}"><img src="{{ dating_media(ph.url) }}" alt="" loading="lazy" decoding="async"></button>{% endfor %}
+      </div>
+      {% endif %}
     </div>
   </header>
 
-  <div class="dt-pf-grid">
-    <div class="dt-pf-main">
-      {% if profile.bio %}
-      <section class="dt-pf-card dt-reveal" style="--i: 0" aria-label="{{ _('About') }}">
-        <h3 class="dt-pf-h">{{ _('About') }}</h3>
-        <p class="dt-pf-bio">{{ profile.bio }}</p>
-      </section>
-      {% endif %}
-
-      {% if profile.prompts %}
-      <section class="dt-pf-prompts" aria-label="{{ _('In their words') }}">
+  <div class="dt-pf-body">
+    {% if profile.prompts %}
+    <section class="dt-pf-prompts2" aria-label="{{ _('In their words') }}">
+      <h3 class="dt-pf-h">{{ _('In their words') }}</h3>
+      <div class="dt-pf-qa">
         {% for q, a in profile.prompts.items() %}
-        <div class="dt-pf-card dt-pf-prompt dt-reveal" style="--i: {{ loop.index }}">
-          <h4>{{ q }}</h4>
-          <p>{{ a }}</p>
-        </div>
+        <figure class="dt-pf-prompt dt-reveal" style="--i: {{ loop.index0 }}"><figcaption>{{ q }}</figcaption><blockquote>{{ a }}</blockquote></figure>
         {% endfor %}
-      </section>
-      {% endif %}
+      </div>
+    </section>
+    {% endif %}
 
-      {% if photos %}
-      <section class="dt-pf-card dt-reveal" style="--i: 2" aria-label="{{ _('Photos') }}">
-        <h3 class="dt-pf-h">{{ _('Photos') }}</h3>
-        <ul class="dt-pf-gallery">
-          {% for ph in photos %}
-          <li>
-            <button type="button" class="dt-pf-photo" data-lightbox="{{ dating_media(ph.url) }}" data-caption="{{ ph.caption }}" aria-label="{{ _('Open photo %(n)s', n=loop.index) }}">
-              <img src="{{ dating_media(ph.url) }}" alt="{{ ph.caption }}" loading="lazy" decoding="async">
-              {% if ph.caption %}<span class="dt-pf-cap">{{ ph.caption }}</span>{% endif %}
-            </button>
-          </li>
-          {% endfor %}
-        </ul>
-      </section>
-      {% endif %}
-    </div>
-
-    <aside class="dt-pf-side">
-      {% if profile.interests %}
-      <section class="dt-pf-card dt-reveal" style="--i: 1" aria-label="{{ _('Interests') }}">
-        <h3 class="dt-pf-h">{{ _('Interests') }}</h3>
-        <ul class="dt-tags dt-pf-tags">{% for i in profile.interests %}<li style="--i: {{ loop.index0 }}">{{ i }}</li>{% endfor %}</ul>
-      </section>
-      {% endif %}
-
-      {% if profile.overview %}
-      <section class="dt-pf-card dt-pf-research dt-reveal" style="--i: 2" aria-label="{{ _('Researcher only') }}">
+    {% if profile.overview %}
+    <section class="dt-pf-research dt-pf-card dt-reveal" aria-label="{{ _('Researcher only') }}" data-tabs>
+      <div class="dt-pf-resh">
         <h3 class="dt-pf-h">{{ _('Researcher only') }}</h3>
-        {% if profile.overview.latent %}
+        <div class="dt-seg" role="tablist">
+          {% if profile.overview.latent %}<button type="button" role="tab" class="is-on" data-tab="latent">{{ _('Latent traits') }}</button>{% endif %}
+          {% if profile.overview.lifecycle and profile.overview.lifecycle.matches %}<button type="button" role="tab" data-tab="rel"{% if not profile.overview.latent %} class="is-on"{% endif %}>{{ _('Relationships') }}</button>{% endif %}
+        </div>
+      </div>
+      {% if profile.overview.latent %}
+      <div class="dt-pf-panel" data-panel="latent">
         <dl class="dt-pf-bars">
           {% for k, v in profile.overview.latent.items() %}
-          <div>
-            <dt>{{ k }}</dt>
-            <dd>{% if v is number and 0 <= v <= 1 %}<span class="dt-pf-bar" style="--v: {{ (v * 100)|round|int }}%"><i></i></span><b title="{{ v }}">{{ '%.2f'|format(v) }}</b>{% else %}{{ v }}{% endif %}</dd>
-          </div>
+          <div><dt>{{ k }}</dt>
+            <dd>{% if v is number and 0 <= v <= 1 %}<span class="dt-pf-bar" style="--v: {{ (v * 100)|round|int }}%"><i></i></span><b title="{{ v }}">{{ '%.2f'|format(v) }}</b>{% else %}{{ v }}{% endif %}</dd></div>
           {% endfor %}
         </dl>
-        {% endif %}
-        {% set lc = profile.overview.lifecycle %}
-        {% if lc and lc.matches %}
-        <h4 class="dt-pf-sub">{{ _('Relationships') }}</h4>
-        <dl class="dt-pf-stats">
-          <div><dt>{{ _('Matches') }}</dt><dd>{{ lc.matches }} <small>({{ _('active') }}: {{ lc.active }})</small></dd></div>
-          <div><dt>{{ _('Conversations started') }}</dt><dd>{{ lc.started }} <small>({{ _('opened by this agent') }}: {{ lc.opened }})</small></dd></div>
-          <div><dt>{{ _('Left unanswered by others (ghosted)') }}</dt><dd>{{ lc.ghosted_by }}</dd></div>
-          <div><dt>{{ _('Ghosted others') }}</dt><dd>{{ lc.ghosted }}</dd></div>
-          <div><dt>{{ _('Dates proposed / received') }}</dt><dd>{{ lc.dates_proposed }} / {{ lc.dates_received }}</dd></div>
-          <div><dt>{{ _('Dates accepted / declined / unanswered') }}</dt><dd>{{ lc.dates_accepted }} / {{ lc.dates_declined }} / {{ lc.dates_expired }}</dd></div>
-          <div><dt>{{ _('Date outcomes: good / so-so / bad') }}</dt><dd>{{ lc.dates_positive }} / {{ lc.dates_neutral }} / {{ lc.dates_negative }}</dd></div>
-          <div><dt>{{ _('Left the platform together') }}</dt><dd>{{ lc.paired }}</dd></div>
-          <div><dt>{{ _('Unmatched by this agent / by the other') }}</dt><dd>{{ lc.unmatched_by_me }} / {{ lc.unmatched_by_other }}</dd></div>
-          <div><dt>{{ _('Blocked by this agent / by the other') }}</dt><dd>{{ lc.blocked_by_me }} / {{ lc.blocked_by_other }}</dd></div>
-        </dl>
-        {% endif %}
-        <p class="dt-pf-note">{{ _('Blocks made: %(n)s', n=profile.overview.blocks_made) }}</p>
-        <a class="dt-btn" href="/{{ exp.idexp }}/dating?vp=overview&acc={{ profile.id }}{{ '&round=%d' % ctx.vp.round if ctx.vp.round != ctx.latest else '' }}">{{ _('Deck of this account') }}</a>
-      </section>
+      </div>
       {% endif %}
-
-      {% if participant and profile.id != participant.account_id %}
-      <details class="dt-pf-card dt-pf-safety">
-        <summary>{{ _('Block or report') }}</summary>
-        <div class="dt-danger">
-          <button type="button" class="dt-btn dt-btn-ghost" data-act="BLOCK" data-confirm="{{ _('Block this person?') }}" data-payload='{{ {"target_id": profile.id}|tojson|forceescape }}'>{{ _('Block') }}</button>
-          <label class="dt-sr" for="dt-reason">{{ _('Reason') }}</label>
-          <select id="dt-reason" name="reason">{% for r in ('HARASSMENT', 'SPAM', 'FAKE', 'INAPPROPRIATE') %}<option value="{{ r }}">{{ {'HARASSMENT': _('Harassment'), 'SPAM': _('Spam'), 'FAKE': _('Fake profile'), 'INAPPROPRIATE': _('Inappropriate') }[r] }}</option>{% endfor %}</select>
-          <button type="button" class="dt-btn dt-btn-ghost" data-act="REPORT" data-from="dt-reason" data-confirm="{{ _('Report this person?') }}" data-payload='{{ {"target_id": profile.id}|tojson|forceescape }}'>{{ _('Report') }}</button>
+      {% set lc = profile.overview.lifecycle %}
+      {% if lc and lc.matches %}
+      <div class="dt-pf-panel" data-panel="rel"{% if profile.overview.latent %} hidden{% endif %}>
+        <div class="dt-stat-grid">
+          {% for label, value, hint in (
+            (_('Matches'), lc.matches, _('active') ~ ': ' ~ lc.active),
+            (_('Conversations started'), lc.started, _('opened by this agent') ~ ': ' ~ lc.opened),
+            (_('Dates proposed / received'), lc.dates_proposed ~ ' / ' ~ lc.dates_received, ''),
+            (_('Dates accepted / declined / unanswered'), lc.dates_accepted ~ ' / ' ~ lc.dates_declined ~ ' / ' ~ lc.dates_expired, ''),
+            (_('Date outcomes: good / so-so / bad'), lc.dates_positive ~ ' / ' ~ lc.dates_neutral ~ ' / ' ~ lc.dates_negative, ''),
+            (_('Left the platform together'), lc.paired, '')) %}
+          <div class="dt-stat"><b data-count>{{ value }}</b><span>{{ label }}</span>{% if hint %}<small>{{ hint }}</small>{% endif %}</div>
+          {% endfor %}
+          {% for label, value, tone in (
+            (_('Left unanswered by others (ghosted)'), lc.ghosted_by, 'bad'),
+            (_('Ghosted others'), lc.ghosted, 'bad'),
+            (_('Unmatched by this agent / by the other'), lc.unmatched_by_me ~ ' / ' ~ lc.unmatched_by_other, 'bad'),
+            (_('Blocked by this agent / by the other'), lc.blocked_by_me ~ ' / ' ~ lc.blocked_by_other, 'bad')) %}
+          <div class="dt-stat dt-stat-{{ tone }}"><b data-count>{{ value }}</b><span>{{ label }}</span></div>
+          {% endfor %}
         </div>
-      </details>
+      </div>
       {% endif %}
-    </aside>
+      <footer class="dt-pf-resf">
+        <span class="dt-pf-note">{{ _('Blocks made: %(n)s', n=profile.overview.blocks_made) }}</span>
+        <a class="dt-btn" href="/{{ exp.idexp }}/dating?vp=overview&acc={{ profile.id }}{{ '&round=%d' % ctx.vp.round if ctx.vp.round != ctx.latest else '' }}">{{ _('Deck of this account') }}</a>
+      </footer>
+    </section>
+    {% endif %}
+
+    {% if participant and profile.id != participant.account_id %}
+    <details class="dt-pf-card dt-pf-safety">
+      <summary>{{ _('Block or report') }}</summary>
+      <div class="dt-danger">
+        <button type="button" class="dt-btn dt-btn-ghost" data-act="BLOCK" data-confirm="{{ _('Block this person?') }}" data-payload='{{ {"target_id": profile.id}|tojson|forceescape }}'>{{ _('Block') }}</button>
+        <label class="dt-sr" for="dt-reason">{{ _('Reason') }}</label>
+        <select id="dt-reason" name="reason">{% for r in ('HARASSMENT', 'SPAM', 'FAKE', 'INAPPROPRIATE') %}<option value="{{ r }}">{{ {'HARASSMENT': _('Harassment'), 'SPAM': _('Spam'), 'FAKE': _('Fake profile'), 'INAPPROPRIATE': _('Inappropriate') }[r] }}</option>{% endfor %}</select>
+        <button type="button" class="dt-btn dt-btn-ghost" data-act="REPORT" data-from="dt-reason" data-confirm="{{ _('Report this person?') }}" data-payload='{{ {"target_id": profile.id}|tojson|forceescape }}'>{{ _('Report') }}</button>
+      </div>
+    </details>
+    {% endif %}
   </div>
 </article>
 

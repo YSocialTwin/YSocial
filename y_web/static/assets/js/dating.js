@@ -59,6 +59,18 @@
           safe(function () { history.replaceState(null, "", "?" + qs.toString()); });
         }).catch(function () { results.classList.remove("is-loading"); });
     };
+    var toggle = document.getElementById("dt-filter-toggle"), panel = document.getElementById("dt-filters");
+    var badge = document.getElementById("dt-filter-n");
+    var count = function () {
+      var n = 0;
+      form.querySelectorAll("#dt-filters input[type=checkbox]:checked").forEach(function () { n++; });
+      form.querySelectorAll("#dt-filters input[type=number],#dt-filters input:not([type]),#dt-filters input[list]").forEach(function (i) { if (i.value) n++; });
+      if (badge) { badge.textContent = n; badge.hidden = !n; }
+    };
+    if (toggle && panel) toggle.addEventListener("click", function () {
+      var open = panel.hidden; panel.hidden = !open; toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    form.addEventListener("change", count);
     var later = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
     form.addEventListener("input", later);
     form.addEventListener("change", run);
@@ -68,7 +80,7 @@
       e.preventDefault(); form.reset();
       form.querySelectorAll("input[type=text],input[type=search],input[type=number]").forEach(function (i) { i.value = ""; });
       form.querySelectorAll("input[type=checkbox]").forEach(function (i) { i.checked = false; });
-      run();
+      count(); run();
     });
   }
   // chat: start at the last message; Enter sends, Shift+Enter makes a new line

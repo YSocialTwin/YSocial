@@ -393,4 +393,9 @@
     }
     act(type, p).then(function (res) { finish(res, form); });
   });
+  // opening a chat marks the other person's messages as read (the notifications badge counts the rest)
+  var opened = document.getElementById("dt-chat-log");
+  if (opened && opened.getAttribute("data-open-match")) {
+    act("OPEN_CONVERSATION", { match_id: opened.getAttribute("data-open-match") });
+  }
 })();

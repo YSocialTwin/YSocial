@@ -17,5 +17,5 @@
 {%- else %}{{ _('New match') }}{% endif -%}
 {%- endmacro %}
 {% macro chips(items) -%}
-<span class="dt-chips">{% for c in items %}<span class="dt-chip dt-chip-{{ c.tone }}">{{ outcome_label(c.code) }}</span>{% endfor %}</span>
+<span class="dt-outcs">{% for c in items %}<span class="dt-outc dt-outc-{{ c.tone }}">{{ outcome_label(c.code) }}</span>{% endfor %}</span>
 {%- endmacro %}

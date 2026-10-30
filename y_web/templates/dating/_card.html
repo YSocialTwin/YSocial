@@ -25,3 +25,16 @@
   </div>
 </article>
 {% endmacro %}
+
+{#- A compact tile for lists (search): portrait photo with name, age and place on it; the whole tile opens the profile. -#}
+{% macro tile(p, link) %}
+{% set photos = p.photos | selectattr('url') | list %}
+<a class="dt-tile{{ ' has-photo' if photos }}" href="{{ link('/profile/' ~ p.id) }}" style="--dt-hue: {{ p.hue }}" aria-label="{{ p.username }}{% if p.age %}, {{ p.age }}{% endif %}">
+  {% if photos %}<img class="dt-tile-img" src="{{ dating_media(photos[0].url) }}" alt="" loading="lazy" decoding="async">
+  {% else %}<span class="dt-tile-initials" aria-hidden="true">{{ p.initials or p.username[:1]|upper }}</span>{% endif %}
+  {% if p.photos|length > 1 %}<span class="dt-photos">{{ p.photos|length }}</span>{% endif %}
+  <span class="dt-tile-info"><strong>{{ p.username }}{% if p.age %}<span>, {{ p.age }}</span>{% endif %}</strong>
+    <small>{{ p.city or '' }}{% if p.intent %}{{ ' · ' if p.city }}{{ p.intent }}{% endif %}</small></span>
+  {% if p.interests %}<span class="dt-tile-more">{{ p.interests[:3]|join(' · ') }}</span>{% endif %}
+</a>
+{% endmacro %}

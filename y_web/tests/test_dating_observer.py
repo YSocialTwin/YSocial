@@ -283,3 +283,16 @@ def test_matches_report_how_each_match_went_and_staff_get_lifecycle_stats(tmp_pa
         stats = reader.lifecycle_stats(j["dates"][0]["proposer_id"], cut)
         assert stats["dates_proposed"] == 1 and stats["dates_negative"] == 1
         assert stats["matches"] == 1
+
+
+def test_notifications_count_only_what_is_still_to_read(tmp_path):
+    ctx, info = _reader(tmp_path)
+    from y_web.src.dating.reader import ACCOUNT, Viewpoint
+
+    me = info["users"][0]
+    with ctx as reader:
+        vp = Viewpoint(ACCOUNT, me, 12)
+        items = reader.notifications(me, vp)
+        assert {i["kind"] for i in items} == {"match", "message"}
+        assert reader.unread_count(me, vp) == 1  # one message of the other person; the match has chat
+        reader.c.close()

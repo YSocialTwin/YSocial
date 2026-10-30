@@ -1,60 +1,102 @@
 {% extends "dating/base.html" %}
+{% from "dating/_avatar.html" import avatar_raw %}
 {% set nav = 'me' %}
 {% block content %}
-<h2 class="dt-h">{{ _('Your profile') }}</h2>
 {% if me %}
-<section class="dt-panel dt-narrow">
-  <h3>{{ _('About you') }}</h3>
-  <form data-act="UPDATE_PROFILE" class="dt-fields">
-    <label for="dt-me-bio">{{ _('About you') }}</label>
-    <textarea id="dt-me-bio" name="bio" rows="4" maxlength="500">{{ me.preferences.bio }}</textarea>
-    <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Save') }}</button>
-  </form>
+{% set can = me.interactions.profile_edit %}
+{% set photos = me.photos | selectattr('url') | list %}
+{% set steps = [
+  (_('Write a few lines about you'), me.preferences.bio|length >= 20),
+  (_('Add a photo'), me.photos|length > 0),
+  (_('Say what you are looking for'), me.preferences.intent in intents),
+  (_('Set who you see'), me.preferences.age_min and me.preferences.age_max)] %}
+{% set done = steps|selectattr(1)|list|length %}
+<section class="dt-me-head" style="--dt-hue: {{ participant.account_id|length * 37 % 360 if participant else 340 }}">
+  <span class="dt-me-avatar">{% if photos %}<img src="{{ dating_media(photos[0].url) }}" alt="">{% else %}<span aria-hidden="true">{{ (participant.username if participant else '?')[:1]|upper }}</span>{% endif %}</span>
+  <div class="dt-me-id">
+    <h2>{{ participant.username if participant else _('Your profile') }}
+      <span class="dt-me-status is-{{ me.account_status }}">{{ {'active': _('Active'), 'paused': _('Paused'), 'left': _('Left')}.get(me.account_status, me.account_status) }}</span></h2>
+    <div class="dt-meter" role="progressbar" aria-valuemin="0" aria-valuemax="{{ steps|length }}" aria-valuenow="{{ done }}" aria-label="{{ _('Profile completeness') }}"><i style="--v: {{ (done * 100 / steps|length)|round|int }}%"></i></div>
+    <p class="dt-hint">{% if done == steps|length %}{{ _('Your profile is complete.') }}{% else %}{{ _('To do') }}: {% for label, ok in steps if not ok %}{{ label }}{{ '; ' if not loop.last }}{% endfor %}{% endif %}</p>
+  </div>
+  {% if participant %}<a class="dt-btn dt-btn-ghost" href="{{ link('/profile/' ~ participant.account_id) }}">{{ _('See how others see you') }}</a>{% endif %}
 </section>
-<section class="dt-panel dt-narrow" id="dt-me-photos">
-  <h3>{{ _('Your photos') }}</h3>
-  {% if me.photos %}
-  <ul class="dt-photo-manage">
-    {% for ph in me.photos %}
-    <li>{% if ph.url %}<img src="{{ dating_media(ph.url) }}" alt="" loading="lazy" decoding="async">{% else %}<span class="dt-noimg" aria-hidden="true">·</span>{% endif %}
-      <span>{{ ph.caption }}</span>
-      <button type="button" class="dt-btn dt-btn-ghost" data-act="REMOVE_PHOTO" data-confirm="{{ _('Remove this photo?') }}" data-payload='{{ {"index": ph.index}|tojson|forceescape }}'{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Remove') }}</button></li>
-    {% endfor %}
-  </ul>
-  {% else %}<p class="dt-hint">{{ _('You have no photos yet.') }}</p>{% endif %}
-  {% if me.photos|length < me.max_photos %}
-  <form data-upload="{{ '/%d/dating/api/photo' % exp.idexp }}" data-t-lost="{{ _('Connection lost: try again in a moment.') }}" class="dt-fields" enctype="multipart/form-data">
-    <label for="dt-photo-file">{{ _('Picture') }}</label>
-    <input id="dt-photo-file" name="photo" type="file" accept="image/png,image/jpeg,image/webp" required>
-    <label for="dt-photo-caption">{{ _('Description') }}</label>
-    <input id="dt-photo-caption" name="caption" maxlength="500" required>
-    <p class="dt-hint">{{ _('PNG, JPEG or WebP, up to 5 MB. The picture is re-encoded and its metadata is removed. The simulated users decide on the description.') }}</p>
-    <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Add photo') }}</button>
-  </form>
-  {% else %}<p class="dt-hint">{{ _('You have reached the maximum number of photos.') }}</p>{% endif %}
-</section>
-<section class="dt-panel dt-narrow">
-  <h3>{{ _('Who you see') }}</h3>
-  <form data-act="UPDATE_PREFERENCES" data-int="age_min,age_max" data-float="max_distance_km" class="dt-fields">
-    <div class="dt-pair">
-      <label>{{ _('Youngest') }} <input name="age_min" type="number" min="18" max="120" value="{{ me.preferences.age_min }}"></label>
-      <label>{{ _('Oldest') }} <input name="age_max" type="number" min="18" max="120" value="{{ me.preferences.age_max }}"></label>
-      <label>{{ _('Distance (km)') }} <input name="max_distance_km" type="number" min="1" value="{{ me.preferences.max_distance_km|int }}"></label>
+
+<div class="dt-me" data-tabs>
+  <div class="dt-seg dt-me-tabs" role="tablist" aria-label="{{ _('Your profile') }}">
+    <button type="button" role="tab" class="is-on" data-tab="about">{{ _('About you') }}</button>
+    <button type="button" role="tab" data-tab="photos">{{ _('Photos') }} <small>{{ me.photos|length }}/{{ me.max_photos }}</small></button>
+    <button type="button" role="tab" data-tab="prefs">{{ _('Who you see') }}</button>
+    <button type="button" role="tab" data-tab="account">{{ _('Account') }}</button>
+  </div>
+
+  <section class="dt-panel dt-me-panel" data-panel="about">
+    <form data-act="UPDATE_PROFILE" class="dt-fields">
+      <label for="dt-me-bio">{{ _('About you') }}</label>
+      <textarea id="dt-me-bio" name="bio" rows="6" maxlength="500" data-counter="dt-bio-n" placeholder="{{ _('What makes you, you? Others read this first.') }}">{{ me.preferences.bio }}</textarea>
+      <div class="dt-me-row"><small class="dt-hint"><span id="dt-bio-n">{{ me.preferences.bio|length }}</span>/500</small>
+        <button class="dt-btn" type="submit"{% if not can %} disabled{% endif %}>{{ _('Save') }}</button></div>
+    </form>
+  </section>
+
+  <section class="dt-panel dt-me-panel" data-panel="photos" id="dt-me-photos" hidden>
+    <ul class="dt-me-grid">
+      {% for ph in me.photos %}
+      <li class="dt-me-photo">
+        {% if ph.url %}<img src="{{ dating_media(ph.url) }}" alt="{{ ph.caption }}" loading="lazy" decoding="async">{% else %}<span class="dt-noimg" aria-hidden="true">·</span>{% endif %}
+        <span class="dt-me-cap">{{ ph.caption }}</span>
+        <button type="button" class="dt-me-del" aria-label="{{ _('Remove') }}" title="{{ _('Remove') }}" data-act="REMOVE_PHOTO" data-confirm="{{ _('Remove this photo?') }}" data-payload='{{ {"index": ph.index}|tojson|forceescape }}'{% if not can %} disabled{% endif %}>&times;</button>
+      </li>
+      {% endfor %}
+      {% if me.photos|length < me.max_photos %}
+      <li class="dt-me-add">
+        <form data-upload="{{ '/%d/dating/api/photo' % exp.idexp }}" data-t-lost="{{ _('Connection lost: try again in a moment.') }}" enctype="multipart/form-data">
+          <label class="dt-drop" for="dt-photo-file" data-drop>
+            <img alt="" hidden data-preview>
+            <span class="dt-drop-plus" aria-hidden="true">+</span>
+            <span data-drop-text>{{ _('Add a photo') }}</span>
+            <input id="dt-photo-file" name="photo" type="file" accept="image/png,image/jpeg,image/webp" required{% if not can %} disabled{% endif %}>
+          </label>
+          <label class="dt-sr" for="dt-photo-caption">{{ _('Description') }}</label>
+          <input id="dt-photo-caption" name="caption" maxlength="500" required placeholder="{{ _('Description') }}"{% if not can %} disabled{% endif %}>
+          <button class="dt-btn" type="submit"{% if not can %} disabled{% endif %}>{{ _('Add photo') }}</button>
+        </form>
+      </li>
+      {% endif %}
+    </ul>
+    <p class="dt-hint">{{ _('PNG, JPEG or WebP, up to 5 MB. The picture is re-encoded and its metadata is removed. The simulated users decide on the description.') }}
+      {% if me.photos|length >= me.max_photos %}{{ _('You have reached the maximum number of photos.') }}{% endif %}</p>
+  </section>
+
+  <section class="dt-panel dt-me-panel" data-panel="prefs" hidden>
+    <form data-act="UPDATE_PREFERENCES" data-int="age_min,age_max" data-float="max_distance_km" class="dt-fields">
+      <fieldset class="dt-me-fs"><legend>{{ _('What are you looking for?') }}</legend>
+        <div class="dt-chipset">{% for i in intents %}<label class="dt-chip"><input type="radio" name="intent" value="{{ i }}" {{ 'checked' if me.preferences.intent == i }}><span>{{ i }}</span></label>{% endfor %}</div>
+      </fieldset>
+      <div class="dt-pair">
+        <label>{{ _('Youngest') }} <input name="age_min" type="number" min="18" max="120" value="{{ me.preferences.age_min }}"></label>
+        <label>{{ _('Oldest') }} <input name="age_max" type="number" min="18" max="120" value="{{ me.preferences.age_max }}"></label>
+      </div>
+      {% set km = me.preferences.max_distance_km|int %}
+      <label for="dt-me-km">{{ _('Distance (km)') }} <output id="dt-km-n" for="dt-me-km">{{ km }}</output></label>
+      <input id="dt-me-km" name="max_distance_km" type="range" min="1" max="{{ [500, km]|max }}" step="1" value="{{ km }}" data-out="dt-km-n">
+      <div class="dt-me-row"><span></span><button class="dt-btn" type="submit"{% if not can %} disabled{% endif %}>{{ _('Save') }}</button></div>
+    </form>
+  </section>
+
+  <section class="dt-panel dt-me-panel dt-me-account" data-panel="account" hidden>
+    <h3>{{ _('Pause or leave') }}</h3>
+    <p class="dt-hint">{{ _('A paused profile is hidden from everyone until you resume it. Leaving ends your matches and cannot be undone.') }}</p>
+    {% if me.account_status == 'paused' %}
+    <button class="dt-btn" type="button" data-act="RESUME_PROFILE"{% if not me.interactions.pause %} disabled{% endif %}>{{ _('Resume profile') }}</button>
+    {% elif me.account_status == 'active' %}
+    <div class="dt-me-row">
+      <button class="dt-btn dt-btn-ghost" type="button" data-act="PAUSE_PROFILE"{% if not me.interactions.pause %} disabled{% endif %}>{{ _('Pause profile') }}</button>
+      <button class="dt-btn dt-btn-ghost dt-me-leave" type="button" data-leave="1" data-confirm="{{ _('Leave the platform? Your matches will end.') }}">{{ _('Leave the platform') }}</button>
     </div>
-    <label for="dt-me-intent">{{ _('What are you looking for?') }}</label>
-    <select id="dt-me-intent" name="intent">{% for i in intents %}<option value="{{ i }}" {{ 'selected' if me.preferences.intent == i }}>{{ i }}</option>{% endfor %}</select>
-    <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Save') }}</button>
-  </form>
-</section>
-<section class="dt-panel dt-narrow">
-  <h3>{{ _('Pause or leave') }}</h3>
-  <p class="dt-hint">{{ _('A paused profile is hidden from everyone until you resume it. Leaving ends your matches and cannot be undone.') }}</p>
-  {% if me.account_status == 'paused' %}
-  <button class="dt-btn" type="button" data-act="RESUME_PROFILE"{% if not me.interactions.pause %} disabled{% endif %}>{{ _('Resume profile') }}</button>
-  {% elif me.account_status == 'active' %}
-  <button class="dt-btn dt-btn-ghost" type="button" data-act="PAUSE_PROFILE"{% if not me.interactions.pause %} disabled{% endif %}>{{ _('Pause profile') }}</button>
-  <button class="dt-btn dt-btn-ghost" type="button" data-leave="1" data-confirm="{{ _('Leave the platform? Your matches will end.') }}">{{ _('Leave the platform') }}</button>
-  {% else %}<p>{{ _('You have left this platform.') }}</p>{% endif %}
-</section>
+    {% else %}<p>{{ _('You have left this platform.') }}</p>{% endif %}
+  </section>
+</div>
 {% else %}<p class="dt-empty">{{ _('Your profile is not reachable right now. Try again in a moment.') }}</p>{% endif %}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='assets/js/dating-me.js') }}"></script>{% endblock %}

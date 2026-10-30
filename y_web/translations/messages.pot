@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 11:50+0000\n"
+"POT-Creation-Date: 2026-10-30 12:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -154,10 +154,6 @@ msgid "%(n)s populations for other platforms are hidden."
 msgstr ""
 
 #, python-format
-msgid "%(n)s profiles"
-msgstr ""
-
-#, python-format
 msgid "%(n)s profiles found"
 msgstr ""
 
@@ -171,6 +167,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s steps"
+msgstr ""
+
+#, python-format
+msgid "%(n)s to read"
 msgstr ""
 
 #, python-format
@@ -787,6 +787,9 @@ msgid "Add a comment..."
 msgstr ""
 
 msgid "Add a new filter tag"
+msgstr ""
+
+msgid "Add a photo"
 msgstr ""
 
 msgid "Add another value..."
@@ -4921,6 +4924,9 @@ msgstr ""
 msgid "Filter experiments by group"
 msgstr ""
 
+msgid "Filters"
+msgstr ""
+
 msgid ""
 "Fine tuning that the defaults of the runtime already cover sits in the "
 "panels called Advanced parameters: open one to change it."
@@ -6511,6 +6517,9 @@ msgstr ""
 msgid "Latent Variables and Affective Traits"
 msgstr ""
 
+msgid "Latent traits"
+msgstr ""
+
 msgid ""
 "Latent variables follow a Beta(a, b) distribution; they drive the rule-"
 "based matching and the metrics and are never shown to the agents. "
@@ -6584,6 +6593,9 @@ msgid "Leave the platform? Your matches will end."
 msgstr ""
 
 msgid "Leaving the platform"
+msgstr ""
+
+msgid "Left"
 msgstr ""
 
 msgid "Left (round)"
@@ -8725,9 +8737,6 @@ msgid ""
 "recommender internals."
 msgstr ""
 
-msgid "Picture"
-msgstr ""
-
 #, python-format
 msgid "Picture %(n)s"
 msgstr ""
@@ -9269,6 +9278,9 @@ msgid "Profile card preview"
 msgstr ""
 
 msgid "Profile changes logged"
+msgstr ""
+
+msgid "Profile completeness"
 msgstr ""
 
 msgid "Profile photos"
@@ -10322,6 +10334,9 @@ msgid ""
 "the existing forum runtime remains unchanged."
 msgstr ""
 
+msgid "Say what you are looking for"
+msgstr ""
+
 msgid "Scale Free (Barabási-Albert)"
 msgstr ""
 
@@ -10450,6 +10465,9 @@ msgid "See all photos."
 msgstr ""
 
 msgid "See full discussion thread"
+msgstr ""
+
+msgid "See how others see you"
 msgstr ""
 
 msgid "Seed"
@@ -10832,6 +10850,9 @@ msgstr ""
 msgid ""
 "Set relative probabilities (0-10) for each action type. Higher values "
 "mean more frequent actions. Use 0 to disable an action."
+msgstr ""
+
+msgid "Set who you see"
 msgstr ""
 
 msgid "Settings"
@@ -12529,6 +12550,12 @@ msgid ""
 "streamline the analysis of YSocial generated data"
 msgstr ""
 
+msgid "To do"
+msgstr ""
+
+msgid "To read"
+msgstr ""
+
 msgid "Toggle chat panel"
 msgstr ""
 
@@ -13699,6 +13726,9 @@ msgid ""
 "occurred?"
 msgstr ""
 
+msgid "What makes you, you? Others read this first."
+msgstr ""
+
 #, python-format
 msgid ""
 "What the agents look for on the app. The values proposed are the defaults"
@@ -13879,6 +13909,9 @@ msgid "Wrapped exception:"
 msgstr ""
 
 msgid "Write a caption for every photo"
+msgstr ""
+
+msgid "Write a few lines about you"
 msgstr ""
 
 msgid "Write a message..."
@@ -14085,9 +14118,6 @@ msgstr[1] ""
 msgid "You have left this platform."
 msgstr ""
 
-msgid "You have no photos yet."
-msgstr ""
-
 msgid "You have not posted in any community yet."
 msgstr ""
 
@@ -14162,10 +14192,10 @@ msgstr ""
 msgid "Your experiment archive is ready to download."
 msgstr ""
 
-msgid "Your photos"
+msgid "Your profile"
 msgstr ""
 
-msgid "Your profile"
+msgid "Your profile is complete."
 msgstr ""
 
 msgid "Your profile is not reachable right now. Try again in a moment."

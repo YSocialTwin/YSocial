@@ -19,7 +19,7 @@
       <a href="{{ link('') }}"{% if nav == 'home' %} aria-current="page"{% endif %}>{{ _('Discover') if ctx.vp.kind != 'public' else _('Profiles') }}</a>
       {% if ctx.vp.kind != 'public' %}<a href="{{ link('/matches') }}"{% if nav == 'matches' %} aria-current="page"{% endif %}>{{ _('Matches') }}</a>{% endif %}
       {% if participant %}<a href="{{ link('/me') }}"{% if nav == 'me' %} aria-current="page"{% endif %}>{{ _('Profile') }}</a>{% endif %}
-      {% if ctx.vp.kind == 'account' %}<a href="{{ link('/notifications') }}"{% if nav == 'notifications' %} aria-current="page"{% endif %}>{{ _('Notifications') }}</a>{% endif %}
+      {% if ctx.vp.kind == 'account' %}{% if unread %}<a href="{{ link('/notifications') }}"{% if nav == 'notifications' %} aria-current="page"{% endif %}>{{ _('Notifications') }} <b class="dt-badge" aria-label="{{ _('%(n)s to read', n=unread) }}">{{ unread if unread < 100 else '99+' }}</b></a>{% else %}<span class="dt-nav-off" aria-disabled="true" title="{{ _('Nothing new.') }}">{{ _('Notifications') }}</span>{% endif %}{% endif %}
       <a href="{{ link('/search') }}"{% if nav == 'search' %} aria-current="page"{% endif %}>{{ _('Search') }}</a>
     </nav>
     <div class="dt-tools">
