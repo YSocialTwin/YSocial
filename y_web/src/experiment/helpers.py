@@ -230,25 +230,41 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     if is_im_experiment(experiment):
         # IM owns its database and keeps no YWeb participant row (no ``user_mgmt``): the participant is the
         # runtime's human account, derived from the experiment and the user, registered when the person first acts
-        user = _im_participant(
-            experiment, kwargs.get("user_id"), kwargs.get("username")
-        )
+        user = _im_participant(experiment, kwargs.get("user_id"), kwargs.get("username"))
         if account_id is not None and user is not None:
             # Training Modules marks the scenario as entered from this hook, whatever the platform
             from y_web.src.external_runtime.plugin_hooks import emit_hook
 
-            emit_hook(
-                "experiment_user_provisioned", experiment, account_id, user.id, False
-            )
+            emit_hook("experiment_user_provisioned", experiment, account_id, user.id, False)
         return user, False
     user, created = _ensure_experiment_user(experiment, **kwargs)
     if account_id is not None and user is not None:
         from y_web.src.external_runtime.plugin_hooks import emit_hook
 
-        emit_hook(
-            "experiment_user_provisioned", experiment, account_id, user.id, created
-        )
+        emit_hook("experiment_user_provisioned", experiment, account_id, user.id, created)
     return user, created
+
+
+def _check_constraint_values(engine: Engine) -> Dict[str, str]:
+    """First allowed value of every ``col IN ('a', 'b', ...)`` CHECK constraint of ``user_mgmt``."""
+    import re
+
+    from sqlalchemy import inspect
+
+    found: Dict[str, str] = {}
+    try:
+        checks = inspect(engine).get_check_constraints("user_mgmt")
+    except Exception:
+        return found
+    for check in checks:
+        match = re.match(
+            r"^\s*\(?\s*[\"`\[]?(\w+)[\"`\]]?\s+IN\s*\(\s*'([^']*)'",
+            check.get("sqltext", ""),
+            re.IGNORECASE,
+        )
+        if match:
+            found.setdefault(match.group(1), match.group(2))
+    return found
 
 
 def _required_unmapped_columns(engine: Engine) -> Dict[str, object]:
@@ -262,11 +278,16 @@ def _required_unmapped_columns(engine: Engine) -> Dict[str, object]:
     except Exception:
         return {}
     mapped = {c.name for c in User_mgmt.__table__.columns}
+    allowed = _check_constraint_values(engine)
     extra: Dict[str, object] = {}
     for col in columns:
         if col["name"] in mapped or col.get("nullable", True):
             continue
         if col.get("default") is not None or col.get("autoincrement") is True:
+            continue
+        if col["name"] in allowed:
+            # a CHECK ... IN (...) column (Dating ``status``): the first listed value is the initial one ("active")
+            extra[col["name"]] = allowed[col["name"]]
             continue
         kind = str(col.get("type", "")).upper()
         extra[col["name"]] = (
@@ -328,20 +349,15 @@ def _ensure_experiment_user(
     try:
         selected_user_id = ""
         if (
-            str(getattr(experiment, "platform_type", "") or "").strip().lower()
-            == "photo_sharing"
+            str(getattr(experiment, "platform_type", "") or "").strip().lower() == "photo_sharing"
             and str(getattr(current_user, "role", "") or "").strip().lower() == "admin"
         ):
             selected_user_id = str(
-                session.get("photo_view_user_id")
-                or session.get("photo_switch_user_id")
-                or ""
+                session.get("photo_view_user_id") or session.get("photo_switch_user_id") or ""
             ).strip()
 
         if selected_user_id:
-            selected_user = (
-                db_session.query(User_mgmt).filter_by(id=selected_user_id).first()
-            )
+            selected_user = db_session.query(User_mgmt).filter_by(id=selected_user_id).first()
             if selected_user is not None:
                 user = selected_user
                 return user, False
@@ -436,9 +452,7 @@ def fetch_simulation_clock(experiment: Exps) -> Dict[str, object]:
     """
     Retrieve the last recorded round (day/hour) for the given experiment.
     """
-    default = SimulationClock(
-        day=0, hour=0, is_running=bool(experiment.running), source="none"
-    )
+    default = SimulationClock(day=0, hour=0, is_running=bool(experiment.running), source="none")
 
     engine, dispose_engine = _bind_engine_for_experiment(experiment)
     engine_source: Optional[str] = None
@@ -452,9 +466,7 @@ def fetch_simulation_clock(experiment: Exps) -> Dict[str, object]:
             latest_post_round_id = _fetch_latest_post_round(engine)
             if latest_post_round_id:
                 post_round = _fetch_round_by_id(engine, latest_post_round_id)
-                if post_round and (
-                    latest_round is None or post_round["id"] > latest_round["id"]
-                ):
+                if post_round and (latest_round is None or post_round["id"] > latest_round["id"]):
                     latest_round = post_round
         except SQLAlchemyError:
             latest_round = None
