@@ -296,7 +296,9 @@ def test_notifications_count_only_what_is_still_to_read(tmp_path):
         vp = Viewpoint(ACCOUNT, me, 12)
         items = reader.notifications(me, vp)
         assert {i["kind"] for i in items} == {"match", "message"}
-        assert reader.unread_count(me, vp) == 1  # one message of the other person; the match has chat
+        assert (
+            reader.unread_count(me, vp) == 1
+        )  # one message of the other person; the match has chat
         reader.c.close()
 
 
