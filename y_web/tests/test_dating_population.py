@@ -702,3 +702,13 @@ def test_generated_placeholders_become_names_of_people():
     assert [
         a["username"] for a in dp.give_names(doc(), {"Taken"}, seed=3)["agents"]
     ] == names
+
+
+def test_genders_are_written_the_way_the_runtime_compares_them():
+    """male/female of the other platforms become man/woman, so the seeking filter finds candidates."""
+    from y_web.src.dating import population as dp
+
+    data = {"agents": [{"gender": "male"}, {"gender": "Female"}, {"gender": "non-binary"}, {"gender": None}]}
+    out = dp.runtime_genders(data)
+    assert [a["gender"] for a in out["agents"]] == ["man", "woman", "non-binary", None]
+    assert data["agents"][0]["gender"] == "male"  # the input is not changed

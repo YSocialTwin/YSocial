@@ -454,6 +454,24 @@ def adults_only(data: Dict[str, Any]) -> Tuple[Dict[str, Any], int]:
     return {**data, "agents": kept}, len(agents) - len(kept)
 
 
+_RUNTIME_GENDER = {"male": "man", "m": "man", "men": "man", "female": "woman", "f": "woman", "women": "woman"}
+
+
+def runtime_genders(data: Dict[str, Any]) -> Dict[str, Any]:
+    """The document with the genders written the way YDating compares them.
+
+    Populations of the other platforms say ``male``/``female`` while the dating profiles (``seeking_genders``) and the
+    recommender use ``man``/``woman``: left as they are, no agent is ever a candidate of another and every deck is
+    empty (no swipes, no matches). Other values (non-binary and the like) are kept as they are.
+    """
+    agents = []
+    for agent in data.get("agents") or []:
+        value = str(agent.get("gender") or "").strip().lower()
+        mapped = _RUNTIME_GENDER.get(value)
+        agents.append({**agent, "gender": mapped} if mapped else agent)
+    return {**data, "agents": agents}
+
+
 def complete_population(
     population_id: int,
     config: Optional[Dict[str, Any]] = None,

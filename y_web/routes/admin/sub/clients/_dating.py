@@ -187,6 +187,7 @@ def create_dating_client():
         return redirect(back)
     # a person under 18 cannot be on the app: those agents are left out of the run, the others are deployed
     pop_data, minors = dp.adults_only(pop_data)
+    pop_data = dp.runtime_genders(pop_data)
     if minors:
         flash(
             _(
