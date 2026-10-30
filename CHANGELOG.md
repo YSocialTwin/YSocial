@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dating admin pages aligned with YSimulator**: the dating population is created in the standard population form
   (platform *Dating*, also for file upload); client and experiment settings use switches, tags, the 0-10 importance
   scale, sliders, an hourly activity chart, a quick reference guide and an advanced-settings switch.
+  The Dating population uses the same selectors and percentages (total 100) as the other platforms, including age
+  classes, nationality and spoken language; Big Five, cities and interests are sampled; the matching recommender is
+  chosen in the client; every dating parameter has a proposed default.
 - **Instant messaging platform** (YInstantMessaging runtime, installed from the Plugins page)
   - Experiment, population and client creation, validation with `yim-validate`, start/stop/resume, clone, reset,
     download, upload, export and reports.

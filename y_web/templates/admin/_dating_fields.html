@@ -19,7 +19,7 @@
     </div>
 {%- elif item.widget == 'select' -%}
     <div class="select"><select name="{{ f.name }}" {% if disabled %}disabled{% endif %}>
-        {% for choice in f.choices %}<option value="{{ choice }}" {% if choice|string == value %}selected{% endif %}>{{ choice }}</option>{% endfor %}
+        {% for choice in (item.options if item.options is not none else f.choices) %}<option value="{{ choice }}" {% if choice|string == value %}selected{% endif %}>{{ choice if choice != '' else _('Population or experiment default') }}</option>{% endfor %}
     </select></div>
 {%- elif item.widget == 'slider' -%}
     <div class="dating-slider">

@@ -221,6 +221,7 @@ def test_the_agent_template_includes_the_dating_section_only_when_available(app)
         "dating_latent_attractiveness",
         "dating_appearance_glasses",
         "dating_photo_captions",
-        "dating_match_recsys",
     ):
         assert f'name="{name}"' in html
+    # the recommender is a choice of the client, not of each individual
+    assert "dating_match_recsys" not in html

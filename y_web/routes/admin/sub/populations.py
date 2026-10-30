@@ -1710,6 +1710,20 @@ def _dating_form_context():
             for r in db.session.scalars(select(Profession).limit(200)).all()
         ],
         "dating_appearance_labels": dp.APPEARANCE_LABELS,
+        "dating_defaults": {
+            "intents": dp.INTENT_DEFAULTS,
+            "seeking": dp.SEEKING_DEFAULTS,
+            "seeking_sets": dp.SEEKING_SETS,
+            "appearance": dp.APPEARANCE_DEFAULTS,
+            "appearance_options": dp.APPEARANCE_OPTIONS,
+            "latent": dp.LATENT_DEFAULTS,
+            "affective": dp.AFFECTIVE_DEFAULT_RANGE,
+            "activity": dp.ACTIVITY_DEFAULT_RANGE,
+            "height": dp.HEIGHT_DEFAULT_RANGE,
+            "glasses": dp.GLASSES_DEFAULT_PERCENT,
+            "photos": dp.PHOTOS_DEFAULT_RANGE,
+            "age_window": dp.AGE_WINDOW_DEFAULT_RANGE,
+        },
     }
 
 
@@ -1765,8 +1779,22 @@ def _generate_dating_population():
         data = dp.generate(
             request.form.get("n_agents"),
             seed=request.form.get("seed"),
-            language=(request.form.get("language") or "").strip() or None,
-            config=dp.config_from_form(request.form),
+            language=dp.language_code(request.form.get("languages")) or None,
+            config=dp.config_from_population_form(
+                request.form,
+                {
+                    str(r.id): (r.age_start, r.age_end)
+                    for r in db.session.scalars(select(AgeClass)).all()
+                },
+                {
+                    str(r.id): r.education_level
+                    for r in db.session.scalars(select(Education)).all()
+                },
+                {
+                    str(r.id): r.leaning
+                    for r in db.session.scalars(select(Leanings)).all()
+                },
+            ),
         )
     except dp.DatingPopulationError as exc:
         flash(

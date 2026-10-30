@@ -79,7 +79,10 @@ def clients_dating(idexp):
         {
             "switches": switches,
             "sections": settings_ui.layout(
-                fields, settings_ui.CLIENT_SECTIONS, switches
+                fields,
+                settings_ui.CLIENT_SECTIONS,
+                switches,
+                {"match_recsys": [""] + server_settings.recsys_models(repo)},
             ),
             "adv_values": dcc.values_for_form(repo),
             "slots_per_day": (server_config.get("simulation") or {}).get(
@@ -269,7 +272,10 @@ def client_details_dating(uid):
         population=population,
         config=config,
         sections=settings_ui.layout(
-            dcc.form_fields(repo), settings_ui.CLIENT_SECTIONS, switches
+            dcc.form_fields(repo),
+            settings_ui.CLIENT_SECTIONS,
+            switches,
+            {"match_recsys": [""] + server_settings.recsys_models(repo)},
         ),
         values=dcc.values_for_form(repo, config),
         slots_per_day=slots,

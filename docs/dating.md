@@ -29,10 +29,11 @@ writes of a person go through the runtime's gateway.
    as another user would see it.
    Dating populations are created in the same form as those of the other platforms (Admin > Populations: choose the
    platform **Dating**, available only when YDating is installed; the same applies to *Load Population from file*).
-   The Dating sections replace the standard ones and have the same demographic variables as the standard form (age, gender, nationality,
-   education, political leaning, profession, Big Five labels) and the dating-specific ones: genders sought, intents,
-   cities, distance and age window, interests, photos, appearance, latent variables, affective traits, activity level
-   and matching recommender. Empty fields use the generator default; weights are written as `label=weight`.
+   Name, size, nationality, spoken language, age classes, gender, education and political leaning use the same
+   selectors, with percentages that total 100, as the other platforms; the Dating sections add the intent, the genders
+   sought by women and by men, appearance, latent variables, affective traits and the daily activity level, each with a
+   proposed default. Personality, cities and distances and interests are sampled by the generator. The recommender is
+   chosen in the client (section *Recommender*), not for each individual.
    Ad hoc agents can carry the same variables: the **Dating** section of Admin > Agents (also shown only when YDating
    is installed) stores them as `dating.*` custom fields, which the other platforms ignore; assign the agent to a
    dating population to use it in a dating simulation.

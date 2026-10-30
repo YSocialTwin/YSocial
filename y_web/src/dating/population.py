@@ -548,6 +548,23 @@ def _cities(text: Any) -> List[Dict[str, Any]]:
     return out
 
 
+def _age_classes(text: Any) -> List[Dict[str, Any]]:
+    """``"18-29=30, 30-49=50"`` -> ``[{"min": 18, "max": 29, "weight": 30.0}, ...]`` (empty text gives ``[]``)."""
+    out: List[Dict[str, Any]] = []
+    for part in str(text or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        m = re.fullmatch(r"(\d+)\s*-\s*(\d+)\s*=\s*([0-9.]+)", part)
+        if not m:
+            raise DatingPopulationError(
+                [f"age_classes: {part!r} is not min-max=weight"]
+            )
+        low, high = sorted((max(18, int(m.group(1))), int(m.group(2))))
+        out.append({"min": low, "max": max(low, high), "weight": float(m.group(3))})
+    return out
+
+
 def config_from_form(form) -> Dict[str, Any]:
     """The generator parameters (``schemas/population/generator.json``) described by the admin form.
 
@@ -572,6 +589,9 @@ def config_from_form(form) -> Dict[str, Any]:
         weights = parse_weights(form.get(field), field)
         if weights:
             cfg[key] = weights
+    classes = _age_classes(form.get("age_classes_spec"))
+    if classes:
+        cfg["age_classes"] = classes
     seeking = _seeking(form.get("seeking"))
     if seeking:
         cfg["seeking"] = seeking
@@ -660,3 +680,158 @@ def population_row_values(data: Dict[str, Any]) -> Tuple[int, int, int]:
 
 def is_dating_population(population) -> bool:
     return getattr(population, "username_type", None) == DATING_PLATFORM
+
+
+# ---------------------------------------------------------------------------------------------------
+# The Dating sections of the standard population form (platform "Dating"): selectors with percentages that sum to
+# 100, exactly like the other platforms; every parameter has a proposed default (the same values are shown in the form)
+# ---------------------------------------------------------------------------------------------------
+LANGUAGE_CODES = {
+    "english": "en", "spanish": "es", "armenian": "hy", "german": "de", "azerbaijani": "az", "bengali": "bn",
+    "dutch": "nl", "portuguese": "pt", "bulgarian": "bg", "chinese": "zh", "croatian": "hr", "czech": "cs",
+    "danish": "da", "estonian": "et", "finnish": "fi", "french": "fr", "georgian": "ka", "greek": "el",
+    "hungarian": "hu", "hindi": "hi", "indonesian": "id", "persian": "fa", "irish": "ga", "hebrew": "he",
+    "italian": "it", "japanese": "ja", "latvian": "lv", "lithuanian": "lt", "nepali": "ne", "norwegian": "no",
+    "polish": "pl", "romanian": "ro", "russian": "ru", "slovak": "sk", "slovenian": "sl", "swedish": "sv",
+    "thai": "th", "turkish": "tr", "ukrainian": "uk",
+}  # fmt: skip
+INTENT_DEFAULTS = {"serious": 35, "casual": 20, "friendship": 10, "unsure": 35}
+SEEKING_SETS = ("man", "woman", "man+woman")
+SEEKING_DEFAULTS = {
+    "woman": {"man": 85, "woman": 10, "man+woman": 5},
+    "man": {"woman": 85, "man": 10, "man+woman": 5},
+}
+APPEARANCE_DEFAULTS: Dict[str, Dict[str, int]] = {
+    "hair_color": {"black": 30, "brown": 40, "blond": 20, "red": 5, "gray": 5},
+    "hair_length": {"short": 35, "medium": 40, "long": 25},
+    "hair_style": {"straight": 50, "wavy": 30, "curly": 20},
+    "eye_color": {"brown": 55, "blue": 20, "green": 10, "hazel": 15},
+    "skin_tone": {"light": 40, "medium": 30, "tan": 20, "dark": 10},
+    "build": {"slim": 30, "average": 40, "athletic": 25, "curvy": 5},
+    "mood": {"smiling": 50, "relaxed": 30, "serious": 20},
+    "photo_style": {"casual": 60, "outdoor": 25, "professional": 15},
+    # optional: not assigned unless the person picks them
+    "facial_hair": {},
+    "distinctive_features": {},
+}
+APPEARANCE_OPTIONS: Dict[str, List[str]] = {
+    **{k: list(v) for k, v in APPEARANCE_DEFAULTS.items()},
+    "facial_hair": ["clean-shaven", "stubble", "beard", "moustache"],
+    "distinctive_features": ["freckles", "dimples", "tattoo", "birthmark"],
+}
+LATENT_DEFAULTS = {
+    "attractiveness": (2, 2),
+    "selectivity": (2, 3),
+    "responsiveness": (3, 2),
+}
+AFFECTIVE_DEFAULT_RANGE = (0.7, 1.3)
+ACTIVITY_DEFAULT_RANGE = (1, 3)
+HEIGHT_DEFAULT_RANGE = (155, 195)
+GLASSES_DEFAULT_PERCENT = 20
+PHOTOS_DEFAULT_RANGE = (1, 3)
+AGE_WINDOW_DEFAULT_RANGE = (4, 10)
+DISTRIBUTION_FIELDS = (  # control name of the percentage selector -> (label of the error, generator field)
+    ("d_intents", "intent"),
+    ("d_seek_woman", "seeking of women"),
+    ("d_seek_man", "seeking of men"),
+) + tuple(
+    (f"d_appearance_{k}", k.replace("_", " ")) for k in APPEARANCE_LABELS
+)
+
+
+def _percentages(
+    form, field: str, names: Optional[Dict[str, str]] = None
+) -> Dict[str, float]:
+    """The ``{label: percent}`` of a multi-select with percentages (``field`` carries the ids, ``field_percentages``
+    the JSON ``{id: percent}``); the percentages must sum to 100. ``names`` maps an id to its label.
+    """
+    ids = [str(i).strip() for i in form.getlist(field) if str(i).strip()]
+    if not ids:
+        return {}
+    try:
+        raw = json.loads(form.get(f"{field}_percentages") or "{}")
+    except (TypeError, ValueError):
+        raw = {}
+    out: Dict[str, float] = {}
+    for i in ids:
+        label = (names or {}).get(i, i)
+        try:
+            out[label] = float(raw.get(i, 0))
+        except (TypeError, ValueError):
+            raise DatingPopulationError(
+                [f"{field}: invalid percentage for {i}"]
+            ) from None
+    if any(v < 0 for v in out.values()) or abs(sum(out.values()) - 100.0) > 0.05:
+        raise DatingPopulationError([f"{field}: the percentages must sum to 100"])
+    return out
+
+
+def _weights_text(weights: Dict[str, float]) -> str:
+    return ", ".join(f"{k}={v:g}" for k, v in weights.items())
+
+
+def config_from_population_form(
+    form,
+    age_classes: Dict[str, Tuple[int, int]],
+    education: Dict[str, str],
+    leanings: Dict[str, str],
+) -> Dict[str, Any]:
+    """Generator parameters from the standard population form (platform Dating).
+
+    ``age_classes`` maps the id of an age class to its ``(start, end)``; ``education`` and ``leanings`` map an id to
+    the value written on the agents. Everything the person leaves out keeps the generator default.
+    """
+    legacy: Dict[str, Any] = {}
+    classes = _percentages(form, "age_classes")
+    spec = []
+    for i, pct in classes.items():
+        low, high = age_classes.get(i) or age_classes.get(str(i)) or (None, None)
+        if low is None:
+            raise DatingPopulationError([f"age_classes: unknown class {i}"])
+        spec.append(f"{max(18, int(low))}-{int(high)}={pct:g}")
+    legacy["age_classes_spec"] = ", ".join(spec)
+    male = _number(form.get("male_percentage"), "male_percentage", float, 0, 100)
+    female = _number(form.get("female_percentage"), "female_percentage", float, 0, 100)
+    if male is not None and female is not None and abs(male + female - 100) > 0.05:
+        raise DatingPopulationError(["gender: the percentages must sum to 100"])
+    if male is not None and female is not None:
+        legacy["genders"] = _weights_text({"man": male, "woman": female})
+    nationality = (form.get("nationalities") or "").strip()
+    if nationality:
+        legacy["nationalities"] = f"{nationality}=1"
+    legacy["education_levels"] = _weights_text(
+        _percentages(form, "education_levels", education)
+    )
+    legacy["leanings"] = _weights_text(
+        _percentages(form, "political_leanings", leanings)
+    )
+    legacy["intents"] = _weights_text(_percentages(form, "d_intents"))
+    lines = []
+    for gender in ("woman", "man"):
+        weights = _percentages(form, f"d_seek_{gender}")
+        if weights:
+            lines.append(f"{gender}: {_weights_text(weights)}")
+    legacy["seeking"] = "\n".join(lines)
+    for key in APPEARANCE_LABELS:
+        legacy[f"appearance_{key}"] = _weights_text(
+            _percentages(form, f"d_appearance_{key}")
+        )
+    for key in (
+        "appearance_height_cm_min", "appearance_height_cm_max", "appearance_glasses",
+        "photos_per_agent_min", "photos_per_agent_max", "age_window_min", "age_window_max",
+        "daily_activity_level_min", "daily_activity_level_max",
+    ):  # fmt: skip
+        legacy[key] = form.get(key)
+    for name in LATENT_VARIABLES:
+        legacy[f"latent_{name}_a"] = form.get(f"latent_{name}_a")
+        legacy[f"latent_{name}_b"] = form.get(f"latent_{name}_b")
+    for trait in AFFECTIVE_TRAITS:
+        legacy[f"affective_{trait}_min"] = form.get(f"affective_{trait}_min")
+        legacy[f"affective_{trait}_max"] = form.get(f"affective_{trait}_max")
+    return config_from_form(legacy)
+
+
+def language_code(name: Any) -> str:
+    """Code of a language of the standard catalogue ("Italian" -> "it"); an unknown name is passed on lower-cased."""
+    text = str(name or "").strip().lower()
+    return LANGUAGE_CODES.get(text, text[:10])

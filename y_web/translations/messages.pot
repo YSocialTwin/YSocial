@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 09:12+0000\n"
+"POT-Creation-Date: 2026-10-30 09:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -706,9 +706,6 @@ msgstr ""
 msgid "Activity Rates Visualization"
 msgstr ""
 
-msgid "Activity and recommendation"
-msgstr ""
-
 msgid "Activity of each hour of the day"
 msgstr ""
 
@@ -882,24 +879,10 @@ msgstr ""
 msgid "Age from"
 msgstr ""
 
-msgid "Age mean"
-msgstr ""
-
-msgid "Age range"
-msgstr ""
-
 msgid "Age range must fit both ways"
 msgstr ""
 
-msgid "Age standard deviation"
-msgstr ""
-
 msgid "Age window (years)"
-msgstr ""
-
-msgid ""
-"Age, gender, nationality and background of the agents. Every agent lives "
-"in a city of its nationality."
 msgstr ""
 
 msgid "Age, oldest first"
@@ -1379,9 +1362,6 @@ msgstr ""
 msgid "Async Embedding"
 msgstr ""
 
-msgid "At least 18 (default 18 to 65)."
-msgstr ""
-
 msgid "At least one number"
 msgstr ""
 
@@ -1724,9 +1704,6 @@ msgid "Big Five Personality Profile"
 msgstr ""
 
 msgid "Big Five Personality profile"
-msgstr ""
-
-msgid "Big Five personality profile"
 msgstr ""
 
 msgid "Big-5 Personality Traits"
@@ -2118,9 +2095,6 @@ msgstr ""
 msgid "City"
 msgstr ""
 
-msgid "City radius (km)"
-msgstr ""
-
 msgid "Clear"
 msgstr ""
 
@@ -2184,6 +2158,9 @@ msgid "Click to select political leanings..."
 msgstr ""
 
 msgid "Click to select toxicity levels..."
+msgstr ""
+
+msgid "Click to select..."
 msgstr ""
 
 msgid "Client"
@@ -3309,14 +3286,14 @@ msgstr ""
 msgid "Dating LLM Prompts"
 msgstr ""
 
+msgid "Dating Profile"
+msgstr ""
+
 msgid "Dating analytics"
 msgstr ""
 
 #, python-format
 msgid "Dating client '%(name)s' created successfully"
-msgstr ""
-
-msgid "Dating demographics"
 msgstr ""
 
 msgid ""
@@ -3330,9 +3307,6 @@ msgstr ""
 msgid "Dating experiments are unavailable because YDating is not present."
 msgstr ""
 
-msgid "Dating generation"
-msgstr ""
-
 msgid "Dating pages"
 msgstr ""
 
@@ -3342,9 +3316,6 @@ msgstr ""
 
 #, python-format
 msgid "Dating population '%(name)s' imported."
-msgstr ""
-
-msgid "Dating profile"
 msgstr ""
 
 msgid "Dating settings"
@@ -3456,25 +3427,7 @@ msgstr ""
 msgid "Decline"
 msgstr ""
 
-msgid "Default"
-msgstr ""
-
 msgid "Default (English)"
-msgstr ""
-
-msgid "Default 0.35, 0.2, 0.1, 0.35."
-msgstr ""
-
-msgid "Default 1 to 3."
-msgstr ""
-
-msgid "Default 2 to 5."
-msgstr ""
-
-msgid "Default 31."
-msgstr ""
-
-msgid "Default 7."
 msgstr ""
 
 msgid "Default content recommender"
@@ -3899,6 +3852,9 @@ msgid ""
 "populate, in real time, the page timeline with real-world articles."
 msgstr ""
 
+msgid "Each agent draws a whole number in this range (1 is the baseline)."
+msgstr ""
+
 msgid ""
 "Each bar is one author, and its height is the total number of times that "
 "author’s posts appeared in recommendation sets."
@@ -3999,9 +3955,6 @@ msgstr ""
 msgid "Education level not found."
 msgstr ""
 
-msgid "Education levels"
-msgstr ""
-
 msgid "Effect of selectivity on the threshold"
 msgstr ""
 
@@ -4077,9 +4030,6 @@ msgid "Emotions"
 msgstr ""
 
 msgid "Empty Populations"
-msgstr ""
-
-msgid "Empty uses the experiment default."
 msgstr ""
 
 msgid "Enable"
@@ -5109,9 +5059,6 @@ msgstr ""
 msgid "Gender Distribution"
 msgstr ""
 
-msgid "Gender distribution"
-msgstr ""
-
 msgid "Gender distribution must total 100%."
 msgstr ""
 
@@ -5122,6 +5069,12 @@ msgid "Genders allowed to write first"
 msgstr ""
 
 msgid "Genders sought"
+msgstr ""
+
+msgid "Genders sought by men"
+msgstr ""
+
+msgid "Genders sought by women"
 msgstr ""
 
 msgid "General Settings"
@@ -5545,9 +5498,6 @@ msgstr ""
 msgid "Hourly profiles by archetype"
 msgstr ""
 
-msgid "How active the agents are and which matching recommender they use."
-msgstr ""
-
 msgid "How agents find chats to join or leave."
 msgstr ""
 
@@ -5603,6 +5553,11 @@ msgid "How often an open page looks for new rounds (1 to 60)"
 msgstr ""
 
 msgid "How often and when agents are active."
+msgstr ""
+
+msgid ""
+"How often each agent opens the app: the daily activity level scales the "
+"probability of a session. The recommender is chosen in the client."
 msgstr ""
 
 msgid "How often memory reflections are generated."
@@ -5951,14 +5906,6 @@ msgstr ""
 msgid "Intent"
 msgstr ""
 
-msgid "Intent distribution"
-msgstr ""
-
-msgid ""
-"Intent, location, matching constraints, interests and photos of every "
-"agent."
-msgstr ""
-
 msgid "Intents"
 msgstr ""
 
@@ -5978,9 +5925,6 @@ msgid "Intercept"
 msgstr ""
 
 msgid "Interest"
-msgstr ""
-
-msgid "Interest catalogue, separated by commas. Default: ten common interests."
 msgstr ""
 
 msgid "Interest learning rate (λ)"
@@ -6008,9 +5952,6 @@ msgid "Interests & Opinions"
 msgstr ""
 
 msgid "Interests (separate with commas)"
-msgstr ""
-
-msgid "Interests per agent"
 msgstr ""
 
 msgid ""
@@ -6391,9 +6332,6 @@ msgstr ""
 msgid "Language Spoken"
 msgstr ""
 
-msgid "Language code written on every agent (for example en, it)."
-msgstr ""
-
 msgid "Language model"
 msgstr ""
 
@@ -6446,14 +6384,14 @@ msgstr ""
 msgid "Last Seen"
 msgstr ""
 
-msgid "Latent variables and affective traits"
+msgid "Latent Variables and Affective Traits"
 msgstr ""
 
 msgid ""
-"Latent variables follow a Beta(a, b) distribution (default Beta(2, 2)); "
-"they drive the rule-based matching and the metrics and are never shown to"
-" the agents. Affective traits are uniform ranges used only when stress "
-"and reward are enabled (default 1.0)."
+"Latent variables follow a Beta(a, b) distribution; they drive the rule-"
+"based matching and the metrics and are never shown to the agents. "
+"Affective traits are uniform ranges used only when stress and reward are "
+"enabled in the experiment."
 msgstr ""
 
 msgid "Latent variables, affective traits and recommender"
@@ -6505,13 +6443,6 @@ msgid "Leave empty for no password"
 msgstr ""
 
 msgid "Leave empty to use name from config..."
-msgstr ""
-
-msgid ""
-"Leave empty to use the main cities of each nationality. To choose them, "
-"write one line per city: name, latitude, longitude and, optionally, the "
-"weight and the nationality that lives there (without a nationality the "
-"city is used for everybody)."
 msgstr ""
 
 msgid "Leave fields empty to use the default activity profile."
@@ -6722,6 +6653,11 @@ msgstr ""
 msgid "Look for chats, users, groups, channels or posts from the search box."
 msgstr ""
 
+msgid ""
+"Look of the agents; it guides the profile photos. An attribute with no "
+"value selected is not assigned."
+msgstr ""
+
 msgid "Looking for"
 msgstr ""
 
@@ -6826,9 +6762,6 @@ msgid "Matches per stack"
 msgstr ""
 
 msgid "Matches with a date"
-msgstr ""
-
-msgid "Matching recommender"
 msgstr ""
 
 msgid "Matrix"
@@ -8078,11 +8011,6 @@ msgstr ""
 msgid "One line per answer: question: answer."
 msgstr ""
 
-msgid ""
-"One line per gender: the weights of the sets of genders sought (a set "
-"joins genders with +)."
-msgstr ""
-
 msgid "One line per photo; the image can be added later from the profile."
 msgstr ""
 
@@ -8303,6 +8231,9 @@ msgstr ""
 
 #, python-format
 msgid "Optional parameters: %(names)s"
+msgstr ""
+
+msgid "Optional."
 msgstr ""
 
 msgid "Optional: Group experiments together"
@@ -8533,9 +8464,6 @@ msgid ""
 "recommended."
 msgstr ""
 
-msgid "Percentage of agents with glasses."
-msgstr ""
-
 msgid "Persist memory events"
 msgstr ""
 
@@ -8748,9 +8676,6 @@ msgstr ""
 msgid "Political leaning"
 msgstr ""
 
-msgid "Political leanings"
-msgstr ""
-
 msgid "Political leanings, education and professions of the agents."
 msgstr ""
 
@@ -8860,6 +8785,9 @@ msgid "Population not found"
 msgstr ""
 
 msgid "Population not found."
+msgstr ""
+
+msgid "Population or experiment default"
 msgstr ""
 
 msgid "Population size must be a valid integer."
@@ -9401,9 +9329,6 @@ msgstr ""
 msgid "RSS-derived posts emitted"
 msgstr ""
 
-msgid "Radius around the city centre in which agents are placed. Default 15."
-msgstr ""
-
 msgid "Random"
 msgstr ""
 
@@ -9417,12 +9342,6 @@ msgid "Random if empty"
 msgstr ""
 
 msgid "Random seed"
-msgstr ""
-
-msgid "Range of the activity level of each agent. Default 1."
-msgstr ""
-
-msgid "Range of the maximum distance each agent accepts. Default 10 to 60."
 msgstr ""
 
 msgid "Range: 0-1, Default: 0"
@@ -9611,6 +9530,9 @@ msgid "Recommender info"
 msgstr ""
 
 msgid "Recommender internals (researcher only)"
+msgstr ""
+
+msgid "Recommender of these agents"
 msgstr ""
 
 msgid "Recommenders"
@@ -11150,9 +11072,6 @@ msgstr ""
 msgid "Spoken Languages"
 msgstr ""
 
-msgid "Spoken language"
-msgstr ""
-
 msgid "Spread of the reaction delay"
 msgstr ""
 
@@ -11989,10 +11908,7 @@ msgid ""
 "reset."
 msgstr ""
 
-msgid ""
-"The same seed and parameters always generate the same population. Fields "
-"left empty use the generator default; click a tag to give it a weight (a "
-"tag without weight counts 1)."
+msgid "The same seed and parameters always generate the same population."
 msgstr ""
 
 msgid "The same subreddit definition can be reused safely"
@@ -13511,19 +13427,6 @@ msgstr ""
 msgid "Weight of topic affinity"
 msgstr ""
 
-msgid ""
-"Weights of the labels of each attribute; an attribute left empty is not "
-"assigned. The attributes drive the profile photos."
-msgstr ""
-
-msgid "Weights of the labels of each trait; a trait left empty is not assigned."
-msgstr ""
-
-msgid ""
-"Weights of the recommenders assigned to the agents; empty uses the "
-"experiment default."
-msgstr ""
-
 msgid "Weights of the utility"
 msgstr ""
 
@@ -13573,6 +13476,14 @@ msgstr ""
 msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
+msgstr ""
+
+#, python-format
+msgid ""
+"What the agents look for on the app. The values proposed are the defaults"
+" of the generator: change them freely, every distribution must total "
+"100%%. Age, gender, nationality, language, education and political "
+"leaning are set in the sections above."
 msgstr ""
 
 msgid ""
@@ -13670,6 +13581,13 @@ msgid ""
 msgstr ""
 
 msgid "Which chats an agent looks at in a session and how they are ranked."
+msgstr ""
+
+msgid ""
+"Which model proposes the cards to the agents of this client. By default "
+"every agent keeps the recommender of its population, or the one of the "
+"experiment. The models and their parameters are in the experiment "
+"settings."
 msgstr ""
 
 msgid "Who are you with?"
@@ -13831,7 +13749,7 @@ msgstr ""
 
 msgid ""
 "Years below and above the own age that an agent accepts (each side drawn "
-"in this range). Default 4 to 10."
+"in this range)."
 msgstr ""
 
 msgid "Yes"

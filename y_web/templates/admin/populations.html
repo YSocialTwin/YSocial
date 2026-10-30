@@ -73,7 +73,6 @@
                                     </div>
                                     </div><!-- End section-basic-info -->
 
-                                    <fieldset id="standard-population-sections" class="ys-fieldset-reset">
                                     <div id="section-demographics" class="tutorial-section">
                                     <div class="form-section-header">{{ _('Demographics') }}</div>
                                     <div class="form-section-description">
@@ -206,7 +205,8 @@
  <div id="political_leanings_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
-                                    <div class="box-line">
+                                    <fieldset class="ys-fieldset-reset" data-platform-only="standard">
+<div class="box-line">
  <span class="left text-danger">{{ _('Toxicity Levels') }} <span>*</span></span>
  <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
@@ -230,9 +230,11 @@
  <div id="toxicity_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
-                                    </div><!-- End section-social-attributes -->
+                                    </fieldset>
+</div><!-- End section-social-attributes -->
 
-                                    <div id="photo-sharing-config-wrapper" class="tutorial-section d-none">
+                                    <fieldset class="ys-fieldset-reset" data-platform-only="standard">
+<div id="photo-sharing-config-wrapper" class="tutorial-section d-none">
                                         <details id="photo-sharing-config-panel" open>
                                             <summary class="form-section-header ys-clickable">
                                                 {{ _('Photo Sharing Configuration') }} <span class="ys-text-sm-normal">{{ _('(Only for Photo Sharing populations)') }}</span>
@@ -525,7 +527,7 @@
 
 
                                     </div><!-- End section-activity-engagement -->
-                                    </fieldset><!-- End standard-population-sections -->
+                                    </fieldset>
                                     {% if dating_available %}{% include "admin/_dating_population_form.html" %}{% endif %}
 
                                 </div>
@@ -701,5 +703,4 @@ var YS_DATA_POPULATIONS = {
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-populations.js') }}"></script>
-{% if dating_available %}<script src="{{ url_for('static', filename='assets/js/admin-dating-population.js') }}"></script>{% endif %}
 {% include "admin/footer.html" %}

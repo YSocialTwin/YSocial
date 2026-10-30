@@ -334,7 +334,7 @@ def test_generate_route_creates_a_population(app, routes):
                 "pop_name": "Gen",
                 "n_agents": "8",
                 "seed": "3",
-                "language": "it",
+                "languages": "Italian",
             },
         ):
             routes.mod.create_population.__wrapped__()
@@ -431,12 +431,17 @@ def test_config_from_form_refuses_malformed_values(form):
 
 
 @needs_runtime
-def test_generate_with_the_full_form_stores_every_field(app, routes):
+def test_generate_with_the_standard_selectors_stores_every_field(app, routes):
     from y_web import db
     from y_web.src.dating import population as dp
-    from y_web.src.models import Agent, Population
+    from y_web.src.models import AgeClass, Agent, Education, Leanings, Population
 
     with app.app_context():
+        edu = Education(education_level="master")
+        lean = Leanings(leaning="centrist")
+        young = AgeClass(name="Young", age_start=20, age_end=25)
+        db.session.add_all([edu, lean, young])
+        db.session.commit()
         with app.test_request_context(
             "/admin/create_population",
             method="POST",
@@ -445,36 +450,43 @@ def test_generate_with_the_full_form_stores_every_field(app, routes):
                 "pop_name": "Full",
                 "n_agents": "20",
                 "seed": "9",
-                "language": "it",
-                "genders": "woman=1, man=1",
-                "nationalities": "Italian=1",
-                "education_levels": "master=1",
-                "leanings": "center=1",
-                "professions": "nurse=1",
-                "personality_oe": "inventive/curious=1",
-                "appearance_hair_color": "black=1",
+                "languages": "Italian",
+                "nationalities": "Italian",
+                "male_percentage": "50",
+                "female_percentage": "50",
+                "age_classes": [str(young.id)],
+                "age_classes_percentages": json.dumps({str(young.id): 100}),
+                "education_levels": [str(edu.id)],
+                "education_levels_percentages": json.dumps({str(edu.id): 100}),
+                "political_leanings": [str(lean.id)],
+                "political_leanings_percentages": json.dumps({str(lean.id): 100}),
+                "d_intents": ["serious"],
+                "d_intents_percentages": json.dumps({"serious": 100}),
+                "d_appearance_hair_color": ["black"],
+                "d_appearance_hair_color_percentages": json.dumps({"black": 100}),
                 "appearance_glasses": "100",
                 "daily_activity_level_min": "2",
                 "daily_activity_level_max": "2",
-                "cities": "Pisa, 43.7, 10.4",
+                "latent_selectivity_a": "2",
+                "latent_selectivity_b": "3",
             },
         ):
             routes.mod.create_population.__wrapped__()
         row = db.session.query(Population).one()
         agent = db.session.query(Agent).first()
         assert row.size == 20 and not routes.flashes[-1][0] == "error"
-        assert agent.nationality == "Italian" and agent.profession == "nurse"
-        assert agent.education_level == "master" and agent.leaning == "center"
-        assert agent.oe == "inventive/curious" and agent.daily_activity_level == 2
+        assert agent.nationality == "Italian" and agent.language == "it"
+        assert agent.education_level == "master" and agent.leaning == "centrist"
+        assert agent.daily_activity_level == 2 and 20 <= agent.age <= 25
         doc = dp.load_document(row.id)
         a0 = doc["agents"][0]
         assert a0["appearance"]["hair_color"] == "black"
         assert a0["appearance"]["glasses"] is True
-        assert a0["profile"]["city"] == "Pisa"
+        assert a0["profile"]["intent"] == "serious"
 
 
 @needs_runtime
-def test_generate_route_reports_a_malformed_form(app, routes):
+def test_generate_route_reports_percentages_that_do_not_total_100(app, routes):
     from y_web import db
     from y_web.src.models import Population
 
@@ -486,12 +498,42 @@ def test_generate_route_reports_a_malformed_form(app, routes):
                 "username_type": "dating",
                 "pop_name": "Bad",
                 "n_agents": "8",
-                "genders": "woman=abc",
+                "d_intents": ["serious", "casual"],
+                "d_intents_percentages": json.dumps({"serious": 30, "casual": 30}),
             },
         ):
             routes.mod.create_population.__wrapped__()
         assert db.session.query(Population).count() == 0
         assert routes.flashes[-1][0] == "error"
+
+
+def test_the_form_composer_uses_percentages_and_proposed_defaults():
+    from werkzeug.datastructures import MultiDict
+
+    from y_web.src.dating import population as dp
+
+    form = MultiDict(
+        {
+            "male_percentage": "40",
+            "female_percentage": "60",
+            "nationalities": "French",
+            "age_classes": "1",
+            "age_classes_percentages": json.dumps({"1": 100}),
+            "d_seek_woman": ["man", "woman"],
+            "d_seek_woman_percentages": json.dumps({"man": 90, "woman": 10}),
+        }
+    )
+    cfg = dp.config_from_population_form(form, {"1": (10, 30)}, {}, {})
+    assert cfg["genders"] == {"man": 40.0, "woman": 60.0}
+    assert cfg["nationalities"] == {"French": 1.0}
+    assert cfg["age_classes"] == [{"min": 18, "max": 30, "weight": 100.0}]
+    assert cfg["seeking"] == {"woman": {"man": 90.0, "woman": 10.0}}
+    for table in dp.APPEARANCE_DEFAULTS.values():
+        assert not table or sum(table.values()) == 100
+    assert sum(dp.INTENT_DEFAULTS.values()) == 100
+    for table in dp.SEEKING_DEFAULTS.values():
+        assert sum(table.values()) == 100
+    assert dp.language_code("Italian") == "it" and dp.language_code("English") == "en"
 
 
 def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
@@ -510,18 +552,45 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
     assert "dating_popcreate_form" not in populations
     assert "box-create-dating-population" not in populations
     assert "/admin/dating_populations" not in populations
+    from y_web.src.dating import population as dp
+
+    defaults = {
+        "intents": dp.INTENT_DEFAULTS,
+        "seeking": dp.SEEKING_DEFAULTS,
+        "seeking_sets": dp.SEEKING_SETS,
+        "appearance": dp.APPEARANCE_DEFAULTS,
+        "appearance_options": dp.APPEARANCE_OPTIONS,
+        "latent": dp.LATENT_DEFAULTS,
+        "affective": dp.AFFECTIVE_DEFAULT_RANGE,
+        "activity": dp.ACTIVITY_DEFAULT_RANGE,
+        "height": dp.HEIGHT_DEFAULT_RANGE,
+        "glasses": dp.GLASSES_DEFAULT_PERCENT,
+        "photos": dp.PHOTOS_DEFAULT_RANGE,
+        "age_window": dp.AGE_WINDOW_DEFAULT_RANGE,
+    }
     with app.test_request_context("/"):
         html = app.jinja_env.from_string(form).render(
-            _=lambda text, **kw: text % kw,
-            dating_languages=["en"],
-            dating_nationalities=["Italian"],
-            dating_education_levels=["master"],
-            dating_leanings=["center"],
-            dating_professions=["nurse"],
+            _=lambda text, **kw: text % kw if kw else text,
+            dating_defaults=defaults,
         )
-    assert 'name="seed"' in html and 'name="appearance_glasses"' in html
-    assert 'name="personality_ne"' in html and 'name="seeking"' in html
-    assert 'data-weights-for="nationalities"' in html
+    # the selectors are the multi-selects with percentages of the other platforms, with proposed defaults
+    assert (
+        'id="d_intents_dropdown"' in html
+        and 'id="d_appearance_hair_color_dropdown"' in html
+    )
+    assert 'name="appearance_glasses"' in html and 'name="latent_selectivity_a"' in html
+    assert 'name="daily_activity_level_min"' in html and 'value="1"' in html
+    assert 'data-platform-only="dating"' in html
+    # what the standard form already asks, or the runtime samples, is not repeated
+    for name in (
+        "personality_",
+        "cities",
+        "city_radius_km",
+        "max_distance_km",
+        "interests",
+        "match_recsys",
+    ):
+        assert f'name="{name}' not in html
 
 
 def test_dating_runtime_availability_follows_the_registry(monkeypatch):
@@ -578,7 +647,7 @@ def test_generated_agents_live_in_a_city_of_their_nationality(app, routes):
                 "pop_name": "Nat",
                 "n_agents": "30",
                 "seed": "4",
-                "nationalities": "French=1, Japanese=1",
+                "nationalities": "French",
             },
         ):
             routes.mod.create_population.__wrapped__()

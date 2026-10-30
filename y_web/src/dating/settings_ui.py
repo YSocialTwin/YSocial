@@ -25,6 +25,7 @@ def N_(message):
 # --------------------------------------------------------------------------------------------- labels
 LABELS: Dict[str, str] = {
     # client: runtime
+    "match_recsys": N_("Recommender of these agents"),
     "heartbeat_interval": N_("Heartbeat interval (seconds)"),
     "poll_interval": N_("Polling interval (seconds)"),
     "logging.enable_execution_log": N_("Write the execution log file"),
@@ -241,6 +242,15 @@ CLIENT_SECTIONS: List[Section] = [
             "When the agents open the app and how many cards they decide each time. Each slot is one round of the experiment."
         ),
         [(None, ["activity."])],
+        None,
+    ),
+    (
+        "recommender",
+        N_("Recommender"),
+        N_(
+            "Which model proposes the cards to the agents of this client. By default every agent keeps the recommender of its population, or the one of the experiment. The models and their parameters are in the experiment settings."
+        ),
+        [(None, ["match_recsys"])],
         None,
     ),
     (
@@ -622,6 +632,8 @@ def is_advanced(path: str) -> bool:
 
 def widget_of(f: Any) -> str:
     """The widget a setting is drawn with (see the table above)."""
+    if f.path == "match_recsys":
+        return "select"
     if f.path in IMPORTANCE:
         return "importance"
     if f.path in TAGLISTS:
@@ -646,8 +658,9 @@ def widget_of(f: Any) -> str:
     return "text"
 
 
-def _item(f: Any) -> Dict[str, Any]:
+def _item(f: Any, options: Optional[Dict[str, List[str]]] = None) -> Dict[str, Any]:
     return {
+        "options": (options or {}).get(f.path),
         "f": f,
         "label": label_of(f.path),
         "widget": widget_of(f),
@@ -666,6 +679,7 @@ def layout(
     fields: List[Any],
     sections: List[Section],
     switches: Optional[Dict[str, bool]] = None,
+    options: Optional[Dict[str, List[str]]] = None,
 ) -> List[Dict[str, Any]]:
     """Group ``fields`` (``schema_forms.Field``) into the ``sections``; keys nobody claims go to "Other settings".
 
@@ -682,7 +696,7 @@ def layout(
             for key in keys:
                 for f in fields:
                     if f.path not in taken and _matches(f.path, key):
-                        chosen.append(_item(f))
+                        chosen.append(_item(f, options))
                         taken.add(f.path)
             if chosen:
                 blocks.append({"heading": heading, "fields": chosen})
@@ -711,7 +725,7 @@ def layout(
                 "blocks": [
                     {
                         "heading": None,
-                        "fields": [_item(f) for f in rest],
+                        "fields": [_item(f, options) for f in rest],
                     }
                 ],
                 "switch": None,

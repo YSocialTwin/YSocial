@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 09:12+0000\n"
+"POT-Creation-Date: 2026-10-30 09:35+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -781,9 +781,6 @@ msgstr "Configurazione dei tassi di attività"
 msgid "Activity Rates Visualization"
 msgstr "Visualizzazione dei tassi di attività"
 
-msgid "Activity and recommendation"
-msgstr "Attività e raccomandazione"
-
 msgid "Activity of each hour of the day"
 msgstr "Attività di ogni ora del giorno"
 
@@ -972,27 +969,11 @@ msgstr "Classe di età non trovata."
 msgid "Age from"
 msgstr "Età da"
 
-msgid "Age mean"
-msgstr "Età media"
-
-msgid "Age range"
-msgstr "Intervallo di età"
-
 msgid "Age range must fit both ways"
 msgstr "La fascia d'età deve valere per entrambi"
 
-msgid "Age standard deviation"
-msgstr "Deviazione standard dell'età"
-
 msgid "Age window (years)"
 msgstr "Finestra d'età (anni)"
-
-msgid ""
-"Age, gender, nationality and background of the agents. Every agent lives "
-"in a city of its nationality."
-msgstr ""
-"Età, genere, nazionalità e background degli agenti. Ogni agente vive in "
-"una città della propria nazionalità."
 
 msgid "Age, oldest first"
 msgstr "Età, dal più anziano"
@@ -1517,9 +1498,6 @@ msgstr ""
 msgid "Async Embedding"
 msgstr "Embedding asincrono"
 
-msgid "At least 18 (default 18 to 65)."
-msgstr "Almeno 18 (predefinito da 18 a 65)."
-
 msgid "At least one number"
 msgstr "Almeno un numero"
 
@@ -1877,9 +1855,6 @@ msgid "Big Five Personality Profile"
 msgstr "Profilo di personalità Big Five"
 
 msgid "Big Five Personality profile"
-msgstr "Profilo di personalità Big Five"
-
-msgid "Big Five personality profile"
 msgstr "Profilo di personalità Big Five"
 
 msgid "Big-5 Personality Traits"
@@ -2307,9 +2282,6 @@ msgstr "Città"
 msgid "City"
 msgstr "Città"
 
-msgid "City radius (km)"
-msgstr "Raggio della città (km)"
-
 msgid "Clear"
 msgstr "Cancella"
 
@@ -2392,6 +2364,9 @@ msgstr "Clicca per selezionare gli orientamenti politici..."
 
 msgid "Click to select toxicity levels..."
 msgstr "Clicca per selezionare i livelli di tossicità..."
+
+msgid "Click to select..."
+msgstr "Clicca per selezionare..."
 
 msgid "Client"
 msgstr "Client"
@@ -3702,15 +3677,15 @@ msgstr "Dating (match con swipe)"
 msgid "Dating LLM Prompts"
 msgstr "Prompt LLM del dating"
 
+msgid "Dating Profile"
+msgstr "Profilo dating"
+
 msgid "Dating analytics"
 msgstr "Analitica del dating"
 
 #, python-format
 msgid "Dating client '%(name)s' created successfully"
 msgstr "Client dating '%(name)s' creato con successo"
-
-msgid "Dating demographics"
-msgstr "Demografia dating"
 
 msgid ""
 "Dating experiment imported. Create its populations and clients from the "
@@ -3725,9 +3700,6 @@ msgstr "Gli esperimenti dating non sono supportati con PostgreSQL."
 msgid "Dating experiments are unavailable because YDating is not present."
 msgstr "Gli esperimenti dating non sono disponibili perché YDating non è presente."
 
-msgid "Dating generation"
-msgstr "Generazione dating"
-
 msgid "Dating pages"
 msgstr "Pagine dating"
 
@@ -3738,9 +3710,6 @@ msgstr "Popolazione dating '%(name)s' generata."
 #, python-format
 msgid "Dating population '%(name)s' imported."
 msgstr "Popolazione dating '%(name)s' importata."
-
-msgid "Dating profile"
-msgstr "Profilo di dating"
 
 msgid "Dating settings"
 msgstr "Impostazioni Dating"
@@ -3851,26 +3820,8 @@ msgstr "Preferenze dichiarate e posizione"
 msgid "Decline"
 msgstr "Rifiuta"
 
-msgid "Default"
-msgstr "Predefinito"
-
 msgid "Default (English)"
 msgstr "Predefinita (inglese)"
-
-msgid "Default 0.35, 0.2, 0.1, 0.35."
-msgstr "Predefinito 0,35, 0,2, 0,1, 0,35."
-
-msgid "Default 1 to 3."
-msgstr "Predefinito da 1 a 3."
-
-msgid "Default 2 to 5."
-msgstr "Predefinito da 2 a 5."
-
-msgid "Default 31."
-msgstr "Predefinito 31."
-
-msgid "Default 7."
-msgstr "Predefinito 7."
 
 msgid "Default content recommender"
 msgstr "Sistema di raccomandazione dei contenuti predefinito"
@@ -4338,6 +4289,11 @@ msgstr ""
 "popolare in tempo reale la timeline della pagina con articoli del mondo "
 "reale."
 
+msgid "Each agent draws a whole number in this range (1 is the baseline)."
+msgstr ""
+"Ogni agente estrae un numero intero in questo intervallo (1 è il valore "
+"di base)."
+
 msgid ""
 "Each bar is one author, and its height is the total number of times that "
 "author’s posts appeared in recommendation sets."
@@ -4456,9 +4412,6 @@ msgstr "Livello di istruzione"
 msgid "Education level not found."
 msgstr "Livello di istruzione non trovato."
 
-msgid "Education levels"
-msgstr "Livelli di istruzione"
-
 msgid "Effect of selectivity on the threshold"
 msgstr "Effetto della selettività sulla soglia"
 
@@ -4537,9 +4490,6 @@ msgstr "Emozioni"
 
 msgid "Empty Populations"
 msgstr "Popolazioni vuote"
-
-msgid "Empty uses the experiment default."
-msgstr "Se vuoto usa il valore predefinito dell'esperimento."
 
 msgid "Enable"
 msgstr "Attiva"
@@ -5650,9 +5600,6 @@ msgstr "Genere"
 msgid "Gender Distribution"
 msgstr "Distribuzione di genere"
 
-msgid "Gender distribution"
-msgstr "Distribuzione di genere"
-
 msgid "Gender distribution must total 100%."
 msgstr "La distribuzione di genere deve totalizzare 100%."
 
@@ -5664,6 +5611,12 @@ msgstr "Generi che possono scrivere per primi"
 
 msgid "Genders sought"
 msgstr "Generi cercati"
+
+msgid "Genders sought by men"
+msgstr "Generi cercati dagli uomini"
+
+msgid "Genders sought by women"
+msgstr "Generi cercati dalle donne"
 
 msgid "General Settings"
 msgstr "Impostazioni generali"
@@ -6113,11 +6066,6 @@ msgstr "Tassi di attività orari (facoltativo)"
 msgid "Hourly profiles by archetype"
 msgstr "Profili orari per archetipo"
 
-msgid "How active the agents are and which matching recommender they use."
-msgstr ""
-"Quanto sono attivi gli agenti e quale sistema di raccomandazione dei "
-"match usano."
-
 msgid "How agents find chats to join or leave."
 msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
 
@@ -6186,6 +6134,14 @@ msgstr "Ogni quanto una pagina aperta cerca nuovi round (da 1 a 60)"
 
 msgid "How often and when agents are active."
 msgstr "Quanto spesso e quando gli agenti sono attivi."
+
+msgid ""
+"How often each agent opens the app: the daily activity level scales the "
+"probability of a session. The recommender is chosen in the client."
+msgstr ""
+"Quanto spesso ogni agente apre l'app: il livello di attività giornaliera "
+"scala la probabilità di una sessione. Il recommender si sceglie nel "
+"client."
 
 msgid "How often memory reflections are generated."
 msgstr "Con quale frequenza vengono generate le riflessioni della memoria."
@@ -6606,14 +6562,6 @@ msgstr "Insulto"
 msgid "Intent"
 msgstr "Intenzione"
 
-msgid "Intent distribution"
-msgstr "Distribuzione delle intenzioni"
-
-msgid ""
-"Intent, location, matching constraints, interests and photos of every "
-"agent."
-msgstr "Intento, luogo, vincoli di abbinamento, interessi e foto di ogni agente."
-
 msgid "Intents"
 msgstr "Intenzioni"
 
@@ -6634,11 +6582,6 @@ msgstr "Intercetta"
 
 msgid "Interest"
 msgstr "Interesse"
-
-msgid "Interest catalogue, separated by commas. Default: ten common interests."
-msgstr ""
-"Catalogo degli interessi, separati da virgole. Predefinito: dieci "
-"interessi comuni."
 
 msgid "Interest learning rate (λ)"
 msgstr "Tasso di apprendimento dell'interesse (λ)"
@@ -6666,9 +6609,6 @@ msgstr "Interessi e opinioni"
 
 msgid "Interests (separate with commas)"
 msgstr "Interessi (separati da virgole)"
-
-msgid "Interests per agent"
-msgstr "Interessi per agente"
 
 msgid ""
 "Interests remain part of the reusable resource so the same subreddit "
@@ -7073,9 +7013,6 @@ msgstr "Affidabilità del modello linguistico"
 msgid "Language Spoken"
 msgstr "Lingua parlata"
 
-msgid "Language code written on every agent (for example en, it)."
-msgstr "Codice della lingua scritto su ogni agente (ad esempio en, it)."
-
 msgid "Language model"
 msgstr "Modello linguistico"
 
@@ -7132,20 +7069,19 @@ msgstr "Ultima esecuzione"
 msgid "Last Seen"
 msgstr "Ultima comparsa"
 
-msgid "Latent variables and affective traits"
+msgid "Latent Variables and Affective Traits"
 msgstr "Variabili latenti e tratti affettivi"
 
 msgid ""
-"Latent variables follow a Beta(a, b) distribution (default Beta(2, 2)); "
-"they drive the rule-based matching and the metrics and are never shown to"
-" the agents. Affective traits are uniform ranges used only when stress "
-"and reward are enabled (default 1.0)."
+"Latent variables follow a Beta(a, b) distribution; they drive the rule-"
+"based matching and the metrics and are never shown to the agents. "
+"Affective traits are uniform ranges used only when stress and reward are "
+"enabled in the experiment."
 msgstr ""
-"Le variabili latenti seguono una distribuzione Beta(a, b) (predefinita "
-"Beta(2, 2)); guidano il matching basato su regole e le metriche e non "
-"vengono mai mostrate agli agenti. I tratti affettivi sono intervalli "
-"uniformi usati solo quando stress e ricompensa sono abilitati "
-"(predefinito 1.0)."
+"Le variabili latenti seguono una distribuzione Beta(a, b); guidano il "
+"matching basato su regole e le metriche e non sono mai mostrate agli "
+"agenti. I tratti affettivi sono intervalli uniformi usati solo quando "
+"stress e ricompensa sono attivi nell'esperimento."
 
 msgid "Latent variables, affective traits and recommender"
 msgstr "Variabili latenti, tratti affettivi e recommender"
@@ -7203,17 +7139,6 @@ msgstr "Lascia vuoto per nessuna password"
 
 msgid "Leave empty to use name from config..."
 msgstr "Lascia vuoto per usare il nome della configurazione..."
-
-msgid ""
-"Leave empty to use the main cities of each nationality. To choose them, "
-"write one line per city: name, latitude, longitude and, optionally, the "
-"weight and the nationality that lives there (without a nationality the "
-"city is used for everybody)."
-msgstr ""
-"Lascia vuoto per usare le città principali di ogni nazionalità. Per "
-"sceglierle, scrivi una riga per città: nome, latitudine, longitudine e, "
-"facoltativamente, il peso e la nazionalità che ci vive (senza nazionalità"
-" la città vale per tutti)."
 
 msgid "Leave fields empty to use the default activity profile."
 msgstr "Lascia i campi vuoti per usare il profilo di attività predefinito."
@@ -7435,6 +7360,13 @@ msgstr "Cerca ancora"
 msgid "Look for chats, users, groups, channels or posts from the search box."
 msgstr "Cerca chat, utenti, gruppi, canali o post dalla barra di ricerca."
 
+msgid ""
+"Look of the agents; it guides the profile photos. An attribute with no "
+"value selected is not assigned."
+msgstr ""
+"Aspetto degli agenti; guida le foto del profilo. Un attributo senza "
+"valori selezionati non viene assegnato."
+
 msgid "Looking for"
 msgstr "Cerca"
 
@@ -7557,9 +7489,6 @@ msgstr "Match per mazzo"
 
 msgid "Matches with a date"
 msgstr "Match con un appuntamento"
-
-msgid "Matching recommender"
-msgstr "Recommender di matching"
 
 msgid "Matrix"
 msgstr "Matrix"
@@ -8870,13 +8799,6 @@ msgstr "Un giorno ha %(n)s slot (un round ciascuno). -1 prosegue fino all'arrest
 msgid "One line per answer: question: answer."
 msgstr "Una riga per risposta: domanda: risposta."
 
-msgid ""
-"One line per gender: the weights of the sets of genders sought (a set "
-"joins genders with +)."
-msgstr ""
-"Una riga per genere: i pesi degli insiemi di generi cercati (un insieme "
-"unisce i generi con +)."
-
 msgid "One line per photo; the image can be added later from the profile."
 msgstr "Una riga per foto; l'immagine può essere aggiunta più tardi dal profilo."
 
@@ -9132,6 +9054,9 @@ msgstr ""
 msgid "Optional parameters: %(names)s"
 msgstr "Parametri facoltativi: %(names)s"
 
+msgid "Optional."
+msgstr "Facoltativo."
+
 msgid "Optional: Group experiments together"
 msgstr "Facoltativo: raggruppa gli esperimenti"
 
@@ -9376,9 +9301,6 @@ msgstr ""
 "Distribuzione per post di quanto spesso i post dell'autore selezionato "
 "sono stati raccomandati."
 
-msgid "Percentage of agents with glasses."
-msgstr "Percentuale di agenti con gli occhiali."
-
 msgid "Persist memory events"
 msgstr "Conserva gli eventi della memoria"
 
@@ -9606,9 +9528,6 @@ msgstr "Orientamenti politici"
 msgid "Political leaning"
 msgstr "Orientamento politico"
 
-msgid "Political leanings"
-msgstr "Orientamenti politici"
-
 msgid "Political leanings, education and professions of the agents."
 msgstr "Orientamenti politici, istruzione e professioni degli agenti."
 
@@ -9731,6 +9650,9 @@ msgstr "Popolazione non trovata"
 
 msgid "Population not found."
 msgstr "Popolazione non trovata."
+
+msgid "Population or experiment default"
+msgstr "Predefinito della popolazione o dell'esperimento"
 
 msgid "Population size must be a valid integer."
 msgstr "La dimensione della popolazione deve essere un intero valido."
@@ -10314,11 +10236,6 @@ msgstr "Risorsa feed RSS non trovata."
 msgid "RSS-derived posts emitted"
 msgstr "Post derivati da RSS pubblicati"
 
-msgid "Radius around the city centre in which agents are placed. Default 15."
-msgstr ""
-"Raggio attorno al centro della città entro cui vengono collocati gli "
-"agenti. Predefinito 15."
-
 msgid "Random"
 msgstr "Casuale"
 
@@ -10333,14 +10250,6 @@ msgstr "Casuale se vuoto"
 
 msgid "Random seed"
 msgstr "Seme casuale"
-
-msgid "Range of the activity level of each agent. Default 1."
-msgstr "Intervallo del livello di attività di ogni agente. Predefinito 1."
-
-msgid "Range of the maximum distance each agent accepts. Default 10 to 60."
-msgstr ""
-"Intervallo della distanza massima che ogni agente accetta. Predefinito da"
-" 10 a 60."
 
 msgid "Range: 0-1, Default: 0"
 msgstr "Intervallo: 0-1, predefinito: 0"
@@ -10529,6 +10438,9 @@ msgstr "Informazioni sul sistema di raccomandazione"
 
 msgid "Recommender internals (researcher only)"
 msgstr "Dettagli interni del recommender (solo ricercatore)"
+
+msgid "Recommender of these agents"
+msgstr "Recommender di questi agenti"
 
 msgid "Recommenders"
 msgstr "Recommender"
@@ -12200,9 +12112,6 @@ msgstr "Lingua parlata"
 msgid "Spoken Languages"
 msgstr "Lingue parlate"
 
-msgid "Spoken language"
-msgstr "Lingua parlata"
-
 msgid "Spread of the reaction delay"
 msgstr "Dispersione del ritardo della reazione"
 
@@ -13164,14 +13073,10 @@ msgstr ""
 "Il run è già iniziato: le notizie non possono cambiare se l'esperimento "
 "non viene reimpostato."
 
-msgid ""
-"The same seed and parameters always generate the same population. Fields "
-"left empty use the generator default; click a tag to give it a weight (a "
-"tag without weight counts 1)."
+msgid "The same seed and parameters always generate the same population."
 msgstr ""
 "Lo stesso seed e gli stessi parametri generano sempre la stessa "
-"popolazione. I campi vuoti usano il valore predefinito del generatore; "
-"clicca un tag per assegnargli un peso (un tag senza peso vale 1)."
+"popolazione."
 
 msgid "The same subreddit definition can be reused safely"
 msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
@@ -14949,25 +14854,6 @@ msgstr "Peso dell'affinità visiva"
 msgid "Weight of topic affinity"
 msgstr "Peso dell'affinità con i topic"
 
-msgid ""
-"Weights of the labels of each attribute; an attribute left empty is not "
-"assigned. The attributes drive the profile photos."
-msgstr ""
-"Pesi delle etichette di ogni attributo; un attributo lasciato vuoto non "
-"viene assegnato. Gli attributi guidano le foto del profilo."
-
-msgid "Weights of the labels of each trait; a trait left empty is not assigned."
-msgstr ""
-"Pesi delle etichette di ogni tratto; un tratto lasciato vuoto non viene "
-"assegnato."
-
-msgid ""
-"Weights of the recommenders assigned to the agents; empty uses the "
-"experiment default."
-msgstr ""
-"Pesi dei recommender assegnati agli agenti; se vuoto usa il valore "
-"predefinito dell'esperimento."
-
 msgid "Weights of the utility"
 msgstr "Pesi dell'utilità"
 
@@ -15025,6 +14911,18 @@ msgid ""
 msgstr ""
 "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è "
 "verificato l'errore?"
+
+#, python-format
+msgid ""
+"What the agents look for on the app. The values proposed are the defaults"
+" of the generator: change them freely, every distribution must total "
+"100%%. Age, gender, nationality, language, education and political "
+"leaning are set in the sections above."
+msgstr ""
+"Che cosa cercano gli agenti sull'app. I valori proposti sono i "
+"predefiniti del generatore: modificali liberamente, ogni distribuzione "
+"deve totalizzare 100%%. Età, genere, nazionalità, lingua, istruzione e "
+"orientamento politico si impostano nelle sezioni sopra."
 
 msgid ""
 "What the agents remember of their chats. Memory is switched on for the "
@@ -15149,6 +15047,17 @@ msgstr ""
 
 msgid "Which chats an agent looks at in a session and how they are ranked."
 msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
+
+msgid ""
+"Which model proposes the cards to the agents of this client. By default "
+"every agent keeps the recommender of its population, or the one of the "
+"experiment. The models and their parameters are in the experiment "
+"settings."
+msgstr ""
+"Quale modello propone le carte agli agenti di questo client. Per "
+"impostazione predefinita ogni agente mantiene il recommender della sua "
+"popolazione o quello dell'esperimento. I modelli e i loro parametri sono "
+"nelle impostazioni dell'esperimento."
 
 msgid "Who are you with?"
 msgstr "Con chi sei?"
@@ -15330,10 +15239,10 @@ msgstr "Anni aggiunti alla fascia d'età"
 
 msgid ""
 "Years below and above the own age that an agent accepts (each side drawn "
-"in this range). Default 4 to 10."
+"in this range)."
 msgstr ""
-"Anni sotto e sopra la propria età che un agente accetta (ogni lato è "
-"estratto in questo intervallo). Predefinito da 4 a 10."
+"Anni sotto e sopra la propria età che un agente accetta (ogni lato "
+"estratto in questo intervallo)."
 
 msgid "Yes"
 msgstr "Sì"
@@ -17317,4 +17226,226 @@ msgstr "✔️ Usa"
 
 #~ msgid "Weights of the professions. Known values: %(values)s"
 #~ msgstr "Pesi delle professioni. Valori noti: %(values)s"
+
+#~ msgid "Activity and recommendation"
+#~ msgstr "Attività e raccomandazione"
+
+#~ msgid "Age mean"
+#~ msgstr "Età media"
+
+#~ msgid "Age range"
+#~ msgstr "Intervallo di età"
+
+#~ msgid "Age standard deviation"
+#~ msgstr "Deviazione standard dell'età"
+
+#~ msgid ""
+#~ "Age, gender, nationality and background "
+#~ "of the agents. Every agent lives "
+#~ "in a city of its nationality."
+#~ msgstr ""
+#~ "Età, genere, nazionalità e background "
+#~ "degli agenti. Ogni agente vive in "
+#~ "una città della propria nazionalità."
+
+#~ msgid "At least 18 (default 18 to 65)."
+#~ msgstr "Almeno 18 (predefinito da 18 a 65)."
+
+#~ msgid "Big Five personality profile"
+#~ msgstr "Profilo di personalità Big Five"
+
+#~ msgid "City radius (km)"
+#~ msgstr "Raggio della città (km)"
+
+#~ msgid "Dating demographics"
+#~ msgstr "Demografia dating"
+
+#~ msgid "Dating generation"
+#~ msgstr "Generazione dating"
+
+#~ msgid "Dating profile"
+#~ msgstr "Profilo di dating"
+
+#~ msgid "Default"
+#~ msgstr "Predefinito"
+
+#~ msgid "Default 0.35, 0.2, 0.1, 0.35."
+#~ msgstr "Predefinito 0,35, 0,2, 0,1, 0,35."
+
+#~ msgid "Default 1 to 3."
+#~ msgstr "Predefinito da 1 a 3."
+
+#~ msgid "Default 2 to 5."
+#~ msgstr "Predefinito da 2 a 5."
+
+#~ msgid "Default 31."
+#~ msgstr "Predefinito 31."
+
+#~ msgid "Default 7."
+#~ msgstr "Predefinito 7."
+
+#~ msgid "Education levels"
+#~ msgstr "Livelli di istruzione"
+
+#~ msgid "Empty uses the experiment default."
+#~ msgstr "Se vuoto usa il valore predefinito dell'esperimento."
+
+#~ msgid "Gender distribution"
+#~ msgstr "Distribuzione di genere"
+
+#~ msgid "How active the agents are and which matching recommender they use."
+#~ msgstr ""
+#~ "Quanto sono attivi gli agenti e "
+#~ "quale sistema di raccomandazione dei "
+#~ "match usano."
+
+#~ msgid "Intent distribution"
+#~ msgstr "Distribuzione delle intenzioni"
+
+#~ msgid ""
+#~ "Intent, location, matching constraints, "
+#~ "interests and photos of every agent."
+#~ msgstr ""
+#~ "Intento, luogo, vincoli di abbinamento, "
+#~ "interessi e foto di ogni agente."
+
+#~ msgid "Interest catalogue, separated by commas. Default: ten common interests."
+#~ msgstr ""
+#~ "Catalogo degli interessi, separati da "
+#~ "virgole. Predefinito: dieci interessi comuni."
+
+#~ msgid "Interests per agent"
+#~ msgstr "Interessi per agente"
+
+#~ msgid "Language code written on every agent (for example en, it)."
+#~ msgstr "Codice della lingua scritto su ogni agente (ad esempio en, it)."
+
+#~ msgid "Latent variables and affective traits"
+#~ msgstr "Variabili latenti e tratti affettivi"
+
+#~ msgid ""
+#~ "Latent variables follow a Beta(a, b) "
+#~ "distribution (default Beta(2, 2)); they "
+#~ "drive the rule-based matching and "
+#~ "the metrics and are never shown to"
+#~ " the agents. Affective traits are "
+#~ "uniform ranges used only when stress "
+#~ "and reward are enabled (default 1.0)."
+#~ msgstr ""
+#~ "Le variabili latenti seguono una "
+#~ "distribuzione Beta(a, b) (predefinita Beta(2,"
+#~ " 2)); guidano il matching basato su"
+#~ " regole e le metriche e non "
+#~ "vengono mai mostrate agli agenti. I "
+#~ "tratti affettivi sono intervalli uniformi "
+#~ "usati solo quando stress e ricompensa"
+#~ " sono abilitati (predefinito 1.0)."
+
+#~ msgid ""
+#~ "Leave empty to use the main cities"
+#~ " of each nationality. To choose them,"
+#~ " write one line per city: name, "
+#~ "latitude, longitude and, optionally, the "
+#~ "weight and the nationality that lives"
+#~ " there (without a nationality the "
+#~ "city is used for everybody)."
+#~ msgstr ""
+#~ "Lascia vuoto per usare le città "
+#~ "principali di ogni nazionalità. Per "
+#~ "sceglierle, scrivi una riga per città:"
+#~ " nome, latitudine, longitudine e, "
+#~ "facoltativamente, il peso e la "
+#~ "nazionalità che ci vive (senza "
+#~ "nazionalità la città vale per tutti)."
+
+#~ msgid "Matching recommender"
+#~ msgstr "Recommender di matching"
+
+#~ msgid ""
+#~ "One line per gender: the weights "
+#~ "of the sets of genders sought (a"
+#~ " set joins genders with +)."
+#~ msgstr ""
+#~ "Una riga per genere: i pesi degli"
+#~ " insiemi di generi cercati (un "
+#~ "insieme unisce i generi con +)."
+
+#~ msgid "Percentage of agents with glasses."
+#~ msgstr "Percentuale di agenti con gli occhiali."
+
+#~ msgid "Political leanings"
+#~ msgstr "Orientamenti politici"
+
+#~ msgid "Radius around the city centre in which agents are placed. Default 15."
+#~ msgstr ""
+#~ "Raggio attorno al centro della città "
+#~ "entro cui vengono collocati gli agenti."
+#~ " Predefinito 15."
+
+#~ msgid "Range of the activity level of each agent. Default 1."
+#~ msgstr "Intervallo del livello di attività di ogni agente. Predefinito 1."
+
+#~ msgid "Range of the maximum distance each agent accepts. Default 10 to 60."
+#~ msgstr ""
+#~ "Intervallo della distanza massima che "
+#~ "ogni agente accetta. Predefinito da 10"
+#~ " a 60."
+
+#~ msgid "Spoken language"
+#~ msgstr "Lingua parlata"
+
+#~ msgid ""
+#~ "The same seed and parameters always "
+#~ "generate the same population. Fields "
+#~ "left empty use the generator default;"
+#~ " click a tag to give it a "
+#~ "weight (a tag without weight counts "
+#~ "1)."
+#~ msgstr ""
+#~ "Lo stesso seed e gli stessi "
+#~ "parametri generano sempre la stessa "
+#~ "popolazione. I campi vuoti usano il "
+#~ "valore predefinito del generatore; clicca "
+#~ "un tag per assegnargli un peso (un"
+#~ " tag senza peso vale 1)."
+
+#~ msgid ""
+#~ "Weights of the labels of each "
+#~ "attribute; an attribute left empty is"
+#~ " not assigned. The attributes drive "
+#~ "the profile photos."
+#~ msgstr ""
+#~ "Pesi delle etichette di ogni attributo;"
+#~ " un attributo lasciato vuoto non "
+#~ "viene assegnato. Gli attributi guidano "
+#~ "le foto del profilo."
+
+#~ msgid ""
+#~ "Weights of the labels of each "
+#~ "trait; a trait left empty is not"
+#~ " assigned."
+#~ msgstr ""
+#~ "Pesi delle etichette di ogni tratto; "
+#~ "un tratto lasciato vuoto non viene "
+#~ "assegnato."
+
+#~ msgid ""
+#~ "Weights of the recommenders assigned to"
+#~ " the agents; empty uses the "
+#~ "experiment default."
+#~ msgstr ""
+#~ "Pesi dei recommender assegnati agli "
+#~ "agenti; se vuoto usa il valore "
+#~ "predefinito dell'esperimento."
+
+#~ msgid ""
+#~ "Years below and above the own age"
+#~ " that an agent accepts (each side "
+#~ "drawn in this range). Default 4 to"
+#~ " 10."
+#~ msgstr ""
+#~ "Anni sotto e sopra la propria età"
+#~ " che un agente accetta (ogni lato "
+#~ "è estratto in questo intervallo). "
+#~ "Predefinito da 4 a 10."
 

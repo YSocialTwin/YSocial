@@ -1,152 +1,109 @@
 {# Dating-specific sections of the population creation form (YDating generator). They live INSIDE the standard
-   ``popcreate_form`` of admin/populations.html and are enabled only when the platform "Dating" is selected; the name,
-   description and size are the shared fields of that form. Every field is optional: an empty field leaves the generator
-   default. Free-label weights are edited with tag pickers that serialize to ``label=weight, ...`` (field names unchanged). #}
-{% macro dline(label, name, hint='', value='', kind='text', extra='') -%}
+   ``popcreate_form`` of admin/populations.html, which keeps the shared sections (basic information, demographics,
+   education and political leaning, with the same selectors and percentages as the other platforms), and are enabled
+   only when the platform "Dating" is selected. Every parameter has a proposed default, shown in the form. #}
+{% macro pctselect(field, label, options, hint='') -%}
 <div class="box-line">
     <span class="left">{{ label }}</span>
     <span class="right ys-w-70">
-        <input type="{{ kind }}" name="{{ name }}" class="input" value="{{ value }}" {{ extra|safe }}>
+        <div class="multi-select-wrapper">
+            <div class="multi-select-display" id="{{ field }}_display_wrapper" onclick="toggleDropdown('{{ field }}')">
+                <span id="{{ field }}_display" class="multi-select-placeholder">{{ _('Click to select...') }}</span>
+            </div>
+            <div class="multi-select-dropdown" id="{{ field }}_dropdown">
+                {% for option in options %}
+                <div class="multi-select-option" onclick="toggleOption('{{ field }}', '{{ option }}', '{{ option }}')">{{ option }}</div>
+                {% endfor %}
+            </div>
+        </div>
         {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
     </span>
 </div>
+<div class="box-line d-none" id="{{ field }}_percentages_container">
+    <span class="left">{{ label }} %</span>
+    <span class="right ys-w-70">
+        <div id="{{ field }}_percentages" class="ys-flex-col-gap-8"></div>
+        <div id="{{ field }}_validation" class="percentage-validation-compact ys-hidden-mt"></div>
+    </span>
+</div>
 {%- endmacro %}
-{% macro drange(label, name, hint='', low='', high='', kind='number', step='any') -%}
+{% macro drange(label, name, low, high, hint='', step='1', minimum='') -%}
 <div class="box-line">
     <span class="left">{{ label }}</span>
     <span class="right ys-w-70">
         <span class="dating-range">
-            <input type="{{ kind }}" name="{{ name }}_min" class="input ys-flex-input" step="{{ step }}" placeholder="{{ _('min') }}" value="{{ low }}">
+            <input type="number" name="{{ name }}_min" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ low }}" placeholder="{{ _('min') }}">
             <span class="dating-range-sep">&ndash;</span>
-            <input type="{{ kind }}" name="{{ name }}_max" class="input ys-flex-input" step="{{ step }}" placeholder="{{ _('max') }}" value="{{ high }}">
+            <input type="number" name="{{ name }}_max" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ high }}" placeholder="{{ _('max') }}">
         </span>
         {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
     </span>
 </div>
 {%- endmacro %}
-{% macro wpick(label, name, options, hint='') -%}
-<div class="box-line">
-    <span class="left">{{ label }}</span>
-    <span class="right ys-w-70">
-        <div class="dating-weights" data-weights-for="{{ name }}" data-options='{{ options|tojson }}'>
-            <div class="profession-tags-container dating-weights-tags"></div>
-            <div class="dating-weights-rows"></div>
-            <div class="dating-weights-add">
-                <input type="text" class="input" maxlength="60" placeholder="{{ _('Add another value...') }}">
-                <button type="button" class="button is-light dating-weights-add-btn">{{ _('Add') }}</button>
-            </div>
-        </div>
-        <input type="hidden" name="{{ name }}" value="">
-        {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
-    </span>
-</div>
-{%- endmacro %}
-{% macro section(sid, title, description) -%}
-<div id="dating-section-{{ sid }}" class="tutorial-section">
-    <div class="form-section-header">{{ title }}</div>
-    <div class="form-section-description">{{ description }}</div>
-{%- endmacro %}
+{% set dd = dating_defaults %}
 
-<fieldset id="dating-population-sections" class="ys-fieldset-reset d-none" disabled>
+<fieldset id="dating-population-sections" class="ys-fieldset-reset" data-platform-only="dating" data-defaults='{{ dd|tojson }}' disabled hidden>
 
-    {{ section('generation', _('Dating generation'), _('The same seed and parameters always generate the same population. Fields left empty use the generator default; click a tag to give it a weight (a tag without weight counts 1).')) }}
-        {{ dline(_('Seed'), 'seed', '', '42', 'number', 'min="0"') }}
-        {{ dline(_('Spoken language'), 'language', _('Language code written on every agent (for example en, it).'), 'en', 'text', 'maxlength="10" list="dating-languages-list"') }}
-        <datalist id="dating-languages-list">{% for lang in dating_languages %}<option value="{{ lang }}">{% endfor %}</datalist>
-    </div>
-
-    {{ section('demographics', _('Dating demographics'), _('Age, gender, nationality and background of the agents. Every agent lives in a city of its nationality.')) }}
-        {{ dline(_('Age mean'), 'age_mean', _('Default 31.'), '', 'number', 'step="any"') }}
-        {{ dline(_('Age standard deviation'), 'age_std', _('Default 7.'), '', 'number', 'step="any" min="0"') }}
-        {{ drange(_('Age range'), 'age', _('At least 18 (default 18 to 65).'), '', '', 'number', '1') }}
-        {{ wpick(_('Gender distribution'), 'genders', ['woman', 'man', 'non-binary']) }}
+    <div id="dating-section-profile" class="tutorial-section">
+        <div class="form-section-header">{{ _('Dating Profile') }}</div>
+        <div class="form-section-description">{{ _('What the agents look for on the app. The values proposed are the defaults of the generator: change them freely, every distribution must total 100%%. Age, gender, nationality, language, education and political leaning are set in the sections above.') }}</div>
         <div class="box-line">
-            <span class="left">{{ _('Genders sought') }}</span>
-            <span class="right ys-w-70">
-                <textarea name="seeking" class="textarea" rows="3" placeholder="{{ 'woman: man=0.85, woman=0.1, man+woman=0.05\nman: woman=0.85, man=0.1, man+woman=0.05' }}"></textarea>
-                <small class="ys-label-hint">{{ _('One line per gender: the weights of the sets of genders sought (a set joins genders with +).') }}</small>
-            </span>
+            <span class="left">{{ _('Seed') }}</span>
+            <span class="right ys-w-70"><input type="number" name="seed" class="input" min="0" value="42"><small class="ys-label-hint">{{ _('The same seed and parameters always generate the same population.') }}</small></span>
         </div>
-        {{ wpick(_('Nationalities'), 'nationalities', dating_nationalities) }}
-        {{ wpick(_('Education levels'), 'education_levels', dating_education_levels) }}
-        {{ wpick(_('Political leanings'), 'leanings', dating_leanings) }}
-        {{ wpick(_('Professions'), 'professions', dating_professions[:24]) }}
+        {{ pctselect('d_intents', _('Intent'), ['serious', 'casual', 'friendship', 'unsure']) }}
+        {{ pctselect('d_seek_woman', _('Genders sought by women'), dd.seeking_sets) }}
+        {{ pctselect('d_seek_man', _('Genders sought by men'), dd.seeking_sets) }}
+        {{ drange(_('Age window (years)'), 'age_window', dd.age_window[0], dd.age_window[1], _('Years below and above the own age that an agent accepts (each side drawn in this range).'), '1', 0) }}
+        {{ drange(_('Photos per agent'), 'photos_per_agent', dd.photos[0], dd.photos[1], '', '1', 0) }}
     </div>
 
-    {{ section('personality', _('Big Five personality profile'), _('Weights of the labels of each trait; a trait left empty is not assigned.')) }}
-        {{ wpick(_('Openness to Experience'), 'personality_oe', ['inventive/curious', 'consistent/cautious']) }}
-        {{ wpick(_('Conscientiousness'), 'personality_co', ['efficient/organized', 'extravagant/careless']) }}
-        {{ wpick(_('Extraversion'), 'personality_ex', ['outgoing/energetic', 'solitary/reserved']) }}
-        {{ wpick(_('Agreeableness'), 'personality_ag', ['friendly/compassionate', 'critical/rational']) }}
-        {{ wpick(_('Neuroticism'), 'personality_ne', ['sensitive/nervous', 'resilient/confident']) }}
-    </div>
-
-    {{ section('dating-profile', _('Dating profile'), _('Intent, location, matching constraints, interests and photos of every agent.')) }}
-        {{ wpick(_('Intent distribution'), 'intents', ['serious', 'casual', 'friendship', 'unsure'], _('Default 0.35, 0.2, 0.1, 0.35.')) }}
-        <div class="box-line">
-            <span class="left">{{ _('Cities') }}</span>
-            <span class="right ys-w-70">
-                <textarea name="cities" class="textarea" rows="3" placeholder="{{ 'Pisa, 43.7228, 10.4017, 1, Italian' }}"></textarea>
-                <small class="ys-label-hint">{{ _('Leave empty to use the main cities of each nationality. To choose them, write one line per city: name, latitude, longitude and, optionally, the weight and the nationality that lives there (without a nationality the city is used for everybody).') }}</small>
-            </span>
-        </div>
-        {{ dline(_('City radius (km)'), 'city_radius_km', _('Radius around the city centre in which agents are placed. Default 15.'), '', 'number', 'min="0" step="any"') }}
-        {{ drange(_('Maximum distance (km)'), 'max_distance_km', _('Range of the maximum distance each agent accepts. Default 10 to 60.')) }}
-        {{ drange(_('Age window (years)'), 'age_window', _('Years below and above the own age that an agent accepts (each side drawn in this range). Default 4 to 10.'), '', '', 'number', '1') }}
-        <div class="box-line">
-            <span class="left">{{ _('Interests') }}</span>
-            <span class="right ys-w-70">
-                <textarea name="interests" class="textarea" rows="2" placeholder="{{ 'hiking, cooking, cinema' }}"></textarea>
-                <small class="ys-label-hint">{{ _('Interest catalogue, separated by commas. Default: ten common interests.') }}</small>
-            </span>
-        </div>
-        {{ drange(_('Interests per agent'), 'interests_per_agent', _('Default 2 to 5.'), '', '', 'number', '1') }}
-        {{ drange(_('Photos per agent'), 'photos_per_agent', _('Default 1 to 3.'), '', '', 'number', '1') }}
-    </div>
-
-    {{ section('appearance', _('Appearance'), _('Weights of the labels of each attribute; an attribute left empty is not assigned. The attributes drive the profile photos.')) }}
-        {{ wpick(_('Hair colour'), 'appearance_hair_color', ['black', 'brown', 'blond', 'red', 'gray']) }}
-        {{ wpick(_('Hair length'), 'appearance_hair_length', ['short', 'medium', 'long']) }}
-        {{ wpick(_('Hair style'), 'appearance_hair_style', ['straight', 'wavy', 'curly']) }}
-        {{ wpick(_('Eye colour'), 'appearance_eye_color', ['brown', 'blue', 'green', 'hazel']) }}
-        {{ wpick(_('Skin tone'), 'appearance_skin_tone', ['light', 'medium', 'tan', 'dark']) }}
-        {{ wpick(_('Build'), 'appearance_build', ['slim', 'average', 'athletic', 'curvy']) }}
-        {{ wpick(_('Facial hair'), 'appearance_facial_hair', ['none', 'stubble', 'beard']) }}
-        {{ wpick(_('Distinctive features'), 'appearance_distinctive_features', ['freckles', 'tattoo', 'dimples']) }}
-        {{ wpick(_('Mood in photos'), 'appearance_mood', ['smiling', 'serious', 'relaxed']) }}
-        {{ wpick(_('Photo style'), 'appearance_photo_style', ['casual', 'professional', 'outdoor']) }}
-        {{ drange(_('Height (cm)'), 'appearance_height_cm', '', '', '', 'number', '1') }}
+    <div id="dating-section-appearance" class="tutorial-section">
+        <div class="form-section-header">{{ _('Appearance') }}</div>
+        <div class="form-section-description">{{ _('Look of the agents; it guides the profile photos. An attribute with no value selected is not assigned.') }}</div>
+        {{ pctselect('d_appearance_hair_color', _('Hair colour'), dd.appearance_options.hair_color) }}
+        {{ pctselect('d_appearance_hair_length', _('Hair length'), dd.appearance_options.hair_length) }}
+        {{ pctselect('d_appearance_hair_style', _('Hair style'), dd.appearance_options.hair_style) }}
+        {{ pctselect('d_appearance_eye_color', _('Eye colour'), dd.appearance_options.eye_color) }}
+        {{ pctselect('d_appearance_skin_tone', _('Skin tone'), dd.appearance_options.skin_tone) }}
+        {{ pctselect('d_appearance_build', _('Build'), dd.appearance_options.build) }}
+        {{ pctselect('d_appearance_facial_hair', _('Facial hair'), dd.appearance_options.facial_hair, _('Optional.')) }}
+        {{ pctselect('d_appearance_distinctive_features', _('Distinctive features'), dd.appearance_options.distinctive_features, _('Optional.')) }}
+        {{ pctselect('d_appearance_mood', _('Mood in photos'), dd.appearance_options.mood) }}
+        {{ pctselect('d_appearance_photo_style', _('Photo style'), dd.appearance_options.photo_style) }}
+        {{ drange(_('Height (cm)'), 'appearance_height_cm', dd.height[0], dd.height[1], '', '1', 100) }}
         <div class="box-line">
             <span class="left">{{ _('Wearing glasses (%%)') }}</span>
-            <span class="right ys-w-70">
-                <div class="slider-timeline"><input type="number" name="appearance_glasses" class="input" min="0" max="100" step="any" placeholder="{{ _('Default') }}"></div>
-                <small class="ys-label-hint">{{ _('Percentage of agents with glasses.') }}</small>
-            </span>
+            <span class="right ys-w-70"><div class="slider-timeline"><input type="number" name="appearance_glasses" class="input" min="0" max="100" step="any" value="{{ dd.glasses }}"></div></span>
         </div>
     </div>
 
-    {{ section('latent', _('Latent variables and affective traits'), _('Latent variables follow a Beta(a, b) distribution (default Beta(2, 2)); they drive the rule-based matching and the metrics and are never shown to the agents. Affective traits are uniform ranges used only when stress and reward are enabled (default 1.0).')) }}
+    <div id="dating-section-latent" class="tutorial-section">
+        <div class="form-section-header">{{ _('Latent Variables and Affective Traits') }}</div>
+        <div class="form-section-description">{{ _('Latent variables follow a Beta(a, b) distribution; they drive the rule-based matching and the metrics and are never shown to the agents. Affective traits are uniform ranges used only when stress and reward are enabled in the experiment.') }}</div>
         {% for key, label in (('attractiveness', _('Attractiveness')), ('selectivity', _('Selectivity')), ('responsiveness', _('Responsiveness'))) %}
         <div class="box-line">
             <span class="left">{{ label }}</span>
             <span class="right ys-w-70">
                 <span class="dating-range">
-                    <input type="number" name="latent_{{ key }}_a" class="input ys-flex-input" step="any" min="0.0001" placeholder="a">
-                    <span class="dating-range-sep">,</span>
-                    <input type="number" name="latent_{{ key }}_b" class="input ys-flex-input" step="any" min="0.0001" placeholder="b">
+                    <span class="dating-range-sep">a</span>
+                    <input type="number" name="latent_{{ key }}_a" class="input ys-flex-input" step="any" min="0.0001" value="{{ dd.latent[key][0] }}">
+                    <span class="dating-range-sep">b</span>
+                    <input type="number" name="latent_{{ key }}_b" class="input ys-flex-input" step="any" min="0.0001" value="{{ dd.latent[key][1] }}">
                 </span>
             </span>
         </div>
         {% endfor %}
-        {{ drange(_('Sensitivity'), 'affective_sensitivity') }}
-        {{ drange(_('Reward sensitivity'), 'affective_reward_sensitivity') }}
-        {{ drange(_('Resilience'), 'affective_resilience') }}
-        {{ drange(_('Need for visibility'), 'affective_visibility_need') }}
+        {{ drange(_('Sensitivity'), 'affective_sensitivity', dd.affective[0], dd.affective[1], '', 'any', 0) }}
+        {{ drange(_('Reward sensitivity'), 'affective_reward_sensitivity', dd.affective[0], dd.affective[1], '', 'any', 0) }}
+        {{ drange(_('Resilience'), 'affective_resilience', dd.affective[0], dd.affective[1], '', 'any', 0) }}
+        {{ drange(_('Need for visibility'), 'affective_visibility_need', dd.affective[0], dd.affective[1], '', 'any', 0) }}
     </div>
 
-    {{ section('activity', _('Activity and recommendation'), _('How active the agents are and which matching recommender they use.')) }}
-        {{ drange(_('Daily activity level'), 'daily_activity_level', _('Range of the activity level of each agent. Default 1.'), '', '', 'number', '1') }}
-        {{ wpick(_('Matching recommender'), 'match_recsys', ['random', 'rule_based'], _('Weights of the recommenders assigned to the agents; empty uses the experiment default.')) }}
+    <div id="dating-section-activity" class="tutorial-section">
+        <div class="form-section-header">{{ _('Activity') }}</div>
+        <div class="form-section-description">{{ _('How often each agent opens the app: the daily activity level scales the probability of a session. The recommender is chosen in the client.') }}</div>
+        {{ drange(_('Daily activity level'), 'daily_activity_level', dd.activity[0], dd.activity[1], _('Each agent draws a whole number in this range (1 is the baseline).'), '1', 1) }}
     </div>
 
 </fieldset>

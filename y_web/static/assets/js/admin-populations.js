@@ -815,6 +815,29 @@ var AdminPopulations = (function() {
       age_classes: {}
   };
 
+  // Dating selectors (same component, labels as ids) and the defaults proposed by the form
+  const DATING_FIELDS = ['d_intents', 'd_seek_woman', 'd_seek_man'].concat(
+      ['hair_color', 'hair_length', 'hair_style', 'eye_color', 'skin_tone', 'build', 'facial_hair',
+       'distinctive_features', 'mood', 'photo_style'].map(k => 'd_appearance_' + k));
+  DATING_FIELDS.forEach(f => { multiSelectData[f] = {}; });
+
+  function datingDefaults() {
+      const box = document.getElementById('dating-population-sections');
+      if (!box) { return; }
+      let d = {};
+      try { d = JSON.parse(box.getAttribute('data-defaults') || '{}'); } catch (e) { d = {}; }
+      const plan = {d_intents: d.intents, d_seek_woman: (d.seeking || {}).woman, d_seek_man: (d.seeking || {}).man};
+      Object.keys(d.appearance || {}).forEach(k => { plan['d_appearance_' + k] = d.appearance[k]; });
+      Object.keys(plan).forEach(field => {
+          Object.entries(plan[field] || {}).forEach(([label, pct]) => {
+              multiSelectData[field][label] = {label: label, percentage: pct};
+          });
+          updateDisplay(field);
+          updateOptionStyles(field);
+          updatePercentages(field);
+      });
+  }
+
   function updateFemalePercentage() {
       const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
       const femalePercentage = 100 - malePercentage;
@@ -1026,7 +1049,9 @@ var AdminPopulations = (function() {
       }
     
       // Validate percentages before submission
-      const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
+      const fieldsToValidate = (isDatingPlatform()
+          ? ['education_levels', 'political_leanings', 'age_classes'].concat(DATING_FIELDS)
+          : ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes']);
       for (const fieldName of fieldsToValidate) {
           const data = multiSelectData[fieldName];
           const items = Object.values(data);
@@ -1048,6 +1073,7 @@ var AdminPopulations = (function() {
       }
     
       // Remove old hidden inputs
+      this.querySelectorAll('input[data-ms]').forEach(input => input.remove());
       this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"], input[name="age_classes"]').forEach(input => input.remove());
       this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"], input[name="age_classes_percentages"]').forEach(input => input.remove());
     
@@ -1059,6 +1085,7 @@ var AdminPopulations = (function() {
               input.type = 'hidden';
               input.name = fieldName;
               input.value = id;
+              input.setAttribute('data-ms', '1');
               this.appendChild(input);
           });
       });
@@ -1075,6 +1102,7 @@ var AdminPopulations = (function() {
           input.type = 'hidden';
           input.name = fieldName + '_percentages';
           input.value = JSON.stringify(percentageData);
+          input.setAttribute('data-ms', '1');
           this.appendChild(input);
       });
   });
@@ -1389,16 +1417,11 @@ var AdminPopulations = (function() {
   }
 
   function toggleDatingPopulationSections(dating) {
-      const standard = document.getElementById('standard-population-sections');
-      const datingBox = document.getElementById('dating-population-sections');
-      if (standard) {
-          standard.disabled = dating;
-          standard.classList.toggle('d-none', dating);
-      }
-      if (datingBox) {
-          datingBox.disabled = !dating;
-          datingBox.classList.toggle('d-none', !dating);
-      }
+      document.querySelectorAll('[data-platform-only]').forEach(el => {
+          const show = (el.getAttribute('data-platform-only') === 'dating') === dating;
+          el.disabled = !show;
+          el.hidden = !show;
+      });
   }
 
   function validatePhotoSharingDistributions() {
@@ -1464,6 +1487,7 @@ var AdminPopulations = (function() {
                   updateHiddenField();
               }
       renderPhotoFavoriteFilters();
+      datingDefaults();
       togglePhotoSharingConfigPanel();
         
     
@@ -1509,8 +1533,9 @@ var AdminPopulations = (function() {
       if (isDatingPlatform()) {
           const nameOk = document.getElementById('pop_name').value.trim();
           const sizeOk = parseInt(document.getElementById('n_agents').value, 10) >= 2;
-          document.getElementById('create_population_btn').disabled = !(nameOk && sizeOk);
-          return !!(nameOk && sizeOk);
+          const ageOk = Object.keys(multiSelectData.age_classes).length > 0;
+          document.getElementById('create_population_btn').disabled = !(nameOk && sizeOk && ageOk);
+          return !!(nameOk && sizeOk && ageOk);
       }
       const popName = document.getElementById('pop_name').value.trim();
       const nAgents = document.getElementById('n_agents').value;
