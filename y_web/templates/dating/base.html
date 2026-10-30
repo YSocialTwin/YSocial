@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ exp.exp_name }}{% endblock %} · {{ _('Dating') }}</title>
-  <link rel="icon" href="{{ url_for('static', filename='assets/img/vector/logo/YSocial_l_teal.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon_rose.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/dating.css') }}">
 </head>
 <body class="dt-body" data-exp="{{ exp.idexp }}" data-poll="{{ poll_seconds|default(0) }}" data-latest="{{ ctx.latest }}" data-status-url="/{{ exp.idexp }}/dating/api/status"{% if participant %} data-act-url="/{{ exp.idexp }}/dating/api/act" data-leave-url="/{{ exp.idexp }}/dating/api/leave" data-csrf="{{ csrf_token }}" data-t-lost="{{ _('Connection lost: try again in a moment.') }}"{% endif %}>

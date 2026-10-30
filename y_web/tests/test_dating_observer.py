@@ -259,3 +259,12 @@ def test_the_profile_page_has_the_gallery_and_the_reveal_script():
         encoding="utf-8"
     )
     assert "IntersectionObserver" in script and "Escape" in script
+
+
+def test_the_dating_pages_use_the_y_favicon_in_the_platform_colour():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    base = (root / "templates" / "dating" / "base.html").read_text(encoding="utf-8")
+    assert "assets/img/favicon_rose.png" in base
+    assert (root / "static" / "assets" / "img" / "favicon_rose.png").is_file()
