@@ -1,6 +1,6 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_field %}
+{% from "admin/_dating_fields.html" import dating_field, dating_sections %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="dating_settings" class="dashboard-container">
@@ -12,7 +12,7 @@
                     <div class="dashboard-box">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }}
                         <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a>
-                        &gt; {{ _('Dating advanced settings') }}
+                        &gt; {{ _('Dating settings') }}
                     </div>
                 </div>
             </div>
@@ -20,42 +20,40 @@
             <div class="columns">
                 <div class="column is-9">
                     <div class="dashboard-box" id="box-dating-settings">
-                        <h3 class="title is-5 is-thin">{{ _('Advanced settings') }}</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Experiment settings') }}</h3>
                         {% if locked %}
                         <div class="ys-note-box" id="dating-settings-locked">{{ _('The experiment has started: the settings that shape the run are locked. To change them, clone the experiment or reset it.') }}</div>
                         {% endif %}
                         <div class="box-content">
                             <form action="/admin/update_dating_settings/{{ experiment.idexp }}" method="POST">
                                 <div class="box-lines">
-                                    <h4 class="title is-6">{{ _('Recommender') }}</h4>
-                                    <p class="ys-label-hint">{{ _('The model that proposes the cards. Agents may have their own model in the population; the others use this one.') }}</p>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Default model') }}</span>
-                                        <span class="right ys-w-70">
-                                            <div class="select is-fullwidth"><select name="matching_default_model" {% if locked or not can_manage %}disabled{% endif %}>
-                                                {% for m in models %}<option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
-                                            </select></div>
-                                        </span>
+                                    <div class="ys-note-box">{{ _('These settings belong to the whole experiment and are shared by every client: the rules of the platform, the recommender and the participation of people. How the agents of one population behave (activity, swiping, writing, memory) is set in each client.') }}
+                                        <a href="/admin/clients_dating/{{ experiment.idexp }}">{{ _('Create a client') }}</a></div>
+                                    {% set off = locked or not can_manage %}
+                                    <div class="tutorial-section" id="sec-recommender">
+                                        <div class="form-section-header">{{ _('Recommender') }}</div>
+                                        <div class="form-section-description">{{ _('The model that proposes the cards. Agents may have their own model in the population; the others use this one.') }}</div>
+                                        <div class="box-line ys-hint-text">
+                                            <span class="left">{{ _('Default model') }}</span>
+                                            <span class="right ys-w-70">
+                                                <div class="select is-fullwidth"><select name="matching_default_model" id="recsys-default" {% if off %}disabled{% endif %}>
+                                                    {% for m in models %}<option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
+                                                </select></div>
+                                            </span>
+                                        </div>
+                                        <h4 class="title is-6">{{ _('Common parameters') }}</h4>
+                                        {% for item in common %}{{ dating_field(item, values, off) }}{% endfor %}
+                                        {% for m in models %}
+                                        {% if model_fields[m] %}
+                                        <div class="recsys-params" id="recsys-{{ m }}" data-model="{{ m }}">
+                                            <h4 class="title is-6">{{ _('Parameters of %(m)s', m=m) }}</h4>
+                                            {% for item in model_fields[m] %}{{ dating_field(item, values, off) }}{% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
                                     </div>
-                                    <details>
-                                        <summary>{{ _('Common parameters') }}</summary>
-                                        {% for f in common %}{{ dating_field(f, values, locked or not can_manage) }}{% endfor %}
-                                    </details>
-                                    {% for m in models %}
-                                    {% if model_fields[m] %}
-                                    <details id="recsys-{{ m }}">
-                                        <summary>{{ _('Parameters of %(m)s', m=m) }}</summary>
-                                        {% for f in model_fields[m] %}{{ dating_field(f, values, locked or not can_manage) }}{% endfor %}
-                                    </details>
-                                    {% endif %}
-                                    {% endfor %}
 
-                                    {% for group, group_fields in groups.items() %}
-                                    <details id="srv-{{ group }}">
-                                        <summary>{{ group | replace('_', ' ') | capitalize }}</summary>
-                                        {% for f in group_fields %}{{ dating_field(f, values, locked or not can_manage) }}{% endfor %}
-                                    </details>
-                                    {% endfor %}
+                                    {{ dating_sections(sections, values, experiment.idexp, off) }}
                                 </div>
                                 {% if can_manage %}
                                 <div class="button-wrap">
@@ -70,4 +68,5 @@
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='assets/js/admin-dating-settings.js') }}"></script>
 {% include "admin/footer.html" %}

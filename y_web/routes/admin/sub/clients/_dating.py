@@ -16,7 +16,7 @@ from y_web.src.agents.platform import infer_population_username_type
 from y_web.src.dating import client_config as dcc
 from y_web.src.dating import is_dating_experiment
 from y_web.src.dating import population as dp
-from y_web.src.dating import server_settings
+from y_web.src.dating import server_settings, settings_ui
 from y_web.src.dating.experiment_config import read_switches
 from y_web.src.models import Client, Client_Execution, Population, Population_Experiment
 from y_web.src.system import prompt_packs
@@ -72,7 +72,9 @@ def clients_dating(idexp):
     context.update(
         {
             "switches": switches,
-            "adv_groups": dcc.grouped(fields),
+            "sections": settings_ui.layout(
+                fields, settings_ui.CLIENT_SECTIONS, switches
+            ),
             "adv_values": dcc.values_for_form(repo),
             "slots_per_day": (server_config.get("simulation") or {}).get(
                 "num_slots_per_day", 24

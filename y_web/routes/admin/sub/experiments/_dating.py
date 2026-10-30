@@ -9,7 +9,13 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.i18n import gettext as _
-from y_web.src.dating import is_dating_experiment, schema_forms, server_settings
+from y_web.src.dating import (
+    is_dating_experiment,
+    schema_forms,
+    server_settings,
+    settings_ui,
+)
+from y_web.src.dating.experiment_config import read_switches
 from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
@@ -71,18 +77,27 @@ def dating_settings(uid):
         for f in fields
     }
     values.update(server_settings.recsys_form_text(repo, base))
-    groups = {}
-    for f in fields:
-        groups.setdefault(f.group, []).append(f)
     models = server_settings.recsys_models(repo)
     return render_template(
         "admin/dating_settings.html",
         experiment=exp,
-        groups=groups,
+        sections=settings_ui.layout(
+            fields, settings_ui.SERVER_SECTIONS, read_switches(config)
+        ),
+        recsys_labels=settings_ui.LABELS,
         values=values,
         models=models,
-        common=server_settings.common_fields(repo),
-        model_fields={m: server_settings.recsys_fields(repo, m) for m in models},
+        common=[
+            {"f": f, "label": settings_ui.label_of(f.path)}
+            for f in server_settings.common_fields(repo)
+        ],
+        model_fields={
+            m: [
+                {"f": f, "label": settings_ui.label_of(f.path)}
+                for f in server_settings.recsys_fields(repo, m)
+            ]
+            for m in models
+        },
         default_model=(base.get("matching") or {}).get("default_model"),
         locked=server_settings.run_started(folder),
         can_manage=user_can_manage_experiment(_current_admin_user_or_none(), exp),

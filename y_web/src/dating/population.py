@@ -530,7 +530,9 @@ def _cities(text: Any) -> List[Dict[str, Any]]:
         parts = [p.strip() for p in line.split(",")]
         if len(parts) not in (3, 4, 5) or not parts[0]:
             raise DatingPopulationError(
-                [f"cities: {line.strip()!r} is not 'name, lat, lon[, weight[, nationality]]'"]
+                [
+                    f"cities: {line.strip()!r} is not 'name, lat, lon[, weight[, nationality]]'"
+                ]
             )
         try:
             city = {"name": parts[0], "lat": float(parts[1]), "lon": float(parts[2])}

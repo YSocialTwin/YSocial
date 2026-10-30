@@ -1,7 +1,9 @@
-{# Controls generated from a JSON Schema of the dating runtime. f: schema_forms.Field; values: text of every control by path. #}
-{% macro dating_field(f, values, disabled=False) %}
-<div class="box-line" title="{{ f.description }}">
-    <span class="left">{{ f.path.split('.')[-1] | replace('_', ' ') | capitalize }}</span>
+{# Controls generated from a JSON Schema of the dating runtime.
+   item: {"f": schema_forms.Field, "label": text}; values: text of every control by path. #}
+{% macro dating_field(item, values, disabled=False) %}
+{%- set f = item.f -%}
+<div class="box-line ys-hint-text" id="field-{{ f.name }}">
+    <span class="left">{{ _(item.label) }}</span>
     <span class="right ys-w-70">
     {%- if f.kind == 'bool' -%}
         <input type="hidden" name="{{ f.name }}__present" value="1">
@@ -13,11 +15,29 @@
     {%- elif f.kind in ('int', 'float') -%}
         <input type="number" name="{{ f.name }}" class="input" step="{{ '1' if f.kind == 'int' else 'any' }}" {% if f.minimum is not none %}min="{{ f.minimum }}"{% endif %} {% if f.maximum is not none %}max="{{ f.maximum }}"{% endif %} value="{{ values[f.path] }}" {% if disabled %}disabled{% endif %}>
     {%- elif f.kind == 'json' -%}
-        <textarea name="{{ f.name }}" class="textarea" rows="2" {% if disabled %}disabled{% endif %}>{{ values[f.path] }}</textarea>
+        <textarea name="{{ f.name }}" class="textarea" rows="3" {% if disabled %}disabled{% endif %}>{{ values[f.path] }}</textarea>
     {%- else -%}
         <input type="text" name="{{ f.name }}" class="input" value="{{ values[f.path] }}" {% if disabled %}disabled{% endif %}>
     {%- endif -%}
+    <small>{{ f.description }}</small>
     </span>
 </div>
-<p class="ys-label-hint">{{ f.description }}</p>
+{% endmacro %}
+
+{# Sections of a page: sections come from settings_ui.layout; experiment_id links to the Experiment Configuration. #}
+{% macro dating_sections(sections, values, experiment_id, disabled=False) %}
+{% for s in sections %}
+<div class="tutorial-section" id="sec-{{ s.id }}">
+    <div class="form-section-header">{{ _(s.title) }}</div>
+    <div class="form-section-description">{{ _(s.description) }}</div>
+    {% if s.inactive %}
+    <div class="ys-note-box">{{ _('This part is off in the Experiment Configuration, so these settings have no effect until you switch it on there.') }}
+        <a href="/admin/experiment_details/{{ experiment_id }}">{{ _('Experiment Configuration') }}</a></div>
+    {% endif %}
+    {% for b in s.blocks %}
+    {% if b.heading %}<h4 class="title is-6">{{ _(b.heading) }}</h4>{% endif %}
+    {% for item in b.fields %}{{ dating_field(item, values, disabled) }}{% endfor %}
+    {% endfor %}
+</div>
+{% endfor %}
 {% endmacro %}
