@@ -18,7 +18,13 @@ from y_web.src.dating import is_dating_experiment
 from y_web.src.dating import population as dp
 from y_web.src.dating import server_settings, settings_ui
 from y_web.src.dating.experiment_config import read_switches
-from y_web.src.models import Client, Client_Execution, Population, Population_Experiment
+from y_web.src.models import (
+    Client,
+    Client_Execution,
+    Exps,
+    Population,
+    Population_Experiment,
+)
 from y_web.src.system import prompt_packs
 from y_web.src.system.miscellanea import check_privileges
 from y_web.src.system.path_utils import get_external_repo_dir, get_writable_path
@@ -215,3 +221,97 @@ def create_dating_client():
     db.session.commit()
     flash(_("Dating client '%(name)s' created successfully", name=name))
     return redirect(f"/admin/experiment_details/{exp.idexp}")
+
+
+def _client_context(uid):
+    """Client, experiment, population and config file of a dating client (None when something is missing)."""
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
+    if client is None:
+        return None
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
+    if exp is None or population is None or not is_dating_experiment(exp):
+        return None
+    exp_dir = _experiment_folder(exp)
+    path = os.path.join(exp_dir, f"client_{client.name}-{population.name}.json")
+    return client, exp, population, exp_dir, path
+
+
+@clientsr.route("/admin/client_details_dating/<int:uid>")
+@login_required
+def client_details_dating(uid):
+    """Details of a dating client: state, length of the simulation and the settings of its agents."""
+    check_privileges(current_user.username)
+    found = _client_context(uid)
+    if found is None:
+        flash(_("Client not found."), "error")
+        return redirect(url_for("experiments.settings"))
+    client, exp, population, exp_dir, path = found
+    repo = get_external_repo_dir("YDating")
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            config = json.load(handle) or {}
+    except (OSError, ValueError):
+        config = {}
+        flash(_("Client configuration file not found."), "warning")
+    server_config = _load_server_config(exp_dir)
+    switches = read_switches(server_config)
+    execution = db.session.scalars(
+        select(Client_Execution).filter_by(client_id=client.id)
+    ).first()
+    slots = (server_config.get("simulation") or {}).get("num_slots_per_day", 24)
+    return render_template(
+        "admin/client_details_dating.html",
+        client=client,
+        experiment=exp,
+        population=population,
+        config=config,
+        sections=settings_ui.layout(
+            dcc.form_fields(repo), settings_ui.CLIENT_SECTIONS, switches
+        ),
+        values=dcc.values_for_form(repo, config),
+        slots_per_day=slots,
+        execution=execution,
+        running=bool(client.status),
+        language=config.get("language"),
+    )
+
+
+@clientsr.route("/admin/update_dating_client/<int:uid>", methods=["POST"])
+@login_required
+def update_dating_client(uid):
+    """Save the settings of a dating client (only while it is not running)."""
+    check_privileges(current_user.username)
+    found = _client_context(uid)
+    if found is None:
+        flash(_("Client not found."), "error")
+        return redirect(url_for("experiments.settings"))
+    client, exp, population, exp_dir, path = found
+    back = url_for("clientsr.client_details_dating", uid=uid)
+    if client.status:
+        flash(_("Stop the client before changing its settings."), "error")
+        return redirect(back)
+    repo = get_external_repo_dir("YDating")
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            config = json.load(handle) or {}
+        merged = dcc.apply_form(repo, config, request.form, label_of=_)
+    except OSError:
+        flash(_("Client configuration file not found."), "error")
+        return redirect(back)
+    except dcc.DatingClientFormError as exc:
+        flash(
+            _("Invalid client settings: %(why)s", why=" | ".join(exc.problems[:5])),
+            "error",
+        )
+        return redirect(back)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as handle:
+        json.dump(merged, handle, indent=2)
+    os.replace(tmp, path)
+    client.llm = (merged.get("llm") or {}).get("model")
+    db.session.commit()
+    flash(_("Client settings updated."), "success")
+    return redirect(back)

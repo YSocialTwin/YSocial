@@ -64,3 +64,30 @@ def test_sections_render():
     assert 'id="sec-llm"' in html and 'id="sec-memory"' in html
     assert "/admin/experiment_details/7" in html  # memory section is off
     assert "adv__profile_generation__images__background" in html
+
+
+def test_remaining_days_for_a_restart():
+    f = dcc.remaining_days
+    assert f(3, -1, -1, 24) == 3  # never ran
+    assert f(3, 1, 10, 24) == 3  # stopped inside day 1: day 1 runs again
+    assert f(3, 2, 24, 24) == 1  # day 2 finished: day 3 is left
+    assert f(3, 3, 24, 24) == 0  # everything done
+    assert f(-1, 5, 3, 24) == -1  # until stopped
+    assert f(5, 3, 24, 24) == 2  # extended from 3 to 5 after day 3
+
+
+def test_apply_form_keeps_what_the_form_does_not_carry():
+    cfg = dcc.build_client_config(
+        REPO,
+        name="c",
+        population_file="p.json",
+        days=2,
+        server_config={},
+        memory_enabled=True,
+        language="en",
+        form={},
+    )
+    merged = dcc.apply_form(REPO, cfg, {"adv__swipe__w_attr": "0.9"})
+    assert merged["swipe"]["w_attr"] == 0.9
+    assert merged["client_name"] == "c" and merged["num_days"] == 2
+    assert merged["memory"]["enabled"] is True

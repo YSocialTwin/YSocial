@@ -1,0 +1,82 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+{% from "admin/_dating_fields.html" import dating_sections %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" data-tutorial-page="client_details_dating" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }}
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a>
+                        &gt; {{ _('Client:') }} {{ client.name }} <span class="tag is-info">{{ _('Dating') }}</span>
+                        {% if running %}<span class="tag is-success">{{ _('Running') }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box" id="box-client-overview">
+                        <h3 class="title is-5 is-thin">{{ _('Client Overview') }}</h3>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line"><span class="left">{{ _('Name') }}</span><span class="right">{{ client.name }}</span></div>
+                                <div class="box-line"><span class="left">{{ _('Description') }}</span><span class="right">{{ client.descr }}</span></div>
+                                <div class="box-line"><span class="left">{{ _('Population') }}</span><span class="right"><a href="/admin/dating_population/{{ population.id }}">{{ population.name }}</a></span></div>
+                                <div class="box-line"><span class="left">{{ _('Language') }}</span><span class="right">{{ language }}</span></div>
+                                <div class="box-line"><span class="left">{{ _('Total length') }}</span><span class="right">{{ _('until stopped') if client.days == -1 else _('%(n)s days', n=client.days) }}</span></div>
+                                {% if execution and execution.last_active_day and execution.last_active_day > 0 %}
+                                <div class="box-line"><span class="left">{{ _('Reached') }}</span><span class="right">{{ _('day %(d)s, slot %(s)s', d=execution.last_active_day, s=execution.last_active_hour) }}</span></div>
+                                {% endif %}
+                            </div>
+                            <div class="buttons ys-flex-right">
+                                <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="{{ _('Delete') }}"><i class="mdi mdi-delete ys-icon-lg"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box" id="box-extend-simulation">
+                        <h3 class="title is-5 is-thin">{{ _('Extend the simulation') }}</h3>
+                        <p class="ys-text-small">{{ _('Add days to the total length. A day has %(n)s slots. After extending, start the client again: it continues from where it stopped.', n=slots_per_day) }}</p>
+                        <div class="box-content">
+                            <form action="/admin/extend_simulation/{{ client.id }}" method="POST">
+                                <div class="box-line">
+                                    <span class="left">{{ _('Days to add') }}</span>
+                                    <span class="right ys-w-70"><input type="number" name="days" class="input" min="1" value="1" required {% if running %}disabled{% endif %}></span>
+                                </div>
+                                {% if running %}<p class="ys-label-hint">{{ _('Stop the client to extend it.') }}</p>{% endif %}
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" {% if running %}disabled{% endif %}>{{ _('Extend') }}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-8">
+                    <div class="dashboard-box" id="box-client-settings">
+                        <h3 class="title is-5 is-thin">{{ _('Client settings') }}</h3>
+                        {% if running %}
+                        <div class="ys-note-box">{{ _('The client is running: stop it to change its settings.') }}</div>
+                        {% endif %}
+                        <div class="box-content">
+                            <form action="/admin/update_dating_client/{{ client.id }}" method="POST">
+                                <div class="box-lines">
+                                    {{ dating_sections(sections, values, experiment.idexp, running) }}
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" {% if running %}disabled{% endif %}>{{ _('Save') }}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

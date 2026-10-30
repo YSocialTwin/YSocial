@@ -60,10 +60,14 @@
             { selector: '#dating-humans', title: 'Participants', description: 'The users assigned to this experiment who can play: whether they have entered and what they have done so far.', position: 'auto' }
         ],
         dating_settings: [
-            { selector: '#box-dating-settings', title: '@heading', description: 'Every setting of the dating runtime, generated from its configuration schema. They are locked once the experiment has started.', position: 'auto' }
+            { selector: '#box-dating-settings', title: '@heading', description: 'The rules shared by every client of the experiment: recommender, quotas, chats, dates and human participation. They are locked once the experiment has started.', position: 'auto' }
         ],
         clients_dating: [
-            { selector: '#box-new-client', title: '@heading', description: 'Choose the population and how long the client runs. Every advanced setting has the default of the dating runtime.', position: 'auto' }
+            { selector: '#box-new-client', title: '@heading', description: 'Choose the population and how long the client runs, then adjust how its agents behave. Every setting has the default of the dating runtime.', position: 'auto' }
+        ],
+        client_details_dating: [
+            { selector: '#box-extend-simulation', title: '@heading', description: 'Add days to the total length of the client, then start it again: it continues from where it stopped.', position: 'auto' },
+            { selector: '#box-client-settings', title: '@heading', description: 'The settings of the agents of this client. They can be changed while the client is stopped.', position: 'auto' }
         ],
         prompts_dating: [
             { selector: '[data-tut="dating-prompts"]', title: '@heading', description: 'The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.', position: 'auto' }

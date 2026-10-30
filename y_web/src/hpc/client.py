@@ -414,6 +414,33 @@ def _resolve_hpc_client_days_from_config(client_config_path: str) -> Optional[in
     return None
 
 
+def _set_dating_run_length(client_config_path: str, cli) -> None:
+    """Write in the client file how many days the dating runtime runs from this start.
+
+    The database holds the total length of the client (``Client.days``); the runtime counts the days from the
+    moment it registers, so a restarted client gets what is left of the total.
+    """
+    from y_web.src.dating import client_config as dcc
+    from y_web.src.models import Client_Execution
+
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        config = json.load(handle)
+    slots = int(config.get("num_slots_per_day") or 24)
+    execution = db.session.scalars(
+        select(Client_Execution).filter_by(client_id=cli.id)
+    ).first()
+    last_day = getattr(execution, "last_active_day", -1) if execution else -1
+    last_slot = getattr(execution, "last_active_hour", -1) if execution else -1
+    days = dcc.remaining_days(cli.days, last_day or -1, last_slot or -1, slots)
+    if days == 0:
+        raise RuntimeError(
+            f"Client '{cli.name}' has already run all its days: extend the simulation to run it further."
+        )
+    if config.get("num_days") != days:
+        with open(client_config_path, "w", encoding="utf-8") as handle:
+            json.dump(dcc.set_duration(config, days), handle, indent=2)
+
+
 def _sync_hpc_client_duration_from_config(
     client_config_path: str,
     cli,
@@ -699,7 +726,12 @@ def start_hpc_client(exp, cli, population):
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
 
     try:
-        synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+        if exp.platform_type == "dating":
+            _set_dating_run_length(client_config, cli)
+        else:
+            synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+    except RuntimeError:
+        raise
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC client duration: {exc}")
 

@@ -57,6 +57,8 @@ def client_details(uid):
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
 
+    if experiment and experiment.platform_type == "dating":
+        return redirect(url_for("clientsr.client_details_dating", uid=uid))
     # Redirect HPC clients to dedicated HPC client details page
     if (
         experiment
@@ -239,6 +241,9 @@ def client_details_hpc(uid):
     if not experiment:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
+
+    if experiment.platform_type == "dating":
+        return redirect(url_for("clientsr.client_details_dating", uid=uid))
 
     population = db.session.scalars(
         select(Population).filter_by(id=client.population_id)

@@ -188,6 +188,31 @@ def extend_simulation(id_client):
             "info",
         )
 
+    if exp and exp.platform_type == "dating":
+        # the runtime reads how many days to run from the client file at every start (see
+        # hpc.client._set_dating_run_length): the new total is all that has to be recorded
+        from ._dating import _experiment_folder, _load_server_config
+
+        slots = int(
+            (
+                (_load_server_config(_experiment_folder(exp)).get("simulation") or {})
+            ).get("num_slots_per_day", 24)
+        )
+        client_execution.expected_duration_rounds = (
+            -1 if new_total_days == -1 else new_total_days * slots
+        )
+        db.session.commit()
+        flash(
+            _(
+                "The client will run %(days)s days in all. Start it again to continue.",
+                days=new_total_days,
+            ),
+            "success",
+        )
+        return redirect(
+            request.referrer or url_for("clientsr.client_details_dating", uid=id_client)
+        )
+
     # Update the client config JSON file for HPC experiments
     # This ensures the client uses the extended duration when restarted
     if exp and exp.simulator_type == "HPC":
