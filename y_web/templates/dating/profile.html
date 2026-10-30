@@ -78,6 +78,22 @@
           {% endfor %}
         </dl>
         {% endif %}
+        {% set lc = profile.overview.lifecycle %}
+        {% if lc and lc.matches %}
+        <h4 class="dt-pf-sub">{{ _('Relationships') }}</h4>
+        <dl class="dt-pf-stats">
+          <div><dt>{{ _('Matches') }}</dt><dd>{{ lc.matches }} <small>({{ _('active') }}: {{ lc.active }})</small></dd></div>
+          <div><dt>{{ _('Conversations started') }}</dt><dd>{{ lc.started }} <small>({{ _('opened by this agent') }}: {{ lc.opened }})</small></dd></div>
+          <div><dt>{{ _('Left unanswered by others (ghosted)') }}</dt><dd>{{ lc.ghosted_by }}</dd></div>
+          <div><dt>{{ _('Ghosted others') }}</dt><dd>{{ lc.ghosted }}</dd></div>
+          <div><dt>{{ _('Dates proposed / received') }}</dt><dd>{{ lc.dates_proposed }} / {{ lc.dates_received }}</dd></div>
+          <div><dt>{{ _('Dates accepted / declined / unanswered') }}</dt><dd>{{ lc.dates_accepted }} / {{ lc.dates_declined }} / {{ lc.dates_expired }}</dd></div>
+          <div><dt>{{ _('Date outcomes: good / so-so / bad') }}</dt><dd>{{ lc.dates_positive }} / {{ lc.dates_neutral }} / {{ lc.dates_negative }}</dd></div>
+          <div><dt>{{ _('Left the platform together') }}</dt><dd>{{ lc.paired }}</dd></div>
+          <div><dt>{{ _('Unmatched by this agent / by the other') }}</dt><dd>{{ lc.unmatched_by_me }} / {{ lc.unmatched_by_other }}</dd></div>
+          <div><dt>{{ _('Blocked by this agent / by the other') }}</dt><dd>{{ lc.blocked_by_me }} / {{ lc.blocked_by_other }}</dd></div>
+        </dl>
+        {% endif %}
         <p class="dt-pf-note">{{ _('Blocks made: %(n)s', n=profile.overview.blocks_made) }}</p>
         <a class="dt-btn" href="/{{ exp.idexp }}/dating?vp=overview&acc={{ profile.id }}{{ '&round=%d' % ctx.vp.round if ctx.vp.round != ctx.latest else '' }}">{{ _('Deck of this account') }}</a>
       </section>

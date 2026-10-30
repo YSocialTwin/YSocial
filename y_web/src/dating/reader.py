@@ -29,6 +29,8 @@ PUBLIC = "public"
 KINDS = (OVERVIEW, ACCOUNT, PUBLIC)
 
 DEFAULT_SLOTS = 24
+_END_CODES = ("paired", "unmatched", "blocked", "ended", "left_platform", "ghosted", "no_opener")
+GHOST_SLOTS = 48  # the server's ghosting_threshold_slots: a message nobody answers for this long
 # fields of profile_events that are part of the public profile
 PROFILE_FIELDS = ("bio", "prompt_answers", "city", "intent")
 
@@ -400,6 +402,7 @@ class DatingReader:
         return {
             "latent": dict(latent) if latent else None,
             "blocks_made": blocks,
+            "lifecycle": self.lifecycle_stats(user_id, cut),
         }
 
     # ------------------------------------------------------------------ deck (account and overview)
@@ -460,6 +463,223 @@ class DatingReader:
         return {"round": {"day": row["day"], "hour": row["hour"]}, "cards": cards}
 
     # ------------------------------------------------------------------ matches and chats
+    # ------------------------------------------------------------------ how a match went
+    def _key_slot(self, key: int) -> int:
+        day, hour = divmod(key, 10000)
+        return day * self.slots + max(hour - 1, 0)
+
+    def _has_dates(self) -> bool:
+        return bool(
+            self.c.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='date_proposals'"
+            ).fetchone()
+        )
+
+    def journeys(
+        self, cut: int, account_id: Optional[str] = None, detail: bool = True
+    ) -> Dict[str, Dict[str, Any]]:
+        """What became of every match (of ``account_id``, else of all) at the cut: the dates and their
+        outcomes, whether the conversation was left unanswered (ghosting) and how the match ended.
+
+        ``chips`` is the ordered list of outcomes shown in the matches table (code, tone good, neutral, bad
+        or info). With ``detail`` false (an account's own view) a block or an unmatch shows only as an end:
+        a person does not learn who ended it nor why.
+        """
+        sql = (
+            "SELECT m.id, m.user_a, m.user_b, m.status, m.created_round, m.ended_round, m.ended_by, "
+            "cr.day * 10000 + cr.hour AS created_key FROM matches m "
+            "JOIN rounds cr ON cr.id = m.created_round AND cr.day * 10000 + cr.hour <= :cut "
+        )
+        params: Dict[str, Any] = {"cut": cut}
+        if account_id:
+            sql += "WHERE m.user_a = :v OR m.user_b = :v"
+            params["v"] = account_id
+        matches = self.c.execute(sql, params).fetchall()
+        if not matches:
+            return {}
+        ids = {m["id"] for m in matches}
+        keys = {
+            r["id"]: r["k"]
+            for r in self.c.execute("SELECT id, day * 10000 + hour AS k FROM rounds")
+        }
+        left_reason = {
+            r["id"]: r["left_reason"]
+            for r in self.c.execute("SELECT id, left_reason FROM user_mgmt WHERE status = 'left'")
+        }
+        last: Dict[str, sqlite3.Row] = {}
+        count: Dict[str, int] = {}
+        for r in self.c.execute(
+            "SELECT ms.match_id, ms.sender_id, rr.day * 10000 + rr.hour AS k FROM messages ms "
+            "JOIN rounds rr ON rr.id = ms.round_id AND rr.day * 10000 + rr.hour <= ? "
+            "WHERE ms.deleted = 0 ORDER BY rr.day, rr.hour, ms.minute, ms.id",
+            (cut,),
+        ):
+            if r["match_id"] in ids:
+                last[r["match_id"]] = r
+                count[r["match_id"]] = count.get(r["match_id"], 0) + 1
+        dates: Dict[str, List[Dict[str, Any]]] = {}
+        if self._has_dates():
+            for d in self.c.execute(
+                "SELECT dp.id, dp.match_id, dp.proposer_id, dp.text, dp.status, dp.outcome, dp.round_id, "
+                "dp.outcome_round FROM date_proposals dp "
+                "JOIN rounds pr ON pr.id = dp.round_id AND pr.day * 10000 + pr.hour <= ? "
+                "ORDER BY pr.day, pr.hour, dp.id",
+                (cut,),
+            ):
+                if d["match_id"] not in ids:
+                    continue
+                out_key = keys.get(d["outcome_round"]) if d["outcome_round"] else None
+                known = out_key is not None and out_key <= cut
+                status = d["status"]
+                if status == "accepted" and d["outcome"] and not known:
+                    outcome = None  # the outcome had not happened yet at this round
+                else:
+                    outcome = d["outcome"] if known else None
+                dates.setdefault(d["match_id"], []).append(
+                    {
+                        "id": d["id"],
+                        "proposer_id": d["proposer_id"],
+                        "text": d["text"],
+                        "status": status,
+                        "outcome": outcome,
+                        "key": keys.get(d["round_id"], 0),
+                        "outcome_key": out_key if known else None,
+                    }
+                )
+        now = self._key_slot(cut)
+        out: Dict[str, Dict[str, Any]] = {}
+        for m in matches:
+            mid = m["id"]
+            ended = False
+            if m["ended_round"]:
+                ended = keys.get(m["ended_round"], 10**9) <= cut
+            ds = dates.get(mid, [])
+            ghost = None
+            lm = last.get(mid)
+            if not ended:
+                if lm is not None:
+                    waited = now - self._key_slot(lm["k"])
+                    if waited >= GHOST_SLOTS:
+                        other = m["user_b"] if lm["sender_id"] == m["user_a"] else m["user_a"]
+                        ghost = {"silent": other, "sender": lm["sender_id"], "slots": waited}
+                else:
+                    waited = now - self._key_slot(m["created_key"])
+                    if waited >= GHOST_SLOTS:
+                        ghost = {"silent": None, "sender": None, "slots": waited}
+            chips: List[Dict[str, str]] = []
+            status = m["status"] if ended else "active"
+            if status == "closed_paired":
+                chips.append({"code": "paired", "tone": "good"})
+            shown = [d for d in ds if d["outcome"] or d["status"] != "pending"] or ds
+            if shown and status != "closed_paired":
+                d = shown[-1]
+                if d["outcome"] == "POSITIVE":
+                    chips.append({"code": "date_good", "tone": "good"})
+                elif d["outcome"] == "NEUTRAL":
+                    chips.append({"code": "date_neutral", "tone": "neutral"})
+                elif d["outcome"] == "NEGATIVE":
+                    chips.append({"code": "date_bad", "tone": "bad"})
+                elif d["status"] == "accepted":
+                    chips.append({"code": "date_planned", "tone": "info"})
+                elif d["status"] == "declined":
+                    chips.append({"code": "date_declined", "tone": "bad"})
+                elif d["status"] == "expired":
+                    chips.append({"code": "date_expired", "tone": "bad"})
+                else:
+                    chips.append({"code": "date_proposed", "tone": "info"})
+            if status in ("unmatched", "closed_block"):
+                if left_reason.get(m["ended_by"]) == "churn":
+                    code = "left_platform"
+                elif not detail:
+                    code = "ended"
+                else:
+                    code = "blocked" if status == "closed_block" else "unmatched"
+                chips.append({"code": code, "tone": "bad"})
+            if ghost is not None and not chips:
+                chips.append({"code": "ghosted" if lm is not None else "no_opener", "tone": "bad"})
+            elif ghost is not None:
+                chips.append({"code": "ghosted" if lm is not None else "no_opener", "tone": "bad"})
+            if not chips:
+                chips.append({"code": "chatting" if lm is not None else "new", "tone": "neutral"})
+            out[mid] = {
+                "dates": ds,
+                "ghost": ghost,
+                "chips": chips,
+                "headline": chips[0],
+                "status": status,
+                "messages": count.get(mid, 0),
+                "last_key": lm["k"] if lm is not None else None,
+            }
+        return out
+
+    def lifecycle_stats(self, user_id: str, cut: int) -> Dict[str, Any]:
+        """How the relationships of an agent went (researcher view): conversations, ghosting, dates, exits."""
+        journeys = self.journeys(cut, user_id, detail=True)
+        matches = {
+            r["id"]: r
+            for r in self.c.execute(
+                "SELECT id, user_a, user_b, status, ended_by, first_message_by FROM matches "
+                "WHERE user_a = ? OR user_b = ?",
+                (user_id, user_id),
+            )
+        }
+        stats = {
+            "matches": len(journeys),
+            "active": 0,
+            "started": 0,  # conversations with at least one message
+            "opened": 0,  # the agent wrote first
+            "ghosted_by": 0,  # the agent wrote last and the other stayed silent
+            "ghosted": 0,  # the agent left the other unanswered
+            "dates_proposed": 0,
+            "dates_received": 0,
+            "dates_accepted": 0,  # of the proposals the agent made or answered, accepted
+            "dates_declined": 0,
+            "dates_expired": 0,
+            "dates_positive": 0,
+            "dates_neutral": 0,
+            "dates_negative": 0,
+            "paired": 0,
+            "unmatched_by_me": 0,
+            "unmatched_by_other": 0,
+            "blocked_by_me": 0,
+            "blocked_by_other": 0,
+        }
+        for mid, j in journeys.items():
+            row = matches.get(mid)
+            if row is None:
+                continue
+            if j["status"] == "active":
+                stats["active"] += 1
+            if j["messages"]:
+                stats["started"] += 1
+            if row["first_message_by"] == user_id and j["messages"]:
+                stats["opened"] += 1
+            g = j["ghost"]
+            if g and g["sender"] == user_id:
+                stats["ghosted_by"] += 1
+            if g and g["silent"] == user_id:
+                stats["ghosted"] += 1
+            for d in j["dates"]:
+                if d["proposer_id"] == user_id:
+                    stats["dates_proposed"] += 1
+                else:
+                    stats["dates_received"] += 1
+                if d["status"] == "accepted":
+                    stats["dates_accepted"] += 1
+                elif d["status"] == "declined":
+                    stats["dates_declined"] += 1
+                elif d["status"] == "expired":
+                    stats["dates_expired"] += 1
+                if d["outcome"]:
+                    stats["dates_" + d["outcome"].lower()] += 1
+            if j["status"] == "closed_paired":
+                stats["paired"] += 1
+            elif j["status"] in ("unmatched", "closed_block"):
+                mine = row["ended_by"] == user_id
+                kind = "blocked" if j["status"] == "closed_block" else "unmatched"
+                stats["%s_by_%s" % (kind, "me" if mine else "other")] += 1
+        return stats
+
     def matches(self, viewer_id: Optional[str], vp: Viewpoint) -> List[Dict[str, Any]]:
         cut = self._cut(vp.round)
         sql = (
@@ -475,8 +695,12 @@ class DatingReader:
             r["id"]: r["username"]
             for r in self.c.execute("SELECT id, username FROM user_mgmt")
         }
+        journeys = self.journeys(
+            cut, viewer_id if vp.kind == ACCOUNT else None, detail=vp.kind == OVERVIEW
+        )
         out = []
         for m in self.c.execute(sql, params).fetchall():
+            journey = journeys.get(m["id"])
             ended = False
             if m["ended_round"]:
                 er = self.c.execute(
@@ -497,6 +721,9 @@ class DatingReader:
                 "initials": initials(names.get(other_id)),
                 "photo": self._photo_url(other_id, cut),
                 "active": not ended,
+                "chips": journey["chips"] if journey else [],
+                "dates": len(journey["dates"]) if journey else 0,
+                "messages": journey["messages"] if journey else 0,
             }
             if vp.kind == OVERVIEW:
                 item["a"] = names.get(m["user_a"], "?")
@@ -554,8 +781,29 @@ class DatingReader:
             if vp.kind != OVERVIEW and deleted:
                 item["text"] = ""
             msgs.append(item)
+        journey = self.journeys(
+            cut, vp.account_id if vp.kind == ACCOUNT else None, detail=vp.kind == OVERVIEW
+        ).get(m["id"])
+        events: List[Dict[str, Any]] = []
+        if journey:
+            for d in journey["dates"]:
+                if d["status"] in ("declined", "expired"):
+                    events.append({"code": "date_" + d["status"], "tone": "bad", "key": d["key"]})
+                elif d["outcome"]:
+                    code = {"POSITIVE": "date_good", "NEUTRAL": "date_neutral"}.get(
+                        d["outcome"], "date_bad"
+                    )
+                    tone = {"POSITIVE": "good", "NEUTRAL": "neutral"}.get(d["outcome"], "bad")
+                    events.append({"code": code, "tone": tone, "key": d["outcome_key"] or d["key"]})
+            tail = [c for c in journey["chips"] if c["code"] in _END_CODES]
+            for c in tail:
+                events.append({"code": c["code"], "tone": c["tone"], "key": 10**9})
+        for e in events:
+            e["day"], e["hour"] = (e["key"] // 10000, e["key"] % 10000) if e["key"] < 10**9 else (None, None)
         return {
             "id": m["id"],
+            "events": events,
+            "journey": journey["chips"] if journey else [],
             "a": {
                 "id": m["user_a"],
                 "name": names.get(m["user_a"], "?"),

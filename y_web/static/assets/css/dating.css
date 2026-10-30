@@ -354,3 +354,18 @@
 @media (max-width: 520px) { .dt-drops { grid-template-columns: 1fr 1fr 1fr; gap: 8px; } .dt-join-form { padding: 16px; } .dt-steps li span { display: none; } }
 @media (prefers-reduced-motion: reduce) { .dt-join-heart, .dt-join-form .dt-step, .dt-tag, .shake, .dt-steps-bar i { animation: none !important; transition: none !important; } }
 .dt-choice-row.dt-intents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* How a match went: chips in the matches table, markers under the chat, lifecycle stats on the profile */
+.dt-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.dt-chip { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 12px; line-height: 1.6;
+  border: 1px solid currentColor; background: transparent; }
+.dt-chip-good { color: #1b7a3d; }
+.dt-chip-bad { color: #b3261e; }
+.dt-chip-neutral { color: #5f6368; }
+.dt-chip-info { color: #1a5fb4; }
+.dt-outcomes { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.dt-pf-sub { margin: 12px 0 6px; font-size: 14px; }
+.dt-pf-stats { margin: 0 0 10px; font-size: 13px; }
+.dt-pf-stats > div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 1px solid rgba(128,128,128,.2); }
+.dt-pf-stats dt { font-weight: 400; }
+.dt-pf-stats dd { margin: 0; font-weight: 600; white-space: nowrap; }

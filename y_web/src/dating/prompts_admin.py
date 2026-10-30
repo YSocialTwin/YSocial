@@ -72,6 +72,8 @@ GROUPS: List[Tuple[str, str, str, List[str]]] = [
             "template_reply_2",
             "template_reply_3",
             "template_date_proposal",
+            "template_date_accept",
+            "template_date_decline",
         ],
     ),
     (

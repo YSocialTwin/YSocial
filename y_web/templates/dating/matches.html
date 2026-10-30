@@ -1,5 +1,6 @@
 {% extends "dating/base.html" %}
 {% from "dating/_avatar.html" import avatar_raw %}
+{% from "dating/_outcome.html" import chips %}
 {% set nav = 'matches' %}
 {% block content %}
 <h2 class="dt-h">{{ _('Matches') }} <small>{{ matches|length }}</small></h2>
@@ -10,7 +11,8 @@
     <span class="dt-pair-avatars">{{ avatar_raw(m.a_avatar.initials, m.a_avatar.hue, m.a_avatar.photo, 'md') }}{{ avatar_raw(m.b_avatar.initials, m.b_avatar.hue, m.b_avatar.photo, 'md') }}</span>
     {% else %}{{ avatar_raw(m.initials, m.hue, m.photo, 'lg') }}{% endif %}
     <span class="dt-row-main"><strong>{% if ctx.vp.kind == 'overview' %}{{ m.a }} ↔ {{ m.b }}{% else %}{{ m.other }}{% endif %}</strong>
-      <small>{{ _('Active') if m.active else _('Ended') }}{% if m.ended_by %} · {{ _('ended by %(n)s', n=m.ended_by) }}{% endif %}</small></span>
+      <small>{{ _('Active') if m.active else _('Ended') }}{% if m.ended_by %} · {{ _('ended by %(n)s', n=m.ended_by) }}{% endif %}{% if m.messages %} · {{ _('%(n)s messages', n=m.messages) }}{% endif %}</small>
+      {{ chips(m.chips) }}</span>
     <span class="dt-row-go" aria-hidden="true">›</span>
   </a></li>{% endfor %}</ul>
 {% else %}<p class="dt-empty">{{ _('No matches up to this round.') }}</p>{% endif %}

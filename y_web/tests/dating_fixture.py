@@ -51,6 +51,8 @@ CREATE TABLE matches (id TEXT PRIMARY KEY, user_a TEXT, user_b TEXT, created_rou
   ended_by TEXT, ended_round TEXT, first_message_by TEXT);
 CREATE TABLE messages (id TEXT PRIMARY KEY, match_id TEXT, sender_id TEXT, text TEXT, reply_to TEXT,
   round_id TEXT, minute INTEGER, read_round TEXT, deleted INTEGER);
+CREATE TABLE date_proposals (id TEXT PRIMARY KEY, match_id TEXT, proposer_id TEXT, text TEXT, status TEXT,
+  outcome TEXT, outcome_round TEXT, round_id TEXT);
 CREATE TABLE blocks (id TEXT PRIMARY KEY, from_id TEXT, to_id TEXT, round_id TEXT);
 CREATE TABLE reports (id TEXT PRIMARY KEY, from_id TEXT, to_id TEXT, message_id TEXT, reason TEXT, round_id TEXT);
 CREATE TABLE stress_reward (id TEXT PRIMARY KEY, uid TEXT, variable TEXT, value REAL, type TEXT, action TEXT,
@@ -194,6 +196,10 @@ def build_dating_db(path, sentinel=False, users=6, days=3, slots=4):
             "INSERT INTO messages VALUES (?,?,?,?,?,?,?,?,?)",
             (_id(), match, snd, text, None, rid, k, None, deleted),
         )
+    c.execute(
+        "INSERT INTO date_proposals VALUES (?,?,?,?,?,?,?,?)",
+        (_id(), match, uids[1], "coffee?", "accepted", "NEGATIVE", rounds[7], rounds[5]),
+    )
     c.execute(
         "INSERT INTO blocks VALUES (?,?,?,?)", (_id(), uids[2], uids[0], rounds[6])
     )

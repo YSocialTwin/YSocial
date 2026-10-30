@@ -2,6 +2,7 @@
 {% set nav = 'matches' %}
 {% block content %}
 {% from "dating/_avatar.html" import avatar_raw %}
+{% from "dating/_outcome.html" import outcome_label %}
 {% set me = ctx.vp.account_id if ctx.vp.kind == 'account' else None %}
 {% set partner = chat.b if chat.a.id == me else chat.a %}
 <header class="dt-chat-head">
@@ -28,6 +29,10 @@
     </div>
   </li>{% endfor %}</ol>
 {% else %}<p class="dt-empty">{{ _('No messages yet.') }}</p>{% endif %}
+{% if chat.events %}
+<ul class="dt-outcomes" aria-label="{{ _('How this match went') }}">{% for e in chat.events %}
+  <li class="dt-chip dt-chip-{{ e.tone }}">{{ outcome_label(e.code) }}{% if e.day %} <small>{{ _('Day %(d)s', d=e.day) }} · {{ _('round %(h)s', h=e.hour) }}</small>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
 {% if participant and convo %}
 {% set me_id = participant.account_id %}
 <section class="dt-panel dt-tools-panel" id="dt-chat-tools" aria-label="{{ _('Reply and options') }}">

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 11:21+0000\n"
+"POT-Creation-Date: 2026-10-30 11:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1749,6 +1749,12 @@ msgstr ""
 msgid "Block this person?"
 msgstr ""
 
+msgid "Blocked"
+msgstr ""
+
+msgid "Blocked by this agent / by the other"
+msgstr ""
+
 msgid "Blocks and reports raise stress"
 msgstr ""
 
@@ -1995,6 +2001,9 @@ msgid "Chats per topic"
 msgstr ""
 
 msgid "Chats that appear during the run."
+msgstr ""
+
+msgid "Chatting"
 msgstr ""
 
 msgid "Check for Updates"
@@ -2817,6 +2826,9 @@ msgstr ""
 msgid "Conversations and dates"
 msgstr ""
 
+msgid "Conversations started"
+msgstr ""
+
 msgid "Copy Experiment"
 msgstr ""
 
@@ -3285,19 +3297,49 @@ msgstr ""
 msgid "Database error: %(error)s"
 msgstr ""
 
+msgid "Date agreed"
+msgstr ""
+
+msgid "Date declined"
+msgstr ""
+
+msgid "Date outcomes: good / so-so / bad"
+msgstr ""
+
 msgid "Date proposal"
+msgstr ""
+
+msgid "Date proposal unanswered"
 msgstr ""
 
 msgid "Date proposals"
 msgstr ""
 
+msgid "Date proposed"
+msgstr ""
+
+msgid "Date went badly: not continuing off the platform"
+msgstr ""
+
+msgid "Date went well"
+msgstr ""
+
+msgid "Date: so-so"
+msgstr ""
+
 msgid "Dates"
+msgstr ""
+
+msgid "Dates accepted / declined / unanswered"
 msgstr ""
 
 msgid "Dates are allowed"
 msgstr ""
 
 msgid "Dates proposed"
+msgstr ""
+
+msgid "Dates proposed / received"
 msgstr ""
 
 msgid "Dates, couples and leaving"
@@ -5206,6 +5248,12 @@ msgstr ""
 msgid "Get in Touch!"
 msgstr ""
 
+msgid "Ghosted"
+msgstr ""
+
+msgid "Ghosted others"
+msgstr ""
+
 msgid "Gini exposure"
 msgstr ""
 
@@ -5678,6 +5726,9 @@ msgid "How the tone of a message is classified"
 msgstr ""
 
 msgid "How the topic and the chat of each post the agent has to write are given."
+msgstr ""
+
+msgid "How this match went"
 msgstr ""
 
 msgid "How to order posts when scores are equal"
@@ -6538,6 +6589,18 @@ msgstr ""
 msgid "Left (round)"
 msgstr ""
 
+msgid "Left the platform"
+msgstr ""
+
+msgid "Left the platform together"
+msgstr ""
+
+msgid "Left together"
+msgstr ""
+
+msgid "Left unanswered by others (ghosted)"
+msgstr ""
+
 msgid "Length asked of a message (characters)"
 msgstr ""
 
@@ -6817,6 +6880,9 @@ msgstr ""
 msgid ""
 "Master of Puppets agents are deployed, but no topic-matched target "
 "interactions have been recorded up to the selected time."
+msgstr ""
+
+msgid "Match ended"
 msgstr ""
 
 msgid "Matches"
@@ -7458,6 +7524,9 @@ msgstr ""
 msgid "New here?"
 msgstr ""
 
+msgid "New match"
+msgstr ""
+
 #, python-format
 msgid "New match with %(n)s"
 msgstr ""
@@ -7758,6 +7827,9 @@ msgid "No more profiles for now."
 msgstr ""
 
 msgid "No notifications yet."
+msgstr ""
+
+msgid "No one wrote"
 msgstr ""
 
 msgid "No open run"
@@ -9722,6 +9794,9 @@ msgid "Rehydrate window (rounds)"
 msgstr ""
 
 msgid "Related:"
+msgstr ""
+
+msgid "Relationships"
 msgstr ""
 
 msgid ""
@@ -12919,6 +12994,12 @@ msgstr ""
 msgid "Unmatch"
 msgstr ""
 
+msgid "Unmatched"
+msgstr ""
+
+msgid "Unmatched by this agent / by the other"
+msgstr ""
+
 msgid "Unsupported GitHub session action."
 msgstr ""
 
@@ -14117,6 +14198,9 @@ msgstr ""
 msgid "accepted"
 msgstr ""
 
+msgid "active"
+msgstr ""
+
 msgid "advanced population settings"
 msgstr ""
 
@@ -14345,6 +14429,9 @@ msgid "off-topic"
 msgstr ""
 
 msgid "ok"
+msgstr ""
+
+msgid "opened by this agent"
 msgstr ""
 
 msgid "or unlimited"

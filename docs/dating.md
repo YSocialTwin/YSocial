@@ -70,6 +70,7 @@ The app of the experiment is at `/<experiment id>/dating`. It has three viewpoin
   messages and the recommender internals (model, score, reason), marked as such.
 - **Account** (admin and researcher): exactly what one account could see at a round: its deck, matches, chats and
   notifications.
+- **How a match went**: the matches table and the chat show the outcome of each match with coloured chips (date went well, so-so or badly - the agents decided not to continue off the platform - date declined or unanswered, ghosting when the last message stays unanswered for `ghosting_threshold_slots` (default 48), no opener, unmatched, blocked, left the platform, left together). Dates and their answers are also written in the chat by the agents. Researchers and admins find the same counts as lifecycle statistics on each agent's profile; an account's own view only says that a match ended. Time travel hides outcomes that had not happened at the chosen round; the answer to a proposal has no timestamp of its own, so it is placed at the proposal's round.
 - **Public observer**: public profiles only, unless the experiment closes it.
 
 Time travel moves any viewpoint to an earlier round; profiles are rebuilt from their change history. Fields reserved

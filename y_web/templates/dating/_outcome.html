@@ -1,0 +1,21 @@
+{% macro outcome_label(code) -%}
+{%- if code == 'paired' %}{{ _('Left together') }}
+{%- elif code == 'date_good' %}{{ _('Date went well') }}
+{%- elif code == 'date_neutral' %}{{ _('Date: so-so') }}
+{%- elif code == 'date_bad' %}{{ _('Date went badly: not continuing off the platform') }}
+{%- elif code == 'date_planned' %}{{ _('Date agreed') }}
+{%- elif code == 'date_declined' %}{{ _('Date declined') }}
+{%- elif code == 'date_expired' %}{{ _('Date proposal unanswered') }}
+{%- elif code == 'date_proposed' %}{{ _('Date proposed') }}
+{%- elif code == 'unmatched' %}{{ _('Unmatched') }}
+{%- elif code == 'blocked' %}{{ _('Blocked') }}
+{%- elif code == 'ended' %}{{ _('Match ended') }}
+{%- elif code == 'left_platform' %}{{ _('Left the platform') }}
+{%- elif code == 'ghosted' %}{{ _('Ghosted') }}
+{%- elif code == 'no_opener' %}{{ _('No one wrote') }}
+{%- elif code == 'chatting' %}{{ _('Chatting') }}
+{%- else %}{{ _('New match') }}{% endif -%}
+{%- endmacro %}
+{% macro chips(items) -%}
+<span class="dt-chips">{% for c in items %}<span class="dt-chip dt-chip-{{ c.tone }}">{{ outcome_label(c.code) }}</span>{% endfor %}</span>
+{%- endmacro %}

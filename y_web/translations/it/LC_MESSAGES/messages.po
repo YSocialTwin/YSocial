@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 11:21+0000\n"
+"POT-Creation-Date: 2026-10-30 11:50+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1903,6 +1903,12 @@ msgstr "Blocca o segnala"
 msgid "Block this person?"
 msgstr "Bloccare questa persona?"
 
+msgid "Blocked"
+msgstr "Bloccato"
+
+msgid "Blocked by this agent / by the other"
+msgstr "Bloccati da questo agente / dall'altro"
+
 msgid "Blocks and reports raise stress"
 msgstr "Blocchi e segnalazioni aumentano lo stress"
 
@@ -2168,6 +2174,9 @@ msgstr "Chat per topic"
 
 msgid "Chats that appear during the run."
 msgstr "Chat che compaiono durante l'esecuzione."
+
+msgid "Chatting"
+msgstr "In chat"
 
 msgid "Check for Updates"
 msgstr "Cerca aggiornamenti"
@@ -3142,6 +3151,9 @@ msgstr "Conversazioni"
 msgid "Conversations and dates"
 msgstr "Conversazioni e appuntamenti"
 
+msgid "Conversations started"
+msgstr "Conversazioni avviate"
+
 msgid "Copy Experiment"
 msgstr "Copia l'esperimento"
 
@@ -3677,20 +3689,50 @@ msgstr "Fallback del database"
 msgid "Database error: %(error)s"
 msgstr "Errore del database: %(error)s"
 
+msgid "Date agreed"
+msgstr "Appuntamento concordato"
+
+msgid "Date declined"
+msgstr "Appuntamento rifiutato"
+
+msgid "Date outcomes: good / so-so / bad"
+msgstr "Esiti degli appuntamenti: buoni / così così / negativi"
+
 msgid "Date proposal"
 msgstr "Proposta di appuntamento"
+
+msgid "Date proposal unanswered"
+msgstr "Proposta di appuntamento senza risposta"
 
 msgid "Date proposals"
 msgstr "Proposte di appuntamento"
 
+msgid "Date proposed"
+msgstr "Appuntamento proposto"
+
+msgid "Date went badly: not continuing off the platform"
+msgstr "Appuntamento andato male: non proseguono fuori dalla piattaforma"
+
+msgid "Date went well"
+msgstr "Appuntamento andato bene"
+
+msgid "Date: so-so"
+msgstr "Appuntamento: così così"
+
 msgid "Dates"
 msgstr "Appuntamenti"
+
+msgid "Dates accepted / declined / unanswered"
+msgstr "Appuntamenti accettati / rifiutati / senza risposta"
 
 msgid "Dates are allowed"
 msgstr "Gli appuntamenti sono consentiti"
 
 msgid "Dates proposed"
 msgstr "Appuntamenti proposti"
+
+msgid "Dates proposed / received"
+msgstr "Appuntamenti proposti / ricevuti"
 
 msgid "Dates, couples and leaving"
 msgstr "Appuntamenti, coppie e abbandoni"
@@ -5765,6 +5807,12 @@ msgstr "Inizia"
 msgid "Get in Touch!"
 msgstr "Contattaci!"
 
+msgid "Ghosted"
+msgstr "Ghosting"
+
+msgid "Ghosted others"
+msgstr "Ghosting verso altri"
+
 msgid "Gini exposure"
 msgstr "Gini dell'esposizione"
 
@@ -6304,6 +6352,9 @@ msgid "How the topic and the chat of each post the agent has to write are given.
 msgstr ""
 "Come vengono indicati l'argomento e la chat di ciascun post che l'agente "
 "deve scrivere."
+
+msgid "How this match went"
+msgstr "Come è andato questo match"
 
 msgid "How to order posts when scores are equal"
 msgstr "Come ordinare i post a parità di punteggio"
@@ -7250,6 +7301,18 @@ msgstr "Lasciare la piattaforma"
 msgid "Left (round)"
 msgstr "Uscito (round)"
 
+msgid "Left the platform"
+msgstr "Ha lasciato la piattaforma"
+
+msgid "Left the platform together"
+msgstr "Usciti insieme dalla piattaforma"
+
+msgid "Left together"
+msgstr "Usciti insieme"
+
+msgid "Left unanswered by others (ghosted)"
+msgstr "Lasciato senza risposta dagli altri (ghosting subìto)"
+
 msgid "Length asked of a message (characters)"
 msgstr "Lunghezza richiesta a un messaggio (caratteri)"
 
@@ -7556,6 +7619,9 @@ msgstr ""
 "Gli agenti Master of Puppets sono distribuiti, ma fino al momento "
 "selezionato non sono state registrate interazioni con bersagli "
 "corrispondenti all'argomento."
+
+msgid "Match ended"
+msgstr "Match concluso"
 
 msgid "Matches"
 msgstr "Match"
@@ -8228,6 +8294,9 @@ msgstr "Nuova chat"
 msgid "New here?"
 msgstr "Sei nuovo?"
 
+msgid "New match"
+msgstr "Nuovo match"
+
 #, python-format
 msgid "New match with %(n)s"
 msgstr "Nuovo match con %(n)s"
@@ -8538,6 +8607,9 @@ msgstr "Per ora non ci sono altri profili."
 
 msgid "No notifications yet."
 msgstr "Ancora nessuna notifica."
+
+msgid "No one wrote"
+msgstr "Nessuno ha scritto"
 
 msgid "No open run"
 msgstr "Nessuna esecuzione aperta"
@@ -10652,6 +10724,9 @@ msgstr "Finestra di ripristino (round)"
 
 msgid "Related:"
 msgstr "Correlati:"
+
+msgid "Relationships"
+msgstr "Relazioni"
 
 msgid ""
 "Relative weight when agents choose where to join: a chat with 2 attracts "
@@ -14248,6 +14323,12 @@ msgstr "Topic non mappati"
 msgid "Unmatch"
 msgstr "Annulla il match"
 
+msgid "Unmatched"
+msgstr "Match annullato"
+
+msgid "Unmatched by this agent / by the other"
+msgstr "Match annullati da questo agente / dall'altro"
+
 msgid "Unsupported GitHub session action."
 msgstr "Azione di sessione GitHub non supportata."
 
@@ -15649,6 +15730,9 @@ msgstr ""
 msgid "accepted"
 msgstr "accettate"
 
+msgid "active"
+msgstr "attivi"
+
 msgid "advanced population settings"
 msgstr "impostazioni avanzate delle popolazioni"
 
@@ -15882,6 +15966,9 @@ msgstr "fuori tema"
 
 msgid "ok"
 msgstr "ok"
+
+msgid "opened by this agent"
+msgstr "aperte da questo agente"
 
 msgid "or unlimited"
 msgstr "oppure illimitato"

@@ -19,10 +19,7 @@ needs_runtime = pytest.mark.skipif(
     not (SCRIPTS / "metrics_report.py").exists(), reason="YDating is not present"
 )
 
-EXTRA = """
-CREATE TABLE date_proposals (id TEXT PRIMARY KEY, match_id TEXT, proposer_id TEXT, text TEXT, status TEXT,
-  outcome TEXT, outcome_round TEXT, round_id TEXT);
-"""
+EXTRA = ""  # the shared fixture already has date_proposals
 
 
 def _id():
