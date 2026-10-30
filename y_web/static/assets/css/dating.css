@@ -569,3 +569,6 @@ a.dt-ico:hover { border-color: var(--dt-accent); } .dt-ico.is-off { opacity: .35
 .dt-dk-filter > button.is-on { background: var(--dt-accent) !important; color: var(--dt-accent-ink) !important; }
 .dt-dk-filter > button:not(.is-on) { color: var(--dt-muted) !important; }
 .dt-dk-filter > button small { opacity: .8; }
+
+.dt-stamp-superlike { color: #1d4ed8; border-color: #1d4ed8; }
+[data-theme="dark"] .dt-stamp-superlike { color: #93c5fd; border-color: #93c5fd; }

@@ -6,7 +6,7 @@
   <div class="dt-card-photo" style="--dt-hue: {{ p.hue }}">
     {% if photos %}<img class="dt-card-img" src="{{ dating_media(photos[0].url) }}" alt="{{ photos[0].caption or p.username }}" loading="lazy" decoding="async">
     {% else %}{{ avatar(p, 'xl') }}{% endif %}
-    {% if decision %}<span class="dt-stamp dt-stamp-{{ decision|lower }}" role="img" aria-label="{{ _('Decision: %(d)s', d=decision) }}">{{ _('LIKE') if decision == 'LIKE' else _('PASS') }}</span>{% endif %}
+    {% if decision %}<span class="dt-stamp dt-stamp-{{ decision|lower }}" role="img" aria-label="{{ _('Decision: %(d)s', d=decision) }}">{{ _('SUPER') if decision == 'SUPERLIKE' else (_('LIKE') if decision == 'LIKE' else _('PASS')) }}</span>{% endif %}
     {% if p.photos|length > 1 %}<span class="dt-photos">{{ p.photos|length }} {{ _('photos') }}</span>{% endif %}
   </div>
   <div class="dt-card-body">
