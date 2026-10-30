@@ -305,6 +305,41 @@ def load_document(
     return {"interests": catalogue, "agents": docs}
 
 
+def use_existing_pictures(
+    data: Dict[str, Any], population_id: int, media_folder: str
+) -> int:
+    """Give the agents that already have a profile picture that picture as their photo, so it is not generated.
+
+    The picture is copied in ``media_folder`` (the ``media`` folder of the experiment, where the web side looks for
+    the photos) and becomes the photo of the agent (``media_url``); the other photos of that agent are dropped,
+    because the generation of the runtime skips a photo that has one. Agents without a picture are left as they
+    are and get theirs generated as usual. ``data`` is changed in place; returns the agents that keep their own.
+    """
+    import shutil
+
+    from y_web.src.agents import profile_pictures as pp
+
+    by_name = {a.name: a for a in _linked_agents(population_id)}
+    used = 0
+    for doc in data.get("agents") or []:
+        agent = by_name.get(doc.get("username"))
+        source = pp.local_picture(agent.profile_pic) if agent else None
+        if not source:
+            continue
+        ext = os.path.splitext(source)[1].lower() or ".png"
+        name = f"agent_{agent.id}{ext}"
+        os.makedirs(media_folder, exist_ok=True)
+        target = os.path.join(media_folder, name)
+        if not os.path.isfile(target):
+            shutil.copyfile(source, target)
+        first = dict((doc.get("photos") or [{}])[0])
+        first.setdefault("caption", "")
+        first["media_url"] = name
+        doc["photos"] = [first]
+        used += 1
+    return used
+
+
 def remove_agents(population_id: int) -> int:
     """Delete the agents of a dating population that belong to no other population, with their features."""
     from sqlalchemy import delete, func, select

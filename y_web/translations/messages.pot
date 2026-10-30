@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:19+0000\n"
+"POT-Creation-Date: 2026-10-30 14:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -123,6 +123,12 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s activity profiles"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(n)s agents already have a profile picture: it is used as their photo "
+"and not generated again."
 msgstr ""
 
 #, python-format

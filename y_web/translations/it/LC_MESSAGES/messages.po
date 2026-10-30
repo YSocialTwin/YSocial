@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:19+0000\n"
+"POT-Creation-Date: 2026-10-30 14:32+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -142,6 +142,14 @@ msgstr "%(n)s esecuzioni attive"
 #, python-format
 msgid "%(n)s activity profiles"
 msgstr "%(n)s profili di attività"
+
+#, python-format
+msgid ""
+"%(n)s agents already have a profile picture: it is used as their photo "
+"and not generated again."
+msgstr ""
+"%(n)s agenti hanno già una foto profilo: viene usata come loro foto e non"
+" viene rigenerata."
 
 #, python-format
 msgid "%(n)s agents under 18 were skipped: they are not deployed on Dating."

@@ -355,3 +355,84 @@ def test_the_image_model_offers_the_alternatives_of_the_dating_client(app):
         assert f'<option value="{model}"' in html
     assert len(DIFFUSION_MODELS) >= 4 and 'value="__other__"' in html
     assert 'name="pictures_model"' in html and "data-diffusion-select" in html
+
+
+def _agent_with_picture(db, media, agent):
+    media.mkdir(parents=True, exist_ok=True)
+    (media / f"{agent.id}.png").write_bytes(b"\x89PNG-own")
+    agent.profile_pic = f"/media/agents/{agent.id}.png"
+    db.session.commit()
+
+
+def test_the_picture_of_a_username_is_found_only_when_the_file_exists(app, media):
+    from y_web import db
+    from y_web.src.agents import profile_pictures as pp
+
+    with app.app_context():
+        _, agents = _standard_population(db, n=2)
+        pp._USERNAME_CACHE.clear()
+        assert pp.picture_of_username(agents[0].name) == ""  # no picture: the usual logic of the platform
+        _agent_with_picture(db, media, agents[0])
+        pp._USERNAME_CACHE.clear()
+        assert pp.picture_of_username(agents[0].name) == f"/media/agents/{agents[0].id}.png"
+        assert pp.picture_of_username(agents[1].name) == "" and pp.picture_of_username("") == ""
+        (media / f"{agents[0].id}.png").unlink()
+        pp._USERNAME_CACHE.clear()
+        assert pp.picture_of_username(agents[0].name) == ""
+
+
+def test_dating_uses_the_pictures_the_agents_already_have(app, media, tmp_path):
+    from y_web import db
+    from y_web.src.dating import population as dp
+
+    with app.app_context():
+        row, agents = _standard_population(db, n=3)
+        _agent_with_picture(db, media, agents[0])
+        data = {
+            "agents": [
+                {"username": a.name, "photos": [{"caption": f"c{n}"} for n in range(3)]} for a in agents
+            ]
+        }
+        exp_media = tmp_path / "exp" / "media"
+        assert dp.use_existing_pictures(data, row.id, str(exp_media)) == 1
+        first = data["agents"][0]
+        assert first["photos"] == [{"caption": "c0", "media_url": f"agent_{agents[0].id}.png"}]
+        assert (exp_media / f"agent_{agents[0].id}.png").read_bytes() == b"\x89PNG-own"
+        assert len(data["agents"][1]["photos"]) == 3  # no picture: generated as usual
+        assert all("media_url" not in p for p in data["agents"][1]["photos"])
+
+
+def test_the_photo_and_forum_frontends_show_the_generated_picture(app, media):
+    from types import SimpleNamespace
+
+    from y_web import db
+    from y_web.routes.social import photo
+    from y_web.src.agents import profile_pictures as pp
+    from y_web.src.content.avatars import resolve_forum_profile_pic
+
+    with app.app_context():
+        _, agents = _standard_population(db, n=2)
+        _agent_with_picture(db, media, agents[0])
+        pp._USERNAME_CACHE.clear()
+        url = f"/media/agents/{agents[0].id}.png"
+        exp = SimpleNamespace(idexp=3)
+        assert photo._photo_media_url(exp, url) == url  # not rewritten as a file of the experiment
+        assert photo._photo_profile_pic_url(exp, username=agents[0].name, user_id=1, raw_profile_pic="/static/assets/img/users/9.png") == url
+        assert photo._photo_profile_pic_url(exp, username=agents[1].name, user_id=1, raw_profile_pic="/static/assets/img/users/9.png") == "/static/assets/img/users/9.png"
+        user = SimpleNamespace(username=agents[0].name, is_page=False, id=1)
+        assert resolve_forum_profile_pic(user, 3) == url  # even in placeholder mode
+        other = SimpleNamespace(username=agents[1].name, is_page=False, id=2)
+        assert resolve_forum_profile_pic(other, 3).startswith(("/static/", "data:"))  # the current logic
+
+
+def test_the_im_avatar_shows_the_picture_when_there_is_one(app):
+    import jinja2
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "templates"
+    env = app.jinja_env.overlay(loader=jinja2.FileSystemLoader(str(root)))
+    env.globals["agent_picture"] = lambda name: "/media/agents/5.png" if name == "Ann" else ""
+    macro = env.get_template("im/_avatar.html").module.avatar
+    with app.test_request_context("/"):
+        assert 'src="/media/agents/5.png"' in str(macro("Ann", 10, "sm"))
+        assert ">BL<" in str(macro("Bo Li", 10, "sm"))

@@ -190,6 +190,13 @@ def resolve_forum_profile_pic(user, exp_id: int | None = None) -> str:
     if not username:
         return ""
 
+    if not bool(getattr(user, "is_page", False)):
+        from y_web.src.agents.profile_pictures import picture_of_username
+
+        generated = picture_of_username(username)  # the picture generated for the agent, whatever the mode
+        if generated:
+            return generated
+
     if normalize_forum_avatar_mode(get_forum_avatar_mode(exp_id)) != "actual":
         return deterministic_forum_avatar_url(username)
 

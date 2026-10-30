@@ -1,4 +1,5 @@
-{#- Placeholder avatar: initials on a colour that is stable per chat or account. -#}
+{#- Avatar: the picture generated for the agent when it has one, else initials on a colour that is stable per chat or account. -#}
 {% macro avatar(name, hue, size='md', kind=None) -%}
-<span class="im-avatar is-{{ size }}" style="--im-hue: {{ hue or 210 }}" aria-hidden="true"{% if kind %} data-kind="{{ kind }}"{% endif %}>{{ ((name or '?').replace('@', '').split() | map('first') | list)[:2] | join('') | upper or '?' }}</span>
+{% set pic = agent_picture(name) if agent_picture is defined else '' -%}
+<span class="im-avatar is-{{ size }}" style="--im-hue: {{ hue or 210 }}" aria-hidden="true"{% if kind %} data-kind="{{ kind }}"{% endif %}>{% if pic %}<img src="{{ pic }}" alt="" loading="lazy">{% else %}{{ ((name or '?').replace('@', '').split() | map('first') | list)[:2] | join('') | upper or '?' }}{% endif %}</span>
 {%- endmacro %}

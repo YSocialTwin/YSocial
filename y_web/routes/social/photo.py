@@ -382,6 +382,8 @@ def _photo_media_url(exp: Exps, raw_url: Optional[str]) -> str:
         return ""
     if value.startswith("http://") or value.startswith("https://"):
         return value
+    if value.startswith("/media/agents/"):  # generated profile picture of an agent (served by the admin app)
+        return value
     if value.startswith("/static/") or value.startswith("/assets/"):
         return value
     if value.startswith("file://"):
@@ -430,6 +432,13 @@ def _photo_profile_pic_url(
     raw_profile_pic: Optional[str] = "",
     is_page: int = 0,
 ) -> str:
+    if not int(is_page or 0):  # the picture generated for the agent comes first; without one, the usual logic
+        from y_web.src.agents.profile_pictures import picture_of_username
+
+        generated = picture_of_username(username)
+        if generated:
+            return generated
+
     value = _photo_media_url(exp, raw_profile_pic)
     if value:
         return value

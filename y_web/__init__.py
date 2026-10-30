@@ -282,6 +282,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     register_template_context(app)
 
+    from y_web.src.agents.profile_pictures import picture_of_username
+
+    app.jinja_env.globals["agent_picture"] = picture_of_username  # the IM avatars show the agent's picture
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)

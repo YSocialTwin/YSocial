@@ -62,6 +62,55 @@ def picture_file(url: str) -> Optional[str]:
     return os.path.join(media_dir(), name)
 
 
+_USERNAME_CACHE: Dict[str, Any] = {}
+_USERNAME_TTL = 60.0
+
+
+def picture_of_username(username: Any) -> str:
+    """Url of the generated picture of the agent called ``username`` ('' when it has none).
+
+    The frontends of the platforms show it as the profile picture; an agent without one keeps the logic of the
+    platform. Looked up in the admin database and kept for a minute (a page shows many avatars).
+    """
+    import time
+
+    name = str(username or "").strip()
+    if not name:
+        return ""
+    now = time.monotonic()
+    hit = _USERNAME_CACHE.get(name)
+    if hit and now - hit[0] < _USERNAME_TTL:
+        return hit[1]
+    url = ""
+    try:
+        from sqlalchemy import select
+
+        from y_web import db
+        from y_web.src.models import Agent
+
+        pic = db.session.scalar(select(Agent.profile_pic).where(Agent.name == name).limit(1))
+        if is_media_url(pic) and os.path.isfile(picture_file(pic) or ""):
+            url = pic
+    except Exception:
+        url = ""
+    if len(_USERNAME_CACHE) > 5000:
+        _USERNAME_CACHE.clear()
+    _USERNAME_CACHE[name] = (now, url)
+    return url
+
+
+def local_picture(url: Any) -> Optional[str]:
+    """File of the profile picture of an agent when it is on this machine (media folder or avatar library)."""
+    path = picture_file(url) if isinstance(url, str) else None
+    if path is None and isinstance(url, str) and url.startswith("/static/assets/img/users/"):
+        from y_web.src.system.avatars_store import get_avatars_dir
+
+        name = url.rsplit("/", 1)[-1]
+        if name and not name.startswith("."):
+            path = os.path.join(get_avatars_dir(), name)
+    return path if path and os.path.isfile(path) else None
+
+
 def delete_picture_file(url: Any) -> bool:
     """Delete the picture an agent points to; ``False`` when there is nothing to delete."""
     path = picture_file(url) if isinstance(url, str) else None

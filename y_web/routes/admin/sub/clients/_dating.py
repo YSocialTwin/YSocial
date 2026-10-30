@@ -98,6 +98,20 @@ def clients_dating(idexp):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     repo = get_external_repo_dir("YDating")
     exp_dir = _experiment_folder(exp)
+    # the agents that already have a profile picture keep it (the runtime does not generate those photos)
+    from y_web.src.dating.photos import media_root
+
+    with_picture = dp.use_existing_pictures(
+        pop_data, population.id, media_root(exp_dir)
+    )
+    if with_picture:
+        flash(
+            _(
+                "%(n)s agents already have a profile picture: it is used as their photo and not generated again.",
+                n=with_picture,
+            ),
+            "info",
+        )
     server_config = _load_server_config(exp_dir)
     switches = read_switches(server_config)
     fields = dcc.form_fields(repo)

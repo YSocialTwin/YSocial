@@ -235,3 +235,4 @@ summary.im-icon-btn::-webkit-details-marker { display: none; }
   .im-menu-panel { left: 8px; right: 8px; width: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .im-scroll { scroll-behavior: auto; } }
+.im-avatar { overflow: hidden; } .im-avatar > img { width: 100%; height: 100%; object-fit: cover; display: block; }
