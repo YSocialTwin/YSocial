@@ -385,6 +385,18 @@
 
 
                                     </div><!-- End section-activity-engagement -->
+                                    <div id="section-appearance" class="tutorial-section">
+                                    <div class="ys-opt-section" id="opt-appearance">
+                                        <label class="ys-opt-head">
+                                            <input type="checkbox" name="include_appearance" id="include_appearance" value="1" onchange="togglePlatformFields()">
+                                            <span class="ys-opt-title">{{ _('Appearance') }}</span>
+                                            <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span>
+                                        </label>
+                                        <div id="appearance-config-wrapper" class="ys-opt-body d-none">
+                                            {% include "admin/_population_appearance.html" %}
+                                        </div>
+                                    </div>
+                                    </div><!-- End section-appearance -->
                                     {% if photo_available or dating_available %}
                                     <div id="section-platform-fields" class="tutorial-section">
                                     <div class="form-section-header">{{ _('Platform-specific fields') }} <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span></div>

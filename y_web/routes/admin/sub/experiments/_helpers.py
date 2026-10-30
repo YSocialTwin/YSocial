@@ -1049,6 +1049,8 @@ def _read_forum_avatar_settings(experiment_dir):
     return settings
 
 
+_PROGRESS_MARKER_RE = re.compile(r"\s*\[progress:(\d+)/(\d+)\]")
+
 _NOTIFICATION_STATUS_LABELS = {
     "ready": N_("ready"),
     "failed": N_("failed"),
@@ -1070,8 +1072,18 @@ _NOTIFICATION_TEXTS = [
     N_("Download file is no longer available."),
     N_("Detoxify model download in progress."),
     N_("Detoxify model download failed."),
+    N_("Agent profile pictures"),
+    N_("Profile picture generation failed."),
 ]
 _NOTIFICATION_PATTERNS = [
+    (
+        re.compile(r"^Generating profile pictures: (?P<done>\d+) of (?P<total>\d+)$"),
+        N_("Generating profile pictures: %(done)s of %(total)s"),
+    ),
+    (
+        re.compile(r"^(?P<count>\d+) profile pictures generated\.$"),
+        N_("%(count)s profile pictures generated."),
+    ),
     (re.compile(r"^Export (?P<name>.+)$", re.S), N_("Export %(name)s")),
     (
         re.compile(r"^Experiment shared: (?P<name>.+)$", re.S),
@@ -1130,6 +1142,16 @@ def _serialize_download_notification(notification):
     clean_message, related_exp_ids = _extract_related_experiment_ids(
         notification.message
     )
+    progress = None
+    progress_match = _PROGRESS_MARKER_RE.search(clean_message)
+    if progress_match:
+        done, total = int(progress_match.group(1)), int(progress_match.group(2))
+        progress = {
+            "done": done,
+            "total": total,
+            "percent": round(100 * done / total) if total else 100,
+        }
+        clean_message = _PROGRESS_MARKER_RE.sub("", clean_message).strip()
     related_experiments = []
     if related_exp_ids:
         experiments = db.session.scalars(
@@ -1181,6 +1203,7 @@ def _serialize_download_notification(notification):
         "action_url": action_url,
         "download_url": action_url,
         "related_experiments": related_experiments,
+        "progress": progress,
     }
 
 

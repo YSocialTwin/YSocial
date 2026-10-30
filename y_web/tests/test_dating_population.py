@@ -578,17 +578,19 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
         "photos": dp.PHOTOS_DEFAULT_RANGE,
         "age_window": dp.AGE_WINDOW_DEFAULT_RANGE,
     }
+    import jinja2
+
+    env = app.jinja_env.overlay(loader=jinja2.FileSystemLoader(str(templates.parent)))
     with app.test_request_context("/"):
-        html = app.jinja_env.from_string(form).render(
+        html = env.from_string(form).render(
             _=lambda text, **kw: text % kw if kw else text,
             dating_defaults=defaults,
         )
-    # the selectors are the multi-selects with percentages of the other platforms, with proposed defaults
-    assert (
-        'id="d_intents_dropdown"' in html
-        and 'id="d_appearance_hair_color_dropdown"' in html
-    )
-    assert 'name="appearance_glasses"' in html and 'name="latent_selectivity_a"' in html
+    # the selectors are the multi-selects with percentages of the other platforms, with proposed defaults; the
+    # appearance is not a Dating field any more (its own optional section)
+    assert 'id="d_intents_dropdown"' in html
+    assert 'id="d_appearance_hair_color_dropdown"' not in html
+    assert 'name="latent_selectivity_a"' in html
     assert 'name="daily_activity_level_min"' in html and 'value="1"' in html
     assert 'data-optional-section="dating"' in html
     # what the standard form already asks, or the runtime samples, is not repeated

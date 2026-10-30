@@ -813,10 +813,11 @@ var AdminPopulations = (function() {
   };
 
   // Dating selectors (same component, labels as ids) and the defaults proposed by the form
-  const DATING_FIELDS = ['d_intents', 'd_seek_woman', 'd_seek_man'].concat(
-      ['hair_color', 'hair_length', 'hair_style', 'eye_color', 'skin_tone', 'build', 'facial_hair',
-       'distinctive_features', 'mood', 'photo_style'].map(k => 'd_appearance_' + k));
-  DATING_FIELDS.forEach(f => { multiSelectData[f] = {}; });
+  const DATING_FIELDS = ['d_intents', 'd_seek_woman', 'd_seek_man'];
+  // Appearance selectors: an optional section of its own, independent of the platform
+  const APPEARANCE_FIELDS = ['hair_color', 'hair_length', 'hair_style', 'eye_color', 'skin_tone', 'build',
+      'facial_hair', 'distinctive_features', 'mood', 'photo_style'].map(k => 'd_appearance_' + k);
+  DATING_FIELDS.concat(APPEARANCE_FIELDS).forEach(f => { multiSelectData[f] = {}; });
 
   function datingDefaults() {
       const box = document.getElementById('dating-population-sections');
@@ -824,7 +825,20 @@ var AdminPopulations = (function() {
       let d = {};
       try { d = JSON.parse(box.getAttribute('data-defaults') || '{}'); } catch (e) { d = {}; }
       const plan = {d_intents: d.intents, d_seek_woman: (d.seeking || {}).woman, d_seek_man: (d.seeking || {}).man};
+      applyDefaultsPlan(plan);
+  }
+
+  function appearanceDefaults() {
+      const box = document.getElementById('appearance-population-sections');
+      if (!box) { return; }
+      let d = {};
+      try { d = JSON.parse(box.getAttribute('data-defaults') || '{}'); } catch (e) { d = {}; }
+      const plan = {};
       Object.keys(d.appearance || {}).forEach(k => { plan['d_appearance_' + k] = d.appearance[k]; });
+      applyDefaultsPlan(plan);
+  }
+
+  function applyDefaultsPlan(plan) {
       Object.keys(plan).forEach(field => {
           Object.entries(plan[field] || {}).forEach(([label, pct]) => {
               multiSelectData[field][label] = {label: label, percentage: pct};
@@ -1047,7 +1061,8 @@ var AdminPopulations = (function() {
     
       // Validate percentages before submission
       const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes']
-          .concat(isDatingPlatform() ? DATING_FIELDS : []);
+          .concat(isDatingPlatform() ? DATING_FIELDS : [])
+          .concat(isSwitchOn('include_appearance') ? APPEARANCE_FIELDS : []);
       for (const fieldName of fieldsToValidate) {
           const data = multiSelectData[fieldName];
           const items = Object.values(data);
@@ -1416,6 +1431,20 @@ var AdminPopulations = (function() {
           el.disabled = !dating;
           el.hidden = !dating;
       });
+      const appearance = isSwitchOn('include_appearance');
+      const appearanceWrapper = document.getElementById('appearance-config-wrapper');
+      if (appearanceWrapper) {
+          appearanceWrapper.classList.toggle('d-none', !appearance);
+      }
+      document.querySelectorAll('[data-optional-section="appearance"]').forEach(el => {
+          el.disabled = !appearance;
+      });
+      // the profile pictures (Stable Diffusion) are a toggle inside the Appearance section, off by default
+      const pictures = appearance && isSwitchOn('generate_profile_pictures');
+      const picturesBox = document.getElementById('profile-pictures-config');
+      if (picturesBox) { picturesBox.classList.toggle('d-none', !pictures); }
+      const picturesFields = document.getElementById('profile-pictures-fields');
+      if (picturesFields) { picturesFields.disabled = !pictures; }
       validatePhotoSharingDistributions();
       validateFormFields();
   }
@@ -1489,6 +1518,7 @@ var AdminPopulations = (function() {
               }
       renderPhotoFavoriteFilters();
       datingDefaults();
+      appearanceDefaults();
       togglePlatformFields();
   });
 

@@ -1,0 +1,39 @@
+{# Shared controls of the optional sections of the population form (percentage selector and range). #}
+{% macro pctselect(field, label, options, hint='') -%}
+<div class="box-line">
+    <span class="left">{{ label }}</span>
+    <span class="right ys-w-70">
+        <div class="multi-select-wrapper">
+            <div class="multi-select-display" id="{{ field }}_display_wrapper" onclick="toggleDropdown('{{ field }}')">
+                <span id="{{ field }}_display" class="multi-select-placeholder">{{ _('Click to select...') }}</span>
+            </div>
+            <div class="multi-select-dropdown" id="{{ field }}_dropdown">
+                {% for option in options %}
+                <div class="multi-select-option" onclick="toggleOption('{{ field }}', '{{ option }}', '{{ option }}')">{{ option }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
+    </span>
+</div>
+<div class="box-line d-none" id="{{ field }}_percentages_container">
+    <span class="left">{{ label }} %</span>
+    <span class="right ys-w-70">
+        <div id="{{ field }}_percentages" class="ys-flex-col-gap-8"></div>
+        <div id="{{ field }}_validation" class="percentage-validation-compact ys-hidden-mt"></div>
+    </span>
+</div>
+{%- endmacro %}
+{% macro drange(label, name, low, high, hint='', step='1', minimum='') -%}
+<div class="box-line">
+    <span class="left">{{ label }}</span>
+    <span class="right ys-w-70">
+        <span class="dating-range">
+            <input type="number" name="{{ name }}_min" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ low }}" placeholder="{{ _('min') }}">
+            <span class="dating-range-sep">&ndash;</span>
+            <input type="number" name="{{ name }}_max" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ high }}" placeholder="{{ _('max') }}">
+        </span>
+        {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
+    </span>
+</div>
+{%- endmacro %}

@@ -263,7 +263,6 @@ def _discard_population(population):
         delete(PopulationActivityProfile).filter_by(population=population.id)
     )
     db.session.execute(delete(Agent_Population).filter_by(population_id=population.id))
-    db.session.execute(delete(Agent_Profile).filter_by(population_id=population.id))
     db.session.delete(population)
     db.session.commit()
 
@@ -284,6 +283,29 @@ def _dating_generator_config():
         },
         {str(r.id): r.leaning for r in db.session.scalars(select(Leanings)).all()},
     )
+
+
+def _apply_appearance(population):
+    """Draw the appearance of the agents just generated (the Appearance section of the form).
+
+    Returns ``(agent ids, picture settings)`` when the profile pictures are requested, else ``None``. With the
+    Dating fields on, the traits already come with them (``dating.appearance.*``) and are kept.
+    """
+    from y_web.src.agents import profile_pictures as pp
+
+    ids = [
+        row[0]
+        for row in db.session.execute(
+            select(Agent_Population.agent_id).where(
+                Agent_Population.population_id == population.id
+            )
+        ).all()
+    ]
+    if not _flag("include_dating"):
+        pp.assign_appearance(ids, pp.appearance_config_from_form(request.form))
+    if not _flag("generate_profile_pictures"):
+        return None
+    return ids, pp.pictures_config_from_form(request.form)
 
 
 def _complete_with_dating_fields(population):
@@ -340,6 +362,7 @@ def create_population():
         "include_photo_sharing"
     )
     include_dating = _flag("include_dating")
+    include_appearance = _flag("include_appearance")
     if include_photo_sharing and username_type != "photo_sharing":
         if not _photo_sharing_available():
             flash(_("The Photo Sharing simulator is not installed."), "error")
@@ -580,6 +603,7 @@ def create_population():
         )
         if include_dating:
             _complete_with_dating_fields(population)
+        appearance_job = _apply_appearance(population) if include_appearance else None
     except Exception as exc:
         _discard_population(population)
         flash(
@@ -590,6 +614,21 @@ def create_population():
             "error",
         )
         return redirect(request.referrer)
+
+    if appearance_job:
+        from flask import current_app
+
+        from y_web.src.agents import profile_pictures as pp
+
+        pp.start_generation(
+            current_app._get_current_object(), current_user.id, *appearance_job
+        )
+        flash(
+            _(
+                "Profile pictures are being generated in the background: follow the progress in the notifications menu."
+            ),
+            "info",
+        )
 
     from y_web.src.telemetry import Telemetry
 
@@ -764,6 +803,7 @@ def populations():
         activity_profiles=activity_profiles,
         profession_backgrounds=profession_backgrounds,
         photo_available=_photo_sharing_available(),
+        **_appearance_form_context(),
         **_dating_form_context(),
     )
 
@@ -1829,6 +1869,34 @@ def _register_dating_population(name, descr, data):
         raise
     _sync_dating_population(row)
     return row
+
+
+def _appearance_form_context():
+    """Defaults and availability of the Appearance section (independent of the platforms)."""
+    from y_web.src.agents import profile_pictures as pp
+
+    return {
+        "appearance_defaults": pp.defaults(),
+        "images_available": pp.available(),
+        "pictures_models": [
+            "segmind/tiny-sd",
+            "nota-ai/bk-sdm-tiny",
+            "nota-ai/bk-sdm-small",
+            "stabilityai/sd-turbo",
+        ],
+    }
+
+
+@population.route("/media/agents/<path:filename>")
+def agent_media(filename):
+    """The profile pictures generated for the agents (media folder); public, like the avatars."""
+    from flask import abort, send_from_directory
+
+    from y_web.src.agents import profile_pictures as pp
+
+    if filename != os.path.basename(filename) or filename.startswith("."):
+        abort(404)
+    return send_from_directory(pp.media_dir(), filename)
 
 
 def _dating_form_context():

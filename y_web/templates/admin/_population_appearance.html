@@ -1,0 +1,69 @@
+{# Optional "Appearance" section of the population form: how the agents look and, with the toggle, their profile
+   pictures drawn by a Stable Diffusion model. Independent of the platform. #}
+{% from 'admin/_population_macros.html' import pctselect, drange with context %}
+{% set ad = appearance_defaults %}
+<fieldset id="appearance-population-sections" class="ys-fieldset-reset" data-optional-section="appearance" data-defaults='{{ ad|tojson }}' disabled>
+    <div class="form-section-description">{{ _('Look of the agents. An attribute with no value selected is not assigned. The traits are stored with the agent and read by every platform that needs them (the Dating profile photos, for one).') }}</div>
+    {{ pctselect('d_appearance_hair_color', _('Hair colour'), ad.appearance_options.hair_color) }}
+    {{ pctselect('d_appearance_hair_length', _('Hair length'), ad.appearance_options.hair_length) }}
+    {{ pctselect('d_appearance_hair_style', _('Hair style'), ad.appearance_options.hair_style) }}
+    {{ pctselect('d_appearance_eye_color', _('Eye colour'), ad.appearance_options.eye_color) }}
+    {{ pctselect('d_appearance_skin_tone', _('Skin tone'), ad.appearance_options.skin_tone) }}
+    {{ pctselect('d_appearance_build', _('Build'), ad.appearance_options.build) }}
+    {{ pctselect('d_appearance_facial_hair', _('Facial hair'), ad.appearance_options.facial_hair, _('Optional.')) }}
+    {{ pctselect('d_appearance_distinctive_features', _('Distinctive features'), ad.appearance_options.distinctive_features, _('Optional.')) }}
+    {{ pctselect('d_appearance_mood', _('Mood in photos'), ad.appearance_options.mood) }}
+    {{ pctselect('d_appearance_photo_style', _('Photo style'), ad.appearance_options.photo_style) }}
+    {{ drange(_('Height (cm)'), 'appearance_height_cm', ad.height[0], ad.height[1], '', '1', 100) }}
+    <div class="box-line">
+        <span class="left">{{ _('Wearing glasses (%%)') }}</span>
+        <span class="right ys-w-70"><div class="slider-timeline"><input type="number" name="appearance_glasses" class="input" min="0" max="100" step="any" value="{{ ad.glasses }}"></div></span>
+    </div>
+
+    <div class="form-section-header ys-sub-header">{{ _('Profile pictures') }}</div>
+    <label class="box-line ys-opt-head">
+        <span class="left">{{ _('Generate the profile pictures') }}</span>
+        <span class="right ys-w-70">
+            <input type="checkbox" name="generate_profile_pictures" id="generate_profile_pictures" value="1" onchange="togglePlatformFields()">
+            <small class="ys-label-hint">{{ _('Off by default. One picture per agent is drawn from the age, gender and appearance with a Stable Diffusion model, saved in the media folder and linked to the agent. It runs in the background: the progress is shown in the notifications menu. The picture is deleted with the agent.') }}</small>
+        </span>
+    </label>
+    <div id="profile-pictures-config" class="d-none">
+        <fieldset class="ys-fieldset-reset" id="profile-pictures-fields" disabled>
+            <div class="box-line">
+                <span class="left">{{ _('Look of the photos') }}</span>
+                <span class="right ys-w-70">
+                    <select name="pictures_style" class="input">
+                        {% for style, label in (('photorealistic', _('Photorealistic human faces')), ('cartoon', _('Fantasy cartoon characters'))) %}
+                        <option value="{{ style }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+            </div>
+            <div class="box-line">
+                <span class="left">{{ _('Image generator') }}</span>
+                <span class="right ys-w-70">
+                    <select name="pictures_generator" class="input">
+                        <option value="diffusion" {% if not images_available %}disabled{% else %}selected{% endif %}>{{ _('Image model') }}</option>
+                        <option value="stub" {% if not images_available %}selected{% endif %}>{{ _('Placeholder') }}</option>
+                    </select>
+                    {% if not images_available %}<small class="ys-label-hint">{{ _('The packages of the image model (torch, diffusers) are not installed: only the placeholder can be used.') }}</small>{% endif %}
+                </span>
+            </div>
+            <div class="box-line">
+                <span class="left">{{ _('Image model (diffusion)') }}</span>
+                <span class="right ys-w-70">
+                    <input type="text" name="pictures_model" class="input" list="pictures-models" value="{{ ad.model }}">
+                    <datalist id="pictures-models">
+                        {% for model in pictures_models %}<option value="{{ model }}">{% endfor %}
+                    </datalist>
+                    <small class="ys-label-hint">{{ _('A Hugging Face diffusers model, downloaded on first use.') }}</small>
+                </span>
+            </div>
+            <div class="box-line">
+                <span class="left">{{ _('Denoising steps') }}</span>
+                <span class="right ys-w-70"><input type="number" name="pictures_steps" class="input" min="1" max="100" value="{{ ad.steps }}"></span>
+            </div>
+        </fieldset>
+    </div>
+</fieldset>

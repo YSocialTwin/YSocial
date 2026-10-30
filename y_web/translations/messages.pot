@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 13:57+0000\n"
+"POT-Creation-Date: 2026-10-30 14:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -57,6 +57,10 @@ msgstr ""
 
 #, python-format
 msgid "%(count)s populations already include pages"
+msgstr ""
+
+#, python-format
+msgid "%(count)s profile pictures generated."
 msgstr ""
 
 #, python-format
@@ -415,6 +419,9 @@ msgid "@dsalvaz"
 msgstr ""
 
 msgid "@katie_abramski"
+msgstr ""
+
+msgid "A Hugging Face diffusers model, downloaded on first use."
 msgstr ""
 
 msgid ""
@@ -1019,6 +1026,9 @@ msgid "Agent not found."
 msgstr ""
 
 msgid "Agent profession"
+msgstr ""
+
+msgid "Agent profile pictures"
 msgstr ""
 
 msgid "Agent profile pictures are downloaded once, in the background."
@@ -5241,6 +5251,9 @@ msgstr ""
 msgid "Generate the profile photos"
 msgstr ""
 
+msgid "Generate the profile pictures"
+msgstr ""
+
 msgid "Generate the topology if missing"
 msgstr ""
 
@@ -5263,6 +5276,10 @@ msgid "Generated Slug"
 msgstr ""
 
 msgid "Generates text or makes decisions leveraging its profile"
+msgstr ""
+
+#, python-format
+msgid "Generating profile pictures: %(done)s of %(total)s"
 msgstr ""
 
 msgid "Geometric"
@@ -6825,8 +6842,9 @@ msgid "Look for chats, users, groups, channels or posts from the search box."
 msgstr ""
 
 msgid ""
-"Look of the agents; it guides the profile photos. An attribute with no "
-"value selected is not assigned."
+"Look of the agents. An attribute with no value selected is not assigned. "
+"The traits are stored with the agent and read by every platform that "
+"needs them (the Dating profile photos, for one)."
 msgstr ""
 
 msgid "Look of the photos"
@@ -8172,6 +8190,13 @@ msgid "Off"
 msgstr ""
 
 msgid ""
+"Off by default. One picture per agent is drawn from the age, gender and "
+"appearance with a Stable Diffusion model, saved in the media folder and "
+"linked to the agent. It runs in the background: the progress is shown in "
+"the notifications menu. The picture is deleted with the agent."
+msgstr ""
+
+msgid ""
 "Off keeps the language fixed for everybody, so it does not become a "
 "variable of the experiment."
 msgstr ""
@@ -9312,7 +9337,15 @@ msgstr ""
 msgid "Profile picture"
 msgstr ""
 
+msgid "Profile picture generation failed."
+msgstr ""
+
 msgid "Profile pictures"
+msgstr ""
+
+msgid ""
+"Profile pictures are being generated in the background: follow the "
+"progress in the notifications menu."
 msgstr ""
 
 msgid "Profile questions answered"
@@ -12086,6 +12119,11 @@ msgstr ""
 msgid ""
 "The news snapshot could not be written (%(error)s): the news pages will "
 "share nothing until it exists."
+msgstr ""
+
+msgid ""
+"The packages of the image model (torch, diffusers) are not installed: "
+"only the placeholder can be used."
 msgstr ""
 
 msgid "The page you are looking for does not exist."

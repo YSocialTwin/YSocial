@@ -332,6 +332,9 @@ def remove_agents(population_id: int) -> int:
             own.append(agent.id)
     for start in range(0, len(own), 500):
         chunk = own[start : start + 500]
+        from y_web.src.agents.profile_pictures import delete_pictures_of
+
+        delete_pictures_of(chunk)  # the generated profile pictures go with the agents
         for model in (Agent_Custom_Feature, Agent_Ext, Agent_Profile):
             db.session.execute(delete(model).where(model.agent_id.in_(chunk)))
         db.session.execute(

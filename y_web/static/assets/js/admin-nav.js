@@ -256,6 +256,9 @@ function renderDownloadNotifications(items, unreadCount, avatars) {
                 action +
                 '</div>' +
                 '<div class="download-notification-message">' + escapeHtml(item.message) + '</div>' +
+                (item.progress && item.status === 'processing'
+                    ? '<progress class="progress is-info is-small" value="' + item.progress.percent + '" max="100" style="margin:.4rem 0 0"></progress>'
+                    : '') +
                 relatedHtml +
                 '</div>'
             );
@@ -283,7 +286,8 @@ async function refreshDownloadNotifications() {
         } catch (e) { /* the bell works without it */ }
         renderDownloadNotifications(payload.items || [], payload.unread_count || 0, avatars);
         // poll faster while the profile pictures are being downloaded
-        var active = !!(avatars && avatars.status && avatars.status !== 'ready');
+        var jobRunning = (payload.items || []).some(function(it) { return it.status === 'processing' && it.progress; });
+        var active = jobRunning || !!(avatars && avatars.status && avatars.status !== 'ready');
         if (active !== window.__ysAvatarsFast) {
             window.__ysAvatarsFast = active;
             if (window.__ysNotifTimer) { clearInterval(window.__ysNotifTimer); }

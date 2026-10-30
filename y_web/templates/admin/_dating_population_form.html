@@ -2,44 +2,7 @@
    ``popcreate_form`` of admin/populations.html, which keeps the shared sections (basic information, demographics,
    education and political leaning, with the same selectors and percentages as the other platforms), and are enabled
    only when the optional Dating fields are switched on. Every parameter has a proposed default, shown in the form. #}
-{% macro pctselect(field, label, options, hint='') -%}
-<div class="box-line">
-    <span class="left">{{ label }}</span>
-    <span class="right ys-w-70">
-        <div class="multi-select-wrapper">
-            <div class="multi-select-display" id="{{ field }}_display_wrapper" onclick="toggleDropdown('{{ field }}')">
-                <span id="{{ field }}_display" class="multi-select-placeholder">{{ _('Click to select...') }}</span>
-            </div>
-            <div class="multi-select-dropdown" id="{{ field }}_dropdown">
-                {% for option in options %}
-                <div class="multi-select-option" onclick="toggleOption('{{ field }}', '{{ option }}', '{{ option }}')">{{ option }}</div>
-                {% endfor %}
-            </div>
-        </div>
-        {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
-    </span>
-</div>
-<div class="box-line d-none" id="{{ field }}_percentages_container">
-    <span class="left">{{ label }} %</span>
-    <span class="right ys-w-70">
-        <div id="{{ field }}_percentages" class="ys-flex-col-gap-8"></div>
-        <div id="{{ field }}_validation" class="percentage-validation-compact ys-hidden-mt"></div>
-    </span>
-</div>
-{%- endmacro %}
-{% macro drange(label, name, low, high, hint='', step='1', minimum='') -%}
-<div class="box-line">
-    <span class="left">{{ label }}</span>
-    <span class="right ys-w-70">
-        <span class="dating-range">
-            <input type="number" name="{{ name }}_min" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ low }}" placeholder="{{ _('min') }}">
-            <span class="dating-range-sep">&ndash;</span>
-            <input type="number" name="{{ name }}_max" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ high }}" placeholder="{{ _('max') }}">
-        </span>
-        {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
-    </span>
-</div>
-{%- endmacro %}
+{% from 'admin/_population_macros.html' import pctselect, drange with context %}
 {% set dd = dating_defaults %}
 
 <fieldset id="dating-population-sections" class="ys-fieldset-reset" data-optional-section="dating" data-defaults='{{ dd|tojson }}' disabled>
@@ -56,26 +19,6 @@
         {{ pctselect('d_seek_man', _('Genders sought by men'), dd.seeking_sets) }}
         {{ drange(_('Age window (years)'), 'age_window', dd.age_window[0], dd.age_window[1], _('Years below and above the own age that an agent accepts (each side drawn in this range).'), '1', 0) }}
         {{ drange(_('Photos per agent'), 'photos_per_agent', dd.photos[0], dd.photos[1], '', '1', 0) }}
-    </div>
-
-    <div id="dating-section-appearance" class="tutorial-section">
-        <div class="form-section-header">{{ _('Appearance') }}</div>
-        <div class="form-section-description">{{ _('Look of the agents; it guides the profile photos. An attribute with no value selected is not assigned.') }}</div>
-        {{ pctselect('d_appearance_hair_color', _('Hair colour'), dd.appearance_options.hair_color) }}
-        {{ pctselect('d_appearance_hair_length', _('Hair length'), dd.appearance_options.hair_length) }}
-        {{ pctselect('d_appearance_hair_style', _('Hair style'), dd.appearance_options.hair_style) }}
-        {{ pctselect('d_appearance_eye_color', _('Eye colour'), dd.appearance_options.eye_color) }}
-        {{ pctselect('d_appearance_skin_tone', _('Skin tone'), dd.appearance_options.skin_tone) }}
-        {{ pctselect('d_appearance_build', _('Build'), dd.appearance_options.build) }}
-        {{ pctselect('d_appearance_facial_hair', _('Facial hair'), dd.appearance_options.facial_hair, _('Optional.')) }}
-        {{ pctselect('d_appearance_distinctive_features', _('Distinctive features'), dd.appearance_options.distinctive_features, _('Optional.')) }}
-        {{ pctselect('d_appearance_mood', _('Mood in photos'), dd.appearance_options.mood) }}
-        {{ pctselect('d_appearance_photo_style', _('Photo style'), dd.appearance_options.photo_style) }}
-        {{ drange(_('Height (cm)'), 'appearance_height_cm', dd.height[0], dd.height[1], '', '1', 100) }}
-        <div class="box-line">
-            <span class="left">{{ _('Wearing glasses (%%)') }}</span>
-            <span class="right ys-w-70"><div class="slider-timeline"><input type="number" name="appearance_glasses" class="input" min="0" max="100" step="any" value="{{ dd.glasses }}"></div></span>
-        </div>
     </div>
 
     <div id="dating-section-latent" class="tutorial-section">

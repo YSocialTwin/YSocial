@@ -1007,3 +1007,15 @@ class SignupTarget(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kind = db.Column(db.String(16), nullable=False)
     ref = db.Column(db.String(64), nullable=False)
+
+
+def _delete_agent_picture(mapper, connection, agent):
+    """The generated profile picture of an agent is deleted with the agent (file of the media folder)."""
+    from y_web.src.agents.profile_pictures import delete_picture_file
+
+    delete_picture_file(agent.profile_pic)
+
+
+from sqlalchemy import event as _sa_event  # noqa: E402
+
+_sa_event.listen(Agent, "after_delete", _delete_agent_picture)

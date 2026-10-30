@@ -93,7 +93,11 @@ The viewpoint and the time travel live in one bar under the navigation: choose O
 
 ## Populations and platforms
 
-A population is not tied to a platform. In *Create Synthetic Population*, the section *Platform-specific fields* (optional, advanced) offers a switch per installed simulator, each with the badge of its platform: *Photo Sharing Configuration* and *Dating fields*. With *Dating fields* on, the standard agents are generated first and then receive the dating-only fields (profile, appearance, latent variables, affective traits, activity), keeping their own name, age, gender and demographics. A population that has no dating fields can still be deployed on a Dating experiment: they are generated with the defaults when the client is created. Agents under 18 are skipped at that moment (a notice says how many): the run only contains adults.
+A population is not tied to a platform. In *Create Synthetic Population*, the section *Platform-specific fields* (optional, advanced) offers a switch per installed simulator, each with the badge of its platform: *Photo Sharing Configuration* and *Dating fields*. With *Dating fields* on, the standard agents are generated first and then receive the dating-only fields (profile, appearance, latent variables, affective traits, activity), keeping their own name, age, gender and demographics. The look of the agents is not a Dating field: it is the separate optional section *Appearance* of *Create Synthetic Population*, and the Dating profile photos read the traits from there. A population that has no dating fields can still be deployed on a Dating experiment: they are generated with the defaults when the client is created. Agents under 18 are skipped at that moment (a notice says how many): the run only contains adults.
+
+### Appearance and profile pictures
+
+*Appearance* (optional, collapsed) draws the look of the agents and stores it with them (`appearance.*`, or `dating.appearance.*` in a Dating population). Its switch *Generate the profile pictures* (off by default) draws one picture per agent with a Stable Diffusion model (style, generator, model and denoising steps, as in the Dating client; the packages `torch` and `diffusers` are needed, otherwise only the placeholder generator is offered). The pictures are saved in the media folder (`<home>/media/agents`), linked to the agent and deleted with it; the generation runs in the background and its progress is shown in the notifications menu.
 
 ## Human participation
 
