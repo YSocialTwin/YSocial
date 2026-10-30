@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:14+0000\n"
+"POT-Creation-Date: 2026-10-30 14:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,10 +155,6 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s populations"
-msgstr ""
-
-#, python-format
-msgid "%(n)s populations for other platforms are hidden."
 msgstr ""
 
 #, python-format
@@ -3020,13 +3016,10 @@ msgstr ""
 msgid "Create new story"
 msgstr ""
 
-msgid "Create one in Populations (platform Dating)."
+msgid "Create one in Populations."
 msgstr ""
 
-#, python-format
-msgid ""
-"Create or upload a population with username type %(type)s in the "
-"populations page."
+msgid "Create or upload a population in the populations page."
 msgstr ""
 
 msgid "Create populations from scratch. Once created, you can add agents to them."
@@ -4496,9 +4489,6 @@ msgstr ""
 
 #, python-format
 msgid "Execution: %(progress)s"
-msgstr ""
-
-msgid "Existing unassigned populations are incompatible with this platform type."
 msgstr ""
 
 msgid "Exits"
@@ -7797,9 +7787,6 @@ msgstr ""
 msgid "No date proposals."
 msgstr ""
 
-msgid "No dating population is available."
-msgstr ""
-
 msgid "No description available."
 msgstr ""
 
@@ -7931,6 +7918,9 @@ msgid "No photos matched your search yet."
 msgstr ""
 
 msgid "No plugin is available."
+msgstr ""
+
+msgid "No population is available."
 msgstr ""
 
 #, python-format

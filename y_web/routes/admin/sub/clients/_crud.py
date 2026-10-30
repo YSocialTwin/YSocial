@@ -30,7 +30,6 @@ from y_web.routes.admin.sub.experiments._helpers import (
 from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
-    population_matches_platform,
 )
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
@@ -1492,10 +1491,7 @@ def _build_client_creation_context(idexp, recsys_mode):
         if population_ids
         else db.session.scalars(select(Population)).all()
     )
-    all_unassigned_pops = list(pops)
-    pops = _exclude_adhoc_populations(pops)
-    pops = [p for p in pops if population_matches_platform(p, exp.platform_type)]
-    incompatible_population_count = max(0, len(all_unassigned_pops) - len(pops))
+    pops = _exclude_adhoc_populations(pops)  # a population is deployable on any platform
 
     topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=idexp)).all()
     topics_ids = [t.topic_id for t in topics]
@@ -1701,7 +1697,6 @@ def _build_client_creation_context(idexp, recsys_mode):
     return {
         "experiment": exp,
         "populations": pops,
-        "incompatible_population_count": incompatible_population_count,
         "crecsys": crecsys,
         "frecsys": frecsys,
         "llm_agents_enabled": llm_agents_enabled,

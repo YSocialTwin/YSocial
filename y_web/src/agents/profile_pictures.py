@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import json
 import os
 import random
 import re
@@ -382,6 +383,30 @@ def make_generator(cfg: Dict[str, Any]):
 # ------------------------------------------------------------------ background job
 
 
+def jobs_dir() -> str:
+    """Folder of the job files: one per running generation, removed when it ends (see :func:`resume_interrupted`)."""
+    return os.path.join(os.path.dirname(media_dir()), "jobs")
+
+
+def _job_file(notification_id: int) -> str:
+    return os.path.join(jobs_dir(), f"{int(notification_id)}.json")
+
+
+def _write_job(notification_id: int, agent_ids: List[int], cfg: Dict[str, Any]) -> None:
+    os.makedirs(jobs_dir(), exist_ok=True)
+    tmp = _job_file(notification_id) + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as handle:
+        json.dump({"agent_ids": list(agent_ids), "cfg": cfg}, handle)
+    os.replace(tmp, _job_file(notification_id))
+
+
+def _remove_job(notification_id: int) -> None:
+    try:
+        os.remove(_job_file(notification_id))
+    except OSError:
+        pass
+
+
 def _set_notification(notification_id: int, **fields) -> Optional[str]:
     """Update the notification; returns its status (``None`` when it no longer exists)."""
     from y_web import db
@@ -416,6 +441,7 @@ def start_generation(app, user_id: int, agent_ids: List[int], cfg: Dict[str, Any
     db.session.add(notification)
     db.session.commit()
     nid = notification.id
+    _write_job(nid, ids, cfg)  # what a restart needs to resume the job
     thread = threading.Thread(
         target=run_generation,
         args=(app, nid, ids, cfg),
@@ -426,10 +452,18 @@ def start_generation(app, user_id: int, agent_ids: List[int], cfg: Dict[str, Any
     return nid, thread
 
 
-def run_generation(app, notification_id: int, agent_ids: List[int], cfg: Dict[str, Any]) -> int:
+def run_generation(
+    app,
+    notification_id: int,
+    agent_ids: List[int],
+    cfg: Dict[str, Any],
+    done_before: int = 0,
+    total: Optional[int] = None,
+) -> int:
     """Draw one picture per agent, write it in the media folder and link it; reports progress to the notification.
 
-    The job stops when the notification is cancelled; an agent deleted meanwhile is skipped.
+    The job stops when the notification is cancelled; an agent deleted meanwhile is skipped. A resumed job passes
+    the pictures already made (``done_before``) and the size of the whole job (``total``) for the progress.
     Returns the pictures made.
     """
     from y_web import db
@@ -442,8 +476,8 @@ def run_generation(app, notification_id: int, agent_ids: List[int], cfg: Dict[st
             style = cfg.get("style", "photorealistic")
             os.makedirs(media_dir(), exist_ok=True)
             traits = read_appearance(agent_ids)
-            total = len(agent_ids)
-            for n, agent_id in enumerate(agent_ids, start=1):
+            total = total or len(agent_ids) + done_before
+            for n, agent_id in enumerate(agent_ids, start=done_before + 1):
                 agent = db.session.get(Agent, agent_id)
                 if agent is not None:
                     prompt = compose_prompt(
@@ -468,13 +502,15 @@ def run_generation(app, notification_id: int, agent_ids: List[int], cfg: Dict[st
                         notification_id, message=progress_message(n, total)
                     )
                     if status == "cancelled":
+                        _remove_job(notification_id)
                         return made
             _set_notification(
                 notification_id,
                 status="ready",
-                message=f"{made} profile pictures generated.",
+                message=f"{made + done_before} profile pictures generated.",
                 error_message=None,
             )
+            _remove_job(notification_id)
         except Exception as exc:  # the notification carries the reason
             db.session.rollback()
             _set_notification(
@@ -483,4 +519,88 @@ def run_generation(app, notification_id: int, agent_ids: List[int], cfg: Dict[st
                 message="Profile picture generation failed.",
                 error_message=str(exc)[:500],
             )
+            _remove_job(notification_id)
     return made
+
+
+def resume_interrupted(app) -> List[int]:
+    """Restart the generations a shutdown interrupted; returns the notification ids resumed.
+
+    Each running generation leaves a job file (agents and settings). At startup the jobs whose notification is
+    still *processing* continue with the agents that have no picture yet (an agent deleted meanwhile is skipped);
+    a finished, cancelled or deleted notification only has its file removed.
+    """
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import Agent, DownloadNotification
+
+    folder = jobs_dir()
+    try:
+        names = sorted(n for n in os.listdir(folder) if n.endswith(".json"))
+    except OSError:
+        return []
+    resumed: List[int] = []
+    with app.app_context():
+        for name in names:
+            try:
+                nid = int(name[: -len(".json")])
+                with open(os.path.join(folder, name), encoding="utf-8") as handle:
+                    job = json.load(handle)
+                ids = [int(i) for i in job["agent_ids"]]
+                cfg = dict(job["cfg"])
+            except (ValueError, KeyError, TypeError, OSError):
+                try:
+                    os.remove(os.path.join(folder, name))
+                except OSError:
+                    pass
+                continue
+            row = db.session.get(DownloadNotification, nid)
+            if row is None or row.status != "processing":
+                _remove_job(nid)
+                continue
+            have = {
+                r[0]
+                for r in db.session.execute(
+                    select(Agent.id, Agent.profile_pic).where(Agent.id.in_(ids))
+                ).all()
+                if is_media_url(r[1]) and os.path.isfile(picture_file(r[1]) or "")
+            }
+            existing = {
+                r[0]
+                for r in db.session.execute(
+                    select(Agent.id).where(Agent.id.in_(ids))
+                ).all()
+            }
+            todo = [i for i in ids if i in existing and i not in have]
+            if not todo:
+                _set_notification(
+                    nid,
+                    status="ready",
+                    message=f"{len(have)} profile pictures generated.",
+                    error_message=None,
+                )
+                _remove_job(nid)
+                continue
+            threading.Thread(
+                target=run_generation,
+                args=(app, nid, todo, cfg, len(have), len(have) + len(todo)),
+                name=f"profile-pictures-{nid}",
+                daemon=True,
+            ).start()
+            resumed.append(nid)
+    return resumed
+
+
+def resume_later(app, delay: float = 15.0) -> None:
+    """Resume the interrupted generations once the application has finished starting."""
+
+    def _go():
+        try:
+            resume_interrupted(app)
+        except Exception:  # never prevents the application from working
+            app.logger.exception("could not resume the profile picture generation")
+
+    timer = threading.Timer(delay, _go)
+    timer.daemon = True
+    timer.start()

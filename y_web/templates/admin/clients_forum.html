@@ -60,10 +60,7 @@
                                         <span class="left"></span>
                                         <span class="right" style="width: 70%; color: #b45309; font-size: 0.95em;">
                                             {{ _('No populations are available for this %(platform)s experiment.', platform=experiment.platform_type) }}
-                                            {% if incompatible_population_count %}
-                                            {{ _('Existing unassigned populations are incompatible with this platform type.') }}
-                                            {% endif %}
-                                            {{ _('Create or upload a population with username type %(type)s in the populations page.', type=wrap('strong', experiment.platform_type)) }}
+                                            {{ _('Create or upload a population in the populations page.') }}
                                         </span>
                                     </div>
                                     {% endif %}

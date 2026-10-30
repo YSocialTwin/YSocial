@@ -50,8 +50,7 @@
                                             </span>
                                         </div>
                                         {% if not populations %}
-                                        <p class="ys-label-hint">{{ _('No dating population is available.') }} <a href="/admin/populations">{{ _('Create one in Populations (platform Dating).') }}</a>
-                                        {% if incompatible_population_count %}({{ _('%(n)s populations for other platforms are hidden.', n=incompatible_population_count) }}){% endif %}</p>
+                                        <p class="ys-label-hint">{{ _('No population is available.') }} <a href="/admin/populations">{{ _('Create one in Populations.') }}</a></p>
                                         {% endif %}
                                     </div>
 

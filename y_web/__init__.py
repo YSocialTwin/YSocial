@@ -291,6 +291,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     register_avatar_route(app)
     ensure_avatars()
 
+    # profile pictures whose generation a shutdown interrupted continue where they stopped
+    from y_web.src.agents.profile_pictures import resume_later
+
+    resume_later(app)
+
     # ------------------------------------------------------------------
     # Frontend plugin suites (e.g. Frontend Adds-on) — registered ONLY for suites
     # that are installed under external/<repo> AND pass manifest validation.

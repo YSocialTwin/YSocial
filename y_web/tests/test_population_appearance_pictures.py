@@ -262,3 +262,77 @@ def test_the_page_offers_the_appearance_section_collapsed_and_the_toggle_off():
     assert 'name="generate_profile_pictures"' in part and "checked" not in part.split('name="generate_profile_pictures"')[1].split(">")[0]
     assert "disabled>" in part.split("<fieldset")[1]
     assert "dating-section-appearance" not in (root / "_dating_population_form.html").read_text()
+
+
+def test_a_generation_interrupted_by_a_restart_resumes_with_the_missing_pictures(app, media):
+    from y_web import db
+    from y_web.src.agents import profile_pictures as pp
+    from y_web.src.models import Agent, DownloadNotification
+
+    with app.app_context():
+        _, agents = _standard_population(db, n=5)
+        ids = [a.id for a in agents]
+        nid = _notification(db)
+        cfg = {"generator": "stub"}
+        pp._write_job(nid, ids, cfg)
+        pp.run_generation(app, nid, ids[:2], cfg)  # two pictures made, then the server stops
+        db.session.get(DownloadNotification, nid).status = "processing"
+        db.session.get(DownloadNotification, nid).message = pp.progress_message(2, 5)
+        db.session.commit()
+        pp._write_job(nid, ids, cfg)  # (the stopped run left its file)
+        db.session.delete(db.session.get(Agent, ids[4]))  # an agent removed meanwhile is skipped
+        db.session.commit()
+        assert pp.resume_interrupted(app) == [nid]
+        import time
+
+        for _ in range(100):
+            db.session.expire_all()
+            if db.session.get(DownloadNotification, nid).status == "ready":
+                break
+            time.sleep(0.1)
+        row = db.session.get(DownloadNotification, nid)
+        assert row.status == "ready" and row.message == "4 profile pictures generated."
+        assert sorted(os.listdir(media)) == sorted(f"{i}.png" for i in ids[:4])
+        assert not os.path.exists(pp._job_file(nid))  # nothing left to resume
+
+
+def test_finished_or_unknown_jobs_are_only_cleaned_up(app, media):
+    from y_web import db
+    from y_web.src.agents import profile_pictures as pp
+    from y_web.src.models import DownloadNotification
+
+    with app.app_context():
+        _, agents = _standard_population(db, n=2)
+        done = _notification(db)
+        db.session.get(DownloadNotification, done).status = "cancelled"
+        db.session.commit()
+        pp._write_job(done, [a.id for a in agents], {"generator": "stub"})
+        pp._write_job(9999, [a.id for a in agents], {"generator": "stub"})  # no such notification
+        os.makedirs(pp.jobs_dir(), exist_ok=True)
+        open(os.path.join(pp.jobs_dir(), "7.json"), "w").write("not json")
+        assert pp.resume_interrupted(app) == []
+        assert os.listdir(pp.jobs_dir()) == []
+        assert not media.exists() or os.listdir(media) == []
+
+
+def test_a_started_job_leaves_its_file_until_it_ends(app, media):
+    from y_web import db
+    from y_web.src.agents import profile_pictures as pp
+
+    with app.app_context():
+        _, agents = _standard_population(db, n=2)
+        nid, thread = pp.start_generation(app, 1, [a.id for a in agents], {"generator": "stub"})
+        thread.join(10)
+        assert not os.path.exists(pp._job_file(nid))
+
+
+def test_client_creation_pages_do_not_filter_populations_by_platform():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    crud = (root / "routes/admin/sub/clients/_crud.py").read_text()
+    assert "population_matches_platform" not in crud and "incompatible_population_count" not in crud
+    for page in (root / "templates/admin").glob("clients*.html"):
+        text = page.read_text()
+        assert "incompatible_population" not in text and "username type" not in text, page.name
+        assert "populations for other platforms" not in text, page.name

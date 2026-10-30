@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:14+0000\n"
+"POT-Creation-Date: 2026-10-30 14:19+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -176,10 +176,6 @@ msgstr "%(n)s tipi di plugin"
 #, python-format
 msgid "%(n)s populations"
 msgstr "%(n)s popolazioni"
-
-#, python-format
-msgid "%(n)s populations for other platforms are hidden."
-msgstr "%(n)s popolazioni di altre piattaforme sono nascoste."
 
 #, python-format
 msgid "%(n)s profiles found"
@@ -3377,16 +3373,11 @@ msgstr "Crea un nuovo post"
 msgid "Create new story"
 msgstr "Crea una nuova storia"
 
-msgid "Create one in Populations (platform Dating)."
-msgstr "Creane una in Popolazioni (piattaforma Dating)."
+msgid "Create one in Populations."
+msgstr "Creane una in Popolazioni."
 
-#, python-format
-msgid ""
-"Create or upload a population with username type %(type)s in the "
-"populations page."
-msgstr ""
-"Crea o carica una popolazione con tipo di nome utente %(type)s nella "
-"pagina delle popolazioni."
+msgid "Create or upload a population in the populations page."
+msgstr "Crea o carica una popolazione nella pagina delle popolazioni."
 
 msgid "Create populations from scratch. Once created, you can add agents to them."
 msgstr ""
@@ -5011,11 +5002,6 @@ msgstr "Estratto"
 #, python-format
 msgid "Execution: %(progress)s"
 msgstr "Esecuzione: %(progress)s"
-
-msgid "Existing unassigned populations are incompatible with this platform type."
-msgstr ""
-"Le popolazioni non assegnate esistenti sono incompatibili con questo tipo"
-" di piattaforma."
 
 msgid "Exits"
 msgstr "Uscite"
@@ -8584,9 +8570,6 @@ msgstr "Nessun dato fornito"
 msgid "No date proposals."
 msgstr "Nessuna proposta di appuntamento."
 
-msgid "No dating population is available."
-msgstr "Nessuna popolazione dating disponibile."
-
 msgid "No description available."
 msgstr "Nessuna descrizione disponibile."
 
@@ -8719,6 +8702,9 @@ msgstr "Ancora nessuna foto corrisponde alla ricerca."
 
 msgid "No plugin is available."
 msgstr "Nessun plugin disponibile."
+
+msgid "No population is available."
+msgstr "Nessuna popolazione disponibile."
 
 #, python-format
 msgid "No populations are available for this %(platform)s experiment."
@@ -18505,4 +18491,30 @@ msgstr "✔️ Usa"
 #~ "of the agents in the Appearance "
 #~ "section."
 #~ msgstr ""
+
+#~ msgid "%(n)s populations for other platforms are hidden."
+#~ msgstr "%(n)s popolazioni di altre piattaforme sono nascoste."
+
+#~ msgid "Create one in Populations (platform Dating)."
+#~ msgstr "Creane una in Popolazioni (piattaforma Dating)."
+
+#~ msgid ""
+#~ "Create or upload a population with "
+#~ "username type %(type)s in the "
+#~ "populations page."
+#~ msgstr ""
+#~ "Crea o carica una popolazione con "
+#~ "tipo di nome utente %(type)s nella "
+#~ "pagina delle popolazioni."
+
+#~ msgid ""
+#~ "Existing unassigned populations are "
+#~ "incompatible with this platform type."
+#~ msgstr ""
+#~ "Le popolazioni non assegnate esistenti "
+#~ "sono incompatibili con questo tipo di"
+#~ " piattaforma."
+
+#~ msgid "No dating population is available."
+#~ msgstr "Nessuna popolazione dating disponibile."
 
