@@ -1,7 +1,6 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_sections, dating_advanced_toggle, dating_rhythms %}
-{% set first_rhythms = rhythms_by_population[populations[0].id|string] if populations and rhythms_by_population else [] %}
+{% from "admin/_dating_fields.html" import dating_sections %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="clients_dating" class="dashboard-container">
@@ -73,18 +72,12 @@
                                         <p class="ys-label-hint">{{ _('One day has %(n)s slots (a round each).', n=slots_per_day) }}</p>
                                     </div>
 
-                                    {{ dating_advanced_toggle() }}
 
                                     <h4 class="dating-group-title">{{ _('Models') }}</h4>
                                     {{ dating_sections(sections, adv_values, experiment.idexp, False, ['llm', 'images', 'recommender']) }}
 
                                     <h4 class="dating-group-title">{{ _('Agent behaviour') }}</h4>
                                     {{ dating_sections(sections, adv_values, experiment.idexp, False, ['activity']) }}
-                                    <div class="tutorial-section" id="section-rhythms">
-                                        <div class="form-section-header">{{ _('Daily rhythm of the agents') }}</div>
-                                        <div class="form-section-description">{{ _('The agents follow the activity profile assigned to them in the population (Always On, Night Owl...), the same profiles of the other platforms: they open the app only in the hours of their profile, with the probability set above. Agents with Always On follow the activity of each hour above.') }}</div>
-                                        <div id="dating-rhythms-box" data-rhythms='{{ (rhythms_by_population or {})|tojson }}'>{{ dating_rhythms(first_rhythms) }}</div>
-                                    </div>
                                     {{ dating_sections(sections, adv_values, experiment.idexp, False, ['swipe', 'conversation', 'profile_generation', 'lifecycle']) }}
 
                                     {% if sections|selectattr('id', 'in', ['stress_reward', 'memory', 'annotations'])|list %}
@@ -102,6 +95,9 @@
                     </div>
                 </div>
                 <div class="column is-4">
+                    <div class="sidebar-box dating-recsys-side" id="dating-recsys-side" hidden>
+                        <h3>{{ _('Selected recommender') }}: <span data-recsys-name></span></h3>
+                    </div>
                     <div class="sidebar-box" data-tut="quick-reference-guide">
                         <h3>{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
@@ -112,7 +108,7 @@
                             {% endif %}
                             <p><b>{{ _('Recommender') }}</b><br>{{ _('Each client chooses the model that proposes the cards to its agents; the parameters of every model are in the experiment settings.') }}</p>
                             <p><b>{{ _('Importance 0-10') }}</b><br>{{ _('The weights of the swiping utility use the same 0 to 10 scale as the actions of the other platforms: 0 means that factor is ignored.') }}</p>
-                            <p><b>{{ _('Advanced settings') }}</b><br>{{ _('Fine tuning that the defaults of the runtime already cover is hidden until you switch it on.') }}</p>
+                            <p><b>{{ _('Advanced settings') }}</b><br>{{ _('Fine tuning that the defaults of the runtime already cover sits in the panels called Advanced parameters: open one to change it.') }}</p>
                         </div>
                     </div>
                     <div class="sidebar-box">

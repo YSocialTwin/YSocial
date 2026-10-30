@@ -74,6 +74,15 @@
         <button type="button" class="button is-solid primary-button" data-fetch-vision="dating_vision_model" {% if disabled %}disabled{% endif %}>{{ _('Fetch Vision Models') }}</button>
     </div>
     <div class="ys-badge-min" data-fetch-status="dating_vision_model"></div>
+{%- elif item.widget == 'diffusion_model' -%}
+    {% set known = item.diffusion_models|map(attribute=0)|list %}
+    <div class="dating-diffusion">
+        <div class="select is-fullwidth"><select data-diffusion-select {% if disabled %}disabled{% endif %}>
+            {% for m, label in item.diffusion_models %}<option value="{{ m }}" {% if m == value %}selected{% endif %}>{{ _(label) }}</option>{% endfor %}
+            <option value="__other__" {% if value not in known %}selected{% endif %}>{{ _('Other (a Hugging Face model id)') }}</option>
+        </select></div>
+        <input type="text" class="input" name="{{ f.name }}" value="{{ value }}" data-diffusion-text {% if value in known %}hidden{% endif %} {% if disabled %}disabled{% endif %}>
+    </div>
 {%- elif item.widget == 'recsys' -%}
     <div class="select is-fullwidth"><select name="{{ f.name }}" id="dating_recsys" data-recsys {% if disabled %}disabled{% endif %}>
         {% for m in item.options %}
@@ -98,7 +107,7 @@
 {% macro dating_field(item, values, disabled=False) %}
 {%- set f = item.f -%}
 {% if item.widget == 'hidden' %}{{ dating_control(item, values, disabled) }}{% else %}
-<div class="box-line ys-hint-text{% if item.advanced %} dating-adv{% endif %}" id="field-{{ f.name }}"{% if item.advanced %} data-advanced="1"{% endif %}>
+<div class="box-line ys-hint-text" id="field-{{ f.name }}">
     <span class="left">{{ _(item.label) }}</span>
     <span class="right ys-w-70">
         {{ dating_control(item, values, disabled) }}
@@ -108,36 +117,40 @@
 {% endif %}
 {% endmacro %}
 
-{# The body of a section: the sub-headings and their fields. #}
+{# The body of a section: the sub-headings and their fields. What most people never touch (item.advanced) sits in a
+   panel that is closed until it is opened. #}
 {% macro dating_section_body(s, values, experiment_id, disabled=False) %}
 {% if s.inactive %}
 <div class="ys-note-box">{{ _('This part is off in the Experiment Configuration, so these settings have no effect until you switch it on there.') }}
     <a href="/admin/experiment_details/{{ experiment_id }}">{{ _('Experiment Configuration') }}</a></div>
 {% endif %}
+{% set ns = namespace(advanced=0) %}
 {% for b in s.blocks %}
+{% set plain = b.fields|rejectattr('advanced')|list %}
+{% set ns.advanced = ns.advanced + (b.fields|selectattr('advanced')|list|length) %}
+{% if plain %}
 {% if b.heading %}<h4 class="title is-6 dating-subheading">{{ _(b.heading) }}</h4>{% endif %}
-{% for item in b.fields %}{{ dating_field(item, values, disabled or item.locked) }}{% endfor %}
+{% for item in plain %}{{ dating_field(item, values, disabled or item.locked) }}{% endfor %}
+{% endif %}
 {% endfor %}
-{% endmacro %}
-
-{# The switch that shows the advanced settings of the page. #}
-{% macro dating_advanced_toggle() %}
-<div class="box-line dating-advanced-toggle">
-    <span class="left">{{ _('Show advanced settings') }}</span>
-    <span class="right ys-w-70">
-        <label class="switch-small">
-            <input type="checkbox" id="dating-show-advanced">
-            <span class="slider-small round"></span>
-        </label>
-        <small>{{ _('Fine tuning that the defaults of the runtime already cover.') }}</small>
-    </span>
-</div>
+{% if ns.advanced %}
+<details class="dating-advanced-panel">
+    <summary>{{ _('Advanced parameters') }}</summary>
+    {% for b in s.blocks %}
+    {% set adv = b.fields|selectattr('advanced')|list %}
+    {% if adv %}
+    {% if b.heading %}<h4 class="title is-6 dating-subheading">{{ _(b.heading) }}</h4>{% endif %}
+    {% for item in adv %}{{ dating_field(item, values, disabled or item.locked) }}{% endfor %}
+    {% endif %}
+    {% endfor %}
+</details>
+{% endif %}
 {% endmacro %}
 
 {# Sections of a page inside ONE form (creation of a client): same look as the other client pages. #}
 {% macro dating_sections(sections, values, experiment_id, disabled=False, ids=None) %}
 {% for s in sections if ids is none or s.id in ids %}
-<div class="tutorial-section{% if s.advanced_only %} dating-adv{% endif %}" id="sec-{{ s.id }}"{% if s.advanced_only %} data-advanced="1"{% endif %}>
+<div class="tutorial-section" id="sec-{{ s.id }}">
     <div class="form-section-header">{{ _(s.title) }}</div>
     <div class="form-section-description">{{ _(s.description) }}</div>
     {{ dating_section_body(s, values, experiment_id, disabled) }}
@@ -148,7 +161,7 @@
 {# One section as its own dashboard box with its own form and Save button (the layout of the YSimulator client page).
    Only the controls of the box are submitted: every other setting keeps its value. #}
 {% macro dating_box(s, values, experiment_id, action, disabled=False, locked=False) %}
-<div class="dashboard-box{% if s.advanced_only %} dating-adv{% endif %}" id="box-{{ s.id }}"{% if s.advanced_only %} data-advanced="1"{% endif %}>
+<div class="dashboard-box" id="box-{{ s.id }}">
     <h3 class="title is-5 is-thin">{{ _(s.title) }}</h3>
     <p class="ys-text-small">{{ _(s.description) }}</p>
     <div class="box-content">
@@ -164,16 +177,3 @@
 </div>
 {% endmacro %}
 
-{# The activity profiles (daily rhythms) of the agents of a population: name, share of the agents and the hours. #}
-{% macro dating_rhythms(rhythms) %}
-<div id="dating-rhythms" class="dating-rhythms">
-    {% for r in rhythms %}
-    <div class="dating-rhythm">
-        <div class="dating-rhythm-name">{{ r.name or _('No profile') }} <span class="ys-text-small">{{ r.share }}%</span></div>
-        <div class="profile-heatmap-compact">
-            {% for h in range(24) %}<div class="heatmap-hour {% if r.hours is none or r.hours[h] %}active{% endif %}" title="{{ _('Hour %(hour)s', hour=h) }}"></div>{% endfor %}
-        </div>
-    </div>
-    {% endfor %}
-</div>
-{% endmacro %}

@@ -1,6 +1,6 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_box, dating_advanced_toggle, dating_rhythms %}
+{% from "admin/_dating_fields.html" import dating_box %}
 {% set save_action = '/admin/update_dating_client/' ~ client.id %}
 {% set left_ids = 'llm images recommender memory lifecycle stress_reward annotations runtime'.split() %}
 
@@ -28,7 +28,7 @@
                             <div class="box-lines">
                                 <div class="box-line"><span class="left">{{ _('Name') }}</span><span class="right">{{ client.name }}</span></div>
                                 <div class="box-line"><span class="left">{{ _('Description') }}</span><span class="right">{{ client.descr }}</span></div>
-                                <div class="box-line"><span class="left">{{ _('Population') }}</span><span class="right"><a href="/admin/dating_population/{{ population.id }}">{{ population.name }}</a></span></div>
+                                <div class="box-line"><span class="left">{{ _('Population') }}</span><span class="right"><a href="/admin/population_details/{{ population.id }}">{{ population.name }}</a></span></div>
                                 <div class="box-line"><span class="left">{{ _('Language') }}</span><span class="right">{{ language }}</span></div>
                                 <div class="box-line"><span class="left">{{ _('Total length') }}</span><span class="right">{{ _('until stopped') if client.days == -1 else _('%(n)s days', n=client.days) }}</span></div>
                                 {% if execution and execution.last_active_day and execution.last_active_day > 0 %}
@@ -70,17 +70,9 @@
                         <div class="ys-note-box">{{ _('The client is running: stop it to change its settings.') }}</div>
                         {% endif %}
                         <p class="ys-text-small">{{ _('Every box has its own Save button: only the settings of that box are changed.') }}</p>
-                        <div class="box-content"><div class="box-lines">{{ dating_advanced_toggle() }}</div></div>
                     </div>
                     {% for s in sections if s.id not in left_ids %}
                     {{ dating_box(s, values, experiment.idexp, save_action, running) }}
-                    {% if s.id == 'activity' %}
-                    <div class="dashboard-box" id="box-rhythms">
-                        <h3 class="title is-5 is-thin">{{ _('Daily rhythm of the agents') }}</h3>
-                        <p class="ys-text-small">{{ _('The agents follow the activity profile assigned to them in the population (Always On, Night Owl...): they open the app only in the hours of their profile. Agents with Always On follow the activity of each hour above. To change the profiles, change the population.') }}</p>
-                        <div class="box-content">{{ dating_rhythms(rhythms) }}</div>
-                    </div>
-                    {% endif %}
                     {% endfor %}
                 </div>
             </div>

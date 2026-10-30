@@ -486,3 +486,23 @@ def test_prompt_routes_save_refuse_and_reset(app, dating_exp, monkeypatch, tmp_p
     with app.test_request_context("/", method="POST", data={"lang": "en"}):
         routes.reset_prompts_dating.__wrapped__(uid)
     assert not target.exists()
+
+
+def test_a_save_without_a_model_keeps_or_repairs_the_default_model():
+    from y_web.src.dating import server_settings as ss
+
+    models = ss.recsys_models(str(REPO))
+    # no model in the form and none stored: the default of the schema, never an error
+    config = {"matching": {}}
+    ss.apply_recsys(str(REPO), config, {})
+    assert config["matching"]["default_model"] in models
+    # a value stored by an older runtime is replaced too
+    config = {"matching": {"default_model": "tinder"}}
+    ss.apply_recsys(str(REPO), config, {})
+    assert config["matching"]["default_model"] in models
+    # a stored valid model is kept; a wrong one in the form is still refused
+    config = {"matching": {"default_model": models[-1]}}
+    ss.apply_recsys(str(REPO), config, {})
+    assert config["matching"]["default_model"] == models[-1]
+    with pytest.raises(ss.ServerSettingsError):
+        ss.apply_recsys(str(REPO), config, {"matching_default_model": "tinder"})

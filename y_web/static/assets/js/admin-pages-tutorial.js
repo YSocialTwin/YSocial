@@ -72,10 +72,6 @@
         prompts_dating: [
             { selector: '[data-tut="dating-prompts"]', title: '@heading', description: 'The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.', position: 'auto' }
         ],
-        dating_population_details: [
-            { selector: '[data-tut="population-overview"]', title: '@heading', description: 'Name, size and summary of the population: ages, genders, intents and photos.', position: 'auto' },
-            { selector: '#dating-card-preview', title: '@heading', description: 'See a profile card as another user would see it; hidden attributes are not shown.', position: 'auto' }
-        ],
         download_notifications: [
             { selector: '[data-tut="notifications"]', title: '@heading', description: 'History of exports and background jobs: status, download links and the experiments involved. Mark entries as read or remove them.', position: 'auto' }
         ],

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 10:13+0000\n"
+"POT-Creation-Date: 2026-10-30 10:30+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -943,6 +943,16 @@ msgstr "Profilo di gioco di ruolo avanzato"
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
 
+msgid "Advanced parameters"
+msgstr "Parametri avanzati"
+
+#, python-format
+msgid "Advanced parameters of %(m)s"
+msgstr "Parametri avanzati di %(m)s"
+
+msgid "Advanced parameters shared by every model"
+msgstr "Parametri avanzati comuni a tutti i modelli"
+
 msgid "Advanced settings"
 msgstr "Impostazioni avanzate"
 
@@ -1159,9 +1169,6 @@ msgstr "Memoria degli agenti (ore)"
 
 msgid "Agents' Memory (hours):"
 msgstr "Memoria degli agenti (ore):"
-
-msgid "Ages"
-msgstr "Età"
 
 msgid "Aggregate state and attacker effects"
 msgstr "Stato aggregato ed effetti degli attaccanti"
@@ -2147,6 +2154,9 @@ msgstr "Probabilità di rinominare le chat"
 msgid "Chats"
 msgstr "Chat"
 
+msgid "Chats and dates"
+msgstr "Chat e appuntamenti"
+
 msgid "Chats by Topic"
 msgstr "Chat per topic"
 
@@ -2573,9 +2583,6 @@ msgstr "Commenti"
 
 msgid "Common Neighbors"
 msgstr "Vicini in comune"
-
-msgid "Common parameters"
-msgstr "Parametri comuni"
 
 msgid "Communities"
 msgstr "Community"
@@ -3644,9 +3651,6 @@ msgstr "Probabilità giornaliera di riscrivere"
 msgid "Daily quotas"
 msgstr "Quote giornaliere"
 
-msgid "Daily rhythm of the agents"
-msgstr "Ritmo giornaliero degli agenti"
-
 msgid ""
 "Daily target toxicity, with moderator intervention volume shown on the "
 "secondary axis."
@@ -3730,6 +3734,9 @@ msgstr "Popolazione dating '%(name)s' generata."
 #, python-format
 msgid "Dating population '%(name)s' imported."
 msgstr "Popolazione dating '%(name)s' importata."
+
+msgid "Dating profiles"
+msgstr "Profili dating"
 
 msgid "Dating settings"
 msgstr "Impostazioni Dating"
@@ -5396,14 +5403,12 @@ msgid "Filter experiments by group"
 msgstr "Filtra gli esperimenti per gruppo"
 
 msgid ""
-"Fine tuning that the defaults of the runtime already cover is hidden "
-"until you switch it on."
+"Fine tuning that the defaults of the runtime already cover sits in the "
+"panels called Advanced parameters: open one to change it."
 msgstr ""
-"La messa a punto già coperta dai valori predefiniti del runtime resta "
-"nascosta finché non la attivi."
-
-msgid "Fine tuning that the defaults of the runtime already cover."
-msgstr "Messa a punto già coperta dai valori predefiniti del runtime."
+"La messa a punto che i valori predefiniti del runtime già coprono si "
+"trova nei pannelli chiamati Parametri avanzati: aprine uno per "
+"modificarla."
 
 msgid "Finnish"
 msgstr "Finlandese"
@@ -5671,9 +5676,6 @@ msgstr "Distribuzione di genere"
 
 msgid "Gender distribution must total 100%."
 msgstr "La distribuzione di genere deve totalizzare 100%."
-
-msgid "Genders"
-msgstr "Generi"
 
 msgid "Genders allowed to write first"
 msgstr "Generi che possono scrivere per primi"
@@ -8555,9 +8557,6 @@ msgstr "Nessun plugin disponibile."
 msgid "No populations are available for this %(platform)s experiment."
 msgstr "Non ci sono popolazioni disponibili per questo esperimento %(platform)s."
 
-msgid "No profile"
-msgstr "Nessun profilo"
-
 msgid "No profiles at this round yet."
 msgstr "Ancora nessun profilo a questo round."
 
@@ -8866,6 +8865,11 @@ msgstr ""
 msgid "Onboarding screen"
 msgstr "Schermata di onboarding"
 
+msgid "One Save for the whole page: every tab is saved together."
+msgstr ""
+"Un solo Salva per tutta la pagina: tutte le schede vengono salvate "
+"insieme."
+
 #, python-format
 msgid "One day has %(n)s slots (a round each)."
 msgstr "Un giorno ha %(n)s slot (un round ciascuno)."
@@ -8944,6 +8948,9 @@ msgid "Only owner/admin/shared researchers can edit stress/reward settings"
 msgstr ""
 "Solo il proprietario, gli amministratori e i ricercatori con accesso "
 "condiviso possono modificare le impostazioni di stress/ricompensa"
+
+msgid "Only show profiles within the distance"
+msgstr "Mostra solo profili entro la distanza"
 
 msgid "Open"
 msgstr "Apri"
@@ -9151,6 +9158,9 @@ msgstr ""
 msgid "Other"
 msgstr "Altro"
 
+msgid "Other (a Hugging Face model id)"
+msgstr "Altro (un id di modello Hugging Face)"
+
 msgid "Other attributes"
 msgstr "Altri attributi"
 
@@ -9247,10 +9257,6 @@ msgstr "Limite per coppia"
 
 msgid "Palestinian"
 msgstr "Palestinese"
-
-#, python-format
-msgid "Parameters of %(m)s"
-msgstr "Parametri di %(m)s"
 
 msgid "Parent post not found"
 msgstr "Post padre non trovato"
@@ -11129,6 +11135,9 @@ msgstr "Salva i feed di notizie"
 msgid "Save prompts"
 msgstr "Salva prompt"
 
+msgid "Save settings"
+msgstr "Salva impostazioni"
+
 msgid "Saved"
 msgstr "Salvati"
 
@@ -11608,6 +11617,9 @@ msgstr ""
 msgid "Selected profile picture"
 msgstr "Immagine del profilo selezionata"
 
+msgid "Selected recommender"
+msgstr "Recommender selezionato"
+
 msgid "Selected story preview"
 msgstr "Anteprima della storia selezionata"
 
@@ -11866,9 +11878,6 @@ msgstr ""
 "Mostra accanto al feed un riquadro con il sistema di raccomandazione dei "
 "contenuti del partecipante e una spiegazione in linguaggio semplice del "
 "suo funzionamento"
-
-msgid "Show advanced settings"
-msgstr "Mostra impostazioni avanzate"
 
 msgid "Show less"
 msgstr "Mostra meno"
@@ -12807,47 +12816,12 @@ msgid "The agent spoken language."
 msgstr "La lingua parlata dall'agente."
 
 msgid ""
-"The agents follow the activity profile assigned to them in the population"
-" (Always On, Night Owl...), the same profiles of the other platforms: "
-"they open the app only in the hours of their profile, with the "
-"probability set above. Agents with Always On follow the activity of each "
-"hour above."
-msgstr ""
-"Gli agenti seguono il profilo di attività assegnato loro nella "
-"popolazione (Always On, Night Owl...), gli stessi profili delle altre "
-"piattaforme: aprono l'app solo nelle ore del loro profilo, con la "
-"probabilità impostata sopra. Gli agenti Always On seguono l'attività di "
-"ciascuna ora indicata sopra."
-
-msgid ""
-"The agents follow the activity profile assigned to them in the population"
-" (Always On, Night Owl...): they open the app only in the hours of their "
-"profile. Agents with Always On follow the activity of each hour above. To"
-" change the profiles, change the population."
-msgstr ""
-"Gli agenti seguono il profilo di attività assegnato loro nella "
-"popolazione (Always On, Night Owl...): aprono l'app solo nelle ore del "
-"loro profilo. Gli agenti Always On seguono l'attività di ciascuna ora "
-"indicata sopra. Per cambiare i profili, modifica la popolazione."
-
-msgid ""
 "The agents must still answer in the JSON format the action instructions "
 "describe, so change the wording of the instructions carefully."
 msgstr ""
 "Gli agenti devono comunque rispondere nel formato JSON descritto dalle "
 "istruzioni delle azioni: modifica con cautela la formulazione delle "
 "istruzioni."
-
-msgid ""
-"The agents of this population are standard agents; what is specific to "
-"dating (location, genders sought, photos, latent variables) is kept in "
-"their custom fields, named \"dating.*\", and can be edited like any "
-"custom field."
-msgstr ""
-"Gli agenti di questa popolazione sono agenti standard; ciò che è "
-"specifico del dating (posizione, generi cercati, foto, variabili latenti)"
-" è conservato nei loro campi personalizzati, chiamati \"dating.*\", e si "
-"modifica come qualsiasi campo personalizzato."
 
 msgid "The algorithm that picks the posts in your feed"
 msgstr "L'algoritmo che sceglie i post del tuo feed"
@@ -13680,6 +13654,9 @@ msgstr "Tempo"
 
 msgid "Time Period"
 msgstr "Periodo di tempo"
+
+msgid "Time and quotas"
+msgstr "Tempo e quote"
 
 msgid "Time and start"
 msgstr "Tempo e avvio"
@@ -15052,6 +15029,19 @@ msgid "What is a client?"
 msgstr "Che cos'è un client?"
 
 msgid ""
+"What is specific to dating: intents, cities, interests and how many "
+"agents have photos and a biography. The agents are standard agents; the "
+"dating-only fields (location, genders sought, photos, latent variables) "
+"are kept in their custom fields, named \"dating.*\", and can be edited "
+"like any custom field."
+msgstr ""
+"Ciò che è specifico del dating: intenti, città, interessi e quanti agenti"
+" hanno foto e biografia. Gli agenti sono agenti standard; i campi solo "
+"dating (posizione, generi cercati, foto, variabili latenti) sono nei loro"
+" campi personalizzati, chiamati \"dating.*\", e si modificano come "
+"qualsiasi campo personalizzato."
+
+msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
 msgstr ""
@@ -15656,6 +15646,12 @@ msgstr "rilevamento automatico dai log"
 msgid "away"
 msgstr "di distanza"
 
+msgid "bk-sdm-small: a little larger, better detail (about 1.4 GB)"
+msgstr "bk-sdm-small: un po' più grande, più dettaglio (circa 1,4 GB)"
+
+msgid "bk-sdm-tiny: compact Stable Diffusion, similar size (about 1 GB)"
+msgstr "bk-sdm-tiny: Stable Diffusion compatto, dimensione simile (circa 1 GB)"
+
 #, python-format
 msgid "branch %(name)s"
 msgstr "branch %(name)s"
@@ -15901,6 +15897,13 @@ msgstr "round %(h)s"
 msgid "round %(n)s"
 msgstr "round %(n)s"
 
+msgid ""
+"sd-turbo: distilled, 1 to 4 steps, best quality for the time (about 2.6 "
+"GB)"
+msgstr ""
+"sd-turbo: distillato, da 1 a 4 passi, la migliore qualità per il tempo "
+"(circa 2,6 GB)"
+
 msgid "sec"
 msgstr "s"
 
@@ -15932,6 +15935,9 @@ msgstr "super like rimasti"
 
 msgid "symlink"
 msgstr "collegamento simbolico"
+
+msgid "tiny-sd: the smallest, fastest (about 1 GB). Default"
+msgstr "tiny-sd: il più piccolo e veloce (circa 1 GB). Predefinito"
 
 msgid "to"
 msgstr "a"
@@ -17914,4 +17920,94 @@ msgstr "✔️ Usa"
 #~ "chiamato nulla: le risposte arrivano da"
 #~ " un finto deterministico, sufficiente per"
 #~ " test e grandi simulazioni."
+
+#~ msgid "Ages"
+#~ msgstr "Età"
+
+#~ msgid "Genders"
+#~ msgstr "Generi"
+
+#~ msgid ""
+#~ "The agents of this population are "
+#~ "standard agents; what is specific to "
+#~ "dating (location, genders sought, photos, "
+#~ "latent variables) is kept in their "
+#~ "custom fields, named \"dating.*\", and "
+#~ "can be edited like any custom "
+#~ "field."
+#~ msgstr ""
+#~ "Gli agenti di questa popolazione sono"
+#~ " agenti standard; ciò che è specifico"
+#~ " del dating (posizione, generi cercati, "
+#~ "foto, variabili latenti) è conservato "
+#~ "nei loro campi personalizzati, chiamati "
+#~ "\"dating.*\", e si modifica come "
+#~ "qualsiasi campo personalizzato."
+
+#~ msgid "Common parameters"
+#~ msgstr "Parametri comuni"
+
+#~ msgid ""
+#~ "Fine tuning that the defaults of "
+#~ "the runtime already cover is hidden "
+#~ "until you switch it on."
+#~ msgstr ""
+#~ "La messa a punto già coperta dai"
+#~ " valori predefiniti del runtime resta "
+#~ "nascosta finché non la attivi."
+
+#~ msgid "Fine tuning that the defaults of the runtime already cover."
+#~ msgstr "Messa a punto già coperta dai valori predefiniti del runtime."
+
+#~ msgid "Parameters of %(m)s"
+#~ msgstr "Parametri di %(m)s"
+
+#~ msgid "Show advanced settings"
+#~ msgstr "Mostra impostazioni avanzate"
+
+#~ msgid "Daily rhythm of the agents"
+#~ msgstr "Ritmo giornaliero degli agenti"
+
+#~ msgid "No profile"
+#~ msgstr "Nessun profilo"
+
+#~ msgid ""
+#~ "The agents follow the activity profile"
+#~ " assigned to them in the population"
+#~ " (Always On, Night Owl...), the same"
+#~ " profiles of the other platforms: "
+#~ "they open the app only in the "
+#~ "hours of their profile, with the "
+#~ "probability set above. Agents with "
+#~ "Always On follow the activity of "
+#~ "each hour above."
+#~ msgstr ""
+#~ "Gli agenti seguono il profilo di "
+#~ "attività assegnato loro nella popolazione "
+#~ "(Always On, Night Owl...), gli stessi"
+#~ " profili delle altre piattaforme: aprono"
+#~ " l'app solo nelle ore del loro "
+#~ "profilo, con la probabilità impostata "
+#~ "sopra. Gli agenti Always On seguono "
+#~ "l'attività di ciascuna ora indicata "
+#~ "sopra."
+
+#~ msgid ""
+#~ "The agents follow the activity profile"
+#~ " assigned to them in the population"
+#~ " (Always On, Night Owl...): they open"
+#~ " the app only in the hours of"
+#~ " their profile. Agents with Always On"
+#~ " follow the activity of each hour "
+#~ "above. To change the profiles, change"
+#~ " the population."
+#~ msgstr ""
+#~ "Gli agenti seguono il profilo di "
+#~ "attività assegnato loro nella popolazione "
+#~ "(Always On, Night Owl...): aprono l'app"
+#~ " solo nelle ore del loro profilo. "
+#~ "Gli agenti Always On seguono l'attività"
+#~ " di ciascuna ora indicata sopra. Per"
+#~ " cambiare i profili, modifica la "
+#~ "popolazione."
 

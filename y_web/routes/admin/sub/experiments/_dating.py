@@ -53,6 +53,9 @@ def _load(path):
         return {}
 
 
+DISTANCE_FILTER = "matching.common.distance_filter"
+
+
 @experiments.route("/admin/dating_settings/<int:uid>")
 @login_required
 def dating_settings(uid):
@@ -96,15 +99,21 @@ def dating_settings(uid):
         recsys_labels=settings_ui.LABELS,
         values=values,
         models=models,
+        distance_item=next(
+            (
+                settings_ui.item_for(f)
+                for f in server_settings.common_fields(repo)
+                if f.path == DISTANCE_FILTER
+            ),
+            None,
+        ),
         common=[
-            {"f": f, "label": settings_ui.label_of(f.path)}
+            settings_ui.item_for(f)
             for f in server_settings.common_fields(repo)
+            if f.path != DISTANCE_FILTER
         ],
         model_fields={
-            m: [
-                {"f": f, "label": settings_ui.label_of(f.path)}
-                for f in server_settings.recsys_fields(repo, m)
-            ]
+            m: [settings_ui.item_for(f) for f in server_settings.recsys_fields(repo, m)]
             for m in models
         },
         default_model=(base.get("matching") or {}).get("default_model"),

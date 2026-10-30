@@ -198,6 +198,7 @@ LABELS: Dict[str, str] = {
     # server: recommender (common parameters)
     "matching.common.stack_size": N_("Cards per request"),
     "matching.common.candidate_pool_size": N_("Candidates scored per viewer"),
+    "matching.common.distance_filter": N_("Only show profiles within the distance"),
     "matching.common.bidirectional_age": N_("Age range must fit both ways"),
     "matching.common.exploration_rate": N_("Share of random cards"),
     "matching.common.max_exposure_per_day": N_(
@@ -632,7 +633,6 @@ ADVANCED = (
     "conversation.min_messages_before_unmatch",
     "conversation.max_message_chars",
     "conversation.date_accept_base",
-    "profile_generation.images.model",
     "profile_generation.images.generator",
     "profile_generation.images.background",
     "profile_generation.images.inference_steps",
@@ -681,8 +681,32 @@ def is_advanced(path: str) -> bool:
     return any(_matches(path, key) for key in ADVANCED)
 
 
+# Small text-to-image models of the Hugging Face hub that YDating runs as they are (downloaded on first use); any
+# other diffusers id can be typed. Sizes are the approximate weights of the model files.
+DIFFUSION_MODELS: List[Tuple[str, str]] = [
+    ("segmind/tiny-sd", N_("tiny-sd: the smallest, fastest (about 1 GB). Default")),
+    (
+        "nota-ai/bk-sdm-tiny",
+        N_("bk-sdm-tiny: compact Stable Diffusion, similar size (about 1 GB)"),
+    ),
+    (
+        "nota-ai/bk-sdm-small",
+        N_("bk-sdm-small: a little larger, better detail (about 1.4 GB)"),
+    ),
+    (
+        "stabilityai/sd-turbo",
+        N_(
+            "sd-turbo: distilled, 1 to 4 steps, best quality for the time (about 2.6 GB)"
+        ),
+    ),
+]
+DIFFUSION_MODEL = "profile_generation.images.model"
+
+
 def widget_of(f: Any) -> str:
     """The widget a setting is drawn with (see the table above)."""
+    if f.path == DIFFUSION_MODEL:
+        return "diffusion_model"
     if f.path == "match_recsys":
         return "recsys"
     if f.path == "llm.backend":
@@ -727,7 +751,13 @@ def _item(f: Any, options: Optional[Dict[str, List[str]]] = None) -> Dict[str, A
         "suggestions": TAGLISTS.get(f.path),
         "choice_labels": CHOICE_LABELS.get(f.path, {}),
         "recsys_info": RECSYS_INFO if f.path == "match_recsys" else None,
+        "diffusion_models": DIFFUSION_MODELS if f.path == DIFFUSION_MODEL else None,
     }
+
+
+def item_for(f: Any) -> Dict[str, Any]:
+    """The drawing instructions of one setting (label, widget, choices), for pages that lay fields out themselves."""
+    return _item(f)
 
 
 def placed_paths(sections: Iterable[Section]) -> List[str]:

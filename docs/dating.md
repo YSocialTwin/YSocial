@@ -20,7 +20,9 @@ writes of a person go through the runtime's gateway.
    take part next to the agents (see *Participants*). Each section says what it does and each
    setting has a readable label and a hint. Settings that already live in the Experiment Configuration (memory,
    embedding model, annotations) are not repeated; a section whose switch is off says so and links there. The
-   settings can be edited whenever the experiment is not running; once it has produced data the slot length and the
+   page is a single form with tabs (Recommender, Time and quotas, Chats and dates, Other settings) and one **Save**
+   for all of them; choosing a recommender shows its description on the right, the switch *Only show profiles within the distance* (off by default: the declared distance still counts for the models that use it but never removes a candidate) sits in the same tab, and the rarely needed parameters sit
+   in *Advanced parameters* panels that are closed until opened. The settings can be edited whenever the experiment is not running; once it has produced data the slot length and the
    seed stay fixed.
 3. Create a **dating population**. Agents are standard agents (the `agents` table); what is specific to dating
    (location, genders sought, photos, latent variables) is kept in their custom fields, named `dating.*`, and can be
@@ -43,11 +45,12 @@ writes of a person go through the runtime's gateway.
 4. Create a **client**: choose the population and the duration (30 days; *Run until stopped* keeps it running), then
    the models in this order: the language model (address, *Fetch* the models, choose one, as on the other platforms),
    the image model (vision model and the model that draws the profile photos, either photorealistic human faces or
-   fantasy cartoon characters) and the recommender, which is chosen per client (each model is explained on the page;
+   fantasy cartoon characters; the drawing model is chosen from a short list of small models of the Hugging Face hub,
+   *tiny-sd* by default, or any other diffusers model id, downloaded on first use) and the recommender, which is chosen per client (each model is explained on the page;
    the default is the one of the experiment settings). The defaults follow the experiment: with language models the
    agents use them for everything (texts, swipes, images), otherwise they follow rules. Components that are switched
-   off in the experiment (memory, stress and reward) are not shown. Technical settings sit behind the advanced switch.
-   The agents' daily rhythm comes from the activity profiles of the population and is shown read-only on the page.
+   off in the experiment (memory, stress and reward) are not shown. Rarely needed settings sit in *Advanced parameters* panels, closed by default; choosing a recommender shows what it does in the side column.
+   The agents' daily rhythm comes from the activity profiles of the population, so the client page does not repeat it.
    The client page (*Client details*) shows the state, extends the simulation (days are added to the total; start the
    client again and it runs what is left) and edits the settings while the client is stopped. Profile images are
    generated in the background by default: the simulation starts at once and each photo appears as soon as it is

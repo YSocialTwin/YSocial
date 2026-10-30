@@ -49,34 +49,6 @@ def _activity_hours(pop_data):
     return {r.name: r.hours for r in rows if r.name.strip().lower() in names}
 
 
-def _rhythms(pop_data, hours_by_name):
-    """Activity profiles of the agents of a population: name, share (%) and the 24 hours (None = all of them)."""
-    agents = (pop_data or {}).get("agents", [])
-    counts = {}
-    for a in agents:
-        name = str(a.get("archetype") or "").strip()
-        counts[name] = counts.get(name, 0) + 1
-    by_lower = {k.strip().lower(): v for k, v in hours_by_name.items()}
-    out = []
-    for name, n in sorted(counts.items(), key=lambda kv: -kv[1]):
-        weights = dcc.profile_weights({name: by_lower.get(name.lower(), "")})
-        hours = weights.get(name.lower())
-        out.append(
-            {
-                "name": name,
-                "share": round(100.0 * n / max(1, len(agents)), 1),
-                "hours": None if hours is None else [int(v) for v in hours],
-            }
-        )
-    return out
-
-
-def _all_activity_hours():
-    from y_web.src.models import ActivityProfile
-
-    return {r.name: r.hours for r in db.session.scalars(select(ActivityProfile)).all()}
-
-
 def _recsys_context(repo, server_config):
     """Models a client can choose, what each does and the default of the experiment."""
     models = server_settings.recsys_models(repo)
@@ -149,10 +121,6 @@ def clients_dating(idexp):
                 "recsys_default": _recsys_context(repo, server_config)[
                     "recsys_default"
                 ],
-            },
-            "rhythms_by_population": {
-                str(p.id): _rhythms(dp.load_document(p.id), _all_activity_hours())
-                for p in context.get("populations", [])
             },
             "default_days": dcc.DEFAULT_DAYS,
             **_recsys_context(repo, server_config),
@@ -357,7 +325,6 @@ def client_details_dating(uid):
             **dcc.values_for_form(repo, config, llm_enabled, dcc.images_available()),
             "recsys_default": _recsys_context(repo, server_config)["recsys_default"],
         },
-        rhythms=_rhythms(dp.load_document(population.id), _all_activity_hours()),
         llm_enabled=llm_enabled,
         images_ok=dcc.images_available(),
         **_recsys_context(repo, server_config),

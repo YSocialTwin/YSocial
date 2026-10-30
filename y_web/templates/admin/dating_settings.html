@@ -1,6 +1,10 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_field, dating_box, dating_advanced_toggle %}
+{% from "admin/_dating_fields.html" import dating_field, dating_sections %}
+{% set off = locked or not can_manage %}
+{% set rules_ids = ['run', 'matching'] %}
+{% set chats_ids = ['conversations', 'dates'] %}
+{% set more = sections|rejectattr('id', 'in', rules_ids + chats_ids)|list %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="dating_settings" class="dashboard-container">
@@ -17,9 +21,9 @@
                 </div>
             </div>
 
+            <form action="/admin/update_dating_settings/{{ experiment.idexp }}" method="POST" id="dating-settings-form">
             <div class="columns">
                 <div class="column is-8">
-                    {% set off = locked or not can_manage %}
                     <div class="dashboard-box" id="box-dating-settings">
                         <h3 class="title is-5 is-thin">{{ _('Experiment settings') }}</h3>
                         {% if locked %}
@@ -29,55 +33,71 @@
                         {% endif %}
                         <p class="ys-text-small">{{ _('These settings belong to the whole experiment and are shared by every client: the rules of the platform and the parameters of the recommenders. People can always take part next to the agents (see the Participants page). How the agents of one population behave is set in each client.') }}
                             <a href="/admin/clients_dating/{{ experiment.idexp }}">{{ _('Create a client') }}</a></p>
-                        <p class="ys-text-small">{{ _('Every box has its own Save button: only the settings of that box are changed.') }}</p>
-                        <div class="box-content"><div class="box-lines">{{ dating_advanced_toggle() }}</div></div>
-                    </div>
-
-                    <div class="dashboard-box" id="sec-recommender">
-                        <h3 class="title is-5 is-thin">{{ _('Recommender') }}</h3>
-                        <p class="ys-text-small">{{ _('The recommender is the model that proposes the cards to the agents. Each client chooses the model for its own agents when it is created (the choice is in the client page); a client that does not choose uses the default model below. The parameters here belong to the model, so they are shared by every client that uses it.') }}</p>
-                        <dl class="dating-recsys-list">
-                            {% for m in models %}
-                            <dt>{{ m }}{% if m == default_model %} <span class="tag is-info">{{ _('default') }}</span>{% endif %}</dt>
-                            <dd>{{ _(recsys_info[m]) if m in recsys_info else '' }}</dd>
-                            {% endfor %}
-                        </dl>
-                        <div class="box-content">
-                            <form action="/admin/update_dating_settings/{{ experiment.idexp }}" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line ys-hint-text">
-                                        <span class="left">{{ _('Default model (clients that do not choose their own)') }}</span>
-                                        <span class="right ys-w-70">
-                                            <div class="select is-fullwidth"><select name="matching_default_model" id="recsys-default" {% if off %}disabled{% endif %}>
-                                                {% for m in models %}<option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
-                                            </select></div>
-                                        </span>
-                                    </div>
-                                    <h4 class="title is-6 dating-subheading">{{ _('Common parameters') }}</h4>
-                                    {% for item in common %}{{ dating_field(item, values, off) }}{% endfor %}
-                                    {% for m in models %}
-                                    {% if model_fields[m] %}
-                                    <div class="recsys-params" id="recsys-{{ m }}" data-model="{{ m }}">
-                                        <h4 class="title is-6 dating-subheading">{{ _('Parameters of %(m)s', m=m) }}</h4>
-                                        {% for item in model_fields[m] %}{{ dating_field(item, values, off) }}{% endfor %}
-                                    </div>
-                                    {% endif %}
-                                    {% endfor %}
-                                </div>
-                                {% if can_manage %}
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth" {% if locked %}disabled{% endif %}>{{ _('Save') }}</button>
-                                </div>
-                                {% endif %}
-                            </form>
+                        <div class="dating-tabs" role="tablist" id="dating-tabs">
+                            <button type="button" class="dating-tab is-active" role="tab" data-tab="recommender">{{ _('Recommender') }}</button>
+                            <button type="button" class="dating-tab" role="tab" data-tab="rules">{{ _('Time and quotas') }}</button>
+                            <button type="button" class="dating-tab" role="tab" data-tab="chats">{{ _('Chats and dates') }}</button>
+                            {% if more %}<button type="button" class="dating-tab" role="tab" data-tab="more">{{ _('Other settings') }}</button>{% endif %}
                         </div>
                     </div>
 
-                    {% for s in sections %}
-                    {{ dating_box(s, values, experiment.idexp, '/admin/update_dating_settings/%s' % experiment.idexp, off, not can_manage) }}
-                    {% endfor %}
+                    <div class="dating-tabpanel" id="tab-recommender" data-panel="recommender">
+                        <div class="dashboard-box" id="sec-recommender">
+                            <h3 class="title is-5 is-thin">{{ _('Recommender') }}</h3>
+                            <p class="ys-text-small">{{ _('The recommender is the model that proposes the cards to the agents. Each client chooses the model for its own agents when it is created (the choice is in the client page); a client that does not choose uses the default model below. The parameters here belong to the model, so they are shared by every client that uses it.') }}</p>
+                            <div class="box-content"><div class="box-lines">
+                                <div class="box-line ys-hint-text">
+                                    <span class="left">{{ _('Default model (clients that do not choose their own)') }}</span>
+                                    <span class="right ys-w-70">
+                                        <div class="select is-fullwidth"><select name="matching_default_model" id="recsys-default" {% if off %}disabled{% endif %}>
+                                            {% for m in models %}<option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
+                                        </select></div>
+                                    </span>
+                                </div>
+                                {% if distance_item %}{{ dating_field(distance_item, values, off) }}{% endif %}
+                                {% for m in models %}
+                                {% if model_fields[m] %}
+                                <details class="dating-advanced-panel recsys-params" id="recsys-{{ m }}" data-model="{{ m }}">
+                                    <summary>{{ _('Advanced parameters of %(m)s', m=m) }}</summary>
+                                    {% for item in model_fields[m] %}{{ dating_field(item, values, off) }}{% endfor %}
+                                </details>
+                                {% endif %}
+                                {% endfor %}
+                                <details class="dating-advanced-panel">
+                                    <summary>{{ _('Advanced parameters shared by every model') }}</summary>
+                                    {% for item in common %}{{ dating_field(item, values, off) }}{% endfor %}
+                                </details>
+                            </div></div>
+                        </div>
+                    </div>
+
+                    <div class="dating-tabpanel" id="tab-rules" data-panel="rules" hidden>
+                        {{ dating_sections(sections, values, experiment.idexp, off, rules_ids) }}
+                    </div>
+                    <div class="dating-tabpanel" id="tab-chats" data-panel="chats" hidden>
+                        {{ dating_sections(sections, values, experiment.idexp, off, chats_ids) }}
+                    </div>
+                    {% if more %}
+                    <div class="dating-tabpanel" id="tab-more" data-panel="more" hidden>
+                        {{ dating_sections(sections, values, experiment.idexp, off, more|map(attribute='id')|list) }}
+                    </div>
+                    {% endif %}
+
+                    {% if can_manage %}
+                    <div class="dating-savebar">
+                        <button class="button is-solid primary-button" type="submit" {% if locked %}disabled{% endif %}>{{ _('Save settings') }}</button>
+                        <span class="ys-label-hint">{{ _('One Save for the whole page: every tab is saved together.') }}</span>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="column is-4">
+                    <div class="sidebar-box dating-recsys-side" id="dating-recsys-side">
+                        <h3>{{ _('Selected recommender') }}: <span data-recsys-name></span></h3>
+                        {% for m in models %}
+                        <p class="ys-label-hint" data-recsys-info="{{ m }}" hidden>{{ _(recsys_info[m]) if m in recsys_info else '' }}</p>
+                        {% endfor %}
+                        <p class="ys-label-hint" data-recsys-default hidden><span class="tag is-info">{{ _('default') }}</span></p>
+                    </div>
                     <div class="sidebar-box" data-tut="quick-reference-guide">
                         <h3>{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
@@ -89,6 +109,7 @@
                     </div>
                 </div>
             </div>
+            </form>
         </div>
     </div>
 </div>

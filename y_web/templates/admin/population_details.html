@@ -11,7 +11,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" data-tut="population-overview">
-                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}
+                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}{% if dating %} <span class="tag is-info">{{ _('Dating') }}</span>{% endif %}
                     </div>
                 </div>
             </div>
@@ -105,6 +105,54 @@
 
 
 
+            {% if dating %}
+            <div class="columns" id="dating-population-details">
+                <div class="column is-6">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">{{ _('Dating profiles') }}</h3>
+                        <p class="ys-text-small">{{ _('What is specific to dating: intents, cities, interests and how many agents have photos and a biography. The agents are standard agents; the dating-only fields (location, genders sought, photos, latent variables) are kept in their custom fields, named "dating.*", and can be edited like any custom field.') }}</p>
+                        <div class="box-content"><div class="box-lines">
+                            <div class="box-line"><span class="left">{{ _('With photos') }}</span><span class="right">{{ dating.summary.with_photos }}</span></div>
+                            <div class="box-line"><span class="left">{{ _('With a biography') }}</span><span class="right">{{ dating.summary.with_bio }}</span></div>
+                        </div></div>
+                        <div class="box-content">
+                            <b>{{ _('Intents') }}</b>
+                            <p>{% for k, v in dating.summary.intents.items() %}{{ k }}: {{ v }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
+                            <b>{{ _('Cities') }}</b>
+                            <p>{% for k, v in dating.summary.cities.items() %}{{ k }}: {{ v }}{% if not loop.last %} &middot; {% endif %}{% else %}&mdash;{% endfor %}</p>
+                            <b>{{ _('Interests') }}</b>
+                            <p>{% for k, v in dating.summary.interests.items() %}{{ k }}: {{ v }}{% if not loop.last %} &middot; {% endif %}{% else %}&mdash;{% endfor %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-6">
+                    <div class="dashboard-box" id="dating-card-preview">
+                        <h3 class="title is-5 is-thin">{{ _('Profile card preview') }}</h3>
+                        <p class="ys-text-small">{{ _('What another user sees of this agent. Hidden attributes are not shown.') }}</p>
+                        <form method="GET" class="box-line">
+                            <span class="left">{{ _('Agent') }}</span>
+                            <span class="right">
+                                <div class="select is-fullwidth">
+                                    <select name="agent" class="input" onchange="this.form.submit()">
+                                        {% for n in dating.names %}<option value="{{ loop.index0 }}" {% if loop.index0 == dating.index %}selected{% endif %}>{{ n }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                            </span>
+                        </form>
+                        <div class="box-content">
+                            <h4 class="title is-4">{{ dating.card.username }}, {{ dating.card.age }}</h4>
+                            <p>{{ dating.card.gender }}{% if dating.card.city %} &middot; {{ dating.card.city }}{% endif %} &middot; {{ dating.card.intent }}</p>
+                            {% if dating.card.bio %}<p>{{ dating.card.bio }}</p>{% endif %}
+                            {% for q, a in dating.card.prompt_answers.items() %}<p><b>{{ q }}</b><br>{{ a }}</p>{% endfor %}
+                            {% if dating.card.interests %}<p>{% for i in dating.card.interests %}<span class="tag">{{ i }}</span> {% endfor %}</p>{% endif %}
+                            {% if dating.card.photos %}<p class="ys-label-hint">{{ _('Photos') }}: {{ dating.card.photos|length }}</p>
+                            <ul>{% for c in dating.card.photos %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="columns">
 
                 <div class="column is-12">
@@ -187,7 +235,7 @@
                     </div>
                 </div>
 
-                <div class="column is-4">
+                <div class="column is-4"{% if dating %} hidden{% endif %}>
                     <div class="dashboard-box">
                         <div class="box-content">
  <canvas id="tox" class="ys-w100-h250"></canvas>

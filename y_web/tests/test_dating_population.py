@@ -259,7 +259,7 @@ def test_upload_valid_population_stores_file_and_row(app, routes):
         assert (
             row.username_type == "dating" and row.size == 10 and row.name == "Pisa 10"
         )
-        assert response.location == f"/admin/dating_population/{row.id}"
+        assert response.location == f"/admin/population_details/{row.id}"
         assert db.session.query(Agent).count() == 10
         # a second import with the same name gets a suffix
         _upload(app, routes, EXAMPLE.read_bytes(), pop_name="Pisa 10")
@@ -304,14 +304,14 @@ def test_details_download_and_delete(app, routes, monkeypatch):
             "render_template",
             lambda tpl, **kw: captured.update(tpl=tpl, **kw) or "ok",
         )
-        with app.test_request_context(f"/admin/dating_population/{row.id}?agent=2"):
-            routes.mod.dating_population_details.__wrapped__(row.id)
-        assert captured["tpl"] == "admin/dating_population_details.html"
-        assert captured["index"] == 2 and captured["card"]["username"] == "user_03"
-        assert "latent" not in json.dumps(captured["card"])
-        with app.test_request_context(f"/admin/population_details/{row.id}"):
-            resp = routes.mod.population_details.__wrapped__(row.id)
-            assert resp.location == f"/admin/dating_population/{row.id}"
+        # the standard details page carries the dating block (no page of its own)
+        with app.test_request_context(f"/admin/population_details/{row.id}?agent=2"):
+            routes.mod.population_details.__wrapped__(row.id)
+        assert captured["tpl"] == "admin/population_details.html"
+        dating = captured["dating"]
+        assert dating["index"] == 2 and dating["card"]["username"] == "user_03"
+        assert "latent" not in json.dumps(dating["card"])
+        assert dating["summary"]["size"] == 10
         monkeypatch.setattr(routes.mod, "populations", lambda: "listed")
         assert db.session.query(Agent).count() == 10
         with app.test_request_context(f"/admin/delete_population/{row.id}"):
@@ -340,12 +340,20 @@ def test_generate_route_creates_a_population(app, routes):
             routes.mod.create_population.__wrapped__()
         row = db.session.query(Population).one()
         assert row.size == 8 and row.languages == "it" and row.username_type == "dating"
+        # the list and the details page read the same columns as the other platforms
+        from y_web.src.models import Agent
+
+        for agent in db.session.query(Agent):
+            agent.education_level, agent.leaning = "Bachelor", "Centrist"
+        db.session.commit()
+        routes.mod._sync_dating_population(row)
+        assert row.education == "Bachelor" and row.leanings == "Centrist"
 
 
 def test_the_dating_templates_compile(app):
     templates = ROOT / "y_web" / "templates" / "admin"
     for name in (
-        "dating_population_details.html",
+        "population_details.html",
         "experiment_details_dating.html",
     ):
         source = (templates / name).read_text(encoding="utf-8")

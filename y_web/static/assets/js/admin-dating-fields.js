@@ -238,48 +238,40 @@
     }
   }
 
+  // ------------------------------------------------------------------ image model: a short list or any model id
+  function initDiffusion(select) {
+    var box = select.closest(".dating-diffusion");
+    var text = box && box.querySelector("[data-diffusion-text]");
+    if (!text) { return; }
+    select.addEventListener("change", function () {
+      if (select.value === "__other__") { text.hidden = false; text.value = ""; text.focus(); }
+      else { text.value = select.value; text.hidden = true; }
+    });
+  }
+
   // ------------------------------------------------------------------ recommender: what the chosen model does
   function initRecsys(select) {
+    var side = document.getElementById("dating-recsys-side");
+    var inline = document.querySelector(".dating-recsys-info");
+    if (side && inline && !side.contains(inline)) {
+      // the description of the chosen model lives in the side column, next to the form
+      side.hidden = false;
+      side.appendChild(inline);
+    }
     function show() {
       each("[data-recsys-info]", function (p) { p.hidden = p.getAttribute("data-recsys-info") !== select.value; });
+      var name = side && side.querySelector("[data-recsys-name]");
+      if (name) { name.textContent = select.value || select.options[select.selectedIndex].text; }
     }
     select.addEventListener("change", show);
     show();
-  }
-
-  // ------------------------------------------------------------------ activity profiles of the chosen population
-  function initRhythms() {
-    var box = document.getElementById("dating-rhythms-box");
-    var select = document.getElementById("dating_population");
-    if (!box || !select) { return; }
-    var data = {};
-    try { data = JSON.parse(box.getAttribute("data-rhythms") || "{}"); } catch (e) { data = {}; }
-    function draw() {
-      var rows = data[select.value] || [];
-      var html = "";
-      rows.forEach(function (r) {
-        var cells = "";
-        for (var h = 0; h < 24; h++) {
-          cells += '<div class="heatmap-hour' + (r.hours === null || r.hours[h] ? " active" : "") + '" title="' + h + 'h"></div>';
-        }
-        var name = r.name || tr("No profile");
-        html += '<div class="dating-rhythm"><div class="dating-rhythm-name"></div><div class="profile-heatmap-compact">' + cells + "</div></div>";
-      });
-      box.innerHTML = '<div id="dating-rhythms" class="dating-rhythms">' + html + "</div>";
-      var names = box.querySelectorAll(".dating-rhythm-name");
-      rows.forEach(function (r, i) {
-        names[i].textContent = (r.name || tr("No profile")) + " " + r.share + "%";
-      });
-    }
-    select.addEventListener("change", draw);
-    draw();
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     initDuration();
     initModels();
     each("[data-recsys]", initRecsys);
-    initRhythms();
+    each("[data-diffusion-select]", initDiffusion);
     each("input[data-dating-slider]", initSlider);
     each(".dating-importance", initImportance);
     each("[data-hourly]", initHourly);

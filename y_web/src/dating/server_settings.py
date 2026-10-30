@@ -186,6 +186,11 @@ def apply_recsys(
     matching = copy.deepcopy(config.get("matching") or {})
     if not chosen:
         chosen = matching.get("default_model") or ""
+        if chosen not in models:  # a stored value of an older runtime: use the schema's
+            chosen = ""
+    if not chosen:  # a configuration that names no model: the one of the schema
+        default = sf.defaults(schema(repo_dir))
+        chosen = str((default.get("matching") or {}).get("default_model") or "")
     if chosen not in models:
         raise ServerSettingsError(
             [f"matching.default_model: must be one of {', '.join(models)}"]

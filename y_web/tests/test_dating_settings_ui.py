@@ -282,3 +282,80 @@ def test_a_restarted_client_runs_what_is_left(app, tmp_path):
         db.session.commit()
         with pytest.raises(RuntimeError):
             _set_dating_run_length(str(path), cli)
+
+
+def test_advanced_parameters_sit_in_a_closed_panel():
+    import jinja2
+
+    from y_web.tests.test_dating_settings import ROOT
+
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
+    )
+    env.globals["_"] = lambda s, **kw: s
+    layout = ui.layout(
+        dcc.form_fields(REPO),
+        ui.CLIENT_SECTIONS,
+        {"memory": True},
+        {"match_recsys": ["", "random"]},
+        llm_enabled=True,
+    )
+    values = dcc.values_for_form(REPO, None, True, False)
+    values["recsys_default"] = "random"
+    tpl = env.from_string(
+        "{% from 'admin/_dating_fields.html' import dating_sections %}"
+        "{{ dating_sections(sections, values, 7) }}"
+    )
+    html = tpl.render(sections=layout, values=values)
+    assert '<details class="dating-advanced-panel">' in html
+    assert "<details open" not in html
+    assert "dating-show-advanced" not in html and "data-advanced" not in html
+
+
+def test_the_experiment_settings_page_is_one_form_with_tabs():
+    source = (
+        __import__("pathlib").Path(__file__).resolve().parents[1]
+        / "templates"
+        / "admin"
+        / "dating_settings.html"
+    ).read_text(encoding="utf-8")
+    assert source.count("<form ") == 1  # one Save for the whole page
+    for tab in ("recommender", "rules", "chats"):
+        assert f'data-panel="{tab}"' in source
+    assert 'id="dating-recsys-side"' in source and "data-recsys-info" in source
+
+
+def test_the_image_model_is_a_choice_of_small_models_or_any_id():
+    import jinja2
+
+    from y_web.tests.test_dating_settings import ROOT
+
+    f = next(x for x in dcc.form_fields(REPO) if x.path == ui.DIFFUSION_MODEL)
+    item = ui.item_for(f)
+    assert item["widget"] == "diffusion_model" and not item["advanced"]
+    ids = [m for m, _ in item["diffusion_models"]]
+    assert ids[0] == "segmind/tiny-sd" and "stabilityai/sd-turbo" in ids
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
+    )
+    env.globals["_"] = lambda s, **kw: s
+    tpl = env.from_string(
+        "{% from 'admin/_dating_fields.html' import dating_control %}"
+        "{{ dating_control(item, values) }}"
+    )
+    known = tpl.render(item=item, values={f.path: "segmind/tiny-sd"})
+    assert "data-diffusion-select" in known and "hidden" in known
+    other = tpl.render(item=item, values={f.path: "someone/other"})
+    assert 'value="someone/other"' in other and "hidden" not in other
+
+
+def test_the_distance_filter_is_an_off_switch_of_the_experiment():
+    f = next(
+        x
+        for x in srv.common_fields(str(REPO))
+        if x.path == "matching.common.distance_filter"
+    )
+    assert f.default is False
+    item = ui.item_for(f)
+    assert item["widget"] == "toggle" and not item["advanced"]
+    assert ui.label_of(f.path) == "Only show profiles within the distance"

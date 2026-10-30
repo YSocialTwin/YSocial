@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 10:13+0000\n"
+"POT-Creation-Date: 2026-10-30 10:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -852,6 +852,16 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
+msgid "Advanced parameters"
+msgstr ""
+
+#, python-format
+msgid "Advanced parameters of %(m)s"
+msgstr ""
+
+msgid "Advanced parameters shared by every model"
+msgstr ""
+
 msgid "Advanced settings"
 msgstr ""
 
@@ -1063,9 +1073,6 @@ msgid "Agents' Memory (hours)"
 msgstr ""
 
 msgid "Agents' Memory (hours):"
-msgstr ""
-
-msgid "Ages"
 msgstr ""
 
 msgid "Aggregate state and attacker effects"
@@ -1975,6 +1982,9 @@ msgstr ""
 msgid "Chats"
 msgstr ""
 
+msgid "Chats and dates"
+msgstr ""
+
 msgid "Chats by Topic"
 msgstr ""
 
@@ -2355,9 +2365,6 @@ msgid "Comments"
 msgstr ""
 
 msgid "Common Neighbors"
-msgstr ""
-
-msgid "Common parameters"
 msgstr ""
 
 msgid "Communities"
@@ -3254,9 +3261,6 @@ msgstr ""
 msgid "Daily quotas"
 msgstr ""
 
-msgid "Daily rhythm of the agents"
-msgstr ""
-
 msgid ""
 "Daily target toxicity, with moderator intervention volume shown on the "
 "secondary axis."
@@ -3335,6 +3339,9 @@ msgstr ""
 
 #, python-format
 msgid "Dating population '%(name)s' imported."
+msgstr ""
+
+msgid "Dating profiles"
 msgstr ""
 
 msgid "Dating settings"
@@ -4866,11 +4873,8 @@ msgid "Filter experiments by group"
 msgstr ""
 
 msgid ""
-"Fine tuning that the defaults of the runtime already cover is hidden "
-"until you switch it on."
-msgstr ""
-
-msgid "Fine tuning that the defaults of the runtime already cover."
+"Fine tuning that the defaults of the runtime already cover sits in the "
+"panels called Advanced parameters: open one to change it."
 msgstr ""
 
 msgid "Finnish"
@@ -5112,9 +5116,6 @@ msgid "Gender Distribution"
 msgstr ""
 
 msgid "Gender distribution must total 100%."
-msgstr ""
-
-msgid "Genders"
 msgstr ""
 
 msgid "Genders allowed to write first"
@@ -7777,9 +7778,6 @@ msgstr ""
 msgid "No populations are available for this %(platform)s experiment."
 msgstr ""
 
-msgid "No profile"
-msgstr ""
-
 msgid "No profiles at this round yet."
 msgstr ""
 
@@ -8066,6 +8064,9 @@ msgstr ""
 msgid "Onboarding screen"
 msgstr ""
 
+msgid "One Save for the whole page: every tab is saved together."
+msgstr ""
+
 #, python-format
 msgid "One day has %(n)s slots (a round each)."
 msgstr ""
@@ -8123,6 +8124,9 @@ msgid "Only owner/admin/shared researchers can edit memory embeddings"
 msgstr ""
 
 msgid "Only owner/admin/shared researchers can edit stress/reward settings"
+msgstr ""
+
+msgid "Only show profiles within the distance"
 msgstr ""
 
 msgid "Open"
@@ -8315,6 +8319,9 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
+msgid "Other (a Hugging Face model id)"
+msgstr ""
+
 msgid "Other attributes"
 msgstr ""
 
@@ -8407,10 +8414,6 @@ msgid "Pair Limit"
 msgstr ""
 
 msgid "Palestinian"
-msgstr ""
-
-#, python-format
-msgid "Parameters of %(m)s"
 msgstr ""
 
 msgid "Parent post not found"
@@ -10183,6 +10186,9 @@ msgstr ""
 msgid "Save prompts"
 msgstr ""
 
+msgid "Save settings"
+msgstr ""
+
 msgid "Saved"
 msgstr ""
 
@@ -10606,6 +10612,9 @@ msgstr ""
 msgid "Selected profile picture"
 msgstr ""
 
+msgid "Selected recommender"
+msgstr ""
+
 msgid "Selected story preview"
 msgstr ""
 
@@ -10837,9 +10846,6 @@ msgstr ""
 msgid ""
 "Show a box next to the feed with the participant's content recommender "
 "system and a plain-language explanation of how it works"
-msgstr ""
-
-msgid "Show advanced settings"
 msgstr ""
 
 msgid "Show less"
@@ -11707,30 +11713,8 @@ msgid "The agent spoken language."
 msgstr ""
 
 msgid ""
-"The agents follow the activity profile assigned to them in the population"
-" (Always On, Night Owl...), the same profiles of the other platforms: "
-"they open the app only in the hours of their profile, with the "
-"probability set above. Agents with Always On follow the activity of each "
-"hour above."
-msgstr ""
-
-msgid ""
-"The agents follow the activity profile assigned to them in the population"
-" (Always On, Night Owl...): they open the app only in the hours of their "
-"profile. Agents with Always On follow the activity of each hour above. To"
-" change the profiles, change the population."
-msgstr ""
-
-msgid ""
 "The agents must still answer in the JSON format the action instructions "
 "describe, so change the wording of the instructions carefully."
-msgstr ""
-
-msgid ""
-"The agents of this population are standard agents; what is specific to "
-"dating (location, genders sought, photos, latent variables) is kept in "
-"their custom fields, named \"dating.*\", and can be edited like any "
-"custom field."
 msgstr ""
 
 msgid "The algorithm that picks the posts in your feed"
@@ -12381,6 +12365,9 @@ msgid "Time"
 msgstr ""
 
 msgid "Time Period"
+msgstr ""
+
+msgid "Time and quotas"
 msgstr ""
 
 msgid "Time and start"
@@ -13588,6 +13575,14 @@ msgid "What is a client?"
 msgstr ""
 
 msgid ""
+"What is specific to dating: intents, cities, interests and how many "
+"agents have photos and a biography. The agents are standard agents; the "
+"dating-only fields (location, genders sought, photos, latent variables) "
+"are kept in their custom fields, named \"dating.*\", and can be edited "
+"like any custom field."
+msgstr ""
+
+msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
 msgstr ""
@@ -14117,6 +14112,12 @@ msgstr ""
 msgid "away"
 msgstr ""
 
+msgid "bk-sdm-small: a little larger, better detail (about 1.4 GB)"
+msgstr ""
+
+msgid "bk-sdm-tiny: compact Stable Diffusion, similar size (about 1 GB)"
+msgstr ""
+
 #, python-format
 msgid "branch %(name)s"
 msgstr ""
@@ -14358,6 +14359,11 @@ msgstr ""
 msgid "round %(n)s"
 msgstr ""
 
+msgid ""
+"sd-turbo: distilled, 1 to 4 steps, best quality for the time (about 2.6 "
+"GB)"
+msgstr ""
+
 msgid "sec"
 msgstr ""
 
@@ -14388,6 +14394,9 @@ msgid "super likes left"
 msgstr ""
 
 msgid "symlink"
+msgstr ""
+
+msgid "tiny-sd: the smallest, fastest (about 1 GB). Default"
 msgstr ""
 
 msgid "to"

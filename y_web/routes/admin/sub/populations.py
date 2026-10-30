@@ -565,6 +565,10 @@ def populations_data():
     # response
     res = query.all()
 
+    for pop in res:
+        if pop.username_type == "dating" and not pop.education:
+            _sync_dating_population(pop)
+
     # Get activity profiles for each population
     population_profiles = {}
     for pop in res:
@@ -680,8 +684,9 @@ def population_details(uid):
     check_privileges(current_user.username)
     # get population details
     population = db.session.scalars(select(Population).filter_by(id=uid)).first()
+    population_row = population
     if population is not None and population.username_type == "dating":
-        return redirect(f"/admin/dating_population/{uid}")
+        _sync_dating_population(population)
 
     # get experiment populations along with experiment names and ids
     experiment_populations = (
@@ -961,6 +966,7 @@ def population_details(uid):
         llm_backend=llm_backend,
         crecsys=crecsys,
         frecsys=frecsys,
+        dating=_dating_details(uid, population_row),
     )
 
 
@@ -1676,6 +1682,50 @@ def _store_dating_activity_profiles(population_id, profiles):
     db.session.commit()
 
 
+def _sync_dating_population(pop):
+    """Fill the columns of a dating population that the list and the details page read, from its agents.
+
+    The education, political leanings and nationalities of the ``population`` row, and the activity profile of every
+    agent that has an archetype named like one (the archetype of a dating agent is its activity profile).
+    """
+    agents = db.session.scalars(
+        select(Agent)
+        .join(Agent_Population, Agent_Population.agent_id == Agent.id)
+        .where(Agent_Population.population_id == pop.id)
+    ).all()
+    changed = False
+
+    def labels(attr, limit):
+        seen = []
+        for a in agents:
+            value = getattr(a, attr, None)
+            if value and str(value) not in seen:
+                seen.append(str(value))
+        return ",".join(seen)[:limit]
+
+    for column, attr, limit in (
+        ("education", "education_level", 100),
+        ("leanings", "leaning", 200),
+        ("nationalities", "nationality", 200),
+    ):
+        if not getattr(pop, column):
+            value = labels(attr, limit)
+            if value:
+                setattr(pop, column, value)
+                changed = True
+    by_name = {
+        p.name.lower(): p.id for p in db.session.scalars(select(ActivityProfile)).all()
+    }
+    for a in agents:
+        if a.activity_profile is None and a.archetype:
+            profile = by_name.get(str(a.archetype).lower())
+            if profile is not None:
+                a.activity_profile = profile
+                changed = True
+    if changed:
+        db.session.commit()
+
+
 def _register_dating_population(name, descr, data):
     """Create the ``population`` row and the agents (with their custom features) of a validated population."""
     from y_web.src.dating import population as dp
@@ -1701,6 +1751,7 @@ def _register_dating_population(name, descr, data):
         db.session.delete(row)
         db.session.commit()
         raise
+    _sync_dating_population(row)
     return row
 
 
@@ -1784,7 +1835,7 @@ def _upload_dating_population():
         data,
     )
     flash(_("Dating population '%(name)s' imported.", name=row.name), "success")
-    return redirect(f"/admin/dating_population/{row.id}")
+    return redirect(f"/admin/population_details/{row.id}")
 
 
 def _generate_dating_population():
@@ -1829,43 +1880,27 @@ def _generate_dating_population():
     )
     _store_dating_activity_profiles(row.id, dp.activity_profiles(request.form))
     flash(_("Dating population '%(name)s' generated.", name=row.name), "success")
-    return redirect(f"/admin/dating_population/{row.id}")
+    return redirect(f"/admin/population_details/{row.id}")
 
 
-@population.route("/admin/dating_population/<int:uid>")
-@login_required
-def dating_population_details(uid):
-    """Summary of a dating population and the public card of one of its agents."""
-    check_privileges(current_user.username)
+def _dating_details(uid, population):
+    """What the details page adds for a dating population: the counts of the runtime summary and a profile card."""
     from y_web.src.dating import population as dp
 
-    pop = _dating_population_or_none(uid)
-    if pop is None:
-        flash(_("Population not found."), "error")
-        return redirect("/admin/populations")
+    if population is None or population.username_type != "dating":
+        return None
     data = dp.load_document(uid)
-    if data is None:
-        flash(_("The population has no agents."), "error")
-        return redirect("/admin/populations")
-    agents = data.get("agents") or []
+    agents = (data or {}).get("agents") or []
+    if not agents:
+        return None
     index = request.args.get("agent", type=int, default=0) or 0
     index = max(0, min(index, len(agents) - 1))
-    exps = [
-        (p[1].exp_name, p[1].idexp)
-        for p in db.session.query(Population_Experiment, Exps)
-        .join(Exps)
-        .filter(Population_Experiment.id_population == uid)
-        .all()
-    ]
-    return render_template(
-        "admin/dating_population_details.html",
-        population=pop,
-        summary=dp.summarize(data),
-        card=dp.profile_card(agents[index]),
-        index=index,
-        names=[a["username"] for a in agents[:500]],
-        experiments=exps,
-    )
+    return {
+        "summary": dp.summarize(data),
+        "card": dp.profile_card(agents[index]),
+        "index": index,
+        "names": [a["username"] for a in agents[:500]],
+    }
 
 
 @population.route("/admin/dating_population/<int:uid>/download")

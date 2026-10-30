@@ -1663,4 +1663,12 @@ details[open] .details-arrow {
 .dating-hourly-chart { height: 180px; margin-bottom: 10px; }
 .dating-taglist-add { display: flex; gap: 8px; margin-top: 6px; }
 .dating-subheading { margin: 14px 0 4px; }
-.dating-advanced-toggle { margin-bottom: 8px; }
+.dating-advanced-panel { margin-top: 12px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 12px; }
+.dating-advanced-panel > summary { cursor: pointer; font-weight: 600; font-size: 0.9em; color: #6b7280; padding: 4px 0; }
+.dating-advanced-panel[open] > summary { margin-bottom: 8px; }
+.dating-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; border-bottom: 2px solid #e5e7eb; }
+.dating-tab { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px; padding: 8px 14px; cursor: pointer; font-weight: 600; color: #6b7280; }
+.dating-tab.is-active { color: #e0457b; border-bottom-color: #e0457b; }
+.dating-tabpanel[hidden] { display: none !important; }
+.dating-savebar { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #fff; border-top: 1px solid #e5e7eb; box-shadow: 0 -2px 8px rgba(0,0,0,0.05); }
+.dating-recsys-side { position: sticky; top: 80px; }
