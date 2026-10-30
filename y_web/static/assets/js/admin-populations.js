@@ -709,7 +709,7 @@ var AdminPopulations = (function() {
               id: parsedId,
               name: data.name,
               size: parseInt(data.size, 10) || 0,
-              username_type: data.username_type || document.getElementById('merged_population_type').value
+              username_type: data.username_type || 'microblogging'
           });
           renderMergeSelectedPopulations();
           renderMergeAvailablePopulations();
@@ -725,12 +725,6 @@ var AdminPopulations = (function() {
   // Initialize merge drag and drop
   document.addEventListener('DOMContentLoaded', function() {
       loadMergePopulations();
-      bindById('merged_population_type', 'change', function() {
-          mergeSelectedPopulations = [];
-          renderMergeSelectedPopulations();
-          renderMergeAvailablePopulations();
-      });
-    
       const selectedContainer = document.getElementById('merge-selected-populations');
       if (!selectedContainer) return;
       selectedContainer.addEventListener('dragover', handleMergeDragOver);

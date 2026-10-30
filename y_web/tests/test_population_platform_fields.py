@@ -151,3 +151,42 @@ def test_a_section_of_a_platform_that_is_not_installed_is_refused(app, routes, m
             routes.mod.create_population.__wrapped__()
         assert db.session.query(Population).count() == 0
         assert any("not installed" in msg for _cat, msg in routes.flashes)
+
+
+@needs_runtime
+def test_agents_under_18_are_skipped_not_refused_on_dating(app):
+    from y_web import db
+    from y_web.src.dating import population as dp
+
+    with app.app_context():
+        row, agents = _standard_population(db, n=6)
+        agents[0].age = 16
+        agents[1].age = 17
+        db.session.commit()
+        dp.complete_population(row.id, seed=2)
+        doc = dp.load_document(row.id)
+        assert dp.validate_population(doc)  # as stored, the minors make it invalid for the runtime
+        adults, skipped = dp.adults_only(doc)
+        assert skipped == 2 and len(adults["agents"]) == 4
+        assert dp.validate_population(adults) == []
+        assert dp.adults_only(adults) == (adults, 0)
+
+
+@needs_runtime
+def test_an_uploaded_dating_document_is_recognised_without_choosing_a_platform(app, routes):  # noqa: F811
+    import io
+
+    from y_web import db
+    from y_web.src.models import Population
+    from y_web.tests.test_dating_population import EXAMPLE
+
+    with app.app_context():
+        with app.test_request_context(
+            "/admin/upload_population",
+            method="POST",
+            data={"population_file": (io.BytesIO(EXAMPLE.read_bytes()), "p.json"), "pop_name": "Up"},
+            content_type="multipart/form-data",
+        ):
+            routes.mod.upload_population.__wrapped__()
+        row = db.session.query(Population).one()
+        assert row.name == "Up" and row.size == 10

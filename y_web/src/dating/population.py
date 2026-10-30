@@ -403,6 +403,19 @@ def has_dating_fields(population) -> bool:
     )
 
 
+MIN_AGE = 18  # the population schema of YDating accepts nobody younger
+
+
+def adults_only(data: Dict[str, Any]) -> Tuple[Dict[str, Any], int]:
+    """The document without the agents under ``MIN_AGE`` (they are skipped when a population is deployed on
+    Dating, not refused) and how many were left out."""
+    agents = data.get("agents") or []
+    kept = [a for a in agents if int(a.get("age") or 0) >= MIN_AGE]
+    if len(kept) == len(agents):
+        return data, 0
+    return {**data, "agents": kept}, len(agents) - len(kept)
+
+
 def complete_population(
     population_id: int,
     config: Optional[Dict[str, Any]] = None,

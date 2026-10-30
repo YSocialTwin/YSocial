@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 13:52+0000\n"
+"POT-Creation-Date: 2026-10-30 13:57+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -138,6 +138,12 @@ msgstr "%(n)s esecuzioni attive"
 #, python-format
 msgid "%(n)s activity profiles"
 msgstr "%(n)s profili di attività"
+
+#, python-format
+msgid "%(n)s agents under 18 were skipped: they are not deployed on Dating."
+msgstr ""
+"%(n)s agenti con meno di 18 anni sono stati saltati: non vengono "
+"deployati su Dating."
 
 #, python-format
 msgid "%(n)s configurable values"
@@ -9796,9 +9802,6 @@ msgstr "Nome della popolazione"
 msgid "Population Overview"
 msgstr "Panoramica della popolazione"
 
-msgid "Population Platform"
-msgstr "Piattaforma della popolazione"
-
 msgid "Population Reach Cumulative Trend"
 msgstr "Andamento cumulativo della copertura della popolazione"
 
@@ -13270,6 +13273,9 @@ msgstr "L'immagine supera i 5 MB."
 #, python-format
 msgid "The population could not be generated: %(why)s"
 msgstr "Non è stato possibile generare la popolazione: %(why)s"
+
+msgid "The population has no agents of age 18 or more."
+msgstr "La popolazione non ha agenti di almeno 18 anni."
 
 msgid "The population has no agents."
 msgstr "La popolazione non ha agenti."
@@ -18410,4 +18416,7 @@ msgstr "✔️ Usa"
 #~ "Le popolazioni selezionate hanno tipi di"
 #~ " piattaforma incompatibili e non possono"
 #~ " essere unite."
+
+#~ msgid "Population Platform"
+#~ msgstr "Piattaforma della popolazione"
 

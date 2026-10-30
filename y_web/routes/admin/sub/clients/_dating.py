@@ -185,6 +185,19 @@ def create_dating_client():
     if pop_data is None:
         flash(_("The population has no agents."), "error")
         return redirect(back)
+    # a person under 18 cannot be on the app: those agents are left out of the run, the others are deployed
+    pop_data, minors = dp.adults_only(pop_data)
+    if minors:
+        flash(
+            _(
+                "%(n)s agents under 18 were skipped: they are not deployed on Dating.",
+                n=minors,
+            ),
+            "info",
+        )
+    if not pop_data["agents"]:
+        flash(_("The population has no agents of age 18 or more."), "error")
+        return redirect(back)
     problems = dp.validate_population(pop_data)
     if (
         problems

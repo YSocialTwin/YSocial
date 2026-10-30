@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 13:52+0000\n"
+"POT-Creation-Date: 2026-10-30 13:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -119,6 +119,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s activity profiles"
+msgstr ""
+
+#, python-format
+msgid "%(n)s agents under 18 were skipped: they are not deployed on Dating."
 msgstr ""
 
 #, python-format
@@ -8924,9 +8928,6 @@ msgstr ""
 msgid "Population Overview"
 msgstr ""
 
-msgid "Population Platform"
-msgstr ""
-
 msgid "Population Reach Cumulative Trend"
 msgstr ""
 
@@ -12105,6 +12106,9 @@ msgstr ""
 
 #, python-format
 msgid "The population could not be generated: %(why)s"
+msgstr ""
+
+msgid "The population has no agents of age 18 or more."
 msgstr ""
 
 msgid "The population has no agents."

@@ -223,6 +223,18 @@ def create_population_empty():
     return populations()
 
 
+def _is_dating_document(upload):
+    """Whether an uploaded JSON file is a YDating population document (it has no ``population_data`` block, which
+    every export of YSocial has). The stream is left at its start."""
+    try:
+        data = json.loads(upload.read().decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return False
+    finally:
+        upload.seek(0)
+    return isinstance(data, dict) and "population_data" not in data and "agents" in data
+
+
 def _flag(name):
     """Whether a checkbox of the form is on."""
     return (request.form.get(name) or "").strip().lower() in {"1", "on", "true", "yes"}
@@ -1299,9 +1311,12 @@ def upload_population():
     check_privileges(current_user.username)
     ensure_population_username_type_column()
 
-    if (request.form.get("upload_population_type") or "").strip().lower() == "dating":
-        return _upload_dating_population()
     population_file = request.files["population_file"]
+    # a file is either a YSocial population export or a YDating population document: told apart by content
+    if (
+        request.form.get("upload_population_type") or ""
+    ).strip().lower() == "dating" or _is_dating_document(population_file):
+        return _upload_dating_population()
 
     from y_web.src.system.path_utils import get_writable_path
 

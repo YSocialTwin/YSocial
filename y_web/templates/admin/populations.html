@@ -585,19 +585,6 @@
                                     </label>
                                     <div id="file-name-display" class="file-name-display"></div>
                                 </div>
-                                <div class="box-line">
-                                    <span class="left">{{ _('Population Platform') }}</span>
-                                    <span class="right">
-                                        <div class="select is-fullwidth">
-                                            <select name="upload_population_type" class="input">
-                                                <option value="microblogging">{{ _('Microblogging') }}</option>
-                                                <option value="photo_sharing">{{ _('Photo Sharing') }}</option>
-                                                <option value="forum">{{ _('Forum') }}</option>
-                                                {% if dating_available %}<option value="dating">{{ _('Dating') }}</option>{% endif %}
-                                            </select>
-                                        </div>
-                                    </span>
-                                </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
                                         {{ _('Upload') }}
@@ -618,18 +605,6 @@
                                     <span class="left">{{ _('Description') }}</span>
                                     <span class="right"><input type="text" name="empty_population_descr" class="input" placeholder="{{ _('Enter description') }}"></span>
                                 </div>
-                                <div class="box-line">
-                                    <span class="left">{{ _('Population Platform') }}</span>
-                                    <span class="right">
-                                        <div class="select is-fullwidth">
-                                            <select name="empty_population_type" class="input">
-                                                <option value="microblogging">{{ _('Microblogging') }}</option>
-                                                <option value="photo_sharing">{{ _('Photo Sharing') }}</option>
-                                                <option value="forum">{{ _('Forum') }}</option>
-                                            </select>
-                                        </div>
-                                    </span>
-                                </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
                                         {{ _('Create') }}
@@ -648,18 +623,6 @@
                                 <div class="box-line">
                                     <span class="left">{{ _('New Population Name') }}</span>
                                     <span class="right"><input type="text" name="merged_population_name" class="input" placeholder="{{ _('Enter name') }}" required></span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">{{ _('Population Platform') }}</span>
-                                    <span class="right">
-                                        <div class="select is-fullwidth">
-                                            <select name="merged_population_type" id="merged_population_type" class="input">
-                                                <option value="microblogging">{{ _('Microblogging') }}</option>
-                                                <option value="photo_sharing">{{ _('Photo Sharing') }}</option>
-                                                <option value="forum">{{ _('Forum') }}</option>
-                                            </select>
-                                        </div>
-                                    </span>
                                 </div>
 
                                         <div class="merge-populations-container">
