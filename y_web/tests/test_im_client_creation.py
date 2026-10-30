@@ -496,7 +496,7 @@ def test_non_im_experiment_is_refused(app, env):
         assert any("not an instant messaging" in m for _, m in env.flashes)
 
 
-def test_population_of_another_platform_is_refused(app, env):
+def test_population_of_another_platform_is_accepted(app, env):
     from y_web import db
     from y_web.src.models import Client
 
@@ -505,8 +505,7 @@ def test_population_of_another_platform_is_refused(app, env):
         pop.username_type = "microblogging"
         db.session.commit()
         _post(app, env, exp, pop)
-        assert db.session.query(Client).count() == 0
-        assert any("incompatible" in m for _, m in env.flashes)
+        assert not any("incompatible" in m for _, m in env.flashes)
 
 
 # -- real run -------------------------------------------------------------------------------------

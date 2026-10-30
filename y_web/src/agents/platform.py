@@ -77,6 +77,44 @@ def infer_population_username_type(population):
 
 
 def population_matches_platform(population, platform_type):
-    """Return whether a population can be used with the requested platform."""
-    inferred = infer_population_username_type(population)
-    return inferred in {None, normalize_population_username_type(platform_type)}
+    """Whether a population can be used with the requested platform: always.
+
+    A population is not tied to a platform. The fields that only one platform reads (photo sharing, dating) are
+    custom fields of its agents: generated with the population when the person asked for them, completed with the
+    generator defaults when the population is first deployed on a platform that needs them
+    (``population_platform_fields`` tells which it has).
+    """
+    return True
+
+
+def population_platform_fields(population):
+    """The platforms whose dedicated custom fields the agents of ``population`` carry, as a sorted list."""
+    found = set()
+    explicit = normalize_population_username_type(
+        getattr(population, "username_type", None), default=""
+    )
+    if explicit in {"photo_sharing", "dating"}:
+        found.add(explicit)
+    try:
+        from y_web.src.dating.population import has_dating_fields
+
+        if has_dating_fields(population):
+            found.add("dating")
+    except Exception:
+        pass
+    try:
+        from y_web.src.models import Agent_Ext, Agent_Population
+
+        if db.session.scalar(
+            select(Agent_Ext.agent_id)
+            .join(Agent_Population, Agent_Population.agent_id == Agent_Ext.agent_id)
+            .where(
+                Agent_Population.population_id == population.id,
+                Agent_Ext.feature_name == "creator_tier",
+            )
+            .limit(1)
+        ):
+            found.add("photo_sharing")
+    except Exception:
+        pass
+    return sorted(found)

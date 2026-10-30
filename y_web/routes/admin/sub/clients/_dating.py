@@ -13,7 +13,6 @@ from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
 )
-from y_web.src.agents.platform import infer_population_username_type
 from y_web.src.dating import client_config as dcc
 from y_web.src.dating import is_dating_experiment
 from y_web.src.dating import population as dp
@@ -162,16 +161,26 @@ def create_dating_client():
     if population is None:
         flash(_("Select a valid population."), "error")
         return redirect(back)
-    pop_type = infer_population_username_type(population)
-    if pop_type != "dating":
+    # a population is not tied to a platform: one that has no dating fields yet gets them (generator defaults)
+    try:
+        completed = dp.complete_population(population.id)
+    except dp.DatingPopulationError as exc:
         flash(
             _(
-                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'dating'.",
-                pop_type=pop_type,
+                "The dating fields of the population could not be generated: %(why)s",
+                why=" | ".join(exc.problems[:5]),
             ),
             "error",
         )
         return redirect(back)
+    if completed:
+        flash(
+            _(
+                "The agents of the population had no dating fields: they were generated with the defaults (%(n)s agents).",
+                n=completed,
+            ),
+            "info",
+        )
     pop_data = dp.load_document(population.id)
     if pop_data is None:
         flash(_("The population has no agents."), "error")

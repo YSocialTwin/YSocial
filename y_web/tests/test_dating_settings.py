@@ -421,7 +421,7 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
         ):
             dating_exp.client_routes.create_dating_client()
         assert db.session.query(Client).count() == 1
-        # a population for another platform is refused
+        # a population created for another platform is no longer refused for its type: this one has no agents
         other = Population(
             name="Micro", descr="", size=1, username_type="microblogging"
         )
@@ -440,7 +440,8 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
         ):
             dating_exp.client_routes.create_dating_client()
         assert db.session.query(Client).count() == 1
-        assert any("incompatible" in m for _c, m in dating_exp.flashes)
+        assert not any("incompatible" in m for _c, m in dating_exp.flashes)
+        assert any("no agents" in m for _c, m in dating_exp.flashes)
 
 
 def test_the_new_templates_compile(app):

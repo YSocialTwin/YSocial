@@ -342,6 +342,130 @@ def remove_agents(population_id: int) -> int:
     return len(own)
 
 
+# ------------------------------------------------------------------ a population of any platform, with dating fields
+_GENDER_FAMILY = {
+    "male": "m", "man": "m", "m": "m", "men": "m",
+    "female": "f", "woman": "f", "f": "f", "women": "f",
+}  # fmt: skip
+LATENT_MARKER = "dating.latent."
+
+
+def _gender_family(value: Any) -> str:
+    return _GENDER_FAMILY.get(str(value or "").strip().lower(), "x")
+
+
+def agents_without_dating_fields(population_id: int):
+    """The agents of the population that have none of the dating custom fields (the latent variables mark them)."""
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import Agent_Custom_Feature
+
+    agents = _linked_agents(population_id)
+    have = set()
+    ids = [a.id for a in agents]
+    for start in range(0, len(ids), 500):
+        have.update(
+            db.session.scalars(
+                select(Agent_Custom_Feature.agent_id)
+                .where(
+                    Agent_Custom_Feature.agent_id.in_(ids[start : start + 500]),
+                    Agent_Custom_Feature.feature_type == "custom",
+                    Agent_Custom_Feature.key.like(LATENT_MARKER + "%"),
+                )
+                .distinct()
+            )
+        )
+    return [a for a in agents if a.id not in have]
+
+
+def has_dating_fields(population) -> bool:
+    """Whether the agents of the population carry dating fields (a dating population, or one completed for dating)."""
+    if getattr(population, "username_type", None) == DATING_PLATFORM:
+        return True
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import Agent_Custom_Feature, Agent_Population
+
+    return (
+        db.session.scalar(
+            select(Agent_Custom_Feature.id)
+            .join(Agent_Population, Agent_Population.agent_id == Agent_Custom_Feature.agent_id)
+            .where(
+                Agent_Population.population_id == population.id,
+                Agent_Custom_Feature.feature_type == "custom",
+                Agent_Custom_Feature.key.like(LATENT_MARKER + "%"),
+            )
+            .limit(1)
+        )
+        is not None
+    )
+
+
+def complete_population(
+    population_id: int,
+    config: Optional[Dict[str, Any]] = None,
+    seed: Optional[int] = None,
+    language: Optional[str] = None,
+    repo_dir: Optional[str] = None,
+    apply_activity: bool = False,
+) -> int:
+    """Give the agents that have no dating fields their dating-only fields, keeping their own demographics.
+
+    The generator of YDating draws one document per agent (``config`` as for ``generate``); each standard agent
+    takes the document of an agent of the same gender family and the closest age that nobody took yet, and only the
+    dating custom features (profile, latent variables, appearance, affective traits, photos, recommender) are
+    stored: name, age, gender, education, profession and the rest stay the agent's (the daily activity level too,
+    unless ``apply_activity``: the Activity section of the form). Returns the agents completed.
+    """
+    from sqlalchemy import insert
+
+    from y_web import db
+    from y_web.src.dating import agent_fields
+    from y_web.src.models import Agent_Custom_Feature
+
+    todo = agents_without_dating_fields(population_id)
+    if not todo:
+        return 0
+    data = generate(
+        max(2, len(todo)), seed=seed, language=language, repo_dir=repo_dir, config=config
+    )
+    _prepare_fields(repo_dir)
+    pool = list(data["agents"])
+    rows = []
+    for agent in sorted(todo, key=lambda a: (a.age or 0, a.id)):
+        family = _gender_family(agent.gender)
+        pick = min(
+            range(len(pool)),
+            key=lambda i: (
+                _gender_family(pool[i].get("gender")) != family,
+                abs((pool[i].get("age") or 0) - (agent.age or 0)),
+            ),
+        )
+        doc = pool.pop(pick)
+        if apply_activity and doc.get("daily_activity_level"):
+            agent.daily_activity_level = int(doc["daily_activity_level"])
+        _, _, custom = agent_fields.agent_to_rows(doc)
+        for item in custom:
+            if item["key"] in ("dating.id", "dating.archetype") or item["key"].startswith(
+                ("dating.personality.", "dating.language", "dating.nationality")
+            ):
+                continue
+            rows.append(
+                {
+                    "agent_id": agent.id,
+                    "feature_type": "custom",
+                    "key": item["key"],
+                    "value": item["value"],
+                }
+            )
+    if rows:
+        db.session.execute(insert(Agent_Custom_Feature), rows)
+    db.session.commit()
+    return len(todo)
+
+
 _PLACEHOLDER_NAME = re.compile(r"^user_\d+$")
 
 
@@ -729,7 +853,8 @@ def population_row_values(data: Dict[str, Any]) -> Tuple[int, int, int]:
 
 
 def is_dating_population(population) -> bool:
-    return getattr(population, "username_type", None) == DATING_PLATFORM
+    """Whether the population has dating fields (generated or uploaded for Dating, or completed for it)."""
+    return has_dating_fields(population)
 
 
 # ---------------------------------------------------------------------------------------------------

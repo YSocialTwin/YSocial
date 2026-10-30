@@ -486,7 +486,7 @@ class TestFunctionalSpotChecks:
         pop = MagicMock()
         pop.username_type = "microblogging"
         assert population_matches_platform(pop, "microblogging") is True
-        assert population_matches_platform(pop, "forum") is False
+        assert population_matches_platform(pop, "forum") is True  # a population is not tied to a platform
 
     def test_strip_tags_removes_html(self):
         from y_web.src.content.text_utils import strip_tags

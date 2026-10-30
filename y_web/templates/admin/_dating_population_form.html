@@ -1,7 +1,7 @@
 {# Dating-specific sections of the population creation form (YDating generator). They live INSIDE the standard
    ``popcreate_form`` of admin/populations.html, which keeps the shared sections (basic information, demographics,
    education and political leaning, with the same selectors and percentages as the other platforms), and are enabled
-   only when the platform "Dating" is selected. Every parameter has a proposed default, shown in the form. #}
+   only when the optional Dating fields are switched on. Every parameter has a proposed default, shown in the form. #}
 {% macro pctselect(field, label, options, hint='') -%}
 <div class="box-line">
     <span class="left">{{ label }}</span>
@@ -42,7 +42,7 @@
 {%- endmacro %}
 {% set dd = dating_defaults %}
 
-<fieldset id="dating-population-sections" class="ys-fieldset-reset" data-platform-only="dating" data-defaults='{{ dd|tojson }}' disabled hidden>
+<fieldset id="dating-population-sections" class="ys-fieldset-reset" data-optional-section="dating" data-defaults='{{ dd|tojson }}' disabled>
 
     <div id="dating-section-profile" class="tutorial-section">
         <div class="form-section-header">{{ _('Dating Profile') }}</div>

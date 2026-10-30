@@ -430,9 +430,15 @@ var AdminPopulations = (function() {
       { id: 'id', hidden: true },
       { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
       {
-        id: 'platform_type',
-        name: YI18n.t('Platform'),
-        formatter: (cell) => platformLabel(cell),
+        id: 'platform_fields',
+        name: YI18n.t('Platform fields'),
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return gridjs.html('<span class="ys-text-tiny-gray">' + YI18n.t('Standard') + '</span>');
+          }
+          return gridjs.html(cell.map(f => '<span class="ys-plat-badge is-' + (f === 'dating' ? 'dating' : 'photo') + '">' + platformLabel(f) + '</span>').join(' '));
+        },
       },
       { id: "size", name: YI18n.t('Agents') },
       { 
@@ -629,12 +635,9 @@ var AdminPopulations = (function() {
 
   function renderMergeAvailablePopulations() {
       const container = document.getElementById('merge-available-populations');
-      const selectedType = document.getElementById('merged_population_type').value;
-    
-      // Filter out already selected populations
+      // Filter out already selected populations (populations of any platform can be merged)
       const available = mergeAvailablePopulations.filter(pop => 
-          !mergeSelectedPopulations.find(selected => selected.id === pop.id) &&
-          pop.username_type === selectedType
+          !mergeSelectedPopulations.find(selected => selected.id === pop.id)
       );
 
       if (available.length === 0) {
@@ -1049,9 +1052,8 @@ var AdminPopulations = (function() {
       }
     
       // Validate percentages before submission
-      const fieldsToValidate = (isDatingPlatform()
-          ? ['education_levels', 'political_leanings', 'age_classes'].concat(DATING_FIELDS)
-          : ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes']);
+      const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes']
+          .concat(isDatingPlatform() ? DATING_FIELDS : []);
       for (const fieldName of fieldsToValidate) {
           const data = multiSelectData[fieldName];
           const items = Object.values(data);
@@ -1390,38 +1392,43 @@ var AdminPopulations = (function() {
       }
   }
 
-  function togglePhotoSharingConfigPanel() {
-      const select = document.getElementById('population_username_type');
-      const wrapper = document.getElementById('photo-sharing-config-wrapper');
-      const panel = document.getElementById('photo-sharing-config-panel');
-      if (!select || !wrapper || !panel) {
-          return;
+  // Optional platform fields (Photo Sharing, Dating): a section is shown, validated and submitted only when its
+  // switch is on; the population itself is not tied to a platform.
+  function isSwitchOn(id) {
+      const box = document.getElementById(id);
+      return !!box && box.checked;
+  }
+
+  function isDatingPlatform() {
+      return isSwitchOn('include_dating');
+  }
+
+  function togglePlatformFields() {
+      const photo = isSwitchOn('include_photo_sharing');
+      const dating = isDatingPlatform();
+      const photoWrapper = document.getElementById('photo-sharing-config-wrapper');
+      if (photoWrapper) {
+          photoWrapper.classList.toggle('d-none', !photo);
+          if (photo) {
+              renderPhotoFavoriteFilters();
+              updatePhotoAttentionBudgetDistributionParams();
+          }
       }
-      toggleDatingPopulationSections(select.value === 'dating');
-      const visible = select.value === 'photo_sharing';
-      wrapper.classList.toggle('d-none', !visible);
-      panel.open = visible;
-      if (visible) {
-          renderPhotoFavoriteFilters();
-          updatePhotoAttentionBudgetDistributionParams();
+      const datingWrapper = document.getElementById('dating-config-wrapper');
+      if (datingWrapper) {
+          datingWrapper.classList.toggle('d-none', !dating);
       }
+      document.querySelectorAll('[data-optional-section="dating"]').forEach(el => {
+          el.disabled = !dating;
+          el.hidden = !dating;
+      });
       validatePhotoSharingDistributions();
       validateFormFields();
   }
 
-  // Platform "Dating": the Dating sections replace the standard ones inside the same form (a disabled fieldset is
-  // neither validated nor submitted).
-  function isDatingPlatform() {
-      const select = document.getElementById('population_username_type');
-      return !!select && select.value === 'dating';
-  }
-
-  function toggleDatingPopulationSections(dating) {
-      document.querySelectorAll('[data-platform-only]').forEach(el => {
-          const show = (el.getAttribute('data-platform-only') === 'dating') === dating;
-          el.disabled = !show;
-          el.hidden = !show;
-      });
+  // kept for the pages and tests that still call the former name
+  function togglePhotoSharingConfigPanel() {
+      togglePlatformFields();
   }
 
   function validatePhotoSharingDistributions() {
@@ -1488,9 +1495,7 @@ var AdminPopulations = (function() {
               }
       renderPhotoFavoriteFilters();
       datingDefaults();
-      togglePhotoSharingConfigPanel();
-        
-    
+      togglePlatformFields();
   });
 
   // Function to show/hide distribution-specific parameters
@@ -1530,13 +1535,6 @@ var AdminPopulations = (function() {
 
   // Form validation to enable/disable submit button
   function validateFormFields() {
-      if (isDatingPlatform()) {
-          const nameOk = document.getElementById('pop_name').value.trim();
-          const sizeOk = parseInt(document.getElementById('n_agents').value, 10) >= 2;
-          const ageOk = Object.keys(multiSelectData.age_classes).length > 0;
-          document.getElementById('create_population_btn').disabled = !(nameOk && sizeOk && ageOk);
-          return !!(nameOk && sizeOk && ageOk);
-      }
       const popName = document.getElementById('pop_name').value.trim();
       const nAgents = document.getElementById('n_agents').value;
       const hasAgeClasses = Object.keys(multiSelectData.age_classes).length > 0;
@@ -1603,6 +1601,7 @@ var AdminPopulations = (function() {
       toggleProfessionBackgrounds,
       toggleProfessionTag,
       togglePhotoSharingConfigPanel,
+      togglePlatformFields,
       toggleDatingPopulationSections,
       togglePhotoFavoriteFilterTag,
       addPhotoFavoriteFilter,

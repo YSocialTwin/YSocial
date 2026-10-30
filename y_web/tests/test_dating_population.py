@@ -206,14 +206,14 @@ def test_generation_refuses_bad_sizes(n):
 
 
 # -- compatibility ---------------------------------------------------------------------------------
-def test_a_dating_population_matches_only_dating_experiments():
+def test_a_dating_population_can_be_deployed_on_any_platform_and_the_reverse():
     from y_web.src.agents.platform import population_matches_platform
 
     pop = SimpleNamespace(id=1, username_type="dating")
     assert population_matches_platform(pop, "dating")
     for other in ("microblogging", "forum", "photo_sharing", "instant_messaging"):
-        assert not population_matches_platform(pop, other)
-        assert not population_matches_platform(
+        assert population_matches_platform(pop, other)
+        assert population_matches_platform(
             SimpleNamespace(id=2, username_type=other), "dating"
         )
 
@@ -551,11 +551,13 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
     populations = (templates / "populations.html").read_text(encoding="utf-8")
     assert "{% if dating_available %}" in populations
     assert '{% include "admin/_dating_population_form.html" %}' in populations
-    # one form for every platform: Dating is an option of the platform select, its sections live inside the
-    # standard form, which keeps posting to its own route; there is no separate box or page any more
+    # one form for every platform: the Dating fields are an optional, advanced section of the standard form
+    # (badge of the platform, a switch, shown only when the simulator is installed), which keeps posting to its
+    # own route; there is no separate box or page any more
     assert 'action="/admin/create_population"' in populations
-    assert '<option value="dating">' in populations
-    assert 'id="dating-population-sections"' in form
+    assert 'name="include_dating"' in populations and "ys-plat-badge is-dating" in populations
+    assert 'name="username_type"' not in populations  # a population is not tied to a platform
+    assert 'id="dating-population-sections"' in form and 'data-optional-section="dating"' in form
     assert "<form" not in form
     assert "dating_popcreate_form" not in populations
     assert "box-create-dating-population" not in populations
@@ -588,7 +590,7 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
     )
     assert 'name="appearance_glasses"' in html and 'name="latent_selectivity_a"' in html
     assert 'name="daily_activity_level_min"' in html and 'value="1"' in html
-    assert 'data-platform-only="dating"' in html
+    assert 'data-optional-section="dating"' in html
     # what the standard form already asks, or the runtime samples, is not repeated
     for name in (
         "personality_",

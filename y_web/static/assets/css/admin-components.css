@@ -3809,3 +3809,15 @@ input:checked + .slider:before {
 .dating-weights-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 12px; margin-top: 8px; }
 .dating-weight-row { display: flex; align-items: center; gap: 8px; font-size: 0.85em; }
 .dating-weight-row .input { max-width: 90px; }
+
+/* Platform badges and the optional platform-specific sections of the population form */
+.ys-plat-badge { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .02em; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; line-height: 1.5; white-space: nowrap; }
+.ys-plat-badge.is-photo { color: #7c3aed; background: rgba(124, 58, 237, .10); }
+.ys-plat-badge.is-dating { color: #e11d48; background: rgba(225, 29, 72, .10); }
+.ys-opt-tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 1px 8px; border-radius: 6px; color: #64748b; background: rgba(100, 116, 139, .12); margin-left: 6px; vertical-align: middle; }
+.ys-opt-section { border: 1px solid rgba(100, 116, 139, .28); border-radius: 12px; margin: 12px 0; overflow: hidden; }
+.ys-opt-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; background: rgba(100, 116, 139, .06); margin: 0; }
+.ys-opt-head input[type="checkbox"] { width: 18px; height: 18px; flex: none; }
+.ys-opt-title { font-weight: 600; }
+.ys-opt-body { padding: 4px 16px 14px; }
+.ys-opt-body.d-none { display: none; }

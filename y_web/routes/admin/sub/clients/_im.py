@@ -15,7 +15,6 @@ from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
 )
 from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
-from y_web.src.agents.platform import infer_population_username_type
 from y_web.src.im import advanced_settings, is_im_experiment, news
 from y_web.src.im.client_config import (
     IM_SLOTS_PER_DAY,
@@ -176,16 +175,7 @@ def create_im_client(exp, name, descr, population_id, form_data):
     if population is None:
         flash(_("Select a valid population."), "error")
         return redirect(back)
-    pop_type = infer_population_username_type(population)
-    if pop_type not in {None, "instant_messaging"}:
-        flash(
-            _(
-                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'instant_messaging'.",
-                pop_type=pop_type,
-            ),
-            "error",
-        )
-        return redirect(back)
+    # a population is not tied to a platform: any of them can be deployed on any experiment
     name = (name or "").strip()
     if not name or any(ch in name for ch in '/\\:*?"<>|'):
         flash(_("Invalid client name."), "error")

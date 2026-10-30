@@ -30,7 +30,6 @@ from y_web.routes.admin.sub.experiments._helpers import (
 from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
-    infer_population_username_type,
     population_matches_platform,
 )
 from y_web.src.content.cover_images import random_cover_image_url
@@ -4161,16 +4160,7 @@ def _create_standard_client_internal():
         flash(_("Population not found."), "error")
         return redirect(request.referrer)
 
-    pop_type = infer_population_username_type(population)
-    if pop_type not in {None, "microblogging"}:
-        flash(
-            _(
-                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'microblogging'.",
-                pop_type=pop_type,
-            ),
-            "error",
-        )
-        return redirect(request.referrer)
+    # a population is not tied to a platform: any of them can be deployed on any experiment
 
     initial_agents_int = None
     if initial_agents and initial_agents.strip():
@@ -5505,16 +5495,7 @@ def _create_forum_client_internal():
         flash(_("Population not found."), "error")
         return redirect(request.referrer)
 
-    pop_type = infer_population_username_type(population)
-    if pop_type not in {None, "forum"}:
-        flash(
-            _(
-                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'forum'.",
-                pop_type=pop_type,
-            ),
-            "error",
-        )
-        return redirect(request.referrer)
+    # a population is not tied to a platform: any of them can be deployed on any experiment
 
     initial_agents_int = None
     if initial_agents and initial_agents.strip():

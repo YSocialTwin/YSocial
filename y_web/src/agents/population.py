@@ -563,7 +563,9 @@ def generate_population(
         )
         agent_populations_to_insert.append(agent_population)
 
-        if getattr(population, "username_type", "microblogging") == "photo_sharing":
+        if photo_sharing_config is not None or (
+            getattr(population, "username_type", "microblogging") == "photo_sharing"
+        ):
             ext_values = _build_photo_sharing_agent_ext_values(
                 agent, photo_sharing_config
             )

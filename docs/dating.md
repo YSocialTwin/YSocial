@@ -91,6 +91,10 @@ the participant notice (up to 4,000 characters) and the refresh interval of open
 
 The viewpoint and the time travel live in one bar under the navigation: choose Overview, Public or *As account* (type a username; the list shows each account's picture), then move the slider or the arrows to any past round. In *As account* the Discover page shows that account's deck for the chosen round with the decisions taken, filterable by Liked / Passed / Undecided; cards open in a reader and nothing is written.
 
+## Populations and platforms
+
+A population is not tied to a platform. In *Create Synthetic Population*, the section *Platform-specific fields* (optional, advanced) offers a switch per installed simulator, each with the badge of its platform: *Photo Sharing Configuration* and *Dating fields*. With *Dating fields* on, the standard agents are generated first and then receive the dating-only fields (profile, appearance, latent variables, affective traits, activity), keeping their own name, age, gender and demographics. A population that has no dating fields can still be deployed on a Dating experiment: they are generated with the defaults when the client is created.
+
 ## Human participation
 
 Always available: people can play on the same platform as the agents in every dating experiment (`human.enabled` is

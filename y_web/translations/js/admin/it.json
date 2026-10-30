@@ -494,5 +494,7 @@
   "✗ Error: Could not fetch models. Check if server is reachable.": "✗ Errore: impossibile recuperare i modelli. Verifica che il server sia raggiungibile.",
   "✗ Error: {error}": "✗ Errore: {error}",
   "✗ Error: {message}": "✗ Errore: {message}",
-  "✗ Failed to update interval": "✗ Aggiornamento dell'intervallo non riuscito"
+  "✗ Failed to update interval": "✗ Aggiornamento dell'intervallo non riuscito",
+  "Platform fields": "Campi di piattaforma",
+  "Standard": "Standard"
 }

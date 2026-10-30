@@ -32,6 +32,7 @@ from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
     normalize_population_username_type,
+    population_platform_fields,
 )
 from y_web.src.agents.population import generate_population
 from y_web.src.llm.ollama_manager import get_ollama_models
@@ -222,6 +223,72 @@ def create_population_empty():
     return populations()
 
 
+def _flag(name):
+    """Whether a checkbox of the form is on."""
+    return (request.form.get(name) or "").strip().lower() in {"1", "on", "true", "yes"}
+
+
+def _photo_sharing_available():
+    """Whether the Photo Sharing simulator is installed (and visible to this admin)."""
+    try:
+        from y_web.src.external_runtime import runtime_installed_and_visible
+
+        return bool(runtime_installed_and_visible("photo_sharing", current_user))
+    except Exception:
+        return False
+
+
+def _discard_population(population):
+    """Remove a population whose generation failed, with its agents: no partial population is kept."""
+    db.session.rollback()
+    try:
+        from y_web.src.dating import population as dp
+
+        dp.remove_agents(population.id)
+    except Exception:
+        db.session.rollback()
+    db.session.execute(
+        delete(PopulationActivityProfile).filter_by(population=population.id)
+    )
+    db.session.execute(delete(Agent_Population).filter_by(population_id=population.id))
+    db.session.execute(delete(Agent_Profile).filter_by(population_id=population.id))
+    db.session.delete(population)
+    db.session.commit()
+
+
+def _dating_generator_config():
+    """The YDating generator parameters of the creation form (the standard sections plus the Dating ones)."""
+    from y_web.src.dating import population as dp
+
+    return dp.config_from_population_form(
+        request.form,
+        {
+            str(r.id): (r.age_start, r.age_end)
+            for r in db.session.scalars(select(AgeClass)).all()
+        },
+        {
+            str(r.id): r.education_level
+            for r in db.session.scalars(select(Education)).all()
+        },
+        {str(r.id): r.leaning for r in db.session.scalars(select(Leanings)).all()},
+    )
+
+
+def _complete_with_dating_fields(population):
+    """Give the agents just generated their dating fields (the Dating sections of the form)."""
+    from y_web.src.dating import population as dp
+
+    config = _dating_generator_config()
+    config.pop("archetypes", None)  # the rhythm of the agents is the standard activity profiles'
+    dp.complete_population(
+        population.id,
+        config=config,
+        seed=request.form.get("seed") or None,
+        language=dp.language_code(request.form.get("languages")) or None,
+        apply_activity=True,
+    )
+
+
 @population.route("/admin/create_population", methods=["POST"])
 @login_required
 def create_population():
@@ -255,6 +322,22 @@ def create_population():
     username_type = normalize_population_username_type(
         request.form.get("username_type")
     )
+    # A population is not tied to a platform: the dedicated fields of a platform are optional sections of the
+    # form (offered only when its simulator is installed), generated on the same agents.
+    include_photo_sharing = username_type == "photo_sharing" or _flag(
+        "include_photo_sharing"
+    )
+    include_dating = _flag("include_dating")
+    if include_photo_sharing and username_type != "photo_sharing":
+        if not _photo_sharing_available():
+            flash(_("The Photo Sharing simulator is not installed."), "error")
+            return redirect(request.referrer)
+    if include_dating:
+        from y_web.src.dating import population as dp
+
+        if not dp.runtime_available(current_user):
+            flash(_("The Dating simulator is not installed."), "error")
+            return redirect(request.referrer)
 
     # Get gender distribution
     male_percentage = int(request.form.get("male_percentage", "50"))
@@ -383,7 +466,7 @@ def create_population():
     }
 
     photo_sharing_config = None
-    if username_type == "photo_sharing":
+    if include_photo_sharing:
         photo_story_visibility = {
             "public": _parse_percentage_value(
                 request.form.get("photo_story_public_percentage"), 20
@@ -483,16 +566,10 @@ def create_population():
             profession_backgrounds,
             photo_sharing_config,
         )
+        if include_dating:
+            _complete_with_dating_fields(population)
     except Exception as exc:
-        db.session.execute(
-            delete(PopulationActivityProfile).filter_by(population=population.id)
-        )
-        db.session.execute(
-            delete(Agent_Population).filter_by(population_id=population.id)
-        )
-        db.session.execute(delete(Agent_Profile).filter_by(population_id=population.id))
-        db.session.delete(population)
-        db.session.commit()
+        _discard_population(population)
         flash(
             _(
                 "Population generation failed: %(error)s. No partial population was kept.",
@@ -619,6 +696,7 @@ def populations_data():
                 ],
                 "username_type": infer_population_username_type(pop) or "microblogging",
                 "platform_type": infer_population_username_type(pop) or "microblogging",
+                "platform_fields": population_platform_fields(pop),
                 "pop_type": pop.pop_type or "standard",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
@@ -673,6 +751,7 @@ def populations():
         age_classes=age_classes,
         activity_profiles=activity_profiles,
         profession_backgrounds=profession_backgrounds,
+        photo_available=_photo_sharing_available(),
         **_dating_form_context(),
     )
 
@@ -1505,25 +1584,7 @@ def merge_populations():
             return redirect(request.referrer)
         source_populations.append(pop)
 
-    source_types = {
-        infer_population_username_type(pop)
-        for pop in source_populations
-        if infer_population_username_type(pop)
-    }
-    if len(source_types) > 1:
-        flash(
-            _(
-                "Selected populations have incompatible platform types and cannot be merged."
-            )
-        )
-        return redirect(request.referrer)
-    if source_types and merged_population_type not in source_types:
-        flash(
-            _(
-                "Merged population type must match the selected population platform type."
-            )
-        )
-        return redirect(request.referrer)
+    # populations of any platform can be merged: the custom fields of the agents are kept with them
 
     # Collect unique agent IDs from all selected populations (optimized query)
     agent_populations = db.session.scalars(

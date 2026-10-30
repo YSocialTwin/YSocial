@@ -101,8 +101,8 @@ def test_matches_platform_true_when_inferred_matches():
         assert population_matches_platform(pop, "microblogging") is True
 
 
-def test_matches_platform_false_when_mismatch():
-    """population_matches_platform returns False on explicit type mismatch."""
+def test_a_population_matches_every_platform():
+    """A population is not tied to a platform: the type it was created with no longer excludes any platform."""
     from y_web.src.agents.platform import population_matches_platform
 
     pop = _mock_pop("forum")
@@ -110,7 +110,8 @@ def test_matches_platform_false_when_mismatch():
         "y_web.src.agents.platform.infer_population_username_type",
         return_value="forum",
     ):
-        assert population_matches_platform(pop, "microblogging") is False
+        for platform in ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating"):
+            assert population_matches_platform(pop, platform) is True
 
 
 def test_matches_platform_true_when_inferred_is_none():
