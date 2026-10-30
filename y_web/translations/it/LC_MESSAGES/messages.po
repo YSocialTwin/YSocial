@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 07:51+0000\n"
+"POT-Creation-Date: 2026-10-30 08:40+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -144,12 +144,20 @@ msgid "%(n)s configurable values"
 msgstr "%(n)s valori configurabili"
 
 #, python-format
+msgid "%(n)s days"
+msgstr "%(n)s giorni"
+
+#, python-format
 msgid "%(n)s feeds selected"
 msgstr "%(n)s feed selezionati"
 
 #, python-format
 msgid "%(n)s members"
 msgstr "%(n)s membri"
+
+#, python-format
+msgid "%(n)s messages"
+msgstr "%(n)s messaggi"
 
 #, python-format
 msgid "%(n)s plugin types"
@@ -162,6 +170,14 @@ msgstr "%(n)s popolazioni"
 #, python-format
 msgid "%(n)s populations for other platforms are hidden."
 msgstr "%(n)s popolazioni di altre piattaforme sono nascoste."
+
+#, python-format
+msgid "%(n)s profiles"
+msgstr "%(n)s profili"
+
+#, python-format
+msgid "%(n)s profiles found"
+msgstr "%(n)s profili trovati"
 
 #, python-format
 msgid "%(n)s prompts differ from the defaults."
@@ -444,16 +460,19 @@ msgstr ""
 
 msgid ""
 "A client is a group of agents (the population) that swipe, match and talk"
-" in this experiment. Choose the population and how long it runs; every "
-"advanced setting below has a default taken from the dating runtime: leave"
-" it untouched if you do not need it. The slot length, the recommender and"
-" the quotas are experiment settings."
+" in this experiment. Choose the population and how long it runs, then "
+"adjust how these agents behave in the sections below: every setting has a"
+" default from the dating runtime, so you can leave any section untouched."
+" Rules shared by all clients (slot length, recommender, quotas, dates) "
+"are in the experiment settings."
 msgstr ""
-"Un client è un gruppo di agenti (la popolazione) che scorrono i profili, "
-"fanno match e conversano in questo esperimento. Scegli la popolazione e "
-"la durata; ogni impostazione avanzata qui sotto ha un valore predefinito "
-"preso dal runtime dating: lascialo com'è se non ti serve. La durata dello"
-" slot, il recommender e le quote sono impostazioni dell'esperimento."
+"Un client è un gruppo di agenti (la popolazione) che fa swipe, crea match"
+" e conversa in questo esperimento. Scegli la popolazione e per quanto "
+"tempo gira, poi regola il comportamento di questi agenti nelle sezioni "
+"sotto: ogni impostazione ha un valore predefinito del runtime di dating, "
+"quindi puoi lasciare intatta qualsiasi sezione. Le regole comuni a tutti "
+"i client (durata dello slot, recommender, quote, appuntamenti) sono nelle"
+" impostazioni dell'esperimento."
 
 msgid ""
 "A client manages a population of agents that interact within the "
@@ -521,6 +540,9 @@ msgstr ""
 "Una chat privata non è individuabile: gli agenti non vi entrano mai da "
 "soli, quindi usala solo per chat che restano quasi vuote."
 
+msgid "A report also blocks the profile"
+msgstr "Una segnalazione blocca anche il profilo"
+
 msgid ""
 "A round never closes sooner than this, so that people have time to act. "
 "It is a lower bound: the simulation never waits for a person."
@@ -552,6 +574,9 @@ msgid "API Key"
 msgstr "Chiave API"
 
 msgid "API Key Environment Variable"
+msgstr "Variabile d'ambiente della chiave API"
+
+msgid "API key environment variable"
 msgstr "Variabile d'ambiente della chiave API"
 
 msgid "About"
@@ -633,6 +658,9 @@ msgstr "Azioni"
 msgid "Actions Per User Once Active"
 msgstr "Azioni per utente una volta attivo"
 
+msgid "Actions a person may take"
+msgstr "Azioni consentite a una persona"
+
 msgid "Actions an agent may take besides posting, replying and reacting."
 msgstr ""
 "Azioni che un agente può compiere oltre a pubblicare, rispondere e "
@@ -644,6 +672,9 @@ msgid ""
 msgstr ""
 "Le azioni comprendono pubblicare, commentare, leggere, cercare e le "
 "funzioni specifiche della piattaforma."
+
+msgid "Actions per request"
+msgstr "Azioni per richiesta"
 
 msgid "Actions per round"
 msgstr "Azioni per round"
@@ -745,6 +776,9 @@ msgstr "Visualizzazione dei tassi di attività"
 msgid "Activity and recommendation"
 msgstr "Attività e raccomandazione"
 
+msgid "Activity of each hour of the day"
+msgstr "Attività di ogni ora del giorno"
+
 msgid "Activity profile not found."
 msgstr "Profilo di attività non trovato."
 
@@ -832,6 +866,14 @@ msgstr "Aggiungi un nuovo tag di filtro"
 msgid "Add chat"
 msgstr "Aggiungi chat"
 
+#, python-format
+msgid ""
+"Add days to the total length. A day has %(n)s slots. After extending, "
+"start the client again: it continues from where it stopped."
+msgstr ""
+"Aggiungi giorni alla durata totale. Un giorno ha %(n)s slot. Dopo "
+"l'estensione riavvia il client: riprende da dove si era fermato."
+
 msgid ""
 "Add explicit interests for this agent. If an opinion group is selected, "
 "the related opinion value is stored too. Stubborn interests are exported "
@@ -840,6 +882,9 @@ msgstr ""
 "Aggiungi interessi espliciti per questo agente. Se si seleziona un gruppo"
 " di opinione, viene salvato anche il relativo valore. Gli interessi "
 "ostinati vengono esportati con indicazioni di opinione immutabili."
+
+msgid "Add nuance cues"
+msgstr "Aggiungi indizi di sfumatura"
 
 msgid "Add photo"
 msgstr "Aggiungi foto"
@@ -885,9 +930,6 @@ msgstr "Profilo di gioco di ruolo avanzato"
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
 
-msgid "Advanced settings"
-msgstr "Impostazioni avanzate"
-
 msgid "Advanced settings and recommender"
 msgstr "Impostazioni avanzate e recommender"
 
@@ -913,14 +955,26 @@ msgstr "Età minima"
 msgid "Age class not found."
 msgstr "Classe di età non trovata."
 
+msgid "Age from"
+msgstr "Età da"
+
 msgid "Age mean"
 msgstr "Età media"
+
+msgid "Age range must fit both ways"
+msgstr "La fascia d'età deve valere per entrambi"
 
 msgid "Age standard deviation"
 msgstr "Deviazione standard dell'età"
 
 msgid "Age window (years)"
 msgstr "Finestra d'età (anni)"
+
+msgid "Age, oldest first"
+msgstr "Età, dal più anziano"
+
+msgid "Age, youngest first"
+msgstr "Età, dal più giovane"
 
 msgid "Agent"
 msgstr "Agente"
@@ -993,6 +1047,9 @@ msgstr "Archetipi degli agenti ripristinati ai valori predefiniti."
 msgid "Agent archetypes updated successfully."
 msgstr "Archetipi degli agenti aggiornati con successo."
 
+msgid "Agent behaviour over time"
+msgstr "Comportamento degli agenti nel tempo"
+
 msgid "Agent gender"
 msgstr "Genere dell'agente"
 
@@ -1001,6 +1058,9 @@ msgstr "Parametri di interazione e coinvolgimento degli agenti."
 
 msgid "Agent is assigned to a population. Cannot delete."
 msgstr "L'agente è assegnato a una popolazione. Impossibile eliminarlo."
+
+msgid "Agent memory"
+msgstr "Memoria degli agenti"
 
 msgid "Agent name"
 msgstr "Nome dell'agente"
@@ -1047,14 +1107,36 @@ msgstr "Pre-prompt degli agenti"
 msgid "Agents and pages"
 msgstr "Agenti e pagine"
 
+msgid ""
+"Agents can change archetype over time, which changes their hourly "
+"activity."
+msgstr ""
+"Gli agenti possono cambiare archetipo nel tempo, e questo cambia la loro "
+"attività oraria."
+
+msgid "Agents leave the platform"
+msgstr "Gli agenti lasciano la piattaforma"
+
 msgid "Agents leaving and joining during the run."
 msgstr "Agenti che escono ed entrano durante l'esecuzione."
+
+msgid "Agents pause their profile"
+msgstr "Gli agenti mettono in pausa il profilo"
+
+msgid "Agents rewrite their bio"
+msgstr "Gli agenti riscrivono la bio"
+
+msgid "Agents talk to their matches"
+msgstr "Gli agenti parlano con i loro match"
 
 msgid "Agents update opinions based on similarity with others"
 msgstr "Gli agenti aggiornano le opinioni in base alla somiglianza con gli altri"
 
 msgid "Agents use LLM to evaluate and update opinions"
 msgstr "Gli agenti usano l'LLM per valutare e aggiornare le opinioni"
+
+msgid "Agents widen their preferences"
+msgstr "Gli agenti ampliano le preferenze"
 
 msgid "Agents' Actions Relevance"
 msgstr "Rilevanza delle azioni degli agenti"
@@ -1171,6 +1253,9 @@ msgstr "Consenti la ricerca"
 
 msgid "Already registered?"
 msgstr "Già registrato?"
+
+msgid "Also show the log on the console"
+msgstr "Mostra il log anche sulla console"
 
 msgid "Alternative installation"
 msgstr "Installazione alternativa"
@@ -1296,6 +1381,9 @@ msgstr ""
 msgid "Appearance"
 msgstr "Aspetto"
 
+msgid "Appearances of a profile per day (0 = no cap)"
+msgstr "Apparizioni di un profilo al giorno (0 = nessun limite)"
+
 msgid "Applied when engagement boost (γ) > 0."
 msgstr "Applicato quando l'amplificazione del coinvolgimento (γ) è > 0."
 
@@ -1327,6 +1415,12 @@ msgid "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%
 msgstr ""
 "Le percentuali degli archetipi devono sommare a 100%% (somma attuale: "
 "%(archetype_sum)s%%)"
+
+msgid "Archetypes"
+msgstr "Archetipi"
+
+msgid "Archetypes change over time"
+msgstr "Gli archetipi cambiano nel tempo"
 
 msgid "Archive generation failed."
 msgstr "Generazione dell'archivio non riuscita."
@@ -1366,6 +1460,9 @@ msgstr "Chiedi all'agente delle sue esperienze, relazioni o della community..."
 
 msgid "Ask the language model when uncertain"
 msgstr "Interroga il modello linguistico nei casi incerti"
+
+msgid "Ask the model when the rules are unsure"
+msgstr "Chiedi al modello quando le regole sono incerte"
 
 msgid "Assign Users to Experiment"
 msgstr "Assegna gli utenti all'esperimento"
@@ -1666,6 +1763,18 @@ msgstr "Bangladese"
 msgid "Barrier poll (seconds)"
 msgstr "Intervallo di controllo della barriera (secondi)"
 
+msgid "Base probability of accepting a date"
+msgstr "Probabilità di base di accettare un appuntamento"
+
+msgid "Base probability of replying"
+msgstr "Probabilità di base di rispondere"
+
+msgid "Base reward"
+msgstr "Ricompensa di base"
+
+msgid "Base stress"
+msgstr "Stress di base"
+
 msgid "Baseline & Exploration"
 msgstr "Riferimento ed esplorazione"
 
@@ -1764,6 +1873,9 @@ msgstr "Binomial"
 msgid "Bio"
 msgstr "Bio"
 
+msgid "Bio length (characters)"
+msgstr "Lunghezza della bio (caratteri)"
+
 msgid ""
 "Bio, profile questions and photo captions written when the run starts and"
 " refreshed by the lifecycle."
@@ -1777,6 +1889,9 @@ msgstr "Blocca"
 msgid "Block this person?"
 msgstr "Bloccare questa persona?"
 
+msgid "Blocks and reports raise stress"
+msgstr "Blocchi e segnalazioni aumentano lo stress"
+
 #, python-format
 msgid "Blocks made: %(n)s"
 msgstr "Blocchi effettuati: %(n)s"
@@ -1787,8 +1902,14 @@ msgstr "Post del blog non trovato"
 msgid "Bluesky Data"
 msgstr "dati di Bluesky"
 
+msgid "Boost of a new profile"
+msgstr "Spinta di un profilo nuovo"
+
 msgid "Both experiment name and source experiment are required."
 msgstr "Sono richiesti sia il nome dell'esperimento sia l'esperimento di origine."
+
+msgid "Both leave after a good date"
+msgstr "Entrambi se ne vanno dopo un buon appuntamento"
 
 msgid "Bounded Confidence"
 msgstr "Fiducia limitata"
@@ -1872,6 +1993,9 @@ msgstr ""
 msgid "Bulk export experiments"
 msgstr "Esportazione multipla di esperimenti"
 
+msgid "Burst of requests"
+msgstr "Raffica di richieste"
+
 msgid "Business Hours (9-17)"
 msgstr "Orario d'ufficio (9-17)"
 
@@ -1883,6 +2007,9 @@ msgstr "Volume di chiamate per percorso"
 
 msgid "Cancel"
 msgstr "Annulla"
+
+msgid "Candidates scored per viewer"
+msgstr "Candidati valutati per ogni utente"
 
 #, python-format
 msgid "Cannot connect to %(host)s:%(port)s - Connection refused"
@@ -1911,8 +2038,14 @@ msgstr ""
 msgid "Cannot remove experiments from a running group"
 msgstr "Impossibile rimuovere esperimenti da un gruppo in esecuzione"
 
+msgid "Cards decided per session"
+msgstr "Carte decise per sessione"
+
 msgid "Cards of this round"
 msgstr "Carte di questo round"
+
+msgid "Cards per request"
+msgstr "Carte per richiesta"
 
 msgid "Cards shown"
 msgstr "Carte mostrate"
@@ -2265,6 +2398,9 @@ msgstr "Esecuzione del client"
 msgid "Client Settings"
 msgstr "Impostazioni del client"
 
+msgid "Client configuration file not found."
+msgstr "File di configurazione del client non trovato."
+
 #, python-format
 msgid "Client configuration file not found: %(client_config_file)s"
 msgstr "File di configurazione del client non trovato: %(client_config_file)s"
@@ -2324,14 +2460,26 @@ msgstr "Client non trovato o non appartenente a questo esperimento."
 msgid "Client not found."
 msgstr "Client non trovato."
 
+msgid "Client settings"
+msgstr "Impostazioni del client"
+
+msgid "Client settings updated."
+msgstr "Impostazioni del client aggiornate."
+
 msgid "Client simulation parameters updated."
 msgstr "Parametri di simulazione del client aggiornati."
+
+msgid "Client timeout (seconds)"
+msgstr "Timeout del client (secondi)"
 
 msgid "Client:"
 msgstr "Client:"
 
 msgid "Clients"
 msgstr "Client"
+
+msgid "Clients needed to start"
+msgstr "Client necessari per partire"
 
 msgid "Clock Timezone"
 msgstr "Fuso orario dell'orologio"
@@ -2494,6 +2642,9 @@ msgid "Concurrency, timeouts and the failure guard of the language model calls."
 msgstr ""
 "Concorrenza, timeout e controllo dei fallimenti delle chiamate al modello"
 " linguistico."
+
+msgid "Concurrent calls"
+msgstr "Chiamate simultanee"
 
 msgid "Configurable Features"
 msgstr "Funzioni configurabili"
@@ -2820,6 +2971,12 @@ msgstr "Congratulazioni!"
 msgid "Connect"
 msgstr "Connetti"
 
+msgid "Connection"
+msgstr "Connessione"
+
+msgid "Connection and logs"
+msgstr "Connessione e log"
+
 #, python-format
 msgid "Connection error: %(error)s"
 msgstr "Errore di connessione: %(error)s"
@@ -2949,6 +3106,12 @@ msgstr "Conversazione"
 msgid "Conversation info"
 msgstr "Informazioni sulla conversazione"
 
+msgid "Conversation rules"
+msgstr "Regole delle conversazioni"
+
+msgid "Conversations"
+msgstr "Conversazioni"
+
 msgid "Conversations and dates"
 msgstr "Conversazioni e appuntamenti"
 
@@ -3075,6 +3238,9 @@ msgstr "Crea il tuo esperimento"
 
 msgid "Create Your Population"
 msgstr "Crea la tua popolazione"
+
+msgid "Create a client"
+msgstr "Crea un client"
 
 msgid "Create a group for each topic"
 msgstr "Crea un gruppo per ogni topic"
@@ -3449,6 +3615,18 @@ msgstr ""
 "Percentuale giornaliera di post annotati che superano la soglia "
 "%(threshold)s per ogni categoria di tossicità."
 
+msgid "Daily probability of leaving"
+msgstr "Probabilità giornaliera di andarsene"
+
+msgid "Daily probability of pausing"
+msgstr "Probabilità giornaliera di mettersi in pausa"
+
+msgid "Daily probability of rewriting"
+msgstr "Probabilità giornaliera di riscrivere"
+
+msgid "Daily quotas"
+msgstr "Quote giornaliere"
+
 msgid ""
 "Daily target toxicity, with moderator intervention volume shown on the "
 "secondary axis."
@@ -3478,8 +3656,17 @@ msgstr "Proposta di appuntamento"
 msgid "Date proposals"
 msgstr "Proposte di appuntamento"
 
+msgid "Dates"
+msgstr "Appuntamenti"
+
+msgid "Dates are allowed"
+msgstr "Gli appuntamenti sono consentiti"
+
 msgid "Dates proposed"
 msgstr "Appuntamenti proposti"
+
+msgid "Dates, couples and leaving"
+msgstr "Appuntamenti, coppie e abbandoni"
 
 msgid "Dating"
 msgstr "Dating"
@@ -3489,9 +3676,6 @@ msgstr "Dating (match con swipe)"
 
 msgid "Dating LLM Prompts"
 msgstr "Prompt LLM del dating"
-
-msgid "Dating advanced settings"
-msgstr "Impostazioni avanzate del dating"
 
 msgid "Dating analytics"
 msgstr "Analitica del dating"
@@ -3533,6 +3717,9 @@ msgstr "Popolazioni dating: carica, genera e anteprima"
 msgid "Dating profile"
 msgstr "Profilo di dating"
 
+msgid "Dating settings"
+msgstr "Impostazioni Dating"
+
 msgid "Day"
 msgstr "Giorno"
 
@@ -3565,6 +3752,30 @@ msgstr "Giorno per giorno"
 
 msgid "Days"
 msgstr "Giorni"
+
+msgid "Days a new profile is boosted"
+msgstr "Giorni di spinta di un profilo nuovo"
+
+msgid "Days before a passed profile returns (0 = never)"
+msgstr "Giorni prima che un profilo scartato ritorni (0 = mai)"
+
+msgid "Days before resuming"
+msgstr "Giorni prima di riprendere"
+
+msgid "Days to add"
+msgstr "Giorni da aggiungere"
+
+msgid "Days without a match before pausing"
+msgstr "Giorni senza match prima della pausa"
+
+msgid "Days without a match before the streak"
+msgstr "Giorni senza match prima della serie negativa"
+
+msgid "Days without a match before widening"
+msgstr "Giorni senza match prima di ampliare"
+
+msgid "Days without a match that raise it"
+msgstr "Giorni senza match che la aumentano"
 
 msgid "Deactivate"
 msgstr "Disattiva"
@@ -3635,6 +3846,9 @@ msgstr "Predefinito 7."
 
 msgid "Default content recommender"
 msgstr "Sistema di raccomandazione dei contenuti predefinito"
+
+msgid "Default conversation tone"
+msgstr "Tono predefinito della conversazione"
 
 msgid "Default feed ordering"
 msgstr "Ordinamento predefinito del feed"
@@ -3776,6 +3990,9 @@ msgstr "Dati demografici e attributi"
 msgid "Demographics & Attributes:"
 msgstr "Dati demografici e attributi:"
 
+msgid "Denoising steps"
+msgstr "Passi di denoising"
+
 msgid "Density"
 msgstr "Densità"
 
@@ -3880,6 +4097,9 @@ msgid ""
 msgstr ""
 "Modello Detoxify pronto. Le nuove simulazioni riutilizzeranno "
 "automaticamente questa cache locale."
+
+msgid "Diffusion model"
+msgstr "Modello di diffusione"
 
 msgid "Diffusion, emergence, reach"
 msgstr "Diffusione, emergenza, copertura"
@@ -4180,6 +4400,9 @@ msgstr "Modifica profilo"
 msgid "Edit server settings"
 msgstr "Modifica le impostazioni del server"
 
+msgid "Edit the profile"
+msgstr "Modifica il profilo"
+
 msgid "Edit your profile and your interface language."
 msgstr "Modifica il tuo profilo e la lingua dell'interfaccia."
 
@@ -4208,6 +4431,15 @@ msgstr "Livello di istruzione non trovato."
 msgid "Education levels"
 msgstr "Livelli di istruzione"
 
+msgid "Effect of selectivity on the threshold"
+msgstr "Effetto della selettività sulla soglia"
+
+msgid "Effect of stress on replying"
+msgstr "Effetto dello stress sulle risposte"
+
+msgid "Effect of stress on the threshold"
+msgstr "Effetto dello stress sulla soglia"
+
 msgid "Efficient/Organized"
 msgstr "Efficiente/Organizzato"
 
@@ -4219,6 +4451,9 @@ msgstr "L'email è già in uso da un altro utente"
 
 msgid "Email updated successfully"
 msgstr "Email aggiornata con successo"
+
+msgid "Embed memories later"
+msgstr "Calcola gli embedding dei ricordi dopo"
 
 msgid "Embedding Model"
 msgstr "Modello di embedding"
@@ -4408,6 +4643,9 @@ msgstr "Terminare questo match?"
 
 msgid "Ended"
 msgstr "Terminato"
+
+msgid "Ending a match"
+msgstr "Chiudere un match"
 
 msgid "Endpoint:"
 msgstr "Endpoint:"
@@ -4893,7 +5131,13 @@ msgstr ""
 "Esposizione ed esito per modello di recommender. I coefficienti di Gini "
 "vanno da 0 (uguaglianza) a 1 (un solo profilo ha tutto)."
 
+msgid "Extend"
+msgstr "Estendi"
+
 msgid "Extend Simulation"
+msgstr "Estendi la simulazione"
+
+msgid "Extend the simulation"
 msgstr "Estendi la simulazione"
 
 msgid "Extensions"
@@ -5113,6 +5357,9 @@ msgstr ""
 
 msgid "Flirtation"
 msgstr "Flirt"
+
+msgid "Folder of the images"
+msgstr "Cartella delle immagini"
 
 msgid "Follow"
 msgstr "Segui"
@@ -5367,6 +5614,9 @@ msgstr "La distribuzione di genere deve totalizzare 100%."
 msgid "Genders"
 msgstr "Generi"
 
+msgid "Genders allowed to write first"
+msgstr "Generi che possono scrivere per primi"
+
 msgid "Genders sought"
 msgstr "Generi cercati"
 
@@ -5400,8 +5650,14 @@ msgstr "Genera una rete sintetica"
 msgid "Generate synthetic population"
 msgstr "Genera una popolazione sintetica"
 
+msgid "Generate the photo images"
+msgstr "Genera le immagini delle foto"
+
 msgid "Generate the topology if missing"
 msgstr "Genera la topologia se manca"
+
+msgid "Generate them while the simulation runs"
+msgstr "Generale mentre la simulazione procede"
 
 msgid "Generate topics"
 msgstr "Genera argomenti"
@@ -5417,9 +5673,6 @@ msgstr "Configurazioni generate"
 
 msgid "Generated Slug"
 msgstr "Slug generato"
-
-msgid "Generated from the configuration schema of the dating runtime."
-msgstr "Generato dallo schema di configurazione del runtime dating."
 
 msgid "Generates text or makes decisions leveraging its profile"
 msgstr "Genera testo o prende decisioni sfruttando il proprio profilo"
@@ -5815,14 +6068,33 @@ msgstr "Tassi di attività orari"
 msgid "Hourly Activity Rates (Optional)"
 msgstr "Tassi di attività orari (facoltativo)"
 
+msgid "Hourly profiles by archetype"
+msgstr "Profili orari per archetipo"
+
 msgid "How agents find chats to join or leave."
 msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
+
+msgid ""
+"How an agent decides on a card: a utility built from the weights below, "
+"compared with a threshold. The weights are relative to each other."
+msgstr ""
+"Come un agente decide su una carta: un'utilità costruita con i pesi qui "
+"sotto, confrontata con una soglia. I pesi sono relativi tra loro."
 
 msgid "How do you feel?"
 msgstr "Come ti senti?"
 
 msgid "How each message the agent reads is shown to it."
 msgstr "Come viene mostrato all'agente ciascun messaggio che legge."
+
+msgid ""
+"How events (matches, silence, blocks, reports) become stress and reward. "
+"Switched on in the Experiment Configuration; how a client uses them is "
+"set in the client."
+msgstr ""
+"Come gli eventi (match, silenzio, blocchi, segnalazioni) diventano stress"
+" e ricompensa. Si attiva nella Configurazione dell'esperimento; come li "
+"usa un client si imposta nel client."
 
 msgid "How it works"
 msgstr "Come funziona"
@@ -5837,6 +6109,13 @@ msgstr ""
 "in tick diversi, così i messaggi non compaiono tutti allo stesso minuto."
 
 msgid ""
+"How many likes and super likes an agent has each day. The recommender is "
+"chosen above."
+msgstr ""
+"Quanti like e super like ha un agente ogni giorno. Il recommender si "
+"sceglie sopra."
+
+msgid ""
 "How many recent interaction events to include in LLM context per "
 "user/thread pair."
 msgstr ""
@@ -5845,6 +6124,9 @@ msgstr ""
 
 msgid "How many sessions an agent may open in a round."
 msgstr "Quante sessioni può aprire un agente in un round."
+
+msgid "How memory enters the prompt"
+msgstr "Come la memoria entra nel prompt"
 
 msgid "How much conversation history agents see"
 msgstr "Quanta cronologia delle conversazioni vedono gli agenti"
@@ -5862,6 +6144,17 @@ msgid "How often memory reflections are generated."
 msgstr "Con quale frequenza vengono generate le riflessioni della memoria."
 
 msgid ""
+"How the agents talk to their matches: who writes the messages, how often "
+"they check a chat, reply, react or leave it, and when they propose or "
+"accept a date. Limits and dates are rules of the platform: see the "
+"experiment settings."
+msgstr ""
+"Come gli agenti parlano con i loro match: chi scrive i messaggi, quanto "
+"spesso controllano una chat, rispondono, reagiscono o la lasciano, e "
+"quando propongono o accettano un appuntamento. Limiti e appuntamenti sono"
+" regole della piattaforma: vedi le impostazioni dell'esperimento."
+
+msgid ""
 "How the automatic chats are generated: who owns channels, how many "
 "channels get a discussion group, and how the social network subscribes "
 "followers. Chats defined in Chats by Topic are created as you wrote them."
@@ -5875,6 +6168,23 @@ msgid "How the chats the agent owns, follows or could join are listed."
 msgstr ""
 "Come sono elencate le chat che l'agente possiede, segue o a cui potrebbe "
 "iscriversi."
+
+msgid ""
+"How the client reads the messages and applies stress to the activity. "
+"Stress and reward are switched on for the whole experiment in the "
+"Experiment Configuration; their rules are in the experiment settings."
+msgstr ""
+"Come il client legge i messaggi e applica lo stress all'attività. Stress "
+"e ricompensa si attivano per tutto l'esperimento nella Configurazione "
+"dell'esperimento; le loro regole sono nelle impostazioni "
+"dell'esperimento."
+
+msgid ""
+"How the client talks to the server and what it writes in its log. The "
+"defaults suit almost every run."
+msgstr ""
+"Come il client parla con il server e cosa scrive nel suo log. I valori "
+"predefiniti vanno bene per quasi ogni esecuzione."
 
 msgid ""
 "How the experiment topics map onto agents and chats: whether interests "
@@ -5896,8 +6206,20 @@ msgstr ""
 msgid "How the prompts work"
 msgstr "Come funzionano i prompt"
 
+msgid ""
+"How the simulated time is divided and when the run starts. The slot "
+"length and the seed are shared by every client of the experiment and are "
+"locked once the run has started."
+msgstr ""
+"Come viene diviso il tempo simulato e quando parte l'esecuzione. La "
+"durata dello slot e il seme sono comuni a tutti i client dell'esperimento"
+" e vengono bloccati una volta avviata l'esecuzione."
+
 msgid "How the stress level is worded when stress/reward is on."
 msgstr "Come è espresso il livello di stress quando stress/reward è attivo."
+
+msgid "How the tone of a message is classified"
+msgstr "Come viene classificato il tono di un messaggio"
 
 msgid "How the topic and the chat of each post the agent has to write are given."
 msgstr ""
@@ -5912,6 +6234,9 @@ msgstr "Umano"
 
 msgid "Human participants can take part in the chats"
 msgstr "I partecipanti umani possono intervenire nelle chat"
+
+msgid "Human participation"
+msgstr "Partecipazione umana"
 
 msgid ""
 "Human participation is off for this experiment. Turn it on in the server "
@@ -5991,6 +6316,9 @@ msgstr "Risorsa feed di immagini non trovata."
 msgid "Image feeds updated successfully."
 msgstr "Feed di immagini aggiornati con successo."
 
+msgid "Image generator"
+msgstr "Generatore di immagini"
+
 msgid ""
 "Image sharing/commenting is currently disabled. Fetch the available "
 "vision models and select one to enable this feature."
@@ -6001,6 +6329,9 @@ msgstr ""
 
 msgid "Image-share posts emitted"
 msgstr "Post con immagini pubblicati"
+
+msgid "Images"
+msgstr "Immagini"
 
 msgid "Images are cropped to a square preview when needed."
 msgstr "Le immagini vengono ritagliate in un'anteprima quadrata quando serve."
@@ -6243,11 +6574,16 @@ msgstr "Interazioni"
 msgid "Interactions switched off"
 msgstr "Interazioni disattivate"
 
+msgid "Intercept"
+msgstr "Intercetta"
+
 msgid "Interest"
 msgstr "Interesse"
 
 msgid "Interest catalogue, separated by commas. Default: ten common interests."
-msgstr "Catalogo degli interessi, separati da virgole. Predefinito: dieci interessi comuni."
+msgstr ""
+"Catalogo degli interessi, separati da virgole. Predefinito: dieci "
+"interessi comuni."
 
 msgid "Interest learning rate (λ)"
 msgstr "Tasso di apprendimento dell'interesse (λ)"
@@ -6517,6 +6853,12 @@ msgstr "Italiano"
 msgid "Item not found"
 msgstr "Elemento non trovato"
 
+msgid "Items kept for a chat"
+msgstr "Elementi conservati per una chat"
+
+msgid "Items kept for a pair"
+msgstr "Elementi conservati per una coppia"
+
 msgid "Japanese"
 msgstr "Giapponese"
 
@@ -6558,6 +6900,9 @@ msgstr ""
 "Mantieni i valori predefiniti per gli esperimenti piccoli e medi. Aumenta"
 " i limiti solo se ti serve una maggiore varietà di temi o insiemi di "
 "contenuti più duraturi."
+
+msgid "Keep the memory between runs"
+msgstr "Conserva la memoria tra le esecuzioni"
 
 msgid ""
 "Kernel density estimate of recommendation counts across the selected "
@@ -6676,6 +7021,9 @@ msgstr "Lingua parlata"
 msgid "Language code written on every agent (for example en, it)."
 msgstr "Codice della lingua scritto su ogni agente (ad esempio en, it)."
 
+msgid "Language model"
+msgstr "Modello linguistico"
+
 msgid "Language not found."
 msgstr "Lingua non trovata."
 
@@ -6714,6 +7062,12 @@ msgstr "Quota della componente più grande"
 msgid "Largest Component Share Over Time"
 msgstr "Quota della componente più grande nel tempo"
 
+msgid "Largest distance (km)"
+msgstr "Distanza massima (km)"
+
+msgid "Largest request (bytes)"
+msgstr "Richiesta più grande (byte)"
+
 msgid "Last Check"
 msgstr "Ultimo controllo"
 
@@ -6731,7 +7085,12 @@ msgid ""
 "they drive the rule-based matching and the metrics and are never shown to"
 " the agents. Affective traits are uniform ranges used only when stress "
 "and reward are enabled (default 1.0)."
-msgstr "Le variabili latenti seguono una distribuzione Beta(a, b) (predefinita Beta(2, 2)); guidano il matching basato su regole e le metriche e non vengono mai mostrate agli agenti. I tratti affettivi sono intervalli uniformi usati solo quando stress e ricompensa sono abilitati (predefinito 1.0)."
+msgstr ""
+"Le variabili latenti seguono una distribuzione Beta(a, b) (predefinita "
+"Beta(2, 2)); guidano il matching basato su regole e le metriche e non "
+"vengono mai mostrate agli agenti. I tratti affettivi sono intervalli "
+"uniformi usati solo quando stress e ricompensa sono abilitati "
+"(predefinito 1.0)."
 
 msgid "Latent variables, affective traits and recommender"
 msgstr "Variabili latenti, tratti affettivi e recommender"
@@ -6790,6 +7149,17 @@ msgstr "Lascia vuoto per nessuna password"
 msgid "Leave empty to use name from config..."
 msgstr "Lascia vuoto per usare il nome della configurazione..."
 
+msgid ""
+"Leave empty to use the main cities of each nationality. To choose them, "
+"write one line per city: name, latitude, longitude and, optionally, the "
+"weight and the nationality that lives there (without a nationality the "
+"city is used for everybody)."
+msgstr ""
+"Lascia vuoto per usare le città principali di ogni nazionalità. Per "
+"sceglierle, scrivi una riga per città: nome, latitudine, longitudine e, "
+"facoltativamente, il peso e la nazionalità che ci vive (senza nazionalità"
+" la città vale per tutti)."
+
 msgid "Leave fields empty to use the default activity profile."
 msgstr "Lascia i campi vuoti per usare il profilo di attività predefinito."
 
@@ -6799,8 +7169,14 @@ msgstr "Lascia la piattaforma"
 msgid "Leave the platform? Your matches will end."
 msgstr "Lasciare la piattaforma? I tuoi match termineranno."
 
+msgid "Leaving the platform"
+msgstr "Lasciare la piattaforma"
+
 msgid "Left (round)"
 msgstr "Uscito (round)"
+
+msgid "Length asked of a message (characters)"
+msgstr "Lunghezza richiesta a un messaggio (caratteri)"
 
 msgid "Less"
 msgstr "Meno"
@@ -6816,6 +7192,15 @@ msgstr "Permetti a chi non fa parte dello staff di guardare un round passato"
 
 msgid "Let participants change the language"
 msgstr "Permetti ai partecipanti di cambiare lingua"
+
+msgid ""
+"Let people play next to the agents: how many, how fast, what they may do "
+"and the limits that protect the server. The participants are managed on "
+"the Participants page."
+msgstr ""
+"Permetti alle persone di giocare accanto agli agenti: quante, con quale "
+"ritmo, cosa possono fare e i limiti che proteggono il server. I "
+"partecipanti si gestiscono nella pagina Partecipanti."
 
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr "Creiamo la tua prima simulazione in soli 4 semplici passi."
@@ -6835,13 +7220,22 @@ msgstr "Mi piace"
 msgid "Like rate"
 msgstr "Tasso di like"
 
+msgid "Like threshold"
+msgstr "Soglia del like"
+
 msgid "Likes"
 msgstr "Mi piace"
+
+msgid "Likes per agent per day"
+msgstr "Like per agente al giorno"
 
 msgid "Limited access to assigned experiments only. Cannot access admin panel."
 msgstr ""
 "Accesso limitato ai soli esperimenti assegnati. Non può accedere al "
 "pannello di amministrazione."
+
+msgid "Limits"
+msgstr "Limiti"
 
 msgid "Linear"
 msgstr "Lineare"
@@ -6961,6 +7355,15 @@ msgstr "Immagine del logo"
 msgid "Logout"
 msgstr "Esci"
 
+msgid "Logs"
+msgstr "Log"
+
+msgid "Longest message accepted (characters)"
+msgstr "Messaggio più lungo accettato (caratteri)"
+
+msgid "Longest text a person may send"
+msgstr "Testo più lungo che una persona può inviare"
+
 msgid "Longitude"
 msgstr "Longitudine"
 
@@ -6969,6 +7372,9 @@ msgstr "Cerca ancora"
 
 msgid "Look for chats, users, groups, channels or posts from the search box."
 msgstr "Cerca chat, utenti, gruppi, canali o post dalla barra di ricerca."
+
+msgid "Looking for"
+msgstr "Cerca"
 
 msgid "Looking for (separate with commas)"
 msgstr "Chi cerchi (separa con virgole)"
@@ -7057,6 +7463,9 @@ msgid "Mandatory. Select one of the installed custom agent families."
 msgstr ""
 "Obbligatorio. Seleziona una delle famiglie di agenti personalizzati "
 "installate."
+
+msgid "Margin for a super like"
+msgstr "Margine per un super like"
 
 msgid "Mark read"
 msgstr "Segna come letto"
@@ -7205,6 +7614,9 @@ msgstr "Quota massima di agenti che abbandonano"
 msgid "Maximum share of failed sessions"
 msgstr "Quota massima di sessioni fallite"
 
+msgid "Maximum tokens of an answer"
+msgstr "Token massimi di una risposta"
+
 msgid "Maximum wait (rounds)"
 msgstr "Attesa massima (round)"
 
@@ -7247,6 +7659,9 @@ msgstr "Membri"
 msgid "Members table"
 msgstr "Tabella dei membri"
 
+msgid "Memories retrieved"
+msgstr "Ricordi recuperati"
+
 msgid "Memory"
 msgstr "Memoria"
 
@@ -7255,6 +7670,12 @@ msgstr "Embedding della memoria"
 
 msgid "Memory backend"
 msgstr "Backend della memoria"
+
+msgid "Memory context in a reply (characters)"
+msgstr "Contesto di memoria in una risposta (caratteri)"
+
+msgid "Memory language"
+msgstr "Lingua della memoria"
 
 msgid "Mention Edges"
 msgstr "Archi di menzione"
@@ -7290,6 +7711,12 @@ msgstr "Messaggio:"
 
 msgid "Messages"
 msgstr "Messaggi"
+
+msgid "Messages before a date can be proposed"
+msgstr "Messaggi prima di poter proporre un appuntamento"
+
+msgid "Messages before a match can be ended"
+msgstr "Messaggi prima di poter chiudere un match"
 
 msgid "Messages in the feed"
 msgstr "Messaggi nel feed"
@@ -7341,11 +7768,20 @@ msgstr "Età minima"
 msgid "Minimum age accepted"
 msgstr "Età minima accettata"
 
+msgid "Minimum duration of a round (seconds)"
+msgstr "Durata minima di un round (secondi)"
+
+msgid "Minimum interest to keep talking"
+msgstr "Interesse minimo per continuare a parlare"
+
 msgid "Minimum round duration (seconds, 0 = off)"
 msgstr "Durata minima del round (secondi, 0 = disattivata)"
 
 msgid "Minimum round time (seconds)"
 msgstr "Durata minima del round (secondi)"
+
+msgid "Minimum score to recall another chat"
+msgstr "Punteggio minimo per richiamare un'altra chat"
 
 msgid "Minimum score to recall another thread"
 msgstr "Punteggio minimo per richiamare un altro thread"
@@ -7462,6 +7898,9 @@ msgstr "Post più tossici"
 msgid "Most commented"
 msgstr "Più commentati"
 
+msgid "Most recent"
+msgstr "Più recenti"
+
 msgid "Most recently active communities across posts and discussions."
 msgstr "Community più attive di recente tra post e discussioni."
 
@@ -7481,6 +7920,12 @@ msgstr ""
 
 msgid "Mu (Averaging Weight)"
 msgstr "Mu (peso della media)"
+
+msgid "Multiplier after those days"
+msgstr "Moltiplicatore dopo quei giorni"
+
+msgid "Multiplier of the distance"
+msgstr "Moltiplicatore della distanza"
 
 msgid "Mutual Friends"
 msgstr "Amici in comune"
@@ -7697,6 +8142,9 @@ msgstr "Neozelandese"
 
 msgid "New agents probability"
 msgstr "Probabilità di nuovi agenti"
+
+msgid "New bio length (characters)"
+msgstr "Lunghezza della nuova bio (caratteri)"
 
 msgid "New chat"
 msgstr "Nuova chat"
@@ -8152,6 +8600,12 @@ msgstr "Nessuno è uscito."
 msgid "Nodes"
 msgstr "Nodi"
 
+msgid "Noise on the outcome"
+msgstr "Rumore sull'esito"
+
+msgid "Noise on the utility"
+msgstr "Rumore sull'utilità"
+
 msgid "None"
 msgstr "Nessuno"
 
@@ -8216,6 +8670,9 @@ msgstr "Notebook creato in %(filepath)s"
 msgid "Nothing found."
 msgstr "Nessun risultato."
 
+msgid "Nothing found. Try fewer filters."
+msgstr "Nessun risultato. Prova con meno filtri."
+
 msgid "Nothing matches your search."
 msgstr "Nessun risultato per la ricerca."
 
@@ -8245,6 +8702,9 @@ msgstr "Notifiche"
 
 msgid "Now"
 msgstr "Ora"
+
+msgid "Nuance cues (characters)"
+msgstr "Indizi di sfumatura (caratteri)"
 
 msgid "Number of Actors"
 msgstr "Numero di attori"
@@ -8343,9 +8803,6 @@ msgstr ""
 "Vista onnisciente del ricercatore: sono mostrate le chat private e i "
 "messaggi eliminati. Non è ciò che vede un partecipante."
 
-msgid "On"
-msgstr "Attivo"
-
 msgid "Onboarding screen"
 msgstr "Schermata di onboarding"
 
@@ -8357,14 +8814,11 @@ msgid "One line per answer: question: answer."
 msgstr "Una riga per risposta: domanda: risposta."
 
 msgid ""
-"One line per city: name, latitude, longitude and optionally the weight. "
-"Default: Pisa."
-msgstr "Una riga per città: nome, latitudine, longitudine e, facoltativamente, il peso. Predefinito: Pisa."
-
-msgid ""
 "One line per gender: the weights of the sets of genders sought (a set "
 "joins genders with +)."
-msgstr "Una riga per genere: i pesi degli insiemi di generi cercati (un insieme unisce i generi con +)."
+msgstr ""
+"Una riga per genere: i pesi degli insiemi di generi cercati (un insieme "
+"unisce i generi con +)."
 
 msgid "One line per photo; the image can be added later from the profile."
 msgstr "Una riga per foto; l'immagine può essere aggiunta più tardi dal profilo."
@@ -8460,11 +8914,11 @@ msgstr "Apri il Builder di pagine"
 msgid "Open Timeline."
 msgstr "Apri la cronologia."
 
-msgid "Open advanced settings"
-msgstr "Apri le impostazioni avanzate"
-
 msgid "Open chat"
 msgstr "Apri la chat"
+
+msgid "Open experiment settings"
+msgstr "Apri le impostazioni dell'esperimento"
 
 msgid "Open profile"
 msgstr "Apri il profilo"
@@ -8613,6 +9067,13 @@ msgstr "Facoltativo"
 msgid "Optional Agent Actions"
 msgstr "Azioni opzionali degli agenti"
 
+msgid ""
+"Optional behaviour of the persisted memory. The embedding model is chosen"
+" in the Experiment Configuration."
+msgstr ""
+"Comportamento facoltativo della memoria persistente. Il modello di "
+"embedding si sceglie nella Configurazione dell'esperimento."
+
 #, python-format
 msgid "Optional parameters: %(names)s"
 msgstr "Parametri facoltativi: %(names)s"
@@ -8647,8 +9108,14 @@ msgstr "Altri attributi"
 msgid "Other experiment"
 msgstr "Altro esperimento"
 
+msgid "Other settings"
+msgstr "Altre impostazioni"
+
 msgid "Out-Degree CCDF"
 msgstr "CCDF del grado uscente"
+
+msgid "Outcome of a date"
+msgstr "Esito di un appuntamento"
 
 msgid "Outgoing/Energetic"
 msgstr "Socievole/Energico"
@@ -8757,6 +9224,9 @@ msgstr "Avviso ai partecipanti"
 msgid "Participants"
 msgstr "Partecipanti"
 
+msgid "Participation"
+msgstr "Partecipazione"
+
 msgid "Pass"
 msgstr "Salta"
 
@@ -8802,8 +9272,14 @@ msgstr "Pausa o uscita"
 msgid "Pause profile"
 msgstr "Metti in pausa il profilo"
 
+msgid "Pause the profile"
+msgstr "Metti in pausa il profilo"
+
 msgid "Paused"
 msgstr "In pausa"
+
+msgid "Pausing the profile"
+msgstr "Pausa del profilo"
 
 msgid "Peak Target Toxicity"
 msgstr "Picco di tossicità del bersaglio"
@@ -8876,6 +9352,9 @@ msgstr "Feed personalizzato"
 msgid "Personalized Feed parameters"
 msgstr "Parametri del feed personalizzato"
 
+msgid "Perspective API key environment variable"
+msgstr "Variabile d'ambiente della chiave Perspective API"
+
 msgid "PhD"
 msgstr "Dottorato"
 
@@ -8940,6 +9419,9 @@ msgstr "Foto (facoltative)"
 
 msgid "Photos per agent"
 msgstr "Foto per agente"
+
+msgid "Photos per profile"
+msgstr "Foto per profilo"
 
 msgid "Pick a source group first, then choose one experiment from that group."
 msgstr "Scegli prima un gruppo di origine, poi un esperimento di quel gruppo."
@@ -9075,6 +9557,9 @@ msgstr "Orientamenti politici"
 
 msgid "Political leanings, education and professions of the agents."
 msgstr "Orientamenti politici, istruzione e professioni degli agenti."
+
+msgid "Polling interval (seconds)"
+msgstr "Intervallo di polling (secondi)"
 
 msgid "Popularity"
 msgstr "Popolarità"
@@ -9452,11 +9937,26 @@ msgstr "Probabilità di follow secondario"
 msgid "Probability Secondary Follow:"
 msgstr "Probabilità di follow secondario:"
 
+msgid "Probability of checking a chat"
+msgstr "Probabilità di controllare una chat"
+
+msgid "Probability of ending a match"
+msgstr "Probabilità di chiudere un match"
+
 msgid "Probability of leaving a chat"
 msgstr "Probabilità di uscire da una chat"
 
+msgid "Probability of proposing a date"
+msgstr "Probabilità di proporre un appuntamento"
+
 msgid "Probability of reacting"
 msgstr "Probabilità di reagire"
+
+msgid "Probability of reacting to a message"
+msgstr "Probabilità di reagire a un messaggio"
+
+msgid "Probability of writing first"
+msgstr "Probabilità di scrivere per primi"
 
 msgid "Probability parameter"
 msgstr "Parametro di probabilità"
@@ -9543,8 +10043,14 @@ msgstr "Immagine del profilo"
 msgid "Profile pictures"
 msgstr "Immagini del profilo"
 
+msgid "Profile questions answered"
+msgstr "Domande del profilo con risposta"
+
 msgid "Profile text and photos"
 msgstr "Testo del profilo e foto"
+
+msgid "Profile texts and photos"
+msgstr "Testi e foto del profilo"
 
 msgid "Profile-Based User Similarity"
 msgstr "Similarità tra utenti basata sul profilo"
@@ -9555,8 +10061,17 @@ msgstr "Profili"
 msgid "Profiles and pages matching your search."
 msgstr "Profili e pagine corrispondenti alla ricerca."
 
+msgid "Profiles can be edited"
+msgstr "I profili possono essere modificati"
+
+msgid "Profiles can be paused"
+msgstr "I profili possono essere messi in pausa"
+
 msgid "Profiles paused at the end"
 msgstr "Profili in pausa alla fine"
+
+msgid "Profiles that liked you come first"
+msgstr "I profili che ti hanno messo like vengono prima"
 
 msgid "Profiles vs. Advanced Roleplay"
 msgstr "Profili vs. Roleplay avanzato"
@@ -9679,11 +10194,17 @@ msgstr ""
 " non sono state registrate interazioni con i bersagli per l'argomento "
 "selezionato."
 
+msgid "Proposals per match"
+msgstr "Proposte per match"
+
 msgid "Propose"
 msgstr "Proponi"
 
 msgid "Propose a date"
 msgstr "Proponi un appuntamento"
+
+msgid "Proposing a date"
+msgstr "Proporre un appuntamento"
 
 msgid "Provide a GitHub token before connecting."
 msgstr "Fornisci un token GitHub prima di connetterti."
@@ -9753,7 +10274,9 @@ msgid "RSS-derived posts emitted"
 msgstr "Post derivati da RSS pubblicati"
 
 msgid "Radius around the city centre in which agents are placed. Default 15."
-msgstr "Raggio attorno al centro della città entro cui vengono collocati gli agenti. Predefinito 15."
+msgstr ""
+"Raggio attorno al centro della città entro cui vengono collocati gli "
+"agenti. Predefinito 15."
 
 msgid "Random"
 msgstr "Casuale"
@@ -9767,11 +10290,16 @@ msgstr "Seed casuale"
 msgid "Random if empty"
 msgstr "Casuale se vuoto"
 
+msgid "Random seed"
+msgstr "Seme casuale"
+
 msgid "Range of the activity level of each agent. Default 1."
 msgstr "Intervallo del livello di attività di ogni agente. Predefinito 1."
 
 msgid "Range of the maximum distance each agent accepts. Default 10 to 60."
-msgstr "Intervallo della distanza massima che ogni agente accetta. Predefinito da 10 a 60."
+msgstr ""
+"Intervallo della distanza massima che ogni agente accetta. Predefinito da"
+" 10 a 60."
 
 msgid "Range: 0-1, Default: 0"
 msgstr "Intervallo: 0-1, predefinito: 0"
@@ -9799,6 +10327,9 @@ msgstr "Parametro di tasso"
 
 msgid "Ray Agents Batch Size"
 msgstr "Dimensione del lotto di agenti Ray"
+
+msgid "Reached"
+msgstr "Raggiunto"
 
 msgid "React"
 msgstr "Reagisci"
@@ -9864,6 +10395,9 @@ msgstr "Motivo"
 msgid "Recall emotionally charged episodes"
 msgstr "Richiama gli episodi emotivamente intensi"
 
+msgid "Received super likes come first"
+msgstr "I super like ricevuti vengono prima"
+
 msgid "Recency decay (β)"
 msgstr "Decadimento di recenza (β)"
 
@@ -9887,6 +10421,9 @@ msgstr "Interazioni di propaganda recenti"
 
 msgid "Recent SA Interactions"
 msgstr "Interazioni SA recenti"
+
+msgid "Recent messages returned per chat"
+msgstr "Messaggi recenti restituiti per chat"
 
 msgid "Recent trend"
 msgstr "Andamento recente"
@@ -9951,13 +10488,6 @@ msgstr "Informazioni sul sistema di raccomandazione"
 
 msgid "Recommender internals (researcher only)"
 msgstr "Dettagli interni del recommender (solo ricercatore)"
-
-msgid ""
-"Recommender, daily quotas, lifecycle and conversation parameters belong "
-"to the experiment."
-msgstr ""
-"Recommender, quote giornaliere, ciclo di vita e parametri delle "
-"conversazioni appartengono all'esperimento."
 
 msgid "Recommenders"
 msgstr "Recommender"
@@ -10059,11 +10589,17 @@ msgstr ""
 "Peso relativo quando gli agenti scelgono dove iscriversi: una chat con 2 "
 "attira il doppio dei membri di una con 1 (predefinito 1)."
 
+msgid "Relevance"
+msgstr "Rilevanza"
+
 msgid "Remaining Time Forecast"
 msgstr "Previsione del tempo rimanente"
 
 msgid "Remaining slots:"
 msgstr "Slot rimanenti:"
+
+msgid "Remember emotional moments"
+msgstr "Ricorda i momenti emotivi"
 
 msgid "Remember me"
 msgstr "Ricordami"
@@ -10150,6 +10686,9 @@ msgstr "Contesto della risposta (caratteri)"
 msgid "Reply to posts and threads"
 msgstr "Rispondere a post e discussioni"
 
+msgid "Replying and reacting"
+msgstr "Rispondere e reagire"
+
 msgid "Replying to"
 msgstr "In risposta a"
 
@@ -10193,6 +10732,9 @@ msgstr "Il file richiesto non è pronto per il download."
 msgid "Requests"
 msgstr "Richieste"
 
+msgid "Requests per minute"
+msgstr "Richieste al minuto"
+
 msgid ""
 "Requires an available Ollama embedding model. Leave disabled for the "
 "safest default setup."
@@ -10223,6 +10765,9 @@ msgstr ""
 "Panoramica del ricercatore: è mostrato tutto ciò che la simulazione ha "
 "registrato, comprese chat private, messaggi eliminati e dettagli interni "
 "del recommender. Non è ciò che vede un utente."
+
+msgid "Reset"
+msgstr "Azzera"
 
 msgid "Reset HPC Experiment"
 msgstr "Reimposta l'esperimento HPC"
@@ -10271,6 +10816,12 @@ msgstr "Riprendi il client"
 
 msgid "Resume profile"
 msgstr "Riattiva il profilo"
+
+msgid "Retries after a failed call"
+msgstr "Tentativi dopo una chiamata fallita"
+
+msgid "Retrieved memories (characters)"
+msgstr "Ricordi recuperati (caratteri)"
 
 msgid "Retry"
 msgstr "Riprova"
@@ -10352,6 +10903,9 @@ msgstr "Sensibilità alla ricompensa"
 msgid "Rewiring probability (p)"
 msgstr "Probabilità di ricablaggio (p)"
 
+msgid "Rewriting the bio"
+msgstr "Riscrittura della bio"
+
 msgid "Role"
 msgstr "Ruolo"
 
@@ -10390,6 +10944,14 @@ msgstr "Argomenti della route:"
 
 msgid "Rule threshold"
 msgstr "Soglia della regola"
+
+msgid ""
+"Rules of the platform for chats: who writes first and the limits the "
+"server enforces. How the agents behave in a chat is set in each client."
+msgstr ""
+"Regole della piattaforma per le chat: chi scrive per primo e i limiti "
+"applicati dal server. Come si comportano gli agenti in una chat si "
+"imposta in ogni client."
 
 msgid "Run"
 msgstr "Avvia"
@@ -11063,6 +11625,9 @@ msgstr "Impostazioni del server"
 msgid "Server Trends Analysis"
 msgstr "Analisi delle tendenze del server"
 
+msgid "Server URL"
+msgstr "URL del server"
+
 msgid "Server call timeout (seconds)"
 msgstr "Timeout delle chiamate al server (secondi)"
 
@@ -11105,6 +11670,9 @@ msgstr "Server, client e analisi"
 msgid "Services & monitoring"
 msgstr "Servizi e monitoraggio"
 
+msgid "Session probability at the peak hour"
+msgstr "Probabilità di sessione nell'ora di punta"
+
 msgid "Sessions"
 msgstr "Sessioni"
 
@@ -11127,6 +11695,9 @@ msgstr ""
 
 msgid "Settings"
 msgstr "Impostazioni"
+
+msgid "Settings of the runtime without a place of their own."
+msgstr "Impostazioni del runtime senza una sezione propria."
 
 msgid "Severe Toxicity"
 msgstr "Tossicità grave"
@@ -11170,6 +11741,9 @@ msgstr "Quota di agenti proprietari di un canale"
 msgid "Share of channels with a discussion group"
 msgstr "Quota di canali con un gruppo di discussione"
 
+msgid "Share of negative outcomes"
+msgstr "Quota di esiti negativi"
+
 msgid "Share of new agents"
 msgstr "Quota di nuovi agenti"
 
@@ -11177,6 +11751,12 @@ msgid "Share of nodes contained in the largest weakly connected component by day
 msgstr ""
 "Quota di nodi contenuti nella più grande componente debolmente connessa, "
 "per giorno."
+
+msgid "Share of random cards"
+msgstr "Quota di carte casuali"
+
+msgid "Share of swipes decided by the language model"
+msgstr "Quota di swipe decisi dal modello linguistico"
 
 #, python-format
 msgid ""
@@ -11268,6 +11848,9 @@ msgstr ""
 
 msgid "Show the opinion to the agent"
 msgstr "Mostra l'opinione all'agente"
+
+msgid "Show the photos to the model"
+msgstr "Mostra le foto al modello"
 
 msgid "Show the profile-setup wizard to users on their first login"
 msgstr ""
@@ -11363,6 +11946,9 @@ msgstr "Andamento del tempo di simulazione"
 msgid "Simulation Topics"
 msgstr "Argomenti della simulazione"
 
+msgid "Simulation length"
+msgstr "Durata della simulazione"
+
 msgid "Simulation length and population dynamics."
 msgstr "Durata della simulazione e dinamiche della popolazione."
 
@@ -11432,6 +12018,18 @@ msgstr "Giorni della finestra scorrevole"
 msgid "Slot"
 msgstr "Slot"
 
+msgid "Slots before a proposal expires"
+msgstr "Slot prima che una proposta scada"
+
+msgid "Slots from acceptance to outcome"
+msgstr "Slot dall'accettazione all'esito"
+
+msgid "Slots in a day"
+msgstr "Slot in un giorno"
+
+msgid "Slots of silence that count as ghosting"
+msgstr "Slot di silenzio che contano come ghosting"
+
 msgid "Slovak"
 msgstr "Slovacca"
 
@@ -11489,6 +12087,9 @@ msgstr "Qualcosa è andato storto da parte nostra."
 msgid "Something went wrong?"
 msgstr "Qualcosa è andato storto?"
 
+msgid "Sort by"
+msgstr "Ordina per"
+
 msgid "Source"
 msgstr "Origine"
 
@@ -11512,6 +12113,9 @@ msgstr "Spam"
 
 msgid "Spanish"
 msgstr "Spagnola"
+
+msgid "Spare likes kept for later"
+msgstr "Like di riserva tenuti per dopo"
 
 msgid "Special rights"
 msgstr "Diritti speciali"
@@ -11642,6 +12246,12 @@ msgstr ""
 "Ferma gli esperimenti attivi che usano questo plugin prima di "
 "modificarlo: %(names)s."
 
+msgid "Stop the client before changing its settings."
+msgstr "Ferma il client prima di cambiarne le impostazioni."
+
+msgid "Stop the client to extend it."
+msgstr "Ferma il client per estenderlo."
+
 msgid "Stop the experiment before clearing logs"
 msgstr "Ferma l'esperimento prima di cancellare i log"
 
@@ -11715,6 +12325,9 @@ msgstr "Distribuzione dello stress"
 
 msgid "Stress and reward"
 msgstr "Stress e ricompensa"
+
+msgid "Stress changes the activity"
+msgstr "Lo stress cambia l'attività"
 
 msgid "Stress/Reward"
 msgstr "Stress/ricompensa"
@@ -11836,6 +12449,9 @@ msgstr "Super like"
 msgid "Super liked you"
 msgstr "Ti ha dato un super like"
 
+msgid "Super likes per agent per day"
+msgstr "Super like per agente al giorno"
+
 msgid "Supergroup"
 msgstr "Supergruppo"
 
@@ -11856,11 +12472,17 @@ msgstr "Progetti di supporto"
 msgid "Swedish"
 msgstr "Svedese"
 
+msgid "Swipe"
+msgstr "Swipe"
+
 msgid "Swipes"
 msgstr "Swipe"
 
 msgid "Swipes and ranking"
 msgstr "Swipe e classifica"
+
+msgid "Swiping"
+msgstr "Swipe"
 
 msgid "Swiping is switched off for this experiment."
 msgstr "Lo scorrimento dei profili è disattivato per questo esperimento."
@@ -11896,7 +12518,9 @@ msgstr "Popolazioni sintetiche"
 msgid ""
 "Synthetic population for dating experiments, generated with the YDating "
 "generator. It can only be assigned to dating experiments."
-msgstr "Popolazione sintetica per esperimenti di dating, generata con il generatore di YDating. Può essere assegnata solo a esperimenti di dating."
+msgstr ""
+"Popolazione sintetica per esperimenti di dating, generata con il "
+"generatore di YDating. Può essere assegnata solo a esperimenti di dating."
 
 msgid "System Settings"
 msgstr "Impostazioni di sistema"
@@ -12034,6 +12658,9 @@ msgstr ""
 " reale quando il prompt viene costruito. Puoi rimuovere un campo o "
 "spostarlo, ma non aggiungerne uno che il prompt predefinito non offre: il"
 " salvataggio viene rifiutato."
+
+msgid "Texts"
+msgstr "Testi"
 
 msgid "Thai"
 msgstr "Thailandese"
@@ -12189,8 +12816,15 @@ msgstr ""
 "Le modifiche sono salvate direttamente nel tuo profilo dell'esperimento "
 "senza lasciare questa pagina."
 
+msgid "The client is running: stop it to change its settings."
+msgstr "Il client è in esecuzione: fermalo per cambiarne le impostazioni."
+
 msgid "The client was interrupted."
 msgstr "Il client è stato interrotto."
+
+#, python-format
+msgid "The client will run %(days)s days in all. Start it again to continue."
+msgstr "Il client durerà %(days)s giorni in tutto. Riavvialo per continuare."
 
 msgid ""
 "The configuration differs from the one recorded when the run started: "
@@ -12374,12 +13008,26 @@ msgstr ""
 "nelle sue sottocartelle, ma non ha trovato una configurazione JSON "
 "leggibile del server o dei client."
 
+msgid "The model may answer super like"
+msgstr "Il modello può rispondere super like"
+
 msgid ""
 "The model that proposes the cards. Agents may have their own model in the"
 " population; the others use this one."
 msgstr ""
 "Il modello che propone le carte. Gli agenti possono avere un modello "
 "proprio nella popolazione; gli altri usano questo."
+
+msgid ""
+"The model that writes profile texts and messages and that decides part of"
+" the swipes. With the stub backend nothing is called: answers are "
+"generated by a deterministic fake, which is enough for tests and large "
+"runs."
+msgstr ""
+"Il modello che scrive testi del profilo e messaggi e che decide una parte"
+" degli swipe. Con il backend stub non viene chiamato nulla: le risposte "
+"sono generate da un finto deterministico, sufficiente per i test e per le"
+" esecuzioni grandi."
 
 msgid ""
 "The network can be either synthetically generated or custom-made and "
@@ -12439,6 +13087,15 @@ msgstr ""
 "I profili pubblici possono essere sfogliati da persone che non fanno "
 "parte dell'esperimento"
 
+msgid ""
+"The recommender, the daily quotas, the rules of chats and dates and human"
+" participation are shared by every client: set them once for the "
+"experiment."
+msgstr ""
+"Il recommender, le quote giornaliere, le regole di chat e appuntamenti e "
+"la partecipazione umana sono comuni a tutti i client: si impostano una "
+"volta per l'esperimento."
+
 msgid "The referenced ad hoc agent type is no longer available."
 msgstr "Il tipo di agente ad hoc referenziato non è più disponibile."
 
@@ -12473,7 +13130,11 @@ msgid ""
 "The same seed and parameters always generate the same population. Fields "
 "left empty use the generator default; weights are written as "
 "label=weight, separated by commas (a label without weight counts 1)."
-msgstr "Lo stesso seme e gli stessi parametri generano sempre la stessa popolazione. I campi lasciati vuoti usano il valore predefinito del generatore; i pesi si scrivono come etichetta=peso, separati da virgole (un'etichetta senza peso vale 1)."
+msgstr ""
+"Lo stesso seme e gli stessi parametri generano sempre la stessa "
+"popolazione. I campi lasciati vuoti usano il valore predefinito del "
+"generatore; i pesi si scrivono come etichetta=peso, separati da virgole "
+"(un'etichetta senza peso vale 1)."
 
 msgid "The same subreddit definition can be reused safely"
 msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
@@ -12712,6 +13373,18 @@ msgstr ""
 "da fissare direttamente in questa simulazione del forum."
 
 msgid ""
+"These settings belong to the whole experiment and are shared by every "
+"client: the rules of the platform, the recommender and the participation "
+"of people. How the agents of one population behave (activity, swiping, "
+"writing, memory) is set in each client."
+msgstr ""
+"Queste impostazioni appartengono a tutto l'esperimento e sono comuni a "
+"ogni client: le regole della piattaforma, il recommender e la "
+"partecipazione delle persone. Come si comportano gli agenti di una "
+"popolazione (attività, swipe, scrittura, memoria) si imposta in ogni "
+"client."
+
+msgid ""
 "These settings control how much external content is ingested during a "
 "forum simulation. Higher values increase variety but also startup and "
 "refresh costs."
@@ -12766,11 +13439,6 @@ msgstr "Questo esperimento non è un esperimento di messaggistica istantanea."
 msgid "This interaction is switched off for the experiment."
 msgstr "Questa interazione è disattivata per l'esperimento."
 
-msgid "This is a simulation: all people, photos and messages are fictional."
-msgstr ""
-"Questa è una simulazione: tutte le persone, le foto e i messaggi sono "
-"fittizi."
-
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -12816,6 +13484,13 @@ msgstr ""
 
 msgid "This page represents a forum community page."
 msgstr "Questa pagina rappresenta la pagina di una community del forum."
+
+msgid ""
+"This part is off in the Experiment Configuration, so these settings have "
+"no effect until you switch it on there."
+msgstr ""
+"Questa parte è disattivata nella Configurazione dell'esperimento, quindi "
+"queste impostazioni non hanno effetto finché non la attivi lì."
 
 msgid ""
 "This plugin comes from the community plugin registry and is not "
@@ -12882,6 +13557,9 @@ msgstr "Thread non trovato."
 msgid "Threat"
 msgstr "Minaccia"
 
+msgid "Threshold and noise"
+msgstr "Soglia e rumore"
+
 msgid "Thumbs-down reaction"
 msgstr "Reazione «pollice in giù»"
 
@@ -12909,6 +13587,9 @@ msgstr "Tempo"
 msgid "Time Period"
 msgstr "Periodo di tempo"
 
+msgid "Time and start"
+msgstr "Tempo e avvio"
+
 msgid ""
 "Time steps in an hour (for example 60 = one per minute). More ticks "
 "spread the messages of a round more finely; the hour itself does not "
@@ -12929,6 +13610,9 @@ msgstr "Viaggio nel tempo: stato al giorno %(d)s, round %(h)s."
 msgid "Time travel: showing the state at day %(d)s, slot %(s)s."
 msgstr "Viaggio nel tempo: stato al giorno %(d)s, slot %(s)s."
 
+msgid "Time window of the search (rounds)"
+msgstr "Finestra temporale della ricerca (round)"
+
 msgid "Timeline"
 msgstr "Cronologia"
 
@@ -12940,6 +13624,9 @@ msgstr "Rapporto della timeline:"
 
 msgid "Timeout (seconds)"
 msgstr "Timeout (secondi)"
+
+msgid "Timeout of a call (seconds)"
+msgstr "Timeout di una chiamata (secondi)"
 
 msgid "Timeouts and polling of the client process."
 msgstr "Timeout e polling del processo client."
@@ -13146,6 +13833,9 @@ msgstr "Totale dei tag emotivi rispetto alle foto annotate distinte per giorno."
 msgid "Total emotion tags versus distinct annotated posts per day."
 msgstr "Totale dei tag emotivi rispetto ai post annotati distinti per giorno."
 
+msgid "Total length"
+msgstr "Durata totale"
+
 msgid "Total memory in the prompt (characters)"
 msgstr "Memoria totale nel prompt (caratteri)"
 
@@ -13184,6 +13874,9 @@ msgstr "Livello di tossicità"
 
 msgid "Toxicity Levels"
 msgstr "Livelli di tossicità"
+
+msgid "Toxicity annotation"
+msgstr "Annotazione di tossicità"
 
 msgid "Toxicity level instruction"
 msgstr "Istruzione sul livello di tossicità"
@@ -13249,6 +13942,9 @@ msgstr ""
 msgid "Transition Probabilities (%%)"
 msgstr "Probabilità di transizione (%%)"
 
+msgid "Transition probabilities"
+msgstr "Probabilità di transizione"
+
 msgid "Transitivity"
 msgstr "Transitività"
 
@@ -13278,6 +13974,9 @@ msgstr "Vero"
 msgid "Turkish"
 msgstr "Turca"
 
+msgid "Turns per slot"
+msgstr "Turni per slot"
+
 msgid ""
 "Two experiments compare cleanly when they share population and seed and "
 "differ in the recommender only."
@@ -13293,6 +13992,11 @@ msgstr "Scrivi un argomento e premi Invio"
 
 msgid "Type a value and press Enter"
 msgstr "Scrivi un valore e premi Invio"
+
+msgid "Type a word or pick a filter: the results appear as you go."
+msgstr ""
+"Scrivi una parola o scegli un filtro: i risultati compaiono mentre "
+"procedi."
 
 msgid "Type at least two characters."
 msgstr "Digita almeno due caratteri."
@@ -13900,7 +14604,14 @@ msgid ""
 "population. Gender, age, language, nationality, education, profession, "
 "leaning and personality are the ones above; interests are the ones of "
 "Interests & Opinions."
-msgstr "Variabili usate solo dalle simulazioni di dating (YDating). Sono salvate come campi personalizzati chiamati dating.*, ignorati dalle altre piattaforme, e permettono a questo agente di partecipare a un esperimento di dating quando appartiene a una popolazione di dating. Genere, età, lingua, nazionalità, istruzione, professione, orientamento e personalità sono quelli indicati sopra; gli interessi sono quelli di Interessi e opinioni."
+msgstr ""
+"Variabili usate solo dalle simulazioni di dating (YDating). Sono salvate "
+"come campi personalizzati chiamati dating.*, ignorati dalle altre "
+"piattaforme, e permettono a questo agente di partecipare a un esperimento"
+" di dating quando appartiene a una popolazione di dating. Genere, età, "
+"lingua, nazionalità, istruzione, professione, orientamento e personalità "
+"sono quelli indicati sopra; gli interessi sono quelli di Interessi e "
+"opinioni."
 
 msgid "Version"
 msgstr "Versione"
@@ -13991,6 +14702,9 @@ msgstr "Modello di visione"
 
 msgid "Vision Temperature"
 msgstr "Temperatura del modello di visione"
+
+msgid "Vision model"
+msgstr "Modello di visione"
 
 msgid ""
 "Visitors can create a participant account from the login page and join "
@@ -14156,11 +14870,35 @@ msgstr "Peso di mi piace / reazioni"
 msgid "Weight for shares / reposts"
 msgstr "Peso di condivisioni / ripubblicazioni"
 
+msgid "Weight of age fit"
+msgstr "Peso dell'adeguatezza dell'età"
+
+msgid "Weight of attractiveness"
+msgstr "Peso dell'attrattività"
+
+msgid "Weight of compatibility"
+msgstr "Peso della compatibilità"
+
+msgid "Weight of compatible intent"
+msgstr "Peso dell'intenzione compatibile"
+
+msgid "Weight of distance"
+msgstr "Peso della distanza"
+
 msgid "Weight of notifications"
 msgstr "Peso delle notifiche"
 
 msgid "Weight of recent activity"
 msgstr "Peso dell'attività recente"
+
+msgid "Weight of shared interests"
+msgstr "Peso degli interessi in comune"
+
+msgid "Weight of the conversation tone"
+msgstr "Peso del tono della conversazione"
+
+msgid "Weight of the visual match"
+msgstr "Peso dell'affinità visiva"
 
 msgid "Weight of topic affinity"
 msgstr "Peso dell'affinità con i topic"
@@ -14168,7 +14906,9 @@ msgstr "Peso dell'affinità con i topic"
 msgid ""
 "Weights of serious, casual, friendship, unsure. Default 0.35, 0.2, 0.1, "
 "0.35."
-msgstr "Pesi di seria, occasionale, amicizia, incerta. Predefiniti 0.35, 0.2, 0.1, 0.35."
+msgstr ""
+"Pesi di seria, occasionale, amicizia, incerta. Predefiniti 0.35, 0.2, "
+"0.1, 0.35."
 
 #, python-format
 msgid "Weights of the education levels. Known values: %(values)s"
@@ -14177,14 +14917,22 @@ msgstr "Pesi dei livelli di istruzione. Valori noti: %(values)s"
 msgid ""
 "Weights of the labels of each attribute; an attribute left empty is not "
 "assigned."
-msgstr "Pesi delle etichette di ogni attributo; un attributo lasciato vuoto non viene assegnato."
+msgstr ""
+"Pesi delle etichette di ogni attributo; un attributo lasciato vuoto non "
+"viene assegnato."
 
 msgid "Weights of the labels of each trait; a trait left empty is not assigned."
-msgstr "Pesi delle etichette di ogni tratto; un tratto lasciato vuoto non viene assegnato."
+msgstr ""
+"Pesi delle etichette di ogni tratto; un tratto lasciato vuoto non viene "
+"assegnato."
 
 #, python-format
-msgid "Weights of the nationalities. Known values: %(values)s"
-msgstr "Pesi delle nazionalità. Valori noti: %(values)s"
+msgid ""
+"Weights of the nationalities; every agent lives in a city of its "
+"nationality (see Cities). Known values: %(values)s"
+msgstr ""
+"Pesi delle nazionalità; ogni agente vive in una città della sua "
+"nazionalità (vedi Città). Valori noti: %(values)s"
 
 #, python-format
 msgid "Weights of the political leanings. Known values: %(values)s"
@@ -14197,7 +14945,12 @@ msgstr "Pesi delle professioni. Valori noti: %(values)s"
 msgid ""
 "Weights of the recommenders assigned to the agents; empty uses the "
 "experiment default."
-msgstr "Pesi dei recommender assegnati agli agenti; se vuoto usa il valore predefinito dell'esperimento."
+msgstr ""
+"Pesi dei recommender assegnati agli agenti; se vuoto usa il valore "
+"predefinito dell'esperimento."
+
+msgid "Weights of the utility"
+msgstr "Pesi dell'utilità"
 
 #, python-format
 msgid "Welcome %(username)s!"
@@ -14208,6 +14961,15 @@ msgstr "Bentornato"
 
 msgid "Welcome to YSocial! 🎉"
 msgstr "Benvenuto in YSocial! 🎉"
+
+msgid ""
+"What an agent does when it is not finding matches or after some time on "
+"the app. Dates, couples and leaving the platform are rules of the "
+"platform: see the experiment settings."
+msgstr ""
+"Cosa fa un agente quando non trova match o dopo un po' di tempo sull'app."
+" Appuntamenti, coppie e abbandono della piattaforma sono regole della "
+"piattaforma: vedi le impostazioni dell'esperimento."
 
 msgid "What another user sees of this agent. Hidden attributes are not shown."
 msgstr ""
@@ -14242,6 +15004,24 @@ msgstr ""
 "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è "
 "verificato l'errore?"
 
+msgid ""
+"What the agents remember of their chats. Memory is switched on for the "
+"whole experiment in the Experiment Configuration; these settings tune it "
+"for this client."
+msgstr ""
+"Cosa ricordano gli agenti delle loro chat. La memoria si attiva per tutto"
+" l'esperimento nella Configurazione dell'esperimento; queste impostazioni"
+" la regolano per questo client."
+
+msgid ""
+"What the client writes or draws when the population file leaves it empty:"
+" bios, answers to the profile questions, captions and, optionally, one "
+"image per photo."
+msgstr ""
+"Cosa scrive o disegna il client quando il file della popolazione lo "
+"lascia vuoto: bio, risposte alle domande del profilo, didascalie e, "
+"facoltativamente, un'immagine per foto."
+
 msgid "What the model is told about the fields each action needs."
 msgstr "Cosa viene detto al modello sui campi richiesti da ciascuna azione."
 
@@ -14256,6 +15036,9 @@ msgid ""
 msgstr ""
 "Cosa riceve il modello all'inizio di una sessione di un agente o di una "
 "pagina di notizie e come è scritta la data."
+
+msgid "What the server writes in its log files."
+msgstr "Cosa scrive il server nei suoi file di log."
 
 msgid "What you assigned to posts and comments"
 msgstr "Ciò che hai assegnato a post e commenti"
@@ -14306,6 +15089,13 @@ msgstr ""
 "dell'attivazione e può chiedere al server di segnare l'agente come "
 "uscito."
 
+msgid ""
+"When the agents open the app and how many cards they decide each time. "
+"Each slot is one round of the experiment."
+msgstr ""
+"Quando gli agenti aprono l'app e quante carte decidono ogni volta. Ogni "
+"slot è un round dell'esperimento."
+
 msgid "Where a chat opens"
 msgstr "Dove si apre una chat"
 
@@ -14321,11 +15111,31 @@ msgstr "Dove il mondo digitale prende vita."
 msgid "Where the message comes from"
 msgstr "Origine del messaggio"
 
+msgid ""
+"Where the toxicity score comes from when annotations are switched on in "
+"the Experiment Configuration."
+msgstr ""
+"Da dove viene il punteggio di tossicità quando le annotazioni sono attive"
+" nella Configurazione dell'esperimento."
+
+msgid ""
+"Whether dates exist, how a date is proposed and answered, how its outcome"
+" is drawn and what happens to the people afterwards."
+msgstr ""
+"Se gli appuntamenti esistono, come si propongono e si risponde, come si "
+"estrae l'esito e cosa succede alle persone dopo."
+
 msgid "Which chats an agent looks at in a session and how they are ranked."
 msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
 
 msgid "Who are you with?"
 msgstr "Con chi sei?"
+
+msgid "Who decides"
+msgstr "Chi decide"
+
+msgid "Who decides the swipes"
+msgstr "Chi decide gli swipe"
 
 msgid "Who the model is told it is and how the profile of the agent is worded."
 msgstr ""
@@ -14339,8 +15149,17 @@ msgstr ""
 "Chi viene detto al modello di essere: il prompt di sistema di un agente e"
 " di una pagina di notizie, e come sono espressi i tratti di personalità."
 
+msgid "Who writes the messages"
+msgstr "Chi scrive i messaggi"
+
 msgid "Who you see"
 msgstr "Chi vedi"
+
+msgid "Widening the preferences"
+msgstr "Ampliare le preferenze"
+
+msgid "Window of past slots"
+msgstr "Finestra di slot passati"
 
 msgid "With a biography"
 msgstr "Con una biografia"
@@ -14350,6 +15169,9 @@ msgstr "Con gruppo di discussione"
 
 msgid "With a message"
 msgstr "Con un messaggio"
+
+msgid "With photo"
+msgstr "Con foto"
 
 msgid "With photos"
 msgstr "Con foto"
@@ -14379,6 +15201,9 @@ msgstr ""
 msgid "Wrapped exception:"
 msgstr "Eccezione incapsulata:"
 
+msgid "Write a caption for every photo"
+msgstr "Scrivi una didascalia per ogni foto"
+
 msgid "Write a message..."
 msgstr "Scrivi un messaggio..."
 
@@ -14394,8 +15219,23 @@ msgstr "Scrivi un titolo breve..."
 msgid "Write something about you..."
 msgstr "Scrivi qualcosa su di te..."
 
+msgid "Write the actor log file"
+msgstr "Scrivi il file di log dell'actor"
+
+msgid "Write the execution log file"
+msgstr "Scrivi il file di log dell'esecuzione"
+
+msgid "Write the missing profile texts"
+msgstr "Scrivi i testi del profilo mancanti"
+
 msgid "Write the post text..."
 msgstr "Scrivi il testo del post..."
+
+msgid "Write the request log file"
+msgstr "Scrivi il file di log delle richieste"
+
+msgid "Write the server log file"
+msgstr "Scrivi il file di log del server"
 
 msgid "Y Social"
 msgstr "Y Social"
@@ -14456,10 +15296,15 @@ msgstr "YSocial supporta tre tipi di utenti con diversi livelli di accesso:"
 msgid "YSocialTwin"
 msgstr "YSocialTwin"
 
+msgid "Years added to the age range"
+msgstr "Anni aggiunti alla fascia d'età"
+
 msgid ""
 "Years below and above the own age that an agent accepts (each side drawn "
 "in this range). Default 4 to 10."
-msgstr "Anni sotto e sopra la propria età che un agente accetta (ogni lato è estratto in questo intervallo). Predefinito da 4 a 10."
+msgstr ""
+"Anni sotto e sopra la propria età che un agente accetta (ogni lato è "
+"estratto in questo intervallo). Predefinito da 4 a 10."
 
 msgid "Yes"
 msgstr "Sì"
@@ -14902,8 +15747,8 @@ msgstr "mancante"
 msgid "multiple clients"
 msgstr "più client"
 
-msgid "name, city, intent, bio"
-msgstr "nome, città, intenzione, bio"
+msgid "name, city, intent, bio, interest"
+msgstr "nome, città, intenzione, bio, interesse"
 
 msgid "never"
 msgstr "mai"
@@ -14990,6 +15835,10 @@ msgstr "server + client"
 msgid "settings"
 msgstr "impostazioni"
 
+#, python-format
+msgid "showing the first %(n)s"
+msgstr "mostro i primi %(n)s"
+
 msgid "signals"
 msgstr "segnali"
 
@@ -15006,6 +15855,9 @@ msgstr "super like rimasti"
 msgid "symlink"
 msgstr "collegamento simbolico"
 
+msgid "to"
+msgstr "a"
+
 msgid "to analyze simulation results"
 msgstr "per analizzare i risultati della simulazione"
 
@@ -15020,6 +15872,9 @@ msgstr "errore sconosciuto"
 
 msgid "unread"
 msgstr "non letti"
+
+msgid "until stopped"
+msgstr "fino a quando non viene fermato"
 
 #, python-format
 msgid "update available: %(tag)s"
@@ -16219,4 +17074,72 @@ msgstr "✔️ Usa"
 
 #~ msgid "Photo descriptions (one per line; no files are uploaded)"
 #~ msgstr "Descrizioni delle foto (una per riga; nessun file viene caricato)"
+
+#~ msgid ""
+#~ "A client is a group of agents "
+#~ "(the population) that swipe, match and"
+#~ " talk in this experiment. Choose the"
+#~ " population and how long it runs; "
+#~ "every advanced setting below has a "
+#~ "default taken from the dating runtime:"
+#~ " leave it untouched if you do "
+#~ "not need it. The slot length, the"
+#~ " recommender and the quotas are "
+#~ "experiment settings."
+#~ msgstr ""
+#~ "Un client è un gruppo di agenti"
+#~ " (la popolazione) che scorrono i "
+#~ "profili, fanno match e conversano in "
+#~ "questo esperimento. Scegli la popolazione "
+#~ "e la durata; ogni impostazione avanzata"
+#~ " qui sotto ha un valore predefinito"
+#~ " preso dal runtime dating: lascialo "
+#~ "com'è se non ti serve. La durata"
+#~ " dello slot, il recommender e le "
+#~ "quote sono impostazioni dell'esperimento."
+
+#~ msgid "Advanced settings"
+#~ msgstr "Impostazioni avanzate"
+
+#~ msgid "Dating advanced settings"
+#~ msgstr "Impostazioni avanzate del dating"
+
+#~ msgid "Generated from the configuration schema of the dating runtime."
+#~ msgstr "Generato dallo schema di configurazione del runtime dating."
+
+#~ msgid "On"
+#~ msgstr "Attivo"
+
+#~ msgid ""
+#~ "One line per city: name, latitude, "
+#~ "longitude and optionally the weight. "
+#~ "Default: Pisa."
+#~ msgstr ""
+#~ "Una riga per città: nome, latitudine,"
+#~ " longitudine e, facoltativamente, il peso."
+#~ " Predefinito: Pisa."
+
+#~ msgid "Open advanced settings"
+#~ msgstr "Apri le impostazioni avanzate"
+
+#~ msgid ""
+#~ "Recommender, daily quotas, lifecycle and "
+#~ "conversation parameters belong to the "
+#~ "experiment."
+#~ msgstr ""
+#~ "Recommender, quote giornaliere, ciclo di "
+#~ "vita e parametri delle conversazioni "
+#~ "appartengono all'esperimento."
+
+#~ msgid "This is a simulation: all people, photos and messages are fictional."
+#~ msgstr ""
+#~ "Questa è una simulazione: tutte le "
+#~ "persone, le foto e i messaggi sono"
+#~ " fittizi."
+
+#~ msgid "Weights of the nationalities. Known values: %(values)s"
+#~ msgstr "Pesi delle nazionalità. Valori noti: %(values)s"
+
+#~ msgid "name, city, intent, bio"
+#~ msgstr "nome, città, intenzione, bio"
 

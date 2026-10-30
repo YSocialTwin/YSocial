@@ -102,3 +102,39 @@ def test_people_are_always_welcome():
     assert srv.ensure_humans(off) and off["human"] == {"enabled": True, "max_humans": 3}
     assert not srv.ensure_humans(off)
     assert "human.enabled" not in [f.path for f in srv.form_fields(REPO)]
+
+
+def test_a_restarted_client_runs_what_is_left(app, tmp_path):
+    import json
+
+    from y_web import db
+    from y_web.src.hpc.client import _set_dating_run_length
+    from y_web.src.models import Client, Client_Execution
+
+    path = tmp_path / "client_c-p.json"
+    path.write_text(json.dumps({"client_name": "c", "num_days": 3, "num_slots_per_day": 24}))
+    with app.app_context():
+        cli = Client(name="c", id_exp=1, population_id=1, days=3, status=0)
+        db.session.add(cli)
+        db.session.commit()
+        ex = Client_Execution(client_id=cli.id, last_active_day=-1, last_active_hour=-1)
+        db.session.add(ex)
+        db.session.commit()
+
+        _set_dating_run_length(str(path), cli)
+        assert json.loads(path.read_text())["num_days"] == 3  # first start: the whole length
+
+        ex.last_active_day, ex.last_active_hour = 2, 24  # day 2 finished
+        db.session.commit()
+        _set_dating_run_length(str(path), cli)
+        assert json.loads(path.read_text())["num_days"] == 1
+
+        cli.days = 5  # extended by two days
+        db.session.commit()
+        _set_dating_run_length(str(path), cli)
+        assert json.loads(path.read_text())["num_days"] == 3
+
+        ex.last_active_day, ex.last_active_hour = 5, 24  # everything done
+        db.session.commit()
+        with pytest.raises(RuntimeError):
+            _set_dating_run_length(str(path), cli)

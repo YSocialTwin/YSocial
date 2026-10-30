@@ -11,8 +11,8 @@
 <a class="dt-skip" href="#dt-main">{{ _('Skip to content') }}</a>
 <div class="dt-app">
   <header class="dt-top">
-    <a class="dt-brand" href="{{ link('') }}" style="--dt-logo: url('{{ url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}')" aria-label="YSocial · {{ exp.exp_name }}">
-      <span class="dt-brand-logo" role="img" aria-label="YSocial"></span>
+    <a class="dt-brand" href="{{ link('') }}" style="--dt-logo: url('{{ url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}')" aria-label="{{ 'YSocial' }} · {{ exp.exp_name }}">
+      <span class="dt-brand-logo" role="img" aria-label="{{ 'YSocial' }}"></span>
       <svg class="dt-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 2.6 4.9 6.1 4.5c2-.2 3.7.8 4.6 2.3l1.3 2 1.3-2c.9-1.5 2.6-2.5 4.6-2.3 3.5.4 5.2 4 3.7 7.3C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg>
       <span class="dt-brand-exp">{{ exp.exp_name }}</span></a>
     <nav class="dt-nav" aria-label="{{ _('Sections') }}">

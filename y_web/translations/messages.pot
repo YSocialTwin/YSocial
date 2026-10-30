@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 07:51+0000\n"
+"POT-Creation-Date: 2026-10-30 08:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -126,11 +126,19 @@ msgid "%(n)s configurable values"
 msgstr ""
 
 #, python-format
+msgid "%(n)s days"
+msgstr ""
+
+#, python-format
 msgid "%(n)s feeds selected"
 msgstr ""
 
 #, python-format
 msgid "%(n)s members"
+msgstr ""
+
+#, python-format
+msgid "%(n)s messages"
 msgstr ""
 
 #, python-format
@@ -143,6 +151,14 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s populations for other platforms are hidden."
+msgstr ""
+
+#, python-format
+msgid "%(n)s profiles"
+msgstr ""
+
+#, python-format
+msgid "%(n)s profiles found"
 msgstr ""
 
 #, python-format
@@ -414,10 +430,11 @@ msgstr ""
 
 msgid ""
 "A client is a group of agents (the population) that swipe, match and talk"
-" in this experiment. Choose the population and how long it runs; every "
-"advanced setting below has a default taken from the dating runtime: leave"
-" it untouched if you do not need it. The slot length, the recommender and"
-" the quotas are experiment settings."
+" in this experiment. Choose the population and how long it runs, then "
+"adjust how these agents behave in the sections below: every setting has a"
+" default from the dating runtime, so you can leave any section untouched."
+" Rules shared by all clients (slot length, recommender, quotas, dates) "
+"are in the experiment settings."
 msgstr ""
 
 msgid ""
@@ -470,6 +487,9 @@ msgid ""
 "so use it only for chats that stay almost empty."
 msgstr ""
 
+msgid "A report also blocks the profile"
+msgstr ""
+
 msgid ""
 "A round never closes sooner than this, so that people have time to act. "
 "It is a lower bound: the simulation never waits for a person."
@@ -496,6 +516,9 @@ msgid "API Key"
 msgstr ""
 
 msgid "API Key Environment Variable"
+msgstr ""
+
+msgid "API key environment variable"
 msgstr ""
 
 msgid "About"
@@ -569,12 +592,18 @@ msgstr ""
 msgid "Actions Per User Once Active"
 msgstr ""
 
+msgid "Actions a person may take"
+msgstr ""
+
 msgid "Actions an agent may take besides posting, replying and reacting."
 msgstr ""
 
 msgid ""
 "Actions include posting, commenting, reading, searching, and platform-"
 "specific features."
+msgstr ""
+
+msgid "Actions per request"
 msgstr ""
 
 msgid "Actions per round"
@@ -675,6 +704,9 @@ msgstr ""
 msgid "Activity and recommendation"
 msgstr ""
 
+msgid "Activity of each hour of the day"
+msgstr ""
+
 msgid "Activity profile not found."
 msgstr ""
 
@@ -754,10 +786,19 @@ msgstr ""
 msgid "Add chat"
 msgstr ""
 
+#, python-format
+msgid ""
+"Add days to the total length. A day has %(n)s slots. After extending, "
+"start the client again: it continues from where it stopped."
+msgstr ""
+
 msgid ""
 "Add explicit interests for this agent. If an opinion group is selected, "
 "the related opinion value is stored too. Stubborn interests are exported "
 "with immutable opinion hints."
+msgstr ""
+
+msgid "Add nuance cues"
 msgstr ""
 
 msgid "Add photo"
@@ -802,9 +843,6 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-msgid "Advanced settings"
-msgstr ""
-
 msgid "Advanced settings and recommender"
 msgstr ""
 
@@ -830,13 +868,25 @@ msgstr ""
 msgid "Age class not found."
 msgstr ""
 
+msgid "Age from"
+msgstr ""
+
 msgid "Age mean"
+msgstr ""
+
+msgid "Age range must fit both ways"
 msgstr ""
 
 msgid "Age standard deviation"
 msgstr ""
 
 msgid "Age window (years)"
+msgstr ""
+
+msgid "Age, oldest first"
+msgstr ""
+
+msgid "Age, youngest first"
 msgstr ""
 
 msgid "Agent"
@@ -910,6 +960,9 @@ msgstr ""
 msgid "Agent archetypes updated successfully."
 msgstr ""
 
+msgid "Agent behaviour over time"
+msgstr ""
+
 msgid "Agent gender"
 msgstr ""
 
@@ -917,6 +970,9 @@ msgid "Agent interaction and engagement parameters."
 msgstr ""
 
 msgid "Agent is assigned to a population. Cannot delete."
+msgstr ""
+
+msgid "Agent memory"
 msgstr ""
 
 msgid "Agent name"
@@ -962,13 +1018,33 @@ msgstr ""
 msgid "Agents and pages"
 msgstr ""
 
+msgid ""
+"Agents can change archetype over time, which changes their hourly "
+"activity."
+msgstr ""
+
+msgid "Agents leave the platform"
+msgstr ""
+
 msgid "Agents leaving and joining during the run."
+msgstr ""
+
+msgid "Agents pause their profile"
+msgstr ""
+
+msgid "Agents rewrite their bio"
+msgstr ""
+
+msgid "Agents talk to their matches"
 msgstr ""
 
 msgid "Agents update opinions based on similarity with others"
 msgstr ""
 
 msgid "Agents use LLM to evaluate and update opinions"
+msgstr ""
+
+msgid "Agents widen their preferences"
 msgstr ""
 
 msgid "Agents' Actions Relevance"
@@ -1066,6 +1142,9 @@ msgid "Allow search"
 msgstr ""
 
 msgid "Already registered?"
+msgstr ""
+
+msgid "Also show the log on the console"
 msgstr ""
 
 msgid "Alternative installation"
@@ -1179,6 +1258,9 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+msgid "Appearances of a profile per day (0 = no cap)"
+msgstr ""
+
 msgid "Applied when engagement boost (γ) > 0."
 msgstr ""
 
@@ -1205,6 +1287,12 @@ msgstr ""
 
 #, python-format
 msgid "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)"
+msgstr ""
+
+msgid "Archetypes"
+msgstr ""
+
+msgid "Archetypes change over time"
 msgstr ""
 
 msgid "Archive generation failed."
@@ -1240,6 +1328,9 @@ msgid "Ask the agent about their experiences, relationships, or the community...
 msgstr ""
 
 msgid "Ask the language model when uncertain"
+msgstr ""
+
+msgid "Ask the model when the rules are unsure"
 msgstr ""
 
 msgid "Assign Users to Experiment"
@@ -1527,6 +1618,18 @@ msgstr ""
 msgid "Barrier poll (seconds)"
 msgstr ""
 
+msgid "Base probability of accepting a date"
+msgstr ""
+
+msgid "Base probability of replying"
+msgstr ""
+
+msgid "Base reward"
+msgstr ""
+
+msgid "Base stress"
+msgstr ""
+
 msgid "Baseline & Exploration"
 msgstr ""
 
@@ -1622,6 +1725,9 @@ msgstr ""
 msgid "Bio"
 msgstr ""
 
+msgid "Bio length (characters)"
+msgstr ""
+
 msgid ""
 "Bio, profile questions and photo captions written when the run starts and"
 " refreshed by the lifecycle."
@@ -1631,6 +1737,9 @@ msgid "Block"
 msgstr ""
 
 msgid "Block this person?"
+msgstr ""
+
+msgid "Blocks and reports raise stress"
 msgstr ""
 
 #, python-format
@@ -1643,7 +1752,13 @@ msgstr ""
 msgid "Bluesky Data"
 msgstr ""
 
+msgid "Boost of a new profile"
+msgstr ""
+
 msgid "Both experiment name and source experiment are required."
+msgstr ""
+
+msgid "Both leave after a good date"
 msgstr ""
 
 msgid "Bounded Confidence"
@@ -1724,6 +1839,9 @@ msgstr ""
 msgid "Bulk export experiments"
 msgstr ""
 
+msgid "Burst of requests"
+msgstr ""
+
 msgid "Business Hours (9-17)"
 msgstr ""
 
@@ -1734,6 +1852,9 @@ msgid "Call Volume by Path"
 msgstr ""
 
 msgid "Cancel"
+msgstr ""
+
+msgid "Candidates scored per viewer"
 msgstr ""
 
 #, python-format
@@ -1757,7 +1878,13 @@ msgstr ""
 msgid "Cannot remove experiments from a running group"
 msgstr ""
 
+msgid "Cards decided per session"
+msgstr ""
+
 msgid "Cards of this round"
+msgstr ""
+
+msgid "Cards per request"
 msgstr ""
 
 msgid "Cards shown"
@@ -2071,6 +2198,9 @@ msgstr ""
 msgid "Client Settings"
 msgstr ""
 
+msgid "Client configuration file not found."
+msgstr ""
+
 #, python-format
 msgid "Client configuration file not found: %(client_config_file)s"
 msgstr ""
@@ -2119,13 +2249,25 @@ msgstr ""
 msgid "Client not found."
 msgstr ""
 
+msgid "Client settings"
+msgstr ""
+
+msgid "Client settings updated."
+msgstr ""
+
 msgid "Client simulation parameters updated."
+msgstr ""
+
+msgid "Client timeout (seconds)"
 msgstr ""
 
 msgid "Client:"
 msgstr ""
 
 msgid "Clients"
+msgstr ""
+
+msgid "Clients needed to start"
 msgstr ""
 
 msgid "Clock Timezone"
@@ -2280,6 +2422,9 @@ msgid "Computational Social Science"
 msgstr ""
 
 msgid "Concurrency, timeouts and the failure guard of the language model calls."
+msgstr ""
+
+msgid "Concurrent calls"
 msgstr ""
 
 msgid "Configurable Features"
@@ -2513,6 +2658,12 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
+msgid "Connection"
+msgstr ""
+
+msgid "Connection and logs"
+msgstr ""
+
 #, python-format
 msgid "Connection error: %(error)s"
 msgstr ""
@@ -2636,6 +2787,12 @@ msgstr ""
 msgid "Conversation info"
 msgstr ""
 
+msgid "Conversation rules"
+msgstr ""
+
+msgid "Conversations"
+msgstr ""
+
 msgid "Conversations and dates"
 msgstr ""
 
@@ -2751,6 +2908,9 @@ msgid "Create Your Experiment"
 msgstr ""
 
 msgid "Create Your Population"
+msgstr ""
+
+msgid "Create a client"
 msgstr ""
 
 msgid "Create a group for each topic"
@@ -3071,6 +3231,18 @@ msgid ""
 "for each toxicity category."
 msgstr ""
 
+msgid "Daily probability of leaving"
+msgstr ""
+
+msgid "Daily probability of pausing"
+msgstr ""
+
+msgid "Daily probability of rewriting"
+msgstr ""
+
+msgid "Daily quotas"
+msgstr ""
+
 msgid ""
 "Daily target toxicity, with moderator intervention volume shown on the "
 "secondary axis."
@@ -3098,7 +3270,16 @@ msgstr ""
 msgid "Date proposals"
 msgstr ""
 
+msgid "Dates"
+msgstr ""
+
+msgid "Dates are allowed"
+msgstr ""
+
 msgid "Dates proposed"
+msgstr ""
+
+msgid "Dates, couples and leaving"
 msgstr ""
 
 msgid "Dating"
@@ -3108,9 +3289,6 @@ msgid "Dating (swipe-based matching)"
 msgstr ""
 
 msgid "Dating LLM Prompts"
-msgstr ""
-
-msgid "Dating advanced settings"
 msgstr ""
 
 msgid "Dating analytics"
@@ -3151,6 +3329,9 @@ msgstr ""
 msgid "Dating profile"
 msgstr ""
 
+msgid "Dating settings"
+msgstr ""
+
 msgid "Day"
 msgstr ""
 
@@ -3182,6 +3363,30 @@ msgid "Day by day"
 msgstr ""
 
 msgid "Days"
+msgstr ""
+
+msgid "Days a new profile is boosted"
+msgstr ""
+
+msgid "Days before a passed profile returns (0 = never)"
+msgstr ""
+
+msgid "Days before resuming"
+msgstr ""
+
+msgid "Days to add"
+msgstr ""
+
+msgid "Days without a match before pausing"
+msgstr ""
+
+msgid "Days without a match before the streak"
+msgstr ""
+
+msgid "Days without a match before widening"
+msgstr ""
+
+msgid "Days without a match that raise it"
 msgstr ""
 
 msgid "Deactivate"
@@ -3252,6 +3457,9 @@ msgid "Default 7."
 msgstr ""
 
 msgid "Default content recommender"
+msgstr ""
+
+msgid "Default conversation tone"
 msgstr ""
 
 msgid "Default feed ordering"
@@ -3380,6 +3588,9 @@ msgstr ""
 msgid "Demographics & Attributes:"
 msgstr ""
 
+msgid "Denoising steps"
+msgstr ""
+
 msgid "Density"
 msgstr ""
 
@@ -3472,6 +3683,9 @@ msgstr ""
 msgid ""
 "Detoxify model ready. New simulations will reuse this local cache "
 "automatically."
+msgstr ""
+
+msgid "Diffusion model"
 msgstr ""
 
 msgid "Diffusion, emergence, reach"
@@ -3736,6 +3950,9 @@ msgstr ""
 msgid "Edit server settings"
 msgstr ""
 
+msgid "Edit the profile"
+msgstr ""
+
 msgid "Edit your profile and your interface language."
 msgstr ""
 
@@ -3764,6 +3981,15 @@ msgstr ""
 msgid "Education levels"
 msgstr ""
 
+msgid "Effect of selectivity on the threshold"
+msgstr ""
+
+msgid "Effect of stress on replying"
+msgstr ""
+
+msgid "Effect of stress on the threshold"
+msgstr ""
+
 msgid "Efficient/Organized"
 msgstr ""
 
@@ -3774,6 +4000,9 @@ msgid "Email is already in use by another user"
 msgstr ""
 
 msgid "Email updated successfully"
+msgstr ""
+
+msgid "Embed memories later"
 msgstr ""
 
 msgid "Embedding Model"
@@ -3949,6 +4178,9 @@ msgid "End this match?"
 msgstr ""
 
 msgid "Ended"
+msgstr ""
+
+msgid "Ending a match"
 msgstr ""
 
 msgid "Endpoint:"
@@ -4399,7 +4631,13 @@ msgid ""
 " 0 (equal) to 1 (one profile holds everything)."
 msgstr ""
 
+msgid "Extend"
+msgstr ""
+
 msgid "Extend Simulation"
+msgstr ""
+
+msgid "Extend the simulation"
 msgstr ""
 
 msgid "Extensions"
@@ -4612,6 +4850,9 @@ msgid "First messages, replies, unmatching and date proposals."
 msgstr ""
 
 msgid "Flirtation"
+msgstr ""
+
+msgid "Folder of the images"
 msgstr ""
 
 msgid "Follow"
@@ -4843,6 +5084,9 @@ msgstr ""
 msgid "Genders"
 msgstr ""
 
+msgid "Genders allowed to write first"
+msgstr ""
+
 msgid "Genders sought"
 msgstr ""
 
@@ -4876,7 +5120,13 @@ msgstr ""
 msgid "Generate synthetic population"
 msgstr ""
 
+msgid "Generate the photo images"
+msgstr ""
+
 msgid "Generate the topology if missing"
+msgstr ""
+
+msgid "Generate them while the simulation runs"
 msgstr ""
 
 msgid "Generate topics"
@@ -4892,9 +5142,6 @@ msgid "Generated Configs"
 msgstr ""
 
 msgid "Generated Slug"
-msgstr ""
-
-msgid "Generated from the configuration schema of the dating runtime."
 msgstr ""
 
 msgid "Generates text or makes decisions leveraging its profile"
@@ -5264,13 +5511,27 @@ msgstr ""
 msgid "Hourly Activity Rates (Optional)"
 msgstr ""
 
+msgid "Hourly profiles by archetype"
+msgstr ""
+
 msgid "How agents find chats to join or leave."
+msgstr ""
+
+msgid ""
+"How an agent decides on a card: a utility built from the weights below, "
+"compared with a threshold. The weights are relative to each other."
 msgstr ""
 
 msgid "How do you feel?"
 msgstr ""
 
 msgid "How each message the agent reads is shown to it."
+msgstr ""
+
+msgid ""
+"How events (matches, silence, blocks, reports) become stress and reward. "
+"Switched on in the Experiment Configuration; how a client uses them is "
+"set in the client."
 msgstr ""
 
 msgid "How it works"
@@ -5283,11 +5544,19 @@ msgid ""
 msgstr ""
 
 msgid ""
+"How many likes and super likes an agent has each day. The recommender is "
+"chosen above."
+msgstr ""
+
+msgid ""
 "How many recent interaction events to include in LLM context per "
 "user/thread pair."
 msgstr ""
 
 msgid "How many sessions an agent may open in a round."
+msgstr ""
+
+msgid "How memory enters the prompt"
 msgstr ""
 
 msgid "How much conversation history agents see"
@@ -5306,12 +5575,30 @@ msgid "How often memory reflections are generated."
 msgstr ""
 
 msgid ""
+"How the agents talk to their matches: who writes the messages, how often "
+"they check a chat, reply, react or leave it, and when they propose or "
+"accept a date. Limits and dates are rules of the platform: see the "
+"experiment settings."
+msgstr ""
+
+msgid ""
 "How the automatic chats are generated: who owns channels, how many "
 "channels get a discussion group, and how the social network subscribes "
 "followers. Chats defined in Chats by Topic are created as you wrote them."
 msgstr ""
 
 msgid "How the chats the agent owns, follows or could join are listed."
+msgstr ""
+
+msgid ""
+"How the client reads the messages and applies stress to the activity. "
+"Stress and reward are switched on for the whole experiment in the "
+"Experiment Configuration; their rules are in the experiment settings."
+msgstr ""
+
+msgid ""
+"How the client talks to the server and what it writes in its log. The "
+"defaults suit almost every run."
 msgstr ""
 
 msgid ""
@@ -5328,7 +5615,16 @@ msgstr ""
 msgid "How the prompts work"
 msgstr ""
 
+msgid ""
+"How the simulated time is divided and when the run starts. The slot "
+"length and the seed are shared by every client of the experiment and are "
+"locked once the run has started."
+msgstr ""
+
 msgid "How the stress level is worded when stress/reward is on."
+msgstr ""
+
+msgid "How the tone of a message is classified"
 msgstr ""
 
 msgid "How the topic and the chat of each post the agent has to write are given."
@@ -5341,6 +5637,9 @@ msgid "Human"
 msgstr ""
 
 msgid "Human participants can take part in the chats"
+msgstr ""
+
+msgid "Human participation"
 msgstr ""
 
 msgid ""
@@ -5414,12 +5713,18 @@ msgstr ""
 msgid "Image feeds updated successfully."
 msgstr ""
 
+msgid "Image generator"
+msgstr ""
+
 msgid ""
 "Image sharing/commenting is currently disabled. Fetch the available "
 "vision models and select one to enable this feature."
 msgstr ""
 
 msgid "Image-share posts emitted"
+msgstr ""
+
+msgid "Images"
 msgstr ""
 
 msgid "Images are cropped to a square preview when needed."
@@ -5625,6 +5930,9 @@ msgid "Interactions"
 msgstr ""
 
 msgid "Interactions switched off"
+msgstr ""
+
+msgid "Intercept"
 msgstr ""
 
 msgid "Interest"
@@ -5890,6 +6198,12 @@ msgstr ""
 msgid "Item not found"
 msgstr ""
 
+msgid "Items kept for a chat"
+msgstr ""
+
+msgid "Items kept for a pair"
+msgstr ""
+
 msgid "Japanese"
 msgstr ""
 
@@ -5927,6 +6241,9 @@ msgstr ""
 msgid ""
 "Keep defaults for small and medium experiments. Increase limits only when"
 " you need broader topical variety or longer-running content pools."
+msgstr ""
+
+msgid "Keep the memory between runs"
 msgstr ""
 
 msgid ""
@@ -6035,6 +6352,9 @@ msgstr ""
 msgid "Language code written on every agent (for example en, it)."
 msgstr ""
 
+msgid "Language model"
+msgstr ""
+
 msgid "Language not found."
 msgstr ""
 
@@ -6067,6 +6387,12 @@ msgid "Largest Component Share"
 msgstr ""
 
 msgid "Largest Component Share Over Time"
+msgstr ""
+
+msgid "Largest distance (km)"
+msgstr ""
+
+msgid "Largest request (bytes)"
 msgstr ""
 
 msgid "Last Check"
@@ -6139,6 +6465,13 @@ msgstr ""
 msgid "Leave empty to use name from config..."
 msgstr ""
 
+msgid ""
+"Leave empty to use the main cities of each nationality. To choose them, "
+"write one line per city: name, latitude, longitude and, optionally, the "
+"weight and the nationality that lives there (without a nationality the "
+"city is used for everybody)."
+msgstr ""
+
 msgid "Leave fields empty to use the default activity profile."
 msgstr ""
 
@@ -6148,7 +6481,13 @@ msgstr ""
 msgid "Leave the platform? Your matches will end."
 msgstr ""
 
+msgid "Leaving the platform"
+msgstr ""
+
 msgid "Left (round)"
+msgstr ""
+
+msgid "Length asked of a message (characters)"
 msgstr ""
 
 msgid "Less"
@@ -6164,6 +6503,12 @@ msgid "Let non-staff viewers look at a past round"
 msgstr ""
 
 msgid "Let participants change the language"
+msgstr ""
+
+msgid ""
+"Let people play next to the agents: how many, how fast, what they may do "
+"and the limits that protect the server. The participants are managed on "
+"the Participants page."
 msgstr ""
 
 msgid "Let's create your first simulation in just 4 easy steps."
@@ -6184,10 +6529,19 @@ msgstr ""
 msgid "Like rate"
 msgstr ""
 
+msgid "Like threshold"
+msgstr ""
+
 msgid "Likes"
 msgstr ""
 
+msgid "Likes per agent per day"
+msgstr ""
+
 msgid "Limited access to assigned experiments only. Cannot access admin panel."
+msgstr ""
+
+msgid "Limits"
 msgstr ""
 
 msgid "Linear"
@@ -6303,6 +6657,15 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
+msgid "Logs"
+msgstr ""
+
+msgid "Longest message accepted (characters)"
+msgstr ""
+
+msgid "Longest text a person may send"
+msgstr ""
+
 msgid "Longitude"
 msgstr ""
 
@@ -6310,6 +6673,9 @@ msgid "Look again"
 msgstr ""
 
 msgid "Look for chats, users, groups, channels or posts from the search box."
+msgstr ""
+
+msgid "Looking for"
 msgstr ""
 
 msgid "Looking for (separate with commas)"
@@ -6384,6 +6750,9 @@ msgid "Mandatory. Only populations with the same custom type are available."
 msgstr ""
 
 msgid "Mandatory. Select one of the installed custom agent families."
+msgstr ""
+
+msgid "Margin for a super like"
 msgstr ""
 
 msgid "Mark read"
@@ -6520,6 +6889,9 @@ msgstr ""
 msgid "Maximum share of failed sessions"
 msgstr ""
 
+msgid "Maximum tokens of an answer"
+msgstr ""
+
 msgid "Maximum wait (rounds)"
 msgstr ""
 
@@ -6562,6 +6934,9 @@ msgstr ""
 msgid "Members table"
 msgstr ""
 
+msgid "Memories retrieved"
+msgstr ""
+
 msgid "Memory"
 msgstr ""
 
@@ -6569,6 +6944,12 @@ msgid "Memory Embeddings"
 msgstr ""
 
 msgid "Memory backend"
+msgstr ""
+
+msgid "Memory context in a reply (characters)"
+msgstr ""
+
+msgid "Memory language"
 msgstr ""
 
 msgid "Mention Edges"
@@ -6602,6 +6983,12 @@ msgid "Message:"
 msgstr ""
 
 msgid "Messages"
+msgstr ""
+
+msgid "Messages before a date can be proposed"
+msgstr ""
+
+msgid "Messages before a match can be ended"
 msgstr ""
 
 msgid "Messages in the feed"
@@ -6650,10 +7037,19 @@ msgstr ""
 msgid "Minimum age accepted"
 msgstr ""
 
+msgid "Minimum duration of a round (seconds)"
+msgstr ""
+
+msgid "Minimum interest to keep talking"
+msgstr ""
+
 msgid "Minimum round duration (seconds, 0 = off)"
 msgstr ""
 
 msgid "Minimum round time (seconds)"
+msgstr ""
+
+msgid "Minimum score to recall another chat"
 msgstr ""
 
 msgid "Minimum score to recall another thread"
@@ -6765,6 +7161,9 @@ msgstr ""
 msgid "Most commented"
 msgstr ""
 
+msgid "Most recent"
+msgstr ""
+
 msgid "Most recently active communities across posts and discussions."
 msgstr ""
 
@@ -6779,6 +7178,12 @@ msgid ""
 msgstr ""
 
 msgid "Mu (Averaging Weight)"
+msgstr ""
+
+msgid "Multiplier after those days"
+msgstr ""
+
+msgid "Multiplier of the distance"
 msgstr ""
 
 msgid "Mutual Friends"
@@ -6989,6 +7394,9 @@ msgid "New Zealander"
 msgstr ""
 
 msgid "New agents probability"
+msgstr ""
+
+msgid "New bio length (characters)"
 msgstr ""
 
 msgid "New chat"
@@ -7432,6 +7840,12 @@ msgstr ""
 msgid "Nodes"
 msgstr ""
 
+msgid "Noise on the outcome"
+msgstr ""
+
+msgid "Noise on the utility"
+msgstr ""
+
 msgid "None"
 msgstr ""
 
@@ -7496,6 +7910,9 @@ msgstr ""
 msgid "Nothing found."
 msgstr ""
 
+msgid "Nothing found. Try fewer filters."
+msgstr ""
+
 msgid "Nothing matches your search."
 msgstr ""
 
@@ -7524,6 +7941,9 @@ msgid "Notifications"
 msgstr ""
 
 msgid "Now"
+msgstr ""
+
+msgid "Nuance cues (characters)"
 msgstr ""
 
 msgid "Number of Actors"
@@ -7608,9 +8028,6 @@ msgid ""
 " This is not what a participant sees."
 msgstr ""
 
-msgid "On"
-msgstr ""
-
 msgid "Onboarding screen"
 msgstr ""
 
@@ -7619,11 +8036,6 @@ msgid "One day has %(n)s slots (a round each). -1 runs until stopped."
 msgstr ""
 
 msgid "One line per answer: question: answer."
-msgstr ""
-
-msgid ""
-"One line per city: name, latitude, longitude and optionally the weight. "
-"Default: Pisa."
 msgstr ""
 
 msgid ""
@@ -7705,10 +8117,10 @@ msgstr ""
 msgid "Open Timeline."
 msgstr ""
 
-msgid "Open advanced settings"
+msgid "Open chat"
 msgstr ""
 
-msgid "Open chat"
+msgid "Open experiment settings"
 msgstr ""
 
 msgid "Open profile"
@@ -7847,6 +8259,11 @@ msgstr ""
 msgid "Optional Agent Actions"
 msgstr ""
 
+msgid ""
+"Optional behaviour of the persisted memory. The embedding model is chosen"
+" in the Experiment Configuration."
+msgstr ""
+
 #, python-format
 msgid "Optional parameters: %(names)s"
 msgstr ""
@@ -7876,7 +8293,13 @@ msgstr ""
 msgid "Other experiment"
 msgstr ""
 
+msgid "Other settings"
+msgstr ""
+
 msgid "Out-Degree CCDF"
+msgstr ""
+
+msgid "Outcome of a date"
 msgstr ""
 
 msgid "Outgoing/Energetic"
@@ -7983,6 +8406,9 @@ msgstr ""
 msgid "Participants"
 msgstr ""
 
+msgid "Participation"
+msgstr ""
+
 msgid "Pass"
 msgstr ""
 
@@ -8024,7 +8450,13 @@ msgstr ""
 msgid "Pause profile"
 msgstr ""
 
+msgid "Pause the profile"
+msgstr ""
+
 msgid "Paused"
+msgstr ""
+
+msgid "Pausing the profile"
 msgstr ""
 
 msgid "Peak Target Toxicity"
@@ -8094,6 +8526,9 @@ msgstr ""
 msgid "Personalized Feed parameters"
 msgstr ""
 
+msgid "Perspective API key environment variable"
+msgstr ""
+
 msgid "PhD"
 msgstr ""
 
@@ -8149,6 +8584,9 @@ msgid "Photos (optional)"
 msgstr ""
 
 msgid "Photos per agent"
+msgstr ""
+
+msgid "Photos per profile"
 msgstr ""
 
 msgid "Pick a source group first, then choose one experiment from that group."
@@ -8277,6 +8715,9 @@ msgid "Political leanings"
 msgstr ""
 
 msgid "Political leanings, education and professions of the agents."
+msgstr ""
+
+msgid "Polling interval (seconds)"
 msgstr ""
 
 msgid "Popularity"
@@ -8617,10 +9058,25 @@ msgstr ""
 msgid "Probability Secondary Follow:"
 msgstr ""
 
+msgid "Probability of checking a chat"
+msgstr ""
+
+msgid "Probability of ending a match"
+msgstr ""
+
 msgid "Probability of leaving a chat"
 msgstr ""
 
+msgid "Probability of proposing a date"
+msgstr ""
+
 msgid "Probability of reacting"
+msgstr ""
+
+msgid "Probability of reacting to a message"
+msgstr ""
+
+msgid "Probability of writing first"
 msgstr ""
 
 msgid "Probability parameter"
@@ -8702,7 +9158,13 @@ msgstr ""
 msgid "Profile pictures"
 msgstr ""
 
+msgid "Profile questions answered"
+msgstr ""
+
 msgid "Profile text and photos"
+msgstr ""
+
+msgid "Profile texts and photos"
 msgstr ""
 
 msgid "Profile-Based User Similarity"
@@ -8714,7 +9176,16 @@ msgstr ""
 msgid "Profiles and pages matching your search."
 msgstr ""
 
+msgid "Profiles can be edited"
+msgstr ""
+
+msgid "Profiles can be paused"
+msgstr ""
+
 msgid "Profiles paused at the end"
+msgstr ""
+
+msgid "Profiles that liked you come first"
 msgstr ""
 
 msgid "Profiles vs. Advanced Roleplay"
@@ -8831,10 +9302,16 @@ msgid ""
 "recorded for the selected topic up to the selected time."
 msgstr ""
 
+msgid "Proposals per match"
+msgstr ""
+
 msgid "Propose"
 msgstr ""
 
 msgid "Propose a date"
+msgstr ""
+
+msgid "Proposing a date"
 msgstr ""
 
 msgid "Provide a GitHub token before connecting."
@@ -8913,6 +9390,9 @@ msgstr ""
 msgid "Random if empty"
 msgstr ""
 
+msgid "Random seed"
+msgstr ""
+
 msgid "Range of the activity level of each agent. Default 1."
 msgstr ""
 
@@ -8944,6 +9424,9 @@ msgid "Rate parameter"
 msgstr ""
 
 msgid "Ray Agents Batch Size"
+msgstr ""
+
+msgid "Reached"
 msgstr ""
 
 msgid "React"
@@ -9010,6 +9493,9 @@ msgstr ""
 msgid "Recall emotionally charged episodes"
 msgstr ""
 
+msgid "Received super likes come first"
+msgstr ""
+
 msgid "Recency decay (β)"
 msgstr ""
 
@@ -9032,6 +9518,9 @@ msgid "Recent Propaganda Interactions"
 msgstr ""
 
 msgid "Recent SA Interactions"
+msgstr ""
+
+msgid "Recent messages returned per chat"
 msgstr ""
 
 msgid "Recent trend"
@@ -9096,11 +9585,6 @@ msgid "Recommender info"
 msgstr ""
 
 msgid "Recommender internals (researcher only)"
-msgstr ""
-
-msgid ""
-"Recommender, daily quotas, lifecycle and conversation parameters belong "
-"to the experiment."
 msgstr ""
 
 msgid "Recommenders"
@@ -9196,10 +9680,16 @@ msgid ""
 "twice as many members as one with 1 (default 1)."
 msgstr ""
 
+msgid "Relevance"
+msgstr ""
+
 msgid "Remaining Time Forecast"
 msgstr ""
 
 msgid "Remaining slots:"
+msgstr ""
+
+msgid "Remember emotional moments"
 msgstr ""
 
 msgid "Remember me"
@@ -9285,6 +9775,9 @@ msgstr ""
 msgid "Reply to posts and threads"
 msgstr ""
 
+msgid "Replying and reacting"
+msgstr ""
+
 msgid "Replying to"
 msgstr ""
 
@@ -9328,6 +9821,9 @@ msgstr ""
 msgid "Requests"
 msgstr ""
 
+msgid "Requests per minute"
+msgstr ""
+
 msgid ""
 "Requires an available Ollama embedding model. Leave disabled for the "
 "safest default setup."
@@ -9352,6 +9848,9 @@ msgid ""
 "Researcher overview: everything the run recorded is shown, including "
 "private chats, deleted messages and the recommender internals. This is "
 "not what a user sees."
+msgstr ""
+
+msgid "Reset"
 msgstr ""
 
 msgid "Reset HPC Experiment"
@@ -9397,6 +9896,12 @@ msgid "Resume Client"
 msgstr ""
 
 msgid "Resume profile"
+msgstr ""
+
+msgid "Retries after a failed call"
+msgstr ""
+
+msgid "Retrieved memories (characters)"
 msgstr ""
 
 msgid "Retry"
@@ -9474,6 +9979,9 @@ msgstr ""
 msgid "Rewiring probability (p)"
 msgstr ""
 
+msgid "Rewriting the bio"
+msgstr ""
+
 msgid "Role"
 msgstr ""
 
@@ -9511,6 +10019,11 @@ msgid "Route args:"
 msgstr ""
 
 msgid "Rule threshold"
+msgstr ""
+
+msgid ""
+"Rules of the platform for chats: who writes first and the limits the "
+"server enforces. How the agents behave in a chat is set in each client."
 msgstr ""
 
 msgid "Run"
@@ -10129,6 +10642,9 @@ msgstr ""
 msgid "Server Trends Analysis"
 msgstr ""
 
+msgid "Server URL"
+msgstr ""
+
 msgid "Server call timeout (seconds)"
 msgstr ""
 
@@ -10161,6 +10677,9 @@ msgstr ""
 msgid "Services & monitoring"
 msgstr ""
 
+msgid "Session probability at the peak hour"
+msgstr ""
+
 msgid "Sessions"
 msgstr ""
 
@@ -10179,6 +10698,9 @@ msgid ""
 msgstr ""
 
 msgid "Settings"
+msgstr ""
+
+msgid "Settings of the runtime without a place of their own."
 msgstr ""
 
 msgid "Severe Toxicity"
@@ -10223,10 +10745,19 @@ msgstr ""
 msgid "Share of channels with a discussion group"
 msgstr ""
 
+msgid "Share of negative outcomes"
+msgstr ""
+
 msgid "Share of new agents"
 msgstr ""
 
 msgid "Share of nodes contained in the largest weakly connected component by day."
+msgstr ""
+
+msgid "Share of random cards"
+msgstr ""
+
+msgid "Share of swipes decided by the language model"
 msgstr ""
 
 #, python-format
@@ -10305,6 +10836,9 @@ msgid "Show the interest / opinion sliders in the Edit Profile page"
 msgstr ""
 
 msgid "Show the opinion to the agent"
+msgstr ""
+
+msgid "Show the photos to the model"
 msgstr ""
 
 msgid "Show the profile-setup wizard to users on their first login"
@@ -10393,6 +10927,9 @@ msgstr ""
 msgid "Simulation Topics"
 msgstr ""
 
+msgid "Simulation length"
+msgstr ""
+
 msgid "Simulation length and population dynamics."
 msgstr ""
 
@@ -10455,6 +10992,18 @@ msgstr ""
 msgid "Slot"
 msgstr ""
 
+msgid "Slots before a proposal expires"
+msgstr ""
+
+msgid "Slots from acceptance to outcome"
+msgstr ""
+
+msgid "Slots in a day"
+msgstr ""
+
+msgid "Slots of silence that count as ghosting"
+msgstr ""
+
 msgid "Slovak"
 msgstr ""
 
@@ -10512,6 +11061,9 @@ msgstr ""
 msgid "Something went wrong?"
 msgstr ""
 
+msgid "Sort by"
+msgstr ""
+
 msgid "Source"
 msgstr ""
 
@@ -10534,6 +11086,9 @@ msgid "Spam"
 msgstr ""
 
 msgid "Spanish"
+msgstr ""
+
+msgid "Spare likes kept for later"
 msgstr ""
 
 msgid "Special rights"
@@ -10652,6 +11207,12 @@ msgid ""
 "%(names)s."
 msgstr ""
 
+msgid "Stop the client before changing its settings."
+msgstr ""
+
+msgid "Stop the client to extend it."
+msgstr ""
+
 msgid "Stop the experiment before clearing logs"
 msgstr ""
 
@@ -10718,6 +11279,9 @@ msgid "Stress Distribution"
 msgstr ""
 
 msgid "Stress and reward"
+msgstr ""
+
+msgid "Stress changes the activity"
 msgstr ""
 
 msgid "Stress/Reward"
@@ -10832,6 +11396,9 @@ msgstr ""
 msgid "Super liked you"
 msgstr ""
 
+msgid "Super likes per agent per day"
+msgstr ""
+
 msgid "Supergroup"
 msgstr ""
 
@@ -10850,10 +11417,16 @@ msgstr ""
 msgid "Swedish"
 msgstr ""
 
+msgid "Swipe"
+msgstr ""
+
 msgid "Swipes"
 msgstr ""
 
 msgid "Swipes and ranking"
+msgstr ""
+
+msgid "Swiping"
 msgstr ""
 
 msgid "Swiping is switched off for this experiment."
@@ -11011,6 +11584,9 @@ msgid ""
 "cannot add one the default prompt does not offer: the save is refused."
 msgstr ""
 
+msgid "Texts"
+msgstr ""
+
 msgid "Thai"
 msgstr ""
 
@@ -11144,7 +11720,14 @@ msgid ""
 " this page."
 msgstr ""
 
+msgid "The client is running: stop it to change its settings."
+msgstr ""
+
 msgid "The client was interrupted."
+msgstr ""
+
+#, python-format
+msgid "The client will run %(days)s days in all. Start it again to continue."
 msgstr ""
 
 msgid ""
@@ -11285,9 +11868,19 @@ msgid ""
 "did not find a readable server or client JSON config."
 msgstr ""
 
+msgid "The model may answer super like"
+msgstr ""
+
 msgid ""
 "The model that proposes the cards. Agents may have their own model in the"
 " population; the others use this one."
+msgstr ""
+
+msgid ""
+"The model that writes profile texts and messages and that decides part of"
+" the swipes. With the stub backend nothing is called: answers are "
+"generated by a deterministic fake, which is enough for tests and large "
+"runs."
 msgstr ""
 
 msgid ""
@@ -11339,6 +11932,12 @@ msgid "The provided passwords do not match."
 msgstr ""
 
 msgid "The public profiles can be browsed by people who are not in the experiment"
+msgstr ""
+
+msgid ""
+"The recommender, the daily quotas, the rules of chats and dates and human"
+" participation are shared by every client: set them once for the "
+"experiment."
 msgstr ""
 
 msgid "The referenced ad hoc agent type is no longer available."
@@ -11554,6 +12153,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"These settings belong to the whole experiment and are shared by every "
+"client: the rules of the platform, the recommender and the participation "
+"of people. How the agents of one population behave (activity, swiping, "
+"writing, memory) is set in each client."
+msgstr ""
+
+msgid ""
 "These settings control how much external content is ingested during a "
 "forum simulation. Higher values increase variety but also startup and "
 "refresh costs."
@@ -11595,9 +12201,6 @@ msgstr ""
 msgid "This interaction is switched off for the experiment."
 msgstr ""
 
-msgid "This is a simulation: all people, photos and messages are fictional."
-msgstr ""
-
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -11633,6 +12236,11 @@ msgid ""
 msgstr ""
 
 msgid "This page represents a forum community page."
+msgstr ""
+
+msgid ""
+"This part is off in the Experiment Configuration, so these settings have "
+"no effect until you switch it on there."
 msgstr ""
 
 msgid ""
@@ -11689,6 +12297,9 @@ msgstr ""
 msgid "Threat"
 msgstr ""
 
+msgid "Threshold and noise"
+msgstr ""
+
 msgid "Thumbs-down reaction"
 msgstr ""
 
@@ -11716,6 +12327,9 @@ msgstr ""
 msgid "Time Period"
 msgstr ""
 
+msgid "Time and start"
+msgstr ""
+
 msgid ""
 "Time steps in an hour (for example 60 = one per minute). More ticks "
 "spread the messages of a round more finely; the hour itself does not "
@@ -11733,6 +12347,9 @@ msgstr ""
 msgid "Time travel: showing the state at day %(d)s, slot %(s)s."
 msgstr ""
 
+msgid "Time window of the search (rounds)"
+msgstr ""
+
 msgid "Timeline"
 msgstr ""
 
@@ -11743,6 +12360,9 @@ msgid "Timeline Ratio:"
 msgstr ""
 
 msgid "Timeout (seconds)"
+msgstr ""
+
+msgid "Timeout of a call (seconds)"
 msgstr ""
 
 msgid "Timeouts and polling of the client process."
@@ -11929,6 +12549,9 @@ msgstr ""
 msgid "Total emotion tags versus distinct annotated posts per day."
 msgstr ""
 
+msgid "Total length"
+msgstr ""
+
 msgid "Total memory in the prompt (characters)"
 msgstr ""
 
@@ -11966,6 +12589,9 @@ msgid "Toxicity Level"
 msgstr ""
 
 msgid "Toxicity Levels"
+msgstr ""
+
+msgid "Toxicity annotation"
 msgstr ""
 
 msgid "Toxicity level instruction"
@@ -12026,6 +12652,9 @@ msgstr ""
 msgid "Transition Probabilities (%%)"
 msgstr ""
 
+msgid "Transition probabilities"
+msgstr ""
+
 msgid "Transitivity"
 msgstr ""
 
@@ -12053,6 +12682,9 @@ msgstr ""
 msgid "Turkish"
 msgstr ""
 
+msgid "Turns per slot"
+msgstr ""
+
 msgid ""
 "Two experiments compare cleanly when they share population and seed and "
 "differ in the recommender only."
@@ -12065,6 +12697,9 @@ msgid "Type a topic and press Enter"
 msgstr ""
 
 msgid "Type a value and press Enter"
+msgstr ""
+
+msgid "Type a word or pick a filter: the results appear as you go."
 msgstr ""
 
 msgid "Type at least two characters."
@@ -12684,6 +13319,9 @@ msgstr ""
 msgid "Vision Temperature"
 msgstr ""
 
+msgid "Vision model"
+msgstr ""
+
 msgid ""
 "Visitors can create a participant account from the login page and join "
 "the selected, active simulations and training modules."
@@ -12811,10 +13449,34 @@ msgstr ""
 msgid "Weight for shares / reposts"
 msgstr ""
 
+msgid "Weight of age fit"
+msgstr ""
+
+msgid "Weight of attractiveness"
+msgstr ""
+
+msgid "Weight of compatibility"
+msgstr ""
+
+msgid "Weight of compatible intent"
+msgstr ""
+
+msgid "Weight of distance"
+msgstr ""
+
 msgid "Weight of notifications"
 msgstr ""
 
 msgid "Weight of recent activity"
+msgstr ""
+
+msgid "Weight of shared interests"
+msgstr ""
+
+msgid "Weight of the conversation tone"
+msgstr ""
+
+msgid "Weight of the visual match"
 msgstr ""
 
 msgid "Weight of topic affinity"
@@ -12838,7 +13500,9 @@ msgid "Weights of the labels of each trait; a trait left empty is not assigned."
 msgstr ""
 
 #, python-format
-msgid "Weights of the nationalities. Known values: %(values)s"
+msgid ""
+"Weights of the nationalities; every agent lives in a city of its "
+"nationality (see Cities). Known values: %(values)s"
 msgstr ""
 
 #, python-format
@@ -12854,6 +13518,9 @@ msgid ""
 "experiment default."
 msgstr ""
 
+msgid "Weights of the utility"
+msgstr ""
+
 #, python-format
 msgid "Welcome %(username)s!"
 msgstr ""
@@ -12862,6 +13529,12 @@ msgid "Welcome back"
 msgstr ""
 
 msgid "Welcome to YSocial! 🎉"
+msgstr ""
+
+msgid ""
+"What an agent does when it is not finding matches or after some time on "
+"the app. Dates, couples and leaving the platform are rules of the "
+"platform: see the experiment settings."
 msgstr ""
 
 msgid "What another user sees of this agent. Hidden attributes are not shown."
@@ -12893,6 +13566,18 @@ msgid ""
 "occurred?"
 msgstr ""
 
+msgid ""
+"What the agents remember of their chats. Memory is switched on for the "
+"whole experiment in the Experiment Configuration; these settings tune it "
+"for this client."
+msgstr ""
+
+msgid ""
+"What the client writes or draws when the population file leaves it empty:"
+" bios, answers to the profile questions, captions and, optionally, one "
+"image per photo."
+msgstr ""
+
 msgid "What the model is told about the fields each action needs."
 msgstr ""
 
@@ -12902,6 +13587,9 @@ msgstr ""
 msgid ""
 "What the model receives at the start of a session of an agent or a news "
 "page, and how the date is written."
+msgstr ""
+
+msgid "What the server writes in its log files."
 msgstr ""
 
 msgid "What you assigned to posts and comments"
@@ -12942,6 +13630,11 @@ msgid ""
 "mark the agent as left."
 msgstr ""
 
+msgid ""
+"When the agents open the app and how many cards they decide each time. "
+"Each slot is one round of the experiment."
+msgstr ""
+
 msgid "Where a chat opens"
 msgstr ""
 
@@ -12957,10 +13650,26 @@ msgstr ""
 msgid "Where the message comes from"
 msgstr ""
 
+msgid ""
+"Where the toxicity score comes from when annotations are switched on in "
+"the Experiment Configuration."
+msgstr ""
+
+msgid ""
+"Whether dates exist, how a date is proposed and answered, how its outcome"
+" is drawn and what happens to the people afterwards."
+msgstr ""
+
 msgid "Which chats an agent looks at in a session and how they are ranked."
 msgstr ""
 
 msgid "Who are you with?"
+msgstr ""
+
+msgid "Who decides"
+msgstr ""
+
+msgid "Who decides the swipes"
 msgstr ""
 
 msgid "Who the model is told it is and how the profile of the agent is worded."
@@ -12971,7 +13680,16 @@ msgid ""
 "page, and how personality traits are worded."
 msgstr ""
 
+msgid "Who writes the messages"
+msgstr ""
+
 msgid "Who you see"
+msgstr ""
+
+msgid "Widening the preferences"
+msgstr ""
+
+msgid "Window of past slots"
 msgstr ""
 
 msgid "With a biography"
@@ -12981,6 +13699,9 @@ msgid "With a discussion group"
 msgstr ""
 
 msgid "With a message"
+msgstr ""
+
+msgid "With photo"
 msgstr ""
 
 msgid "With photos"
@@ -13002,6 +13723,9 @@ msgstr ""
 msgid "Wrapped exception:"
 msgstr ""
 
+msgid "Write a caption for every photo"
+msgstr ""
+
 msgid "Write a message..."
 msgstr ""
 
@@ -13017,7 +13741,22 @@ msgstr ""
 msgid "Write something about you..."
 msgstr ""
 
+msgid "Write the actor log file"
+msgstr ""
+
+msgid "Write the execution log file"
+msgstr ""
+
+msgid "Write the missing profile texts"
+msgstr ""
+
 msgid "Write the post text..."
+msgstr ""
+
+msgid "Write the request log file"
+msgstr ""
+
+msgid "Write the server log file"
 msgstr ""
 
 msgid "Y Social"
@@ -13071,6 +13810,9 @@ msgid "YSocial supports three types of users with different access levels:"
 msgstr ""
 
 msgid "YSocialTwin"
+msgstr ""
+
+msgid "Years added to the age range"
 msgstr ""
 
 msgid ""
@@ -13495,7 +14237,7 @@ msgstr ""
 msgid "multiple clients"
 msgstr ""
 
-msgid "name, city, intent, bio"
+msgid "name, city, intent, bio, interest"
 msgstr ""
 
 msgid "never"
@@ -13583,6 +14325,10 @@ msgstr ""
 msgid "settings"
 msgstr ""
 
+#, python-format
+msgid "showing the first %(n)s"
+msgstr ""
+
 msgid "signals"
 msgstr ""
 
@@ -13599,6 +14345,9 @@ msgstr ""
 msgid "symlink"
 msgstr ""
 
+msgid "to"
+msgstr ""
+
 msgid "to analyze simulation results"
 msgstr ""
 
@@ -13612,6 +14361,9 @@ msgid "unknown error"
 msgstr ""
 
 msgid "unread"
+msgstr ""
+
+msgid "until stopped"
 msgstr ""
 
 #, python-format

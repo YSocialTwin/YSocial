@@ -370,12 +370,10 @@
   "🧮 Experiment Matrix": "🧮 Experiment Matrix",
   "🧾 Experiment Overview": "🧾 Experiment Overview",
   "Analytics data": "Analytics data",
-  "Choose the population and how long the client runs. Every advanced setting has the default of the dating runtime.": "Choose the population and how long the client runs. Every advanced setting has the default of the dating runtime.",
   "Compare this run with another dating experiment. The comparison is clean when population and seed are the same and only the recommender differs.": "Compare this run with another dating experiment. The comparison is clean when population and seed are the same and only the recommender differs.",
   "Comparison": "Comparison",
   "Dating populations": "Dating populations",
   "Download any derived table as CSV, or everything in one ZIP together with the field map.": "Download any derived table as CSV, or everything in one ZIP together with the field map.",
-  "Every setting of the dating runtime, generated from its configuration schema. They are locked once the experiment has started.": "Every setting of the dating runtime, generated from its configuration schema. They are locked once the experiment has started.",
   "Exposure and outcome of each recommender model: like rate, matches per stack and how unequal the exposure is.": "Exposure and outcome of each recommender model: like rate, matches per stack and how unequal the exposure is.",
   "From proposal to outcome: how many dates were proposed, accepted, declined or expired.": "From proposal to outcome: how many dates were proposed, accepted, declined or expired.",
   "Gateway": "Gateway",
@@ -392,5 +390,9 @@
   "Upload a population file. It is validated against the schema of the dating runtime and refused, with the path of the problem, if it does not fit.": "Upload a population file. It is validated against the schema of the dating runtime and refused, with the path of the problem, if it does not fit.",
   "When the derived data were last built. Refresh them to read the latest rounds of a running experiment; the run itself is never modified.": "When the derived data were last built. Refresh them to read the latest rounds of a running experiment; the run itself is never modified.",
   "Whether the local gateway that carries the actions of the people to the run is answering.": "Whether the local gateway that carries the actions of the people to the run is answering.",
-  "Who left and why: success (a couple formed) or frustration (churn).": "Who left and why: success (a couple formed) or frustration (churn)."
+  "Who left and why: success (a couple formed) or frustration (churn).": "Who left and why: success (a couple formed) or frustration (churn).",
+  "Add days to the total length of the client, then start it again: it continues from where it stopped.": "Add days to the total length of the client, then start it again: it continues from where it stopped.",
+  "The settings of the agents of this client. They can be changed while the client is stopped.": "The settings of the agents of this client. They can be changed while the client is stopped.",
+  "The rules shared by every client of the experiment: recommender, quotas, chats, dates and human participation. They are locked once the experiment has started.": "The rules shared by every client of the experiment: recommender, quotas, chats, dates and human participation. They are locked once the experiment has started.",
+  "Choose the population and how long the client runs, then adjust how its agents behave. Every setting has the default of the dating runtime.": "Choose the population and how long the client runs, then adjust how its agents behave. Every setting has the default of the dating runtime."
 }
