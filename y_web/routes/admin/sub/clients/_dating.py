@@ -11,6 +11,7 @@ from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
+    _experiment_uses_llm_agents,
 )
 from y_web.src.agents.platform import infer_population_username_type
 from y_web.src.dating import client_config as dcc
@@ -31,6 +32,60 @@ from y_web.src.system.path_utils import get_external_repo_dir, get_writable_path
 
 from ._blueprint import clientsr
 from ._crud import _build_client_creation_context, _get_experiment_folder_name
+
+
+def _activity_hours(pop_data):
+    """Hours of the activity profiles that the agents of a population carry (name -> comma separated hours)."""
+    from y_web.src.models import ActivityProfile
+
+    names = {
+        str(a.get("archetype")).strip().lower()
+        for a in (pop_data or {}).get("agents", [])
+        if a.get("archetype")
+    }
+    if not names:
+        return {}
+    rows = db.session.scalars(select(ActivityProfile)).all()
+    return {r.name: r.hours for r in rows if r.name.strip().lower() in names}
+
+
+def _rhythms(pop_data, hours_by_name):
+    """Activity profiles of the agents of a population: name, share (%) and the 24 hours (None = all of them)."""
+    agents = (pop_data or {}).get("agents", [])
+    counts = {}
+    for a in agents:
+        name = str(a.get("archetype") or "").strip()
+        counts[name] = counts.get(name, 0) + 1
+    by_lower = {k.strip().lower(): v for k, v in hours_by_name.items()}
+    out = []
+    for name, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+        weights = dcc.profile_weights({name: by_lower.get(name.lower(), "")})
+        hours = weights.get(name.lower())
+        out.append(
+            {
+                "name": name,
+                "share": round(100.0 * n / max(1, len(agents)), 1),
+                "hours": None if hours is None else [int(v) for v in hours],
+            }
+        )
+    return out
+
+
+def _all_activity_hours():
+    from y_web.src.models import ActivityProfile
+
+    return {r.name: r.hours for r in db.session.scalars(select(ActivityProfile)).all()}
+
+
+def _recsys_context(repo, server_config):
+    """Models a client can choose, what each does and the default of the experiment."""
+    models = server_settings.recsys_models(repo)
+    return {
+        "recsys_options": [""] + models,
+        "recsys_info": settings_ui.RECSYS_INFO,
+        "recsys_default": (server_config.get("matching") or {}).get("default_model")
+        or "hybrid",
+    }
 
 
 def _experiment_folder(exp) -> str:
@@ -75,16 +130,32 @@ def clients_dating(idexp):
     server_config = _load_server_config(exp_dir)
     switches = read_switches(server_config)
     fields = dcc.form_fields(repo)
+    llm_enabled = bool(context.get("llm_agents_enabled"))
+    images_ok = dcc.images_available()
     context.update(
         {
             "switches": switches,
+            "llm_enabled": llm_enabled,
+            "images_ok": images_ok,
             "sections": settings_ui.layout(
                 fields,
                 settings_ui.CLIENT_SECTIONS,
                 switches,
                 {"match_recsys": [""] + server_settings.recsys_models(repo)},
+                llm_enabled=llm_enabled,
             ),
-            "adv_values": dcc.values_for_form(repo),
+            "adv_values": {
+                **dcc.values_for_form(repo, None, llm_enabled, images_ok),
+                "recsys_default": _recsys_context(repo, server_config)[
+                    "recsys_default"
+                ],
+            },
+            "rhythms_by_population": {
+                str(p.id): _rhythms(dp.load_document(p.id), _all_activity_hours())
+                for p in context.get("populations", [])
+            },
+            "default_days": dcc.DEFAULT_DAYS,
+            **_recsys_context(repo, server_config),
             "slots_per_day": (server_config.get("simulation") or {}).get(
                 "num_slots_per_day", 24
             ),
@@ -155,7 +226,7 @@ def create_dating_client():
     server_config = _load_server_config(exp_dir)
     switches = read_switches(server_config)
     try:
-        days = dcc.parse_days(request.form.get("num_days", "1"))
+        days = dcc.days_from_form(request.form)
         language = prompt_packs.resolve(
             request.form.get("prompt_language"), exp.prompt_language
         )
@@ -169,6 +240,9 @@ def create_dating_client():
             language=language,
             form=request.form,
             label_of=_,
+            llm_enabled=_experiment_uses_llm_agents(exp),
+            images_ok=dcc.images_available(),
+            activity_hours=_activity_hours(pop_data),
         )
     except dcc.DatingClientFormError as exc:
         flash(
@@ -265,6 +339,7 @@ def client_details_dating(uid):
         select(Client_Execution).filter_by(client_id=client.id)
     ).first()
     slots = (server_config.get("simulation") or {}).get("num_slots_per_day", 24)
+    llm_enabled = _experiment_uses_llm_agents(exp)
     return render_template(
         "admin/client_details_dating.html",
         client=client,
@@ -276,8 +351,16 @@ def client_details_dating(uid):
             settings_ui.CLIENT_SECTIONS,
             switches,
             {"match_recsys": [""] + server_settings.recsys_models(repo)},
+            llm_enabled=llm_enabled,
         ),
-        values=dcc.values_for_form(repo, config),
+        values={
+            **dcc.values_for_form(repo, config, llm_enabled, dcc.images_available()),
+            "recsys_default": _recsys_context(repo, server_config)["recsys_default"],
+        },
+        rhythms=_rhythms(dp.load_document(population.id), _all_activity_hours()),
+        llm_enabled=llm_enabled,
+        images_ok=dcc.images_available(),
+        **_recsys_context(repo, server_config),
         slots_per_day=slots,
         execution=execution,
         running=bool(client.status),

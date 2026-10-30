@@ -828,7 +828,37 @@ def config_from_population_form(
     for trait in AFFECTIVE_TRAITS:
         legacy[f"affective_{trait}_min"] = form.get(f"affective_{trait}_min")
         legacy[f"affective_{trait}_max"] = form.get(f"affective_{trait}_max")
-    return config_from_form(legacy)
+    config = config_from_form(legacy)
+    profiles = activity_profiles(form)
+    if profiles:
+        config["archetypes"] = profiles
+    return config
+
+
+def activity_profiles(form) -> Dict[str, float]:
+    """``{profile name: percent}`` of the activity profiles assigned in the form (same control as the other
+    platforms: the hidden ``activity_profiles_data`` holds a JSON list of ``{id, name, percentage}``).
+
+    In dating the name of the profile is the archetype of the agent: its daily rhythm.
+    """
+    try:
+        data = json.loads(form.get("activity_profiles_data") or "[]")
+    except (TypeError, ValueError):
+        data = []
+    out: Dict[str, float] = {}
+    for item in data if isinstance(data, list) else []:
+        try:
+            name = str(item["name"]).strip()
+            pct = float(item["percentage"])
+        except (KeyError, TypeError, ValueError):
+            raise DatingPopulationError(["activity_profiles: invalid entry"]) from None
+        if name and pct > 0:
+            out[name] = out.get(name, 0.0) + pct
+    if out and abs(sum(out.values()) - 100.0) > 0.05:
+        raise DatingPopulationError(
+            ["activity_profiles: the percentages must sum to 100"]
+        )
+    return out
 
 
 def language_code(name: Any) -> str:

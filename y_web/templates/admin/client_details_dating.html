@@ -1,8 +1,8 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_box, dating_advanced_toggle %}
+{% from "admin/_dating_fields.html" import dating_box, dating_advanced_toggle, dating_rhythms %}
 {% set save_action = '/admin/update_dating_client/' ~ client.id %}
-{% set left_ids = 'llm memory lifecycle stress_reward annotations runtime'.split() %}
+{% set left_ids = 'llm images recommender memory lifecycle stress_reward annotations runtime'.split() %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="client_details_dating" class="dashboard-container">
@@ -74,6 +74,13 @@
                     </div>
                     {% for s in sections if s.id not in left_ids %}
                     {{ dating_box(s, values, experiment.idexp, save_action, running) }}
+                    {% if s.id == 'activity' %}
+                    <div class="dashboard-box" id="box-rhythms">
+                        <h3 class="title is-5 is-thin">{{ _('Daily rhythm of the agents') }}</h3>
+                        <p class="ys-text-small">{{ _('The agents follow the activity profile assigned to them in the population (Always On, Night Owl...): they open the app only in the hours of their profile. Agents with Always On follow the activity of each hour above. To change the profiles, change the population.') }}</p>
+                        <div class="box-content">{{ dating_rhythms(rhythms) }}</div>
+                    </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
             </div>

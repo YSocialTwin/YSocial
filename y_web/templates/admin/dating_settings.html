@@ -23,9 +23,11 @@
                     <div class="dashboard-box" id="box-dating-settings">
                         <h3 class="title is-5 is-thin">{{ _('Experiment settings') }}</h3>
                         {% if locked %}
-                        <div class="ys-note-box" id="dating-settings-locked">{{ _('The experiment has started: the settings that shape the run are locked. To change them, clone the experiment or reset it.') }}</div>
+                        <div class="ys-note-box" id="dating-settings-locked">{{ _('The experiment is running: stop it to change its settings.') }}</div>
+                        {% elif run_started %}
+                        <div class="ys-note-box" id="dating-settings-started">{{ _('The experiment has already produced data. The changes apply from the next start; the slot length and the seed stay fixed because the days already stored are counted with them.') }}</div>
                         {% endif %}
-                        <p class="ys-text-small">{{ _('These settings belong to the whole experiment and are shared by every client: the rules of the platform, the recommender and the participation of people. How the agents of one population behave (activity, swiping, writing, memory) is set in each client.') }}
+                        <p class="ys-text-small">{{ _('These settings belong to the whole experiment and are shared by every client: the rules of the platform and the parameters of the recommenders. People can always take part next to the agents (see the Participants page). How the agents of one population behave is set in each client.') }}
                             <a href="/admin/clients_dating/{{ experiment.idexp }}">{{ _('Create a client') }}</a></p>
                         <p class="ys-text-small">{{ _('Every box has its own Save button: only the settings of that box are changed.') }}</p>
                         <div class="box-content"><div class="box-lines">{{ dating_advanced_toggle() }}</div></div>
@@ -33,12 +35,18 @@
 
                     <div class="dashboard-box" id="sec-recommender">
                         <h3 class="title is-5 is-thin">{{ _('Recommender') }}</h3>
-                        <p class="ys-text-small">{{ _('The model that proposes the cards. Agents may have their own model in the population; the others use this one.') }}</p>
+                        <p class="ys-text-small">{{ _('The recommender is the model that proposes the cards to the agents. Each client chooses the model for its own agents when it is created (the choice is in the client page); a client that does not choose uses the default model below. The parameters here belong to the model, so they are shared by every client that uses it.') }}</p>
+                        <dl class="dating-recsys-list">
+                            {% for m in models %}
+                            <dt>{{ m }}{% if m == default_model %} <span class="tag is-info">{{ _('default') }}</span>{% endif %}</dt>
+                            <dd>{{ _(recsys_info[m]) if m in recsys_info else '' }}</dd>
+                            {% endfor %}
+                        </dl>
                         <div class="box-content">
                             <form action="/admin/update_dating_settings/{{ experiment.idexp }}" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line ys-hint-text">
-                                        <span class="left">{{ _('Default model') }}</span>
+                                        <span class="left">{{ _('Default model (clients that do not choose their own)') }}</span>
                                         <span class="right ys-w-70">
                                             <div class="select is-fullwidth"><select name="matching_default_model" id="recsys-default" {% if off %}disabled{% endif %}>
                                                 {% for m in models %}<option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
@@ -74,9 +82,9 @@
                         <h3>{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
                             <p><b>{{ _('Experiment or client?') }}</b><br>{{ _('The rules of the platform are set here once and apply to every client; how a group of agents behaves is set in its client.') }}</p>
-                            <p><b>{{ _('Recommender') }}</b><br>{{ _('Choose the model that proposes the cards; the parameters of the chosen model appear below it.') }}</p>
-                            <p><b>{{ _('Locked settings') }}</b><br>{{ _('Once the run has started, the settings that shape it are locked. Clone the experiment to try other values.') }}</p>
-                            <p><b>{{ _('Human participation') }}</b><br>{{ _('Let people play next to the agents. The participants are managed on the Participants page.') }}</p>
+                            <p><b>{{ _('Recommender') }}</b><br>{{ _('Every client chooses the model for its agents; here you set the default and the parameters of each model. The parameters of the default model appear below it.') }}</p>
+                            <p><b>{{ _('When can I edit?') }}</b><br>{{ _('Whenever the experiment is not running. Once it has produced data, the slot length and the seed stay fixed.') }}</p>
+                            <p><b>{{ _('Human participation') }}</b><br>{{ _('People can always take part next to the agents; manage the participants on the Participants page.') }}</p>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
 """Dating experiments: advanced server settings and recommender choice (plan S3, IR-D-07, IR-D-10)."""
 
+import copy
 import json
 import os
 
@@ -78,12 +79,20 @@ def dating_settings(uid):
     }
     values.update(server_settings.recsys_form_text(repo, base))
     models = server_settings.recsys_models(repo)
+    sections = settings_ui.layout(
+        fields, settings_ui.SERVER_SECTIONS, read_switches(config)
+    )
+    started = server_settings.run_started(folder)
+    for section in sections:  # once data exists these two keep their value
+        for block in section["blocks"]:
+            for item in block["fields"]:
+                item["locked"] = started and (
+                    item["f"].path in server_settings.FIXED_AFTER_START
+                )
     return render_template(
         "admin/dating_settings.html",
         experiment=exp,
-        sections=settings_ui.layout(
-            fields, settings_ui.SERVER_SECTIONS, read_switches(config)
-        ),
+        sections=sections,
         recsys_labels=settings_ui.LABELS,
         values=values,
         models=models,
@@ -99,7 +108,9 @@ def dating_settings(uid):
             for m in models
         },
         default_model=(base.get("matching") or {}).get("default_model"),
-        locked=server_settings.run_started(folder),
+        locked=bool(exp.running),
+        run_started=started,
+        recsys_info=settings_ui.RECSYS_INFO,
         can_manage=user_can_manage_experiment(_current_admin_user_or_none(), exp),
     )
 
@@ -120,6 +131,7 @@ def update_dating_settings(uid):
     repo = get_external_repo_dir("YDating")
     folder, path = _server_config_path(exp)
     config = _load(path)
+    previous = copy.deepcopy(config)
     try:
         server_settings.apply_form(repo, config, request.form, label_of=_)
     except server_settings.ServerSettingsError as exc:
@@ -128,7 +140,9 @@ def update_dating_settings(uid):
             "error",
         )
         return redirect(back)
-    allowed, why = server_settings.check_change_allowed(folder, config)
+    allowed, why = server_settings.check_change_allowed(
+        folder, config, running=bool(exp.running), old_config=previous
+    )
     if not allowed:
         flash(
             _("The settings were not saved: %(why)s.", why=_(why)),
@@ -139,5 +153,6 @@ def update_dating_settings(uid):
     with open(tmp, "w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=4)
     os.replace(tmp, path)
+    server_settings.refresh_lock(folder, config)
     flash(_("Advanced settings updated."), "success")
     return redirect(back)

@@ -16,10 +16,12 @@ writes of a person go through the runtime's gateway.
    switches as the other platforms (annotations, stress and reward, memory); the experiment starts locked until
    *Update Configuration* confirms them. **Experiment settings** (page *Dating settings*) holds what is shared by every
    client: the recommender (with the parameters of the selected model), the daily quotas, time and start, the rules
-   of chats and dates, archetypes, stress and reward, and human participation. Each section says what it does and each
+   of chats and dates, and the rules of stress and reward. Human participation needs no setting: people can always
+   take part next to the agents (see *Participants*). Each section says what it does and each
    setting has a readable label and a hint. Settings that already live in the Experiment Configuration (memory,
    embedding model, annotations) are not repeated; a section whose switch is off says so and links there. The
-   settings that shape the run lock when the experiment starts; to change them, clone the experiment or reset it.
+   settings can be edited whenever the experiment is not running; once it has produced data the slot length and the
+   seed stay fixed.
 3. Create a **dating population**. Agents are standard agents (the `agents` table); what is specific to dating
    (location, genders sought, photos, latent variables) is kept in their custom fields, named `dating.*`, and can be
    edited like any custom field. You can upload a file (checked against the population schema of the runtime and
@@ -32,24 +34,26 @@ writes of a person go through the runtime's gateway.
    Name, size, nationality, spoken language, age classes, gender, education and political leaning use the same
    selectors, with percentages that total 100, as the other platforms; the Dating sections add the intent, the genders
    sought by women and by men, appearance, latent variables, affective traits and the daily activity level, each with a
-   proposed default. Personality, cities and distances and interests are sampled by the generator. The recommender is
+   proposed default. The daily rhythm of the agents is set here too, with the **activity profiles** (Always On, Night
+   Owl...) of the other platforms, assigned with percentages; they are the dating equivalent of the archetypes. Personality, cities and distances and interests are sampled by the generator. The recommender is
    chosen in the client (section *Recommender*), not for each individual.
    Ad hoc agents can carry the same variables: the **Dating** section of Admin > Agents (also shown only when YDating
    is installed) stores them as `dating.*` custom fields, which the other platforms ignore; assign the agent to a
    dating population to use it in a dating simulation.
-4. Create a **client** (population, days, then the sections that tune its agents: language model, memory, activity,
-   swiping, conversations, profile texts and photos, behaviour over time). The page follows the other client pages: switches for yes/no settings, tags for a few choices, the 0 to 10
-   importance scale for the weights of the swiping utility, sliders for probabilities, a bar chart for the hourly
-   activity, a guide on the side and a switch that shows the advanced settings; on the client page every section is a
-   box with its own Save button, and it shows only settings of the client (the rules of the platform are in the
-   experiment settings);
-   rules shared by all clients are in the experiment settings. The client page (*Client details*) shows the state,
-   extends the simulation (days are added to the total; start the client again and it runs what is left) and edits the
-   settings while the client is stopped. Profile images are generated in the background by default: the simulation
-   starts at once and each photo appears as soon as it is ready (a vision-based swipe model waits for them instead).
-   Before it
-   starts, YSocial rebuilds the input file from the database and validates the folder with the offline validator of the
-   runtime; a run that would fail to start is refused with the reason.
+4. Create a **client**: choose the population and the duration (30 days; *Run until stopped* keeps it running), then
+   the models in this order: the language model (address, *Fetch* the models, choose one, as on the other platforms),
+   the image model (vision model and the model that draws the profile photos, either photorealistic human faces or
+   fantasy cartoon characters) and the recommender, which is chosen per client (each model is explained on the page;
+   the default is the one of the experiment settings). The defaults follow the experiment: with language models the
+   agents use them for everything (texts, swipes, images), otherwise they follow rules. Components that are switched
+   off in the experiment (memory, stress and reward) are not shown. Technical settings sit behind the advanced switch.
+   The agents' daily rhythm comes from the activity profiles of the population and is shown read-only on the page.
+   The client page (*Client details*) shows the state, extends the simulation (days are added to the total; start the
+   client again and it runs what is left) and edits the settings while the client is stopped. Profile images are
+   generated in the background by default: the simulation starts at once and each photo appears as soon as it is
+   ready (a vision-based swipe model waits for them instead). Before it starts, YSocial rebuilds the input file from
+   the database and validates the folder with the offline validator of the runtime; a run that would fail to start is
+   refused with the reason.
 5. Start the experiment. YSocial starts the server, then (when human participation is on) the gateway, then the clients;
    it stops them in the reverse order. Stop and resume work like on the other platforms and leave no round duplicated.
 6. The **Dating LLM Prompts** page shows the prompts the agents use (English and Italian packs), lets you reword them for

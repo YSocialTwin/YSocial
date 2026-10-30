@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 09:35+0000\n"
+"POT-Creation-Date: 2026-10-30 10:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -416,6 +416,11 @@ msgstr ""
 msgid "@katie_abramski"
 msgstr ""
 
+msgid ""
+"A base model proposes the candidates and a language model re-orders the "
+"best ones. Needs a language model and is slower."
+msgstr ""
+
 msgid "A chat with this name already exists."
 msgstr ""
 
@@ -430,11 +435,8 @@ msgstr ""
 
 msgid ""
 "A client is a group of agents (the population) that swipe, match and talk"
-" in this experiment. Choose the population and how long it runs, then "
-"adjust how these agents behave in the sections below: every setting has a"
-" default from the dating runtime, so you can leave any section untouched."
-" Rules shared by all clients (slot length, recommender, quotas, dates) "
-"are in the experiment settings."
+" in this experiment. Choose the population and how long it runs, then the"
+" models; the other settings have defaults that suit most runs."
 msgstr ""
 
 msgid ""
@@ -509,6 +511,11 @@ msgid "A snapshot exists for this experiment."
 msgstr ""
 
 msgid "A subset of agent's interests."
+msgstr ""
+
+msgid ""
+"A weighted blend of the ranks of other models. It is the default of a new"
+" experiment."
 msgstr ""
 
 msgid "AI Agent"
@@ -595,9 +602,6 @@ msgid "Actions"
 msgstr ""
 
 msgid "Actions Per User Once Active"
-msgstr ""
-
-msgid "Actions a person may take"
 msgstr ""
 
 msgid "Actions an agent may take besides posting, replying and reacting."
@@ -962,6 +966,9 @@ msgstr ""
 msgid "Agent archetypes updated successfully."
 msgstr ""
 
+msgid "Agent behaviour"
+msgstr ""
+
 msgid "Agent behaviour over time"
 msgstr ""
 
@@ -1020,11 +1027,6 @@ msgstr ""
 msgid "Agents and pages"
 msgstr ""
 
-msgid ""
-"Agents can change archetype over time, which changes their hourly "
-"activity."
-msgstr ""
-
 msgid "Agents leave the platform"
 msgstr ""
 
@@ -1044,6 +1046,11 @@ msgid "Agents update opinions based on similarity with others"
 msgstr ""
 
 msgid "Agents use LLM to evaluate and update opinions"
+msgstr ""
+
+msgid ""
+"Agents who liked the same profiles get similar suggestions; it needs some"
+" swipe history first."
 msgstr ""
 
 msgid "Agents widen their preferences"
@@ -1156,6 +1163,9 @@ msgid "Alternative profile"
 msgstr ""
 
 msgid "Alternative values"
+msgstr ""
+
+msgid "Always neutral"
 msgstr ""
 
 msgid "Always offer chats with notifications"
@@ -1289,9 +1299,6 @@ msgstr ""
 
 #, python-format
 msgid "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)"
-msgstr ""
-
-msgid "Archetypes"
 msgstr ""
 
 msgid "Archetypes change over time"
@@ -1847,7 +1854,15 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+msgid ""
+"Candidates in random order: a baseline and control group, no preference "
+"is used."
+msgstr ""
+
 msgid "Candidates scored per viewer"
+msgstr ""
+
+msgid "Canned phrases"
 msgstr ""
 
 #, python-format
@@ -2046,11 +2061,6 @@ msgid "Choose the language of the dashboard for this user."
 msgstr ""
 
 msgid "Choose the language of the interface."
-msgstr ""
-
-msgid ""
-"Choose the model that proposes the cards; the parameters of the chosen "
-"model appear below it."
 msgstr ""
 
 msgid "Choose two dating experiments to compare."
@@ -2402,6 +2412,9 @@ msgstr ""
 msgid "Components (independent)"
 msgstr ""
 
+msgid "Components switched on in the experiment"
+msgstr ""
+
 msgid "Compose and publish new posts"
 msgstr ""
 
@@ -2605,6 +2618,9 @@ msgid ""
 msgstr ""
 
 msgid "Configure the duration and behavioral settings for the simulation run."
+msgstr ""
+
+msgid "Configure the duration of the simulation run."
 msgstr ""
 
 #, python-format
@@ -3238,6 +3254,9 @@ msgstr ""
 msgid "Daily quotas"
 msgstr ""
 
+msgid "Daily rhythm of the agents"
+msgstr ""
+
 msgid ""
 "Daily target toxicity, with moderator intervention volume shown on the "
 "secondary axis."
@@ -3445,7 +3464,7 @@ msgstr ""
 msgid "Default home tab"
 msgstr ""
 
-msgid "Default model"
+msgid "Default model (clients that do not choose their own)"
 msgstr ""
 
 msgid "Default values (52-20-28) are based on real-world Bluesky data."
@@ -3495,6 +3514,12 @@ msgid ""
 "Define the population name, description, and size. These settings "
 "identify the population and determine the number of synthetic agents to "
 "generate."
+msgstr ""
+
+msgid ""
+"Define when the agents open the app during the day by assigning activity "
+"profiles (their daily rhythm), the same profiles used by the other "
+"platforms. The profiles are managed in the Miscellanea page."
 msgstr ""
 
 msgid "Defines agent persona and context"
@@ -3657,9 +3682,6 @@ msgstr ""
 msgid ""
 "Detoxify model ready. New simulations will reuse this local cache "
 "automatically."
-msgstr ""
-
-msgid "Diffusion model"
 msgstr ""
 
 msgid "Diffusion, emergence, reach"
@@ -3863,6 +3885,11 @@ msgstr ""
 msgid ""
 "Each client can be deployed by imposing a starting social network among "
 "the agents of its populations."
+msgstr ""
+
+msgid ""
+"Each client chooses the model that proposes the cards to its agents; the "
+"parameters of every model are in the experiment settings."
 msgstr ""
 
 msgid ""
@@ -4201,6 +4228,12 @@ msgstr ""
 msgid "Enter or select a group..."
 msgstr ""
 
+msgid ""
+"Enter the address of the model server, fetch its models and choose one. "
+"The vision model lets the agents look at the photos; the image model "
+"draws the profile photos (photorealistic faces or cartoon characters)."
+msgstr ""
+
 msgid "Enter the link to the immage you are commenting on..."
 msgstr ""
 
@@ -4304,6 +4337,11 @@ msgstr ""
 msgid "Estimated remaining time:"
 msgstr ""
 
+msgid ""
+"Estimates the chance that both sides like each other and favours mutual "
+"interest: in the comparison of the runtime it produces the most matches."
+msgstr ""
+
 msgid "Estonian"
 msgstr ""
 
@@ -4325,6 +4363,17 @@ msgstr ""
 msgid ""
 "Every box has its own Save button: only the settings of that box are "
 "changed."
+msgstr ""
+
+msgid ""
+"Every client chooses the model for its agents; here you set the default "
+"and the parameters of each model. The parameters of the default model "
+"appear below it."
+msgstr ""
+
+msgid ""
+"Every few slots it pairs agents with a stable matching on symmetric "
+"weights; the assigned partners lead the stack."
 msgstr ""
 
 msgid "Every prompt is the default one."
@@ -4707,6 +4756,9 @@ msgid "Fake profile"
 msgstr ""
 
 msgid "False"
+msgstr ""
+
+msgid "Fantasy cartoon characters"
 msgstr ""
 
 msgid "Faster"
@@ -5104,7 +5156,7 @@ msgstr ""
 msgid "Generate Synthetic Network"
 msgstr ""
 
-msgid "Generate the photo images"
+msgid "Generate the profile photos"
 msgstr ""
 
 msgid "Generate the topology if missing"
@@ -5193,6 +5245,11 @@ msgid "GitHub:"
 msgstr ""
 
 msgid "Give the chat a name."
+msgstr ""
+
+msgid ""
+"Gives every profile a desirability rating that moves with the swipes it "
+"receives, and shows each agent profiles of a similar level."
 msgstr ""
 
 msgid ""
@@ -5514,8 +5571,7 @@ msgstr ""
 
 msgid ""
 "How events (matches, silence, blocks, reports) become stress and reward. "
-"Switched on in the Experiment Configuration; how a client uses them is "
-"set in the client."
+"How a client uses them is set in the client."
 msgstr ""
 
 msgid "How it works"
@@ -5527,9 +5583,7 @@ msgid ""
 "different ticks, so that messages do not all appear at the same minute."
 msgstr ""
 
-msgid ""
-"How many likes and super likes an agent has each day. The recommender is "
-"chosen above."
+msgid "How many likes and super likes an agent has each day."
 msgstr ""
 
 msgid ""
@@ -5581,8 +5635,7 @@ msgstr ""
 
 msgid ""
 "How the client reads the messages and applies stress to the activity. "
-"Stress and reward are switched on for the whole experiment in the "
-"Experiment Configuration; their rules are in the experiment settings."
+"Their rules are in the experiment settings."
 msgstr ""
 
 msgid ""
@@ -5703,6 +5756,12 @@ msgid "Image feeds updated successfully."
 msgstr ""
 
 msgid "Image generator"
+msgstr ""
+
+msgid "Image model"
+msgstr ""
+
+msgid "Image model (diffusion)"
 msgstr ""
 
 msgid ""
@@ -6433,6 +6492,11 @@ msgstr ""
 msgid "Leaning not found."
 msgstr ""
 
+msgid ""
+"Learns the visual taste of each agent from the captions of the profiles "
+"it liked or passed."
+msgstr ""
+
 msgid "Leave"
 msgstr ""
 
@@ -6478,17 +6542,6 @@ msgstr ""
 msgid "Let participants change the language"
 msgstr ""
 
-msgid ""
-"Let people play next to the agents. The participants are managed on the "
-"Participants page."
-msgstr ""
-
-msgid ""
-"Let people play next to the agents: how many, how fast, what they may do "
-"and the limits that protect the server. The participants are managed on "
-"the Participants page."
-msgstr ""
-
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr ""
 
@@ -6517,9 +6570,6 @@ msgid "Likes per agent per day"
 msgstr ""
 
 msgid "Limited access to assigned experiments only. Cannot access admin panel."
-msgstr ""
-
-msgid "Limits"
 msgstr ""
 
 msgid "Linear"
@@ -6591,9 +6641,6 @@ msgstr ""
 msgid "Local models and notes on these settings."
 msgstr ""
 
-msgid "Locked settings"
-msgstr ""
-
 msgid "Log"
 msgstr ""
 
@@ -6656,6 +6703,9 @@ msgstr ""
 msgid ""
 "Look of the agents; it guides the profile photos. An attribute with no "
 "value selected is not assigned."
+msgstr ""
+
+msgid "Look of the photos"
 msgstr ""
 
 msgid "Looking for"
@@ -7044,6 +7094,9 @@ msgstr ""
 msgid "Missing experiment_id or client_id"
 msgstr ""
 
+msgid "Mixed"
+msgstr ""
+
 msgid "Mixing parameter (mu)"
 msgstr ""
 
@@ -7066,6 +7119,9 @@ msgid "Model discovery is enabled only after an Ollama host is provided."
 msgstr ""
 
 msgid "Model selection"
+msgstr ""
+
+msgid "Models"
 msgstr ""
 
 msgid "Models & information"
@@ -7205,6 +7261,9 @@ msgid "Nationality"
 msgstr ""
 
 msgid "Nationality not found."
+msgstr ""
+
+msgid "Nearby and recently active profiles come first."
 msgstr ""
 
 msgid "Nearest neighbors (k)"
@@ -7718,6 +7777,9 @@ msgstr ""
 msgid "No populations are available for this %(platform)s experiment."
 msgstr ""
 
+msgid "No profile"
+msgstr ""
+
 msgid "No profiles at this round yet."
 msgstr ""
 
@@ -7927,6 +7989,11 @@ msgid "Number of blocks"
 msgstr ""
 
 msgid ""
+"Number of days to run (30 by default). Check \"Run until stopped\" to "
+"keep the client running until you stop it."
+msgstr ""
+
+msgid ""
 "Number of days to run. Check \"Run until stopped\" to create an infinite-"
 "duration client that runs until manually stopped."
 msgstr ""
@@ -7999,13 +8066,8 @@ msgstr ""
 msgid "Onboarding screen"
 msgstr ""
 
-msgid ""
-"Once the run has started, the settings that shape it are locked. Clone "
-"the experiment to try other values."
-msgstr ""
-
 #, python-format
-msgid "One day has %(n)s slots (a round each). -1 runs until stopped."
+msgid "One day has %(n)s slots (a round each)."
 msgstr ""
 
 msgid "One line per answer: question: answer."
@@ -8224,9 +8286,7 @@ msgstr ""
 msgid "Optional Agent Actions"
 msgstr ""
 
-msgid ""
-"Optional behaviour of the persisted memory. The embedding model is chosen"
-" in the Experiment Configuration."
+msgid "Optional behaviour of the persisted memory."
 msgstr ""
 
 #, python-format
@@ -8374,9 +8434,6 @@ msgstr ""
 msgid "Participants"
 msgstr ""
 
-msgid "Participation"
-msgstr ""
-
 msgid "Pass"
 msgstr ""
 
@@ -8446,6 +8503,11 @@ msgid "People and pages you can follow in this experiment."
 msgstr ""
 
 msgid "People assigned to this experiment"
+msgstr ""
+
+msgid ""
+"People can always take part next to the agents; manage the participants "
+"on the Participants page."
 msgstr ""
 
 msgid ""
@@ -8542,6 +8604,9 @@ msgstr ""
 msgid "Photo style"
 msgstr ""
 
+msgid "Photorealistic human faces"
+msgstr ""
+
 msgid "Photos"
 msgstr ""
 
@@ -8568,6 +8633,9 @@ msgstr ""
 
 #, python-format
 msgid "Picture %(n)s"
+msgstr ""
+
+msgid "Placeholder"
 msgstr ""
 
 msgid "Platform"
@@ -9106,6 +9174,9 @@ msgstr ""
 msgid "Profile changes logged"
 msgstr ""
 
+msgid "Profile photos"
+msgstr ""
+
 msgid "Profile picture"
 msgstr ""
 
@@ -9118,7 +9189,7 @@ msgstr ""
 msgid "Profile text and photos"
 msgstr ""
 
-msgid "Profile texts and photos"
+msgid "Profile texts"
 msgstr ""
 
 msgid "Profile-Based User Similarity"
@@ -9354,6 +9425,11 @@ msgid "Range: 0-1, Default: 0.5"
 msgstr ""
 
 msgid "Ranking mode"
+msgstr ""
+
+msgid ""
+"Ranks the candidates by how well they fit what the viewer is looking for "
+"(age, distance, intent, interests)."
 msgstr ""
 
 msgid "Rate Limit (seconds)"
@@ -9969,6 +10045,9 @@ msgstr ""
 msgid "Rule threshold"
 msgstr ""
 
+msgid "Rules"
+msgstr ""
+
 msgid ""
 "Rules of the platform for chats: who writes first and the limits the "
 "server enforces. How the agents behave in a chat is set in each client."
@@ -10020,6 +10099,10 @@ msgid "SHOW"
 msgstr ""
 
 msgid "Same as the experiment"
+msgstr ""
+
+#, python-format
+msgid "Same as the experiment (%(m)s)"
 msgstr ""
 
 msgid "Sample Images"
@@ -10590,9 +10673,6 @@ msgstr ""
 msgid "Server Trends Analysis"
 msgstr ""
 
-msgid "Server URL"
-msgstr ""
-
 msgid "Server call timeout (seconds)"
 msgstr ""
 
@@ -10860,6 +10940,9 @@ msgstr ""
 msgid "Simulation Days"
 msgstr ""
 
+msgid "Simulation Length"
+msgstr ""
+
 msgid "Simulation Length (days)"
 msgstr ""
 
@@ -10876,9 +10959,6 @@ msgid "Simulation Time Trend"
 msgstr ""
 
 msgid "Simulation Topics"
-msgstr ""
-
-msgid "Simulation length"
 msgstr ""
 
 msgid "Simulation length and population dynamics."
@@ -11527,9 +11607,6 @@ msgid ""
 "cannot add one the default prompt does not offer: the save is refused."
 msgstr ""
 
-msgid "Texts"
-msgstr ""
-
 msgid "Thai"
 msgstr ""
 
@@ -11630,6 +11707,21 @@ msgid "The agent spoken language."
 msgstr ""
 
 msgid ""
+"The agents follow the activity profile assigned to them in the population"
+" (Always On, Night Owl...), the same profiles of the other platforms: "
+"they open the app only in the hours of their profile, with the "
+"probability set above. Agents with Always On follow the activity of each "
+"hour above."
+msgstr ""
+
+msgid ""
+"The agents follow the activity profile assigned to them in the population"
+" (Always On, Night Owl...): they open the app only in the hours of their "
+"profile. Agents with Always On follow the activity of each hour above. To"
+" change the profiles, change the population."
+msgstr ""
+
+msgid ""
 "The agents must still answer in the JSON format the action instructions "
 "describe, so change the wording of the instructions carefully."
 msgstr ""
@@ -11661,11 +11753,6 @@ msgstr ""
 msgid ""
 "The changes are saved directly to your experiment profile without leaving"
 " this page."
-msgstr ""
-
-msgid ""
-"The chart shows how likely the agents are to open the app in each hour of"
-" the day (the slots of a day are mapped on the hours)."
 msgstr ""
 
 msgid "The client is running: stop it to change its settings."
@@ -11742,15 +11829,19 @@ msgid ""
 "topics: it was kept, so that existing runs can resume."
 msgstr ""
 
+msgid ""
+"The experiment has already produced data. The changes apply from the next"
+" start; the slot length and the seed stay fixed because the days already "
+"stored are counted with them."
+msgstr ""
+
 msgid "The experiment has no data to analyze yet."
 msgstr ""
 
-msgid ""
-"The experiment has started: the settings that shape the run are locked. "
-"To change them, clone the experiment or reset it."
+msgid "The experiment is not reachable right now. Try again in a moment."
 msgstr ""
 
-msgid "The experiment is not reachable right now. Try again in a moment."
+msgid "The experiment is running: stop it to change its settings."
 msgstr ""
 
 msgid "The experiment needs to be activated first."
@@ -11790,6 +11881,12 @@ msgid "The instant messaging configuration is not valid: %(why)s"
 msgstr ""
 
 msgid ""
+"The language model of the agents: it writes the profile texts and the "
+"messages and decides the swipes. Enter the address of the server, fetch "
+"its models and choose one."
+msgstr ""
+
+msgid ""
 "The language model that writes the messages of the agents and decides "
 "what they do in each session (which chat to read, whether to reply, "
 "forward or react). The temperature sets how varied the output is."
@@ -11808,19 +11905,18 @@ msgid ""
 "did not find a readable server or client JSON config."
 msgstr ""
 
+msgid ""
+"The model chosen in the experiment settings. If the population file names"
+" a model for an agent, that agent keeps it."
+msgstr ""
+
 msgid "The model may answer super like"
 msgstr ""
 
 msgid ""
-"The model that proposes the cards. Agents may have their own model in the"
-" population; the others use this one."
-msgstr ""
-
-msgid ""
-"The model that writes profile texts and messages and that decides part of"
-" the swipes. With the stub backend nothing is called: answers are "
-"generated by a deterministic fake, which is enough for tests and large "
-"runs."
+"The model that looks at the photos and the model that draws them. The "
+"photos are described to the agents with their captions; with a vision "
+"model the agents can also look at the images."
 msgstr ""
 
 msgid ""
@@ -11875,9 +11971,11 @@ msgid "The public profiles can be browsed by people who are not in the experimen
 msgstr ""
 
 msgid ""
-"The recommender, the daily quotas, the rules of chats and dates and human"
-" participation are shared by every client: set them once for the "
-"experiment."
+"The recommender is the model that proposes the cards to the agents. Each "
+"client chooses the model for its own agents when it is created (the "
+"choice is in the client page); a client that does not choose uses the "
+"default model below. The parameters here belong to the model, so they are"
+" shared by every client that uses it."
 msgstr ""
 
 msgid "The referenced ad hoc agent type is no longer available."
@@ -11890,6 +11988,12 @@ msgid "The requested page could not be found."
 msgstr ""
 
 msgid "The round is closed: try again in a moment."
+msgstr ""
+
+msgid ""
+"The rules of the platform (quotas, chats and dates) and the parameters of"
+" the recommenders are shared by every client: set them once for the "
+"experiment."
 msgstr ""
 
 msgid ""
@@ -12049,8 +12153,7 @@ msgstr ""
 
 msgid ""
 "The weights of the swiping utility use the same 0 to 10 scale as the "
-"actions of the other platforms: 0 means that factor is ignored, and the "
-"values are relative to each other."
+"actions of the other platforms: 0 means that factor is ignored."
 msgstr ""
 
 msgid "Thematic Characterization"
@@ -12099,9 +12202,9 @@ msgstr ""
 
 msgid ""
 "These settings belong to the whole experiment and are shared by every "
-"client: the rules of the platform, the recommender and the participation "
-"of people. How the agents of one population behave (activity, swiping, "
-"writing, memory) is set in each client."
+"client: the rules of the platform and the parameters of the recommenders."
+" People can always take part next to the agents (see the Participants "
+"page). How the agents of one population behave is set in each client."
 msgstr ""
 
 msgid ""
@@ -12135,12 +12238,20 @@ msgstr ""
 msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
 
+msgid "This experiment has no LLM agents: by default the agents follow rules."
+msgstr ""
+
 msgid ""
 "This experiment has no clients yet, so client log analysis is unavailable"
 " until a client is created."
 msgstr ""
 
 msgid "This experiment is not an instant messaging experiment."
+msgstr ""
+
+msgid ""
+"This experiment uses language models: by default the agents use them for "
+"everything, from the texts to the images."
 msgstr ""
 
 msgid "This interaction is switched off for the experiment."
@@ -13267,6 +13378,9 @@ msgstr ""
 msgid "Vision model"
 msgstr ""
 
+msgid "Vision model (the agents look at the photos)"
+msgstr ""
+
 msgid ""
 "Visitors can create a participant account from the login page and join "
 "the selected, active simulations and training modules."
@@ -13486,16 +13600,12 @@ msgid ""
 "leaning are set in the sections above."
 msgstr ""
 
-msgid ""
-"What the agents remember of their chats. Memory is switched on for the "
-"whole experiment in the Experiment Configuration; these settings tune it "
-"for this client."
+msgid "What the agents remember of their chats."
 msgstr ""
 
 msgid ""
-"What the client writes or draws when the population file leaves it empty:"
-" bios, answers to the profile questions, captions and, optionally, one "
-"image per photo."
+"What the language model writes when the population file leaves it empty: "
+"bios, answers to the profile questions and photo captions."
 msgstr ""
 
 msgid "What the model is told about the fields each action needs."
@@ -13523,6 +13633,9 @@ msgstr ""
 
 #, python-format
 msgid "When %(b)s is enabled, Detoxify is used automatically."
+msgstr ""
+
+msgid "When can I edit?"
 msgstr ""
 
 msgid ""
@@ -13555,6 +13668,11 @@ msgid ""
 "Each slot is one round of the experiment."
 msgstr ""
 
+msgid ""
+"Whenever the experiment is not running. Once it has produced data, the "
+"slot length and the seed stay fixed."
+msgstr ""
+
 msgid "Where a chat opens"
 msgstr ""
 
@@ -13570,9 +13688,7 @@ msgstr ""
 msgid "Where the message comes from"
 msgstr ""
 
-msgid ""
-"Where the toxicity score comes from when annotations are switched on in "
-"the Experiment Configuration."
+msgid "Where the toxicity score comes from."
 msgstr ""
 
 msgid ""
@@ -13584,10 +13700,9 @@ msgid "Which chats an agent looks at in a session and how they are ranked."
 msgstr ""
 
 msgid ""
-"Which model proposes the cards to the agents of this client. By default "
-"every agent keeps the recommender of its population, or the one of the "
-"experiment. The models and their parameters are in the experiment "
-"settings."
+"Which model proposes the cards to the agents of this client. Every client"
+" can use its own model; the parameters of each model are shared by the "
+"whole experiment and are set in the experiment settings."
 msgstr ""
 
 msgid "Who are you with?"
@@ -13645,11 +13760,6 @@ msgstr ""
 msgid ""
 "With the same seed, population and settings the choices of the agents are"
 " drawn again in the same way: use it to repeat a run."
-msgstr ""
-
-msgid ""
-"With the stub backend nothing is called: answers come from a "
-"deterministic fake, enough for tests and large runs."
 msgstr ""
 
 msgid "Wrapped exception:"
@@ -14040,6 +14150,9 @@ msgstr ""
 
 #, python-format
 msgid "day %(d)s, slot %(s)s"
+msgstr ""
+
+msgid "default"
 msgstr ""
 
 msgid "deleted"

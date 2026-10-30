@@ -1659,6 +1659,23 @@ def _unique_population_name(base_name):
     return name
 
 
+def _store_dating_activity_profiles(population_id, profiles):
+    """Link the activity profiles (name -> percent) assigned in the form to the population, as the other platforms do."""
+    for name, pct in (profiles or {}).items():
+        profile = db.session.scalars(
+            select(ActivityProfile).filter_by(name=name)
+        ).first()
+        if profile is not None:
+            db.session.add(
+                PopulationActivityProfile(
+                    population=population_id,
+                    activity_profile=profile.id,
+                    percentage=float(pct),
+                )
+            )
+    db.session.commit()
+
+
 def _register_dating_population(name, descr, data):
     """Create the ``population`` row and the agents (with their custom features) of a validated population."""
     from y_web.src.dating import population as dp
@@ -1810,6 +1827,7 @@ def _generate_dating_population():
         request.form.get("pop_descr"),
         data,
     )
+    _store_dating_activity_profiles(row.id, dp.activity_profiles(request.form))
     flash(_("Dating population '%(name)s' generated.", name=row.name), "success")
     return redirect(f"/admin/dating_population/{row.id}")
 

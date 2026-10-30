@@ -14,7 +14,7 @@
 {%- elif item.widget == 'segmented' -%}
     <div class="dating-segmented" role="radiogroup">
         {% for choice in f.choices %}
-        <label class="dating-segment"><input type="radio" name="{{ f.name }}" value="{{ choice }}" {% if choice|string == value %}checked{% endif %} {% if disabled %}disabled{% endif %}><span>{{ choice }}</span></label>
+        <label class="dating-segment"><input type="radio" name="{{ f.name }}" value="{{ choice }}" {% if choice|string == value %}checked{% endif %} {% if disabled %}disabled{% endif %}><span>{{ _(item.choice_labels[choice]) if item.choice_labels and choice in item.choice_labels else choice }}</span></label>
         {% endfor %}
     </div>
 {%- elif item.widget == 'select' -%}
@@ -52,6 +52,40 @@
         </div>
         <input type="hidden" name="{{ f.name }}" value="{{ value }}" {% if disabled %}disabled{% endif %}>
     </div>
+{%- elif item.widget == 'hidden' -%}
+    <input type="hidden" name="{{ f.name }}" value="{{ value }}" {% if disabled %}disabled{% endif %}>
+{%- elif item.widget == 'model_url' -%}
+    <div class="ys-flex-row-mb">
+        <input type="text" id="dating_llm_url" name="{{ f.name }}" class="input ys-flex-1" placeholder="{{ _('e.g., localhost:8000') }}" value="{{ value }}" {% if disabled %}disabled{% endif %}>
+        <button type="button" class="button is-solid primary-button" data-fetch-models="dating_llm_model" {% if disabled %}disabled{% endif %}>{{ _('Fetch Models') }}</button>
+    </div>
+    <div class="ys-badge-min" data-fetch-status="dating_llm_model"></div>
+{%- elif item.widget == 'model_select' -%}
+    <div class="select"><select name="{{ f.name }}" id="dating_llm_model" data-model-select {% if disabled %}disabled{% endif %}>
+        <option value="">{{ _('Select a model') }}</option>
+        {% if value %}<option value="{{ value }}" selected>{{ value }}</option>{% endif %}
+    </select></div>
+{%- elif item.widget == 'vision_select' -%}
+    <div class="ys-flex-row-mb">
+        <div class="select ys-flex-1"><select name="{{ f.name }}" id="dating_vision_model" data-vision-select {% if disabled %}disabled{% endif %}>
+            <option value="">{{ _('Fetch available vision models') }}</option>
+            {% if value %}<option value="{{ value }}" selected>{{ value }}</option>{% endif %}
+        </select></div>
+        <button type="button" class="button is-solid primary-button" data-fetch-vision="dating_vision_model" {% if disabled %}disabled{% endif %}>{{ _('Fetch Vision Models') }}</button>
+    </div>
+    <div class="ys-badge-min" data-fetch-status="dating_vision_model"></div>
+{%- elif item.widget == 'recsys' -%}
+    <div class="select is-fullwidth"><select name="{{ f.name }}" id="dating_recsys" data-recsys {% if disabled %}disabled{% endif %}>
+        {% for m in item.options %}
+        <option value="{{ m }}" {% if m == value %}selected{% endif %}>{{ _('Same as the experiment (%(m)s)', m=values['recsys_default']) if not m else m }}</option>
+        {% endfor %}
+    </select></div>
+    <div class="dating-recsys-info">
+        <p class="ys-label-hint" data-recsys-info="">{{ _('The model chosen in the experiment settings. If the population file names a model for an agent, that agent keeps it.') }}</p>
+        {% for m in item.options if m %}
+        <p class="ys-label-hint" data-recsys-info="{{ m }}" hidden>{{ _(item.recsys_info[m]) if item.recsys_info and m in item.recsys_info else '' }}</p>
+        {% endfor %}
+    </div>
 {%- elif item.widget == 'number' -%}
     <input type="number" name="{{ f.name }}" class="input" step="{{ '1' if f.kind == 'int' else 'any' }}" {% if f.minimum is not none %}min="{{ f.minimum }}"{% endif %} {% if f.maximum is not none %}max="{{ f.maximum }}"{% endif %} value="{{ value }}" {% if disabled %}disabled{% endif %}>
 {%- elif item.widget == 'json' -%}
@@ -63,13 +97,15 @@
 
 {% macro dating_field(item, values, disabled=False) %}
 {%- set f = item.f -%}
+{% if item.widget == 'hidden' %}{{ dating_control(item, values, disabled) }}{% else %}
 <div class="box-line ys-hint-text{% if item.advanced %} dating-adv{% endif %}" id="field-{{ f.name }}"{% if item.advanced %} data-advanced="1"{% endif %}>
     <span class="left">{{ _(item.label) }}</span>
     <span class="right ys-w-70">
         {{ dating_control(item, values, disabled) }}
-        <small>{{ f.description }}</small>
+        {% if item.widget not in ('recsys',) %}<small>{{ f.description }}</small>{% endif %}
     </span>
 </div>
+{% endif %}
 {% endmacro %}
 
 {# The body of a section: the sub-headings and their fields. #}
@@ -80,7 +116,7 @@
 {% endif %}
 {% for b in s.blocks %}
 {% if b.heading %}<h4 class="title is-6 dating-subheading">{{ _(b.heading) }}</h4>{% endif %}
-{% for item in b.fields %}{{ dating_field(item, values, disabled) }}{% endfor %}
+{% for item in b.fields %}{{ dating_field(item, values, disabled or item.locked) }}{% endfor %}
 {% endfor %}
 {% endmacro %}
 
@@ -99,8 +135,8 @@
 {% endmacro %}
 
 {# Sections of a page inside ONE form (creation of a client): same look as the other client pages. #}
-{% macro dating_sections(sections, values, experiment_id, disabled=False) %}
-{% for s in sections %}
+{% macro dating_sections(sections, values, experiment_id, disabled=False, ids=None) %}
+{% for s in sections if ids is none or s.id in ids %}
 <div class="tutorial-section{% if s.advanced_only %} dating-adv{% endif %}" id="sec-{{ s.id }}"{% if s.advanced_only %} data-advanced="1"{% endif %}>
     <div class="form-section-header">{{ _(s.title) }}</div>
     <div class="form-section-description">{{ _(s.description) }}</div>
@@ -125,5 +161,19 @@
             </div>
         </form>
     </div>
+</div>
+{% endmacro %}
+
+{# The activity profiles (daily rhythms) of the agents of a population: name, share of the agents and the hours. #}
+{% macro dating_rhythms(rhythms) %}
+<div id="dating-rhythms" class="dating-rhythms">
+    {% for r in rhythms %}
+    <div class="dating-rhythm">
+        <div class="dating-rhythm-name">{{ r.name or _('No profile') }} <span class="ys-text-small">{{ r.share }}%</span></div>
+        <div class="profile-heatmap-compact">
+            {% for h in range(24) %}<div class="heatmap-hour {% if r.hours is none or r.hours[h] %}active{% endif %}" title="{{ _('Hour %(hour)s', hour=h) }}"></div>{% endfor %}
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endmacro %}

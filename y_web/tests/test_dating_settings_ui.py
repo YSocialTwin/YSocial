@@ -27,7 +27,9 @@ pytestmark = [
 )
 def test_every_setting_is_placed_and_labelled(fields, sections):
     fs = fields()
-    layout = ui.layout(fs, sections)
+    layout = ui.layout(
+        fs, sections, {"memory": True, "stress_reward": True, "toxicity": True}
+    )
     assert "other" not in [s["id"] for s in layout]
     placed = [i["f"].path for s in layout for b in s["blocks"] for i in b["fields"]]
     assert sorted(placed) == sorted(f.path for f in fs)
@@ -43,11 +45,54 @@ def test_a_setting_is_on_one_page_only():
         assert path in ui.LABELS
 
 
-def test_switch_off_marks_section_inactive():
-    layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS, {"memory": False})
-    assert next(s for s in layout if s["id"] == "memory")["inactive"]
-    layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS, {"memory": True})
-    assert not next(s for s in layout if s["id"] == "memory")["inactive"]
+def test_a_component_that_is_off_is_not_shown():
+    fields = dcc.form_fields(REPO)
+    off = ui.layout(fields, ui.CLIENT_SECTIONS, {"memory": False})
+    shown = {i["f"].path for sec in off for b in sec["blocks"] for i in b["fields"]}
+    assert "memory" not in [x["id"] for x in off]
+    assert not [
+        p for p in shown if p.startswith(("memory.", "stress_reward.", "annotations."))
+    ]
+    assert "other" not in [x["id"] for x in off]
+    on = ui.layout(fields, ui.CLIENT_SECTIONS, {"memory": True})
+    assert "memory" in [x["id"] for x in on]
+
+
+def test_settings_that_need_a_model_are_hidden_without_llm_agents():
+    fields = dcc.form_fields(REPO)
+    layout = ui.layout(fields, ui.CLIENT_SECTIONS, llm_enabled=False)
+    shown = {i["f"].path for sec in layout for b in sec["blocks"] for i in b["fields"]}
+    assert "llm" not in [x["id"] for x in layout]
+    for path in ("llm.model", "swipe.mode", "conversation.text_source", "swipe.llm_vision",
+                 "profile_generation.enabled"):  # fmt: skip
+        assert path not in shown
+    assert (
+        "profile_generation.images.enabled" in shown
+    )  # drawing the photos is its own choice
+    assert "swipe.w_attr" in shown
+    with_llm = ui.layout(fields, ui.CLIENT_SECTIONS, llm_enabled=True)
+    assert [x["id"] for x in with_llm][:3] == [
+        "llm",
+        "images",
+        "recommender",
+    ]  # the image model follows
+
+
+def test_the_defaults_follow_the_llm_switch():
+    on = dcc.mode_defaults(True, True)
+    assert on["swipe"]["mode"] == "llm" and on["conversation"]["text_source"] == "llm"
+    assert (
+        on["profile_generation"]["enabled"]
+        and on["profile_generation"]["images"]["enabled"]
+    )
+    assert (
+        dcc.mode_defaults(True, False)["profile_generation"]["images"]["enabled"]
+        is False
+    )
+    off = dcc.mode_defaults(False)
+    assert off["swipe"]["mode"] == "rule" and off["llm"]["backend"] == "stub"
+    assert off["conversation"]["text_source"] == "template"
+    assert not off["profile_generation"]["enabled"]
 
 
 def test_sections_render():
@@ -59,16 +104,28 @@ def test_sections_render():
         loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
     )
     env.globals["_"] = lambda s, **kw: s
-    layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS, {"memory": False})
-    values = dcc.values_for_form(REPO)
+    layout = ui.layout(
+        dcc.form_fields(REPO),
+        ui.CLIENT_SECTIONS,
+        {"memory": False},
+        {"match_recsys": ["", "random", "hybrid"]},
+    )
+    values = dcc.values_for_form(REPO, None, True, False)
+    values["recsys_default"] = "hybrid"
     tpl = env.from_string(
         "{% from 'admin/_dating_fields.html' import dating_sections %}"
         "{{ dating_sections(sections, values, 7) }}"
     )
     html = tpl.render(sections=layout, values=values)
-    assert 'id="sec-llm"' in html and 'id="sec-memory"' in html
-    assert "/admin/experiment_details/7" in html  # memory section is off
+    assert 'id="sec-llm"' in html and 'id="sec-images"' in html
+    assert 'id="sec-memory"' not in html  # memory is off: not shown at all
     assert "adv__profile_generation__images__background" in html
+    # the language model block of the other platforms: address with Fetch, model list, vision model with Fetch
+    assert "data-fetch-models" in html and "data-fetch-vision" in html
+    assert "dating_llm_model" in html and 'name="adv__llm__backend"' in html
+    # the look of the photos and the recommender
+    assert "Photorealistic human faces" in html and "Fantasy cartoon characters" in html
+    assert "data-recsys" in html and "Same as the experiment" in html
 
 
 def _env():
@@ -113,7 +170,6 @@ def test_settings_use_the_widgets_of_the_other_pages():
     assert client["conversation.check_probability"] == "slider"
     assert client["llm.temperature"] == "number"
     assert server["conversations.opener_genders"] == "taglist"
-    assert server["human.interactions.swipe"] == "toggle"
     assert "bool" not in {
         f.kind for f in dcc.form_fields(REPO) if client[f.path] != "toggle"
     }

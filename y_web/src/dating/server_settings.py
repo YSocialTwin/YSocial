@@ -39,6 +39,25 @@ INTERNAL: Dict[str, str] = {
     "annotations.toxicity": "the annotation switches of the experiment configuration",
     "annotations.emotions": "the annotation switches of the experiment configuration",
     "human.enabled": "always on: people can take part in every dating experiment",
+    "human.max_humans": "people can always take part: the limits of the runtime apply",
+    "human.pace.min_round_seconds": "people can always take part: the limits of the runtime apply",
+    "human.limits.max_text_chars": "people can always take part: the limits of the runtime apply",
+    "human.limits.max_photos": "people can always take part: the limits of the runtime apply",
+    "human.limits.max_actions_per_request": "people can always take part: the limits of the runtime apply",
+    "human.limits.requests_per_minute": "people can always take part: the limits of the runtime apply",
+    "human.limits.burst": "people can always take part: the limits of the runtime apply",
+    "human.limits.max_body_bytes": "people can always take part: the limits of the runtime apply",
+    "human.interactions.swipe": "people can always take part: every action is allowed",
+    "human.interactions.messages": "people can always take part: every action is allowed",
+    "human.interactions.reactions": "people can always take part: every action is allowed",
+    "human.interactions.dates": "people can always take part: every action is allowed",
+    "human.interactions.unmatch": "people can always take part: every action is allowed",
+    "human.interactions.block": "people can always take part: every action is allowed",
+    "human.interactions.report": "people can always take part: every action is allowed",
+    "human.interactions.pause": "people can always take part: every action is allowed",
+    "human.interactions.profile_edit": "people can always take part: every action is allowed",
+    "archetypes.enabled": "the activity profile of an agent is fixed by its population, as in the other platforms",
+    "archetypes.transitions": "the activity profile of an agent is fixed by its population, as in the other platforms",
     "human.gateway.host": "loopback only; chosen by YWeb when it starts the gateway",
     "human.gateway.port": "chosen by YWeb when it starts the gateway",
     "memory_embeddings.service": "the embedding model of the experiment configuration",
@@ -278,16 +297,38 @@ def run_started(exp_dir: str) -> bool:
     )
 
 
-def check_change_allowed(exp_dir: str, new_config: Dict[str, Any]) -> Tuple[bool, str]:
-    """(allowed, reason). With a run started, only the settings outside the run's hash may change."""
-    lock = read_lock(exp_dir)
-    if lock is None:
-        if os.path.isfile(os.path.join(exp_dir, "database_server.db")):
-            return False, "a run has already created the database of this experiment"
-        return True, ""
-    if config_hash(new_config) != lock.get("hash"):
-        return (
-            False,
-            "the experiment has started: the settings that shape the run are locked",
-        )
+# Once a run has produced data these two cannot change: days and slots are counted with them, so another value
+# would make the stored days mean something else.
+FIXED_AFTER_START = ("simulation.num_slots_per_day", "seed")
+
+
+def check_change_allowed(
+    exp_dir: str, new_config: Dict[str, Any], running: bool = False, old_config=None
+) -> Tuple[bool, str]:
+    """(allowed, reason).
+
+    The settings are editable whenever the experiment is not running. A run that has already produced data keeps
+    the length of its slots and its seed (:data:`FIXED_AFTER_START`); everything else may change, and applies from
+    the next start.
+    """
+    if running:
+        return False, "the experiment is running: stop it to change its settings"
+    if run_started(exp_dir) and old_config is not None:
+        for path in FIXED_AFTER_START:
+            if sf.get_path(new_config, path) != sf.get_path(old_config, path):
+                return (
+                    False,
+                    "the slot length and the seed cannot change once the experiment has produced data",
+                )
     return True, ""
+
+
+def refresh_lock(exp_dir: str, config: Dict[str, Any]) -> None:
+    """Record the saved configuration as the one the next run starts with (when a lock exists)."""
+    if read_lock(exp_dir) is None:
+        return
+    lock = {"hash": config_hash(config), "locked_at": int(time.time())}
+    tmp = lock_path(exp_dir) + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as handle:
+        json.dump(lock, handle, indent=2)
+    os.replace(tmp, lock_path(exp_dir))

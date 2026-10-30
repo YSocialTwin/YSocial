@@ -99,6 +99,7 @@ def test_client_config_satisfies_the_runtime_schema_and_carries_the_internal_key
         memory_enabled=True,
         language="it",
         form={fields["llm.backend"].name: "stub", fields["swipe.mode"].name: "llm"},
+        llm_enabled=True,
     )
     jsonschema.Draft7Validator(cc.schema(str(REPO))).validate(cfg)
     assert cfg["client_name"] == "c1" and cfg["num_days"] == 3
@@ -209,38 +210,54 @@ def test_apply_form_keeps_the_config_valid_for_the_strict_schema():
 
 
 # -- the run lock --------------------------------------------------------------------------------------------
-def test_the_run_lock_refuses_changes_that_shape_the_run(tmp_path):
+def test_settings_are_editable_when_the_experiment_is_stopped(tmp_path):
     from y_web.src.dating import server_settings as ss
 
     cfg = {
         "seed": 1,
+        "simulation": {"num_slots_per_day": 24},
         "matching": {"likes_per_day": 100},
-        "logging": {"enable_server_log": True},
     }
-    assert ss.check_change_allowed(str(tmp_path), cfg) == (True, "")
+    assert ss.check_change_allowed(str(tmp_path), cfg, False, cfg) == (True, "")
     assert not ss.run_started(str(tmp_path))
     ss.write_lock(str(tmp_path), cfg)
     assert ss.run_started(str(tmp_path))
     first = ss.read_lock(str(tmp_path))
     assert ss.write_lock(str(tmp_path), {"seed": 99}) == first  # never overwritten
-    assert ss.check_change_allowed(str(tmp_path), cfg)[0] is True
-    logs = json.loads(json.dumps(cfg))
-    logs["logging"]["enable_server_log"] = False
-    assert ss.check_change_allowed(str(tmp_path), logs)[0] is True  # logging may change
     changed = json.loads(json.dumps(cfg))
     changed["matching"]["likes_per_day"] = 5
-    allowed, why = ss.check_change_allowed(str(tmp_path), changed)
-    assert not allowed and "locked" in why
+    assert ss.check_change_allowed(str(tmp_path), changed, False, cfg)[0] is True
+    ss.refresh_lock(str(tmp_path), changed)
+    assert ss.read_lock(str(tmp_path))["hash"] == ss.config_hash(changed)
+    # running: nothing changes
+    allowed, why = ss.check_change_allowed(str(tmp_path), changed, True, cfg)
+    assert not allowed and "running" in why
+    # data exists: the slot length and the seed stay
+    for key in ("seed", "slots"):
+        other = json.loads(json.dumps(cfg))
+        if key == "seed":
+            other["seed"] = 2
+        else:
+            other["simulation"]["num_slots_per_day"] = 12
+        allowed, why = ss.check_change_allowed(str(tmp_path), other, False, cfg)
+        assert not allowed and "cannot change" in why
     ss.clear_lock(str(tmp_path))
-    assert ss.check_change_allowed(str(tmp_path), changed)[0] is True
+    assert ss.check_change_allowed(str(tmp_path), other, False, cfg)[0] is True
 
 
-def test_a_database_without_a_lock_also_locks(tmp_path):
+def test_a_database_without_a_lock_counts_as_started(tmp_path):
     from y_web.src.dating import server_settings as ss
 
     (tmp_path / "database_server.db").write_text("")
     assert ss.run_started(str(tmp_path))
-    assert ss.check_change_allowed(str(tmp_path), {"seed": 1})[0] is False
+    assert (
+        ss.check_change_allowed(str(tmp_path), {"seed": 1}, False, {"seed": 2})[0]
+        is False
+    )
+    assert (
+        ss.check_change_allowed(str(tmp_path), {"seed": 1}, False, {"seed": 1})[0]
+        is True
+    )
 
 
 # -- routes -------------------------------------------------------------------------------------------------
@@ -314,39 +331,46 @@ def dating_exp(app, tmp_path, monkeypatch):
 
 
 @needs_runtime
-def test_update_settings_route_saves_then_refuses_after_the_run_started(
+def test_update_settings_route_saves_when_stopped_and_refuses_when_running(
     app, dating_exp
 ):
+    from y_web import db
     from y_web.src.dating import server_settings as ss
 
     path = dating_exp.folder / "server_config.json"
-    with app.test_request_context(
-        f"/admin/update_dating_settings/{dating_exp.exp.idexp}",
-        method="POST",
-        data={"matching_default_model": "random", "adv__matching__likes_per_day": "40"},
-    ):
-        dating_exp.exp_routes.update_dating_settings.__wrapped__(dating_exp.exp.idexp)
-    saved = json.loads(path.read_text())
+
+    def post(**data):
+        with app.test_request_context(
+            f"/admin/update_dating_settings/{dating_exp.exp.idexp}",
+            method="POST",
+            data=data,
+        ):
+            dating_exp.exp_routes.update_dating_settings.__wrapped__(
+                dating_exp.exp.idexp
+            )
+        return json.loads(path.read_text())
+
+    saved = post(matching_default_model="random", adv__matching__likes_per_day="40")
     assert (
         saved["matching"]["default_model"] == "random"
         and saved["matching"]["likes_per_day"] == 40
     )
-    ss.write_lock(str(dating_exp.folder), saved)
-    with app.test_request_context(
-        f"/admin/update_dating_settings/{dating_exp.exp.idexp}",
-        method="POST",
-        data={"matching_default_model": "hybrid", "adv__matching__likes_per_day": "41"},
-    ):
-        dating_exp.exp_routes.update_dating_settings.__wrapped__(dating_exp.exp.idexp)
-    assert json.loads(path.read_text()) == saved
-    assert any("locked" in m for _c, m in dating_exp.flashes)
-    with app.test_request_context(
-        f"/admin/update_dating_settings/{dating_exp.exp.idexp}",
-        method="POST",
-        data={"matching_default_model": "tinder"},
-    ):
-        dating_exp.exp_routes.update_dating_settings.__wrapped__(dating_exp.exp.idexp)
-    assert json.loads(path.read_text()) == saved
+    ss.write_lock(
+        str(dating_exp.folder), saved
+    )  # the experiment has started once and is stopped
+    saved = post(matching_default_model="hybrid", adv__matching__likes_per_day="41")
+    assert saved["matching"]["likes_per_day"] == 41  # editable when stopped
+    assert ss.read_lock(str(dating_exp.folder))["hash"] == ss.config_hash(saved)
+    kept = post(matching_default_model="hybrid", adv__seed="9")
+    assert kept["seed"] == saved["seed"]  # the seed stays once there is data
+    assert any("cannot change" in m for _c, m in dating_exp.flashes)
+    dating_exp.exp.running = 1
+    db.session.commit()
+    assert post(matching_default_model="random") == kept  # running: refused
+    assert any("running" in m for _c, m in dating_exp.flashes)
+    dating_exp.exp.running = 0
+    db.session.commit()
+    assert post(matching_default_model="tinder") == kept  # unknown model
 
 
 @needs_runtime
@@ -367,8 +391,8 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
                 "id_exp": dating_exp.exp.idexp,
                 "name": "c1",
                 "population_id": pop.id,
-                "num_days": "2",
-                "adv__swipe__mode__": "x",
+                "days": "2",
+                "adv__llm__model": "qwen3:4b",
             },
         ):
             dating_exp.client_routes.create_dating_client()
@@ -391,7 +415,8 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
                 "id_exp": dating_exp.exp.idexp,
                 "name": "c1",
                 "population_id": pop.id,
-                "num_days": "1",
+                "days": "1",
+                "adv__llm__model": "qwen3:4b",
             },
         ):
             dating_exp.client_routes.create_dating_client()
@@ -409,7 +434,8 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
                 "id_exp": dating_exp.exp.idexp,
                 "name": "c2",
                 "population_id": other.id,
-                "num_days": "1",
+                "days": "1",
+                "adv__llm__model": "qwen3:4b",
             },
         ):
             dating_exp.client_routes.create_dating_client()

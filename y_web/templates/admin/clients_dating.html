@@ -1,6 +1,7 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
-{% from "admin/_dating_fields.html" import dating_sections, dating_advanced_toggle %}
+{% from "admin/_dating_fields.html" import dating_sections, dating_advanced_toggle, dating_rhythms %}
+{% set first_rhythms = rhythms_by_population[populations[0].id|string] if populations and rhythms_by_population else [] %}
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" data-tutorial-page="clients_dating" class="dashboard-container">
@@ -26,43 +27,75 @@
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
                                     <div class="ys-note-box">
-                                        {{ _('A client is a group of agents (the population) that swipe, match and talk in this experiment. Choose the population and how long it runs, then adjust how these agents behave in the sections below: every setting has a default from the dating runtime, so you can leave any section untouched. Rules shared by all clients (slot length, recommender, quotas, dates) are in the experiment settings.') }}
+                                        {{ _('A client is a group of agents (the population) that swipe, match and talk in this experiment. Choose the population and how long it runs, then the models; the other settings have defaults that suit most runs.') }}
+                                        {% if llm_enabled %}{{ _('This experiment uses language models: by default the agents use them for everything, from the texts to the images.') }}{% else %}{{ _('This experiment has no LLM agents: by default the agents follow rules.') }}{% endif %}
                                     </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Name') }}</span>
-                                        <span class="right ys-w-70"><input type="text" name="name" class="input" required maxlength="50"></span>
-                                    </div>
+
+                                    <div class="tutorial-section" id="section-basic">
+                                        <div class="form-section-header">{{ _('Basic Information') }}</div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Name') }}</span>
+                                            <span class="right ys-w-70"><input type="text" name="name" class="input" required maxlength="50"></span>
+                                        </div>
 {% set prompt_scope = 'client' %}{% include 'admin/_prompt_language.html' %}
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Description') }}</span>
-                                        <span class="right ys-w-70"><input type="text" name="descr" class="input"></span>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Description') }}</span>
+                                            <span class="right ys-w-70"><input type="text" name="descr" class="input"></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Population') }}</span>
+                                            <span class="right ys-w-70">
+                                                <div class="select is-fullwidth"><select name="population_id" id="dating_population" required>
+                                                    {% for p in populations %}<option value="{{ p.id }}">{{ p.name }} ({{ p.size }})</option>{% endfor %}
+                                                </select></div>
+                                            </span>
+                                        </div>
+                                        {% if not populations %}
+                                        <p class="ys-label-hint">{{ _('No dating population is available.') }} <a href="/admin/populations">{{ _('Create one in Populations (platform Dating).') }}</a>
+                                        {% if incompatible_population_count %}({{ _('%(n)s populations for other platforms are hidden.', n=incompatible_population_count) }}){% endif %}</p>
+                                        {% endif %}
                                     </div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Population') }}</span>
-                                        <span class="right ys-w-70">
-                                            <div class="select is-fullwidth"><select name="population_id" required>
-                                                {% for p in populations %}<option value="{{ p.id }}">{{ p.name }} ({{ p.size }})</option>{% endfor %}
-                                            </select></div>
-                                        </span>
+
+                                    <div class="tutorial-section" id="section-simulation-params">
+                                        <div class="form-section-header">{{ _('Simulation Parameters') }}</div>
+                                        <div class="form-section-description">{{ _('Configure the duration of the simulation run.') }}</div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('Simulation Length (days)') }}</span>
+                                            <span class="right ys-value-col">
+                                                <input type="number" id="days_display" class="input ys-flex-1" min="1" step="1" value="{{ default_days }}">
+                                                <input type="hidden" name="days" id="days_input" value="{{ default_days }}">
+                                                <label class="ys-flex-click-nowrap">
+                                                    <input type="checkbox" id="infinite_duration" name="infinite_duration" class="ys-pointer">
+                                                    <span class="ys-text-brand">{{ _('Run until stopped') }}</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                        <p class="ys-label-hint">{{ _('One day has %(n)s slots (a round each).', n=slots_per_day) }}</p>
                                     </div>
-                                    {% if not populations %}
-                                    <p class="ys-label-hint">{{ _('No dating population is available.') }} <a href="/admin/populations">{{ _('Create one in Populations (platform Dating).') }}</a>
-                                    {% if incompatible_population_count %}({{ _('%(n)s populations for other platforms are hidden.', n=incompatible_population_count) }}){% endif %}</p>
-                                    {% endif %}
-                                    <div class="tutorial-section">
-                                    <div class="form-section-header">{{ _('Simulation length') }}</div>
-                                    <div class="box-line">
-                                        <span class="left">{{ _('Days') }}</span>
-                                        <span class="right ys-w-70"><input type="number" name="num_days" class="input" min="-1" value="1" required></span>
-                                    </div>
-                                    <p class="ys-label-hint">{{ _('One day has %(n)s slots (a round each). -1 runs until stopped.', n=slots_per_day) }}</p>
-                                    </div>
-                                    
+
                                     {{ dating_advanced_toggle() }}
-                                    {{ dating_sections(sections, adv_values, experiment.idexp) }}
+
+                                    <h4 class="dating-group-title">{{ _('Models') }}</h4>
+                                    {{ dating_sections(sections, adv_values, experiment.idexp, False, ['llm', 'images', 'recommender']) }}
+
+                                    <h4 class="dating-group-title">{{ _('Agent behaviour') }}</h4>
+                                    {{ dating_sections(sections, adv_values, experiment.idexp, False, ['activity']) }}
+                                    <div class="tutorial-section" id="section-rhythms">
+                                        <div class="form-section-header">{{ _('Daily rhythm of the agents') }}</div>
+                                        <div class="form-section-description">{{ _('The agents follow the activity profile assigned to them in the population (Always On, Night Owl...), the same profiles of the other platforms: they open the app only in the hours of their profile, with the probability set above. Agents with Always On follow the activity of each hour above.') }}</div>
+                                        <div id="dating-rhythms-box" data-rhythms='{{ (rhythms_by_population or {})|tojson }}'>{{ dating_rhythms(first_rhythms) }}</div>
+                                    </div>
+                                    {{ dating_sections(sections, adv_values, experiment.idexp, False, ['swipe', 'conversation', 'profile_generation', 'lifecycle']) }}
+
+                                    {% if sections|selectattr('id', 'in', ['stress_reward', 'memory', 'annotations'])|list %}
+                                    <h4 class="dating-group-title">{{ _('Components switched on in the experiment') }}</h4>
+                                    {{ dating_sections(sections, adv_values, experiment.idexp, False, ['stress_reward', 'memory', 'annotations']) }}
+                                    {% endif %}
+
+                                    {{ dating_sections(sections, adv_values, experiment.idexp, False, ['runtime']) }}
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth" {% if not populations %}disabled{% endif %}>{{ _('Create client') }}</button>
+                                    <button id="create_dating_client" class="button is-solid primary-button is-fullwidth" {% if not populations %}disabled{% endif %} {% if llm_enabled %}data-requires-model="dating_llm_model"{% endif %}>{{ _('Create client') }}</button>
                                 </div>
                             </form>
                         </div>
@@ -73,15 +106,18 @@
                         <h3>{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
                             <p><b>{{ _('What is a client?') }}</b><br>{{ _('A group of agents (the population) that swipe, match and talk in this experiment. Several clients can run in the same experiment.') }}</p>
-                            <p><b>{{ _('Importance 0-10') }}</b><br>{{ _('The weights of the swiping utility use the same 0 to 10 scale as the actions of the other platforms: 0 means that factor is ignored, and the values are relative to each other.') }}</p>
-                            <p><b>{{ _('Activity') }}</b><br>{{ _('The chart shows how likely the agents are to open the app in each hour of the day (the slots of a day are mapped on the hours).') }}</p>
-                            <p><b>{{ _('Language model') }}</b><br>{{ _('With the stub backend nothing is called: answers come from a deterministic fake, enough for tests and large runs.') }}</p>
+                            <p><b>{{ _('Simulation Length') }}</b><br>{{ _('Number of days to run (30 by default). Check "Run until stopped" to keep the client running until you stop it.') }}</p>
+                            {% if llm_enabled %}
+                            <p><b>{{ _('Large Language Models') }}</b><br>{{ _('Enter the address of the model server, fetch its models and choose one. The vision model lets the agents look at the photos; the image model draws the profile photos (photorealistic faces or cartoon characters).') }}</p>
+                            {% endif %}
+                            <p><b>{{ _('Recommender') }}</b><br>{{ _('Each client chooses the model that proposes the cards to its agents; the parameters of every model are in the experiment settings.') }}</p>
+                            <p><b>{{ _('Importance 0-10') }}</b><br>{{ _('The weights of the swiping utility use the same 0 to 10 scale as the actions of the other platforms: 0 means that factor is ignored.') }}</p>
                             <p><b>{{ _('Advanced settings') }}</b><br>{{ _('Fine tuning that the defaults of the runtime already cover is hidden until you switch it on.') }}</p>
                         </div>
                     </div>
                     <div class="sidebar-box">
                         <h3>{{ _('Experiment settings') }}</h3>
-                        <p class="ys-label-hint">{{ _('The recommender, the daily quotas, the rules of chats and dates and human participation are shared by every client: set them once for the experiment.') }}</p>
+                        <p class="ys-label-hint">{{ _('The rules of the platform (quotas, chats and dates) and the parameters of the recommenders are shared by every client: set them once for the experiment.') }}</p>
                         <a class="button is-solid primary-button is-fullwidth" href="/admin/dating_settings/{{ experiment.idexp }}">{{ _('Open experiment settings') }}</a>
                     </div>
                 </div>

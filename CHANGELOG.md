@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Dating: reorganised client page (language model with *Fetch* like the other platforms, image model right after it, per-client recommender with an explanation of each model, 30-day duration with *Run until stopped*, defaults that follow whether the experiment uses language models, components that are off are hidden); style of the profile photos (photorealistic faces or cartoon characters); the daily rhythm of the agents uses the activity profiles of the population form; human participation is always on; the experiment settings are editable whenever the experiment is not running (IR-D-05, IR-D-06). Needs the YDating commit that adds `profile_generation.images.style` and the generator key `archetypes`.
+
 - **Dating admin pages aligned with YSimulator**: the dating population is created in the standard population form
   (platform *Dating*, also for file upload); client and experiment settings use switches, tags, the 0-10 importance
   scale, sliders, an hourly activity chart, a quick reference guide and an advanced-settings switch.

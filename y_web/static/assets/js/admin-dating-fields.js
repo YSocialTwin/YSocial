@@ -128,7 +128,158 @@
     apply();
   }
 
+  // ------------------------------------------------------------------ duration (same controls as the other clients)
+  function initDuration() {
+    var display = document.getElementById("days_display");
+    var hidden = document.getElementById("days_input");
+    var infinite = document.getElementById("infinite_duration");
+    if (!display || !hidden) { return; }
+    function sync() { hidden.value = display.value; }
+    display.addEventListener("input", sync);
+    display.addEventListener("change", sync);
+    if (!infinite) { return; }
+    infinite.addEventListener("change", function () {
+      if (infinite.checked) {
+        display.dataset.previousValue = display.value;
+        display.value = "\u221e";
+        display.disabled = true;
+        display.style.opacity = "0.5";
+        hidden.value = "-1";
+      } else {
+        display.value = display.dataset.previousValue || "30";
+        display.disabled = false;
+        display.style.opacity = "1";
+        hidden.value = display.value;
+      }
+    });
+  }
+
+  // ------------------------------------------------------------------ models of the server (Fetch Models)
+  var VISION_MARKERS = ["vision", "minicpm-v", "qwen-vl", "llava", "internvl", "pixtral", "molmo", "gpt-4o", "gpt-4.1", "omni", "-vl", "_vl"];
+  function isVisionModel(name) {
+    var lowered = String(name || "").toLowerCase();
+    return VISION_MARKERS.some(function (m) { return lowered.indexOf(m) >= 0; });
+  }
+  function tr(text, params) {
+    return window.YI18n && window.YI18n.t ? window.YI18n.t(text, params) : text;
+  }
+  function setStatus(id, html, ms) {
+    var el = document.querySelector('[data-fetch-status="' + id + '"]');
+    if (!el) { return; }
+    el.innerHTML = html;
+    if (ms) { setTimeout(function () { el.innerHTML = ""; }, ms); }
+  }
+  function fillSelect(select, models, placeholder) {
+    var previous = select.value;
+    select.innerHTML = "";
+    var empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = placeholder;
+    select.appendChild(empty);
+    models.forEach(function (m) {
+      var o = document.createElement("option");
+      o.value = m;
+      o.textContent = m;
+      select.appendChild(o);
+    });
+    if (models.indexOf(previous) >= 0) { select.value = previous; }
+    else if (placeholder === tr("Select a vision model") && models.length) { select.value = models[0]; }
+    select.dispatchEvent(new Event("change"));
+  }
+  function fetchModels(targetId, onlyVision) {
+    var urlInput = document.getElementById("dating_llm_url");
+    var select = document.getElementById(targetId);
+    var url = urlInput ? urlInput.value.trim() : "";
+    if (!url || !select) {
+      if (window.YNotify) { window.YNotify.warning(tr("Please enter an LLM server URL")); }
+      return;
+    }
+    setStatus(targetId, '<i class="mdi mdi-loading mdi-spin"></i> ' + tr("Fetching..."));
+    fetch("/admin/api/fetch_models?llm_url=" + encodeURIComponent(url))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error || !data.models) {
+          setStatus(targetId, '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + (data.error || data.message || tr("Connection failed")) + "</span>", 5000);
+          return;
+        }
+        var models = onlyVision ? data.models.filter(isVisionModel) : data.models;
+        if (onlyVision && !models.length) {
+          setStatus(targetId, '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + tr("No vision-capable models found on this server") + "</span>", 5000);
+          return;
+        }
+        fillSelect(select, models, onlyVision ? tr("Select a vision model") : tr("Select a model"));
+        var label = onlyVision ? "{length} vision models loaded" : "{length} models loaded";
+        setStatus(targetId, '<span style="color: green;"><i class="mdi mdi-check"></i> ' + tr(label, { length: models.length }) + "</span>", 3000);
+      })
+      .catch(function () {
+        setStatus(targetId, '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + tr("Connection failed") + "</span>", 5000);
+      });
+  }
+  function initModels() {
+    each("[data-fetch-models]", function (b) {
+      b.addEventListener("click", function () { fetchModels(b.getAttribute("data-fetch-models"), false); });
+    });
+    each("[data-fetch-vision]", function (b) {
+      b.addEventListener("click", function () { fetchModels(b.getAttribute("data-fetch-vision"), true); });
+    });
+    // the photos are shown to the model only when a vision model is chosen
+    var vision = document.getElementById("dating_vision_model");
+    var share = document.querySelector('input[type="checkbox"][name="adv__swipe__llm_vision"]');
+    if (vision && share) {
+      vision.addEventListener("change", function () { share.checked = !!vision.value; });
+    }
+    // the client is created once a language model is chosen
+    var button = document.querySelector("button[data-requires-model]");
+    var model = button ? document.getElementById(button.getAttribute("data-requires-model")) : null;
+    if (button && model && !button.disabled) {
+      var update = function () { button.disabled = !model.value; };
+      model.addEventListener("change", update);
+      update();
+    }
+  }
+
+  // ------------------------------------------------------------------ recommender: what the chosen model does
+  function initRecsys(select) {
+    function show() {
+      each("[data-recsys-info]", function (p) { p.hidden = p.getAttribute("data-recsys-info") !== select.value; });
+    }
+    select.addEventListener("change", show);
+    show();
+  }
+
+  // ------------------------------------------------------------------ activity profiles of the chosen population
+  function initRhythms() {
+    var box = document.getElementById("dating-rhythms-box");
+    var select = document.getElementById("dating_population");
+    if (!box || !select) { return; }
+    var data = {};
+    try { data = JSON.parse(box.getAttribute("data-rhythms") || "{}"); } catch (e) { data = {}; }
+    function draw() {
+      var rows = data[select.value] || [];
+      var html = "";
+      rows.forEach(function (r) {
+        var cells = "";
+        for (var h = 0; h < 24; h++) {
+          cells += '<div class="heatmap-hour' + (r.hours === null || r.hours[h] ? " active" : "") + '" title="' + h + 'h"></div>';
+        }
+        var name = r.name || tr("No profile");
+        html += '<div class="dating-rhythm"><div class="dating-rhythm-name"></div><div class="profile-heatmap-compact">' + cells + "</div></div>";
+      });
+      box.innerHTML = '<div id="dating-rhythms" class="dating-rhythms">' + html + "</div>";
+      var names = box.querySelectorAll(".dating-rhythm-name");
+      rows.forEach(function (r, i) {
+        names[i].textContent = (r.name || tr("No profile")) + " " + r.share + "%";
+      });
+    }
+    select.addEventListener("change", draw);
+    draw();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    initDuration();
+    initModels();
+    each("[data-recsys]", initRecsys);
+    initRhythms();
     each("input[data-dating-slider]", initSlider);
     each(".dating-importance", initImportance);
     each("[data-hourly]", initHourly);
