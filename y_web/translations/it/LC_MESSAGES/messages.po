@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 12:33+0000\n"
+"POT-Creation-Date: 2026-10-30 12:42+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -3405,6 +3405,22 @@ msgstr "Qui non è possibile creare chat."
 msgid "Creator Tier %%"
 msgstr "Livello creatore %%"
 
+msgid "Credits"
+msgstr "Crediti"
+
+msgid "Credits are the likes and super likes a person can use each day."
+msgstr ""
+"I crediti sono i like e i super like che una persona può usare ogni "
+"giorno."
+
+#, python-format
+msgid ""
+"Credits reset for %(n)s person(s): likes and super likes of the day are "
+"back."
+msgstr ""
+"Crediti azzerati per %(n)s persona/e: i like e i super like del giorno "
+"sono di nuovo disponibili."
+
 msgid "Critical/Judgmental"
 msgstr "Critico/Giudicante"
 
@@ -5874,6 +5890,9 @@ msgstr "GitHub:"
 msgid "Give the chat a name."
 msgstr "Dai un nome alla chat."
 
+msgid "Give the likes and super likes of today back"
+msgstr "Restituisci i like e i super like di oggi"
+
 msgid ""
 "Gives every profile a desirability rating that moves with the swipes it "
 "receives, and shows each agent profiles of a similar level."
@@ -6373,6 +6392,9 @@ msgstr "I partecipanti umani possono intervenire nelle chat"
 
 msgid "Human participation"
 msgstr "Partecipazione umana"
+
+msgid "Human participation is off for this experiment."
+msgstr "La partecipazione umana è disattivata per questo esperimento."
 
 msgid ""
 "Human participation is off for this experiment. Turn it on in the server "
@@ -8754,6 +8776,9 @@ msgstr "No: le opinioni evolvono ma l'agente non ne è informato"
 msgid "Nobody left."
 msgstr "Nessuno è uscito."
 
+msgid "Nobody to reset: the person has not entered the experiment yet."
+msgstr "Nessuno da azzerare: la persona non è ancora entrata nell'esperimento."
+
 msgid "Nodes"
 msgstr "Nodi"
 
@@ -10930,6 +10955,12 @@ msgstr "Azzera"
 msgid "Reset HPC Experiment"
 msgstr "Reimposta l'esperimento HPC"
 
+msgid "Reset credits"
+msgstr "Azzera crediti"
+
+msgid "Reset credits of everyone"
+msgstr "Azzera i crediti di tutti"
+
 msgid ""
 "Reset experiment to initial state: clear logs, delete DB, restore "
 "population backups, and reset dashboard counters."
@@ -12995,6 +13026,9 @@ msgstr ""
 msgid "The conversations cannot be shown right now."
 msgstr "Le conversazioni non possono essere mostrate in questo momento."
 
+msgid "The credits could not be reset."
+msgstr "Non è stato possibile azzerare i crediti."
+
 #, python-format
 msgid "The current experiment database does not contain %(lower)s tables."
 msgstr "Il database dell'esperimento corrente non contiene tabelle %(lower)s."
@@ -13349,6 +13383,9 @@ msgid ""
 msgstr ""
 "La popolazione selezionata non ha agenti utilizzabili o manca dei dati di"
 " età. Ricostruisci o ricarica la popolazione prima di creare un client."
+
+msgid "The server cannot be reached right now: try again in a moment."
+msgstr "Il server non è raggiungibile in questo momento: riprova tra poco."
 
 msgid "The server could not understand the request due to invalid syntax."
 msgstr ""

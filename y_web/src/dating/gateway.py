@@ -180,6 +180,10 @@ class GatewayClient:
     def leave(self, agent_id: str):
         return self.call("leave", {"agent_id": agent_id})
 
+    def reset_quota(self, agent_id: str):
+        """Give the person the likes and super likes of the day back (administrators only)."""
+        return self.call("reset_quota", {"agent_id": agent_id})
+
 
 # ------------------------------------------------------------------------------------------ process
 def start_gateway(

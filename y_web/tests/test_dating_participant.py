@@ -478,6 +478,40 @@ def test_the_admin_page_lists_the_participants_and_the_gateway(stack, monkeypatc
     assert "part1" in html and "not reproducible" in html and "Running" in html
 
 
+def test_an_administrator_resets_the_credits_of_a_person(stack, monkeypatch):
+    s = stack
+    _enter(s)
+    deck = s.client.get(f"/{s.exp_id}/dating/api/deck").get_json()
+    target = deck["cards"][0]["candidate_id"]
+    assert _act(s, [{"type": "LIKE", "payload": {"target_id": target}}]).get_json()["outcomes"][0][
+        "success"
+    ]
+    hid = next(iter(s.core.world.humans))
+    assert s.core.dating.remaining(hid, s.core.day)[0] == s.core.dating.likes_per_day - 1
+    admin = SimpleNamespace(
+        is_authenticated=True, is_active=True, is_anonymous=False, id=999, username="adm",
+        role="admin", telemetry_enabled=0, get_id=lambda: "999", email="a@x.test",
+    )
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: admin)
+    monkeypatch.setattr(
+        sys.modules["y_web.routes.admin.sub.experiments._dating_participants"],
+        "check_privileges",
+        lambda *_: None,
+    )
+    page = s.client.get(f"/admin/dating_participants/{s.exp_id}").data.decode()
+    assert "Reset credits" in page and "dating-reset-all" in page
+    r = s.client.post(
+        f"/admin/dating_participants/{s.exp_id}/reset_credits", data={"account": hid}
+    )
+    assert r.status_code == 302
+    assert s.core.dating.remaining(hid, s.core.day)[0] == s.core.dating.likes_per_day
+    # a stranger account is ignored
+    r = s.client.post(
+        f"/admin/dating_participants/{s.exp_id}/reset_credits", data={"account": "nobody"}
+    )
+    assert r.status_code == 302
+
+
 # ---------------------------------------------------------------------------------- process lifecycle
 def _fake_runtime(tmp_path):
     repo = tmp_path / "repo"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 12:33+0000\n"
+"POT-Creation-Date: 2026-10-30 12:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3050,6 +3050,18 @@ msgstr ""
 msgid "Creator Tier %%"
 msgstr ""
 
+msgid "Credits"
+msgstr ""
+
+msgid "Credits are the likes and super likes a person can use each day."
+msgstr ""
+
+#, python-format
+msgid ""
+"Credits reset for %(n)s person(s): likes and super likes of the day are "
+"back."
+msgstr ""
+
 msgid "Critical/Judgmental"
 msgstr ""
 
@@ -5309,6 +5321,9 @@ msgstr ""
 msgid "Give the chat a name."
 msgstr ""
 
+msgid "Give the likes and super likes of today back"
+msgstr ""
+
 msgid ""
 "Gives every profile a desirability rating that moves with the swipes it "
 "receives, and shows each agent profiles of a similar level."
@@ -5747,6 +5762,9 @@ msgid "Human participants can take part in the chats"
 msgstr ""
 
 msgid "Human participation"
+msgstr ""
+
+msgid "Human participation is off for this experiment."
 msgstr ""
 
 msgid ""
@@ -7971,6 +7989,9 @@ msgstr ""
 msgid "Nobody left."
 msgstr ""
 
+msgid "Nobody to reset: the person has not entered the experiment yet."
+msgstr ""
+
 msgid "Nodes"
 msgstr ""
 
@@ -9992,6 +10013,12 @@ msgstr ""
 msgid "Reset HPC Experiment"
 msgstr ""
 
+msgid "Reset credits"
+msgstr ""
+
+msgid "Reset credits of everyone"
+msgstr ""
+
 msgid ""
 "Reset experiment to initial state: clear logs, delete DB, restore "
 "population backups, and reset dashboard counters."
@@ -11881,6 +11908,9 @@ msgstr ""
 msgid "The conversations cannot be shown right now."
 msgstr ""
 
+msgid "The credits could not be reset."
+msgstr ""
+
 #, python-format
 msgid "The current experiment database does not contain %(lower)s tables."
 msgstr ""
@@ -12152,6 +12182,9 @@ msgstr ""
 msgid ""
 "The selected population has no usable agents or is missing age data. "
 "Rebuild or re-upload the population before creating a client."
+msgstr ""
+
+msgid "The server cannot be reached right now: try again in a moment."
 msgstr ""
 
 msgid "The server could not understand the request due to invalid syntax."
