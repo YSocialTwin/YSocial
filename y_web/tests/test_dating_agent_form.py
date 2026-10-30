@@ -211,7 +211,7 @@ def test_without_the_runtime_the_dating_fields_are_ignored_and_the_agent_is_unch
 def test_the_agent_template_includes_the_dating_section_only_when_available(app):
     templates = ROOT / "y_web" / "templates" / "admin"
     page = (templates / "agents.html").read_text(encoding="utf-8")
-    assert "{% if dating_available and" in page
+    assert "{% if dating_available %}" in page
     part = (templates / "_dating_agent_fields.html").read_text(encoding="utf-8")
     assert app.jinja_env.parse(part) is not None
     with app.test_request_context("/"):
@@ -219,9 +219,10 @@ def test_the_agent_template_includes_the_dating_section_only_when_available(app)
     for name in (
         "dating_seeking_genders",
         "dating_latent_attractiveness",
-        "dating_appearance_glasses",
         "dating_photo_captions",
     ):
         assert f'name="{name}"' in html
     # the recommender is a choice of the client, not of each individual
     assert "dating_match_recsys" not in html
+    # the look is the platform-independent Appearance section, not a Dating field any more
+    assert "dating_appearance_" not in html

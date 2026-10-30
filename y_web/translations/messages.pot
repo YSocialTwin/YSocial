@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 14:45+0000\n"
+"POT-Creation-Date: 2026-10-30 14:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1243,6 +1243,12 @@ msgstr ""
 msgid "An ad hoc client config named '%(safe_client_name)s' already exists."
 msgstr ""
 
+msgid ""
+"An agent is not tied to a platform: it can belong to any population. Turn"
+" a section on to store the custom fields that only that platform reads; "
+"the sections of platforms that are not installed are not offered."
+msgstr ""
+
 #, python-format
 msgid ""
 "An experiment defines the simulation environment. For more options, visit"
@@ -1318,6 +1324,16 @@ msgid "Anonymous usage data helps improve YSocial. No personal data is collected
 msgstr ""
 
 msgid "Appearance"
+msgstr ""
+
+#, python-format
+msgid "Appearance: %(field)s has an unknown value."
+msgstr ""
+
+msgid "Appearance: glasses must be yes or no."
+msgstr ""
+
+msgid "Appearance: the height must be between 100 and 250 cm."
 msgstr ""
 
 msgid "Appearances of a profile per day (0 = no cap)"
@@ -2396,6 +2412,9 @@ msgid "Combine all enabled features"
 msgstr ""
 
 msgid "Comic Relief Agent"
+msgstr ""
+
+msgid "Comma-separated filter names."
 msgstr ""
 
 msgid "Comma-separated labels, for example woman, man."
@@ -4975,6 +4994,11 @@ msgid "Field '%(replace)s' contains an invalid value."
 msgstr ""
 
 msgid ""
+"Fields read only by Photo Sharing. A field left empty is not stored: the "
+"simulator then uses its own default."
+msgstr ""
+
+msgid ""
 "Fields stored with the agents that only some platforms read, in groups: "
 "appearance, Dating and Photo Sharing fields, and any other custom field. "
 "Each card shows how many agents have the field and how its values are "
@@ -5302,6 +5326,9 @@ msgid "Generate Synthetic Network"
 msgstr ""
 
 msgid "Generate the profile photos"
+msgstr ""
+
+msgid "Generate the profile picture"
 msgstr ""
 
 msgid "Generate the profile pictures"
@@ -6896,6 +6923,12 @@ msgid "Look for chats, users, groups, channels or posts from the search box."
 msgstr ""
 
 msgid ""
+"Look of the agent. An attribute left empty is not assigned. The traits "
+"are stored with the agent and read by every platform that needs them (the"
+" Dating profile photos, for one)."
+msgstr ""
+
+msgid ""
 "Look of the agents. An attribute with no value selected is not assigned. "
 "The traits are stored with the agent and read by every platform that "
 "needs them (the Dating profile photos, for one)."
@@ -8251,6 +8284,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Off by default. The picture is drawn from the age, gender and appearance "
+"with a Stable Diffusion model, saved in the media folder and linked to "
+"the agent (it replaces the picture URL above). It runs in the background:"
+" the progress is shown in the notifications menu. The picture is deleted "
+"with the agent."
+msgstr ""
+
+msgid ""
 "Off keeps the language fixed for everybody, so it does not become a "
 "variable of the experiment."
 msgstr ""
@@ -8820,7 +8861,14 @@ msgid ""
 "present."
 msgstr ""
 
+#, python-format
+msgid "Photo Sharing: %(field)s has an unknown value."
+msgstr ""
+
 msgid "Photo attention budget min/max must be valid integers."
+msgstr ""
+
+msgid "Photo attention budget must be a positive integer."
 msgstr ""
 
 msgid "Photo attention budget must use positive min/max values with min <= max."
@@ -12237,6 +12285,11 @@ msgstr ""
 msgid "The post text."
 msgstr ""
 
+msgid ""
+"The profile picture is being generated in the background: follow the "
+"progress in the notifications menu."
+msgstr ""
+
 msgid "The provided passwords do not match."
 msgstr ""
 
@@ -13597,7 +13650,7 @@ msgid ""
 "this agent take part in a dating experiment when it belongs to a dating "
 "population. Gender, age, language, nationality, education, profession, "
 "leaning and personality are the ones above; interests are the ones of "
-"Interests & Opinions."
+"Interests & Opinions; the look is the Appearance section."
 msgstr ""
 
 msgid "Verified account"
@@ -14512,6 +14565,9 @@ msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr ""
 
 msgid "draft"
+msgstr ""
+
+msgid "e.g. warm, vintage, mono"
 msgstr ""
 
 msgid "e.g., 192.168.1.100 or example.com"

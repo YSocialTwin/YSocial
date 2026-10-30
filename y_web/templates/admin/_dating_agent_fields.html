@@ -9,10 +9,9 @@
     </span>
 </div>
 {%- endmacro %}
-<div id="section-dating" class="tutorial-section">
-    <b>{{ _('Dating') }}</b> <span class="tag is-info">{{ _('Dating') }}</span>
-    <div class="form-section-description-agent">
-        {{ _('Variables used only by dating simulations (YDating). They are stored as custom fields named dating.*, ignored by the other platforms, and let this agent take part in a dating experiment when it belongs to a dating population. Gender, age, language, nationality, education, profession, leaning and personality are the ones above; interests are the ones of Interests & Opinions.') }}
+<fieldset id="dating-agent-sections" class="ys-fieldset-reset" data-optional-section="dating" disabled>
+    <div class="form-section-description">
+        {{ _('Variables used only by dating simulations (YDating). They are stored as custom fields named dating.*, ignored by the other platforms, and let this agent take part in a dating experiment when it belongs to a dating population. Gender, age, language, nationality, education, profession, leaning and personality are the ones above; interests are the ones of Interests & Opinions; the look is the Appearance section.') }}
     </div>
     <details>
         <summary>{{ _('Declared preferences and location') }}</summary>
@@ -58,30 +57,6 @@
         </div>
     </details>
     <details>
-        <summary>{{ _('Appearance') }}</summary>
-        {{ aline(_('Hair colour'), 'appearance_hair_color') }}
-        {{ aline(_('Hair length'), 'appearance_hair_length') }}
-        {{ aline(_('Hair style'), 'appearance_hair_style') }}
-        {{ aline(_('Eye colour'), 'appearance_eye_color') }}
-        {{ aline(_('Skin tone'), 'appearance_skin_tone') }}
-        {{ aline(_('Build'), 'appearance_build') }}
-        {{ aline(_('Height (cm)'), 'appearance_height_cm', 'number', '', 'min="100" max="250"') }}
-        {{ aline(_('Facial hair'), 'appearance_facial_hair') }}
-        <div class="box-line">
-            <span class="left">{{ _('Wearing glasses') }}</span>
-            <div class="select">
-                <select name="dating_appearance_glasses">
-                    <option value=""></option>
-                    <option value="yes">{{ _('Yes') }}</option>
-                    <option value="no">{{ _('No') }}</option>
-                </select>
-            </div>
-        </div>
-        {{ aline(_('Distinctive features'), 'appearance_distinctive_features') }}
-        {{ aline(_('Mood in photos'), 'appearance_mood') }}
-        {{ aline(_('Photo style'), 'appearance_photo_style') }}
-    </details>
-    <details>
         <summary>{{ _('Latent variables, affective traits and recommender') }}</summary>
         {{ aline(_('Attractiveness'), 'latent_attractiveness', 'number', _('Between 0 and 1; never shown to the agents.'), 'min="0" max="1" step="any"') }}
         {{ aline(_('Selectivity'), 'latent_selectivity', 'number', _('Between 0 and 1.'), 'min="0" max="1" step="any"') }}
@@ -91,4 +66,4 @@
         {{ aline(_('Resilience'), 'affective_resilience', 'number', '', 'min="0" step="any"') }}
         {{ aline(_('Need for visibility'), 'affective_visibility_need', 'number', '', 'min="0" step="any"') }}
     </details>
-</div>
+</fieldset>

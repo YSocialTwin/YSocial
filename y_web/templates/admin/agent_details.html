@@ -296,7 +296,7 @@
                             {% endif %}
                             {% for g in agent_custom_groups %}
                             <section class="ys-ad-card">
-                                <h4 class="ys-ad-card-title">{{ _(g.title) }}{% if g.badge == 'dating' %} <span class="ys-ad-chip ys-ad-chip-dating">Dating</span>{% elif g.badge == 'photo' %} <span class="ys-ad-chip ys-ad-chip-photo">Photo Sharing</span>{% endif %}</h4>
+                                <h4 class="ys-ad-card-title">{{ _(g.title) }}{% if g.badge == 'dating' %} <span class="ys-ad-chip ys-ad-chip-dating">{{ _('Dating') }}</span>{% elif g.badge == 'photo' %} <span class="ys-ad-chip ys-ad-chip-photo">{{ _('Photo Sharing') }}</span>{% endif %}</h4>
                                 <dl class="ys-ad-fields">
                                     {% for f in g.fields %}
                                     <div class="ys-ad-field ys-ad-k-{{ f.kind }}">

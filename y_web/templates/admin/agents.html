@@ -406,10 +406,7 @@
                                     </div>
                                     </div><!-- End section-advanced-roleplay -->
                                     <hr>
-                                    {% if dating_available and page_kind|default('standard') == 'standard' %}
-                                    {% include "admin/_dating_agent_fields.html" %}
-                                    <hr>
-                                    {% endif %}
+                                    <div id="section-activity-profile" class="tutorial-section">
                                     <div class="form-section-header-agent">{{ _('Activity Profile') }}</div>
                                     <div class="form-section-description-agent">
                                         {{ _('Select when this agent will be active during the day. The default "Always On" profile keeps the agent active 24/7.') }}
@@ -430,6 +427,54 @@
                                             </div>
 
                                     </div>
+                                    </div><!-- End section-activity-profile -->
+
+                                    <div id="section-appearance" class="tutorial-section">
+                                    <div class="ys-opt-section" id="opt-appearance">
+                                        <label class="ys-opt-head">
+                                            <input type="checkbox" name="include_appearance" id="include_appearance" value="1">
+                                            <span class="ys-opt-title">{{ _('Appearance') }}</span>
+                                            <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span>
+                                        </label>
+                                        <div id="appearance-config-wrapper" class="ys-opt-body d-none">
+                                            {% include "admin/_agent_appearance.html" %}
+                                        </div>
+                                    </div>
+                                    </div><!-- End section-appearance -->
+                                    {% if photo_available or dating_available %}
+                                    <div id="section-platform-fields" class="tutorial-section">
+                                    <div class="form-section-header">{{ _('Platform-specific fields') }} <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span></div>
+                                    <div class="form-section-description">
+                                        {{ _('An agent is not tied to a platform: it can belong to any population. Turn a section on to store the custom fields that only that platform reads; the sections of platforms that are not installed are not offered.') }}
+                                    </div>
+                                    {% if photo_available %}
+                                    <div class="ys-opt-section" id="opt-photo-sharing">
+                                        <label class="ys-opt-head">
+                                            <input type="checkbox" name="include_photo_sharing" id="include_photo_sharing" value="1">
+                                            <span class="ys-plat-badge is-photo">{{ _('Photo Sharing') }}</span>
+                                            <span class="ys-opt-title">{{ _('Photo Sharing Configuration') }}</span>
+                                            <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span>
+                                        </label>
+                                        <div id="photo-sharing-config-wrapper" class="ys-opt-body d-none">
+                                            {% include "admin/_agent_photo_sharing.html" %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% if dating_available %}
+                                    <div class="ys-opt-section" id="opt-dating">
+                                        <label class="ys-opt-head">
+                                            <input type="checkbox" name="include_dating" id="include_dating" value="1">
+                                            <span class="ys-plat-badge is-dating">{{ _('Dating') }}</span>
+                                            <span class="ys-opt-title">{{ _('Dating fields') }}</span>
+                                            <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span>
+                                        </label>
+                                        <div id="dating-config-wrapper" class="ys-opt-body d-none">
+                                            {% include "admin/_dating_agent_fields.html" %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    </div><!-- End section-platform-fields -->
+                                    {% endif %}
                                     {% endif %}
 
                                 </div>
@@ -471,6 +516,7 @@
 
 {% if page_kind != 'hello' %}
 {% include "admin/tutorials/agents_tutorial.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-agent-optional.js') }}"></script>
 {% endif %}
 <script src="{{ url_for('static', filename='assets/js/admin-pages.js') }}"></script>
 {% if page_kind != 'hello' and (available_profile_pics or available_cover_images) %}

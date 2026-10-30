@@ -331,6 +331,104 @@ def _discover_plugin_agent_types() -> list[dict]:
     return plugin_cards
 
 
+_STORY_VISIBILITY = ("public", "followers", "private")
+_CREATOR_TIERS = ("standard", "pro", "influencer")
+
+
+def _photo_sharing_available() -> bool:
+    """Whether the Photo Sharing simulator is installed (and visible to this admin)."""
+    try:
+        from y_web.src.external_runtime import runtime_installed_and_visible
+
+        return bool(runtime_installed_and_visible("photo_sharing", current_user))
+    except Exception:
+        return False
+
+
+def _agent_optional_context() -> dict:
+    """Availability and defaults of the optional sections of the agent form (as in the population form)."""
+    from y_web.src.agents import profile_pictures as pp
+
+    return {
+        "appearance_defaults": pp.defaults(),
+        "images_available": pp.available(),
+        "photo_available": _photo_sharing_available(),
+        "story_visibility_options": _STORY_VISIBILITY,
+        "creator_tier_options": _CREATOR_TIERS,
+    }
+
+
+def _appearance_features_from_form() -> list[dict]:
+    """``appearance.*`` custom features of the optional Appearance section (none when it is off or empty)."""
+    from y_web.src.dating import population as dp
+
+    form = request.form
+    if not form.get("include_appearance"):
+        return []
+    entries = []
+    for key in dp.APPEARANCE_LABELS:
+        value = (form.get("appearance_" + key) or "").strip()
+        if not value:
+            continue
+        if value not in dp.APPEARANCE_OPTIONS.get(key, ()):
+            raise ValueError(_("Appearance: %(field)s has an unknown value.", field=key))
+        entries.append({"feature_type": "custom", "key": f"appearance.{key}", "value": value})
+    height = (form.get("appearance_height_cm") or "").strip()
+    if height:
+        try:
+            number = int(height)
+        except ValueError:
+            number = 0
+        if not 100 <= number <= 250:
+            raise ValueError(_("Appearance: the height must be between 100 and 250 cm."))
+        entries.append({"feature_type": "custom", "key": "appearance.height_cm", "value": str(number)})
+    glasses = (form.get("appearance_glasses") or "").strip()
+    if glasses:
+        if glasses not in ("yes", "no"):
+            raise ValueError(_("Appearance: glasses must be yes or no."))
+        entries.append(
+            {"feature_type": "custom", "key": "appearance.glasses", "value": "true" if glasses == "yes" else "false"}
+        )
+    return entries
+
+
+def _photo_sharing_ext_from_form() -> dict:
+    """The Photo Sharing extensions of the optional section (none when it is off); ``ValueError`` when invalid."""
+    form = request.form
+    if not form.get("include_photo_sharing"):
+        return {}
+    if not _photo_sharing_available():
+        raise ValueError(_("The Photo Sharing simulator is not installed."))
+    ext: dict = {}
+    bio = (form.get("photo_bio") or "").strip()
+    if bio:
+        ext["bio"] = bio
+    for name in ("is_private", "is_verified"):
+        value = (form.get("photo_" + name) or "").strip()
+        if value in ("yes", "no"):
+            ext[name] = json.dumps(value == "yes")
+    budget = (form.get("photo_attention_budget") or "").strip()
+    if budget:
+        try:
+            number = int(budget)
+        except ValueError:
+            number = 0
+        if number <= 0:
+            raise ValueError(_("Photo attention budget must be a positive integer."))
+        ext["attention_budget"] = str(number)
+    filters = [t.strip() for t in (form.get("photo_favorite_filters") or "").split(",") if t.strip()]
+    if filters:
+        ext["favorite_filters"] = json.dumps(list(dict.fromkeys(filters)))
+    for name, allowed in (("story_visibility", _STORY_VISIBILITY), ("creator_tier", _CREATOR_TIERS)):
+        value = (form.get("photo_" + name) or "").strip()
+        if value:
+            if value not in allowed:
+                raise ValueError(_("Photo Sharing: %(field)s has an unknown value.", field=name))
+            ext[name] = value
+    return ext
+
+
+
 def _dating_runtime_available() -> bool:
     from y_web.src.dating import population as dp
 
@@ -407,6 +505,7 @@ def _agent_builder_context(**overrides):
         "available_profile_pics": available_profile_pics,
         "available_cover_images": available_cover_images,
         "dating_available": _dating_runtime_available(),
+        **_agent_optional_context(),
     }
     context.update(overrides)
     return context
@@ -759,6 +858,13 @@ def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
     form = request.form
     if not dp.runtime_available(current_user) or not agent_form.has_dating_fields(form):
         return feature_entries
+    if form.get("include_appearance"):  # the Appearance section feeds the Dating appearance too
+        from werkzeug.datastructures import MultiDict
+
+        form = MultiDict(form)
+        for key in list(dp.APPEARANCE_LABELS) + ["height_cm", "glasses"]:
+            if form.get("appearance_" + key) and not form.get("dating_appearance_" + key):
+                form["dating_appearance_" + key] = form.get("appearance_" + key)
     try:
         age = int(str(form.get("age") or "").strip())
     except ValueError:
@@ -1178,7 +1284,16 @@ def create_agent():
     try:
         structured_features = _parse_structured_agent_features_from_form()
         _ensure_interest_topics_exist(structured_features)
+        structured_features = structured_features + _appearance_features_from_form()
         structured_features = _with_dating_features(structured_features)
+        photo_ext = _photo_sharing_ext_from_form()
+        picture_cfg = None
+        if request.form.get("include_appearance") and request.form.get(
+            "generate_profile_pictures"
+        ):
+            from y_web.src.agents import profile_pictures as pp
+
+            picture_cfg = pp.pictures_config_from_form(request.form)
     except ValueError as exc:
         flash(str(exc), "error")
         return _agent_builder_for_type(user_type)
@@ -1234,7 +1349,24 @@ def create_agent():
     db.session.flush()
     db.session.commit()
     replace_agent_custom_features(agent.id, structured_features)
+    for feature_name, feature_value in photo_ext.items():
+        _upsert_agent_ext(agent.id, feature_name, feature_value)
     db.session.commit()
+
+    if picture_cfg:
+        from flask import current_app
+
+        from y_web.src.agents import profile_pictures as pp
+
+        pp.start_generation(
+            current_app._get_current_object(), current_user.id, [agent.id], picture_cfg
+        )
+        flash(
+            _(
+                "The profile picture is being generated in the background: follow the progress in the notifications menu."
+            ),
+            "info",
+        )
 
     if population != "none":
         ap = Agent_Population(agent_id=agent.id, population_id=population)

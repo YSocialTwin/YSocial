@@ -84,6 +84,24 @@
                     <li>Overrides all other configuration variables</li>
                     <li>Use for highly customized agent behavior</li>
                 </ul>`,
+            position: 'top'
+        },
+        {
+            id: 'appearance',
+            selector: '#section-appearance',
+            title: '🧑 Appearance',
+            description: `<p>An <b>optional, collapsed</b> section: how the agent looks (hair, eyes, skin, build, height, glasses).</p>
+                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
+                    <li>The traits are stored with the agent and read by every platform that needs them</li>
+                    <li>A switch generates the profile picture with a Stable Diffusion model, in the background</li>
+                </ul>`,
+            position: 'top'
+        },
+        {
+            id: 'platform-fields',
+            selector: '#section-platform-fields',
+            title: '🧩 Platform-specific fields',
+            description: `<p>Custom fields that only one platform reads, each behind its own switch and tagged with the platform badge. A section appears only when its platform is installed.</p>`,
             position: 'top',
             isLast: true
         },
