@@ -37,6 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Guide: `docs/dating.md`.
   - Dating population creation form (all variables of the standard form plus the dating-specific ones; shown only
     when YDating is installed) and a Dating section in the agent form that stores `dating.*` custom fields.
+  - Settings pages reorganised into titled sections with readable labels and hints (client and experiment settings no
+    longer repeat each other or the Experiment Configuration); dedicated client details page with extension and restart
+    of the remaining days; cities follow the nationality of the agents; profile images are generated in the
+    background and written in the experiment folder (they were not shown before); human participation is always on.
+  - Frontend: photos as cards and avatars, YSocial header with the YDating accent, no simulation banner, better chat
+    pages and a live, filterable search.
 - Forum clients can use the Reddit-style content recommenders `HotRanking`, `TopRanking` and `MostCommented`
   (new `content_recsys` rows reserved to forums: template database, PostgreSQL seed and Alembic `0011`).
 

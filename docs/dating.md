@@ -14,14 +14,19 @@ writes of a person go through the runtime's gateway.
    installed. Dating experiments run on SQLite (PostgreSQL is refused) and on the local Ray cluster.
 2. Create the experiment and choose *Dating*. On the experiment details page, *Experiment Configuration* has the same
    switches as the other platforms (annotations, stress and reward, memory); the experiment starts locked until
-   *Update Configuration* confirms them. *Advanced settings* (page **Dating advanced settings**) shows every key of the
-   runtime's `server_config.json` schema as a form with its default, plus the section of the ten recommenders. The
+   *Update Configuration* confirms them. **Experiment settings** (page *Dating settings*) holds what is shared by every
+   client: the recommender (with the parameters of the selected model), the daily quotas, time and start, the rules
+   of chats and dates, archetypes, stress and reward, and human participation. Each section says what it does and each
+   setting has a readable label and a hint. Settings that already live in the Experiment Configuration (memory,
+   embedding model, annotations) are not repeated; a section whose switch is off says so and links there. The
    settings that shape the run lock when the experiment starts; to change them, clone the experiment or reset it.
 3. Create a **dating population**. Agents are standard agents (the `agents` table); what is specific to dating
    (location, genders sought, photos, latent variables) is kept in their custom fields, named `dating.*`, and can be
    edited like any custom field. You can upload a file (checked against the population schema of the runtime and
    refused with the path of the problem) or generate a synthetic population from a seed (the same seed always gives the
-   same agents). A population page previews the profile card as another user would see it.
+   same agents). Every agent lives in a city of its own nationality (the catalogue has the main cities of each of the 54
+   nationalities; a city line may name the nationality that lives there). A population page previews the profile card
+   as another user would see it.
    The **Create Dating Population** form (Admin > Populations, shown only when YDating is installed, and on the
    Dating populations page) has the same demographic variables as the standard form (age, gender, nationality,
    education, political leaning, profession, Big Five labels) and the dating-specific ones: genders sought, intents,
@@ -30,7 +35,13 @@ writes of a person go through the runtime's gateway.
    Ad hoc agents can carry the same variables: the **Dating** section of Admin > Agents (also shown only when YDating
    is installed) stores them as `dating.*` custom fields, which the other platforms ignore; assign the agent to a
    dating population to use it in a dating simulation.
-4. Create a **client** (population, days, language model, optional advanced settings from the client schema). Before it
+4. Create a **client** (population, days, then the sections that tune its agents: language model, memory, activity,
+   swiping, conversations, profile texts and photos, behaviour over time). The page follows the other client pages;
+   rules shared by all clients are in the experiment settings. The client page (*Client details*) shows the state,
+   extends the simulation (days are added to the total; start the client again and it runs what is left) and edits the
+   settings while the client is stopped. Profile images are generated in the background by default: the simulation
+   starts at once and each photo appears as soon as it is ready (a vision-based swipe model waits for them instead).
+   Before it
    starts, YSocial rebuilds the input file from the database and validates the folder with the offline validator of the
    runtime; a run that would fail to start is refused with the reason.
 5. Start the experiment. YSocial starts the server, then (when human participation is on) the gateway, then the clients;
@@ -66,9 +77,9 @@ the participant notice (up to 4,000 characters) and the refresh interval of open
 
 ## Human participation
 
-Off by default; people play on the same platform as the agents. To use it, set `human.enabled` in the experiment's
-*Dating advanced settings* (section *Human participants*: maximum participants, minimum round time, request limits and
-which interactions people may use), leave *Participant mode* on in the frontend settings, and assign the users to the
+Always available: people can play on the same platform as the agents in every dating experiment (`human.enabled` is
+set by YSocial). The experiment settings (section *Human participation*) hold the maximum participants, the minimum
+round time, the request limits and which interactions people may use. Leave *Participant mode* on in the frontend settings, and assign the users to the
 experiment. **A run with human participants is not reproducible**: what happens depends on what the people do and when.
 The page *Participants* (linked from the experiment details) says so, shows whether the gateway answers and lists the
 people assigned with what each has done.
