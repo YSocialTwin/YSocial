@@ -307,6 +307,15 @@ def select_experiment():
         session["platform_account_id"] = user.id
         return redirect(f"/{exp.idexp}/im")
 
+    from y_web.src.dating import is_dating_experiment
+
+    if is_dating_experiment(exp):
+        # Dating owns its database and recognises the participant by the platform account (User_Experiment), so the
+        # session stays the account's: no row in the experiment's user_mgmt, and the person lands on the play view
+        login_user(user, remember=remember)
+        session["platform_account_id"] = user.id
+        return redirect(f"/{exp.idexp}/dating")
+
     try:
         user_agent, _created = ensure_experiment_user(
             exp,
