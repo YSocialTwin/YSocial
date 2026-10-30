@@ -63,7 +63,17 @@
       var a = el("article", "dt-card dt-swipe");
       var photo = el("div", "dt-card-photo");
       photo.style.setProperty("--dt-hue", String(Math.abs(hash(c.candidate_id)) % 360));
-      photo.appendChild(el("span", "dt-avatar dt-avatar-xl", (c.username || "?").slice(0, 2).toUpperCase()));
+      var urls = (c.photo_urls || []).filter(function (u) { return u; });
+      var base = play.getAttribute("data-media") || "";
+      if (urls.length) {
+        var img = el("img", "dt-card-img");
+        img.src = base + encodeURI(urls[0]);
+        img.alt = (c.photos && c.photos[0]) || "";
+        img.loading = "lazy";
+        photo.appendChild(img);
+      } else {
+        photo.appendChild(el("span", "dt-avatar dt-avatar-xl", (c.username || "?").slice(0, 2).toUpperCase()));
+      }
       if (c.superliked_you) photo.appendChild(el("span", "dt-stamp dt-stamp-like", t("super-from")));
       a.appendChild(photo);
       var b = el("div", "dt-card-body");
@@ -86,6 +96,17 @@
         var ul = el("ul", "dt-tags");
         c.interests.slice(0, 8).forEach(function (i) { ul.appendChild(el("li", "", i)); });
         b.appendChild(ul);
+      }
+      if (urls.length > 1) {
+        var strip = el("div", "dt-thumbs");
+        urls.slice(1, 5).forEach(function (u) {
+          var t = el("img");
+          t.src = base + encodeURI(u);
+          t.alt = "";
+          t.loading = "lazy";
+          strip.appendChild(t);
+        });
+        b.appendChild(strip);
       }
       if (c.photos && c.photos.length) b.appendChild(el("p", "dt-photolist", c.photos.join(" · ")));
       a.appendChild(b);
@@ -206,6 +227,30 @@
       if (ask && !window.confirm(ask)) return;
       post(leaveUrl, {}).then(function (res) { if (res.status === 200) location.reload(); else toast(res.data.error || "error"); });
     }
+  });
+
+  // upload of a picture: multipart, checked and re-encoded by the server
+  document.addEventListener("submit", function (e) {
+    var up = e.target.closest("form[data-upload]");
+    if (!up) return;
+    e.preventDefault();
+    var button = up.querySelector("button[type=submit]");
+    if (button) button.disabled = true;
+    fetch(up.getAttribute("data-upload"), {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "X-CSRF-Token": csrf },
+      body: new FormData(up)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; });
+    }).then(function (res) {
+      if (res.status === 200 && res.data.ok) { location.reload(); return; }
+      toast(res.data.error || "error");
+      if (button) button.disabled = false;
+    }).catch(function () {
+      toast(up.getAttribute("data-t-lost") || "");
+      if (button) button.disabled = false;
+    });
   });
 
   document.addEventListener("submit", function (e) {

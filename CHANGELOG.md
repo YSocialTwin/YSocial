@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     comparison of two experiments.
   - Optional human participation (off by default): entry form, notice, swipe deck, chat, dates, block and report,
     profile and pause, through a loopback gateway with a per-run token and CSRF, server-side enforcement of the
-    interaction settings, optional minimum round time, offline entry and an admin page of participants. Runs with
+    interaction settings, optional minimum round time, photo uploads (checked and re-encoded), profile views recorded in the run database, play with every action while the server is stopped, and an admin page of participants. Runs with
     humans are not reproducible.
   - Guided tours for every dating admin page; Italian catalog (draft, native review pending).
   - Guide: `docs/dating.md`.

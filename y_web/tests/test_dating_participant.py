@@ -36,7 +36,7 @@ ACCOUNT_FORM = {
     "intent": "serious",
     "bio": "I like the sea",
     "interests": "hiking",
-    "photo_caption": "me on a boat",
+    "photo_caption_1": "me on a boat",
 }
 
 
@@ -538,3 +538,298 @@ def test_the_client_only_talks_to_a_loopback_gateway(tmp_path):
     (folder / "ray_ready.temp").write_text("x")
     with pytest.raises(gw.GatewayUnavailable):
         gw.GatewayClient(str(folder)).state("a")
+
+
+# ------------------------------------------------------------------------- photos and profile views
+def _png(size=(40, 30), color=(200, 30, 90)):
+    import io
+
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.new("RGB", size, color).save(out, "PNG")
+    return out.getvalue()
+
+
+def _upload(
+    s, data, name="p.png", caption="At the lake", token=None, ctype="image/png"
+):
+    import io
+
+    token = token or _csrf(s.client.get(f"/{s.exp_id}/dating/me").data.decode())
+    return s.client.post(
+        f"/{s.exp_id}/dating/api/photo",
+        data={"photo": (io.BytesIO(data), name, ctype), "caption": caption},
+        headers={"X-CSRF-Token": token},
+        content_type="multipart/form-data",
+    )
+
+
+def test_a_picture_uploaded_at_entry_is_stored_named_for_the_account_and_served(stack):
+    import io
+
+    s = stack
+    html = s.client.get(f"/{s.exp_id}/dating/join").data.decode()
+    assert 'enctype="multipart/form-data"' in html and "photo_file_1" in html
+    form = {
+        **ACCOUNT_FORM,
+        "csrf_token": _form_csrf(html),
+        "photo_file_1": (io.BytesIO(_png()), "me.png"),
+        "photo_caption_1": "On the boat",
+    }
+    r = s.client.post(
+        f"/{s.exp_id}/dating/join", data=form, content_type="multipart/form-data"
+    )
+    assert r.status_code == 302, r.data[:300]
+    agent = s.core.world.agents[_account(s)]
+    (url,) = agent.photo_urls
+    assert re.fullmatch(rf"human/{_account(s)}_[0-9a-f]{{12}}\.png", url)
+    assert (s.folder / "media" / url).is_file()
+    r = s.client.get(f"/{s.exp_id}/dating/media/{url}")
+    assert r.status_code == 200 and r.mimetype == "image/png"
+    assert r.headers["X-Content-Type-Options"] == "nosniff"
+
+
+def test_an_entry_with_a_picture_but_no_description_is_refused_and_leaves_no_file(
+    stack,
+):
+    import io
+
+    s = stack
+    html = s.client.get(f"/{s.exp_id}/dating/join").data.decode()
+    form = {
+        **ACCOUNT_FORM,
+        "csrf_token": _form_csrf(html),
+        "photo_file_2": (io.BytesIO(_png()), "me.png"),
+    }
+    r = s.client.post(
+        f"/{s.exp_id}/dating/join", data=form, content_type="multipart/form-data"
+    )
+    assert r.status_code == 200 and b"Describe every photo" in r.data
+    assert _account(s) not in s.core.world.humans
+    assert (
+        not list((s.folder / "media").rglob("*.png"))
+        if (s.folder / "media").exists()
+        else True
+    )
+
+
+def test_add_and_remove_a_photo_from_the_profile(stack):
+    s = stack
+    _enter(s)
+    r = _upload(s, _png())
+    assert r.status_code == 200 and r.get_json()["ok"], r.data
+    agent = s.core.world.agents[_account(s)]
+    assert agent.photo_captions[-1] == "At the lake" and agent.photo_urls[-1]
+    page = s.client.get(f"/{s.exp_id}/dating/me").data.decode()
+    assert "At the lake" in page and "/dating/media/human/" in page
+    index = len(agent.photo_captions) - 1
+    out = _act(s, [{"type": "REMOVE_PHOTO", "payload": {"index": index}}]).get_json()
+    assert out["outcomes"][0]["success"]
+    assert "At the lake" not in s.client.get(f"/{s.exp_id}/dating/me").data.decode()
+
+
+def test_uploads_are_checked_the_content_decides_and_metadata_goes(stack):
+    import io
+
+    from PIL import Image
+
+    s = stack
+    _enter(s)
+    # not a picture, whatever name and type it declares
+    assert _upload(s, b"<script>alert(1)</script>", "x.png").status_code == 400
+    assert _upload(s, b"GIF89a....", "x.png").status_code == 400
+    assert _upload(s, b"", "x.png").status_code == 400
+    # a missing description, a wrong token
+    assert _upload(s, _png(), caption="  ").status_code == 400
+    assert _upload(s, _png(), token="wrong").status_code == 400
+    # an image with metadata is re-encoded without it
+    src = Image.new("RGB", (20, 20), (1, 2, 3))
+    exif = Image.Exif()
+    exif[0x010F] = "SecretCamera"
+    buf = io.BytesIO()
+    src.save(buf, "JPEG", exif=exif)
+    assert b"SecretCamera" in buf.getvalue()
+    assert _upload(s, buf.getvalue(), "m.jpg", ctype="image/jpeg").status_code == 200
+    url = s.core.world.agents[_account(s)].photo_urls[-1]
+    assert (
+        url.endswith(".jpg")
+        and b"SecretCamera" not in (s.folder / "media" / url).read_bytes()
+    )
+    # too large, refused before decoding
+    from y_web.src.dating import photos
+
+    big = _png()
+    assert photos.MAX_BYTES > len(big)
+    r = s.client.post(
+        f"/{s.exp_id}/dating/api/photo",
+        data=b"x" * (photos.MAX_BYTES + 200000),
+        headers={
+            "X-CSRF-Token": _csrf(s.client.get(f"/{s.exp_id}/dating/me").data.decode())
+        },
+        content_type="multipart/form-data; boundary=zz",
+    )
+    assert r.status_code == 413
+
+
+def test_the_media_route_serves_only_files_of_the_media_folder(stack):
+    s = stack
+    _enter(s)
+    _upload(s, _png())
+    media = s.folder / "media"
+    (media / "agent_1.png").write_bytes(_png())
+    (s.folder / "secret.png").write_bytes(_png())
+    (s.folder / "server_config.json.png").write_bytes(b"x")
+    ok = s.client.get(f"/{s.exp_id}/dating/media/agent_1.png")
+    assert (
+        ok.status_code == 200
+    )  # the pictures of the agents are served from the same folder
+    for bad in (
+        "../secret.png",
+        "..%2Fsecret.png",
+        "human/../../secret.png",
+        "agent_1.txt",
+        "missing.png",
+        "human/other_aaaaaaaaaaaa.png",
+        "%2e%2e/secret.png",
+    ):
+        assert s.client.get(f"/{s.exp_id}/dating/media/{bad}").status_code in (
+            404,
+            308,
+        ), bad
+    # a person who is not part of the experiment cannot reach pictures when the observer is closed
+    _set(s, dating_public_observer_enabled=False)
+    _login(s, SimpleNamespace(id=s.stranger.id, username="stranger", role="user"))
+    assert s.client.get(f"/{s.exp_id}/dating/media/agent_1.png").status_code == 403
+
+
+def test_opening_a_profile_is_recorded_once_per_round_with_its_source(stack):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from YDating.YServer.classes import models as m
+
+    s = stack
+    _enter(s)
+    deck = s.client.get(f"/{s.exp_id}/dating/api/deck").get_json()
+    target = deck["cards"][0]["candidate_id"]
+    page = s.client.get(f"/{s.exp_id}/dating/profile/{target}")
+    assert page.status_code == 200
+    s.client.get(
+        f"/{s.exp_id}/dating/profile/{target}?src=match"
+    )  # the same round: not twice
+    s.client.get(
+        f"/{s.exp_id}/dating/profile/{_account(s)}"
+    )  # the own profile is not a view
+    with Session(s.core.engine) as session:
+        rows = session.scalars(select(m.ProfileView)).all()
+    assert [(r.viewer_id, r.target_id, r.source) for r in rows] == [
+        (_account(s), target, "profile")
+    ]
+    # a profile outside the stack and without a match is not available (and the page still opens)
+    outsider = deck["cards"][1]["candidate_id"]
+    _act(
+        s, [{"type": "PASS", "payload": {"target_id": outsider}}]
+    )  # it leaves the stack
+    s.client.get(f"/{s.exp_id}/dating/profile/{outsider}")
+    with Session(s.core.engine) as session:
+        assert len(session.scalars(select(m.ProfileView)).all()) == 1
+
+
+def test_removed_photos_stay_in_time_travel(stack):
+    from y_web.src.dating.reader import open_reader
+
+    s = stack
+    _enter(s)
+    _upload(s, _png())
+    with Session_for(s) as c:
+        before = c.execute("select max(day*10000+hour) from rounds").fetchone()[0]
+    s.core.get_instruction("c1")
+    s.core.submit_actions("c1", [])
+    index = len(s.core.world.agents[_account(s)].photo_captions) - 1
+    assert _act(s, [{"type": "REMOVE_PHOTO", "payload": {"index": index}}]).get_json()[
+        "outcomes"
+    ][0]["success"]
+    with open_reader(str(s.folder / "database_server.db")) as reader:
+        latest = reader.latest_round()
+        from y_web.src.dating.reader import ACCOUNT, Viewpoint
+
+        now = reader.profile(_account(s), Viewpoint(ACCOUNT, _account(s), latest))
+        assert "At the lake" not in [p["caption"] for p in now["photos"]]
+        earlier = reader.profile(
+            _account(s), Viewpoint(ACCOUNT, _account(s), latest - 1)
+        )
+        assert "At the lake" in [p["caption"] for p in earlier["photos"]]
+
+
+def Session_for(s):
+    import sqlite3
+    from contextlib import closing
+
+    return closing(sqlite3.connect(str(s.folder / "database_server.db")))
+
+
+def test_a_person_plays_with_the_server_stopped(stack, monkeypatch):
+    """Offline: every action of the online gateway works, one short-lived server per request."""
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from YDating.YGateway import handle_offline
+    from YDating.YServer.classes import models as m
+    from YDating.YServer.server import DatingServerCore
+
+    from y_web import db
+    from y_web.src.dating.gateway import GatewayClient
+    from y_web.src.models import Exps
+
+    s = stack
+    _enter(s)  # the account exists in the database
+    with s.app.app_context():
+        db.session.get(Exps, s.exp_id).running = 0
+        db.session.commit()
+    s.http.shutdown()  # nobody answers on the gateway any more
+    (s.folder / "human_gateway.json").unlink()
+    (s.folder / "ray_ready.temp").unlink()
+    db_cfg = {"type": "sqlite", "sqlite": {"filename": "database_server.db"}}
+
+    def build(folder):
+        return DatingServerCore(
+            db_cfg,
+            str(folder),
+            1,
+            "off",
+            60,
+            {
+                "simulation": {"num_slots_per_day": 4},
+                "matching": {"default_model": "random", "common": {"stack_size": 30}},
+                "human": {"enabled": True},
+                "lifecycle": {"profile_updates_enabled": True, "pause_enabled": True},
+                "logging": {"enable_actor_log": False, "enable_request_log": False},
+            },
+        )
+
+    monkeypatch.setattr(
+        GatewayClient,
+        "_offline",
+        lambda self, op, body: handle_offline(self.exp_folder, op, body, build),
+    )
+    deck = s.client.get(f"/{s.exp_id}/dating/api/deck")
+    assert deck.status_code == 200 and deck.get_json()["cards"]
+    first = deck.get_json()["cards"][0]["candidate_id"]
+    like = _act(s, [{"type": "LIKE", "payload": {"target_id": first}}])
+    assert like.status_code == 200, like.get_json()
+    assert like.get_json()["outcomes"][0]["success"]
+    assert (
+        s.client.get(
+            f"/{s.exp_id}/dating/profile/{deck.get_json()['cards'][1]['candidate_id']}"
+        ).status_code
+        == 200
+    )
+    assert _upload(s, _png()).status_code == 200
+    out = _act(s, [{"type": "PAUSE_PROFILE", "payload": {}}]).get_json()
+    assert out["outcomes"][0]["success"]
+    with Session(s.core.engine) as session:
+        swipes = session.scalars(select(m.Swipe)).all()
+        assert [(w.swiper_id, w.target_id, w.mode) for w in swipes] == [
+            (_account(s), first, "human")
+        ]
+        assert len(session.scalars(select(m.ProfileView)).all()) == 1
+        assert session.get(m.User_mgmt, _account(s)).status == "paused"

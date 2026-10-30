@@ -42,6 +42,9 @@ ACTION_TYPES = frozenset(
         "RESUME_PROFILE",
         "UPDATE_PROFILE",
         "UPDATE_PREFERENCES",
+        "VIEW_PROFILE",
+        "ADD_PHOTO",
+        "REMOVE_PHOTO",
     }
 )
 REPORT_REASONS = ("HARASSMENT", "SPAM", "FAKE", "INAPPROPRIATE")
@@ -136,8 +139,11 @@ def csrf_ok(session, presented: Optional[str]) -> bool:
     )
 
 
-def account_from_form(form, language: str, username: str) -> dict:
-    """The account document the person filled in (the runtime validates it like an agent's)."""
+def account_from_form(form, language: str, username: str, photos=None) -> dict:
+    """The account document the person filled in (the runtime validates it like an agent's).
+
+    ``photos`` are the pictures already stored for the person (``{"caption", "media_url"?}``).
+    """
 
     def num(name, default=None):
         try:
@@ -172,9 +178,5 @@ def account_from_form(form, language: str, username: str) -> dict:
         "language": language,
         "profile": profile,
         "interests": interests,
-        "photos": [
-            {"caption": c.strip()}
-            for c in (form.get("photo_caption") or "").split("\n")
-            if c.strip()
-        ][:6],
+        "photos": list(photos or []),
     }

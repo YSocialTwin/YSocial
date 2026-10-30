@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 21:02+0000\n"
+"POT-Creation-Date: 2026-10-30 05:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -446,6 +446,13 @@ msgid ""
 "ends your matches and cannot be undone."
 msgstr ""
 
+msgid ""
+"A photo needs a description: the simulated users decide on the "
+"description. Pictures are PNG, JPEG or WebP, up to 5 MB; they are re-"
+"encoded and their metadata is removed. Add or remove photos later from "
+"your profile."
+msgstr ""
+
 msgid "A population is a group of agents/pages that are used in a simulation."
 msgstr ""
 
@@ -745,6 +752,9 @@ msgid ""
 "Add explicit interests for this agent. If an opinion group is selected, "
 "the related opinion value is stored too. Stubborn interests are exported "
 "with immutable opinion hints."
+msgstr ""
+
+msgid "Add photo"
 msgstr ""
 
 msgid "Add to Experiment"
@@ -3327,6 +3337,11 @@ msgstr ""
 msgid "Describe Image (User)"
 msgstr ""
 
+msgid ""
+"Describe every photo: the other people and the simulated users decide on "
+"the description."
+msgstr ""
+
 msgid "Describe the problem (optional):"
 msgstr ""
 
@@ -3341,6 +3356,10 @@ msgid "Description"
 msgstr ""
 
 msgid "Description (optional)"
+msgstr ""
+
+#, python-format
+msgid "Description of picture %(n)s"
 msgstr ""
 
 msgid "Description:"
@@ -7701,6 +7720,11 @@ msgstr ""
 msgid "PASS"
 msgstr ""
 
+msgid ""
+"PNG, JPEG or WebP, up to 5 MB. The picture is re-encoded and its metadata"
+" is removed. The simulated users decide on the description."
+msgstr ""
+
 msgid "Page"
 msgstr ""
 
@@ -7912,9 +7936,6 @@ msgstr ""
 msgid "Photo creator tier percentages must sum to 100%."
 msgstr ""
 
-msgid "Photo descriptions (one per line; no files are uploaded)"
-msgstr ""
-
 msgid "Photo details"
 msgstr ""
 
@@ -7927,6 +7948,9 @@ msgstr ""
 msgid "Photos"
 msgstr ""
 
+msgid "Photos (optional)"
+msgstr ""
+
 msgid "Pick a source group first, then choose one experiment from that group."
 msgstr ""
 
@@ -7934,6 +7958,13 @@ msgid ""
 "Pick an account in the side panel (View as account) or open a profile and"
 " use \"Deck of this account\" to see its recommendations with the "
 "recommender internals."
+msgstr ""
+
+msgid "Picture"
+msgstr ""
+
+#, python-format
+msgid "Picture %(n)s"
 msgstr ""
 
 msgid "Platform"
@@ -8984,6 +9015,9 @@ msgid "Remove this comment"
 msgstr ""
 
 msgid "Remove this photo from the feed"
+msgstr ""
+
+msgid "Remove this photo?"
 msgstr ""
 
 msgid "Remove this post"
@@ -10953,6 +10987,12 @@ msgid ""
 "a file that does not satisfy it is refused with the path of the problem."
 msgstr ""
 
+msgid "The file is empty."
+msgstr ""
+
+msgid "The file is not a readable picture."
+msgstr ""
+
 msgid ""
 "The hash is the start of the SHA-256 of the prompt the run uses; the full"
 " list is recorded for every client in the experiment folder, so a run "
@@ -11007,6 +11047,15 @@ msgstr ""
 
 #, python-format
 msgid "The password must have at least %(n)s characters."
+msgstr ""
+
+msgid "The picture could not be stored."
+msgstr ""
+
+msgid "The picture has too many pixels."
+msgstr ""
+
+msgid "The picture is larger than 5 MB."
 msgstr ""
 
 #, python-format
@@ -12076,6 +12125,9 @@ msgstr ""
 msgid "Use Local Diffusion"
 msgstr ""
 
+msgid "Use a PNG, JPEG or WebP picture."
+msgstr ""
+
 #, python-format
 msgid ""
 "Use a subreddit name, %(name)s, or a Reddit subreddit URL such as "
@@ -12815,7 +12867,13 @@ msgstr[1] ""
 msgid "You have left this platform."
 msgstr ""
 
+msgid "You have no photos yet."
+msgstr ""
+
 msgid "You have not posted in any community yet."
+msgstr ""
+
+msgid "You have reached the maximum number of photos."
 msgstr ""
 
 msgid "You joined the discussion"
@@ -12881,6 +12939,9 @@ msgid "Your bulk experiments archive is ready to download."
 msgstr ""
 
 msgid "Your experiment archive is ready to download."
+msgstr ""
+
+msgid "Your photos"
 msgstr ""
 
 msgid "Your profile"

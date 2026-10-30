@@ -67,9 +67,9 @@ people assigned with what each has done.
 
 - **Who can play.** YWeb users with the role *user* or *student* assigned to the experiment, when participation is on.
 - **Entry.** The first visit opens a form: the person fills in a profile (name or the pseudonym `participant-<id>`, age,
-  gender, who they look for, age range, distance, intent, city, bio, interests, photo descriptions). The runtime
-  validates it exactly like an agent's profile. People do not upload files, and they start with neutral hidden
-  variables. If the researcher wrote a notice, it is shown once before the first entry.
+  gender, who they look for, age range, distance, intent, city, bio, interests, up to three photos, each with a
+  description and an optional picture). The runtime validates the profile exactly like an agent's. People start with
+  neutral hidden variables. If the researcher wrote a notice, it is shown once before the first entry.
 - **The app.** A deck built by the recommender of the experiment (buttons *Pass*, *Super like*, *Like*, arrow keys or
   dragging the card); matches and conversations with replies, reactions, unmatching, date proposals and answers, block
   and report with the runtime's reasons; the person's own profile, preferences, pause and leaving. There is no time
@@ -80,10 +80,21 @@ people assigned with what each has done.
   off answers `403` whatever the page shows, and texts and request sizes are limited.
 - **Pace.** People never stop the simulation: they act inside the round the agents drive. With *minimum round time* the
   clock waits at least that long while a person is active.
-- **Offline.** While the server is stopped a person can still enter and edit their profile and preferences (a short
-  process applies the request to the database under a file lock). Playing needs a running experiment.
-- **Not done.** Opening a profile is not recorded as an exposure (the runtime has no processor for `VIEW_PROFILE`); the
-  deck itself is recorded as for any agent. People cannot upload photos.
+- **Photos.** A person adds or removes photos from *Your profile* (up to `human.limits.max_photos`, 6 by default, 9 at
+  most), as the profiles of agents have photos. A photo has a description, which is what the simulated users read, and
+  optionally a picture: PNG, JPEG or WebP up to 5 MB, checked by content (the name and declared type do not count),
+  decoded and re-encoded so that metadata and anything appended to the file are dropped, and stored in the `media`
+  folder of the experiment under a name made for the account. Pictures are served only from that folder, to the
+  people who can open the dating pages of the experiment. A removed photo stays in the database (and its file on disk)
+  so that time travel can still show it.
+- **Profile views.** Opening the profile of another account (from the deck, a match or a chat) is recorded in the
+  run database as a profile view (`profile_views`: viewer, profile, source, round, once per round). Only profiles the
+  person can see are recorded. The deck itself is recorded as exposure, as for any agent.
+- **Offline.** While the server is stopped a person can do everything they can do online (deck, swipes, chat, dates,
+  photos, profile, pause, leaving): a short process loads the world from the database for each request, under a file
+  lock, and acts in the round at which the experiment stopped. The stack they were shown and the likes used today are
+  rebuilt from the database, so the daily quotas hold. Before the experiment has run a round there is nothing to
+  play: the pages answer that the experiment has not started yet. Notifications are not kept between requests.
 
 ## Limits
 

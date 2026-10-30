@@ -7,7 +7,15 @@ database: every read of the deck and every action goes through the human gateway
 Pages that only read (matches, chats, profiles) use the read-only reader, fixed to the person's account.
 """
 
-from flask import abort, current_app, jsonify, redirect, render_template, request
+from flask import (
+    abort,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+)
 from flask import session as flask_session
 from flask import url_for
 from flask_login import current_user, login_required
@@ -17,10 +25,11 @@ from y_web.routes.social._blueprint import main
 from y_web.routes.social.dating import (
     _db_path,
     _experiment_or_404,
+    _staff_user,
     _ui,
     participant_of,
 )
-from y_web.src.dating import human
+from y_web.src.dating import human, photos
 from y_web.src.dating.gateway import (
     GatewayClient,
     GatewayUnavailable,
@@ -31,6 +40,8 @@ from y_web.src.dating.reader import DatingReadError, open_reader
 
 MAX_BODY = 16384
 MAX_ACTIONS = 20
+MAX_JOIN_PHOTOS = 3
+MAX_UPLOAD = photos.MAX_BYTES + 65536  # the picture and the form around it
 
 
 def _participant_or_403(exp_id):
@@ -95,6 +106,47 @@ def _account_exists(exp, part):
         return False
 
 
+def _photo_error(code):
+    """The translated message of a refused upload (``photos.PhotoError.code``)."""
+    return {
+        "empty": _("The file is empty."),
+        "too_large": _("The picture is larger than 5 MB."),
+        "format": _("Use a PNG, JPEG or WebP picture."),
+        "pixels": _("The picture has too many pixels."),
+        "unreadable": _("The file is not a readable picture."),
+        "caption": _(
+            "Describe every photo: the other people and the simulated users decide on the description."
+        ),
+    }.get(code, _("The picture could not be stored."))
+
+
+def _join_photos(part, form, files):
+    """``(photos, stored)`` of the entry form: up to three rows of description and optional picture."""
+    out, stored = [], []
+    try:
+        for n in range(1, MAX_JOIN_PHOTOS + 1):
+            caption = (form.get(f"photo_caption_{n}") or "").strip()
+            upload = files.get(f"photo_file_{n}")
+            has_file = upload is not None and bool(upload.filename)
+            if not caption and not has_file:
+                continue
+            if not caption:
+                raise photos.PhotoError("caption")
+            photo = {"caption": caption[:500]}
+            if has_file:
+                url = photos.store_upload(
+                    part.exp_folder, part.account_id, upload.stream
+                )
+                stored.append(url)
+                photo["media_url"] = url
+            out.append(photo)
+    except photos.PhotoError:
+        for url in stored:
+            photos.delete_upload(part.exp_folder, url)
+        raise
+    return out, stored
+
+
 def _shell(exp, ui, part, **values):
     from types import SimpleNamespace
 
@@ -142,20 +194,36 @@ def dating_join(exp_id):
             else part.username
         )
         language = (exp.prompt_language or "en")[:8]
-        account = human.account_from_form(form, language, shown)
-        status, payload = _gateway(exp, part, "register", part.key, account)
-        if status in (200, 201):
-            return redirect(url_for("main.dating_home", exp_id=exp_id))
-        error = {
-            403: _("Taking part is closed for this experiment."),
-            409: _("This name is taken or there is no room for more participants."),
-            503: _("The experiment is not reachable right now. Try again in a moment."),
-        }.get(status)
-        if error is None:
-            error = _(
-                "Please check your profile: %(why)s", why=payload.get("error", "")
-            )
-        current_app.logger.info("dating entry refused with %s", status)
+        try:
+            pictures, stored = _join_photos(part, form, request.files)
+        except photos.PhotoError as exc:
+            error = _photo_error(exc.code)
+        else:
+            account = human.account_from_form(form, language, shown, pictures)
+            status, payload = _gateway(exp, part, "register", part.key, account)
+            if status in (200, 201):
+                if status == 200 and not payload.get("created"):
+                    for (
+                        url
+                    ) in (
+                        stored
+                    ):  # the account already existed: the files are not needed
+                        photos.delete_upload(part.exp_folder, url)
+                return redirect(url_for("main.dating_home", exp_id=exp_id))
+            for url in stored:  # the account was not created: the files are not needed
+                photos.delete_upload(part.exp_folder, url)
+            error = {
+                403: _("Taking part is closed for this experiment."),
+                409: _("This name is taken or there is no room for more participants."),
+                503: _(
+                    "The experiment is not reachable right now. Try again in a moment."
+                ),
+            }.get(status)
+            if error is None:
+                error = _(
+                    "Please check your profile: %(why)s", why=payload.get("error", "")
+                )
+            current_app.logger.info("dating entry refused with %s", status)
     return _shell(
         exp,
         ui,
@@ -168,6 +236,76 @@ def dating_join(exp_id):
         intents=human.INTENTS,
         notice=(ui.get("dating_participant_notice") or "").strip(),
     )
+
+
+@main.route("/<int:exp_id>/dating/api/photo", methods=["POST"])
+@login_required
+def dating_api_photo(exp_id):
+    """Add a picture to the profile: it is checked and re-encoded here, then added through the gateway."""
+    exp, ui, part = _participant_or_403(exp_id)
+    if request.content_length is None or request.content_length > MAX_UPLOAD:
+        return _json_error(413, "too_large", _photo_error("too_large"))
+    if not human.csrf_ok(
+        flask_session,
+        request.headers.get(human.CSRF_HEADER) or request.form.get("csrf_token"),
+    ):
+        return _json_error(400, "csrf", "missing or wrong CSRF token")
+    caption = (request.form.get("caption") or "").strip()
+    upload = request.files.get("photo")
+    if not caption:
+        return _json_error(400, "caption", _photo_error("caption"))
+    if upload is None or not upload.filename:
+        return _json_error(400, "empty", _photo_error("empty"))
+    try:
+        url = photos.store_upload(part.exp_folder, part.account_id, upload.stream)
+    except photos.PhotoError as exc:
+        return _json_error(400, exc.code, _photo_error(exc.code))
+    action = {
+        "type": "ADD_PHOTO",
+        "payload": {"caption": caption[:500], "media_url": url},
+    }
+    status, payload = _gateway(exp, part, "act", part.account_id, [action])
+    outcomes = payload.get("outcomes") or [] if isinstance(payload, dict) else []
+    if status == 200 and outcomes and outcomes[0].get("success"):
+        return jsonify({"ok": True})
+    photos.delete_upload(part.exp_folder, url)
+    reason = (outcomes[0].get("error") if outcomes else None) or payload.get("error")
+    return _json_error(status if status != 200 else 400, "refused", reason or "refused")
+
+
+@main.route("/<int:exp_id>/dating/media/<path:name>")
+def dating_media(exp_id, name):
+    """A profile picture, of an agent or of a person: only files of the media folder of the experiment."""
+    from y_web.src.experiment.access import user_can_view_experiment
+
+    exp = _experiment_or_404(exp_id)
+    staff = _staff_user()
+    if staff is not None:
+        if not user_can_view_experiment(staff, exp):
+            abort(403)
+    else:
+        ui = _ui(exp_id)
+        if participant_of(exp, ui) is None and not ui.get(
+            "dating_public_observer_enabled", True
+        ):
+            abort(403)
+    path = photos.resolve_media(human.experiment_folder(exp), name)
+    if path is None:
+        abort(404)
+    response = send_file(path, mimetype=photos.content_type(name), max_age=300)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Cache-Control"] = "private, max-age=300"
+    response.headers["Content-Security-Policy"] = "default-src 'none'"
+    return response
+
+
+@main.app_template_global("dating_media")
+def dating_media_url(url):
+    """Address of a picture of the experiment being shown (empty when the profile has no file)."""
+    exp_id = (request.view_args or {}).get("exp_id")
+    if not url or exp_id is None:
+        return ""
+    return url_for("main.dating_media", exp_id=exp_id, name=url)
 
 
 @main.route("/<int:exp_id>/dating/notice", methods=["GET", "POST"])

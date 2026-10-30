@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-29 21:02+0000\n"
+"POT-Creation-Date: 2026-10-30 05:46+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -489,6 +489,13 @@ msgstr ""
 "Un profilo in pausa è nascosto a tutti finché non lo riattivi. Uscire "
 "chiude i tuoi match e non si può annullare."
 
+msgid ""
+"A photo needs a description: the simulated users decide on the "
+"description. Pictures are PNG, JPEG or WebP, up to 5 MB; they are re-"
+"encoded and their metadata is removed. Add or remove photos later from "
+"your profile."
+msgstr "Ogni foto ha bisogno di una descrizione: gli utenti simulati decidono in base alla descrizione. Le immagini sono PNG, JPEG o WebP, fino a 5 MB; vengono ricodificate e i loro metadati vengono rimossi. Puoi aggiungere o togliere foto più tardi dal tuo profilo."
+
 msgid "A population is a group of agents/pages that are used in a simulation."
 msgstr "Una popolazione è un gruppo di agenti/pagine usati in una simulazione."
 
@@ -823,6 +830,9 @@ msgstr ""
 "Aggiungi interessi espliciti per questo agente. Se si seleziona un gruppo"
 " di opinione, viene salvato anche il relativo valore. Gli interessi "
 "ostinati vengono esportati con indicazioni di opinione immutabili."
+
+msgid "Add photo"
+msgstr "Aggiungi foto"
 
 msgid "Add to Experiment"
 msgstr "Aggiungi all'esperimento"
@@ -3721,6 +3731,11 @@ msgstr "Descrivere l'immagine (sistema)"
 msgid "Describe Image (User)"
 msgstr "Descrivere l'immagine (utente)"
 
+msgid ""
+"Describe every photo: the other people and the simulated users decide on "
+"the description."
+msgstr "Descrivi ogni foto: le altre persone e gli utenti simulati decidono in base alla descrizione."
+
 msgid "Describe the problem (optional):"
 msgstr "Descrivi il problema (facoltativo):"
 
@@ -3736,6 +3751,10 @@ msgstr "Descrizione"
 
 msgid "Description (optional)"
 msgstr "Descrizione (facoltativa)"
+
+#, python-format
+msgid "Description of picture %(n)s"
+msgstr "Descrizione della foto %(n)s"
 
 msgid "Description:"
 msgstr "Descrizione:"
@@ -8466,6 +8485,11 @@ msgstr "Proprietario: %(owner)s"
 msgid "PASS"
 msgstr "PASS"
 
+msgid ""
+"PNG, JPEG or WebP, up to 5 MB. The picture is re-encoded and its metadata"
+" is removed. The simulated users decide on the description."
+msgstr "PNG, JPEG o WebP, fino a 5 MB. L'immagine viene ricodificata e i suoi metadati vengono rimossi. Gli utenti simulati decidono in base alla descrizione."
+
 msgid "Page"
 msgstr "Pagina"
 
@@ -8691,9 +8715,6 @@ msgstr ""
 msgid "Photo creator tier percentages must sum to 100%."
 msgstr "Le percentuali dei livelli dei creatori di foto devono sommare a 100%."
 
-msgid "Photo descriptions (one per line; no files are uploaded)"
-msgstr "Descrizioni delle foto (una per riga; nessun file viene caricato)"
-
 msgid "Photo details"
 msgstr "Dettagli della foto"
 
@@ -8708,6 +8729,9 @@ msgstr ""
 msgid "Photos"
 msgstr "Foto"
 
+msgid "Photos (optional)"
+msgstr "Foto (facoltative)"
+
 msgid "Pick a source group first, then choose one experiment from that group."
 msgstr "Scegli prima un gruppo di origine, poi un esperimento di quel gruppo."
 
@@ -8719,6 +8743,13 @@ msgstr ""
 "Scegli un account nel pannello laterale (Vedi come account) oppure apri "
 "un profilo e usa \"Mazzo di questo account\" per vederne le "
 "raccomandazioni con i dettagli interni del recommender."
+
+msgid "Picture"
+msgstr "Immagine"
+
+#, python-format
+msgid "Picture %(n)s"
+msgstr "Immagine %(n)s"
 
 msgid "Platform"
 msgstr "Piattaforma"
@@ -9839,6 +9870,9 @@ msgstr "Rimuovi questo commento"
 
 msgid "Remove this photo from the feed"
 msgstr "Rimuovi questa foto dal feed"
+
+msgid "Remove this photo?"
+msgstr "Rimuovere questa foto?"
 
 msgid "Remove this post"
 msgstr "Rimuovi questo post"
@@ -12019,6 +12053,12 @@ msgstr ""
 "dating; un file che non lo soddisfa è rifiutato indicando il percorso del"
 " problema."
 
+msgid "The file is empty."
+msgstr "Il file è vuoto."
+
+msgid "The file is not a readable picture."
+msgstr "Il file non è un'immagine leggibile."
+
 msgid ""
 "The hash is the start of the SHA-256 of the prompt the run uses; the full"
 " list is recorded for every client in the experiment folder, so a run "
@@ -12095,6 +12135,15 @@ msgstr "La pagina che cerchi non esiste."
 #, python-format
 msgid "The password must have at least %(n)s characters."
 msgstr "La password deve avere almeno %(n)s caratteri."
+
+msgid "The picture could not be stored."
+msgstr "Non è stato possibile salvare l'immagine."
+
+msgid "The picture has too many pixels."
+msgstr "L'immagine ha troppi pixel."
+
+msgid "The picture is larger than 5 MB."
+msgstr "L'immagine supera i 5 MB."
 
 #, python-format
 msgid "The population could not be generated: %(why)s"
@@ -13327,6 +13376,9 @@ msgstr ""
 msgid "Use Local Diffusion"
 msgstr "Usa la diffusione locale"
 
+msgid "Use a PNG, JPEG or WebP picture."
+msgstr "Usa un'immagine PNG, JPEG o WebP."
+
 #, python-format
 msgid ""
 "Use a subreddit name, %(name)s, or a Reddit subreddit URL such as "
@@ -14197,8 +14249,14 @@ msgstr[1] "Hai accesso a %(num)s esperimenti attivi"
 msgid "You have left this platform."
 msgstr "Hai lasciato questa piattaforma."
 
+msgid "You have no photos yet."
+msgstr "Non hai ancora foto."
+
 msgid "You have not posted in any community yet."
 msgstr "Non hai ancora pubblicato in nessuna community."
+
+msgid "You have reached the maximum number of photos."
+msgstr "Hai raggiunto il numero massimo di foto."
 
 msgid "You joined the discussion"
 msgstr "Hai partecipato alla discussione"
@@ -14274,6 +14332,9 @@ msgstr "L'archivio multiplo degli esperimenti è pronto per il download."
 
 msgid "Your experiment archive is ready to download."
 msgstr "L'archivio dell'esperimento è pronto per il download."
+
+msgid "Your photos"
+msgstr "Le tue foto"
 
 msgid "Your profile"
 msgstr "Il tuo profilo"
@@ -15819,4 +15880,7 @@ msgstr "✔️ Usa"
 #~ "forum. Una volta salvato, lo stesso "
 #~ "feed può essere assegnato a più "
 #~ "esperimenti."
+
+#~ msgid "Photo descriptions (one per line; no files are uploaded)"
+#~ msgstr "Descrizioni delle foto (una per riga; nessun file viene caricato)"
 

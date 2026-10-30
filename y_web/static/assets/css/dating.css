@@ -110,3 +110,16 @@
 .dt-date { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
 @media (max-width: 640px) { .dt-pair { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .dt-swipe { transition: none; } }
+
+/* photos of the people (uploads) and of the agents */
+.dt-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dt-thumbs { display: flex; gap: 6px; margin: 6px 0; }
+.dt-thumbs img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; }
+.dt-photolist { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.dt-photolist li { display: grid; gap: 4px; max-width: 160px; }
+.dt-photo-img { width: 160px; height: 160px; object-fit: cover; border-radius: 10px; }
+.dt-photo-row { display: grid; gap: 4px; margin-bottom: 8px; }
+.dt-photo-manage { list-style: none; padding: 0; display: grid; gap: 8px; }
+.dt-photo-manage li { display: flex; align-items: center; gap: 10px; }
+.dt-photo-manage img, .dt-noimg { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; flex: none; }
+.dt-photo-manage li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }

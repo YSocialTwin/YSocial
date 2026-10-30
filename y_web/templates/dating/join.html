@@ -5,7 +5,7 @@
   <h2 class="dt-h" id="dt-join-h">{{ _('Create your profile') }}</h2>
   <p class="dt-hint">{{ _('You take part as yourself, next to simulated users. Other people and simulated users will see this profile. Do not share contact details or real names you want to keep private.') }}</p>
   {% if error %}<p class="dt-error" role="alert">{{ error }}</p>{% endif %}
-  <form method="post" action="/{{ exp.idexp }}/dating/join" class="dt-fields">
+  <form method="post" action="/{{ exp.idexp }}/dating/join" class="dt-fields" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <fieldset><legend>{{ _('Name shown to others') }}</legend>
       <label><input type="radio" name="name_mode" value="username" {{ 'checked' if form.get('name_mode', 'username') != 'pseudonym' }}> {{ participant.username }}</label>
@@ -32,8 +32,17 @@
     <label for="dt-interests">{{ _('Interests (separate with commas)') }}</label>
     <input id="dt-interests" name="interests" list="dt-interest-list" maxlength="400" value="{{ form.get('interests', '') }}">
     <datalist id="dt-interest-list">{% for i in vocab.interests %}<option value="{{ i }}">{% endfor %}</datalist>
-    <label for="dt-photos">{{ _('Photo descriptions (one per line; no files are uploaded)') }}</label>
-    <textarea id="dt-photos" name="photo_caption" rows="2">{{ form.get('photo_caption', '') }}</textarea>
+    <fieldset class="dt-photos-fs"><legend>{{ _('Photos (optional)') }}</legend>
+      <p class="dt-hint">{{ _('A photo needs a description: the simulated users decide on the description. Pictures are PNG, JPEG or WebP, up to 5 MB; they are re-encoded and their metadata is removed. Add or remove photos later from your profile.') }}</p>
+      {% for n in (1, 2, 3) %}
+      <div class="dt-photo-row">
+        <label for="dt-photo-file-{{ n }}">{{ _('Picture %(n)s', n=n) }}</label>
+        <input id="dt-photo-file-{{ n }}" name="photo_file_{{ n }}" type="file" accept="image/png,image/jpeg,image/webp">
+        <label for="dt-photo-caption-{{ n }}">{{ _('Description of picture %(n)s', n=n) }}</label>
+        <input id="dt-photo-caption-{{ n }}" name="photo_caption_{{ n }}" maxlength="500" value="{{ form.get('photo_caption_' ~ n, '') }}">
+      </div>
+      {% endfor %}
+    </fieldset>
     <button class="dt-btn" type="submit">{{ _('Start') }}</button>
   </form>
 </section>

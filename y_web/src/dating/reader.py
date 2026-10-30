@@ -210,6 +210,26 @@ class DatingReader:
                 profile[ev["field"]] = ev["old"]
         return profile
 
+    def _photos_at(self, user_id: str, cut: int) -> List[Dict[str, Any]]:
+        """Photos of the profile at a round: added by then and not removed by then (history is kept)."""
+        removed_later = set()
+        for ev in self.c.execute(
+            "SELECT pe.old FROM profile_events pe JOIN rounds r ON r.id = pe.round_id "
+            "WHERE pe.user_id = ? AND pe.field = 'photo_removed' AND r.day * 10000 + r.hour > ?",
+            (user_id, cut),
+        ):
+            removed_later.add(_loads(ev["old"], {}).get("id"))
+        return [
+            {"position": r["position"], "caption": r["caption"], "url": r["media_url"]}
+            for r in self.c.execute(
+                "SELECT pm.id, pm.position, pm.caption, pm.media_url, pm.active FROM profile_media pm "
+                "JOIN rounds r ON r.id = pm.round_id AND r.day * 10000 + r.hour <= ? "
+                "WHERE pm.user_id = ? ORDER BY pm.position, pm.rowid",
+                (cut, user_id),
+            )
+            if r["active"] == 1 or r["id"] in removed_later
+        ]
+
     def _public_profile(
         self, user_id: str, cut: int, base: sqlite3.Row
     ) -> Dict[str, Any]:
@@ -224,15 +244,7 @@ class DatingReader:
                 (cut, user_id),
             )
         ]
-        photos = [
-            {"position": r["position"], "caption": r["caption"], "url": r["media_url"]}
-            for r in self.c.execute(
-                "SELECT pm.position, pm.caption, pm.media_url FROM profile_media pm "
-                "JOIN rounds r ON r.id = pm.round_id AND r.day * 10000 + r.hour <= ? "
-                "WHERE pm.user_id = ? AND pm.active = 1 ORDER BY pm.position",
-                (cut, user_id),
-            )
-        ]
+        photos = self._photos_at(user_id, cut)
         return {
             "id": user_id,
             "username": base["username"],

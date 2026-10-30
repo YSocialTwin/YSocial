@@ -3,7 +3,7 @@
 {% block content %}
 <h2 class="dt-h">{{ _('Discover') }} <small id="dt-quota" aria-live="polite"></small></h2>
 <div id="dt-play" class="dt-play"
-     data-deck-url="/{{ exp.idexp }}/dating/api/deck" data-matches-url="/{{ exp.idexp }}/dating/matches"
+     data-media="/{{ exp.idexp }}/dating/media/" data-deck-url="/{{ exp.idexp }}/dating/api/deck" data-matches-url="/{{ exp.idexp }}/dating/matches"
      data-t-match="{{ _('It is a match!') }}" data-t-open="{{ _('Open chat') }}"
      data-t-lost="{{ _('Connection lost: try again in a moment.') }}" data-t-off="{{ _('Swiping is switched off for this experiment.') }}"
      data-t-likes="{{ _('likes left') }}" data-t-supers="{{ _('super likes left') }}"

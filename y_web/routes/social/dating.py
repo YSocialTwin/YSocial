@@ -8,7 +8,7 @@ Pages for the ``public`` and ``account`` viewpoints are built from the reader's 
 
 import os
 
-from flask import abort, jsonify, redirect, render_template, request
+from flask import abort, current_app, jsonify, redirect, render_template, request
 from flask import session as flask_session
 from flask import url_for
 from sqlalchemy import select
@@ -303,12 +303,32 @@ def dating_chat(exp_id, match_id):
     return _view(exp_id, handler)
 
 
+def _record_view(ctx, account_id):
+    """VIEW_PROFILE of a person opening a profile; the page does not depend on the answer."""
+    from y_web.routes.social.dating_participant import _gateway
+
+    source = request.args.get("src")
+    action = {
+        "type": "VIEW_PROFILE",
+        "payload": {
+            "target_id": account_id,
+            "source": source if source in ("deck", "match", "chat") else "profile",
+        },
+    }
+    try:
+        _gateway(ctx.exp, ctx.participant, "act", ctx.participant.account_id, [action])
+    except Exception:  # a view that is not recorded must not break the page
+        current_app.logger.info("dating: profile view not recorded", exc_info=True)
+
+
 @main.route("/<int:exp_id>/dating/profile/<account_id>")
 def dating_profile(exp_id, account_id):
     def handler(ctx, reader):
         profile = reader.profile(account_id, ctx.vp)
         if profile is None:
             abort(404)
+        if ctx.participant is not None and account_id != ctx.participant.account_id:
+            _record_view(ctx, account_id)
         return _render("dating/profile.html", ctx, reader, profile=profile)
 
     return _view(exp_id, handler)

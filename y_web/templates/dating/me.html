@@ -11,6 +11,28 @@
     <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Save') }}</button>
   </form>
 </section>
+<section class="dt-panel dt-narrow" id="dt-me-photos">
+  <h3>{{ _('Your photos') }}</h3>
+  {% if me.photos %}
+  <ul class="dt-photo-manage">
+    {% for ph in me.photos %}
+    <li>{% if ph.url %}<img src="{{ dating_media(ph.url) }}" alt="" loading="lazy" decoding="async">{% else %}<span class="dt-noimg" aria-hidden="true">·</span>{% endif %}
+      <span>{{ ph.caption }}</span>
+      <button type="button" class="dt-btn dt-btn-ghost" data-act="REMOVE_PHOTO" data-confirm="{{ _('Remove this photo?') }}" data-payload='{{ {"index": ph.index}|tojson|forceescape }}'{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Remove') }}</button></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="dt-hint">{{ _('You have no photos yet.') }}</p>{% endif %}
+  {% if me.photos|length < me.max_photos %}
+  <form data-upload="{{ '/%d/dating/api/photo' % exp.idexp }}" data-t-lost="{{ _('Connection lost: try again in a moment.') }}" class="dt-fields" enctype="multipart/form-data">
+    <label for="dt-photo-file">{{ _('Picture') }}</label>
+    <input id="dt-photo-file" name="photo" type="file" accept="image/png,image/jpeg,image/webp" required>
+    <label for="dt-photo-caption">{{ _('Description') }}</label>
+    <input id="dt-photo-caption" name="caption" maxlength="500" required>
+    <p class="dt-hint">{{ _('PNG, JPEG or WebP, up to 5 MB. The picture is re-encoded and its metadata is removed. The simulated users decide on the description.') }}</p>
+    <button class="dt-btn" type="submit"{% if not me.interactions.profile_edit %} disabled{% endif %}>{{ _('Add photo') }}</button>
+  </form>
+  {% else %}<p class="dt-hint">{{ _('You have reached the maximum number of photos.') }}</p>{% endif %}
+</section>
 <section class="dt-panel dt-narrow">
   <h3>{{ _('Who you see') }}</h3>
   <form data-act="UPDATE_PREFERENCES" data-int="age_min,age_max" data-float="max_distance_km" class="dt-fields">
