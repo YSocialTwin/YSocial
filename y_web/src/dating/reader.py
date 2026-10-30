@@ -29,8 +29,18 @@ PUBLIC = "public"
 KINDS = (OVERVIEW, ACCOUNT, PUBLIC)
 
 DEFAULT_SLOTS = 24
-_END_CODES = ("paired", "unmatched", "blocked", "ended", "left_platform", "ghosted", "no_opener")
-GHOST_SLOTS = 48  # the server's ghosting_threshold_slots: a message nobody answers for this long
+_END_CODES = (
+    "paired",
+    "unmatched",
+    "blocked",
+    "ended",
+    "left_platform",
+    "ghosted",
+    "no_opener",
+)
+GHOST_SLOTS = (
+    48  # the server's ghosting_threshold_slots: a message nobody answers for this long
+)
 # fields of profile_events that are part of the public profile
 PROFILE_FIELDS = ("bio", "prompt_answers", "city", "intent")
 
@@ -505,7 +515,9 @@ class DatingReader:
         if not matches:
             return {}
         ids = {m["id"] for m in matches}
-        scoped = bool(match_id or account_id)  # read only the messages of the matches asked for
+        scoped = bool(
+            match_id or account_id
+        )  # read only the messages of the matches asked for
         marks = ",".join("?" * len(ids)) if scoped and len(ids) <= 500 else None
         keys = {
             r["id"]: r["k"]
@@ -513,7 +525,9 @@ class DatingReader:
         }
         left_reason = {
             r["id"]: r["left_reason"]
-            for r in self.c.execute("SELECT id, left_reason FROM user_mgmt WHERE status = 'left'")
+            for r in self.c.execute(
+                "SELECT id, left_reason FROM user_mgmt WHERE status = 'left'"
+            )
         }
         last: Dict[str, sqlite3.Row] = {}
         count: Dict[str, int] = {}
@@ -571,8 +585,16 @@ class DatingReader:
                 if lm is not None:
                     waited = now - self._key_slot(lm["k"])
                     if waited >= GHOST_SLOTS:
-                        other = m["user_b"] if lm["sender_id"] == m["user_a"] else m["user_a"]
-                        ghost = {"silent": other, "sender": lm["sender_id"], "slots": waited}
+                        other = (
+                            m["user_b"]
+                            if lm["sender_id"] == m["user_a"]
+                            else m["user_a"]
+                        )
+                        ghost = {
+                            "silent": other,
+                            "sender": lm["sender_id"],
+                            "slots": waited,
+                        }
                 else:
                     waited = now - self._key_slot(m["created_key"])
                     if waited >= GHOST_SLOTS:
@@ -607,11 +629,23 @@ class DatingReader:
                     code = "blocked" if status == "closed_block" else "unmatched"
                 chips.append({"code": code, "tone": "bad"})
             if ghost is not None and not chips:
-                chips.append({"code": "ghosted" if lm is not None else "no_opener", "tone": "bad"})
+                chips.append(
+                    {
+                        "code": "ghosted" if lm is not None else "no_opener",
+                        "tone": "bad",
+                    }
+                )
             elif ghost is not None:
-                chips.append({"code": "ghosted" if lm is not None else "no_opener", "tone": "bad"})
+                chips.append(
+                    {
+                        "code": "ghosted" if lm is not None else "no_opener",
+                        "tone": "bad",
+                    }
+                )
             if not chips:
-                chips.append({"code": "chatting" if lm is not None else "new", "tone": "neutral"})
+                chips.append(
+                    {"code": "chatting" if lm is not None else "new", "tone": "neutral"}
+                )
             out[mid] = {
                 "dates": ds,
                 "ghost": ghost,
@@ -793,24 +827,41 @@ class DatingReader:
                 item["text"] = ""
             msgs.append(item)
         journey = self.journeys(
-            cut, vp.account_id if vp.kind == ACCOUNT else None, detail=vp.kind == OVERVIEW, match_id=m["id"]
+            cut,
+            vp.account_id if vp.kind == ACCOUNT else None,
+            detail=vp.kind == OVERVIEW,
+            match_id=m["id"],
         ).get(m["id"])
         events: List[Dict[str, Any]] = []
         if journey:
             for d in journey["dates"]:
                 if d["status"] in ("declined", "expired"):
-                    events.append({"code": "date_" + d["status"], "tone": "bad", "key": d["key"]})
+                    events.append(
+                        {"code": "date_" + d["status"], "tone": "bad", "key": d["key"]}
+                    )
                 elif d["outcome"]:
                     code = {"POSITIVE": "date_good", "NEUTRAL": "date_neutral"}.get(
                         d["outcome"], "date_bad"
                     )
-                    tone = {"POSITIVE": "good", "NEUTRAL": "neutral"}.get(d["outcome"], "bad")
-                    events.append({"code": code, "tone": tone, "key": d["outcome_key"] or d["key"]})
+                    tone = {"POSITIVE": "good", "NEUTRAL": "neutral"}.get(
+                        d["outcome"], "bad"
+                    )
+                    events.append(
+                        {
+                            "code": code,
+                            "tone": tone,
+                            "key": d["outcome_key"] or d["key"],
+                        }
+                    )
             tail = [c for c in journey["chips"] if c["code"] in _END_CODES]
             for c in tail:
                 events.append({"code": c["code"], "tone": c["tone"], "key": 10**9})
         for e in events:
-            e["day"], e["hour"] = (e["key"] // 10000, e["key"] % 10000) if e["key"] < 10**9 else (None, None)
+            e["day"], e["hour"] = (
+                (e["key"] // 10000, e["key"] % 10000)
+                if e["key"] < 10**9
+                else (None, None)
+            )
         return {
             "id": m["id"],
             "events": events,
@@ -854,11 +905,15 @@ class DatingReader:
         ).fetchall()
         if not matches:
             return []
-        others = {m["id"]: (m["user_b"] if m["user_a"] == viewer_id else m["user_a"]) for m in matches}
+        others = {
+            m["id"]: (m["user_b"] if m["user_a"] == viewer_id else m["user_a"])
+            for m in matches
+        }
         names = {
             r["id"]: r["username"]
             for r in self.c.execute(
-                "SELECT id, username FROM user_mgmt WHERE id IN (%s)" % ",".join("?" * len(set(others.values()))),
+                "SELECT id, username FROM user_mgmt WHERE id IN (%s)"
+                % ",".join("?" * len(set(others.values()))),
                 tuple(set(others.values())),
             )
         }
@@ -903,7 +958,9 @@ class DatingReader:
 
     def unread_count(self, viewer_id: str, vp: Viewpoint) -> int:
         """How many notifications of the account are still to be read (a badge on every page)."""
-        return sum(1 for n in self.notifications(viewer_id, vp, limit=10**6) if n["unread"])
+        return sum(
+            1 for n in self.notifications(viewer_id, vp, limit=10**6) if n["unread"]
+        )
 
     # ------------------------------------------------------------------ overview: history
     def history(self, vp: Viewpoint) -> List[Dict[str, Any]]:
