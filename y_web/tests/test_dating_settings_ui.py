@@ -1,5 +1,7 @@
 """Layout of the dating settings pages: every setting has one place and one label."""
 
+import os
+
 import pytest
 
 from y_web.src.dating import client_config as dcc
@@ -8,9 +10,12 @@ from y_web.src.dating import settings_ui as ui
 from y_web.src.system.path_utils import get_external_repo_dir
 
 REPO = get_external_repo_dir("YDating")
-pytestmark = pytest.mark.skipif(
-    not REPO or not __import__("os").path.isdir(REPO), reason="YDating not installed"
-)
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not REPO or not os.path.isdir(REPO), reason="YDating not installed"
+    ),
+]
 
 
 @pytest.mark.parametrize(
@@ -112,7 +117,9 @@ def test_a_restarted_client_runs_what_is_left(app, tmp_path):
     from y_web.src.models import Client, Client_Execution
 
     path = tmp_path / "client_c-p.json"
-    path.write_text(json.dumps({"client_name": "c", "num_days": 3, "num_slots_per_day": 24}))
+    path.write_text(
+        json.dumps({"client_name": "c", "num_days": 3, "num_slots_per_day": 24})
+    )
     with app.app_context():
         cli = Client(name="c", id_exp=1, population_id=1, days=3, status=0)
         db.session.add(cli)
@@ -122,7 +129,9 @@ def test_a_restarted_client_runs_what_is_left(app, tmp_path):
         db.session.commit()
 
         _set_dating_run_length(str(path), cli)
-        assert json.loads(path.read_text())["num_days"] == 3  # first start: the whole length
+        assert (
+            json.loads(path.read_text())["num_days"] == 3
+        )  # first start: the whole length
 
         ex.last_active_day, ex.last_active_hour = 2, 24  # day 2 finished
         db.session.commit()
