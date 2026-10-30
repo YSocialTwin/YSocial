@@ -1,14 +1,31 @@
 {% extends "dating/base.html" %}
 {% set nav = 'matches' %}
 {% block content %}
-<h2 class="dt-h">{% if ctx.vp.kind == 'overview' %}{{ chat.a.name }} ↔ {{ chat.b.name }}{% else %}{{ (chat.b.name if chat.a.id == ctx.vp.account_id else chat.a.name) }}{% endif %}</h2>
-<p><a href="{{ link('/matches') }}">‹ {{ _('Matches') }}</a></p>
+{% from "dating/_avatar.html" import avatar_raw %}
+{% set me = ctx.vp.account_id if ctx.vp.kind == 'account' else None %}
+{% set partner = chat.b if chat.a.id == me else chat.a %}
+<header class="dt-chat-head">
+  <a class="dt-back" href="{{ link('/matches') }}" aria-label="{{ _('Matches') }}">‹</a>
+  {% if ctx.vp.kind == 'overview' %}
+  <span class="dt-pair-avatars">{{ avatar_raw(chat.a.initials, chat.a.hue, chat.a.photo, 'md') }}{{ avatar_raw(chat.b.initials, chat.b.hue, chat.b.photo, 'md') }}</span>
+  <h2 class="dt-h"><a href="{{ link('/profile/' ~ chat.a.id) }}">{{ chat.a.name }}</a> ↔ <a href="{{ link('/profile/' ~ chat.b.id) }}">{{ chat.b.name }}</a></h2>
+  {% else %}
+  <a href="{{ link('/profile/' ~ partner.id) }}">{{ avatar_raw(partner.initials, partner.hue, partner.photo, 'md') }}</a>
+  <h2 class="dt-h"><a href="{{ link('/profile/' ~ partner.id) }}">{{ partner.name }}</a></h2>
+  {% endif %}
+  <small class="dt-chat-count">{{ _('%(n)s messages', n=chat.messages|length) }}</small>
+</header>
 {% if chat.messages %}
-<ol class="dt-chat" aria-label="{{ _('Conversation') }}">{% for m in chat.messages %}
+<ol class="dt-chat" id="dt-chat-log" aria-label="{{ _('Conversation') }}">{% set ns = namespace(day=None) %}{% for m in chat.messages %}
+  {% if ns.day != m.day %}{% set ns.day = m.day %}<li class="dt-daysep" role="separator"><span>{{ _('Day %(d)s', d=m.day) }}</span></li>{% endif %}
+  {% set who = chat.a if m.sender_id == chat.a.id else chat.b %}
   <li class="dt-msg{{ ' is-mine' if m.mine }}{{ ' is-deleted' if m.deleted }}">
-    <span class="dt-msg-by">{{ m.sender }} <small>{{ _('day %(d)s, round %(h)s', d=m.day, h=m.hour) }}</small></span>
-    {% if m.deleted and ctx.vp.kind != 'overview' %}<em>{{ _('Message removed') }}</em>
-    {% else %}<p>{{ m.text }}</p>{% if m.deleted %}<small class="dt-flag">{{ _('Deleted (researcher only)') }}</small>{% endif %}{% endif %}
+    {% if not m.mine %}<a class="dt-msg-av" href="{{ link('/profile/' ~ who.id) }}" tabindex="-1">{{ avatar_raw(who.initials, who.hue, who.photo, 'sm') }}</a>{% endif %}
+    <div class="dt-bubble">
+      <span class="dt-msg-by">{% if not m.mine %}{{ m.sender }} {% endif %}<small>{{ _('round %(h)s', h=m.hour) }}</small></span>
+      {% if m.deleted and ctx.vp.kind != 'overview' %}<em>{{ _('Message removed') }}</em>
+      {% else %}<p>{{ m.text }}</p>{% if m.deleted %}<small class="dt-flag">{{ _('Deleted (researcher only)') }}</small>{% endif %}{% endif %}
+    </div>
   </li>{% endfor %}</ol>
 {% else %}<p class="dt-empty">{{ _('No messages yet.') }}</p>{% endif %}
 {% if participant and convo %}

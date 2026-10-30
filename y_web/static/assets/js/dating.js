@@ -41,4 +41,47 @@
       }).catch(function () {});
     }, poll * 1000);
   }
+  // live search: results are fetched as the visitor types or changes a filter
+  var form = document.getElementById("dt-search");
+  var results = document.getElementById("dt-results");
+  if (form && results && window.fetch && window.URLSearchParams) {
+    var timer = null, seq = 0;
+    var run = function () {
+      var qs = new URLSearchParams(new FormData(form));
+      var mine = ++seq;
+      results.classList.add("is-loading");
+      fetch(form.getAttribute("data-partial") + "?" + qs.toString() + "&partial=1", { credentials: "same-origin" })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (html) {
+          if (mine !== seq) return;
+          results.innerHTML = html;
+          results.classList.remove("is-loading");
+          safe(function () { history.replaceState(null, "", "?" + qs.toString()); });
+        }).catch(function () { results.classList.remove("is-loading"); });
+    };
+    var later = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
+    form.addEventListener("input", later);
+    form.addEventListener("change", run);
+    form.addEventListener("submit", function (e) { e.preventDefault(); clearTimeout(timer); run(); });
+    var reset = document.getElementById("dt-reset");
+    if (reset) reset.addEventListener("click", function (e) {
+      e.preventDefault(); form.reset();
+      form.querySelectorAll("input[type=text],input[type=search],input[type=number]").forEach(function (i) { i.value = ""; });
+      form.querySelectorAll("input[type=checkbox]").forEach(function (i) { i.checked = false; });
+      run();
+    });
+  }
+  // chat: start at the last message; Enter sends, Shift+Enter makes a new line
+  var log = document.getElementById("dt-chat-log");
+  if (log && !location.hash) {
+    var last = log.lastElementChild;
+    if (last && last.scrollIntoView) last.scrollIntoView({ block: "end" });
+  }
+  var text = document.getElementById("dt-text");
+  if (text) text.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && text.form) {
+      e.preventDefault();
+      if (text.form.requestSubmit) text.form.requestSubmit();
+    }
+  });
 })();

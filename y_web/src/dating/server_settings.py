@@ -38,6 +38,7 @@ INTERNAL: Dict[str, str] = {
     "annotations.sentiment": "the annotation switches of the experiment configuration",
     "annotations.toxicity": "the annotation switches of the experiment configuration",
     "annotations.emotions": "the annotation switches of the experiment configuration",
+    "human.enabled": "always on: people can take part in every dating experiment",
     "human.gateway.host": "loopback only; chosen by YWeb when it starts the gateway",
     "human.gateway.port": "chosen by YWeb when it starts the gateway",
     "memory_embeddings.service": "the embedding model of the experiment configuration",
@@ -93,6 +94,18 @@ def schema(repo_dir: str) -> Dict[str, Any]:
 
 def form_fields(repo_dir: str) -> List[sf.Field]:
     return sf.fields(schema(repo_dir), INTERNAL)
+
+
+def ensure_humans(config: Dict[str, Any]) -> bool:
+    """Make people welcome in the experiment (``human.enabled``); True when the configuration changed."""
+    human = config.get("human")
+    if not isinstance(human, dict):
+        human = {}
+        config["human"] = human
+    if human.get("enabled") is True:
+        return False
+    human["enabled"] = True
+    return True
 
 
 # ----------------------------------------------------------------------------------- recommenders
@@ -203,6 +216,7 @@ def apply_form(
     except sf.SettingsError as exc:
         raise ServerSettingsError(exc.problems) from None
     merged = sf.merge(config, values)
+    ensure_humans(merged)
     apply_recsys(repo_dir, merged, form, label_of)
     problems = sf.schema_problems(sch, merged)
     if problems:

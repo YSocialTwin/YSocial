@@ -1,9 +1,11 @@
 {% from "dating/_avatar.html" import avatar %}
 {#- A profile card: public fields only. ``extra`` is the overview block, shown only to researchers. -#}
 {% macro card(p, link, decision=None, extra=None, position=None) %}
-<article class="dt-card" aria-label="{{ p.username }}">
+{% set photos = p.photos | selectattr('url') | list %}
+<article class="dt-card{{ ' has-photo' if photos }}" aria-label="{{ p.username }}">
   <div class="dt-card-photo" style="--dt-hue: {{ p.hue }}">
-    {{ avatar(p, 'xl') }}
+    {% if photos %}<img class="dt-card-img" src="{{ dating_media(photos[0].url) }}" alt="{{ photos[0].caption or p.username }}" loading="lazy" decoding="async">
+    {% else %}{{ avatar(p, 'xl') }}{% endif %}
     {% if decision %}<span class="dt-stamp dt-stamp-{{ decision|lower }}" role="img" aria-label="{{ _('Decision: %(d)s', d=decision) }}">{{ _('LIKE') if decision == 'LIKE' else _('PASS') }}</span>{% endif %}
     {% if p.photos|length > 1 %}<span class="dt-photos">{{ p.photos|length }} {{ _('photos') }}</span>{% endif %}
   </div>

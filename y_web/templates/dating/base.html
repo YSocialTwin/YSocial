@@ -11,7 +11,10 @@
 <a class="dt-skip" href="#dt-main">{{ _('Skip to content') }}</a>
 <div class="dt-app">
   <header class="dt-top">
-    <a class="dt-brand" href="{{ link('') }}"><span class="dt-logo" aria-hidden="true">♥</span> <span>{{ exp.exp_name }}</span></a>
+    <a class="dt-brand" href="{{ link('') }}" style="--dt-logo: url('{{ url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}')" aria-label="YSocial · {{ exp.exp_name }}">
+      <span class="dt-brand-logo" role="img" aria-label="YSocial"></span>
+      <svg class="dt-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 2.6 4.9 6.1 4.5c2-.2 3.7.8 4.6 2.3l1.3 2 1.3-2c.9-1.5 2.6-2.5 4.6-2.3 3.5.4 5.2 4 3.7 7.3C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg>
+      <span class="dt-brand-exp">{{ exp.exp_name }}</span></a>
     <nav class="dt-nav" aria-label="{{ _('Sections') }}">
       <a href="{{ link('') }}"{% if nav == 'home' %} aria-current="page"{% endif %}>{{ _('Discover') if ctx.vp.kind != 'public' else _('Profiles') }}</a>
       {% if ctx.vp.kind != 'public' %}<a href="{{ link('/matches') }}"{% if nav == 'matches' %} aria-current="page"{% endif %}>{{ _('Matches') }}</a>{% endif %}
@@ -24,7 +27,6 @@
       <button type="button" class="dt-btn dt-btn-ghost" id="dt-theme" aria-label="{{ _('Switch light or dark theme') }}">◐</button>
     </div>
   </header>
-  <div class="dt-banner dt-banner-sim" role="note">{{ _('This is a simulation: all people, photos and messages are fictional.') }}</div>
   {% if ctx.vp.kind == 'overview' %}<div class="dt-banner is-overview" role="note">{{ _('Researcher overview: everything the run recorded is shown, including private chats, deleted messages and the recommender internals. This is not what a user sees.') }}</div>
   {% elif participant %}<div class="dt-banner is-account" role="note">{{ _('You are playing as %(name)s. Simulated users and other people see your profile and your messages.', name=participant.username) }}</div>
   {% elif ctx.vp.kind == 'account' %}<div class="dt-banner is-account" role="note">{{ _('Viewing as %(name)s: exactly what this account could see at this round.', name=(viewed.username if viewed else ctx.vp.account_id)) }}</div>{% endif %}

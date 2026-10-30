@@ -176,7 +176,6 @@ LABELS: Dict[str, str] = {
     "stress_reward.base_stress": N_("Base stress"),
     "stress_reward.base_reward": N_("Base reward"),
     # server: human participation
-    "human.enabled": N_("Accept human participants"),
     "human.max_humans": N_("Maximum participants"),
     "human.pace.min_round_seconds": N_("Minimum duration of a round (seconds)"),
     "human.limits.max_text_chars": N_("Longest text a person may send"),
@@ -499,7 +498,7 @@ SERVER_SECTIONS: List[Section] = [
             "Let people play next to the agents: how many, how fast, what they may do and the limits that protect the server. The participants are managed on the Participants page."
         ),
         [
-            (N_("Participation"), ["human.enabled", "human.max_humans", "human.pace."]),
+            (N_("Participation"), ["human.max_humans", "human.pace."]),
             (N_("Limits"), ["human.limits."]),
             (N_("Actions a person may take"), ["human.interactions."]),
         ],

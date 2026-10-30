@@ -33,6 +33,11 @@ DEFAULT_SLOTS = 24
 PROFILE_FIELDS = ("bio", "prompt_answers", "city", "intent")
 
 
+def _avatar(user_id: str, name: Optional[str], photo: str) -> Dict[str, Any]:
+    """What the avatar of a user needs: initials and hue, and the picture when there is one."""
+    return {"hue": avatar_hue(user_id), "initials": initials(name), "photo": photo}
+
+
 class DatingReadError(Exception):
     """The database is missing, is not a dating database, or cannot be read."""
 
@@ -284,21 +289,100 @@ class DatingReader:
             data["overview"] = self._overview_extra(user_id, cut)
         return data
 
-    def search(self, term: str, ordinal: int, limit: int = 40) -> List[Dict[str, Any]]:
-        term = (term or "").strip().lower()
-        if not term:
-            return []
+    def _photo_url(self, user_id: str, cut: int) -> str:
+        """The first picture of the profile at the round that has a file (empty when none has one yet)."""
+        for ph in self._photos_at(user_id, cut):
+            if ph.get("url"):
+                return ph["url"]
+        return ""
+
+    def facets(self, ordinal: int) -> Dict[str, Any]:
+        """Values to offer in the search form: what the profiles shown at the round actually have."""
+        rows = list(self._active_ids(self._cut(ordinal)).values())
+        ages = [r["age"] for r in rows if r["age"] is not None]
+        return {
+            "genders": sorted({r["gender"] for r in rows if r["gender"]}),
+            "intents": sorted({r["intent"] for r in rows if r["intent"]}),
+            "cities": sorted({r["city"] for r in rows if r["city"]}),
+            "age_min": min(ages) if ages else 18,
+            "age_max": max(ages) if ages else 99,
+            "total": len(rows),
+        }
+
+    SORTS = ("relevance", "name", "age", "age_desc", "newest")
+
+    def search(
+        self,
+        term: str,
+        ordinal: int,
+        limit: int = 60,
+        filters: Optional[Dict[str, Any]] = None,
+        sort: str = "relevance",
+    ) -> Dict[str, Any]:
+        """Profiles that match a text (name, city, intent, bio, interests) and the filters, with a total.
+
+        ``filters``: ``genders`` (list), ``intents`` (list), ``city`` (text), ``age_min``/``age_max`` (int),
+        ``interest`` (text) and ``photo`` (only profiles with a picture). Each word of the text must be found;
+        a hit in the name or in the interests ranks first.
+        """
+        filters = filters or {}
+        words = [w for w in (term or "").lower().split() if w]
         cut = self._cut(ordinal)
-        out = []
-        for r in self._active_ids(cut).values():
-            hay = " ".join(
-                str(x or "") for x in (r["username"], r["city"], r["intent"], r["bio"])
-            ).lower()
-            if term in hay:
-                out.append(self._public_profile(r["id"], cut, r))
-                if len(out) >= limit:
-                    break
-        return out
+        genders = {g.lower() for g in filters.get("genders") or []}
+        intents = {i.lower() for i in filters.get("intents") or []}
+        city = (filters.get("city") or "").strip().lower()
+        interest = (filters.get("interest") or "").strip().lower()
+        lo, hi = filters.get("age_min"), filters.get("age_max")
+        found = []
+        for order, r in enumerate(self._active_ids(cut).values()):
+            if genders and (r["gender"] or "").lower() not in genders:
+                continue
+            if intents and (r["intent"] or "").lower() not in intents:
+                continue
+            if city and city not in (r["city"] or "").lower():
+                continue
+            if lo is not None and (r["age"] is None or r["age"] < lo):
+                continue
+            if hi is not None and (r["age"] is None or r["age"] > hi):
+                continue
+            profile = self._public_profile(r["id"], cut, r)
+            tags = [i.lower() for i in profile["interests"]]
+            if interest and not any(interest in t for t in tags):
+                continue
+            if filters.get("photo") and not any(
+                p.get("url") for p in profile["photos"]
+            ):
+                continue
+            score = 0
+            if words:
+                name = (r["username"] or "").lower()
+                hay = " ".join(
+                    [
+                        name,
+                        (r["city"] or "").lower(),
+                        (r["intent"] or "").lower(),
+                        (r["bio"] or "").lower(),
+                    ]
+                    + tags
+                )
+                if not all(w in hay for w in words):
+                    continue
+                score = sum(
+                    3 if w in name else 2 if any(w in t for t in tags) else 1
+                    for w in words
+                )
+            found.append((score, order, profile))
+        if sort == "name":
+            found.sort(key=lambda x: (x[2]["username"] or "").lower())
+        elif sort == "age":
+            found.sort(key=lambda x: (x[2]["age"] is None, x[2]["age"] or 0))
+        elif sort == "age_desc":
+            found.sort(key=lambda x: -(x[2]["age"] or 0))
+        elif sort == "newest":
+            found.sort(key=lambda x: -x[1])
+        else:
+            found.sort(key=lambda x: (-x[0], x[1]))
+        return {"results": [x[2] for x in found[:limit]], "total": len(found)}
 
     # ------------------------------------------------------------------ overview-only data
     def _overview_extra(self, user_id: str, cut: int) -> Dict[str, Any]:
@@ -411,11 +495,22 @@ class DatingReader:
                 "other": names.get(other_id, "?"),
                 "hue": avatar_hue(other_id),
                 "initials": initials(names.get(other_id)),
+                "photo": self._photo_url(other_id, cut),
                 "active": not ended,
             }
             if vp.kind == OVERVIEW:
                 item["a"] = names.get(m["user_a"], "?")
                 item["b"] = names.get(m["user_b"], "?")
+                item["a_avatar"] = _avatar(
+                    m["user_a"],
+                    names.get(m["user_a"]),
+                    self._photo_url(m["user_a"], cut),
+                )
+                item["b_avatar"] = _avatar(
+                    m["user_b"],
+                    names.get(m["user_b"]),
+                    self._photo_url(m["user_b"], cut),
+                )
                 item["ended_by"] = names.get(m["ended_by"]) if m["ended_by"] else None
             out.append(item)
         return out
@@ -461,8 +556,24 @@ class DatingReader:
             msgs.append(item)
         return {
             "id": m["id"],
-            "a": {"id": m["user_a"], "name": names.get(m["user_a"], "?")},
-            "b": {"id": m["user_b"], "name": names.get(m["user_b"], "?")},
+            "a": {
+                "id": m["user_a"],
+                "name": names.get(m["user_a"], "?"),
+                **_avatar(
+                    m["user_a"],
+                    names.get(m["user_a"]),
+                    self._photo_url(m["user_a"], cut),
+                ),
+            },
+            "b": {
+                "id": m["user_b"],
+                "name": names.get(m["user_b"], "?"),
+                **_avatar(
+                    m["user_b"],
+                    names.get(m["user_b"]),
+                    self._photo_url(m["user_b"], cut),
+                ),
+            },
             "messages": msgs,
         }
 

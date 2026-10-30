@@ -1,14 +1,17 @@
 {% extends "dating/base.html" %}
-{% from "dating/_avatar.html" import avatar %}
+{% from "dating/_avatar.html" import avatar_raw %}
 {% set nav = 'matches' %}
 {% block content %}
 <h2 class="dt-h">{{ _('Matches') }} <small>{{ matches|length }}</small></h2>
 {% if matches %}
-<ul class="dt-list">{% for m in matches %}
-  <li><a class="dt-row" href="{{ link('/chat/' ~ m.id) }}">
-    {{ avatar({'hue': m.hue, 'initials': m.initials, 'photos': []}) }}
+<ul class="dt-list dt-matches">{% for m in matches %}
+  <li><a class="dt-row{{ '' if m.active else ' is-ended' }}" href="{{ link('/chat/' ~ m.id) }}">
+    {% if ctx.vp.kind == 'overview' %}
+    <span class="dt-pair-avatars">{{ avatar_raw(m.a_avatar.initials, m.a_avatar.hue, m.a_avatar.photo, 'md') }}{{ avatar_raw(m.b_avatar.initials, m.b_avatar.hue, m.b_avatar.photo, 'md') }}</span>
+    {% else %}{{ avatar_raw(m.initials, m.hue, m.photo, 'lg') }}{% endif %}
     <span class="dt-row-main"><strong>{% if ctx.vp.kind == 'overview' %}{{ m.a }} ↔ {{ m.b }}{% else %}{{ m.other }}{% endif %}</strong>
       <small>{{ _('Active') if m.active else _('Ended') }}{% if m.ended_by %} · {{ _('ended by %(n)s', n=m.ended_by) }}{% endif %}</small></span>
+    <span class="dt-row-go" aria-hidden="true">›</span>
   </a></li>{% endfor %}</ul>
 {% else %}<p class="dt-empty">{{ _('No matches up to this round.') }}</p>{% endif %}
 {% endblock %}

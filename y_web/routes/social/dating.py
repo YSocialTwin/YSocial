@@ -334,12 +334,51 @@ def dating_profile(exp_id, account_id):
     return _view(exp_id, handler)
 
 
+def _search_filters(args):
+    """The filters of the search page from the query string (anything unreadable is ignored)."""
+    filters = {
+        "genders": [g for g in args.getlist("gender") if g],
+        "intents": [i for i in args.getlist("intent") if i],
+        "city": args.get("city", ""),
+        "interest": args.get("interest", ""),
+        "photo": args.get("photo") == "1",
+    }
+    lo, hi = _int(args.get("age_min")), _int(args.get("age_max"))
+    if lo is not None:
+        filters["age_min"] = lo
+    if hi is not None:
+        filters["age_max"] = hi
+    return filters
+
+
 @main.route("/<int:exp_id>/dating/search")
 def dating_search(exp_id):
     def handler(ctx, reader):
         term = request.args.get("q", "")
-        results = reader.search(term, ctx.vp.round)
-        return _render("dating/search.html", ctx, reader, term=term, results=results)
+        filters = _search_filters(request.args)
+        sort = request.args.get("sort", "relevance")
+        if sort not in reader.SORTS:
+            sort = "relevance"
+        found = reader.search(term, ctx.vp.round, filters=filters, sort=sort)
+        values = dict(
+            term=term,
+            results=found["results"],
+            total=found["total"],
+            filters=filters,
+            sort=sort,
+            searched=True,
+            facets=reader.facets(ctx.vp.round),
+        )
+        if request.args.get("partial") == "1":
+            return render_template(
+                "dating/_search_results.html",
+                link=_linker(ctx),
+                ctx=ctx,
+                exp=ctx.exp,
+                participant=ctx.participant,
+                **values,
+            )
+        return _render("dating/search.html", ctx, reader, **values)
 
     return _view(exp_id, handler)
 

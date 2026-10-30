@@ -20,9 +20,13 @@
 .dt-skip { position: absolute; left: 8px; top: -48px; background: var(--dt-surface); color: var(--dt-text); padding: 8px 12px; border-radius: 8px; z-index: 50; }
 .dt-skip:focus { top: 8px; }
 :focus-visible { outline: 3px solid var(--dt-accent); outline-offset: 2px; }
-.dt-top { display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: var(--dt-surface); border-bottom: 1px solid var(--dt-border); position: sticky; top: 0; z-index: 10; }
-.dt-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; color: var(--dt-text) !important; }
-.dt-logo { color: var(--dt-accent); font-size: 22px; }
+.dt-top { display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: linear-gradient(90deg, var(--dt-surface) 70%, var(--dt-accent-soft)); backdrop-filter: blur(6px); border-bottom: 1px solid var(--dt-border); position: sticky; top: 0; z-index: 10; }
+.dt-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; color: var(--dt-text) !important; min-width: 0; }
+.dt-brand-logo { display: inline-block; height: 24px; aspect-ratio: 1484 / 284; background: var(--dt-accent); -webkit-mask: var(--dt-logo) left center / contain no-repeat; mask: var(--dt-logo) left center / contain no-repeat; flex: none; }
+.dt-heart { width: 22px; height: 22px; color: var(--dt-accent); flex: none; margin-left: -2px; filter: drop-shadow(0 2px 4px rgba(225,29,72,.35)); }
+.dt-brand-exp { padding-left: 10px; border-left: 1px solid var(--dt-border); color: var(--dt-muted); font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: no-preference) { .dt-heart { animation: dt-beat 2.6s ease-in-out infinite; transform-origin: center; } }
+@keyframes dt-beat { 0%, 70%, 100% { transform: scale(1); } 80% { transform: scale(1.18); } 90% { transform: scale(1.04); } }
 .dt-nav { display: flex; gap: 4px; flex: 1; }
 .dt-nav a { padding: 8px 12px; border-radius: 999px; text-decoration: none; color: var(--dt-muted); font-weight: 600; }
 .dt-nav a[aria-current="page"] { background: var(--dt-accent-soft); color: var(--dt-accent); }
@@ -30,7 +34,6 @@
 .dt-btn { display: inline-block; border: 0; border-radius: 999px; padding: 8px 16px; background: var(--dt-accent); color: var(--dt-accent-ink) !important; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; min-height: 40px; }
 .dt-btn-ghost { background: transparent; color: var(--dt-text) !important; border: 1px solid var(--dt-border); }
 .dt-banner { padding: 8px 16px; font-size: 14px; background: var(--dt-info-bg); color: var(--dt-info-ink); }
-.dt-banner-sim { background: var(--dt-surface-2); color: var(--dt-muted); border-bottom: 1px solid var(--dt-border); }
 .dt-banner.is-overview, .dt-banner.is-past { background: var(--dt-warn-bg); color: var(--dt-warn-ink); }
 .dt-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; max-width: 1180px; margin: 16px auto; padding: 0 16px; }
 .dt-panel { background: var(--dt-surface); border: 1px solid var(--dt-border); border-radius: var(--dt-radius); padding: 14px; margin-bottom: 12px; box-shadow: var(--dt-shadow); }
@@ -123,3 +126,45 @@
 .dt-photo-manage li { display: flex; align-items: center; gap: 10px; }
 .dt-photo-manage img, .dt-noimg { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; flex: none; }
 .dt-photo-manage li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+
+/* ---- look and feel (avatars, cards, chats, search) ---- */
+.dt-avatar-sm { width: 30px; height: 30px; font-size: 12px; } .dt-avatar-lg { width: 56px; height: 56px; font-size: 20px; }
+.dt-avatar.has-photo { box-shadow: 0 0 0 2px var(--dt-surface), 0 0 0 3px var(--dt-accent-soft); }
+.dt-pair-avatars { display: inline-flex; flex: none; } .dt-pair-avatars .dt-avatar + .dt-avatar { margin-left: -14px; }
+.dt-card { transition: transform .18s ease, box-shadow .18s ease; }
+.dt-grid .dt-card:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(15,23,42,.08), 0 14px 32px rgba(15,23,42,.14); }
+.dt-card.has-photo .dt-card-photo { height: 260px; }
+.dt-card.has-photo .dt-card-photo::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40%; background: linear-gradient(transparent, rgba(0,0,0,.35)); pointer-events: none; }
+.dt-card-img { transition: transform .35s ease; } .dt-card:hover .dt-card-img { transform: scale(1.04); }
+.dt-photos { z-index: 1; } .dt-stamp { z-index: 1; }
+@media (prefers-reduced-motion: no-preference) { .dt-slide, .dt-grid .dt-card, .dt-row { animation: dt-in .3s ease both; } }
+@keyframes dt-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.dt-row { transition: border-color .15s, transform .15s, box-shadow .15s; } .dt-row:hover { border-color: var(--dt-accent); transform: translateX(2px); box-shadow: var(--dt-shadow); }
+.dt-row.is-ended { opacity: .65; } .dt-row-main { flex: 1; min-width: 0; } .dt-row-go { color: var(--dt-muted); font-size: 22px; }
+.dt-chat-head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--dt-surface); border: 1px solid var(--dt-border); border-radius: var(--dt-radius); margin-bottom: 12px; position: sticky; top: 64px; z-index: 5; }
+.dt-chat-head .dt-h { margin: 0; font-size: 18px; flex: 1; min-width: 0; } .dt-chat-head .dt-h a { color: var(--dt-text); text-decoration: none; }
+.dt-back { font-size: 26px; line-height: 1; text-decoration: none; padding: 0 6px; } .dt-chat-count { color: var(--dt-muted); }
+.dt-chat { padding: 4px 0; gap: 6px; }
+.dt-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 100%; padding: 0; border: 0; background: none; }
+.dt-msg.is-mine { justify-content: flex-end; background: none; }
+.dt-bubble { max-width: 75%; padding: 8px 12px; border-radius: 18px 18px 18px 4px; background: var(--dt-surface); border: 1px solid var(--dt-border); }
+.dt-msg.is-mine .dt-bubble { border-radius: 18px 18px 4px 18px; background: var(--dt-accent); color: var(--dt-accent-ink); border-color: transparent; }
+.dt-msg.is-mine .dt-msg-by small { color: inherit; opacity: .75; }
+.dt-bubble p { margin: 2px 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.dt-msg-by { font-size: 12px; font-weight: 600; } .dt-msg-by small { font-weight: 400; }
+.dt-daysep { display: flex; justify-content: center; margin: 10px 0 4px; } .dt-daysep span { font-size: 12px; color: var(--dt-muted); background: var(--dt-surface-2); border: 1px solid var(--dt-border); padding: 2px 12px; border-radius: 999px; }
+.dt-tools-panel { position: sticky; bottom: 8px; }
+.dt-search { display: grid; gap: 10px; margin-bottom: 16px; }
+.dt-search-bar { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.dt-search input, .dt-search select { font: inherit; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--dt-border); background: var(--dt-surface); color: var(--dt-text); min-height: 40px; }
+.dt-search-bar input { font-size: 17px; }
+.dt-filters { background: var(--dt-surface); border: 1px solid var(--dt-border); border-radius: var(--dt-radius); padding: 12px; display: grid; gap: 10px; }
+.dt-chipset { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .dt-chipset legend { float: left; margin-right: 10px; color: var(--dt-muted); font-size: 13px; }
+.dt-chip { cursor: pointer; } .dt-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.dt-chip span { display: inline-block; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--dt-border); background: var(--dt-surface-2); font-size: 14px; transition: background .12s; }
+.dt-chip input:checked + span { background: var(--dt-accent); color: var(--dt-accent-ink); border-color: transparent; } .dt-chip input:focus-visible + span { outline: 3px solid var(--dt-accent); outline-offset: 2px; }
+.dt-filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } .dt-filter-row label { display: grid; gap: 2px; font-size: 13px; color: var(--dt-muted); } .dt-filter-row input[type=number] { width: 90px; }
+.dt-count { color: var(--dt-muted); margin: 0 0 8px; }
+#dt-results.is-loading { opacity: .55; transition: opacity .15s; }
+@media (max-width: 760px) { .dt-chat-head { top: 0; } .dt-brand-exp { display: none; } .dt-bubble { max-width: 84%; } }

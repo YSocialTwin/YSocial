@@ -1,0 +1,6 @@
+{% from "dating/_card.html" import card %}
+{% if searched %}
+<p class="dt-count" id="dt-count">{{ _('%(n)s profiles found', n=total) }}{% if total > results|length %} · {{ _('showing the first %(n)s', n=results|length) }}{% endif %}</p>
+{% if results %}<div class="dt-grid">{% for p in results %}{{ card(p, link) }}{% endfor %}</div>
+{% else %}<p class="dt-empty">{{ _('Nothing found. Try fewer filters.') }}</p>{% endif %}
+{% else %}<p class="dt-hint">{{ _('Type a word or pick a filter: the results appear as you go.') }}</p>{% endif %}

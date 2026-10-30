@@ -54,6 +54,7 @@ def generate_dating_server_config(
         "server_name": DATING_SERVER_NAME,
         "namespace": DATING_NAMESPACE,
         "min_to_start": 1,
+        "human": {"enabled": True},  # people can always take part
         "seed": _int_in_range(
             seed, "seed", 0, DATING_MAX_SEED, secrets.randbelow(DATING_MAX_SEED)
         ),

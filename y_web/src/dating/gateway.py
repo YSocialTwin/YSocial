@@ -48,7 +48,8 @@ def human_config(exp_folder: str) -> dict:
 
 
 def human_enabled(exp_folder: str) -> bool:
-    return bool(human_config(exp_folder).get("enabled"))
+    """People can take part in every dating experiment (the server is started with ``human.enabled``)."""
+    return True
 
 
 # ----------------------------------------------------------------------------------------- runtime files

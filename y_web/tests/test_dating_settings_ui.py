@@ -91,3 +91,14 @@ def test_apply_form_keeps_what_the_form_does_not_carry():
     assert merged["swipe"]["w_attr"] == 0.9
     assert merged["client_name"] == "c" and merged["num_days"] == 2
     assert merged["memory"]["enabled"] is True
+
+
+def test_people_are_always_welcome():
+    from y_web.src.dating.experiment_config import generate_dating_server_config
+
+    cfg = generate_dating_server_config("e", "db", "/tmp", seed=1)
+    assert cfg["human"]["enabled"] is True
+    off = {"human": {"enabled": False, "max_humans": 3}}
+    assert srv.ensure_humans(off) and off["human"] == {"enabled": True, "max_humans": 3}
+    assert not srv.ensure_humans(off)
+    assert "human.enabled" not in [f.path for f in srv.form_fields(REPO)]

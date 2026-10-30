@@ -497,7 +497,7 @@ def test_the_gateway_starts_with_a_private_token_and_stops(tmp_path):
     folder = tmp_path / "exp"
     folder.mkdir()
     repo = _fake_runtime(tmp_path)
-    assert gw.start_gateway(str(folder), repo) is None  # participation is off
+    assert gw.human_enabled(str(folder))  # people can always take part
     (folder / "server_config.json").write_text(json.dumps({"human": {"enabled": True}}))
     pid = gw.start_gateway(str(folder), repo)
     try:

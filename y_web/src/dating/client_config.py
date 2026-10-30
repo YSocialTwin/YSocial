@@ -22,6 +22,7 @@ INTERNAL: Dict[str, str] = {
     "ray_address": "found by the client in the marker the server writes",
     "population_file": "the population chosen on the form (a file of the experiment folder)",
     "language": "the prompt language of the client (prompt settings)",
+    "profile_generation.images.folder": "the web interface shows the files of the media folder of the experiment",
     "memory.enabled": "the Memory switch of the experiment configuration",
     "memory.package_path": "managed by the runtime",
     "memory.run_id": "managed by the runtime",

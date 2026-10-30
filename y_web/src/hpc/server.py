@@ -241,10 +241,13 @@ def start_hpc_server(exp):
         # the settings that shape the run are fixed from the first start (S3 lock)
         from y_web.src.dating import server_settings
 
-        with open(
-            os.path.join(exp_folder, "server_config.json"), "r", encoding="utf-8"
-        ) as handle:
-            server_settings.write_lock(exp_folder, json.load(handle))
+        _config_file = os.path.join(exp_folder, "server_config.json")
+        with open(_config_file, "r", encoding="utf-8") as handle:
+            _server_config = json.load(handle)
+        if server_settings.ensure_humans(_server_config):  # people are always welcome
+            with open(_config_file, "w", encoding="utf-8") as handle:
+                json.dump(_server_config, handle, indent=4)
+        server_settings.write_lock(exp_folder, _server_config)
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     # Check multiple PyInstaller indicators

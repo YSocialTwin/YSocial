@@ -171,11 +171,12 @@ def test_wrong_platform_and_missing_database(im_app):  # noqa: F811
 
 
 @pytest.mark.parametrize("observer", [False], indirect=True)
-def test_page_chrome_is_accessible_and_marks_the_simulation(observer):
+def test_page_chrome_is_accessible_without_the_simulation_banner(observer):
     app, client, exp_id, info = observer
     html = client.get(f"/{exp_id}/dating?vp=public").data.decode()
     assert "dt-skip" in html and 'id="dt-main"' in html
-    assert "fictional" in html  # permanent simulation banner
+    assert "fictional" not in html  # no banner: the interface is a simulator
+    assert "dt-brand-logo" in html and "dt-heart" in html  # YSocial logo with the heart
     assert re.search(r'<html lang="[a-z]{2}', html)
     assert 'aria-label="Sections"' in html or "Sections" in html
 
@@ -193,3 +194,52 @@ def test_dating_frontend_settings_are_declared():
     assert keys <= set(fs.capabilities_for("dating"))
     assert keys <= set(DEFAULT_SETTINGS)
     assert fs._INT_RANGES["dating_poll_seconds"] == (1, 60)
+
+
+def _reader(tmp_path):
+    from y_web.src.dating.reader import open_reader
+
+    path = str(tmp_path / "r.db")
+    info = build_dating_db(path)
+    return open_reader(path), info
+
+
+def test_search_filters_sorting_and_facets(tmp_path):
+    with _reader(tmp_path)[0] as reader:
+        last = reader.latest_round()
+        facets = reader.facets(last)
+        assert (
+            facets["total"] >= 4
+            and "woman" in facets["genders"]
+            and facets["age_min"] <= 26
+        )
+        everyone = reader.search("", last)
+        assert everyone["total"] == facets["total"]
+        women = reader.search("", last, filters={"genders": ["woman"]})
+        assert women["total"] and all(p["gender"] == "woman" for p in women["results"])
+        ages = reader.search("", last, filters={"age_min": 27, "age_max": 28})
+        assert {p["age"] for p in ages["results"]} <= {27, 28}
+        oldest = reader.search("", last, sort="age_desc")["results"]
+        assert [p["age"] for p in oldest] == sorted(
+            (p["age"] for p in oldest), reverse=True
+        )
+        assert (
+            reader.search("user_01 pisa", last)["total"] == 1
+        )  # every word must match
+        assert reader.search("nobody-here", last)["total"] == 0
+        assert (
+            reader.search("", last, filters={"photo": True})["total"] == 0
+        )  # no picture in the fixture
+
+
+def test_matches_and_chat_carry_what_an_avatar_needs(tmp_path):
+    from y_web.src.dating.reader import Viewpoint
+
+    opened, info = _reader(tmp_path)
+    with opened as reader:
+        last = reader.latest_round()
+        vp = Viewpoint("overview", None, last)
+        match = reader.matches(None, vp)[0]
+        assert {"photo", "hue", "initials"} <= set(match) and "a_avatar" in match
+        chat = reader.chat(info["match"], vp)
+        assert {"photo", "hue", "initials"} <= set(chat["a"])
