@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 08:40+0000\n"
+"POT-Creation-Date: 2026-10-30 09:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -783,6 +783,9 @@ msgstr ""
 msgid "Add a new filter tag"
 msgstr ""
 
+msgid "Add another value..."
+msgstr ""
+
 msgid "Add chat"
 msgstr ""
 
@@ -874,6 +877,9 @@ msgstr ""
 msgid "Age mean"
 msgstr ""
 
+msgid "Age range"
+msgstr ""
+
 msgid "Age range must fit both ways"
 msgstr ""
 
@@ -881,6 +887,11 @@ msgid "Age standard deviation"
 msgstr ""
 
 msgid "Age window (years)"
+msgstr ""
+
+msgid ""
+"Age, gender, nationality and background of the agents. Every agent lives "
+"in a city of its nationality."
 msgstr ""
 
 msgid "Age, oldest first"
@@ -1360,7 +1371,7 @@ msgstr ""
 msgid "Async Embedding"
 msgstr ""
 
-msgid "At least 18; default 18."
+msgid "At least 18 (default 18 to 65)."
 msgstr ""
 
 msgid "At least one number"
@@ -1652,9 +1663,6 @@ msgid "Basic Models"
 msgstr ""
 
 msgid "Basic demographic attributes and language preferences."
-msgstr ""
-
-msgid "Basic information"
 msgstr ""
 
 msgid "Basic user information and role."
@@ -2392,9 +2400,6 @@ msgstr ""
 msgid "Compare with another experiment"
 msgstr ""
 
-msgid "Compatible with"
-msgstr ""
-
 msgid "Complete Graph"
 msgstr ""
 
@@ -2865,9 +2870,6 @@ msgstr ""
 msgid "Create Client"
 msgstr ""
 
-msgid "Create Dating Population"
-msgstr ""
-
 msgid "Create Empty Population"
 msgstr ""
 
@@ -2964,6 +2966,9 @@ msgid "Create new post"
 msgstr ""
 
 msgid "Create new story"
+msgstr ""
+
+msgid "Create one in Populations (platform Dating)."
 msgstr ""
 
 #, python-format
@@ -3298,6 +3303,9 @@ msgstr ""
 msgid "Dating client '%(name)s' created successfully"
 msgstr ""
 
+msgid "Dating demographics"
+msgstr ""
+
 msgid ""
 "Dating experiment imported. Create its populations and clients from the "
 "experiment page."
@@ -3309,6 +3317,9 @@ msgstr ""
 msgid "Dating experiments are unavailable because YDating is not present."
 msgstr ""
 
+msgid "Dating generation"
+msgstr ""
+
 msgid "Dating pages"
 msgstr ""
 
@@ -3318,12 +3329,6 @@ msgstr ""
 
 #, python-format
 msgid "Dating population '%(name)s' imported."
-msgstr ""
-
-msgid "Dating populations"
-msgstr ""
-
-msgid "Dating populations: upload, generate and preview"
 msgstr ""
 
 msgid "Dating profile"
@@ -3438,7 +3443,13 @@ msgstr ""
 msgid "Decline"
 msgstr ""
 
+msgid "Default"
+msgstr ""
+
 msgid "Default (English)"
+msgstr ""
+
+msgid "Default 0.35, 0.2, 0.1, 0.35."
 msgstr ""
 
 msgid "Default 1 to 3."
@@ -3448,9 +3459,6 @@ msgid "Default 2 to 5."
 msgstr ""
 
 msgid "Default 31."
-msgstr ""
-
-msgid "Default 65."
 msgstr ""
 
 msgid "Default 7."
@@ -4908,9 +4916,6 @@ msgid ""
 "segment."
 msgstr ""
 
-msgid "For example woman=0.5, man=0.5, non-binary=0.05. Free labels."
-msgstr ""
-
 msgid "For how long a content can be proposed by recommender systems"
 msgstr ""
 
@@ -5115,9 +5120,6 @@ msgid "Generate Share Commentary"
 msgstr ""
 
 msgid "Generate Synthetic Network"
-msgstr ""
-
-msgid "Generate synthetic population"
 msgstr ""
 
 msgid "Generate the photo images"
@@ -5512,6 +5514,9 @@ msgid "Hourly Activity Rates (Optional)"
 msgstr ""
 
 msgid "Hourly profiles by archetype"
+msgstr ""
+
+msgid "How active the agents are and which matching recommender they use."
 msgstr ""
 
 msgid "How agents find chats to join or leave."
@@ -5915,6 +5920,11 @@ msgid "Intent"
 msgstr ""
 
 msgid "Intent distribution"
+msgstr ""
+
+msgid ""
+"Intent, location, matching constraints, interests and photos of every "
+"agent."
 msgstr ""
 
 msgid "Intents"
@@ -6580,9 +6590,6 @@ msgstr ""
 msgid "Load Population from file"
 msgstr ""
 
-msgid "Load population from file"
-msgstr ""
-
 msgid "Load prompts"
 msgstr ""
 
@@ -6823,9 +6830,6 @@ msgstr ""
 msgid "Maximum actions"
 msgstr ""
 
-msgid "Maximum age"
-msgstr ""
-
 msgid "Maximum age accepted"
 msgstr ""
 
@@ -7029,9 +7033,6 @@ msgid "Minimum actions"
 msgstr ""
 
 msgid "Minimum activity level for several sessions"
-msgstr ""
-
-msgid "Minimum age"
 msgstr ""
 
 msgid "Minimum age accepted"
@@ -7610,9 +7611,6 @@ msgstr ""
 msgid "No dating population is available."
 msgstr ""
 
-msgid "No dating populations yet. Upload one or generate a synthetic one."
-msgstr ""
-
 msgid "No description available."
 msgstr ""
 
@@ -7952,9 +7950,6 @@ msgstr ""
 msgid "Number of Copies"
 msgstr ""
 
-msgid "Number of agents"
-msgstr ""
-
 msgid "Number of blocks"
 msgstr ""
 
@@ -8251,9 +8246,6 @@ msgid "Opinions"
 msgstr ""
 
 msgid "Opinions in conversations"
-msgstr ""
-
-msgid "Optional"
 msgstr ""
 
 msgid "Optional Agent Actions"
@@ -8790,9 +8782,6 @@ msgstr ""
 msgid "Population and content pages used in this simulation."
 msgstr ""
 
-msgid "Population file"
-msgstr ""
-
 #, python-format
 msgid "Population file not found: %(population_file)s"
 msgstr ""
@@ -8805,9 +8794,6 @@ msgid "Population is assigned to an experiment. Cannot delete."
 msgstr ""
 
 msgid "Population is fixed for an existing ad hoc client."
-msgstr ""
-
-msgid "Population name"
 msgstr ""
 
 #, python-format
@@ -8852,11 +8838,6 @@ msgid "Population:"
 msgstr ""
 
 msgid "Populations"
-msgstr ""
-
-msgid ""
-"Populations for dating experiments. They can only be assigned to dating "
-"experiments, and dating experiments only accept them."
 msgstr ""
 
 msgid "Populations where this agent is currently deployed."
@@ -11458,11 +11439,6 @@ msgstr ""
 msgid "Synthetic Populations"
 msgstr ""
 
-msgid ""
-"Synthetic population for dating experiments, generated with the YDating "
-"generator. It can only be assigned to dating experiments."
-msgstr ""
-
 msgid "System Settings"
 msgstr ""
 
@@ -11784,9 +11760,6 @@ msgstr ""
 msgid "The dating fields are not valid: %(why)s"
 msgstr ""
 
-msgid "The dating runtime (YDating) is not installed."
-msgstr ""
-
 msgid ""
 "The experiment already exists. Please check the experiment name and try "
 "again."
@@ -11823,11 +11796,6 @@ msgid ""
 msgstr ""
 
 msgid "The feelings surfacing most in the feed"
-msgstr ""
-
-msgid ""
-"The file is checked against the population schema of the dating runtime; "
-"a file that does not satisfy it is refused with the path of the problem."
 msgstr ""
 
 msgid "The file is empty."
@@ -11963,13 +11931,10 @@ msgid ""
 "reset."
 msgstr ""
 
-msgid "The same seed always generates the same population."
-msgstr ""
-
 msgid ""
 "The same seed and parameters always generate the same population. Fields "
-"left empty use the generator default; weights are written as "
-"label=weight, separated by commas (a label without weight counts 1)."
+"left empty use the generator default; click a tag to give it a weight (a "
+"tag without weight counts 1)."
 msgstr ""
 
 msgid "The same subreddit definition can be reused safely"
@@ -13483,34 +13448,11 @@ msgid "Weight of topic affinity"
 msgstr ""
 
 msgid ""
-"Weights of serious, casual, friendship, unsure. Default 0.35, 0.2, 0.1, "
-"0.35."
-msgstr ""
-
-#, python-format
-msgid "Weights of the education levels. Known values: %(values)s"
-msgstr ""
-
-msgid ""
 "Weights of the labels of each attribute; an attribute left empty is not "
-"assigned."
+"assigned. The attributes drive the profile photos."
 msgstr ""
 
 msgid "Weights of the labels of each trait; a trait left empty is not assigned."
-msgstr ""
-
-#, python-format
-msgid ""
-"Weights of the nationalities; every agent lives in a city of its "
-"nationality (see Cities). Known values: %(values)s"
-msgstr ""
-
-#, python-format
-msgid "Weights of the political leanings. Known values: %(values)s"
-msgstr ""
-
-#, python-format
-msgid "Weights of the professions. Known values: %(values)s"
 msgstr ""
 
 msgid ""

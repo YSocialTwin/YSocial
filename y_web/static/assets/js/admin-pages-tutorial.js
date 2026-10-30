@@ -72,11 +72,6 @@
         prompts_dating: [
             { selector: '[data-tut="dating-prompts"]', title: '@heading', description: 'The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.', position: 'auto' }
         ],
-        dating_populations: [
-            { selector: '#dating-populations-table', title: 'Dating populations', description: 'The dating populations available. Open one to inspect its agents and preview their profile cards.', position: 'auto' },
-            { selector: '#box-upload-dating-population', title: '@heading', description: 'Upload a population file. It is validated against the schema of the dating runtime and refused, with the path of the problem, if it does not fit.', position: 'auto' },
-            { selector: '#box-generate-dating-population', title: '@heading', description: 'Generate a synthetic population from a seed: the same seed always gives the same agents.', position: 'auto' }
-        ],
         dating_population_details: [
             { selector: '[data-tut="population-overview"]', title: '@heading', description: 'Name, size and summary of the population: ages, genders, intents and photos.', position: 'auto' },
             { selector: '#dating-card-preview', title: '@heading', description: 'See a profile card as another user would see it; hidden attributes are not shown.', position: 'auto' }

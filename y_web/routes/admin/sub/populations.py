@@ -244,6 +244,8 @@ def create_population():
     """
     check_privileges(current_user.username)
     ensure_population_username_type_column()
+    if (request.form.get("username_type") or "").strip().lower() == "dating":
+        return _generate_dating_population()
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")
     n_agents = request.form.get("n_agents")
@@ -1212,6 +1214,8 @@ def upload_population():
     check_privileges(current_user.username)
     ensure_population_username_type_column()
 
+    if (request.form.get("upload_population_type") or "").strip().lower() == "dating":
+        return _upload_dating_population()
     population_file = request.files["population_file"]
 
     from y_web.src.system.path_utils import get_writable_path
@@ -1712,31 +1716,20 @@ def _dating_form_context():
 @population.route("/admin/dating_populations")
 @login_required
 def dating_populations():
-    """Dating populations: upload, generation and the list with their compatibility label."""
+    """Dating populations are managed in the populations page, like those of the other platforms."""
     check_privileges(current_user.username)
-    ensure_population_username_type_column()
-    rows = db.session.scalars(
-        select(Population).filter_by(username_type="dating").order_by(Population.name)
-    ).all()
-    return render_template(
-        "admin/dating_populations.html",
-        populations=rows,
-        **_dating_form_context(),
-    )
+    return redirect("/admin/populations")
 
 
-@population.route("/admin/dating_populations/upload", methods=["POST"])
-@login_required
-def upload_dating_population():
-    """Validate an uploaded document against the YDating population schema and store it."""
-    check_privileges(current_user.username)
-    ensure_population_username_type_column()
+def _upload_dating_population():
+    """Validate an uploaded document against the YDating population schema and store it (platform Dating of the
+    standard upload form)."""
     from y_web.src.dating import population as dp
 
     upload = request.files.get("population_file")
     if upload is None or not upload.filename:
         flash(_("Choose a population file first."), "error")
-        return redirect("/admin/dating_populations")
+        return redirect("/admin/populations")
     try:
         data = dp.read_upload(upload.read(dp.MAX_UPLOAD_BYTES + 1))
         problems = dp.validate_population(data)
@@ -1750,7 +1743,7 @@ def upload_dating_population():
             ),
             "error",
         )
-        return redirect("/admin/dating_populations")
+        return redirect("/admin/populations")
     default_name = os.path.splitext(os.path.basename(upload.filename))[0]
     row = _register_dating_population(
         dp.clean_name(request.form.get("pop_name"))
@@ -1763,12 +1756,9 @@ def upload_dating_population():
     return redirect(f"/admin/dating_population/{row.id}")
 
 
-@population.route("/admin/dating_populations/generate", methods=["POST"])
-@login_required
-def generate_dating_population():
-    """Generate a synthetic dating population with the generator of YDating."""
-    check_privileges(current_user.username)
-    ensure_population_username_type_column()
+def _generate_dating_population():
+    """Generate a synthetic dating population with the generator of YDating (platform Dating of the standard
+    creation form)."""
     from y_web.src.dating import population as dp
 
     try:
@@ -1786,7 +1776,7 @@ def generate_dating_population():
             ),
             "error",
         )
-        return redirect("/admin/dating_populations")
+        return redirect("/admin/populations")
     row = _register_dating_population(
         dp.clean_name(request.form.get("pop_name")) or "dating",
         request.form.get("pop_descr"),
@@ -1810,7 +1800,7 @@ def dating_population_details(uid):
     data = dp.load_document(uid)
     if data is None:
         flash(_("The population has no agents."), "error")
-        return redirect("/admin/dating_populations")
+        return redirect("/admin/populations")
     agents = data.get("agents") or []
     index = request.args.get("agent", type=int, default=0) or 0
     index = max(0, min(index, len(agents) - 1))
@@ -1845,7 +1835,7 @@ def download_dating_population(uid):
     data = dp.load_document(uid) if pop is not None else None
     if data is None:
         flash(_("Population not found."), "error")
-        return redirect("/admin/dating_populations")
+        return redirect("/admin/populations")
     filename = re.sub(r"[^A-Za-z0-9_.-]+", "_", pop.name) or "population"
     return Response(
         json.dumps(data, indent=2, ensure_ascii=False),

@@ -27,8 +27,9 @@ writes of a person go through the runtime's gateway.
    same agents). Every agent lives in a city of its own nationality (the catalogue has the main cities of each of the 54
    nationalities; a city line may name the nationality that lives there). A population page previews the profile card
    as another user would see it.
-   The **Create Dating Population** form (Admin > Populations, shown only when YDating is installed, and on the
-   Dating populations page) has the same demographic variables as the standard form (age, gender, nationality,
+   Dating populations are created in the same form as those of the other platforms (Admin > Populations: choose the
+   platform **Dating**, available only when YDating is installed; the same applies to *Load Population from file*).
+   The Dating sections replace the standard ones and have the same demographic variables as the standard form (age, gender, nationality,
    education, political leaning, profession, Big Five labels) and the dating-specific ones: genders sought, intents,
    cities, distance and age window, interests, photos, appearance, latent variables, affective traits, activity level
    and matching recommender. Empty fields use the generator default; weights are written as `label=weight`.

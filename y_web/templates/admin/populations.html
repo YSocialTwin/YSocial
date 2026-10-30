@@ -12,7 +12,6 @@
                     <div class="column is-12">
                         <div class="dashboard-box" id="box-available-populations">
                             <h3 class="title is-5 is-thin">{{ _('Available Populations') }}</h3>
-                            {% if dating_available %}<p class="ys-text-small"><a href="/admin/dating_populations">{{ _('Dating populations: upload, generate and preview') }}</a></p>{% endif %}
 
                             <div class="box-content">
 
@@ -61,6 +60,7 @@
                                                     <option value="photo_sharing">{{ _('Photo Sharing') }}</option>
                                                     <option value="forum">{{ _('Forum') }}</option>
                                                     <option value="instant_messaging">{{ _('Instant Messaging') }}</option>
+                                                    {% if dating_available %}<option value="dating">{{ _('Dating') }}</option>{% endif %}
                                                 </select>
                                             </div>
                                         </span>
@@ -73,6 +73,7 @@
                                     </div>
                                     </div><!-- End section-basic-info -->
 
+                                    <fieldset id="standard-population-sections" class="ys-fieldset-reset">
                                     <div id="section-demographics" class="tutorial-section">
                                     <div class="form-section-header">{{ _('Demographics') }}</div>
                                     <div class="form-section-description">
@@ -524,6 +525,8 @@
 
 
                                     </div><!-- End section-activity-engagement -->
+                                    </fieldset><!-- End standard-population-sections -->
+                                    {% if dating_available %}{% include "admin/_dating_population_form.html" %}{% endif %}
 
                                 </div>
                                 <div class="button-wrap">
@@ -535,15 +538,7 @@
                             </div>
                         </div>
 
-                        {% if dating_available %}
-                        <div class="dashboard-box" id="box-create-dating-population">
-                            <h3 class="title is-5 is-thin">{{ _('Create Dating Population') }} <span class="tag is-info">{{ _('Dating') }}</span></h3>
-                            <p class="ys-text-small">{{ _('Synthetic population for dating experiments, generated with the YDating generator. It can only be assigned to dating experiments.') }}</p>
-                            <div class="box-content">
-                                {% include "admin/_dating_population_form.html" %}
-                            </div>
-                        </div>
-                        {% endif %}
+                        
 
                         <!--Dashboard box-->
 
@@ -588,6 +583,7 @@
                                                 <option value="microblogging">{{ _('Microblogging') }}</option>
                                                 <option value="photo_sharing">{{ _('Photo Sharing') }}</option>
                                                 <option value="forum">{{ _('Forum') }}</option>
+                                                {% if dating_available %}<option value="dating">{{ _('Dating') }}</option>{% endif %}
                                             </select>
                                         </div>
                                     </span>
@@ -705,4 +701,5 @@ var YS_DATA_POPULATIONS = {
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-populations.js') }}"></script>
+{% if dating_available %}<script src="{{ url_for('static', filename='assets/js/admin-dating-population.js') }}"></script>{% endif %}
 {% include "admin/footer.html" %}

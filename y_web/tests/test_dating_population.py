@@ -234,14 +234,18 @@ def routes(app, monkeypatch, tmp_path):
 
 
 def _upload(app, routes, payload: bytes, name="pop.json", **form):
-    data = {"population_file": (io.BytesIO(payload), name), **form}
+    data = {
+        "population_file": (io.BytesIO(payload), name),
+        "upload_population_type": "dating",
+        **form,
+    }
     with app.test_request_context(
-        "/admin/dating_populations/upload",
+        "/admin/upload_population",
         method="POST",
         data=data,
         content_type="multipart/form-data",
     ):
-        return routes.mod.upload_dating_population.__wrapped__()
+        return routes.mod.upload_population.__wrapped__()
 
 
 @needs_runtime
@@ -323,11 +327,17 @@ def test_generate_route_creates_a_population(app, routes):
 
     with app.app_context():
         with app.test_request_context(
-            "/admin/dating_populations/generate",
+            "/admin/create_population",
             method="POST",
-            data={"pop_name": "Gen", "n_agents": "8", "seed": "3", "language": "it"},
+            data={
+                "username_type": "dating",
+                "pop_name": "Gen",
+                "n_agents": "8",
+                "seed": "3",
+                "language": "it",
+            },
         ):
-            routes.mod.generate_dating_population.__wrapped__()
+            routes.mod.create_population.__wrapped__()
         row = db.session.query(Population).one()
         assert row.size == 8 and row.languages == "it" and row.username_type == "dating"
 
@@ -335,7 +345,6 @@ def test_generate_route_creates_a_population(app, routes):
 def test_the_dating_templates_compile(app):
     templates = ROOT / "y_web" / "templates" / "admin"
     for name in (
-        "dating_populations.html",
         "dating_population_details.html",
         "experiment_details_dating.html",
     ):
@@ -429,9 +438,10 @@ def test_generate_with_the_full_form_stores_every_field(app, routes):
 
     with app.app_context():
         with app.test_request_context(
-            "/admin/dating_populations/generate",
+            "/admin/create_population",
             method="POST",
             data={
+                "username_type": "dating",
                 "pop_name": "Full",
                 "n_agents": "20",
                 "seed": "9",
@@ -449,7 +459,7 @@ def test_generate_with_the_full_form_stores_every_field(app, routes):
                 "cities": "Pisa, 43.7, 10.4",
             },
         ):
-            routes.mod.generate_dating_population.__wrapped__()
+            routes.mod.create_population.__wrapped__()
         row = db.session.query(Population).one()
         agent = db.session.query(Agent).first()
         assert row.size == 20 and not routes.flashes[-1][0] == "error"
@@ -470,11 +480,16 @@ def test_generate_route_reports_a_malformed_form(app, routes):
 
     with app.app_context():
         with app.test_request_context(
-            "/admin/dating_populations/generate",
+            "/admin/create_population",
             method="POST",
-            data={"pop_name": "Bad", "n_agents": "8", "genders": "woman=abc"},
+            data={
+                "username_type": "dating",
+                "pop_name": "Bad",
+                "n_agents": "8",
+                "genders": "woman=abc",
+            },
         ):
-            routes.mod.generate_dating_population.__wrapped__()
+            routes.mod.create_population.__wrapped__()
         assert db.session.query(Population).count() == 0
         assert routes.flashes[-1][0] == "error"
 
@@ -486,9 +501,15 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
     populations = (templates / "populations.html").read_text(encoding="utf-8")
     assert "{% if dating_available %}" in populations
     assert '{% include "admin/_dating_population_form.html" %}' in populations
-    # the standard form is untouched: it still posts to its own route and has none of the dating fields
+    # one form for every platform: Dating is an option of the platform select, its sections live inside the
+    # standard form, which keeps posting to its own route; there is no separate box or page any more
     assert 'action="/admin/create_population"' in populations
+    assert '<option value="dating">' in populations
+    assert 'id="dating-population-sections"' in form
+    assert "<form" not in form
     assert "dating_popcreate_form" not in populations
+    assert "box-create-dating-population" not in populations
+    assert "/admin/dating_populations" not in populations
     with app.test_request_context("/"):
         html = app.jinja_env.from_string(form).render(
             _=lambda text, **kw: text % kw,
@@ -498,8 +519,9 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
             dating_leanings=["center"],
             dating_professions=["nurse"],
         )
-    assert 'name="n_agents"' in html and 'name="appearance_glasses"' in html
+    assert 'name="seed"' in html and 'name="appearance_glasses"' in html
     assert 'name="personality_ne"' in html and 'name="seeking"' in html
+    assert 'data-weights-for="nationalities"' in html
 
 
 def test_dating_runtime_availability_follows_the_registry(monkeypatch):
@@ -523,9 +545,19 @@ def test_dating_runtime_availability_follows_the_registry(monkeypatch):
 def test_cities_of_the_form_can_name_the_nationality_that_lives_there():
     from y_web.src.dating import population as dp
 
-    cfg = dp.config_from_form({"cities": "Lyon, 45.7, 4.8, 2, French\nRoma, 41.9, 12.5, , Italian\nOslo, 59.9, 10.7"})
+    cfg = dp.config_from_form(
+        {
+            "cities": "Lyon, 45.7, 4.8, 2, French\nRoma, 41.9, 12.5, , Italian\nOslo, 59.9, 10.7"
+        }
+    )
     assert cfg["cities"] == [
-        {"name": "Lyon", "lat": 45.7, "lon": 4.8, "weight": 2.0, "nationality": "French"},
+        {
+            "name": "Lyon",
+            "lat": 45.7,
+            "lon": 4.8,
+            "weight": 2.0,
+            "nationality": "French",
+        },
         {"name": "Roma", "lat": 41.9, "lon": 12.5, "nationality": "Italian"},
         {"name": "Oslo", "lat": 59.9, "lon": 10.7},
     ]
@@ -539,14 +571,22 @@ def test_generated_agents_live_in_a_city_of_their_nationality(app, routes):
 
     with app.app_context():
         with app.test_request_context(
-            "/admin/dating_populations/generate",
+            "/admin/create_population",
             method="POST",
-            data={"pop_name": "Nat", "n_agents": "30", "seed": "4", "nationalities": "French=1, Japanese=1"},
+            data={
+                "username_type": "dating",
+                "pop_name": "Nat",
+                "n_agents": "30",
+                "seed": "4",
+                "nationalities": "French=1, Japanese=1",
+            },
         ):
-            routes.mod.generate_dating_population.__wrapped__()
+            routes.mod.create_population.__wrapped__()
         row = db.session.query(Population).one()
         doc = dp.load_document(row.id)
         french = {"Paris", "Lyon", "Marseille", "Toulouse", "Lille", "Bordeaux"}
         japanese = {"Tokyo", "Osaka", "Nagoya", "Fukuoka", "Sapporo"}
         for a in doc["agents"]:
-            assert a["profile"]["city"] in (french if a["nationality"] == "French" else japanese)
+            assert a["profile"]["city"] in (
+                french if a["nationality"] == "French" else japanese
+            )

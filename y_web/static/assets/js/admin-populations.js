@@ -1369,6 +1369,7 @@ var AdminPopulations = (function() {
       if (!select || !wrapper || !panel) {
           return;
       }
+      toggleDatingPopulationSections(select.value === 'dating');
       const visible = select.value === 'photo_sharing';
       wrapper.classList.toggle('d-none', !visible);
       panel.open = visible;
@@ -1378,6 +1379,26 @@ var AdminPopulations = (function() {
       }
       validatePhotoSharingDistributions();
       validateFormFields();
+  }
+
+  // Platform "Dating": the Dating sections replace the standard ones inside the same form (a disabled fieldset is
+  // neither validated nor submitted).
+  function isDatingPlatform() {
+      const select = document.getElementById('population_username_type');
+      return !!select && select.value === 'dating';
+  }
+
+  function toggleDatingPopulationSections(dating) {
+      const standard = document.getElementById('standard-population-sections');
+      const datingBox = document.getElementById('dating-population-sections');
+      if (standard) {
+          standard.disabled = dating;
+          standard.classList.toggle('d-none', dating);
+      }
+      if (datingBox) {
+          datingBox.disabled = !dating;
+          datingBox.classList.toggle('d-none', !dating);
+      }
   }
 
   function validatePhotoSharingDistributions() {
@@ -1485,6 +1506,12 @@ var AdminPopulations = (function() {
 
   // Form validation to enable/disable submit button
   function validateFormFields() {
+      if (isDatingPlatform()) {
+          const nameOk = document.getElementById('pop_name').value.trim();
+          const sizeOk = parseInt(document.getElementById('n_agents').value, 10) >= 2;
+          document.getElementById('create_population_btn').disabled = !(nameOk && sizeOk);
+          return !!(nameOk && sizeOk);
+      }
       const popName = document.getElementById('pop_name').value.trim();
       const nAgents = document.getElementById('n_agents').value;
       const hasAgeClasses = Object.keys(multiSelectData.age_classes).length > 0;
@@ -1551,6 +1578,7 @@ var AdminPopulations = (function() {
       toggleProfessionBackgrounds,
       toggleProfessionTag,
       togglePhotoSharingConfigPanel,
+      toggleDatingPopulationSections,
       togglePhotoFavoriteFilterTag,
       addPhotoFavoriteFilter,
       updatePhotoAttentionBudgetDistributionParams,

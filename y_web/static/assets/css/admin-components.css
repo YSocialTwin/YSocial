@@ -3800,3 +3800,12 @@ input:checked + .slider:before {
     outline: 2px solid #2563eb;
     outline-offset: 2px;
 }
+
+/* Dating sections of the population form (IR-D-05) */
+.ys-fieldset-reset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.dating-range { display: flex; gap: 8px; align-items: center; }
+.dating-range-sep { color: #6b7280; }
+.dating-weights-add { display: flex; gap: 8px; margin-top: 6px; }
+.dating-weights-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 12px; margin-top: 8px; }
+.dating-weight-row { display: flex; align-items: center; gap: 8px; font-size: 0.85em; }
+.dating-weight-row .input { max-width: 90px; }

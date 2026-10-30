@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 08:40+0000\n"
+"POT-Creation-Date: 2026-10-30 09:07+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -863,6 +863,9 @@ msgstr "Aggiungi un commento..."
 msgid "Add a new filter tag"
 msgstr "Aggiungi un nuovo tag di filtro"
 
+msgid "Add another value..."
+msgstr "Aggiungi un altro valore..."
+
 msgid "Add chat"
 msgstr "Aggiungi chat"
 
@@ -961,6 +964,9 @@ msgstr "Età da"
 msgid "Age mean"
 msgstr "Età media"
 
+msgid "Age range"
+msgstr "Intervallo di età"
+
 msgid "Age range must fit both ways"
 msgstr "La fascia d'età deve valere per entrambi"
 
@@ -969,6 +975,13 @@ msgstr "Deviazione standard dell'età"
 
 msgid "Age window (years)"
 msgstr "Finestra d'età (anni)"
+
+msgid ""
+"Age, gender, nationality and background of the agents. Every agent lives "
+"in a city of its nationality."
+msgstr ""
+"Età, genere, nazionalità e background degli agenti. Ogni agente vive in "
+"una città della propria nazionalità."
 
 msgid "Age, oldest first"
 msgstr "Età, dal più anziano"
@@ -1493,8 +1506,8 @@ msgstr ""
 msgid "Async Embedding"
 msgstr "Embedding asincrono"
 
-msgid "At least 18; default 18."
-msgstr "Almeno 18; predefinito 18."
+msgid "At least 18 (default 18 to 65)."
+msgstr "Almeno 18 (predefinito da 18 a 65)."
 
 msgid "At least one number"
 msgstr "Almeno un numero"
@@ -1798,9 +1811,6 @@ msgstr "Modelli di base"
 
 msgid "Basic demographic attributes and language preferences."
 msgstr "Attributi demografici di base e preferenze linguistiche."
-
-msgid "Basic information"
-msgstr "Informazioni di base"
 
 msgid "Basic user information and role."
 msgstr "Informazioni di base e ruolo dell'utente."
@@ -2607,9 +2617,6 @@ msgstr "Confronta i recommender"
 msgid "Compare with another experiment"
 msgstr "Confronta con un altro esperimento"
 
-msgid "Compatible with"
-msgstr "Compatibile con"
-
 msgid "Complete Graph"
 msgstr "Grafo completo"
 
@@ -3194,9 +3201,6 @@ msgstr "Crea agente"
 msgid "Create Client"
 msgstr "Crea client"
 
-msgid "Create Dating Population"
-msgstr "Crea popolazione Dating"
-
 msgid "Create Empty Population"
 msgstr "Crea una popolazione vuota"
 
@@ -3308,6 +3312,9 @@ msgstr "Crea un nuovo post"
 
 msgid "Create new story"
 msgstr "Crea una nuova storia"
+
+msgid "Create one in Populations (platform Dating)."
+msgstr "Creane una in Popolazioni (piattaforma Dating)."
 
 #, python-format
 msgid ""
@@ -3684,6 +3691,9 @@ msgstr "Analitica del dating"
 msgid "Dating client '%(name)s' created successfully"
 msgstr "Client dating '%(name)s' creato con successo"
 
+msgid "Dating demographics"
+msgstr "Demografia dating"
+
 msgid ""
 "Dating experiment imported. Create its populations and clients from the "
 "experiment page."
@@ -3697,6 +3707,9 @@ msgstr "Gli esperimenti dating non sono supportati con PostgreSQL."
 msgid "Dating experiments are unavailable because YDating is not present."
 msgstr "Gli esperimenti dating non sono disponibili perché YDating non è presente."
 
+msgid "Dating generation"
+msgstr "Generazione dating"
+
 msgid "Dating pages"
 msgstr "Pagine dating"
 
@@ -3707,12 +3720,6 @@ msgstr "Popolazione dating '%(name)s' generata."
 #, python-format
 msgid "Dating population '%(name)s' imported."
 msgstr "Popolazione dating '%(name)s' importata."
-
-msgid "Dating populations"
-msgstr "Popolazioni dating"
-
-msgid "Dating populations: upload, generate and preview"
-msgstr "Popolazioni dating: carica, genera e anteprima"
 
 msgid "Dating profile"
 msgstr "Profilo di dating"
@@ -3826,8 +3833,14 @@ msgstr "Preferenze dichiarate e posizione"
 msgid "Decline"
 msgstr "Rifiuta"
 
+msgid "Default"
+msgstr "Predefinito"
+
 msgid "Default (English)"
 msgstr "Predefinita (inglese)"
+
+msgid "Default 0.35, 0.2, 0.1, 0.35."
+msgstr "Predefinito 0,35, 0,2, 0,1, 0,35."
 
 msgid "Default 1 to 3."
 msgstr "Predefinito da 1 a 3."
@@ -3837,9 +3850,6 @@ msgstr "Predefinito da 2 a 5."
 
 msgid "Default 31."
 msgstr "Predefinito 31."
-
-msgid "Default 65."
-msgstr "Predefinito 65."
 
 msgid "Default 7."
 msgstr "Predefinito 7."
@@ -5416,9 +5426,6 @@ msgstr ""
 "Per ogni argomento, seleziona la distribuzione di opinione per ogni "
 "segmento della popolazione."
 
-msgid "For example woman=0.5, man=0.5, non-binary=0.05. Free labels."
-msgstr "Ad esempio donna=0.5, uomo=0.5, non-binario=0.05. Etichette libere."
-
 msgid "For how long a content can be proposed by recommender systems"
 msgstr ""
 "Per quanto tempo un contenuto può essere proposto dai sistemi di "
@@ -5646,9 +5653,6 @@ msgstr "Generare il commento a una condivisione"
 
 msgid "Generate Synthetic Network"
 msgstr "Genera una rete sintetica"
-
-msgid "Generate synthetic population"
-msgstr "Genera una popolazione sintetica"
 
 msgid "Generate the photo images"
 msgstr "Genera le immagini delle foto"
@@ -6070,6 +6074,11 @@ msgstr "Tassi di attività orari (facoltativo)"
 
 msgid "Hourly profiles by archetype"
 msgstr "Profili orari per archetipo"
+
+msgid "How active the agents are and which matching recommender they use."
+msgstr ""
+"Quanto sono attivi gli agenti e quale sistema di raccomandazione dei "
+"match usano."
 
 msgid "How agents find chats to join or leave."
 msgstr "Come gli agenti trovano le chat a cui unirsi o da cui uscire."
@@ -6558,6 +6567,11 @@ msgstr "Intenzione"
 
 msgid "Intent distribution"
 msgstr "Distribuzione delle intenzioni"
+
+msgid ""
+"Intent, location, matching constraints, interests and photos of every "
+"agent."
+msgstr "Intento, luogo, vincoli di abbinamento, interessi e foto di ogni agente."
 
 msgid "Intents"
 msgstr "Intenzioni"
@@ -7273,9 +7287,6 @@ msgstr "Carica una raccolta di pagine"
 msgid "Load Population from file"
 msgstr "Carica una popolazione da file"
 
-msgid "Load population from file"
-msgstr "Carica una popolazione da file"
-
 msgid "Load prompts"
 msgstr "Carica i prompt"
 
@@ -7544,9 +7555,6 @@ msgstr ""
 msgid "Maximum actions"
 msgstr "Azioni massime"
 
-msgid "Maximum age"
-msgstr "Età massima"
-
 msgid "Maximum age accepted"
 msgstr "Età massima accettata"
 
@@ -7761,9 +7769,6 @@ msgstr "Azioni minime"
 
 msgid "Minimum activity level for several sessions"
 msgstr "Livello minimo di attività per più sessioni"
-
-msgid "Minimum age"
-msgstr "Età minima"
 
 msgid "Minimum age accepted"
 msgstr "Età minima accettata"
@@ -8366,9 +8371,6 @@ msgstr "Nessuna proposta di appuntamento."
 msgid "No dating population is available."
 msgstr "Nessuna popolazione dating disponibile."
 
-msgid "No dating populations yet. Upload one or generate a synthetic one."
-msgstr "Ancora nessuna popolazione dating. Caricane una o generane una sintetica."
-
 msgid "No description available."
 msgstr "Nessuna descrizione disponibile."
 
@@ -8711,9 +8713,6 @@ msgstr "Numero di attori"
 
 msgid "Number of Copies"
 msgstr "Numero di copie"
-
-msgid "Number of agents"
-msgstr "Numero di agenti"
 
 msgid "Number of blocks"
 msgstr "Numero di blocchi"
@@ -9060,9 +9059,6 @@ msgstr "Opinioni"
 
 msgid "Opinions in conversations"
 msgstr "Opinioni nelle conversazioni"
-
-msgid "Optional"
-msgstr "Facoltativo"
 
 msgid "Optional Agent Actions"
 msgstr "Azioni opzionali degli agenti"
@@ -9639,9 +9635,6 @@ msgstr ""
 msgid "Population and content pages used in this simulation."
 msgstr "Popolazione e pagine di contenuti usate in questa simulazione."
 
-msgid "Population file"
-msgstr "File di popolazione"
-
 #, python-format
 msgid "Population file not found: %(population_file)s"
 msgstr "File della popolazione non trovato: %(population_file)s"
@@ -9657,9 +9650,6 @@ msgstr "La popolazione è assegnata a un esperimento. Impossibile eliminarla."
 
 msgid "Population is fixed for an existing ad hoc client."
 msgstr "La popolazione è fissa per un client ad hoc esistente."
-
-msgid "Population name"
-msgstr "Nome della popolazione"
 
 #, python-format
 msgid ""
@@ -9706,13 +9696,6 @@ msgstr "Popolazione:"
 
 msgid "Populations"
 msgstr "Popolazioni"
-
-msgid ""
-"Populations for dating experiments. They can only be assigned to dating "
-"experiments, and dating experiments only accept them."
-msgstr ""
-"Popolazioni per esperimenti dating. Possono essere assegnate solo a "
-"esperimenti dating, e gli esperimenti dating accettano solo queste."
 
 msgid "Populations where this agent is currently deployed."
 msgstr "Popolazioni in cui questo agente è attualmente distribuito."
@@ -12515,13 +12498,6 @@ msgstr "Rete sintetica:"
 msgid "Synthetic Populations"
 msgstr "Popolazioni sintetiche"
 
-msgid ""
-"Synthetic population for dating experiments, generated with the YDating "
-"generator. It can only be assigned to dating experiments."
-msgstr ""
-"Popolazione sintetica per esperimenti di dating, generata con il "
-"generatore di YDating. Può essere assegnata solo a esperimenti di dating."
-
 msgid "System Settings"
 msgstr "Impostazioni di sistema"
 
@@ -12898,9 +12874,6 @@ msgstr "La configurazione dating non è valida: %(why)s"
 msgid "The dating fields are not valid: %(why)s"
 msgstr "I campi di dating non sono validi: %(why)s"
 
-msgid "The dating runtime (YDating) is not installed."
-msgstr "Il runtime di dating (YDating) non è installato."
-
 msgid ""
 "The experiment already exists. Please check the experiment name and try "
 "again."
@@ -12947,14 +12920,6 @@ msgstr ""
 
 msgid "The feelings surfacing most in the feed"
 msgstr "Le emozioni che emergono di più nel feed"
-
-msgid ""
-"The file is checked against the population schema of the dating runtime; "
-"a file that does not satisfy it is refused with the path of the problem."
-msgstr ""
-"Il file è verificato rispetto allo schema delle popolazioni del runtime "
-"dating; un file che non lo soddisfa è rifiutato indicando il percorso del"
-" problema."
 
 msgid "The file is empty."
 msgstr "Il file è vuoto."
@@ -13123,18 +13088,14 @@ msgstr ""
 "Il run è già iniziato: le notizie non possono cambiare se l'esperimento "
 "non viene reimpostato."
 
-msgid "The same seed always generates the same population."
-msgstr "Lo stesso seed genera sempre la stessa popolazione."
-
 msgid ""
 "The same seed and parameters always generate the same population. Fields "
-"left empty use the generator default; weights are written as "
-"label=weight, separated by commas (a label without weight counts 1)."
+"left empty use the generator default; click a tag to give it a weight (a "
+"tag without weight counts 1)."
 msgstr ""
-"Lo stesso seme e gli stessi parametri generano sempre la stessa "
-"popolazione. I campi lasciati vuoti usano il valore predefinito del "
-"generatore; i pesi si scrivono come etichetta=peso, separati da virgole "
-"(un'etichetta senza peso vale 1)."
+"Lo stesso seed e gli stessi parametri generano sempre la stessa "
+"popolazione. I campi vuoti usano il valore predefinito del generatore; "
+"clicca un tag per assegnargli un peso (un tag senza peso vale 1)."
 
 msgid "The same subreddit definition can be reused safely"
 msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
@@ -14904,43 +14865,16 @@ msgid "Weight of topic affinity"
 msgstr "Peso dell'affinità con i topic"
 
 msgid ""
-"Weights of serious, casual, friendship, unsure. Default 0.35, 0.2, 0.1, "
-"0.35."
-msgstr ""
-"Pesi di seria, occasionale, amicizia, incerta. Predefiniti 0.35, 0.2, "
-"0.1, 0.35."
-
-#, python-format
-msgid "Weights of the education levels. Known values: %(values)s"
-msgstr "Pesi dei livelli di istruzione. Valori noti: %(values)s"
-
-msgid ""
 "Weights of the labels of each attribute; an attribute left empty is not "
-"assigned."
+"assigned. The attributes drive the profile photos."
 msgstr ""
 "Pesi delle etichette di ogni attributo; un attributo lasciato vuoto non "
-"viene assegnato."
+"viene assegnato. Gli attributi guidano le foto del profilo."
 
 msgid "Weights of the labels of each trait; a trait left empty is not assigned."
 msgstr ""
 "Pesi delle etichette di ogni tratto; un tratto lasciato vuoto non viene "
 "assegnato."
-
-#, python-format
-msgid ""
-"Weights of the nationalities; every agent lives in a city of its "
-"nationality (see Cities). Known values: %(values)s"
-msgstr ""
-"Pesi delle nazionalità; ogni agente vive in una città della sua "
-"nazionalità (vedi Città). Valori noti: %(values)s"
-
-#, python-format
-msgid "Weights of the political leanings. Known values: %(values)s"
-msgstr "Pesi degli orientamenti politici. Valori noti: %(values)s"
-
-#, python-format
-msgid "Weights of the professions. Known values: %(values)s"
-msgstr "Pesi delle professioni. Valori noti: %(values)s"
 
 msgid ""
 "Weights of the recommenders assigned to the agents; empty uses the "
@@ -17142,4 +17076,150 @@ msgstr "✔️ Usa"
 
 #~ msgid "name, city, intent, bio"
 #~ msgstr "nome, città, intenzione, bio"
+
+#~ msgid "At least 18; default 18."
+#~ msgstr "Almeno 18; predefinito 18."
+
+#~ msgid "Basic information"
+#~ msgstr "Informazioni di base"
+
+#~ msgid "Compatible with"
+#~ msgstr "Compatibile con"
+
+#~ msgid "Create Dating Population"
+#~ msgstr "Crea popolazione Dating"
+
+#~ msgid "Dating populations"
+#~ msgstr "Popolazioni dating"
+
+#~ msgid "Dating populations: upload, generate and preview"
+#~ msgstr "Popolazioni dating: carica, genera e anteprima"
+
+#~ msgid "Default 65."
+#~ msgstr "Predefinito 65."
+
+#~ msgid "For example woman=0.5, man=0.5, non-binary=0.05. Free labels."
+#~ msgstr "Ad esempio donna=0.5, uomo=0.5, non-binario=0.05. Etichette libere."
+
+#~ msgid "Generate synthetic population"
+#~ msgstr "Genera una popolazione sintetica"
+
+#~ msgid "Load population from file"
+#~ msgstr "Carica una popolazione da file"
+
+#~ msgid "Maximum age"
+#~ msgstr "Età massima"
+
+#~ msgid "Minimum age"
+#~ msgstr "Età minima"
+
+#~ msgid "No dating populations yet. Upload one or generate a synthetic one."
+#~ msgstr ""
+#~ "Ancora nessuna popolazione dating. Caricane"
+#~ " una o generane una sintetica."
+
+#~ msgid "Number of agents"
+#~ msgstr "Numero di agenti"
+
+#~ msgid "Optional"
+#~ msgstr "Facoltativo"
+
+#~ msgid "Population file"
+#~ msgstr "File di popolazione"
+
+#~ msgid "Population name"
+#~ msgstr "Nome della popolazione"
+
+#~ msgid ""
+#~ "Populations for dating experiments. They "
+#~ "can only be assigned to dating "
+#~ "experiments, and dating experiments only "
+#~ "accept them."
+#~ msgstr ""
+#~ "Popolazioni per esperimenti dating. Possono"
+#~ " essere assegnate solo a esperimenti "
+#~ "dating, e gli esperimenti dating "
+#~ "accettano solo queste."
+
+#~ msgid ""
+#~ "Synthetic population for dating experiments,"
+#~ " generated with the YDating generator. "
+#~ "It can only be assigned to dating"
+#~ " experiments."
+#~ msgstr ""
+#~ "Popolazione sintetica per esperimenti di "
+#~ "dating, generata con il generatore di"
+#~ " YDating. Può essere assegnata solo a"
+#~ " esperimenti di dating."
+
+#~ msgid "The dating runtime (YDating) is not installed."
+#~ msgstr "Il runtime di dating (YDating) non è installato."
+
+#~ msgid ""
+#~ "The file is checked against the "
+#~ "population schema of the dating runtime;"
+#~ " a file that does not satisfy "
+#~ "it is refused with the path of "
+#~ "the problem."
+#~ msgstr ""
+#~ "Il file è verificato rispetto allo "
+#~ "schema delle popolazioni del runtime "
+#~ "dating; un file che non lo "
+#~ "soddisfa è rifiutato indicando il "
+#~ "percorso del problema."
+
+#~ msgid "The same seed always generates the same population."
+#~ msgstr "Lo stesso seed genera sempre la stessa popolazione."
+
+#~ msgid ""
+#~ "The same seed and parameters always "
+#~ "generate the same population. Fields "
+#~ "left empty use the generator default;"
+#~ " weights are written as label=weight, "
+#~ "separated by commas (a label without "
+#~ "weight counts 1)."
+#~ msgstr ""
+#~ "Lo stesso seme e gli stessi "
+#~ "parametri generano sempre la stessa "
+#~ "popolazione. I campi lasciati vuoti "
+#~ "usano il valore predefinito del "
+#~ "generatore; i pesi si scrivono come "
+#~ "etichetta=peso, separati da virgole "
+#~ "(un'etichetta senza peso vale 1)."
+
+#~ msgid ""
+#~ "Weights of serious, casual, friendship, "
+#~ "unsure. Default 0.35, 0.2, 0.1, 0.35."
+#~ msgstr ""
+#~ "Pesi di seria, occasionale, amicizia, "
+#~ "incerta. Predefiniti 0.35, 0.2, 0.1, "
+#~ "0.35."
+
+#~ msgid "Weights of the education levels. Known values: %(values)s"
+#~ msgstr "Pesi dei livelli di istruzione. Valori noti: %(values)s"
+
+#~ msgid ""
+#~ "Weights of the labels of each "
+#~ "attribute; an attribute left empty is"
+#~ " not assigned."
+#~ msgstr ""
+#~ "Pesi delle etichette di ogni attributo;"
+#~ " un attributo lasciato vuoto non "
+#~ "viene assegnato."
+
+#~ msgid ""
+#~ "Weights of the nationalities; every "
+#~ "agent lives in a city of its "
+#~ "nationality (see Cities). Known values: "
+#~ "%(values)s"
+#~ msgstr ""
+#~ "Pesi delle nazionalità; ogni agente vive"
+#~ " in una città della sua nazionalità"
+#~ " (vedi Città). Valori noti: %(values)s"
+
+#~ msgid "Weights of the political leanings. Known values: %(values)s"
+#~ msgstr "Pesi degli orientamenti politici. Valori noti: %(values)s"
+
+#~ msgid "Weights of the professions. Known values: %(values)s"
+#~ msgstr "Pesi delle professioni. Valori noti: %(values)s"
 
