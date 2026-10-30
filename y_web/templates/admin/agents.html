@@ -406,6 +406,10 @@
                                     </div>
                                     </div><!-- End section-advanced-roleplay -->
                                     <hr>
+                                    {% if dating_available and page_kind|default('standard') == 'standard' %}
+                                    {% include "admin/_dating_agent_fields.html" %}
+                                    <hr>
+                                    {% endif %}
                                     <div class="form-section-header-agent">{{ _('Activity Profile') }}</div>
                                     <div class="form-section-description-agent">
                                         {{ _('Select when this agent will be active during the day. The default "Always On" profile keeps the agent active 24/7.') }}

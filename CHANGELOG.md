@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     humans are not reproducible.
   - Guided tours for every dating admin page; Italian catalog (draft, native review pending).
   - Guide: `docs/dating.md`.
+  - Dating population creation form (all variables of the standard form plus the dating-specific ones; shown only
+    when YDating is installed) and a Dating section in the agent form that stores `dating.*` custom fields.
 - Forum clients can use the Reddit-style content recommenders `HotRanking`, `TopRanking` and `MostCommented`
   (new `content_recsys` rows reserved to forums: template database, PostgreSQL seed and Alembic `0011`).
 

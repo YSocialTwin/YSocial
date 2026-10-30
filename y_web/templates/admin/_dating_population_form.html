@@ -43,7 +43,7 @@
         <div class="box-line">
             <span class="left">{{ _('Genders sought') }}</span>
             <span class="right ys-w-70">
-                <textarea name="seeking" class="textarea" rows="3" placeholder="woman: man=0.85, woman=0.1, man+woman=0.05&#10;man: woman=0.85, man=0.1, man+woman=0.05"></textarea>
+                <textarea name="seeking" class="textarea" rows="3" placeholder="{{ 'woman: man=0.85, woman=0.1, man+woman=0.05\nman: woman=0.85, man=0.1, man+woman=0.05' }}"></textarea>
                 <small class="ys-label-hint">{{ _('One line per gender: the weights of the sets of genders sought (a set joins genders with +).') }}</small>
             </span>
         </div>
@@ -69,7 +69,7 @@
         <div class="box-line">
             <span class="left">{{ _('Cities') }}</span>
             <span class="right ys-w-70">
-                <textarea name="cities" class="textarea" rows="3" placeholder="Pisa, 43.7228, 10.4017, 1"></textarea>
+                <textarea name="cities" class="textarea" rows="3" placeholder="{{ 'Pisa, 43.7228, 10.4017, 1' }}"></textarea>
                 <small class="ys-label-hint">{{ _('One line per city: name, latitude, longitude and optionally the weight. Default: Pisa.') }}</small>
             </span>
         </div>
@@ -79,7 +79,7 @@
         <div class="box-line">
             <span class="left">{{ _('Interests') }}</span>
             <span class="right ys-w-70">
-                <textarea name="interests" class="textarea" rows="2" placeholder="hiking, cooking, cinema"></textarea>
+                <textarea name="interests" class="textarea" rows="2" placeholder="{{ 'hiking, cooking, cinema' }}"></textarea>
                 <small class="ys-label-hint">{{ _('Interest catalogue, separated by commas. Default: ten common interests.') }}</small>
             </span>
         </div>

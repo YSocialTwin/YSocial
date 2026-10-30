@@ -22,6 +22,14 @@ writes of a person go through the runtime's gateway.
    edited like any custom field. You can upload a file (checked against the population schema of the runtime and
    refused with the path of the problem) or generate a synthetic population from a seed (the same seed always gives the
    same agents). A population page previews the profile card as another user would see it.
+   The **Create Dating Population** form (Admin > Populations, shown only when YDating is installed, and on the
+   Dating populations page) has the same demographic variables as the standard form (age, gender, nationality,
+   education, political leaning, profession, Big Five labels) and the dating-specific ones: genders sought, intents,
+   cities, distance and age window, interests, photos, appearance, latent variables, affective traits, activity level
+   and matching recommender. Empty fields use the generator default; weights are written as `label=weight`.
+   Ad hoc agents can carry the same variables: the **Dating** section of Admin > Agents (also shown only when YDating
+   is installed) stores them as `dating.*` custom fields, which the other platforms ignore; assign the agent to a
+   dating population to use it in a dating simulation.
 4. Create a **client** (population, days, language model, optional advanced settings from the client schema). Before it
    starts, YSocial rebuilds the input file from the database and validates the folder with the offline validator of the
    runtime; a run that would fail to start is refused with the reason.

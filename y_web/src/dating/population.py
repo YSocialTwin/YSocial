@@ -84,6 +84,24 @@ def validate_population(data: Any, repo_dir: Optional[str] = None) -> List[str]:
     return problems[:50]
 
 
+def validate_agent_document(agent: Any, repo_dir: Optional[str] = None) -> List[str]:
+    """Problems of one agent document against the ``agent`` definition of the YDating population schema."""
+    import jsonschema
+
+    schema_path = os.path.join(_repo_dir(repo_dir), POPULATION_SCHEMA_FILE)
+    try:
+        with open(schema_path, "r", encoding="utf-8") as handle:
+            schema = json.load(handle)
+    except OSError as exc:
+        return [f"<schema>: cannot read the YDating population schema ({exc})"]
+    validator = jsonschema.Draft7Validator(
+        {"$ref": "#/definitions/agent", "definitions": schema["definitions"]}
+    )
+    return sorted(f"{_location(e)}: {e.message}" for e in validator.iter_errors(agent))[
+        :50
+    ]
+
+
 def summarize(data: Dict[str, Any]) -> Dict[str, Any]:
     """Counts the admin pages show (public attributes only; latent variables are not summarized)."""
     agents = data.get("agents") or []

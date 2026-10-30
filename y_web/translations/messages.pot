@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 05:46+0000\n"
+"POT-Creation-Date: 2026-10-30 07:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -434,6 +434,9 @@ msgstr ""
 msgid "A client with this name and population already exists."
 msgstr ""
 
+msgid "A dating agent needs a numeric age."
+msgstr ""
+
 msgid "A discussion thread."
 msgstr ""
 
@@ -669,6 +672,9 @@ msgstr ""
 msgid "Activity Rates Visualization"
 msgstr ""
 
+msgid "Activity and recommendation"
+msgstr ""
+
 msgid "Activity profile not found."
 msgstr ""
 
@@ -822,6 +828,15 @@ msgid "Age Start"
 msgstr ""
 
 msgid "Age class not found."
+msgstr ""
+
+msgid "Age mean"
+msgstr ""
+
+msgid "Age standard deviation"
+msgstr ""
+
+msgid "Age window (years)"
 msgstr ""
 
 msgid "Agent"
@@ -1161,6 +1176,9 @@ msgstr ""
 msgid "Anonymous usage data helps improve YSocial. No personal data is collected."
 msgstr ""
 
+msgid "Appearance"
+msgstr ""
+
 msgid "Applied when engagement boost (γ) > 0."
 msgstr ""
 
@@ -1251,6 +1269,9 @@ msgstr ""
 msgid "Async Embedding"
 msgstr ""
 
+msgid "At least 18; default 18."
+msgstr ""
+
 msgid "At least one number"
 msgstr ""
 
@@ -1278,6 +1299,9 @@ msgid "Attention"
 msgstr ""
 
 msgid "Attention Budget"
+msgstr ""
+
+msgid "Attractiveness"
 msgstr ""
 
 msgid "Audio call"
@@ -1527,6 +1551,9 @@ msgstr ""
 msgid "Basic demographic attributes and language preferences."
 msgstr ""
 
+msgid "Basic information"
+msgstr ""
+
 msgid "Basic user information and role."
 msgstr ""
 
@@ -1565,6 +1592,12 @@ msgstr ""
 msgid "Beta"
 msgstr ""
 
+msgid "Between 0 and 1."
+msgstr ""
+
+msgid "Between 0 and 1; never shown to the agents."
+msgstr ""
+
 msgid "Big Five"
 msgstr ""
 
@@ -1572,6 +1605,9 @@ msgid "Big Five Personality Profile"
 msgstr ""
 
 msgid "Big Five Personality profile"
+msgstr ""
+
+msgid "Big Five personality profile"
 msgstr ""
 
 msgid "Big-5 Personality Traits"
@@ -1659,6 +1695,9 @@ msgstr ""
 msgid "Browse recent photos, people and hashtags in this experiment."
 msgstr ""
 
+msgid "Build"
+msgstr ""
+
 msgid "Build the agents and information sources that populate your simulations."
 msgstr ""
 
@@ -1728,6 +1767,9 @@ msgid "Cartesian product"
 msgstr ""
 
 msgid "Cast Vote"
+msgstr ""
+
+msgid "Casual"
 msgstr ""
 
 msgid "Category"
@@ -1926,6 +1968,9 @@ msgid "Cities"
 msgstr ""
 
 msgid "City"
+msgstr ""
+
+msgid "City radius (km)"
 msgstr ""
 
 msgid "Clear"
@@ -2127,6 +2172,9 @@ msgid "Combine all enabled features"
 msgstr ""
 
 msgid "Comic Relief Agent"
+msgstr ""
+
+msgid "Comma-separated labels, for example woman, man."
 msgstr ""
 
 msgid "Comma-separated values"
@@ -2660,6 +2708,9 @@ msgstr ""
 msgid "Create Client"
 msgstr ""
 
+msgid "Create Dating Population"
+msgstr ""
+
 msgid "Create Empty Population"
 msgstr ""
 
@@ -3097,6 +3148,9 @@ msgstr ""
 msgid "Dating populations: upload, generate and preview"
 msgstr ""
 
+msgid "Dating profile"
+msgstr ""
+
 msgid "Day"
 msgstr ""
 
@@ -3173,10 +3227,28 @@ msgstr ""
 msgid "Deck of this account"
 msgstr ""
 
+msgid "Declared preferences and location"
+msgstr ""
+
 msgid "Decline"
 msgstr ""
 
 msgid "Default (English)"
+msgstr ""
+
+msgid "Default 1 to 3."
+msgstr ""
+
+msgid "Default 2 to 5."
+msgstr ""
+
+msgid "Default 31."
+msgstr ""
+
+msgid "Default 65."
+msgstr ""
+
+msgid "Default 7."
 msgstr ""
 
 msgid "Default content recommender"
@@ -3479,6 +3551,9 @@ msgstr ""
 msgid "Distinct Recommended Posts"
 msgstr ""
 
+msgid "Distinctive features"
+msgstr ""
+
 msgid "Distribution Type"
 msgstr ""
 
@@ -3686,6 +3761,9 @@ msgstr ""
 msgid "Education level not found."
 msgstr ""
 
+msgid "Education levels"
+msgstr ""
+
 msgid "Efficient/Organized"
 msgstr ""
 
@@ -3749,6 +3827,9 @@ msgid "Emotions"
 msgstr ""
 
 msgid "Empty Populations"
+msgstr ""
+
+msgid "Empty uses the experiment default."
 msgstr ""
 
 msgid "Enable"
@@ -4357,6 +4438,12 @@ msgstr ""
 msgid "Extreme Interest"
 msgstr ""
 
+msgid "Eye colour"
+msgstr ""
+
+msgid "Facial hair"
+msgstr ""
+
 #, python-format
 msgid "Failed to clear experiment logs: %(error)s"
 msgstr ""
@@ -4580,6 +4667,9 @@ msgid ""
 "segment."
 msgstr ""
 
+msgid "For example woman=0.5, man=0.5, non-binary=0.05. Free labels."
+msgstr ""
+
 msgid "For how long a content can be proposed by recommender systems"
 msgstr ""
 
@@ -4694,6 +4784,9 @@ msgstr ""
 msgid "Friends filters"
 msgstr ""
 
+msgid "Friendship"
+msgstr ""
+
 msgid "Friendship RecSys"
 msgstr ""
 
@@ -4741,10 +4834,16 @@ msgstr ""
 msgid "Gender Distribution"
 msgstr ""
 
+msgid "Gender distribution"
+msgstr ""
+
 msgid "Gender distribution must total 100%."
 msgstr ""
 
 msgid "Genders"
+msgstr ""
+
+msgid "Genders sought"
 msgstr ""
 
 msgid "General Settings"
@@ -4993,6 +5092,15 @@ msgstr ""
 msgid "HPC reset is available only when the experiment is stopped."
 msgstr ""
 
+msgid "Hair colour"
+msgstr ""
+
+msgid "Hair length"
+msgstr ""
+
+msgid "Hair style"
+msgstr ""
+
 msgid "Half-life Rounds"
 msgstr ""
 
@@ -5048,6 +5156,9 @@ msgid "Header Image URL"
 msgstr ""
 
 msgid "Heartbeat interval (seconds)"
+msgstr ""
+
+msgid "Height (cm)"
 msgstr ""
 
 msgid "Hello World"
@@ -5495,6 +5606,12 @@ msgstr ""
 msgid "Insult"
 msgstr ""
 
+msgid "Intent"
+msgstr ""
+
+msgid "Intent distribution"
+msgstr ""
+
 msgid "Intents"
 msgstr ""
 
@@ -5511,6 +5628,9 @@ msgid "Interactions switched off"
 msgstr ""
 
 msgid "Interest"
+msgstr ""
+
+msgid "Interest catalogue, separated by commas. Default: ten common interests."
 msgstr ""
 
 msgid "Interest learning rate (λ)"
@@ -5538,6 +5658,9 @@ msgid "Interests & Opinions"
 msgstr ""
 
 msgid "Interests (separate with commas)"
+msgstr ""
+
+msgid "Interests per agent"
 msgstr ""
 
 msgid ""
@@ -5909,6 +6032,9 @@ msgstr ""
 msgid "Language Spoken"
 msgstr ""
 
+msgid "Language code written on every agent (for example en, it)."
+msgstr ""
+
 msgid "Language not found."
 msgstr ""
 
@@ -5952,6 +6078,19 @@ msgstr ""
 msgid "Last Seen"
 msgstr ""
 
+msgid "Latent variables and affective traits"
+msgstr ""
+
+msgid ""
+"Latent variables follow a Beta(a, b) distribution (default Beta(2, 2)); "
+"they drive the rule-based matching and the metrics and are never shown to"
+" the agents. Affective traits are uniform ranges used only when stress "
+"and reward are enabled (default 1.0)."
+msgstr ""
+
+msgid "Latent variables, affective traits and recommender"
+msgstr ""
+
 msgid "Latest"
 msgstr ""
 
@@ -5971,6 +6110,9 @@ msgid "Latest messages"
 msgstr ""
 
 msgid "Latest release"
+msgstr ""
+
+msgid "Latitude"
 msgstr ""
 
 msgid "Latvian"
@@ -6161,6 +6303,9 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
+msgid "Longitude"
+msgstr ""
+
 msgid "Look again"
 msgstr ""
 
@@ -6267,6 +6412,9 @@ msgstr ""
 msgid "Matches with a date"
 msgstr ""
 
+msgid "Matching recommender"
+msgstr ""
+
 msgid "Matrix"
 msgstr ""
 
@@ -6306,6 +6454,12 @@ msgstr ""
 msgid "Maximum actions"
 msgstr ""
 
+msgid "Maximum age"
+msgstr ""
+
+msgid "Maximum age accepted"
+msgstr ""
+
 msgid "Maximum articles to process from each standard RSS feed."
 msgstr ""
 
@@ -6322,6 +6476,9 @@ msgid "Maximum chats per session"
 msgstr ""
 
 msgid "Maximum concurrent requests"
+msgstr ""
+
+msgid "Maximum distance (km)"
 msgstr ""
 
 msgid "Maximum entries to load from the database when live feeds are unavailable."
@@ -6487,6 +6644,12 @@ msgstr ""
 msgid "Minimum activity level for several sessions"
 msgstr ""
 
+msgid "Minimum age"
+msgstr ""
+
+msgid "Minimum age accepted"
+msgstr ""
+
 msgid "Minimum round duration (seconds, 0 = off)"
 msgstr ""
 
@@ -6581,6 +6744,9 @@ msgstr ""
 msgid "Monitors server/client processes for hangs and auto-restarts them."
 msgstr ""
 
+msgid "Mood in photos"
+msgstr ""
+
 msgid "Most Commented"
 msgstr ""
 
@@ -6663,6 +6829,9 @@ msgid "Nationality not found."
 msgstr ""
 
 msgid "Nearest neighbors (k)"
+msgstr ""
+
+msgid "Need for visibility"
 msgstr ""
 
 msgid "Negative"
@@ -7363,6 +7532,9 @@ msgstr ""
 msgid "Number of Copies"
 msgstr ""
 
+msgid "Number of agents"
+msgstr ""
+
 msgid "Number of blocks"
 msgstr ""
 
@@ -7444,6 +7616,22 @@ msgstr ""
 
 #, python-format
 msgid "One day has %(n)s slots (a round each). -1 runs until stopped."
+msgstr ""
+
+msgid "One line per answer: question: answer."
+msgstr ""
+
+msgid ""
+"One line per city: name, latitude, longitude and optionally the weight. "
+"Default: Pisa."
+msgstr ""
+
+msgid ""
+"One line per gender: the weights of the sets of genders sought (a set "
+"joins genders with +)."
+msgstr ""
+
+msgid "One line per photo; the image can be added later from the profile."
 msgstr ""
 
 msgid "Only LLM agents are listed."
@@ -7876,6 +8064,9 @@ msgid ""
 "recommended."
 msgstr ""
 
+msgid "Percentage of agents with glasses."
+msgstr ""
+
 msgid "Persist memory events"
 msgstr ""
 
@@ -7933,6 +8124,9 @@ msgstr ""
 msgid "Photo attention budget must use positive min/max values with min <= max."
 msgstr ""
 
+msgid "Photo captions"
+msgstr ""
+
 msgid "Photo creator tier percentages must sum to 100%."
 msgstr ""
 
@@ -7945,10 +8139,16 @@ msgstr ""
 msgid "Photo story visibility percentages must sum to 100%."
 msgstr ""
 
+msgid "Photo style"
+msgstr ""
+
 msgid "Photos"
 msgstr ""
 
 msgid "Photos (optional)"
+msgstr ""
+
+msgid "Photos per agent"
 msgstr ""
 
 msgid "Pick a source group first, then choose one experiment from that group."
@@ -8073,6 +8273,9 @@ msgstr ""
 msgid "Political leaning"
 msgstr ""
 
+msgid "Political leanings"
+msgstr ""
+
 msgid "Political leanings, education and professions of the agents."
 msgstr ""
 
@@ -8161,6 +8364,9 @@ msgid "Population is assigned to an experiment. Cannot delete."
 msgstr ""
 
 msgid "Population is fixed for an existing ad hoc client."
+msgstr ""
+
+msgid "Population name"
 msgstr ""
 
 #, python-format
@@ -8496,6 +8702,9 @@ msgstr ""
 msgid "Profile pictures"
 msgstr ""
 
+msgid "Profile text and photos"
+msgstr ""
+
 msgid "Profile-Based User Similarity"
 msgstr ""
 
@@ -8515,6 +8724,9 @@ msgid "Progress"
 msgstr ""
 
 msgid "Prompt Max Chars"
+msgstr ""
+
+msgid "Prompt answers"
 msgstr ""
 
 msgid "Prompt language"
@@ -8686,6 +8898,9 @@ msgstr ""
 msgid "RSS-derived posts emitted"
 msgstr ""
 
+msgid "Radius around the city centre in which agents are placed. Default 15."
+msgstr ""
+
 msgid "Random"
 msgstr ""
 
@@ -8696,6 +8911,12 @@ msgid "Random Seed"
 msgstr ""
 
 msgid "Random if empty"
+msgstr ""
+
+msgid "Range of the activity level of each agent. Default 1."
+msgstr ""
+
+msgid "Range of the maximum distance each agent accepts. Default 10 to 60."
 msgstr ""
 
 msgid "Range: 0-1, Default: 0"
@@ -9147,7 +9368,13 @@ msgstr ""
 msgid "Reset to default values"
 msgstr ""
 
+msgid "Resilience"
+msgstr ""
+
 msgid "Resilient/Confident"
+msgstr ""
+
+msgid "Responsiveness"
 msgstr ""
 
 msgid "Restart required"
@@ -9239,6 +9466,9 @@ msgid "Reward"
 msgstr ""
 
 msgid "Reward Distribution"
+msgstr ""
+
+msgid "Reward sensitivity"
 msgstr ""
 
 msgid "Rewiring probability (p)"
@@ -9443,6 +9673,9 @@ msgid ""
 msgstr ""
 
 msgid "Scale Free (Barabási-Albert)"
+msgstr ""
+
+msgid "Scale of the stress and reward changes; 1 is the default."
 msgstr ""
 
 msgid "Schedule already running"
@@ -9832,6 +10065,9 @@ msgstr ""
 msgid "Selected story preview"
 msgstr ""
 
+msgid "Selectivity"
+msgstr ""
+
 #, python-format
 msgid "Self-hosted LLM Server (%(backend)s)"
 msgstr ""
@@ -9851,6 +10087,9 @@ msgstr ""
 msgid "Sensitive/Nervous"
 msgstr ""
 
+msgid "Sensitivity"
+msgstr ""
+
 msgid "Sentiment"
 msgstr ""
 
@@ -9864,6 +10103,9 @@ msgid "Sentiment Evolution"
 msgstr ""
 
 msgid "Sentiment Mix Over Time"
+msgstr ""
+
+msgid "Serious"
 msgstr ""
 
 msgid "Server & Analysis Controls"
@@ -10195,6 +10437,9 @@ msgstr ""
 msgid "Skeptical, fact-checks, brief responses"
 msgstr ""
 
+msgid "Skin tone"
+msgstr ""
+
 msgid "Skip"
 msgstr ""
 
@@ -10319,6 +10564,9 @@ msgid "Spoken Language"
 msgstr ""
 
 msgid "Spoken Languages"
+msgstr ""
+
+msgid "Spoken language"
 msgstr ""
 
 msgid "Spread of the reaction delay"
@@ -10637,6 +10885,11 @@ msgstr ""
 msgid "Synthetic Populations"
 msgstr ""
 
+msgid ""
+"Synthetic population for dating experiments, generated with the YDating "
+"generator. It can only be assigned to dating experiments."
+msgstr ""
+
 msgid "System Settings"
 msgstr ""
 
@@ -10944,6 +11197,13 @@ msgstr ""
 msgid "The dating configuration is not valid: %(why)s"
 msgstr ""
 
+#, python-format
+msgid "The dating fields are not valid: %(why)s"
+msgstr ""
+
+msgid "The dating runtime (YDating) is not installed."
+msgstr ""
+
 msgid ""
 "The experiment already exists. Please check the experiment name and try "
 "again."
@@ -11105,6 +11365,12 @@ msgid ""
 msgstr ""
 
 msgid "The same seed always generates the same population."
+msgstr ""
+
+msgid ""
+"The same seed and parameters always generate the same population. Fields "
+"left empty use the generator default; weights are written as "
+"label=weight, separated by commas (a label without weight counts 1)."
 msgstr ""
 
 msgid "The same subreddit definition can be reused safely"
@@ -11959,6 +12225,9 @@ msgstr ""
 msgid "Unsupported runtime action."
 msgstr ""
 
+msgid "Unsure"
+msgstr ""
+
 msgid "Update"
 msgstr ""
 
@@ -12323,6 +12592,15 @@ msgstr ""
 msgid "Vanishing Topics"
 msgstr ""
 
+msgid ""
+"Variables used only by dating simulations (YDating). They are stored as "
+"custom fields named dating.*, ignored by the other platforms, and let "
+"this agent take part in a dating experiment when it belongs to a dating "
+"population. Gender, age, language, nationality, education, profession, "
+"leaning and personality are the ones above; interests are the ones of "
+"Interests & Opinions."
+msgstr ""
+
 msgid "Version"
 msgstr ""
 
@@ -12511,6 +12789,13 @@ msgstr ""
 msgid "We're working to fix the issue. Please try again later."
 msgstr ""
 
+msgid "Wearing glasses"
+msgstr ""
+
+#, python-format
+msgid "Wearing glasses (%%)"
+msgstr ""
+
 msgid "Website:"
 msgstr ""
 
@@ -12533,6 +12818,40 @@ msgid "Weight of recent activity"
 msgstr ""
 
 msgid "Weight of topic affinity"
+msgstr ""
+
+msgid ""
+"Weights of serious, casual, friendship, unsure. Default 0.35, 0.2, 0.1, "
+"0.35."
+msgstr ""
+
+#, python-format
+msgid "Weights of the education levels. Known values: %(values)s"
+msgstr ""
+
+msgid ""
+"Weights of the labels of each attribute; an attribute left empty is not "
+"assigned."
+msgstr ""
+
+msgid "Weights of the labels of each trait; a trait left empty is not assigned."
+msgstr ""
+
+#, python-format
+msgid "Weights of the nationalities. Known values: %(values)s"
+msgstr ""
+
+#, python-format
+msgid "Weights of the political leanings. Known values: %(values)s"
+msgstr ""
+
+#, python-format
+msgid "Weights of the professions. Known values: %(values)s"
+msgstr ""
+
+msgid ""
+"Weights of the recommenders assigned to the agents; empty uses the "
+"experiment default."
 msgstr ""
 
 #, python-format
@@ -12752,6 +13071,11 @@ msgid "YSocial supports three types of users with different access levels:"
 msgstr ""
 
 msgid "YSocialTwin"
+msgstr ""
+
+msgid ""
+"Years below and above the own age that an agent accepts (each side drawn "
+"in this range). Default 4 to 10."
 msgstr ""
 
 msgid "Yes"
@@ -13151,6 +13475,9 @@ msgid "manifest invalid"
 msgstr ""
 
 msgid "manifest valid"
+msgstr ""
+
+msgid "max"
 msgstr ""
 
 msgid "memes or https://www.reddit.com/r/memes/"

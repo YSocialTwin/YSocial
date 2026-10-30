@@ -331,6 +331,12 @@ def _discover_plugin_agent_types() -> list[dict]:
     return plugin_cards
 
 
+def _dating_runtime_available() -> bool:
+    from y_web.src.dating import population as dp
+
+    return dp.runtime_available(current_user)
+
+
 def _agent_builder_context(**overrides):
     available_profile_pics = []
     available_cover_images = []
@@ -400,6 +406,7 @@ def _agent_builder_context(**overrides):
         "hello_populations": [],
         "available_profile_pics": available_profile_pics,
         "available_cover_images": available_cover_images,
+        "dating_available": _dating_runtime_available(),
     }
     context.update(overrides)
     return context
@@ -738,6 +745,52 @@ def _parse_structured_agent_features_from_form() -> list[dict]:
         )
 
     return entries
+
+
+def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
+    """Add the ``dating.*`` custom features described by the dating fields of the form (none when YDating is absent).
+
+    The fields are ignored by every other platform; they let an ad hoc agent take part in a dating simulation.
+    Raises ``ValueError`` (shown to the admin) when the filled fields do not satisfy the YDating agent schema.
+    """
+    from y_web.src.dating import agent_form
+    from y_web.src.dating import population as dp
+
+    form = request.form
+    if not dp.runtime_available(current_user) or not agent_form.has_dating_fields(form):
+        return feature_entries
+    try:
+        age = int(str(form.get("age") or "").strip())
+    except ValueError:
+        raise ValueError(_("A dating agent needs a numeric age.")) from None
+    personality = {
+        trait: form.get(trait)
+        for trait in ("oe", "co", "ex", "ag", "ne")
+        if form.get(trait)
+    }
+    base = {
+        "username": (form.get("name") or "").strip(),
+        "age": age,
+        "gender": form.get("gender"),
+        "language": form.get("language"),
+        "nationality": form.get("nationality"),
+        "education_level": form.get("education_level"),
+        "profession": form.get("profession"),
+        "leaning": form.get("leaning"),
+        "personality": personality or None,
+    }
+    entries, problems = agent_form.entries_from_form(form, base)
+    if problems:
+        raise ValueError(
+            _("The dating fields are not valid: %(why)s", why=" | ".join(problems[:5]))
+        )
+    taken = {entry["key"] for entry in entries}
+    kept = [
+        entry
+        for entry in feature_entries
+        if not (entry.get("feature_type") == "custom" and entry.get("key") in taken)
+    ]
+    return kept + entries
 
 
 def _ensure_interest_topics_exist(feature_entries: list[dict]) -> None:
@@ -1125,6 +1178,7 @@ def create_agent():
     try:
         structured_features = _parse_structured_agent_features_from_form()
         _ensure_interest_topics_exist(structured_features)
+        structured_features = _with_dating_features(structured_features)
     except ValueError as exc:
         flash(str(exc), "error")
         return _agent_builder_for_type(user_type)
