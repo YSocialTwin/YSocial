@@ -137,6 +137,9 @@ ERROR_TEXT = {
     "simulator_type": lambda: _("One of the experiments uses a backend that is not supported for its platform."),
     "clock": lambda: _("All experiments must use the simulated clock with 24 slots a day."),
     "already_member": lambda: _("An experiment already belongs to another World Simulation."),
+    "already_queued": lambda: _("The World Simulation is already in the queue."),
+    "member_busy": lambda: _("Member experiments are running or in the experiment schedule."),
+    "state": lambda: _("The World Simulation is not in the right state for this operation."),
 }
 
 
@@ -338,4 +341,54 @@ def analytics(user):
 @world_simulation.route("/schedule")
 @guarded
 def schedule(user):
-    return render_template("admin/world_simulation/schedule.html")
+    from y_web.src.federation import schedule_queue
+
+    visible = {f.id: f for f in _visible_federations(user)}
+    entries = [(item, fed) for item, fed in schedule_queue.rows() if fed is not None and fed.id in visible]
+    queued = {item.federation_id for item, _fed in entries if item.status in schedule_queue.OPEN_STATES}
+    addable = [f for f in visible.values() if f.id not in queued and f.status in ("stopped", "completed", "failed")]
+    return render_template(
+        "admin/world_simulation/schedule.html", entries=entries, addable=addable, badges=STATE_BADGES
+    )
+
+
+@world_simulation.route("/schedule/enqueue", methods=["POST"])
+@guarded
+def schedule_enqueue(user):
+    from y_web.src.federation import schedule_queue
+
+    try:
+        fed = _get_or_404(int(request.form.get("simulation_id", 0)), user)
+        schedule_queue.enqueue(fed)
+        flash(_("World Simulation added to the queue."), "success")
+    except service.WorldSimulationError as exc:
+        _flash_errors(exc)
+    return redirect(url_for("world_simulation.schedule"))
+
+
+@world_simulation.route("/schedule/<int:item_id>/cancel", methods=["POST"])
+@guarded
+def schedule_cancel(user, item_id):
+    from y_web.src.federation import schedule_queue
+    from y_web.src.models.admin import FederationScheduleQueue
+
+    item = db.session.get(FederationScheduleQueue, item_id)
+    if item is None:
+        abort(404)
+    _get_or_404(item.federation_id, user)
+    if schedule_queue.cancel(item):
+        flash(_("Removed from the queue."), "success")
+    else:
+        flash(_("Only a waiting World Simulation can be removed from the queue."), "error")
+    return redirect(url_for("world_simulation.schedule"))
+
+
+@world_simulation.record_once
+def _start_schedule_monitor(state):
+    """Start the queue monitor with the application (not in tests, not when switched off)."""
+    app = state.app
+    if app.config.get("TESTING") or app.config.get("WORLD_SIMULATION_MONITOR") is False:
+        return
+    from y_web.src.federation.schedule_monitor import init_federation_schedule_monitor
+
+    init_federation_schedule_monitor(app)

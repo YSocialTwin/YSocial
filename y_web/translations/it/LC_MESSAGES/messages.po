@@ -16747,6 +16747,48 @@ msgstr "In arresto"
 msgid "Failed"
 msgstr "Fallita"
 
+msgid "World Simulation added to the queue."
+msgstr "World Simulation aggiunta alla coda."
+
+msgid "Removed from the queue."
+msgstr "Rimossa dalla coda."
+
+msgid "Only a waiting World Simulation can be removed from the queue."
+msgstr "Si può rimuovere dalla coda solo una World Simulation in attesa."
+
+msgid "The World Simulation is already in the queue."
+msgstr "La World Simulation è già in coda."
+
+msgid "Member experiments are running or in the experiment schedule."
+msgstr "Alcuni esperimenti membri sono in esecuzione o nella pianificazione degli esperimenti."
+
+msgid "The World Simulation is not in the right state for this operation."
+msgstr "La World Simulation non è nello stato giusto per questa operazione."
+
+msgid "No World Simulation to add."
+msgstr "Nessuna World Simulation da aggiungere."
+
+msgid "Add to the queue"
+msgstr "Aggiungi alla coda"
+
+msgid "Added"
+msgstr "Aggiunta"
+
+msgid "Started"
+msgstr "Avviata"
+
+msgid "Finished"
+msgstr "Terminata"
+
+msgid "The queue is empty."
+msgstr "La coda è vuota."
+
+msgid "Queued"
+msgstr "In coda"
+
+msgid "Cancelled"
+msgstr "Annullata"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 

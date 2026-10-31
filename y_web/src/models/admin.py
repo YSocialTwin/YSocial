@@ -1073,6 +1073,25 @@ class FederationIdentityLink(db.Model):
     local_account_id = db.Column(db.String(64), nullable=False)
 
 
+class FederationScheduleQueue(db.Model):
+    """Queue of World Simulations, separate from the experiment scheduler (one runs at a time, in order of position).
+
+    ``status``: "queued", "running", "completed", "failed", "cancelled".
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_schedule_queue"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_id = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    position = db.Column(db.Integer, nullable=False, default=0)
+    status = db.Column(db.String(20), nullable=False, default="queued")
+    enqueued_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    started_at = db.Column(db.DateTime, nullable=True, default=None)
+    finished_at = db.Column(db.DateTime, nullable=True, default=None)
+
+
 def _delete_agent_picture(mapper, connection, agent):
     """The generated profile picture of an agent is deleted with the agent (file of the media folder)."""
     from y_web.src.agents.profile_pictures import delete_picture_file

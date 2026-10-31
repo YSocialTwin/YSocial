@@ -60,7 +60,12 @@ def _repair_legacy_columns(app):
         print(f"⚠ Warning: legacy column sync failed: {exc}")
 
 
-FEDERATION_TABLES = ("Federation", "FederationMember", "FederationIdentityLink")
+FEDERATION_TABLES = (
+    "Federation",
+    "FederationMember",
+    "FederationIdentityLink",
+    "FederationScheduleQueue",
+)
 
 
 def ensure_federation_tables(engine):

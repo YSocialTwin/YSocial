@@ -8,7 +8,12 @@ from y_web.src.system.startup_migrations import (
     ensure_federation_tables,
 )
 
-NAMES = {"federation", "federation_member", "federation_identity_link"}
+NAMES = {
+    "federation",
+    "federation_member",
+    "federation_identity_link",
+    "federation_schedule_queue",
+}
 
 
 def _engine(tmp_path, name="admin.db"):
