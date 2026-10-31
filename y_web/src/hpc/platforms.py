@@ -36,6 +36,8 @@ class HpcPlatform:
     # config; the actor log clean-up trims "completion" lines); the prompts file must exist before a start
     syncs_client_config: bool = True
     requires_prompts_file: bool = True
+    # the runtime can take part in a World Simulation (federation adapter and gate are installed)
+    supports_federation: bool = False
 
     @property
     def server_repo(self) -> str:
@@ -50,6 +52,7 @@ HPC_PLATFORMS = {
         key="microblogging",
         runtime_repo="YSimulator",
         server_dir_repo="YServer",
+        supports_federation=True,
     ),
     "photo_sharing": HpcPlatform(
         key="photo_sharing",
@@ -61,6 +64,7 @@ HPC_PLATFORMS = {
         prompts_filename="prompts_ygram.json",
         orchestrator_actor="orchestrator_server",
         client_actor_prefix="Client_",
+        supports_federation=True,
     ),
     "instant_messaging": HpcPlatform(
         key="instant_messaging",
@@ -74,6 +78,7 @@ HPC_PLATFORMS = {
         validates_config=True,
         syncs_client_config=False,
         requires_prompts_file=False,
+        supports_federation=True,
     ),
     "dating": HpcPlatform(
         key="dating",
@@ -89,6 +94,7 @@ HPC_PLATFORMS = {
         validates_config=True,
         syncs_client_config=False,
         requires_prompts_file=False,
+        supports_federation=True,
     ),
 }
 
