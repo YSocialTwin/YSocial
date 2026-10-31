@@ -293,5 +293,9 @@ def test_channels_and_private_chats_are_identified_by_an_agent(world):
                 vp = Viewpoint("account", me.account_id, info["rounds"])
                 mine = {c["id"]: c for c in Reader(session, vp).chat_list()}
                 if chat.id in mine:
-                    other = [m for m in members if m != session.get(models.Account, me.account_id).username]
+                    other = [
+                        m
+                        for m in members
+                        if m != session.get(models.Account, me.account_id).username
+                    ]
                     assert mine[chat.id]["avatar_user"] in other

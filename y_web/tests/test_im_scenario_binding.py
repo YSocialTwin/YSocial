@@ -23,12 +23,16 @@ def folder(tmp_path, monkeypatch):
 def test_the_sidecar_is_registered_beside_the_run_database(folder):
     app = SimpleNamespace(config={"SQLALCHEMY_BINDS": {}})
     db_name = "experiments/uid/database_server.db"
-    assert ctx.register_scenario_sidecar(app, 7, db_name) is None  # no database yet: nothing is bound
+    assert (
+        ctx.register_scenario_sidecar(app, 7, db_name) is None
+    )  # no database yet: nothing is bound
     assert app.config["SQLALCHEMY_BINDS"] == {}
     (folder / "database_server.db").write_bytes(b"")
     assert ctx.register_scenario_sidecar(app, 7, db_name) == "db_exp_7_sd"
     uri = app.config["SQLALCHEMY_BINDS"]["db_exp_7_sd"]
-    assert uri.startswith("sqlite:///") and uri.endswith(os.path.join("experiments", "uid", "scenario_design_im.db"))
+    assert uri.startswith("sqlite:///") and uri.endswith(
+        os.path.join("experiments", "uid", "scenario_design_im.db")
+    )
 
 
 def test_only_scenario_design_requests_of_im_experiments_use_it(monkeypatch):

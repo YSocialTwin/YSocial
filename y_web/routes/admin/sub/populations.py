@@ -313,7 +313,9 @@ def _complete_with_dating_fields(population):
     from y_web.src.dating import population as dp
 
     config = _dating_generator_config()
-    config.pop("archetypes", None)  # the rhythm of the agents is the standard activity profiles'
+    config.pop(
+        "archetypes", None
+    )  # the rhythm of the agents is the standard activity profiles'
     dp.complete_population(
         population.id,
         config=config,
@@ -2054,7 +2056,9 @@ def _dating_details(uid, population):
         return None
     try:
         data = dp.load_document(uid)
-    except Exception:  # the runtime that describes the fields is not installed: no card, the statistics remain
+    except (
+        Exception
+    ):  # the runtime that describes the fields is not installed: no card, the statistics remain
         return None
     agents = (data or {}).get("agents") or []
     if not agents:

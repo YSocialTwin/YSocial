@@ -33,7 +33,9 @@ def runtime(tmp_path, monkeypatch):
 
 
 def call(repo, folder, **kw):
-    return host.apply_plan(str(folder), PLAN, repo_dir=str(repo), python_cmd=sys.executable, **kw)
+    return host.apply_plan(
+        str(folder), PLAN, repo_dir=str(repo), python_cmd=sys.executable, **kw
+    )
 
 
 def test_the_plan_reaches_the_runtime_and_its_answer_comes_back(runtime):
@@ -48,7 +50,10 @@ def test_a_refused_plan_lists_every_reason(runtime):
     write(REFUSE)
     with pytest.raises(host.ScenarioApplyError) as caught:
         call(repo, folder)
-    assert caught.value.errors == ["message m1: text is required", "chat c: title is required"]
+    assert caught.value.errors == [
+        "message m1: text is required",
+        "chat c: title is required",
+    ]
 
 
 def test_what_is_not_the_plans_fault_is_unavailable(runtime, monkeypatch):
@@ -64,7 +69,9 @@ def test_what_is_not_the_plans_fault_is_unavailable(runtime, monkeypatch):
     with pytest.raises(host.ScenarioApplyUnavailable, match="stop the experiment"):
         call(repo, folder)
     with pytest.raises(host.ScenarioApplyUnavailable, match="no folder"):
-        host.apply_plan(str(folder / "missing"), PLAN, repo_dir=str(repo), python_cmd=sys.executable)
+        host.apply_plan(
+            str(folder / "missing"), PLAN, repo_dir=str(repo), python_cmd=sys.executable
+        )
 
 
 def test_the_plan_file_does_not_stay_behind(runtime, tmp_path, monkeypatch):
@@ -72,6 +79,10 @@ def test_the_plan_file_does_not_stay_behind(runtime, tmp_path, monkeypatch):
     write(OK)
     seen = []
     real = host.tempfile.mkstemp
-    monkeypatch.setattr(host.tempfile, "mkstemp", lambda **kw: (lambda h, p: (seen.append(p), (h, p))[1])(*real(**kw)))
+    monkeypatch.setattr(
+        host.tempfile,
+        "mkstemp",
+        lambda **kw: (lambda h, p: (seen.append(p), (h, p))[1])(*real(**kw)),
+    )
     call(repo, folder)
     assert seen and not __import__("os").path.exists(seen[0])

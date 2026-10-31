@@ -1209,7 +1209,9 @@ def update_forum_avatar_mode(uid):
         if enabled_flag in {"1", "true", "on", "yes"}:
             mode = "actual"
         config["avatar_mode"] = mode
-    if request.form.get("force_placeholder_present"):  # the switch is part of this submission
+    if request.form.get(
+        "force_placeholder_present"
+    ):  # the switch is part of this submission
         config["force_placeholder_avatars"] = normalize_force_placeholder(
             request.form.get("force_placeholder_avatars")
         )

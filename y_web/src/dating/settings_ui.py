@@ -80,11 +80,21 @@ LABELS: Dict[str, str] = {
     "conversation.min_messages_before_unmatch": N_(
         "Messages before a match can be ended"
     ),
-    "conversation.after_date_evaluation": N_("Agents evaluate the relationship after a date"),
-    "conversation.after_date_negative_close": N_("Closing the match after a bad date (fallback)"),
-    "conversation.after_date_negative_ghost": N_("Ghosting after a bad date (fallback)"),
-    "conversation.after_date_neutral_close": N_("Closing the match after a so-so date (fallback)"),
-    "conversation.after_date_neutral_ghost": N_("Ghosting after a so-so date (fallback)"),
+    "conversation.after_date_evaluation": N_(
+        "Agents evaluate the relationship after a date"
+    ),
+    "conversation.after_date_negative_close": N_(
+        "Closing the match after a bad date (fallback)"
+    ),
+    "conversation.after_date_negative_ghost": N_(
+        "Ghosting after a bad date (fallback)"
+    ),
+    "conversation.after_date_neutral_close": N_(
+        "Closing the match after a so-so date (fallback)"
+    ),
+    "conversation.after_date_neutral_ghost": N_(
+        "Ghosting after a so-so date (fallback)"
+    ),
     "conversation.max_message_chars": N_("Length asked of a message (characters)"),
     "conversation.date_proposal_probability": N_("Probability of proposing a date"),
     "conversation.date_accept_base": N_("Base probability of accepting a date"),
@@ -453,7 +463,9 @@ SERVER_SECTIONS: List[Section] = [
     (
         "matching",
         N_("Daily quotas"),
-        N_("How many likes and super likes an agent has each day, and how many cards it is shown."),
+        N_(
+            "How many likes and super likes an agent has each day, and how many cards it is shown."
+        ),
         [
             (
                 None,

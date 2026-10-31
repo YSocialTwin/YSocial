@@ -40,10 +40,28 @@ def test_appearance_is_drawn_from_the_weights_and_read_back(app):
         assert pp.assign_appearance(ids, cfg, seed=1) == 5
         assert pp.assign_appearance(ids, cfg, seed=1) == 0  # nothing left to draw
         traits = pp.read_appearance(ids)
-        assert traits[ids[0]] == {"hair_color": "red", "height_cm": "170", "glasses": "true"}
+        assert traits[ids[0]] == {
+            "hair_color": "red",
+            "height_cm": "170",
+            "glasses": "true",
+        }
         # a Dating population keeps them as dating.appearance.*: read the same way, the generic ones win
-        db.session.add(Agent_Custom_Feature(agent_id=ids[0], feature_type="custom", key="dating.appearance.eye_color", value="blue"))
-        db.session.add(Agent_Custom_Feature(agent_id=ids[0], feature_type="custom", key="dating.appearance.hair_color", value="black"))
+        db.session.add(
+            Agent_Custom_Feature(
+                agent_id=ids[0],
+                feature_type="custom",
+                key="dating.appearance.eye_color",
+                value="blue",
+            )
+        )
+        db.session.add(
+            Agent_Custom_Feature(
+                agent_id=ids[0],
+                feature_type="custom",
+                key="dating.appearance.hair_color",
+                value="black",
+            )
+        )
         db.session.commit()
         got = pp.read_appearance([ids[0]])[ids[0]]
         assert got["eye_color"] == "blue" and got["hair_color"] == "red"
@@ -52,15 +70,26 @@ def test_appearance_is_drawn_from_the_weights_and_read_back(app):
 def test_the_prompt_uses_visible_traits_only_in_english():
     from y_web.src.agents import profile_pictures as pp
 
-    text = pp.compose_prompt(31, "female", {"hair_color": "red", "eye_color": "green", "glasses": "true", "secret": "x"})
-    assert "31 years old" in text and "red" in text and "green eyes" in text and "wearing glasses" in text
+    text = pp.compose_prompt(
+        31,
+        "female",
+        {"hair_color": "red", "eye_color": "green", "glasses": "true", "secret": "x"},
+    )
+    assert (
+        "31 years old" in text
+        and "red" in text
+        and "green eyes" in text
+        and "wearing glasses" in text
+    )
     assert "secret" not in text and "x" not in text.split(",")
     assert "cartoon" in pp.compose_prompt(30, "male", {}, "cartoon")
     with pytest.raises(ValueError):
         pp.compose_prompt(30, "male", {}, "oil")
 
 
-def test_the_pictures_are_written_in_the_media_folder_and_linked_to_the_agents(app, media):
+def test_the_pictures_are_written_in_the_media_folder_and_linked_to_the_agents(
+    app, media
+):
     from y_web import db
     from y_web.src.agents import profile_pictures as pp
     from y_web.src.models import Agent, DownloadNotification
@@ -69,7 +98,9 @@ def test_the_pictures_are_written_in_the_media_folder_and_linked_to_the_agents(a
         _, agents = _standard_population(db, n=3)
         ids = [a.id for a in agents]
         nid = _notification(db)
-        made = pp.run_generation(app, nid, ids, {"generator": "stub", "style": "photorealistic"})
+        made = pp.run_generation(
+            app, nid, ids, {"generator": "stub", "style": "photorealistic"}
+        )
         assert made == 3
         db.session.expire_all()
         for agent_id in ids:
@@ -110,7 +141,9 @@ def test_the_progress_is_reported_in_the_notification(app, media, monkeypatch):
         with app.test_request_context("/"):
             data = _serialize_download_notification(row)
         assert data["progress"] == {"done": 1, "total": 4, "percent": 25}
-        assert "progress" not in data["message"] and data["message"].startswith("Generating profile pictures: 1 of 4")
+        assert "progress" not in data["message"] and data["message"].startswith(
+            "Generating profile pictures: 1 of 4"
+        )
 
 
 def test_a_cancelled_job_stops(app, media):
@@ -123,7 +156,10 @@ def test_a_cancelled_job_stops(app, media):
         nid = _notification(db)
         db.session.get(DownloadNotification, nid).status = "cancelled"
         db.session.commit()
-        assert pp.run_generation(app, nid, [a.id for a in agents], {"generator": "stub"}) == 1  # stops after the first
+        assert (
+            pp.run_generation(app, nid, [a.id for a in agents], {"generator": "stub"})
+            == 1
+        )  # stops after the first
         assert db.session.get(DownloadNotification, nid).status == "cancelled"
 
 
@@ -152,7 +188,10 @@ def test_the_picture_is_deleted_with_the_agent(app, media):
         assert sorted(os.listdir(media)) == sorted(f"{i}.png" for i in ids)
         db.session.delete(db.session.get(Agent, ids[0]))  # ORM delete (the admin pages)
         db.session.commit()
-        assert not (media / f"{ids[0]}.png").exists() and (media / f"{ids[1]}.png").exists()
+        assert (
+            not (media / f"{ids[0]}.png").exists()
+            and (media / f"{ids[1]}.png").exists()
+        )
         assert pp.delete_pictures_of(ids[1:]) == 2  # bulk deletes (population removal)
         assert os.listdir(media) == []
 
@@ -213,12 +252,30 @@ def _create(app, routes, monkeypatch, **extra):  # noqa: F811
 
     monkeypatch.setattr(routes.mod, "generate_population", fake_generate)
     monkeypatch.setattr(routes.mod, "populations", lambda: "listed")
-    monkeypatch.setattr(pp, "start_generation", lambda *a: started.append(a) or (1, None))
+    monkeypatch.setattr(
+        pp, "start_generation", lambda *a: started.append(a) or (1, None)
+    )
     with app.app_context():
-        with app.test_request_context("/admin/create_population", method="POST", data=_form(**extra), headers={"Referer": "/admin/populations"}):
+        with app.test_request_context(
+            "/admin/create_population",
+            method="POST",
+            data=_form(**extra),
+            headers={"Referer": "/admin/populations"},
+        ):
             routes.mod.create_population.__wrapped__()
         pop = db.session.query(Population).filter_by(name="Look").first()
-        traits = pp.read_appearance([r[0] for r in db.session.query(Agent_Population.agent_id).filter_by(population_id=pop.id)]) if pop else {}
+        traits = (
+            pp.read_appearance(
+                [
+                    r[0]
+                    for r in db.session.query(Agent_Population.agent_id).filter_by(
+                        population_id=pop.id
+                    )
+                ]
+            )
+            if pop
+            else {}
+        )
     return started, traits, pop
 
 
@@ -227,13 +284,26 @@ def test_appearance_is_off_by_default(app, routes, monkeypatch):  # noqa: F811
     assert pop is not None and not started and traits == {}
 
 
-def test_appearance_without_pictures_assigns_traits_and_starts_no_job(app, routes, monkeypatch):  # noqa: F811
-    started, traits, pop = _create(app, routes, monkeypatch, include_appearance="1", appearance_height_cm_min="160", appearance_height_cm_max="170")
+def test_appearance_without_pictures_assigns_traits_and_starts_no_job(
+    app, routes, monkeypatch
+):  # noqa: F811
+    started, traits, pop = _create(
+        app,
+        routes,
+        monkeypatch,
+        include_appearance="1",
+        appearance_height_cm_min="160",
+        appearance_height_cm_max="170",
+    )
     assert pop is not None and not started
-    assert len(traits) == 4 and all(160 <= int(t["height_cm"]) <= 170 for t in traits.values())
+    assert len(traits) == 4 and all(
+        160 <= int(t["height_cm"]) <= 170 for t in traits.values()
+    )
 
 
-def test_the_picture_toggle_starts_the_background_job(app, routes, monkeypatch):  # noqa: F811
+def test_the_picture_toggle_starts_the_background_job(
+    app, routes, monkeypatch
+):  # noqa: F811
     started, traits, pop = _create(
         app, routes, monkeypatch, include_appearance="1", generate_profile_pictures="1",
         pictures_style="cartoon", pictures_generator="stub", pictures_model="x/y", pictures_steps="8",
@@ -241,12 +311,26 @@ def test_the_picture_toggle_starts_the_background_job(app, routes, monkeypatch):
     assert len(started) == 1
     _app, user_id, ids, cfg = started[0]
     assert user_id == 1 and len(ids) == 4
-    assert cfg == {"style": "cartoon", "generator": "stub", "model": "x/y", "inference_steps": 8}
+    assert cfg == {
+        "style": "cartoon",
+        "generator": "stub",
+        "model": "x/y",
+        "inference_steps": 8,
+    }
     assert any("notifications menu" in msg for _c, msg in routes.flashes)
 
 
-def test_wrong_picture_settings_discard_the_population(app, routes, monkeypatch):  # noqa: F811
-    started, _traits, pop = _create(app, routes, monkeypatch, include_appearance="1", generate_profile_pictures="1", pictures_style="oil")
+def test_wrong_picture_settings_discard_the_population(
+    app, routes, monkeypatch
+):  # noqa: F811
+    started, _traits, pop = _create(
+        app,
+        routes,
+        monkeypatch,
+        include_appearance="1",
+        generate_profile_pictures="1",
+        pictures_style="oil",
+    )
     assert pop is None and not started
     assert any("unknown image style" in msg for _c, msg in routes.flashes)
 
@@ -256,15 +340,27 @@ def test_the_page_offers_the_appearance_section_collapsed_and_the_toggle_off():
 
     root = Path(__file__).resolve().parents[1] / "templates" / "admin"
     page = (root / "populations.html").read_text()
-    assert 'id="include_appearance"' in page and "checked" not in page.split('id="include_appearance"')[1].split(">")[0]
+    assert (
+        'id="include_appearance"' in page
+        and "checked" not in page.split('id="include_appearance"')[1].split(">")[0]
+    )
     assert 'id="appearance-config-wrapper" class="ys-opt-body d-none"' in page
     part = (root / "_population_appearance.html").read_text()
-    assert 'name="generate_profile_pictures"' in part and "checked" not in part.split('name="generate_profile_pictures"')[1].split(">")[0]
+    assert (
+        'name="generate_profile_pictures"' in part
+        and "checked"
+        not in part.split('name="generate_profile_pictures"')[1].split(">")[0]
+    )
     assert "disabled>" in part.split("<fieldset")[1]
-    assert "dating-section-appearance" not in (root / "_dating_population_form.html").read_text()
+    assert (
+        "dating-section-appearance"
+        not in (root / "_dating_population_form.html").read_text()
+    )
 
 
-def test_a_generation_interrupted_by_a_restart_resumes_with_the_missing_pictures(app, media):
+def test_a_generation_interrupted_by_a_restart_resumes_with_the_missing_pictures(
+    app, media
+):
     from y_web import db
     from y_web.src.agents import profile_pictures as pp
     from y_web.src.models import Agent, DownloadNotification
@@ -275,12 +371,16 @@ def test_a_generation_interrupted_by_a_restart_resumes_with_the_missing_pictures
         nid = _notification(db)
         cfg = {"generator": "stub"}
         pp._write_job(nid, ids, cfg)
-        pp.run_generation(app, nid, ids[:2], cfg)  # two pictures made, then the server stops
+        pp.run_generation(
+            app, nid, ids[:2], cfg
+        )  # two pictures made, then the server stops
         db.session.get(DownloadNotification, nid).status = "processing"
         db.session.get(DownloadNotification, nid).message = pp.progress_message(2, 5)
         db.session.commit()
         pp._write_job(nid, ids, cfg)  # (the stopped run left its file)
-        db.session.delete(db.session.get(Agent, ids[4]))  # an agent removed meanwhile is skipped
+        db.session.delete(
+            db.session.get(Agent, ids[4])
+        )  # an agent removed meanwhile is skipped
         db.session.commit()
         assert pp.resume_interrupted(app) == [nid]
         import time
@@ -307,7 +407,9 @@ def test_finished_or_unknown_jobs_are_only_cleaned_up(app, media):
         db.session.get(DownloadNotification, done).status = "cancelled"
         db.session.commit()
         pp._write_job(done, [a.id for a in agents], {"generator": "stub"})
-        pp._write_job(9999, [a.id for a in agents], {"generator": "stub"})  # no such notification
+        pp._write_job(
+            9999, [a.id for a in agents], {"generator": "stub"}
+        )  # no such notification
         os.makedirs(pp.jobs_dir(), exist_ok=True)
         open(os.path.join(pp.jobs_dir(), "7.json"), "w").write("not json")
         assert pp.resume_interrupted(app) == []
@@ -321,7 +423,9 @@ def test_a_started_job_leaves_its_file_until_it_ends(app, media):
 
     with app.app_context():
         _, agents = _standard_population(db, n=2)
-        nid, thread = pp.start_generation(app, 1, [a.id for a in agents], {"generator": "stub"})
+        nid, thread = pp.start_generation(
+            app, 1, [a.id for a in agents], {"generator": "stub"}
+        )
         thread.join(10)
         assert not os.path.exists(pp._job_file(nid))
 
@@ -331,16 +435,22 @@ def test_client_creation_pages_do_not_filter_populations_by_platform():
 
     root = Path(__file__).resolve().parents[1]
     crud = (root / "routes/admin/sub/clients/_crud.py").read_text()
-    assert "population_matches_platform" not in crud and "incompatible_population_count" not in crud
+    assert (
+        "population_matches_platform" not in crud
+        and "incompatible_population_count" not in crud
+    )
     for page in (root / "templates/admin").glob("clients*.html"):
         text = page.read_text()
-        assert "incompatible_population" not in text and "username type" not in text, page.name
+        assert (
+            "incompatible_population" not in text and "username type" not in text
+        ), page.name
         assert "populations for other platforms" not in text, page.name
 
 
 def test_the_image_model_offers_the_alternatives_of_the_dating_client(app):
-    import jinja2
     from pathlib import Path
+
+    import jinja2
 
     from y_web.src.agents import profile_pictures as pp
     from y_web.src.dating.settings_ui import DIFFUSION_MODELS
@@ -349,7 +459,9 @@ def test_the_image_model_offers_the_alternatives_of_the_dating_client(app):
     env = app.jinja_env.overlay(loader=jinja2.FileSystemLoader(str(root)))
     with app.test_request_context("/"):
         html = env.get_template("admin/_population_appearance.html").render(
-            _=lambda text, **kw: text % kw if kw else text, appearance_defaults=pp.defaults(), images_available=False
+            _=lambda text, **kw: text % kw if kw else text,
+            appearance_defaults=pp.defaults(),
+            images_available=False,
         )
     for model, _label in DIFFUSION_MODELS:
         assert f'<option value="{model}"' in html
@@ -371,11 +483,19 @@ def test_the_picture_of_a_username_is_found_only_when_the_file_exists(app, media
     with app.app_context():
         _, agents = _standard_population(db, n=2)
         pp._USERNAME_CACHE.clear()
-        assert pp.picture_of_username(agents[0].name) == ""  # no picture: the usual logic of the platform
+        assert (
+            pp.picture_of_username(agents[0].name) == ""
+        )  # no picture: the usual logic of the platform
         _agent_with_picture(db, media, agents[0])
         pp._USERNAME_CACHE.clear()
-        assert pp.picture_of_username(agents[0].name) == f"/media/agents/{agents[0].id}.png"
-        assert pp.picture_of_username(agents[1].name) == "" and pp.picture_of_username("") == ""
+        assert (
+            pp.picture_of_username(agents[0].name)
+            == f"/media/agents/{agents[0].id}.png"
+        )
+        assert (
+            pp.picture_of_username(agents[1].name) == ""
+            and pp.picture_of_username("") == ""
+        )
         (media / f"{agents[0].id}.png").unlink()
         pp._USERNAME_CACHE.clear()
         assert pp.picture_of_username(agents[0].name) == ""
@@ -390,13 +510,16 @@ def test_dating_uses_the_pictures_the_agents_already_have(app, media, tmp_path):
         _agent_with_picture(db, media, agents[0])
         data = {
             "agents": [
-                {"username": a.name, "photos": [{"caption": f"c{n}"} for n in range(3)]} for a in agents
+                {"username": a.name, "photos": [{"caption": f"c{n}"} for n in range(3)]}
+                for a in agents
             ]
         }
         exp_media = tmp_path / "exp" / "media"
         assert dp.use_existing_pictures(data, row.id, str(exp_media)) == 1
         first = data["agents"][0]
-        assert first["photos"] == [{"caption": "c0", "media_url": f"agent_{agents[0].id}.png"}]
+        assert first["photos"] == [
+            {"caption": "c0", "media_url": f"agent_{agents[0].id}.png"}
+        ]
         assert (exp_media / f"agent_{agents[0].id}.png").read_bytes() == b"\x89PNG-own"
         assert len(data["agents"][1]["photos"]) == 3  # no picture: generated as usual
         assert all("media_url" not in p for p in data["agents"][1]["photos"])
@@ -416,22 +539,45 @@ def test_the_photo_and_forum_frontends_show_the_generated_picture(app, media):
         pp._USERNAME_CACHE.clear()
         url = f"/media/agents/{agents[0].id}.png"
         exp = SimpleNamespace(idexp=3)
-        assert photo._photo_media_url(exp, url) == url  # not rewritten as a file of the experiment
-        assert photo._photo_profile_pic_url(exp, username=agents[0].name, user_id=1, raw_profile_pic="/static/assets/img/users/9.png") == url
-        assert photo._photo_profile_pic_url(exp, username=agents[1].name, user_id=1, raw_profile_pic="/static/assets/img/users/9.png") == "/static/assets/img/users/9.png"
+        assert (
+            photo._photo_media_url(exp, url) == url
+        )  # not rewritten as a file of the experiment
+        assert (
+            photo._photo_profile_pic_url(
+                exp,
+                username=agents[0].name,
+                user_id=1,
+                raw_profile_pic="/static/assets/img/users/9.png",
+            )
+            == url
+        )
+        assert (
+            photo._photo_profile_pic_url(
+                exp,
+                username=agents[1].name,
+                user_id=1,
+                raw_profile_pic="/static/assets/img/users/9.png",
+            )
+            == "/static/assets/img/users/9.png"
+        )
         user = SimpleNamespace(username=agents[0].name, is_page=False, id=1)
         assert resolve_forum_profile_pic(user, 3) == url  # even in placeholder mode
         other = SimpleNamespace(username=agents[1].name, is_page=False, id=2)
-        assert resolve_forum_profile_pic(other, 3).startswith(("/static/", "data:"))  # the current logic
+        assert resolve_forum_profile_pic(other, 3).startswith(
+            ("/static/", "data:")
+        )  # the current logic
 
 
 def test_the_im_avatar_shows_the_picture_when_there_is_one(app):
-    import jinja2
     from pathlib import Path
+
+    import jinja2
 
     root = Path(__file__).resolve().parents[1] / "templates"
     env = app.jinja_env.overlay(loader=jinja2.FileSystemLoader(str(root)))
-    env.globals["agent_picture"] = lambda name: "/media/agents/5.png" if name == "Ann" else ""
+    env.globals["agent_picture"] = lambda name: (
+        "/media/agents/5.png" if name == "Ann" else ""
+    )
     macro = env.get_template("im/_avatar.html").module.avatar
     with app.test_request_context("/"):
         assert 'src="/media/agents/5.png"' in str(macro("Ann", 10, "sm"))

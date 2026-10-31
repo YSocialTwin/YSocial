@@ -139,7 +139,9 @@ def _common_schema(repo_dir: str) -> Dict[str, Any]:
 
 def schema(repo_dir: str) -> Dict[str, Any]:
     sch = sf.load_schema(repo_dir, SCHEMA)
-    props = ((sch.get("properties") or {}).get("matching") or {}).get("properties") or {}
+    props = ((sch.get("properties") or {}).get("matching") or {}).get(
+        "properties"
+    ) or {}
     for key, value in (
         ("likes_per_day", DEFAULT_LIKES_PER_DAY),
         ("cards_per_day", DEFAULT_CARDS_PER_DAY),

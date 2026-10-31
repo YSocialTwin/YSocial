@@ -429,7 +429,10 @@ def has_dating_fields(population) -> bool:
     return (
         db.session.scalar(
             select(Agent_Custom_Feature.id)
-            .join(Agent_Population, Agent_Population.agent_id == Agent_Custom_Feature.agent_id)
+            .join(
+                Agent_Population,
+                Agent_Population.agent_id == Agent_Custom_Feature.agent_id,
+            )
             .where(
                 Agent_Population.population_id == population.id,
                 Agent_Custom_Feature.feature_type == "custom",
@@ -454,7 +457,14 @@ def adults_only(data: Dict[str, Any]) -> Tuple[Dict[str, Any], int]:
     return {**data, "agents": kept}, len(agents) - len(kept)
 
 
-_RUNTIME_GENDER = {"male": "man", "m": "man", "men": "man", "female": "woman", "f": "woman", "women": "woman"}
+_RUNTIME_GENDER = {
+    "male": "man",
+    "m": "man",
+    "men": "man",
+    "female": "woman",
+    "f": "woman",
+    "women": "woman",
+}
 
 
 def runtime_genders(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -498,7 +508,11 @@ def complete_population(
     if not todo:
         return 0
     data = generate(
-        max(2, len(todo)), seed=seed, language=language, repo_dir=repo_dir, config=config
+        max(2, len(todo)),
+        seed=seed,
+        language=language,
+        repo_dir=repo_dir,
+        config=config,
     )
     _prepare_fields(repo_dir)
     pool = list(data["agents"])
@@ -517,7 +531,9 @@ def complete_population(
             agent.daily_activity_level = int(doc["daily_activity_level"])
         _, _, custom = agent_fields.agent_to_rows(doc)
         for item in custom:
-            if item["key"] in ("dating.id", "dating.archetype") or item["key"].startswith(
+            if item["key"] in ("dating.id", "dating.archetype") or item[
+                "key"
+            ].startswith(
                 ("dating.personality.", "dating.language", "dating.nationality")
             ):
                 continue
