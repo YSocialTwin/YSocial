@@ -73,6 +73,9 @@
         prompts_dating: [
             { selector: '[data-tut="dating-prompts"]', title: '@heading', description: 'The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.', position: 'auto' }
         ],
+        prompts_im: [
+            { selector: '[data-tut="im-prompts"]', title: '@heading', description: 'The prompts the agents use in the chats. You can reword them for this experiment; only the prompts you change are saved.', position: 'auto' }
+        ],
         download_notifications: [
             { selector: '[data-tut="notifications"]', title: '@heading', description: 'History of exports and background jobs: status, download links and the experiments involved. Mark entries as read or remove them.', position: 'auto' }
         ],
