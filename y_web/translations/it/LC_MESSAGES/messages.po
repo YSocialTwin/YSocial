@@ -16561,6 +16561,192 @@ msgstr "✔️ Gioca con"
 msgid "✔️ Use"
 msgstr "✔️ Usa"
 
+msgid "World Simulation"
+msgstr "World Simulation"
+
+msgid "World Simulations"
+msgstr "World Simulation"
+
+msgid "Schedule"
+msgstr "Pianificazione"
+
+msgid "Analytics"
+msgstr "Analisi"
+
+msgid "Queue of World Simulations: one runs at a time, in order."
+msgstr "Coda delle World Simulation: una alla volta, in ordine."
+
+msgid "A World Simulation runs several experiments, one for each platform, on one shared clock. The same agents can be active on more than one platform."
+msgstr "Una World Simulation esegue più esperimenti, uno per piattaforma, con un unico orologio condiviso. Gli stessi agenti possono essere attivi su più piattaforme."
+
+msgid "New simulation"
+msgstr "Nuova simulazione"
+
+msgid "Current tick"
+msgstr "Tick corrente"
+
+msgid "No World Simulation yet."
+msgstr "Nessuna World Simulation per ora."
+
+msgid "Choose a World Simulation to see its analytics."
+msgstr "Scegli una World Simulation per vederne le analisi."
+
+msgid "Configuration"
+msgstr "Configurazione"
+
+msgid "Execution"
+msgstr "Esecuzione"
+
+msgid "Population: shared by all members."
+msgstr "Popolazione: condivisa da tutti i membri."
+
+msgid "Parameters"
+msgstr "Parametri"
+
+msgid "The parameters can be changed only while the World Simulation is stopped."
+msgstr "I parametri si possono modificare solo con la World Simulation ferma."
+
+msgid "random"
+msgstr "casuale"
+
+msgid "Clock granularity"
+msgstr "Granularità dell'orologio"
+
+msgid "Slot (hourly)"
+msgstr "Slot (orario)"
+
+msgid "Mechanisms"
+msgstr "Meccanismi"
+
+msgid "Share the daily attention of each agent among its platforms"
+msgstr "Ripartisci l'attenzione giornaliera di ogni agente tra le sue piattaforme"
+
+msgid "Agents discover and join new platforms"
+msgstr "Gli agenti scoprono nuove piattaforme e vi si iscrivono"
+
+msgid "Agents leave platforms that no longer interest them"
+msgstr "Gli agenti lasciano le piattaforme che non li interessano più"
+
+msgid "Advanced parameters (JSON)"
+msgstr "Parametri avanzati (JSON)"
+
+msgid "Optional. Blocks: attention, crosspost, discovery, leave, membership."
+msgstr "Facoltativo. Blocchi: attention, crosspost, discovery, leave, membership."
+
+msgid "Delete this World Simulation? The experiments are not deleted."
+msgstr "Eliminare questa World Simulation? Gli esperimenti non vengono eliminati."
+
+msgid "Global tick"
+msgstr "Tick globale"
+
+msgid "Skew"
+msgstr "Scarto"
+
+msgid "Deliveries"
+msgstr "Consegne"
+
+msgid "Tick"
+msgstr "Tick"
+
+msgid "Waiting for"
+msgstr "In attesa di"
+
+msgid "Events"
+msgstr "Eventi"
+
+msgid "Coordinator log"
+msgstr "Log del coordinatore"
+
+msgid "Choose two to five stopped experiments, at most one for each platform, that use the same population and the simulated clock."
+msgstr "Scegli da due a cinque esperimenti fermi, al massimo uno per piattaforma, che usano la stessa popolazione e l'orologio simulato."
+
+msgid "Running: stop it first."
+msgstr "In esecuzione: fermalo prima."
+
+msgid "Already part of the World Simulation %(name)s."
+msgstr "Fa già parte della World Simulation %(name)s."
+
+msgid "No experiment is available."
+msgstr "Nessun esperimento disponibile."
+
+msgid "The advanced parameters are not valid JSON."
+msgstr "I parametri avanzati non sono un JSON valido."
+
+msgid "The advanced parameters must be a JSON object."
+msgstr "I parametri avanzati devono essere un oggetto JSON."
+
+msgid "A World Simulation needs 2 to 5 experiments."
+msgstr "Una World Simulation richiede da 2 a 5 esperimenti."
+
+msgid "An experiment is running: stop it first."
+msgstr "Un esperimento è in esecuzione: fermalo prima."
+
+msgid "Remote experiments cannot take part in a World Simulation."
+msgstr "Gli esperimenti remoti non possono far parte di una World Simulation."
+
+msgid "All experiments must use the same population."
+msgstr "Tutti gli esperimenti devono usare la stessa popolazione."
+
+msgid "Choose at most one experiment for each platform."
+msgstr "Scegli al massimo un esperimento per piattaforma."
+
+msgid "One of the platforms cannot take part in a World Simulation."
+msgstr "Una delle piattaforme non può far parte di una World Simulation."
+
+msgid "One of the experiments uses a backend that is not supported for its platform."
+msgstr "Uno degli esperimenti usa un backend non supportato per la sua piattaforma."
+
+msgid "All experiments must use the simulated clock with 24 slots a day."
+msgstr "Tutti gli esperimenti devono usare l'orologio simulato con 24 slot al giorno."
+
+msgid "An experiment already belongs to another World Simulation."
+msgstr "Un esperimento appartiene già a un'altra World Simulation."
+
+msgid "World Simulation created."
+msgstr "World Simulation creata."
+
+msgid "The seed must be an integer."
+msgstr "Il seed deve essere un numero intero."
+
+msgid "Stop the World Simulation before changing its parameters."
+msgstr "Ferma la World Simulation prima di modificarne i parametri."
+
+msgid "Granularity must be slot or day."
+msgstr "La granularità deve essere slot o giorno."
+
+msgid "Parameters saved."
+msgstr "Parametri salvati."
+
+msgid "World Simulation started."
+msgstr "World Simulation avviata."
+
+msgid "World Simulation paused."
+msgstr "World Simulation in pausa."
+
+msgid "World Simulation resumed."
+msgstr "World Simulation ripresa."
+
+msgid "World Simulation stopped."
+msgstr "World Simulation fermata."
+
+msgid "The World Simulation could not complete the operation: %(error)s"
+msgstr "La World Simulation non ha potuto completare l'operazione: %(error)s"
+
+msgid "World Simulation deleted."
+msgstr "World Simulation eliminata."
+
+msgid "Stop the World Simulation before deleting it."
+msgstr "Ferma la World Simulation prima di eliminarla."
+
+msgid "Starting"
+msgstr "In avvio"
+
+msgid "Stopping"
+msgstr "In arresto"
+
+msgid "Failed"
+msgstr "Fallita"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 

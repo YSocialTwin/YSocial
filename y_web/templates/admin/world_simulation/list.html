@@ -1,0 +1,75 @@
+{% include "admin/head.html" %}
+<style>
+    .ws-page { --ws-border:#e5e7eb; --ws-muted:#6b7280; --ws-dark:#111827; }
+    .ws-page .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
+    .ws-intro { font-size:.82rem; color:var(--ws-muted); margin-bottom:14px; }
+    .ws-table { width:100%; border-collapse:collapse; }
+    .ws-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ws-muted); padding:8px 10px; border-bottom:1px solid var(--ws-border); }
+    .ws-table td { padding:10px; border-bottom:1px solid var(--ws-border); vertical-align:middle; font-size:.84rem; }
+    .ws-name { font-weight:700; color:var(--ws-dark); }
+    .ws-sub { font-size:.72rem; color:var(--ws-muted); }
+    .ws-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .ws-actions form { margin:0; }
+    .ws-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
+    .ws-tabs { display:flex; gap:4px; border-bottom:1px solid var(--ws-border); margin-bottom:16px; }
+    .ws-tab { border:0; background:none; padding:8px 16px; font-weight:600; font-size:.85rem; color:var(--ws-muted); cursor:pointer; border-bottom:2px solid transparent; }
+    .ws-tab.is-active { color:var(--ws-dark); border-bottom-color:#039be5; }
+    .ws-pane[hidden] { display:none; }
+    .ws-log { background:#0f172a; color:#e2e8f0; font-family:monospace; font-size:.74rem; padding:10px; border-radius:6px; max-height:260px; overflow:auto; white-space:pre-wrap; }
+    .ws-field { margin-bottom:12px; }
+    .ws-field label { display:block; font-size:.78rem; font-weight:600; margin-bottom:4px; }
+    .ws-check { display:flex; gap:8px; align-items:center; font-size:.84rem; margin:4px 0; }
+    .ws-pick { border:1px solid var(--ws-border); border-radius:6px; padding:8px 12px; margin-bottom:6px; }
+    .ws-pick.is-off { opacity:.55; }
+    .ws-counter { display:inline-block; margin-right:18px; font-size:.84rem; }
+</style>
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-list">
+                        <h3 class="title is-5 is-thin">{{ _('World Simulations') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-intro">{{ _('A World Simulation runs several experiments, one for each platform, on one shared clock. The same agents can be active on more than one platform.') }}</p>
+                            <p><a class="button is-solid primary-button" href="{{ url_for('world_simulation.new') }}">{{ _('New simulation') }}</a></p>
+                            <div class="table-responsive">
+                            <table class="ws-table" id="world-simulation-table">
+                                <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Members') }}</th><th>{{ _('Current tick') }}</th><th></th></tr></thead>
+                                <tbody>
+                                {% for row in rows %}
+                                <tr data-world-simulation="{{ row.fed.id }}">
+                                    <td><a class="ws-name" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}">{{ row.fed.name }}</a>
+                                        <div class="ws-sub">{{ row.fed.description }}</div></td>
+                                    <td><span class="badge {{ row.badge }}">{{ _(row.fed.status|capitalize) }}</span></td>
+                                    <td>{% for member, label, exp in row.members %}<div class="ws-sub">{{ label }}: {{ exp.exp_name }}</div>{% endfor %}</td>
+                                    <td>{{ row.tick if row.tick is not none else '-' }}</td>
+                                    <td><div class="ws-actions">
+                                        {% if row.fed.status in ('stopped', 'completed', 'failed') %}
+                                        <form method="post" action="{{ url_for('world_simulation.command_start', fed_id=row.fed.id) }}"><button class="button is-solid primary-button" type="submit">{{ _('Start') }}</button></form>
+                                        {% elif row.fed.status == 'running' %}
+                                        <form method="post" action="{{ url_for('world_simulation.command_pause', fed_id=row.fed.id) }}"><button class="button is-light" type="submit">{{ _('Pause') }}</button></form>
+                                        {% elif row.fed.status == 'paused' %}
+                                        <form method="post" action="{{ url_for('world_simulation.command_resume', fed_id=row.fed.id) }}"><button class="button is-solid primary-button" type="submit">{{ _('Resume') }}</button></form>
+                                        {% endif %}
+                                        {% if row.fed.status in ('running', 'paused', 'starting') %}
+                                        <form method="post" action="{{ url_for('world_simulation.command_stop', fed_id=row.fed.id) }}"><button class="button is-light" type="submit">{{ _('Stop') }}</button></form>
+                                        {% endif %}
+                                        <a class="button is-light" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}">{{ _('Open') }}</a>
+                                    </div></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="5" class="ws-sub">{{ _('No World Simulation yet.') }}</td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

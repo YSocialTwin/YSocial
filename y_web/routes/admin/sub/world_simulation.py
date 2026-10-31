@@ -1,0 +1,341 @@
+"""World Simulation routes (admin section "World Simulation", guide F5, D-12).
+
+Pages: list of simulations, guided creation, detail with the Configuration and Execution tabs, analytics selection and
+the schedule. In the interface the feature is always called "World Simulation"; in code it is the federation.
+Only admins and researchers reach these routes (a researcher sees only the simulations they own)."""
+
+import json
+import sqlite3
+from pathlib import Path
+
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+from sqlalchemy import select
+
+from y_web import db
+from y_web.i18n import gettext as _
+from y_web.src.federation import coordinator_process as cp
+from y_web.src.federation import service
+from y_web.src.experiment.access import get_visible_experiment_query
+from y_web.src.models import Admin_users, Exps
+from y_web.src.models.admin import Federation
+
+world_simulation = Blueprint("world_simulation", __name__, url_prefix="/admin/world_simulation")
+
+PLATFORM_LABELS = {
+    "microblogging": "Microblogging",
+    "forum": "Forum",
+    "photo_sharing": "Photo sharing",
+    "instant_messaging": "Instant messaging",
+    "dating": "Dating",
+}
+STATE_BADGES = {
+    "stopped": "badge-secondary",
+    "starting": "badge-info",
+    "running": "badge-success",
+    "paused": "badge-warning",
+    "stopping": "badge-info",
+    "completed": "badge-primary",
+    "failed": "badge-danger",
+}
+SWITCHES = ("attention", "discovery", "leave")  # parameter blocks with an "enabled" switch (guide 4.7)
+
+
+def _admin_user():
+    return db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+
+
+def _allowed(user):
+    return user is not None and user.role in ("admin", "researcher")
+
+
+def _visible_federations(user):
+    query = Federation.query.order_by(Federation.id.desc())
+    if user.role != "admin":
+        query = query.filter(Federation.owner == user.username)
+    return query.all()
+
+
+def _get_or_404(fed_id, user):
+    fed = db.session.get(Federation, fed_id)
+    if fed is None or (user.role != "admin" and fed.owner != user.username):
+        abort(404)
+    return fed
+
+
+def guarded(view):
+    """Login required, admin or researcher only (others are sent back to the home page, JSON routes get 403)."""
+    from functools import wraps
+
+    @wraps(view)
+    @login_required
+    def wrapper(*args, **kwargs):
+        user = _admin_user()
+        if not _allowed(user):
+            if request.path.endswith(".json"):
+                return jsonify({"error": _("Access denied")}), 403
+            return redirect(url_for("main.index"))
+        return view(user, *args, **kwargs)
+
+    return wrapper
+
+
+def _row(fed):
+    members = service.members_of(fed)
+    status = cp.coordinator_status(fed, timeout=1.0) if fed.status in ("running", "paused") else None
+    return {
+        "fed": fed,
+        "badge": STATE_BADGES.get(fed.status, "badge-secondary"),
+        "members": [(m.member, PLATFORM_LABELS.get(m.platform_type, m.platform_type), exp) for m, exp in members],
+        "tick": None if not status else status.get("global_tick"),
+    }
+
+
+@world_simulation.route("", strict_slashes=False)
+@guarded
+def simulations(user):
+    return render_template("admin/world_simulation/list.html", rows=[_row(f) for f in _visible_federations(user)])
+
+
+def _candidates(user):
+    exps = get_visible_experiment_query(user).filter(Exps.is_remote == 0).order_by(Exps.exp_name).all()
+    out = []
+    for exp in exps:
+        info = service.collect_member_info(exp)
+        out.append({"exp": exp, "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type), "info": info})
+    return out
+
+
+def _options_from_form(form):
+    options = {}
+    for block in SWITCHES:
+        if form.get(f"{block}_enabled"):
+            options[block] = {"enabled": True}
+    raw = (form.get("advanced") or "").strip()
+    if raw:
+        try:
+            extra = json.loads(raw)
+        except ValueError:
+            raise service.WorldSimulationError({"code": "options", "message": _("The advanced parameters are not valid JSON.")})
+        if not isinstance(extra, dict):
+            raise service.WorldSimulationError({"code": "options", "message": _("The advanced parameters must be a JSON object.")})
+        for key, value in extra.items():
+            if isinstance(value, dict) and isinstance(options.get(key), dict):
+                options[key] = {**value, **options[key]}
+            else:
+                options[key] = value
+    return options
+
+
+ERROR_TEXT = {
+    "member_count": lambda: _("A World Simulation needs 2 to 5 experiments."),
+    "experiment_running": lambda: _("An experiment is running: stop it first."),
+    "remote": lambda: _("Remote experiments cannot take part in a World Simulation."),
+    "population": lambda: _("All experiments must use the same population."),
+    "duplicate_platform": lambda: _("Choose at most one experiment for each platform."),
+    "platform": lambda: _("One of the platforms cannot take part in a World Simulation."),
+    "simulator_type": lambda: _("One of the experiments uses a backend that is not supported for its platform."),
+    "clock": lambda: _("All experiments must use the simulated clock with 24 slots a day."),
+    "already_member": lambda: _("An experiment already belongs to another World Simulation."),
+}
+
+
+def _flash_errors(error):
+    for item in error.errors:
+        text = ERROR_TEXT.get(item["code"])
+        message = "%s (%s)" % (text(), item["message"]) if text else item["message"]
+        flash(message, "error")
+
+
+@world_simulation.route("/new", methods=["GET", "POST"])
+@guarded
+def new(user):
+    form = request.form
+    if request.method == "POST":
+        try:
+            seed = form.get("seed", "").strip()
+            fed = service.create_federation(
+                form.get("name"),
+                [int(i) for i in form.getlist("experiments")],
+                owner=user.username,
+                seed=int(seed) if seed else None,
+                granularity=form.get("granularity", "slot"),
+                options=_options_from_form(form),
+                exposures=bool(form.get("discovery_enabled")),
+            )
+            flash(_("World Simulation created."), "success")
+            return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+        except service.WorldSimulationError as exc:
+            _flash_errors(exc)
+        except ValueError:
+            flash(_("The seed must be an integer."), "error")
+    return render_template("admin/world_simulation/new.html", candidates=_candidates(user), form=form)
+
+
+@world_simulation.route("/<int:fed_id>")
+@guarded
+def detail(user, fed_id):
+    fed = _get_or_404(fed_id, user)
+    options = json.loads(fed.config_json or "{}")
+    return render_template(
+        "admin/world_simulation/detail.html",
+        row=_row(fed),
+        options=options,
+        options_text=json.dumps({k: v for k, v in options.items() if k != "exposures"}, indent=2, sort_keys=True),
+        editable=fed.status in ("stopped", "completed", "failed"),
+    )
+
+
+@world_simulation.route("/<int:fed_id>/configuration", methods=["POST"])
+@guarded
+def configure(user, fed_id):
+    """Change the parameters (only while the World Simulation is stopped)."""
+    fed = _get_or_404(fed_id, user)
+    if fed.status not in ("stopped", "completed", "failed"):
+        flash(_("Stop the World Simulation before changing its parameters."), "error")
+        return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+    try:
+        options = _options_from_form(request.form)
+        options = service._clean_options(options)
+        seed = request.form.get("seed", "").strip()
+        granularity = request.form.get("granularity", fed.granularity)
+        if granularity not in service.GRANULARITIES:
+            raise service.WorldSimulationError({"code": "granularity", "message": _("Granularity must be slot or day.")})
+        fed.seed = int(seed) if seed else fed.seed
+        fed.granularity = granularity
+        fed.config_json = json.dumps({**options, "exposures": bool(request.form.get("discovery_enabled"))})
+        service.write_federation_files(fed)
+        db.session.commit()
+        flash(_("Parameters saved."), "success")
+    except service.WorldSimulationError as exc:
+        db.session.rollback()
+        _flash_errors(exc)
+    except ValueError:
+        db.session.rollback()
+        flash(_("The seed must be an integer."), "error")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+
+
+def _command(fed_id, user, action):
+    from y_web.src.simulation import execution_backend as eb
+
+    fed = _get_or_404(fed_id, user)
+    try:
+        if action == "start":
+            eb.start_federation(fed)
+            flash(_("World Simulation started."), "success")
+        elif action == "pause":
+            eb.pause_federation(fed)
+            flash(_("World Simulation paused."), "success")
+        elif action == "resume":
+            eb.resume_federation(fed)
+            flash(_("World Simulation resumed."), "success")
+        elif action == "stop":
+            errors = eb.stop_federation(fed)
+            flash(_("World Simulation stopped."), "success")
+            for message in errors:
+                flash(message, "error")
+    except service.WorldSimulationError as exc:
+        _flash_errors(exc)
+    except Exception as exc:
+        db.session.rollback()
+        flash(_("The World Simulation could not complete the operation: %(error)s", error=str(exc)), "error")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+
+
+for _action in ("start", "pause", "resume", "stop"):
+
+    def _make(action):
+        @guarded
+        def view(user, fed_id):
+            return _command(fed_id, user, action)
+
+        view.__name__ = f"command_{action}"
+        return view
+
+    world_simulation.add_url_rule(f"/<int:fed_id>/{_action}", f"command_{_action}", _make(_action), methods=["POST"])
+
+
+@world_simulation.route("/<int:fed_id>/delete", methods=["POST"])
+@guarded
+def delete(user, fed_id):
+    fed = _get_or_404(fed_id, user)
+    try:
+        service.delete_federation(fed)
+        flash(_("World Simulation deleted."), "success")
+    except service.WorldSimulationError:
+        flash(_("Stop the World Simulation before deleting it."), "error")
+        return redirect(url_for("world_simulation.detail", fed_id=fed_id))
+    return redirect(url_for("world_simulation.simulations"))
+
+
+def _read_bus(fed):
+    """Counters of the bus and the last events, read from the database of the coordinator (read only)."""
+    path = Path(fed.folder) / "federation.db"
+    out = {"messages": 0, "deliveries": 0, "events": []}
+    if not path.is_file():
+        return out
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=1.0)
+        try:
+            out["messages"] = conn.execute("SELECT COUNT(*) FROM federation_message").fetchone()[0]
+            out["deliveries"] = conn.execute("SELECT COUNT(*) FROM federation_delivery").fetchone()[0]
+            rows = conn.execute("SELECT tick, kind, detail_json FROM federation_event ORDER BY rowid DESC LIMIT 30").fetchall()
+            out["events"] = [{"tick": t, "kind": k, "detail": d} for t, k, d in rows]
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        pass
+    return out
+
+
+def _log_tail(fed, lines=40):
+    path = Path(fed.folder) / "coordinator.log"
+    try:
+        return path.read_text(errors="replace").splitlines()[-lines:]
+    except OSError:
+        return []
+
+
+@world_simulation.route("/<int:fed_id>/status.json")
+@guarded
+def status(user, fed_id):
+    fed = _get_or_404(fed_id, user)
+    coordinator = cp.coordinator_status(fed, timeout=1.5) if fed.status in ("running", "paused") else None
+    waiting = cp.waiting_members(coordinator)
+    members = []
+    for row, exp in service.members_of(fed):
+        live = ((coordinator or {}).get("members") or {}).get(row.member, {})
+        members.append(
+            {
+                "member": row.member,
+                "label": PLATFORM_LABELS.get(row.platform_type, row.platform_type),
+                "experiment": exp.exp_name,
+                "state": live.get("status"),
+                "tick": live.get("last_ready_tick"),
+                "waiting_for": waiting.get(row.member, []),
+            }
+        )
+    return jsonify(
+        {
+            "state": fed.status,
+            "global_tick": None if not coordinator else coordinator.get("global_tick"),
+            "skew": None if not coordinator else coordinator.get("skew"),
+            "coordinator_up": coordinator is not None,
+            "members": members,
+            "bus": _read_bus(fed),
+            "log": _log_tail(fed),
+        }
+    )
+
+
+@world_simulation.route("/analytics")
+@guarded
+def analytics(user):
+    return render_template("admin/world_simulation/analytics.html", rows=[_row(f) for f in _visible_federations(user)])
+
+
+@world_simulation.route("/schedule")
+@guarded
+def schedule(user):
+    return render_template("admin/world_simulation/schedule.html")
