@@ -80,6 +80,11 @@ LABELS: Dict[str, str] = {
     "conversation.min_messages_before_unmatch": N_(
         "Messages before a match can be ended"
     ),
+    "conversation.after_date_evaluation": N_("Agents evaluate the relationship after a date"),
+    "conversation.after_date_negative_close": N_("Closing the match after a bad date (fallback)"),
+    "conversation.after_date_negative_ghost": N_("Ghosting after a bad date (fallback)"),
+    "conversation.after_date_neutral_close": N_("Closing the match after a so-so date (fallback)"),
+    "conversation.after_date_neutral_ghost": N_("Ghosting after a so-so date (fallback)"),
     "conversation.max_message_chars": N_("Length asked of a message (characters)"),
     "conversation.date_proposal_probability": N_("Probability of proposing a date"),
     "conversation.date_accept_base": N_("Base probability of accepting a date"),
@@ -351,6 +356,16 @@ CLIENT_SECTIONS: List[Section] = [
                 [
                     "conversation.date_proposal_probability",
                     "conversation.date_accept_base",
+                ],
+            ),
+            (
+                N_("After a date"),
+                [
+                    "conversation.after_date_evaluation",
+                    "conversation.after_date_negative_close",
+                    "conversation.after_date_negative_ghost",
+                    "conversation.after_date_neutral_close",
+                    "conversation.after_date_neutral_ghost",
                 ],
             ),
         ],

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 06:38+0000\n"
+"POT-Creation-Date: 2026-10-31 08:39+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1005,6 +1005,9 @@ msgstr "Impostazioni avanzate aggiornate."
 msgid "Affective traits"
 msgstr "Tratti affettivi"
 
+msgid "After a date"
+msgstr "Dopo un appuntamento"
+
 msgid "Age"
 msgstr "Età"
 
@@ -1178,6 +1181,9 @@ msgstr "Pre-prompt degli agenti"
 
 msgid "Agents and pages"
 msgstr "Agenti e pagine"
+
+msgid "Agents evaluate the relationship after a date"
+msgstr "Gli agenti valutano la relazione dopo un appuntamento"
 
 msgid "Agents leave the platform"
 msgstr "Gli agenti lasciano la piattaforma"
@@ -2613,6 +2619,12 @@ msgstr "%(label)s clonato sul branch %(branch)s."
 
 msgid "Close"
 msgstr "Chiudi"
+
+msgid "Closing the match after a bad date (fallback)"
+msgstr "Chiusura del match dopo un appuntamento andato male (ripiego)"
+
+msgid "Closing the match after a so-so date (fallback)"
+msgstr "Chiusura del match dopo un appuntamento così così (ripiego)"
 
 msgid "Cluster"
 msgstr "Cluster"
@@ -5964,6 +5976,12 @@ msgstr "Ghosting"
 
 msgid "Ghosted others"
 msgstr "Ghosting verso altri"
+
+msgid "Ghosting after a bad date (fallback)"
+msgstr "Ghosting dopo un appuntamento andato male (ripiego)"
+
+msgid "Ghosting after a so-so date (fallback)"
+msgstr "Ghosting dopo un appuntamento così così (ripiego)"
 
 msgid "Gini exposure"
 msgstr "Gini dell'esposizione"

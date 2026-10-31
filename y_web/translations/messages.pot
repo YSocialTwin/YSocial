@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 06:38+0000\n"
+"POT-Creation-Date: 2026-10-31 08:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -905,6 +905,9 @@ msgstr ""
 msgid "Affective traits"
 msgstr ""
 
+msgid "After a date"
+msgstr ""
+
 msgid "Age"
 msgstr ""
 
@@ -1075,6 +1078,9 @@ msgid "Agents Pre-prompts"
 msgstr ""
 
 msgid "Agents and pages"
+msgstr ""
+
+msgid "Agents evaluate the relationship after a date"
 msgstr ""
 
 msgid "Agents leave the platform"
@@ -2382,6 +2388,12 @@ msgid "Cloned %(label)s on branch %(branch)s."
 msgstr ""
 
 msgid "Close"
+msgstr ""
+
+msgid "Closing the match after a bad date (fallback)"
+msgstr ""
+
+msgid "Closing the match after a so-so date (fallback)"
 msgstr ""
 
 msgid "Cluster"
@@ -5384,6 +5396,12 @@ msgid "Ghosted"
 msgstr ""
 
 msgid "Ghosted others"
+msgstr ""
+
+msgid "Ghosting after a bad date (fallback)"
+msgstr ""
+
+msgid "Ghosting after a so-so date (fallback)"
 msgstr ""
 
 msgid "Gini exposure"
