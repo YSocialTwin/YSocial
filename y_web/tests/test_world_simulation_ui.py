@@ -53,6 +53,7 @@ def site(world, monkeypatch):  # noqa: F811
     auth.add_url_rule("/login", "login", lambda: "login")
     app.register_blueprint(main)
     app.register_blueprint(auth)
+    app.config["WORLD_SIMULATION_MONITOR"] = False  # never start the queue monitor from a test app
     app.register_blueprint(world_simulation)
 
     @app.context_processor
