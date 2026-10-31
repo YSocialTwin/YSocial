@@ -19,9 +19,10 @@ LOCK_FILE = "run_lock.json"
 COMMON_RECSYS = "common"
 
 # defaults of YWeb that differ from the ones of the runtime: a profile that was seen comes back after a week and
-# an agent has 5 likes a day (the schema of YDating says "back never" and 100 likes). They are shown on the
+# an agent has 5 likes and is shown 15 cards a day (the schema of YDating says "back never", 100 likes, no cap). They are shown on the
 # page and written into the configuration of a new experiment, so what the page shows is what the run uses.
 DEFAULT_LIKES_PER_DAY = 5
+DEFAULT_CARDS_PER_DAY = 15
 DEFAULT_REVISIT_DAYS = 7
 DEFAULT_PASS_COOLDOWN_DAYS = 7
 YWEB_COMMON_DEFAULTS: Dict[str, Any] = {
@@ -34,6 +35,7 @@ def default_matching() -> Dict[str, Any]:
     """The ``matching`` block of a new experiment (only the keys whose default YWeb changes)."""
     return {
         "likes_per_day": DEFAULT_LIKES_PER_DAY,
+        "cards_per_day": DEFAULT_CARDS_PER_DAY,
         "common": dict(YWEB_COMMON_DEFAULTS),
     }
 
@@ -137,11 +139,13 @@ def _common_schema(repo_dir: str) -> Dict[str, Any]:
 
 def schema(repo_dir: str) -> Dict[str, Any]:
     sch = sf.load_schema(repo_dir, SCHEMA)
-    likes = (((sch.get("properties") or {}).get("matching") or {}).get("properties") or {}).get(
-        "likes_per_day"
-    )
-    if isinstance(likes, dict):
-        likes["default"] = DEFAULT_LIKES_PER_DAY
+    props = ((sch.get("properties") or {}).get("matching") or {}).get("properties") or {}
+    for key, value in (
+        ("likes_per_day", DEFAULT_LIKES_PER_DAY),
+        ("cards_per_day", DEFAULT_CARDS_PER_DAY),
+    ):
+        if isinstance(props.get(key), dict):
+            props[key]["default"] = value
     return sch
 
 

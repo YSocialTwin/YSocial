@@ -519,9 +519,11 @@ def test_yweb_defaults_for_likes_and_revisit_are_shown_and_written_in_new_experi
     cfg = ec.generate_dating_server_config("x", "/tmp/x.db", "/tmp/")
     assert cfg["matching"] == {
         "likes_per_day": 5,
+        "cards_per_day": 15,
         "common": {"revisit_after_days": 7, "pass_cooldown_days": 7},
     }
     assert sf.defaults(ss.schema(str(REPO)))["matching"]["likes_per_day"] == 5
+    assert sf.defaults(ss.schema(str(REPO)))["matching"]["cards_per_day"] == 15
     text = ss.recsys_form_text(str(REPO), {})
     assert text["matching.common.revisit_after_days"] == "7"
     assert text["matching.common.pass_cooldown_days"] == "7"

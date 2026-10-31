@@ -148,6 +148,7 @@ LABELS: Dict[str, str] = {
     # server: matching quotas
     "matching.likes_per_day": N_("Likes per agent per day"),
     "matching.superlikes_per_day": N_("Super likes per agent per day"),
+    "matching.cards_per_day": N_("Cards shown per agent per day (0 = no limit)"),
     # server: conversations
     "conversations.opener_genders": N_("Genders allowed to write first"),
     "conversations.ghosting_threshold_slots": N_(
@@ -437,8 +438,17 @@ SERVER_SECTIONS: List[Section] = [
     (
         "matching",
         N_("Daily quotas"),
-        N_("How many likes and super likes an agent has each day."),
-        [(None, ["matching.likes_per_day", "matching.superlikes_per_day"])],
+        N_("How many likes and super likes an agent has each day, and how many cards it is shown."),
+        [
+            (
+                None,
+                [
+                    "matching.likes_per_day",
+                    "matching.superlikes_per_day",
+                    "matching.cards_per_day",
+                ],
+            )
+        ],
         None,
     ),
     (
