@@ -156,10 +156,13 @@ def start_federation(fed, *, resume=True):
             _start_federation_clients(exp, resume=resume)
         fed.status = "running"
         db.session.commit()
-    except Exception:
+    except Exception as exc:
+        from y_web.src.federation.notifications import notify_failure
+
         _stop_federation_processes(fed, members)
         fed.status = "failed"
         db.session.commit()
+        notify_failure(fed, "start", str(exc))
         raise
     return fed
 
