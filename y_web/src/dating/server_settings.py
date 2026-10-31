@@ -18,6 +18,26 @@ SCHEMA = os.path.join("config", "server_config.json")
 LOCK_FILE = "run_lock.json"
 COMMON_RECSYS = "common"
 
+# defaults of YWeb that differ from the ones of the runtime: a profile that was seen comes back after a week and
+# an agent has 5 likes a day (the schema of YDating says "back never" and 100 likes). They are shown on the
+# page and written into the configuration of a new experiment, so what the page shows is what the run uses.
+DEFAULT_LIKES_PER_DAY = 5
+DEFAULT_REVISIT_DAYS = 7
+DEFAULT_PASS_COOLDOWN_DAYS = 7
+YWEB_COMMON_DEFAULTS: Dict[str, Any] = {
+    "revisit_after_days": DEFAULT_REVISIT_DAYS,
+    "pass_cooldown_days": DEFAULT_PASS_COOLDOWN_DAYS,
+}
+
+
+def default_matching() -> Dict[str, Any]:
+    """The ``matching`` block of a new experiment (only the keys whose default YWeb changes)."""
+    return {
+        "likes_per_day": DEFAULT_LIKES_PER_DAY,
+        "common": dict(YWEB_COMMON_DEFAULTS),
+    }
+
+
 # keys YWeb sets itself, and why they are not on the generic form
 INTERNAL: Dict[str, str] = {
     "server_name": "fixed by YWeb: names the logs and the actor",
@@ -107,8 +127,22 @@ class ServerSettingsError(ValueError):
         super().__init__("; ".join(self.problems))
 
 
+def _common_schema(repo_dir: str) -> Dict[str, Any]:
+    sch = sf.load_schema(repo_dir, os.path.join("recsys", "common.json"))
+    for key, value in YWEB_COMMON_DEFAULTS.items():
+        if isinstance((sch.get("properties") or {}).get(key), dict):
+            sch["properties"][key]["default"] = value
+    return sch
+
+
 def schema(repo_dir: str) -> Dict[str, Any]:
-    return sf.load_schema(repo_dir, SCHEMA)
+    sch = sf.load_schema(repo_dir, SCHEMA)
+    likes = (((sch.get("properties") or {}).get("matching") or {}).get("properties") or {}).get(
+        "likes_per_day"
+    )
+    if isinstance(likes, dict):
+        likes["default"] = DEFAULT_LIKES_PER_DAY
+    return sch
 
 
 def form_fields(repo_dir: str) -> List[sf.Field]:
@@ -147,10 +181,7 @@ def recsys_fields(repo_dir: str, model: str) -> List[sf.Field]:
 
 
 def common_fields(repo_dir: str) -> List[sf.Field]:
-    return sf.fields(
-        sf.load_schema(repo_dir, os.path.join("recsys", "common.json")),
-        prefix="matching.common.",
-    )
+    return sf.fields(_common_schema(repo_dir), prefix="matching.common.")
 
 
 def recsys_form_text(repo_dir: str, config: Dict[str, Any]) -> Dict[str, str]:

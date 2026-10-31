@@ -9,6 +9,8 @@ annotation mirrors, the confirmation flag). The module is pure: no Flask, no dat
 import secrets
 from typing import Any, Dict, Optional
 
+from y_web.src.dating.server_settings import default_matching
+
 DATING_SERVER_NAME = "orchestrator_server"
 DATING_NAMESPACE = "dating_sim"
 DATING_DEFAULT_SLOTS_PER_DAY = 24
@@ -80,6 +82,7 @@ def generate_dating_server_config(
             "emotions": bool(emotion_annotation),
         },
         "stress_reward": {"enabled": bool(stress_reward_enabled)},
+        "matching": default_matching(),
         # host metadata read by the experiment pages (accepted by the schema, ignored by the runtime)
         "platform_type": "dating",
         "experiment_name": exp_name,

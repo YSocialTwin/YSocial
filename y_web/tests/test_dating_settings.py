@@ -507,3 +507,23 @@ def test_a_save_without_a_model_keeps_or_repairs_the_default_model():
     assert config["matching"]["default_model"] == models[-1]
     with pytest.raises(ss.ServerSettingsError):
         ss.apply_recsys(str(REPO), config, {"matching_default_model": "tinder"})
+
+
+@needs_runtime
+def test_yweb_defaults_for_likes_and_revisit_are_shown_and_written_in_new_experiments():
+    """5 likes a day; a seen profile comes back after 7 days (pass or not): page and new configuration agree."""
+    from y_web.src.dating import experiment_config as ec
+    from y_web.src.dating import schema_forms as sf
+    from y_web.src.dating import server_settings as ss
+
+    cfg = ec.generate_dating_server_config("x", "/tmp/x.db", "/tmp/")
+    assert cfg["matching"] == {
+        "likes_per_day": 5,
+        "common": {"revisit_after_days": 7, "pass_cooldown_days": 7},
+    }
+    assert sf.defaults(ss.schema(str(REPO)))["matching"]["likes_per_day"] == 5
+    text = ss.recsys_form_text(str(REPO), {})
+    assert text["matching.common.revisit_after_days"] == "7"
+    assert text["matching.common.pass_cooldown_days"] == "7"
+    stored = ss.recsys_form_text(str(REPO), {"matching": {"common": {"revisit_after_days": 3}}})
+    assert stored["matching.common.revisit_after_days"] == "3"  # a stored value wins
