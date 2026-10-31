@@ -127,11 +127,20 @@ def test_create_writes_folder_token_configuration_and_rows(world):
     token = os.path.join(fed.folder, "federation.token")
     assert oct(os.stat(token).st_mode & 0o777) == "0o600" and fed.token
     assert FederationMember.query.count() == 2 and FederationIdentityLink.query.count() == 6
+    for platform in exps:  # member configurations are untouched until the World Simulation starts
+        for name in ("config_server.json", f"client_x-{platform}.json"):
+            assert "federation" not in json.loads((tmp / "experiments" / platform / name).read_text())
+    written = service.write_member_configs(fed)
+    assert len(written) == 4
+    service.write_member_configs(fed)  # idempotent
     for platform in exps:
         for name in ("config_server.json", f"client_x-{platform}.json"):
             section = json.loads((tmp / "experiments" / platform / name).read_text())["federation"]
             assert section["enabled"] and section["member"] == platform and section["federation_id"] == fed.id
             assert section["coordinator_file"].endswith("federation_coordinator.json")
+    assert len(service.remove_member_configs(fed)) == 4
+    for platform in exps:
+        assert "federation" not in json.loads((tmp / "experiments" / platform / "config_server.json").read_text())
 
 
 def test_invalid_group_creates_nothing(world):
@@ -158,6 +167,7 @@ def test_delete_restores_the_member_configuration(world):
 
     app, exps, tmp = world
     fed = service.create_federation("one", list(exps.values()))
+    service.write_member_configs(fed)
     service.delete_federation(fed)
     assert Federation.query.count() == 0
     for platform in exps:

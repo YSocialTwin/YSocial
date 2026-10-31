@@ -215,7 +215,9 @@ def _clean_options(options) -> dict:
 
 
 def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", options=None, exposures=False):
-    """Validate and create a World Simulation; writes its folder, token and configuration. Returns the model row."""
+    """Validate and create a World Simulation; writes its folder, token and federation.json. Returns the model row.
+
+    The member configurations are not touched until the World Simulation starts (see write_member_configs)."""
     from y_web.src.models.admin import Exps, Federation, FederationIdentityLink, FederationMember
 
     name = (name or "").strip()
@@ -264,7 +266,6 @@ def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", op
             )
     try:
         write_federation_files(fed)
-        write_member_configs(fed)
     except Exception:
         db.session.rollback()
         shutil.rmtree(folder, ignore_errors=True)
@@ -347,7 +348,10 @@ def _update_json(path: Path, section: Optional[dict]) -> None:
 
 
 def write_member_configs(fed) -> list:
-    """Install the federation section in the server and client configuration files of every member (idempotent)."""
+    """Install the federation section in the server and client configuration files of every member (idempotent).
+
+    Done when the World Simulation starts and undone when it stops, so that a member experiment started on its own
+    never waits for a coordinator."""
     written = []
     for row, exp in members_of(fed):
         section = member_section(fed, row, exp)
