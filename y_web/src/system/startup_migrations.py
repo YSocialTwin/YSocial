@@ -60,6 +60,35 @@ def _repair_legacy_columns(app):
         print(f"⚠ Warning: legacy column sync failed: {exc}")
 
 
+FEDERATION_TABLES = ("Federation", "FederationMember", "FederationIdentityLink")
+
+
+def ensure_federation_tables(engine):
+    """Create the World Simulation tables when missing (additive, idempotent, no existing table is touched).
+
+    Returns the names of the tables created.
+    """
+    from sqlalchemy import inspect
+
+    from y_web.src.models import admin as admin_models
+
+    tables = [getattr(admin_models, name).__table__ for name in FEDERATION_TABLES]
+    existing = set(inspect(engine).get_table_names())
+    missing = [t for t in tables if t.name not in existing]
+    for table in missing:
+        table.create(bind=engine, checkfirst=True)
+    return [t.name for t in missing]
+
+
+def _ensure_federation_tables(app):
+    try:
+        created = ensure_federation_tables(db.engines["db_admin"])
+        if created:
+            print("✓ Created World Simulation tables: " + ", ".join(created))
+    except Exception as exc:  # never block startup
+        print(f"⚠ Warning: World Simulation tables not created: {exc}")
+
+
 def run_startup_migrations(app, db_type):
     """Migrate the databases of ``app`` at startup."""
     # ------------------------------------------------------------------ #
@@ -111,6 +140,7 @@ def run_startup_migrations(app, db_type):
             alembic_upgrade()
             print("✓ Alembic: primary schema up to date")
             _repair_legacy_columns(app)
+            _ensure_federation_tables(app)
 
             # Bring every active experiment database up to date.
             # Experiment DBs (experiments/<UUID>/database_server.db) are NOT
@@ -169,6 +199,7 @@ def run_startup_migrations(app, db_type):
                 _alembic_cmd.upgrade(_sa_cfg, "head")
                 print("✓ Alembic (standalone): primary schema up to date")
                 _repair_legacy_columns(app)
+                _ensure_federation_tables(app)
 
                 try:
                     from y_web.src.experiment.context import (

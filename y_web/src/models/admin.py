@@ -1009,6 +1009,70 @@ class SignupTarget(db.Model):
     ref = db.Column(db.String(64), nullable=False)
 
 
+class Federation(db.Model):
+    """A World Simulation: a group of member experiments (one per platform) run on one shared clock.
+
+    ``status``: "stopped" (default), "starting", "running", "paused", "stopping", "completed", "failed".
+    ``federation_id`` is the stable identifier written to ``federation.json`` and used in ``source_ref``.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_id = db.Column(db.String(64), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=False, default="")
+    owner = db.Column(db.String(50), nullable=False, default="")
+    seed = db.Column(db.Integer, nullable=False, default=0)
+    granularity = db.Column(db.String(10), nullable=False, default="slot")
+    status = db.Column(db.String(20), nullable=False, default="stopped")
+    host = db.Column(db.String(50), nullable=False, default="127.0.0.1")
+    port = db.Column(db.Integer, nullable=True, default=None)
+    coordinator_pid = db.Column(db.Integer, nullable=True, default=None)
+    token = db.Column(db.String(128), nullable=False, default="")
+    folder = db.Column(db.String(255), nullable=False, default="")
+    config_json = db.Column(db.Text, nullable=False, default="{}")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
+class FederationMember(db.Model):
+    """An experiment taking part in a World Simulation (one member per platform type)."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_member"
+    __table_args__ = (
+        db.UniqueConstraint("federation_pk", "member", name="uq_federation_member_name"),
+        db.UniqueConstraint("federation_pk", "exp_id", name="uq_federation_member_exp"),
+    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_pk = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    member = db.Column(db.String(50), nullable=False)
+    platform_type = db.Column(db.String(50), nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+
+
+class FederationIdentityLink(db.Model):
+    """Global agent identity of a World Simulation and its local account on one member."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_identity_link"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "federation_pk", "global_agent_id", "member", name="uq_federation_identity"
+        ),
+    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_pk = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    global_agent_id = db.Column(db.String(64), nullable=False)
+    member = db.Column(db.String(50), nullable=False)
+    local_account_id = db.Column(db.String(64), nullable=False)
+
+
 def _delete_agent_picture(mapper, connection, agent):
     """The generated profile picture of an agent is deleted with the agent (file of the media folder)."""
     from y_web.src.agents.profile_pictures import delete_picture_file
