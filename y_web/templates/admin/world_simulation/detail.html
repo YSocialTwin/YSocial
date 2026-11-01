@@ -97,7 +97,7 @@
                                 <div class="ws-actions" style="margin-bottom:14px;">
                                     <form method="post" action="{{ url_for('world_simulation.analytics_rebuild', fed_id=fed.id) }}"><button class="button is-light" type="submit">{{ _('Recalculate') }}</button></form>
                                     {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival'))) %}
-                                    <a class="button is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}">{{ _('Download') }} {{ label }} (CSV)</a>
+                                    <a class="button is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}">{{ _('Download %(what)s (CSV)', what=label) }}</a>
                                     {% endfor %}
                                 </div>
                                 <h4 class="title is-6">{{ _('Share of attention per day') }}</h4>

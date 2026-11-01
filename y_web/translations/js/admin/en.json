@@ -496,5 +496,7 @@
   "✗ Error: {message}": "✗ Error: {message}",
   "✗ Failed to update interval": "✗ Failed to update interval",
   "Platform fields": "Platform fields",
-  "Standard": "Standard"
+  "Standard": "Standard",
+  "World Simulation": "World Simulation",
+  "Managed by the World Simulation": "Managed by the World Simulation"
 }

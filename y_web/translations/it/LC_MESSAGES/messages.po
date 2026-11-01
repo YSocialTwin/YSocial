@@ -16564,6 +16564,9 @@ msgstr "✔️ Usa"
 msgid "World Simulation"
 msgstr "World Simulation"
 
+msgid "Download %(what)s (CSV)"
+msgstr "Scarica %(what)s (CSV)"
+
 msgid "Export, copy and reset"
 msgstr "Esporta, copia e reimposta"
 
