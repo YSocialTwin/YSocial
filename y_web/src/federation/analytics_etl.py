@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Tuple
 ANALYTICS_FILE = "analytics_federation.db"
 STATUS_FILE = "analytics_federation.status.json"
 SOURCE_FILE = "federation.db"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # 2: share chains, bridge agents and topics carried (X3.2)
 SLOTS_PER_DAY = 24
 SOURCE_REF_PREFIX = "ysocial://"
 NEW = "(new)"  # origin of a join that follows no leave
@@ -83,6 +83,51 @@ FIELD_MAP: Dict[str, Tuple[str, str, List[Tuple[str, str, str]]]] = {
             ("active", "INTEGER", "agents with an affective report for the day (active at its end)"),
             ("left", "INTEGER", "agents whose membership ended that day"),
             ("survival", "REAL", "active / active on the first day with data for the member"),
+        ],
+    ),
+    "shares": (
+        "Cross-posts that share the content of another agent (crosspost.v1 with `quoted`), one row per share and destination.",
+        "federation_message (crosspost.v1, quoted)",
+        [
+            ("day", "INTEGER", "day the share was emitted"),
+            ("tick", "INTEGER", "tick the share was emitted"),
+            ("sharer", "TEXT", "global_agent_id of the agent that shares"),
+            ("origin_member", "TEXT", "platform where the sharer saw the content (quoted.member)"),
+            ("destination", "TEXT", "member the share was addressed to"),
+            ("original_author", "TEXT", "name of the author of the shared content"),
+            ("original_author_id", "TEXT", "global_agent_id of that author, '' when it is not a federation identity"),
+            ("quoted_ref", "TEXT", "reference of the shared content ('' for an author outside the federation)"),
+            ("depth", "INTEGER", "1 for a share of local content, +1 for each earlier cross-post the content went through"),
+        ],
+    ),
+    "share_depth": (
+        "How many shares sit at each depth of a chain.",
+        "federation_message (crosspost.v1, quoted)",
+        [
+            ("depth", "INTEGER", "depth in the chain (see shares.depth)"),
+            ("shares", "INTEGER", "shares at that depth"),
+        ],
+    ),
+    "bridge_agents": (
+        "Agents whose shares carry content from one platform to another, most active first.",
+        "federation_message (crosspost.v1, quoted)",
+        [
+            ("agent", "TEXT", "global_agent_id of the sharer"),
+            ("shares", "INTEGER", "shares sent"),
+            ("origins", "INTEGER", "distinct platforms the shared content came from"),
+            ("destinations", "INTEGER", "distinct platforms the shares reached"),
+        ],
+    ),
+    "topics_carried": (
+        "Topics that travelled with cross-posted content, by platform pair. Coordinator data only: whether the destination "
+        "had to create the topic is in the member databases (federation_topic), which this analysis does not open.",
+        "federation_message (crosspost.v1, topics)",
+        [
+            ("topic", "TEXT", "topic name as sent"),
+            ("source", "TEXT", "member where the content was posted (from its source_ref)"),
+            ("target", "TEXT", "member the content was addressed to"),
+            ("n", "INTEGER", "cross-posts carrying the topic"),
+            ("first_day", "INTEGER", "day of the first one"),
         ],
     ),
 }
@@ -195,9 +240,38 @@ def compute(src: sqlite3.Connection) -> Dict[str, Any]:
          round(active.get((day, member), 0) / first[member], 6) if first.get(member) else 0.0)
         for day, member in keys
     ]
+    shares: List[tuple] = []
+    depth_of_ref: Dict[str, int] = {}
+    carried: Dict[Tuple[str, str, str], List[int]] = {}
+    for _fid, target, tick, payload in messages:
+        body = json.loads(payload)
+        ref, quoted, day = body.get("source_ref", ""), body.get("quoted"), int(tick) // SLOTS_PER_DAY
+        depth = depth_of_ref.get(quoted.get("source_ref") or "", 0) + 1 if quoted else 1
+        depth_of_ref[ref] = max(depth, depth_of_ref.get(ref, 0))
+        if quoted:
+            shares.append((day, int(tick), str(body.get("global_agent_id", "")), quoted["member"], target,
+                           quoted["author_name"], quoted.get("global_agent_id") or "", quoted.get("source_ref") or "", depth))
+        for topic in body.get("topics") or []:
+            cell = carried.setdefault((str(topic), _origin(ref), target), [0, day])
+            cell[0] += 1
+            cell[1] = min(cell[1], day)
+    shares.sort()
+    depth_count: Dict[int, int] = defaultdict(int)
+    bridge: Dict[str, List[Any]] = {}
+    for row in shares:
+        depth_count[row[8]] += 1
+        entry = bridge.setdefault(row[2], [0, set(), set()])
+        entry[0] += 1
+        entry[1].add(row[3])
+        entry[2].add(row[4])
+    share_depth = sorted(depth_count.items())
+    bridge_agents = sorted(((a, e[0], len(e[1]), len(e[2])) for a, e in bridge.items()), key=lambda r: (-r[1], r[0]))
+    topics_carried = [(t, a, b, c[0], c[1]) for (t, a, b), c in sorted(carried.items())]
     last_day = max([r[0] for r in daily_attention] + [r[0] for r in survival] + [r[0] for r in crosspost_flows], default=-1)
     return {"tables": {"daily_attention": daily_attention, "migration_flows": migration_flows,
-                       "crosspost_flows": crosspost_flows, "cascades": cascades, "survival": survival},
+                       "crosspost_flows": crosspost_flows, "cascades": cascades, "survival": survival,
+                       "shares": shares, "share_depth": share_depth, "bridge_agents": bridge_agents,
+                       "topics_carried": topics_carried},
             "last_day": last_day, "messages": len(messages), "events": len(events)}
 
 

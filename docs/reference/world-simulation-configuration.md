@@ -22,6 +22,12 @@ starts. Values shown are the defaults.
 | `probability` | `{}` | `{"<source>-><target>": p}` with member names or platform types, each p in [0, 1]; a pair that is not listed has probability 0; used by `coordinator_rule` only |
 | `propensity` | not set | how often an agent tries to cross-post (client side); written into the `federation` section of the members |
 
+## `topics`
+
+| Key | Default | Meaning |
+|---|---|---|
+| `migration` | `true` | content that crosses platforms brings its topics and a topic missing on the destination is created; `false` switches it off where a runtime has a switch (forum `topic_migration`, YSimulator `create_topics`). Only the opt-out is stored. |
+
 ## `discovery`
 
 `enabled` (`false`), `decision` (`"logit"` or `"threshold"`), `decay` (0.1), `w_view` (1.0), `w_view_tie` (2.0),
@@ -53,3 +59,5 @@ it when it stops. Without it, or with `enabled: false`, a runtime does not chang
 | `exposures` | send what each agent was shown, for discovery |
 | `crosspost_mode` | `coordinator_rule` or `agent_action` |
 | `crosspost_propensity`, `seed` | written only when `crosspost.propensity` is set |
+| `topic_migration` | forum member only: `topics.migration` (default true) |
+| `create_topics` | microblogging member on HPC (YSimulator) only: `topics.migration` (default true) |

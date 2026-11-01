@@ -62,3 +62,51 @@ Agents still present on each platform at the end of each day, and those who left
 | `left` | INTEGER | agents whose membership ended that day |
 | `survival` | REAL | active / active on the first day with data for the member |
 
+### `shares`
+
+Cross-posts that share the content of another agent (crosspost.v1 with `quoted`), one row per share and destination. Source: federation_message (crosspost.v1, quoted).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | day the share was emitted |
+| `tick` | INTEGER | tick the share was emitted |
+| `sharer` | TEXT | global_agent_id of the agent that shares |
+| `origin_member` | TEXT | platform where the sharer saw the content (quoted.member) |
+| `destination` | TEXT | member the share was addressed to |
+| `original_author` | TEXT | name of the author of the shared content |
+| `original_author_id` | TEXT | global_agent_id of that author, '' when it is not a federation identity |
+| `quoted_ref` | TEXT | reference of the shared content ('' for an author outside the federation) |
+| `depth` | INTEGER | 1 for a share of local content, +1 for each earlier cross-post the content went through |
+
+### `share_depth`
+
+How many shares sit at each depth of a chain. Source: federation_message (crosspost.v1, quoted).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `depth` | INTEGER | depth in the chain (see shares.depth) |
+| `shares` | INTEGER | shares at that depth |
+
+### `bridge_agents`
+
+Agents whose shares carry content from one platform to another, most active first. Source: federation_message (crosspost.v1, quoted).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `agent` | TEXT | global_agent_id of the sharer |
+| `shares` | INTEGER | shares sent |
+| `origins` | INTEGER | distinct platforms the shared content came from |
+| `destinations` | INTEGER | distinct platforms the shares reached |
+
+### `topics_carried`
+
+Topics that travelled with cross-posted content, by platform pair. Coordinator data only: whether the destination had to create the topic is in the member databases (federation_topic), which this analysis does not open. Source: federation_message (crosspost.v1, topics).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name as sent |
+| `source` | TEXT | member where the content was posted (from its source_ref) |
+| `target` | TEXT | member the content was addressed to |
+| `n` | INTEGER | cross-posts carrying the topic |
+| `first_day` | INTEGER | day of the first one |
+

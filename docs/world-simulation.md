@@ -56,7 +56,11 @@ Several World Simulations can be queued from **Schedule**.
 
 The **Analytics** tab shows the share of attention per platform and day, migration between platforms, cross-posts
 per day and direction, the cascades of cross-posted contents and survival per platform. The tables can be downloaded
-as CSV and recalculated by hand; their columns are listed in
+as CSV and recalculated by hand. When agents share the content of other agents across platforms
+(`crosspost.mode = agent_action`), the tab also shows the depth of the share chains, the bridge agents (who carries
+content from one platform to another) and the topics that travelled with cross-posted content; the last one comes from
+the coordinator only, so the topics a platform had to create are recorded in that platform's own database
+(`federation_topic`). The tables of the tab are their columns are listed in
 [the analytics mapping](world-simulation-analytics-mapping.md). The per-platform analytics of each experiment
 (dating, instant messaging, ...) stay on the pages of those experiments.
 

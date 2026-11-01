@@ -98,7 +98,7 @@
                                     <span id="ws-an-state"></span></p>
                                 <div class="ws-actions" style="margin-bottom:14px;">
                                     <form method="post" action="{{ url_for('world_simulation.analytics_rebuild', fed_id=fed.id) }}"><button class="button is-light" type="submit">{{ _('Recalculate') }}</button></form>
-                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival'))) %}
+                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival')), ('shares', _('Shares')), ('share_depth', _('Share chains')), ('bridge_agents', _('Bridge agents')), ('topics_carried', _('Topics carried'))) %}
                                     <a class="button is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}">{{ _('Download %(what)s (CSV)', what=label) }}</a>
                                     {% endfor %}
                                 </div>
@@ -110,6 +110,14 @@
                                 <div style="height:240px;"><canvas id="ws-chart-crosspost"></canvas></div>
                                 <h4 class="title is-6" style="margin-top:14px;">{{ _('Cross-post cascades') }}</h4>
                                 <table class="ws-table" id="ws-an-cascades"><thead><tr><th>{{ _('Original content') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Day') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Platforms reached') }}</th></tr></thead><tbody></tbody></table>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Shares of other agents\' content') }}</h4>
+                                <p class="ws-sub">{{ _('Chain depth: 1 for content of the platform where it was seen, +1 for each cross-post it went through.') }}</p>
+                                <div style="height:200px;"><canvas id="ws-chart-sharedepth"></canvas></div>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Bridge agents') }}</h4>
+                                <table class="ws-table" id="ws-an-bridges"><thead><tr><th>{{ _('Agent') }}</th><th>{{ _('Shares') }}</th><th>{{ _('Platforms of origin') }}</th><th>{{ _('Platforms reached') }}</th></tr></thead><tbody></tbody></table>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Topics carried between platforms') }}</h4>
+                                <p class="ws-sub">{{ _('From the cross-posts of the coordinator; the topics a platform had to create are in its own database.') }}</p>
+                                <table class="ws-table" id="ws-an-topics"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('From') }}</th><th>{{ _('To') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('First day') }}</th></tr></thead><tbody></tbody></table>
                                 <h4 class="title is-6" style="margin-top:14px;">{{ _('Survival per platform') }}</h4>
                                 <div style="height:240px;"><canvas id="ws-chart-survival"></canvas></div>
                             </div>
@@ -219,6 +227,19 @@
             [r.source_ref, r.origin, r.day, r.size, r.targets].forEach(function (v) { var td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
             body.appendChild(tr);
         });
+        var sd = t.share_depth || [];
+        draw('ws-chart-sharedepth', 'bar', sd.map(function (r) { return r.depth; }), [{label: '#', backgroundColor: COLORS[3], data: sd.map(function (r) { return r.shares; })}]);
+        function fill(selector, rows, keys, limit) {
+            var b = document.querySelector(selector + ' tbody');
+            b.textContent = '';
+            rows.slice(0, limit).forEach(function (r) {
+                var tr = document.createElement('tr');
+                keys.forEach(function (k) { var td = document.createElement('td'); td.textContent = r[k]; tr.appendChild(td); });
+                b.appendChild(tr);
+            });
+        }
+        fill('#ws-an-bridges', t.bridge_agents || [], ['agent', 'shares', 'origins', 'destinations'], 20);
+        fill('#ws-an-topics', (t.topics_carried || []).slice().sort(function (a, b) { return b.n - a.n; }), ['topic', 'source', 'target', 'n', 'first_day'], 30);
         var sDays = uniq(sur, 'day').map(Number).sort(function (a, b) { return a - b; });
         draw('ws-chart-survival', 'line', sDays, perMember(sur, 'survival', sDays, uniq(sur, 'member')), {scales: {y: {min: 0}}});
     }

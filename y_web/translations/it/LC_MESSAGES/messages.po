@@ -16735,6 +16735,39 @@ msgstr "Gli agenti lasciano le piattaforme che non li interessano più"
 msgid "Shared content brings its topics, and missing topics are created"
 msgstr "I contenuti condivisi portano con sé i loro argomenti e quelli mancanti vengono creati"
 
+msgid "Share chains"
+msgstr "Catene di condivisione"
+
+msgid "Bridge agents"
+msgstr "Agenti ponte"
+
+msgid "Topics carried"
+msgstr "Argomenti portati"
+
+msgid "Shares of other agents' content"
+msgstr "Condivisioni di contenuti di altri agenti"
+
+msgid "Chain depth: 1 for content of the platform where it was seen, +1 for each cross-post it went through."
+msgstr "Profondità della catena: 1 per un contenuto della piattaforma in cui è stato visto, +1 per ogni cross-post attraversato."
+
+msgid "Platforms of origin"
+msgstr "Piattaforme di origine"
+
+msgid "Topics carried between platforms"
+msgstr "Argomenti portati da una piattaforma all'altra"
+
+msgid "From the cross-posts of the coordinator; the topics a platform had to create are in its own database."
+msgstr "Dai cross-post del coordinatore; gli argomenti che una piattaforma ha dovuto creare sono nel suo database."
+
+msgid "From"
+msgstr "Da"
+
+msgid "To"
+msgstr "A"
+
+msgid "First day"
+msgstr "Primo giorno"
+
 msgid "Advanced parameters (JSON)"
 msgstr "Parametri avanzati (JSON)"
 
