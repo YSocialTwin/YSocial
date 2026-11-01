@@ -212,3 +212,27 @@ def _first_member(fed):
 
 def _exp_of(fed):
     return service.members_of(fed)[0][1]
+
+
+def test_world_simulation_of_an_experiment_and_its_lock(world):
+    app, exps, tmp = world
+    assert service.world_simulation_of(exps["forum"]) is None and service.world_simulation_map() == {}
+    fed = service.create_federation("badge", list(exps.values()))
+    found = service.world_simulation_of(exps["forum"])
+    assert found == {"id": fed.id, "name": "badge", "status": "stopped", "locked": False}
+    assert set(service.world_simulation_map([exps["forum"]])) == {exps["forum"]}
+    for status, locked in (("starting", True), ("running", True), ("paused", True), ("stopping", True),
+                           ("stopped", False), ("completed", False), ("failed", False)):
+        fed.status = status
+        assert service.world_simulation_of(exps["forum"])["locked"] is locked
+
+
+def test_the_experiment_pages_show_the_badge_and_disable_the_member_commands():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    for name in ("experiment_details.html", "experiment_details_forum.html"):
+        text = (root / "templates" / "admin" / name).read_text()
+        assert "world_simulation_of(experiment.idexp)" in text and text.count("ws and ws.locked") == 2
+    assert "world_simulation_locked" in (root / "static" / "assets" / "js" / "admin-settings.js").read_text()
+    assert "world_simulation_of" in (root / "__init__.py").read_text()

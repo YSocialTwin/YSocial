@@ -16564,6 +16564,15 @@ msgstr "✔️ Usa"
 msgid "World Simulation"
 msgstr "World Simulation"
 
+msgid "Managed by the World Simulation"
+msgstr "Gestito dalla World Simulation"
+
+msgid "This experiment belongs to a World Simulation: it starts and stops with it"
+msgstr "Questo esperimento fa parte di una World Simulation: si avvia e si ferma con essa"
+
+msgid "This experiment is managed by the World Simulation '%(name)s'."
+msgstr "Questo esperimento è gestito dalla World Simulation '%(name)s'."
+
 msgid "World Simulations"
 msgstr "World Simulation"
 

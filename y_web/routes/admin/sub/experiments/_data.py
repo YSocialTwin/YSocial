@@ -350,6 +350,9 @@ def experiments_data():
     exp_progress_label = {}
     # Track experiments with infinite clients
     exp_has_infinite = {}
+    from y_web.src.federation.service import world_simulation_map
+
+    world_simulations = world_simulation_map([e.idexp for e in res])
     for exp in res:
         clients = clients_by_exp.get(exp.idexp, [])
         exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
@@ -378,6 +381,8 @@ def experiments_data():
                 "simulator_type": getattr(exp, "simulator_type", "Standard"),
                 "is_remote": getattr(exp, "is_remote", 0),
                 "can_manage": user_can_manage_experiment(user, exp),
+                "world_simulation": (world_simulations.get(exp.idexp) or {}).get("name"),
+                "world_simulation_locked": bool((world_simulations.get(exp.idexp) or {}).get("locked")),
             }
             for exp in res
         ],

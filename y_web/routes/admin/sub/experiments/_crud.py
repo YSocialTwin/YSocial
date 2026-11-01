@@ -3019,6 +3019,13 @@ def start_experiment(uid):
     """Handle start experiment operation."""
     check_privileges(current_user.username)
 
+    from y_web.src.federation.service import world_simulation_of
+
+    ws = world_simulation_of(uid)
+    if ws and ws["locked"]:
+        flash(_("This experiment is managed by the World Simulation '%(name)s'.", name=ws["name"]), "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
     # get experiment
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
@@ -3098,6 +3105,13 @@ def stop_experiment(uid):
     4. Update server execution status in database
     """
     check_privileges(current_user.username)
+
+    from y_web.src.federation.service import world_simulation_of
+
+    ws = world_simulation_of(uid)
+    if ws and ws["locked"]:
+        flash(_("This experiment is managed by the World Simulation '%(name)s'.", name=ws["name"]), "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
 
     # get experiment
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()

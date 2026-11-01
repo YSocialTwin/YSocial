@@ -286,6 +286,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["agent_picture"] = picture_of_username  # the IM avatars show the agent's picture
 
+    from y_web.src.federation.service import world_simulation_of
+
+    app.jinja_env.globals["world_simulation_of"] = world_simulation_of  # badge and disabled commands of the members
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)

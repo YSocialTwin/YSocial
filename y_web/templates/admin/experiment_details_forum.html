@@ -44,6 +44,10 @@
                                         {% else %}
                                         {{ experiment.exp_name }}
                                         {% endif %}
+                                        {% set ws = world_simulation_of(experiment.idexp) %}
+                                        {% if ws %}
+ <a class="ys-badge-success" href="{{ url_for('world_simulation.detail', fed_id=ws.id) }}" title="{{ _('This experiment belongs to a World Simulation: it starts and stops with it') }}">{{ _('World Simulation') }}: {{ ws.name }}</a>
+                                        {% endif %}
                                         {% if has_infinite_client %}
  <span class="ys-badge-success" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">∞</span>
                                         {% endif %}
@@ -460,7 +464,11 @@
  <span class="right ys-flex-gap-8">
  <div class="ys-flex-gap-3">
                                             {% if experiment.running == 0 %}
-                                            {% if configuration_update_required %}
+                                            {% if ws and ws.locked %}
+ <span class="link-tooltip" title="{{ _('Managed by the World Simulation') }}">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+ </span>
+ {% elif configuration_update_required %}
  <span class="link-tooltip" title="{{ _('Update configuration first') }}">
  <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
                                             </span>
@@ -471,7 +479,11 @@
                                             {% endif %}
                                             {% endif %}
                                         {% if experiment.running == 1 and can_manage_experiment %}
-                                            {% if configuration_update_required %}
+                                            {% if ws and ws.locked %}
+ <span class="link-tooltip" title="{{ _('Managed by the World Simulation') }}">
+ <i class="mdi mdi-stop ys-icon-muted"></i>
+ </span>
+ {% elif configuration_update_required %}
  <span class="link-tooltip" title="{{ _('Update configuration first') }}">
  <i class="mdi mdi-stop ys-icon-muted"></i>
                                             </span>

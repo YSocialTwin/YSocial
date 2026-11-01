@@ -399,3 +399,27 @@ def delete_federation(fed) -> None:
     db.session.commit()
     if folder:
         shutil.rmtree(folder, ignore_errors=True)
+
+
+def world_simulation_map(exp_ids=None) -> dict:
+    """{experiment id: {"id", "name", "status"}} of the experiments that belong to a World Simulation (one query)."""
+    from y_web.src.models.admin import Federation, FederationMember
+
+    query = db.session.query(FederationMember.exp_id, Federation.id, Federation.name, Federation.status).join(
+        Federation, FederationMember.federation_pk == Federation.id
+    )
+    if exp_ids is not None:
+        query = query.filter(FederationMember.exp_id.in_(list(exp_ids)))
+    # "locked": the World Simulation is starting, running, paused or stopping, so the member cannot be started or stopped alone
+    return {
+        e: {"id": i, "name": n, "status": s, "locked": s in ("starting", "running", "paused", "stopping")}
+        for e, i, n, s in query.all()
+    }
+
+
+def world_simulation_of(exp_id):
+    """The World Simulation ({"id", "name", "status"}) an experiment belongs to, or None."""
+    try:
+        return world_simulation_map([exp_id]).get(exp_id)
+    except Exception:  # noqa: BLE001 - a page or a command must work even where the federation tables cannot be read
+        return None
