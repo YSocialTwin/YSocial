@@ -37,6 +37,13 @@ keys `0`, `A`, `S`, `I`, `N`, `F` (defaults -3.0, 1.0, 0.5, 1.5, 0.5, 0.5).
 
 `quoted_weight` (0.0, between 0 and 1): when above 0, an exposure to a cross-post that quotes content from a third platform also adds awareness of that platform, at `quoted_weight` times the usual weight; 0 switches it off. It is set in the advanced options of the World Simulation (`discovery.quoted_weight`).
 
+## `provisioning`
+
+Read by YSocial only (it is not written to `federation.json`): `{"members": ["microblogging"]}` lets the agents of the other members **discover** those platforms
+and get an account there on the fly (needs `discovery.enabled`). Honoured only for runtimes that create accounts on request and whose client
+adopts them (today microblogging on the Standard backend: YServer + YClient); asking for another member has no effect. The member entry in
+`federation.json` then carries `provision: true`, and the `federation` section of that member `provision` and `adopt`. See `flexible-populations.md` in the YFederation docs.
+
 ## `pseudonyms`
 
 | Key | Default | Meaning |
@@ -69,6 +76,8 @@ it when it stops. Without it, or with `enabled: false`, a runtime does not chang
 | `crosspost_propensity`, `seed` | written only when `crosspost.propensity` is set |
 | `topic_migration` | forum member, and microblogging member (YServer): written as `false` only when the admin opted out of `topics.migration`; absent means the runtime default (on) |
 | `create_topics` | microblogging member on HPC (YSimulator) only: `topics.migration` (default true) |
+| `bindings_file` | file where the runtime keeps who is who: it reports its accounts by username and the coordinator answers with the global id of the agent it expected under that name (`bindings_<member>.db` in the folder of the World Simulation) |
+| `provision`, `adopt` | only with `provisioning.members`: the server creates the accounts the coordinator asks for and the client gives each an agent |
 
 ### People enrolled (`accounts`)
 
