@@ -110,3 +110,30 @@ Topics that travelled with cross-posted content, by platform pair. Coordinator d
 | `n` | INTEGER | cross-posts carrying the topic |
 | `first_day` | INTEGER | day of the first one |
 
+### `human_crossposts`
+
+Cross-posts sent by people (identity `human:<id>`), one row per day, platform pair and kind. The identities of the agents never start with `human:` (INV-14), so this is exactly what the people did. Source: federation_message (crosspost.v1 whose global_agent_id starts with human:).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | day the cross-post was emitted |
+| `human` | TEXT | global_agent_id of the person (human:<id>) |
+| `source` | TEXT | member the person posted on (source_member of the message) |
+| `target` | TEXT | member the cross-post was addressed to |
+| `shares` | INTEGER | of them, shares of another agent's content (with `quoted`) |
+| `n` | INTEGER | cross-posts |
+
+### `human_activity`
+
+What each person did across the platforms, most active first. Source: federation_message (crosspost.v1 whose global_agent_id starts with human:).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `human` | TEXT | global_agent_id of the person (human:<id>) |
+| `crossposts` | INTEGER | cross-posts sent |
+| `shares` | INTEGER | of them, shares of another agent's content |
+| `origins` | INTEGER | distinct platforms the person posted from |
+| `destinations` | INTEGER | distinct platforms the cross-posts reached |
+| `first_day` | INTEGER | day of the first cross-post |
+| `last_day` | INTEGER | day of the last one |
+

@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Tuple
 ANALYTICS_FILE = "analytics_federation.db"
 STATUS_FILE = "analytics_federation.status.json"
 SOURCE_FILE = "federation.db"
-SCHEMA_VERSION = 2  # 2: share chains, bridge agents and topics carried (X3.2)
+SCHEMA_VERSION = 3  # 2: share chains, bridge agents and topics carried (X3.2); 3: people (human:) tables (H8)
 SLOTS_PER_DAY = 24
 SOURCE_REF_PREFIX = "ysocial://"
 NEW = "(new)"  # origin of a join that follows no leave
@@ -131,6 +131,33 @@ FIELD_MAP: Dict[str, Tuple[str, str, List[Tuple[str, str, str]]]] = {
         ],
     ),
 }
+FIELD_MAP["human_crossposts"] = (
+    "Cross-posts sent by people (identity `human:<id>`), one row per day, platform pair and kind. The identities of the agents never "
+    "start with `human:` (INV-14), so this is exactly what the people did.",
+    "federation_message (crosspost.v1 whose global_agent_id starts with human:)",
+    [
+        ("day", "INTEGER", "day the cross-post was emitted"),
+        ("human", "TEXT", "global_agent_id of the person (human:<id>)"),
+        ("source", "TEXT", "member the person posted on (source_member of the message)"),
+        ("target", "TEXT", "member the cross-post was addressed to"),
+        ("shares", "INTEGER", "of them, shares of another agent's content (with `quoted`)"),
+        ("n", "INTEGER", "cross-posts"),
+    ],
+)
+FIELD_MAP["human_activity"] = (
+    "What each person did across the platforms, most active first.",
+    "federation_message (crosspost.v1 whose global_agent_id starts with human:)",
+    [
+        ("human", "TEXT", "global_agent_id of the person (human:<id>)"),
+        ("crossposts", "INTEGER", "cross-posts sent"),
+        ("shares", "INTEGER", "of them, shares of another agent's content"),
+        ("origins", "INTEGER", "distinct platforms the person posted from"),
+        ("destinations", "INTEGER", "distinct platforms the cross-posts reached"),
+        ("first_day", "INTEGER", "day of the first cross-post"),
+        ("last_day", "INTEGER", "day of the last one"),
+    ],
+)
+HUMAN_PREFIX = "human:"
 EXPORT_TABLES = tuple(FIELD_MAP)
 _guard = threading.Lock()
 _locks: Dict[str, threading.Lock] = {}
@@ -256,6 +283,30 @@ def compute(src: sqlite3.Connection) -> Dict[str, Any]:
             cell[0] += 1
             cell[1] = min(cell[1], day)
     shares.sort()
+    # people (H8): cross-posts whose author is a human:<id> identity, from the member the person posted on
+    human_cells: Dict[Tuple[int, str, str, str], List[int]] = {}
+    human_total: Dict[str, List[Any]] = {}
+    for _fid, source, target, tick, payload in q(
+        "SELECT fed_msg_id, source_member, target_member, tick_emitted, payload_json FROM federation_message "
+        "WHERE payload_type='crosspost.v1' ORDER BY tick_emitted, fed_msg_id"
+    ):
+        body = json.loads(payload)
+        who = str(body.get("global_agent_id", ""))
+        if not who.startswith(HUMAN_PREFIX):
+            continue
+        day, shared = int(tick) // SLOTS_PER_DAY, 1 if body.get("quoted") else 0
+        cell = human_cells.setdefault((day, who, source, target), [0, 0])
+        cell[0] += 1
+        cell[1] += shared
+        tot = human_total.setdefault(who, [0, 0, set(), set(), day, day])
+        tot[0] += 1
+        tot[1] += shared
+        tot[2].add(source)
+        tot[3].add(target)
+        tot[4], tot[5] = min(tot[4], day), max(tot[5], day)
+    human_crossposts = [(d, h, s, t, c[1], c[0]) for (d, h, s, t), c in sorted(human_cells.items())]
+    human_activity = sorted(((h, v[0], v[1], len(v[2]), len(v[3]), v[4], v[5]) for h, v in human_total.items()),
+                            key=lambda r: (-r[1], r[0]))
     depth_count: Dict[int, int] = defaultdict(int)
     bridge: Dict[str, List[Any]] = {}
     for row in shares:
@@ -271,7 +322,8 @@ def compute(src: sqlite3.Connection) -> Dict[str, Any]:
     return {"tables": {"daily_attention": daily_attention, "migration_flows": migration_flows,
                        "crosspost_flows": crosspost_flows, "cascades": cascades, "survival": survival,
                        "shares": shares, "share_depth": share_depth, "bridge_agents": bridge_agents,
-                       "topics_carried": topics_carried},
+                       "topics_carried": topics_carried, "human_crossposts": human_crossposts,
+                       "human_activity": human_activity},
             "last_day": last_day, "messages": len(messages), "events": len(events)}
 
 

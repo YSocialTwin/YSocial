@@ -73,6 +73,22 @@ gateways, clients. While it is starting, running, paused or stopping, its experi
 and their own start and stop commands are disabled. When it is stopped, each experiment can be started alone again.
 Several World Simulations can be queued from **Schedule**.
 
+### Posting on several platforms (people)
+
+Where a person is enrolled on more than one platform, every composer shows *Also post on* with one box per **other**
+platform where they are enrolled (nothing is shown to anybody else). Tick the platforms and publish:
+
+- the post goes through the gateway of the platform (microblogging: post and share; forum: new thread; photo sharing: new
+  photo and share; instant messaging: message and forward; dating: accepting a date, unmatching, ignoring, messages and
+  replies) with `crosspost_to`, the same field the agents send, so it leaves at the next barrier and arrives once;
+- the text on each destination is the person's own, shaped for it with a plain rule (a title for a forum, the limit of each
+  platform); no language model is involved, and there is no per-destination editing yet;
+- sharing another's content carries the original author as `quoted`, with the author's local name;
+- limits: the forum gateway has no *community* field, so a thread posted with other platforms ticked goes to the default
+  community; a post that carries an image link keeps the direct path (nothing is cross-posted); a person who ticks nothing
+  posts exactly as before. With the server stopped the request is recorded and leaves at the first barrier after the restart;
+  a person on a stopped platform sees what others cross-posted to it only after it restarts.
+
 ## Read the results
 
 The **Analytics** tab shows the share of attention per platform and day, migration between platforms, cross-posts
@@ -81,7 +97,8 @@ as CSV and recalculated by hand. When agents share the content of other agents a
 (`crosspost.mode = agent_action`), the tab also shows the depth of the share chains, the bridge agents (who carries
 content from one platform to another) and the topics that travelled with cross-posted content; the last one comes from
 the coordinator only, so the topics a platform had to create are recorded in that platform's own database
-(`federation_topic`). The tables of the tab are their columns are listed in
+(`federation_topic`). The *People* table lists what each person did across platforms (cross-posts and shares, platforms of origin and reached,
+first and last day; people are told apart by the `human:` prefix of their identity, which agents never use). The tables of the tab and their columns are listed in
 [the analytics mapping](world-simulation-analytics-mapping.md). The per-platform analytics of each experiment
 (dating, instant messaging, ...) stay on the pages of those experiments.
 

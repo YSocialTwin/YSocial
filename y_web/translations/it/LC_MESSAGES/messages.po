@@ -19188,3 +19188,19 @@ msgstr "Non è stato possibile inviare il post alle altre piattaforme."
 #: y_web/templates/world_simulation/_crosspost.html
 msgid "Also post on"
 msgstr "Pubblica anche su"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Cross-posts of people"
+msgstr "Cross-post delle persone"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Person"
+msgstr "Persona"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "People enrolled in the World Simulation (identity human:<id>); agents are not listed here."
+msgstr "Persone iscritte alla World Simulation (identità human:<id>); gli agenti non compaiono qui."
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Last day"
+msgstr "Ultimo giorno"
