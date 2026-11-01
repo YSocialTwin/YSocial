@@ -24,6 +24,10 @@ class Form(dict):
         return v if isinstance(v, list) else [v]
 
 
+def box_of(html, value):
+    return re.search(rf'<input type="checkbox" name="crosspost_content" value="{value}"([^>]*)>', html).group(1)
+
+
 def federation_json(fed):
     return json.loads(open(os.path.join(fed.folder, "federation.json")).read())
 
@@ -33,16 +37,36 @@ def test_the_form_checkboxes_become_the_crosspost_content_in_a_fixed_order():
     assert got == {"crosspost": {"content": ["own_content", "images"]}}
 
 
-def test_nothing_checked_is_the_default_and_stores_nothing():
-    assert ws._options_from_form(Form(crosspost_content_present="1")) == {}
+def test_all_content_is_the_default_and_stores_nothing():
+    assert ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["all"])) == {}
     assert ws._options_from_form(Form()) == {}  # a form without the control (an older page) leaves the setting alone
+
+
+def test_nothing_chosen_is_refused_with_a_message_and_all_mixed_with_others_too(site):
+    app, exps, tmp = site
+    with pytest.raises(WorldSimulationError) as err:
+        ws._options_from_form(Form(crosspost_content_present="1"))
+    assert "at least one kind of content" in str(err.value)
+    mixed = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["all", "news"]))
+    with pytest.raises(WorldSimulationError):
+        service._clean_options(mixed)
+    client = login(app, "admin")
+    from y_web.src.models.admin import Federation
+
+    page = client.post("/admin/world_simulation/new", data={"name": "X", "experiments": [str(i) for i in exps.values()],
+                                                            "crosspost_content_present": "1"})
+    assert page.status_code == 200 and "at least one kind of content" in page.get_data(as_text=True) and Federation.query.count() == 0
+    fed = service.create_federation("W", list(exps.values()), owner="admin", options={"crosspost": {"content": ["news"]}})
+    before = fed.config_json
+    _post(client, f"/admin/world_simulation/{fed.id}/configuration", crosspost_content_present="1")
+    assert fed.config_json == before  # refused: nothing saved
 
 
 def test_the_form_wins_over_a_stale_copy_in_the_advanced_json_and_keeps_the_other_crosspost_keys():
     advanced = json.dumps({"crosspost": {"mode": "agent_action", "propensity": 0.5, "content": ["news"]}})
     got = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["images"], advanced=advanced))
     assert got["crosspost"] == {"mode": "agent_action", "propensity": 0.5, "content": ["images"]}
-    cleared = ws._options_from_form(Form(crosspost_content_present="1", advanced=advanced))
+    cleared = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["all"], advanced=advanced))
     assert cleared["crosspost"] == {"mode": "agent_action", "propensity": 0.5}
 
 
@@ -99,9 +123,10 @@ def test_the_detail_page_shows_the_setting_and_it_is_locked_while_running(site):
                                     options={"crosspost": {"content": ["news"]}})
     client = login(app, "admin")
     html = client.get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
-    box = lambda value: re.search(rf'<input type="checkbox" name="crosspost_content" value="{value}"([^>]*)>', html).group(1)
-    assert "checked" in box("news") and "checked" not in box("own_content") and "checked" not in box("images")
-    assert "takes effect at the next start or restart" in html
+    box = lambda value: box_of(html, value)
+    assert "checked" in box("news") and "checked" not in box("own_content") and "checked" not in box("images") and "checked" not in box("all")
+    assert "disabled" not in box("news")
+    assert "Read at each start or restart" in html
     fed.status = "running"
     running = client.get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
     assert re.search(r"<fieldset disabled>", running) and "only while the World Simulation is stopped" in running
@@ -137,11 +162,11 @@ def test_the_forms_and_the_italian_catalog_carry_the_control():
     root = os.path.join(os.path.dirname(__file__), "..")
     for name in ("new.html", "detail.html"):
         text = open(os.path.join(root, "templates", "admin", "world_simulation", name)).read()
-        for value in ("own_content", "news", "images"):
+        for value in ("all", "own_content", "news", "images"):
             assert f'name="crosspost_content" value="{value}"' in text
         assert 'name="crosspost_content_present"' in text
     po = {m.id: m.string for m in read_po(open(os.path.join(root, "translations", "it", "LC_MESSAGES", "messages.po"), "rb")) if m.id}
-    for text in ("Agent content that can be cross-posted", "Only the agent's own content", "Only content with news (a link)", "Only content with images"):
+    for text in ("Agent content that can be cross-posted", "All content (the agent's own and that of other agents)", "The agent's own content", "Content with news (a link)", "Content with images"):
         assert po[text]
 
 
@@ -165,3 +190,12 @@ def test_the_detail_page_checks_the_box_of_a_legacy_saved_value(site):
     fed.config_json = json.dumps({"crosspost": {"content": ["own_posts"]}})
     html = login(app, "admin").get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
     assert re.search(r'name="crosspost_content" value="own_content" checked', html)
+
+
+def test_a_simulation_without_the_setting_shows_all_content_ticked_and_the_rest_disabled(site):
+    app, exps, tmp = site
+    fed = service.create_federation("W", list(exps.values()), owner="admin")
+    html = login(app, "admin").get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
+    assert "checked" in box_of(html, "all") and "disabled" in box_of(html, "news") and "checked" not in box_of(html, "news")
+    new = login(app, "admin").get("/admin/world_simulation/new").get_data(as_text=True)
+    assert "checked" in box_of(new, "all")

@@ -51,7 +51,7 @@
                                 {% set seed_value = form.get('seed', '') %}{% set granularity_value = form.get('granularity', 'slot') %}
                                 {% set attention_on = form.get('attention_enabled') %}{% set discovery_on = form.get('discovery_enabled') %}{% set leave_on = form.get('leave_enabled') %}{% set pseudonyms_on = form.get('pseudonyms_enabled') %}
                                 {% set advanced_value = form.get('advanced', '') %}
-                                {% set cp_content = form.getlist('crosspost_content') %}
+                                {% set cp_content = form.getlist('crosspost_content') %}{% set cp_all = ('all' in cp_content) or not cp_content %}
 <div class="ws-field"><label for="ws-seed">{{ _('Seed') }}</label>
     <input class="input" type="number" id="ws-seed" name="seed" value="{{ seed_value }}" placeholder="{{ _('random') }}"></div>
 <div class="ws-field"><label for="ws-granularity">{{ _('Clock granularity') }}</label>
@@ -68,10 +68,19 @@
     <label class="ws-check"><input type="checkbox" name="topic_migration" {% if topics_on %}checked{% endif %}> {{ _('Shared content brings its topics, and missing topics are created') }}</label></div>
 <div class="ws-field" id="ws-crosspost-content"><label>{{ _('Agent content that can be cross-posted') }}</label>
     <input type="hidden" name="crosspost_content_present" value="1">
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_content" {% if 'own_content' in cp_content %}checked{% endif %}> {{ _('Only the agent\'s own content') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {% if 'news' in cp_content %}checked{% endif %}> {{ _('Only content with news (a link)') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {% if 'images' in cp_content %}checked{% endif %}> {{ _('Only content with images') }}</label>
-    <div class="ws-sub">{{ _('Nothing selected: all the content of the agents (posts, comments, messages, photos). Selected options apply together (for example own content and news: the original content of the agent that contains a link; shares, replies to and forwards of the content of others are not own content). The setting is read when the World Simulation starts: a change takes effect at the next start or restart.') }}</div></div>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="all" {% if cp_all %}checked{% endif %}> {{ _('All content (the agent\'s own and that of other agents)') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_content" {% if not cp_all and 'own_content' in cp_content %}checked{% endif %} {% if cp_all %}disabled{% endif %}> {{ _('The agent\'s own content') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {% if not cp_all and 'news' in cp_content %}checked{% endif %} {% if cp_all %}disabled{% endif %}> {{ _('Content with news (a link)') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {% if not cp_all and 'images' in cp_content %}checked{% endif %} {% if cp_all %}disabled{% endif %}> {{ _('Content with images') }}</label>
+    <div class="ws-sub">{{ _('Choose All, or add the kinds of content that may be cross-posted: each option you add widens what can travel (own content, plus content with news, plus content with images). Read at each start or restart.') }}</div>
+    <script>(function () {
+        var box = document.getElementById('ws-crosspost-content');
+        var all = box.querySelector('input[value="all"]');
+        var others = box.querySelectorAll('input[name="crosspost_content"]:not([value="all"])');
+        function sync() { others.forEach(function (o) { if (all.checked) { o.checked = false; } o.disabled = all.checked; }); }
+        all.addEventListener('change', sync);
+        others.forEach(function (o) { o.addEventListener('change', function () { if (o.checked) { all.checked = false; sync(); } }); });
+    })();</script></div>
 <div class="ws-field"><label for="ws-advanced">{{ _('Advanced parameters (JSON)') }}</label>
     <textarea class="textarea" id="ws-advanced" name="advanced" rows="6" placeholder="{{ '{\"attention\": {\"temperature\": 1.0}}' }}">{{ advanced_value }}</textarea>
     <div class="ws-sub">{{ _('Optional. Blocks: attention, crosspost, discovery, leave, membership.') }}</div></div>

@@ -127,10 +127,13 @@ def _options_from_form(form):
             else:
                 options[key] = value
     if form.get("crosspost_content_present") and isinstance(options.get("crosspost", {}), dict):
-        # nothing checked = all content = the default, not stored; the form wins over a stale copy of the setting in the advanced JSON (the detail page pre-fills it there)
-        form_content = [c for c in service.CROSSPOST_CONTENT if c in [service.CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]]
+        # "all" or the additive options (OR); at least one must be chosen; the form wins over a stale copy in the advanced JSON
+        chosen = [service.CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]
+        if not chosen:
+            raise service.WorldSimulationError({"code": "options", "message": _("Choose All content, or at least one kind of content that may be cross-posted.")})
+        form_content = [c for c in ("all",) + service.CROSSPOST_CONTENT if c in chosen]
         crosspost = {k: v for k, v in (options.get("crosspost") or {}).items() if k != "content"}
-        if form_content:
+        if form_content != ["all"]:  # all content is the default: not stored (a mix with "all" is refused by the validation)
             crosspost["content"] = form_content
         if crosspost:
             options["crosspost"] = crosspost
