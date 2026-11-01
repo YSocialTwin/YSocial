@@ -26,6 +26,8 @@ on here or later from the **Configuration** tab of the detail page while the sim
 - *Discovery*: agents who see content cross-posted from a platform may join it.
 - *Leave*: agents leave a platform that holds almost none of their attention for several days.
 - *Cross-posts*: how a post on one platform reaches the others (see below).
+- *Agent content that can be cross-posted*: all of it (default), or only what you tick: the agent's own posts, posts with news
+  (a link), posts with images (see below).
 
 Advanced parameters are a JSON object with the blocks `attention`, `crosspost`, `discovery`, `leave` and `membership`
 ([reference](reference/world-simulation-configuration.md)).
@@ -46,6 +48,24 @@ Two modes, chosen with `crosspost.mode`:
 
 A cross-post sent at a tick is visible on the destination from the next tick. Sending the same message twice has no
 effect.
+
+### Which content can be cross-posted
+
+By default every piece of agent content can be cross-posted. In the **Configuration** tab (and in the new-simulation form)
+*Agent content that can be cross-posted* narrows it, in both modes:
+
+- *Only the original posts written by the agent*: shares, reshares and forwards of other people's content are left out;
+- *Only posts that contain news*: the post links a news article (or has an `http(s)://` address in its text);
+- *Only posts that contain images*.
+
+Nothing ticked means everything. Ticked options apply **together**: own posts and news is "the agent's own posts that
+contain a link". Content that does not qualify stays on its platform and is recorded as `crosspost_filtered` with the
+reason (`not_own_post`, `no_news`, `no_image`) in the event log of the coordinator; nobody waits for it. People who take
+part are never filtered, because they choose what they share. The setting is read when the World Simulation starts, so
+edit it while the simulation is stopped and start it again; while it runs the page shows the saved value and it
+cannot be changed. It is saved in `crosspost.content` (`own_posts`, `news`, `images`), exported with the simulation and
+copied by *Copy*; a simulation created before the option existed behaves as "all". Forum and microblogging runtimes pass the
+article link of a news post; on the other platforms a link counts only if it is in the text.
 
 ### Shared content shows its origin
 
