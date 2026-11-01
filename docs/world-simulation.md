@@ -5,6 +5,8 @@ instant messaging, dating), as one simulation: they share a clock, the agents ca
 their attention, arrival and departure can follow what happens to them across platforms. In the interface the feature
 is called **World Simulation**; in the code and in the protocol it is the *federation*.
 
+New to the idea? Start with the [plain-language overview](world-simulation-overview.md).
+
 ## Before you start
 
 - Create the experiments first, one for each platform, all with the **same, non-empty population**, the **simulated
