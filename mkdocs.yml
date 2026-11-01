@@ -11,6 +11,7 @@ nav:
   - Features: features.md
   - Instant Messaging: instant-messaging.md
   - Dating: dating.md
+  - World Simulation: world-simulation.md
   - Getting Started:
       - Installation Modalities: installation.md
       - Desktop Installer and Launcher: launcher.md
@@ -18,6 +19,7 @@ nav:
   - Configuration:
       - Configuration Layers: configuration.md
       - Parameters Reference: reference/parameters.md
+      - World Simulation Parameters: reference/world-simulation-configuration.md
       - Runtime Layout: project-structure.md
   - Reference:
       - CLI Reference: reference/cli.md

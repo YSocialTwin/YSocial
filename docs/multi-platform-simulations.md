@@ -2,7 +2,7 @@
 
 This is the entry point for the multi-platform simulation design package.
 
-**Status:** design proposal. The feature is not implemented in the codebase; these documents describe the intended design.
+**Status:** historical design proposal. The feature was implemented as the *World Simulation*; the current behaviour is described in the [researcher guide](world-simulation.md) and the [configuration reference](reference/world-simulation-configuration.md). These documents keep the original design rationale and may differ in detail.
 
 The detailed material has been split into focused documents so the feature can be implemented and reviewed in smaller pieces.
 
