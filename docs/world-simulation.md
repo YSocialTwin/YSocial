@@ -153,3 +153,5 @@ Run once, with a local model, before an expensive experiment:
    by the posts of the platforms) with the configured value; it is acceptable within ±50% of it.
 4. Read a sample of the cross-posted texts on the destination platforms: they must read as posts of that platform
    (length, form, no mention of the other platform).
+
+A longer protocol, covering shares with attribution, topics, quoted content, pseudonyms and people, is in [World Simulation pilot](world-simulation-pilot.md).
