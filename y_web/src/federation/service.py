@@ -406,7 +406,10 @@ def delete_federation(fed) -> None:
     if fed.status not in ("stopped", "completed", "failed"):
         raise WorldSimulationError({"code": "running", "message": "Stop the World Simulation before deleting it."})
     remove_member_configs(fed)
+    from y_web.src.models.admin import FederationHuman
+
     db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).delete()
+    db.session.query(FederationHuman).filter_by(federation_pk=fed.id).delete()  # F8: the enrolments go with the World Simulation
     db.session.query(FederationMember).filter_by(federation_pk=fed.id).delete()
     folder = fed.folder
     db.session.delete(fed)

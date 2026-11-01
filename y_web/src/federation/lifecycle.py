@@ -66,6 +66,14 @@ def _default_copy(exp, name):
     return new
 
 
+def _humans_of(fed) -> list:
+    """F8: the people enrolled ({user_id, human_id, members, status}); an additive key of the manifest."""
+    from y_web.src.federation import humans
+
+    return [{"user_id": h.user_id, "human_id": h.human_id, "members": humans.members_state(h), "status": h.status}
+            for h in humans.list_humans(fed)]
+
+
 def manifest(fed) -> dict:
     from y_web.src.models.admin import FederationIdentityLink
 
@@ -83,6 +91,7 @@ def manifest(fed) -> dict:
                      "archive": f"members/{row.member}.zip"} for row, exp in service.members_of(fed)],
         "identity": [{"global_agent_id": l.global_agent_id, "member": l.member, "local_account_id": l.local_account_id}
                      for l in links],
+        "humans": _humans_of(fed),
     }
 
 
@@ -203,6 +212,24 @@ def _identity_of_database(path):
         conn.close()
 
 
+def _restore_humans(fed, data) -> None:
+    """F8: the people enrolled in the exported World Simulation, with the accounts the member databases already hold
+    (the archives carry them), so the identity map is the same and the coordinator database can be restored."""
+    from y_web.src.federation.humans import is_human_id
+    from y_web.src.models.admin import FederationHuman, FederationIdentityLink
+
+    for h in data.get("humans") or []:
+        db.session.add(FederationHuman(federation_pk=fed.id, user_id=int(h["user_id"]), human_id=h["human_id"],
+                                       members_json=json.dumps(h["members"], sort_keys=True), status=h.get("status", "active")))
+    for link in data.get("identity") or []:
+        if is_human_id(link["global_agent_id"]):
+            db.session.add(FederationIdentityLink(federation_pk=fed.id, global_agent_id=link["global_agent_id"],
+                                                  member=link["member"], local_account_id=link["local_account_id"]))
+    db.session.commit()
+    if data.get("humans"):
+        service.write_federation_files(fed)
+
+
 def import_bundle(path, owner="", name=None, member_import=None):
     """Create a World Simulation from a bundle; returns ``(fed, report)``."""
     from y_web.src.models.admin import Federation, FederationIdentityLink
@@ -229,6 +256,7 @@ def import_bundle(path, owner="", name=None, member_import=None):
                 fed.federation_id = wanted
                 service.write_federation_files(fed)
                 db.session.commit()
+        _restore_humans(fed, data)
         report["federation_id_kept"] = fed.federation_id == wanted
         if not report["federation_id_kept"]:
             report["notes"].append("The identifier of the bundle is already in use: the World Simulation starts fresh.")
