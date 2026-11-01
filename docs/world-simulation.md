@@ -72,7 +72,12 @@ From the detail page:
 - **Reset** (only when stopped) removes the coordinator database, the analytics and the log. Each experiment keeps its
   own reset.
 
-Importing a bundle back is not available yet: import each experiment with *Upload experiment*.
+**Import** (on the list page) takes such a bundle back: it checks the SHA-256 of every file, imports each experiment
+(as *Upload experiment* does, named `<name>_<platform>`) and creates the World Simulation with the same seed,
+granularity and options. It also keeps the same identifier when that is free, because the identifier takes part in the
+message ids and therefore in the draws of the run. When the identifier was kept and the agents of the imported
+experiments are the ones of the bundle, the database of the coordinator is restored too and the run resumes where it
+stopped; otherwise the World Simulation starts from nothing and a note says why.
 
 ## Pilot protocol (before a large run)
 

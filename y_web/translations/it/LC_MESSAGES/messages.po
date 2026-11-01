@@ -16564,6 +16564,27 @@ msgstr "✔️ Usa"
 msgid "World Simulation"
 msgstr "World Simulation"
 
+msgid "Choose a bundle to import."
+msgstr "Scegli un bundle da importare."
+
+msgid "The bundle could not be imported: %(why)s"
+msgstr "Impossibile importare il bundle: %(why)s"
+
+msgid "World Simulation imported."
+msgstr "World Simulation importata."
+
+msgid "Name (optional)"
+msgstr "Nome (facoltativo)"
+
+msgid "Import"
+msgstr "Importa"
+
+msgid "The identifier of the bundle is already in use: the World Simulation starts fresh."
+msgstr "L'identificativo del bundle è già in uso: la World Simulation parte da zero."
+
+msgid "The agents of the imported experiments differ from those of the bundle: the World Simulation starts fresh."
+msgstr "Gli agenti degli esperimenti importati sono diversi da quelli del bundle: la World Simulation parte da zero."
+
 msgid "Download %(what)s (CSV)"
 msgstr "Scarica %(what)s (CSV)"
 

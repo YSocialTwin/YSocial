@@ -283,6 +283,31 @@ def export(user, fed_id):
     return response
 
 
+@world_simulation.route("/import", methods=["POST"])
+@guarded
+def import_bundle(user):
+    from y_web.src.federation import lifecycle
+
+    upload = request.files.get("bundle")
+    if upload is None or not upload.filename:
+        flash(_("Choose a bundle to import."), "error")
+        return redirect(url_for("world_simulation.simulations"))
+    import tempfile
+
+    handle = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    handle.close()
+    try:
+        upload.save(handle.name)
+        fed, report = lifecycle.import_bundle(handle.name, owner=user.username, name=request.form.get("name") or None)
+    except service.WorldSimulationError as exc:
+        flash(_("The bundle could not be imported: %(why)s", why=str(exc)), "error")
+        return redirect(url_for("world_simulation.simulations"))
+    finally:
+        Path(handle.name).unlink(missing_ok=True)
+    flash(_("World Simulation imported.") + (" " + " ".join(_(n) for n in report["notes"]) if report["notes"] else ""), "success")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+
+
 @world_simulation.route("/<int:fed_id>/clone", methods=["POST"])
 @guarded
 def clone(user, fed_id):

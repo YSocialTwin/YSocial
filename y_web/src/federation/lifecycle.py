@@ -7,6 +7,11 @@ The mechanisms of a single experiment are reused: the archive of each member is 
 - ``export_bundle``: a zip with ``world_simulation.json`` (name, seed, granularity, options, members, identity,
   SHA-256 of every other file), ``federation.db`` (a consistent copy, made with the SQLite backup API), the derived
   analytics when they exist, and one archive per member under ``members/``. The token is never exported.
+- ``import_bundle``: the opposite of the export. Checks the SHA-256 of every file, imports each member archive as a new
+  experiment (the machinery of "Upload experiment") and creates the World Simulation with the same seed, granularity,
+  options and the same ``federation_id`` when it is free (the id enters the message ids and so the draws of the run).
+  When the identity map is the same and that id could be kept, the coordinator database is restored too, so the run
+  resumes where it stopped; otherwise the World Simulation starts fresh and the report says why.
 - ``clone``: copies every member experiment and creates a new, stopped World Simulation with the same seed,
   granularity and options. It starts from nothing: no coordinator database is copied.
 - ``reset``: only for a stopped, completed or failed World Simulation; removes the coordinator database, the derived
@@ -69,6 +74,7 @@ def manifest(fed) -> dict:
     return {
         "bundle_version": BUNDLE_VERSION,
         "name": fed.name,
+        "federation_id": fed.federation_id,
         "seed": fed.seed,
         "granularity": fed.granularity,
         "options": {k: v for k, v in options.items() if k != "exposures"},
@@ -145,3 +151,103 @@ def reset(fed) -> list:
     fed.status = "stopped"
     db.session.commit()
     return removed
+
+
+# -- import ---------------------------------------------------------------------------------------------------
+def _default_member_import(archive_path, name):
+    """Import one member archive with the real "Upload experiment" route, as the user who is importing."""
+    from flask import current_app
+    from flask_login import current_user
+    from sqlalchemy import select
+
+    from y_web.src.models import Exps
+
+    client = current_app.test_client()
+    with client.session_transaction() as session:
+        session["_user_id"] = current_user.get_id()
+        session["_fresh"] = True
+    with open(archive_path, "rb") as handle:
+        client.post("/admin/upload_experiment", data={"experiment": (handle, "exp.zip"), "exp_name": name, "exp_group": ""},
+                    content_type="multipart/form-data")
+    db.session.expire_all()
+    exp = db.session.scalars(select(Exps).filter_by(exp_name=name)).first()
+    if exp is None:
+        raise WorldSimulationError({"code": "upload", "message": f"The experiment '{name}' could not be imported."})
+    return exp
+
+
+def read_bundle(path) -> dict:
+    """The manifest of a bundle after checking its structure and the SHA-256 of every file."""
+    try:
+        with zipfile.ZipFile(path) as bundle:
+            data = json.loads(bundle.read("world_simulation.json"))
+            if data.get("bundle_version") != BUNDLE_VERSION:
+                raise WorldSimulationError({"code": "bundle", "message": "This bundle has a version this release cannot read."})
+            for name, digest in data["files"].items():
+                if hashlib.sha256(bundle.read(name)).hexdigest() != digest:
+                    raise WorldSimulationError({"code": "bundle", "message": f"The file '{name}' of the bundle is damaged."})
+            for member in data["members"]:
+                if member["archive"] not in data["files"]:
+                    raise WorldSimulationError({"code": "bundle", "message": f"The archive of '{member['member']}' is missing."})
+    except (zipfile.BadZipFile, KeyError, ValueError, OSError) as exc:
+        raise WorldSimulationError({"code": "bundle", "message": f"This is not a World Simulation bundle ({exc})."})
+    return data
+
+
+def _identity_of_database(path):
+    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        return {(str(g), m, None if a is None else str(a))
+                for g, m, a in conn.execute("SELECT global_agent_id, member, local_account_id FROM federation_identity")}
+    finally:
+        conn.close()
+
+
+def import_bundle(path, owner="", name=None, member_import=None):
+    """Create a World Simulation from a bundle; returns ``(fed, report)``."""
+    from y_web.src.models.admin import Federation, FederationIdentityLink
+
+    member_import = member_import or _default_member_import
+    data = read_bundle(path)
+    new_name = (name or data["name"]).strip()
+    if not new_name:
+        raise WorldSimulationError({"code": "name", "message": "The World Simulation needs a name."})
+    report = {"restored_database": False, "federation_id_kept": False, "notes": []}
+    with tempfile.TemporaryDirectory() as tmp, zipfile.ZipFile(path) as bundle:
+        imported = []
+        for member in data["members"]:
+            archive = bundle.extract(member["archive"], tmp)
+            exp = member_import(archive, f"{new_name}_{member['member']}"[:50])
+            if exp.platform_type != member["platform_type"]:
+                raise WorldSimulationError({"code": "platform", "message": f"'{exp.exp_name}' is {exp.platform_type}, not {member['platform_type']}."})
+            imported.append(exp)
+        fed = service.create_federation(new_name, [e.idexp for e in imported], owner=owner, seed=data["seed"],
+                                        granularity=data["granularity"], options=data["options"], exposures=data["exposures"])
+        wanted = str(data.get("federation_id") or "")
+        if wanted and fed.federation_id != wanted:
+            if db.session.query(Federation).filter_by(federation_id=wanted).first() is None:
+                fed.federation_id = wanted
+                service.write_federation_files(fed)
+                db.session.commit()
+        report["federation_id_kept"] = fed.federation_id == wanted
+        if not report["federation_id_kept"]:
+            report["notes"].append("The identifier of the bundle is already in use: the World Simulation starts fresh.")
+        elif "federation.db" in data["files"]:
+            stored = bundle.extract("federation.db", tmp)
+            links = {(l.global_agent_id, l.member, l.local_account_id)
+                     for l in db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).all()}
+            if _identity_of_database(stored) != links:
+                report["notes"].append("The agents of the imported experiments differ from those of the bundle: the World Simulation starts fresh.")
+            else:
+                conn = sqlite3.connect(stored, isolation_level=None)
+                try:
+                    for row, exp in service.members_of(fed):
+                        conn.execute("UPDATE federation_member SET exp_id=? WHERE member=?", (str(exp.idexp), row.member))
+                    conn.execute("PRAGMA journal_mode=DELETE")
+                finally:
+                    conn.close()
+                shutil.copyfile(stored, os.path.join(fed.folder, "federation.db"))
+                report["restored_database"] = True
+        if "analytics_federation.db" in data["files"] and report["restored_database"]:
+            shutil.copyfile(bundle.extract("analytics_federation.db", tmp), os.path.join(fed.folder, "analytics_federation.db"))
+    return fed, report

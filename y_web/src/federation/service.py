@@ -258,7 +258,7 @@ def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", op
         )
     agents = _population_agents(infos[0].population_ids)
     for agent in agents:
-        for exp in exps:
+        for exp in sorted(exps, key=lambda e: e.platform_type):  # the same order whatever the order of the selection
             db.session.add(
                 FederationIdentityLink(
                     federation_pk=fed.id, global_agent_id=str(agent.id), member=exp.platform_type, local_account_id=str(agent.id)

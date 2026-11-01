@@ -33,7 +33,12 @@
                         <h3 class="title is-5 is-thin">{{ _('World Simulations') }}</h3>
                         <div class="box-content">
                             <p class="ws-intro">{{ _('A World Simulation runs several experiments, one for each platform, on one shared clock. The same agents can be active on more than one platform.') }}</p>
-                            <p><a class="button is-solid primary-button" href="{{ url_for('world_simulation.new') }}">{{ _('New simulation') }}</a></p>
+                            <p class="ws-actions"><a class="button is-solid primary-button" href="{{ url_for('world_simulation.new') }}">{{ _('New simulation') }}</a></p>
+                            <form method="post" action="{{ url_for('world_simulation.import_bundle') }}" enctype="multipart/form-data" class="ws-actions" style="margin-bottom:14px;">
+                                <input type="file" name="bundle" accept=".zip" required>
+                                <input type="text" name="name" class="input ys-input-sm" maxlength="40" placeholder="{{ _('Name (optional)') }}">
+                                <button class="button is-light" type="submit">{{ _('Import') }}</button>
+                            </form>
                             <div class="table-responsive">
                             <table class="ws-table" id="world-simulation-table">
                                 <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Members') }}</th><th>{{ _('Current tick') }}</th><th></th></tr></thead>
