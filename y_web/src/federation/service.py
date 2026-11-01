@@ -347,6 +347,12 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         section["topic_migration"] = migrate
     elif row.platform_type == "microblogging" and (getattr(exp, "simulator_type", None) or "Standard") == "HPC":
         section["create_topics"] = migrate
+    # F8: the people enrolled in this member (``human:<id>`` -> local account); the runtimes keep them out of the agent rules
+    from y_web.src.federation.humans import accounts_by_member
+
+    humans = accounts_by_member(fed).get(row.member)
+    if humans:
+        section["accounts"] = humans
     if "propensity" in crosspost:
         section["crosspost_propensity"] = float(crosspost["propensity"])
         section["seed"] = int(fed.seed)

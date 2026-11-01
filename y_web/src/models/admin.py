@@ -1073,6 +1073,30 @@ class FederationIdentityLink(db.Model):
     local_account_id = db.Column(db.String(64), nullable=False)
 
 
+class FederationHuman(db.Model):
+    """A person (YWeb user) enrolled in a World Simulation under the identity ``human:<user id>`` (F8, H3).
+
+    ``members_json`` maps each enrolled member to ``{"account_id", "created"}``: ``created`` is false while the
+    account does not exist yet (dating asks the person for a profile first). ``status``: "active" or "inactive"
+    (never deletes an account: it only stops the person being offered the destinations).
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_human"
+    __table_args__ = (
+        db.UniqueConstraint("federation_pk", "user_id", name="uq_federation_human"),
+    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_pk = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    user_id = db.Column(db.Integer, nullable=False)
+    human_id = db.Column(db.String(64), nullable=False)
+    members_json = db.Column(db.Text, nullable=False, default="{}")
+    status = db.Column(db.String(10), nullable=False, default="active")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
 class FederationScheduleQueue(db.Model):
     """Queue of World Simulations, separate from the experiment scheduler (one runs at a time, in order of position).
 

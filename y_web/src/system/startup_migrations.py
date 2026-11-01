@@ -67,6 +67,9 @@ FEDERATION_TABLES = (
     "FederationScheduleQueue",
 )
 
+# F8 (H3): tables added after the first release of the World Simulation, created by the same migration
+FEDERATION_HUMAN_TABLES = ("FederationHuman",)
+
 
 def ensure_federation_tables(engine):
     """Create the World Simulation tables when missing (additive, idempotent, no existing table is touched).
@@ -85,9 +88,24 @@ def ensure_federation_tables(engine):
     return [t.name for t in missing]
 
 
+def ensure_federation_human_tables(engine):
+    """Create the tables of the human participants of a World Simulation when missing (additive, idempotent)."""
+    from sqlalchemy import inspect
+
+    from y_web.src.models import admin as admin_models
+
+    existing = set(inspect(engine).get_table_names())
+    missing = [getattr(admin_models, n).__table__ for n in FEDERATION_HUMAN_TABLES]
+    missing = [t for t in missing if t.name not in existing]
+    for table in missing:
+        table.create(bind=engine, checkfirst=True)
+    return [t.name for t in missing]
+
+
 def _ensure_federation_tables(app):
     try:
         created = ensure_federation_tables(db.engines["db_admin"])
+        created += ensure_federation_human_tables(db.engines["db_admin"])
         if created:
             print("✓ Created World Simulation tables: " + ", ".join(created))
     except Exception as exc:  # never block startup
