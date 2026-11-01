@@ -332,6 +332,55 @@ def status(user, fed_id):
     )
 
 
+@world_simulation.route("/<int:fed_id>/analytics.json")
+@guarded
+def analytics_data(user, fed_id):
+    """Derived analytics of one World Simulation (built on first use and when the run has moved on)."""
+    from y_web.src.federation import analytics_etl
+
+    fed = _get_or_404(fed_id, user)
+    return jsonify(analytics_etl.cards(fed.folder))
+
+
+@world_simulation.route("/<int:fed_id>/analytics/rebuild", methods=["POST"])
+@guarded
+def analytics_rebuild(user, fed_id):
+    """Manual recalculation of the derived analytics."""
+    from y_web.src.federation import analytics_etl
+
+    fed = _get_or_404(fed_id, user)
+    result = analytics_etl.build(fed.folder)
+    if not result["ok"]:
+        flash(_("The analytics could not be recalculated: %(why)s", why=result["message"]), "warning")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id) + "#analytics")
+
+
+@world_simulation.route("/<int:fed_id>/analytics/<table>.csv")
+@guarded
+def analytics_csv(user, fed_id, table):
+    """One derived table as CSV."""
+    import csv
+    import io
+
+    from flask import Response
+
+    from y_web.src.federation import analytics_etl
+
+    fed = _get_or_404(fed_id, user)
+    if table not in analytics_etl.EXPORT_TABLES:
+        abort(404)
+    analytics_etl.ensure_derived(fed.folder)
+    if not Path(analytics_etl.analytics_path(fed.folder)).is_file():
+        abort(404)
+    columns, rows = analytics_etl.table_rows(fed.folder, table)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(columns)
+    writer.writerows(rows)
+    return Response(out.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_{table}.csv"})
+
+
 @world_simulation.route("/analytics")
 @guarded
 def analytics(user):

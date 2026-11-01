@@ -16564,6 +16564,48 @@ msgstr "✔️ Usa"
 msgid "World Simulation"
 msgstr "World Simulation"
 
+msgid "Computed from the database of the coordinator; days are numbered from 0."
+msgstr "Calcolato dal database del coordinatore; i giorni sono numerati da 0."
+
+msgid "Recalculate"
+msgstr "Ricalcola"
+
+msgid "Migration"
+msgstr "Migrazione"
+
+msgid "Cross-posts"
+msgstr "Cross-post"
+
+msgid "Survival"
+msgstr "Sopravvivenza"
+
+msgid "Cascades"
+msgstr "Cascate"
+
+msgid "Share of attention per day"
+msgstr "Quota di attenzione per giorno"
+
+msgid "Migration between platforms"
+msgstr "Migrazione tra piattaforme"
+
+msgid "Cross-posts between platforms, per day"
+msgstr "Cross-post tra piattaforme, per giorno"
+
+msgid "Cross-post cascades"
+msgstr "Cascate di cross-post"
+
+msgid "Original content"
+msgstr "Contenuto originale"
+
+msgid "Platforms reached"
+msgstr "Piattaforme raggiunte"
+
+msgid "Survival per platform"
+msgstr "Sopravvivenza per piattaforma"
+
+msgid "The analytics could not be recalculated: %(why)s"
+msgstr "Impossibile ricalcolare le analitiche: %(why)s"
+
 msgid "Managed by the World Simulation"
 msgstr "Gestito dalla World Simulation"
 

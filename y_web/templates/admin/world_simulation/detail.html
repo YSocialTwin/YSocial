@@ -37,6 +37,7 @@
                             <div class="ws-tabs" role="tablist">
                                 <button type="button" class="ws-tab is-active" data-ws-tab="configuration">{{ _('Configuration') }}</button>
                                 <button type="button" class="ws-tab" data-ws-tab="execution">{{ _('Execution') }}</button>
+                                <button type="button" class="ws-tab" data-ws-tab="analytics">{{ _('Analytics') }}</button>
                                                             </div>
 
                             <div class="ws-pane" data-ws-pane="configuration">
@@ -74,6 +75,27 @@
                                     <button class="button is-light" type="submit">{{ _('Delete') }}</button>
                                 </form>
                                 {% endif %}
+                            </div>
+
+                            <div class="ws-pane" data-ws-pane="analytics" hidden id="ws-analytics" data-url="{{ url_for('world_simulation.analytics_data', fed_id=fed.id) }}">
+                                <p class="ws-intro">{{ _('Computed from the database of the coordinator; days are numbered from 0.') }}
+                                    <span id="ws-an-state"></span></p>
+                                <div class="ws-actions" style="margin-bottom:14px;">
+                                    <form method="post" action="{{ url_for('world_simulation.analytics_rebuild', fed_id=fed.id) }}"><button class="button is-light" type="submit">{{ _('Recalculate') }}</button></form>
+                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival'))) %}
+                                    <a class="button is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}">{{ _('Download') }} {{ label }} (CSV)</a>
+                                    {% endfor %}
+                                </div>
+                                <h4 class="title is-6">{{ _('Share of attention per day') }}</h4>
+                                <div style="height:240px;"><canvas id="ws-chart-attention"></canvas></div>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Migration between platforms') }}</h4>
+                                <div style="height:240px;"><canvas id="ws-chart-migration"></canvas></div>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Cross-posts between platforms, per day') }}</h4>
+                                <div style="height:240px;"><canvas id="ws-chart-crosspost"></canvas></div>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Cross-post cascades') }}</h4>
+                                <table class="ws-table" id="ws-an-cascades"><thead><tr><th>{{ _('Original content') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Day') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Platforms reached') }}</th></tr></thead><tbody></tbody></table>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Survival per platform') }}</h4>
+                                <div style="height:240px;"><canvas id="ws-chart-survival"></canvas></div>
                             </div>
 
                             <div class="ws-pane" data-ws-pane="execution" hidden>
@@ -139,5 +161,58 @@
     }
     refresh();
     setInterval(refresh, 3000);
+})();
+
+(function () {
+    var box = document.getElementById('ws-analytics');
+    if (!box || typeof Chart === 'undefined') { return; }
+    var COLORS = ['#039be5', '#e53935', '#43a047', '#fb8c00', '#8e24aa'];
+    var charts = {}, loaded = false;
+    function uniq(rows, key) { var seen = {}; rows.forEach(function (r) { seen[r[key]] = 1; }); return Object.keys(seen).sort(); }
+    function draw(id, type, labels, datasets, extra) {
+        if (charts[id]) { charts[id].destroy(); }
+        charts[id] = new Chart(document.getElementById(id), {type: type, data: {labels: labels, datasets: datasets},
+            options: Object.assign({responsive: true, maintainAspectRatio: false}, extra || {})});
+    }
+    function perMember(rows, key, days, members) {
+        return members.map(function (m, i) {
+            return {label: m, backgroundColor: COLORS[i % COLORS.length], borderColor: COLORS[i % COLORS.length], fill: false,
+                    data: days.map(function (d) { var r = rows.filter(function (x) { return x.day === d && x.member === m; })[0]; return r ? r[key] : 0; })};
+        });
+    }
+    function render(data) {
+        var t = data.tables || {};
+        document.getElementById('ws-an-state').textContent = (data.state && data.state.state) ? '(' + data.state.state + ')' : '';
+        var att = t.daily_attention || [], sur = t.survival || [];
+        var days = uniq(att, 'day').map(Number).sort(function (a, b) { return a - b; });
+        var members = uniq(att, 'member');
+        draw('ws-chart-attention', 'bar', days, perMember(att, 'share', days, members), {scales: {x: {stacked: true}, y: {stacked: true, max: 1}}});
+        var mig = t.migration_flows || [], pairs = {};
+        mig.forEach(function (r) { var k = r.from_member + ' \u2192 ' + r.to_member; pairs[k] = (pairs[k] || 0) + r.n; });
+        draw('ws-chart-migration', 'bar', Object.keys(pairs), [{label: '#', backgroundColor: COLORS[0], data: Object.keys(pairs).map(function (k) { return pairs[k]; })}]);
+        var cp = t.crosspost_flows || [], cpDays = uniq(cp, 'day').map(Number).sort(function (a, b) { return a - b; }), cpPairs = {};
+        cp.forEach(function (r) { cpPairs[r.source + ' \u2192 ' + r.target] = 1; });
+        draw('ws-chart-crosspost', 'bar', cpDays, Object.keys(cpPairs).sort().map(function (k, i) {
+            return {label: k, backgroundColor: COLORS[i % COLORS.length], data: cpDays.map(function (d) {
+                return cp.filter(function (r) { return r.day === d && (r.source + ' \u2192 ' + r.target) === k; }).reduce(function (s, r) { return s + r.n; }, 0); })};
+        }), {scales: {x: {stacked: true}, y: {stacked: true}}});
+        var body = document.querySelector('#ws-an-cascades tbody');
+        body.textContent = '';
+        (t.cascades || []).slice().sort(function (a, b) { return b.size - a.size; }).slice(0, 20).forEach(function (r) {
+            var tr = document.createElement('tr');
+            [r.source_ref, r.origin, r.day, r.size, r.targets].forEach(function (v) { var td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+            body.appendChild(tr);
+        });
+        var sDays = uniq(sur, 'day').map(Number).sort(function (a, b) { return a - b; });
+        draw('ws-chart-survival', 'line', sDays, perMember(sur, 'survival', sDays, uniq(sur, 'member')), {scales: {y: {min: 0}}});
+    }
+    function load() {
+        if (loaded) { return; }
+        loaded = true;
+        fetch(box.dataset.url, {credentials: 'same-origin'}).then(function (r) { return r.json(); }).then(render).catch(function () { loaded = false; });
+    }
+    document.querySelectorAll('[data-ws-tab="analytics"]').forEach(function (b) { b.addEventListener('click', load); });
+    if (!box.hidden) { load(); }
+    if ((location.hash || '') === '#analytics') { load(); }
 })();
 </script>
