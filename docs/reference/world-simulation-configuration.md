@@ -37,6 +37,12 @@ keys `0`, `A`, `S`, `I`, `N`, `F` (defaults -3.0, 1.0, 0.5, 1.5, 0.5, 0.5).
 
 `quoted_weight` (0.0, between 0 and 1): when above 0, an exposure to a cross-post that quotes content from a third platform also adds awareness of that platform, at `quoted_weight` times the usual weight; 0 switches it off. It is set in the advanced options of the World Simulation (`discovery.quoted_weight`).
 
+## `pseudonyms`
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` | the authors named in a quoted cross-post reach the receiving platforms as `participant-<8 hex>`, stable during the simulation and different in another one; the stored data are unchanged. The seed of the simulation is the secret that derives them. |
+
 ## `leave`
 
 | Key | Default | Meaning |

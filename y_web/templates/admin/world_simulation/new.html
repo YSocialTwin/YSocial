@@ -49,7 +49,7 @@
                                     {% else %}<div class="ws-sub">{{ _('No experiment is available.') }}</div>{% endfor %}
                                 </div>
                                 {% set seed_value = form.get('seed', '') %}{% set granularity_value = form.get('granularity', 'slot') %}
-                                {% set attention_on = form.get('attention_enabled') %}{% set discovery_on = form.get('discovery_enabled') %}{% set leave_on = form.get('leave_enabled') %}
+                                {% set attention_on = form.get('attention_enabled') %}{% set discovery_on = form.get('discovery_enabled') %}{% set leave_on = form.get('leave_enabled') %}{% set pseudonyms_on = form.get('pseudonyms_enabled') %}
                                 {% set advanced_value = form.get('advanced', '') %}
 <div class="ws-field"><label for="ws-seed">{{ _('Seed') }}</label>
     <input class="input" type="number" id="ws-seed" name="seed" value="{{ seed_value }}" placeholder="{{ _('random') }}"></div>
@@ -62,6 +62,7 @@
     <label class="ws-check"><input type="checkbox" name="attention_enabled" {% if attention_on %}checked{% endif %}> {{ _('Share the daily attention of each agent among its platforms') }}</label>
     <label class="ws-check"><input type="checkbox" name="discovery_enabled" {% if discovery_on %}checked{% endif %}> {{ _('Agents discover and join new platforms') }}</label>
     <label class="ws-check"><input type="checkbox" name="leave_enabled" {% if leave_on %}checked{% endif %}> {{ _('Agents leave platforms that no longer interest them') }}</label>
+    <label class="ws-check"><input type="checkbox" name="pseudonyms_enabled" {% if pseudonyms_on %}checked{% endif %}> {{ _('Use pseudonyms for authors in cross-posts') }}</label>
     {% set topics_on = request.method == 'GET' or form.get('topic_migration') %}<input type="hidden" name="topics_present" value="1">
     <label class="ws-check"><input type="checkbox" name="topic_migration" {% if topics_on %}checked{% endif %}> {{ _('Shared content brings its topics, and missing topics are created') }}</label></div>
 <div class="ws-field"><label for="ws-advanced">{{ _('Advanced parameters (JSON)') }}</label>

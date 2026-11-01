@@ -16732,6 +16732,9 @@ msgstr "Gli agenti scoprono nuove piattaforme e vi si iscrivono"
 msgid "Agents leave platforms that no longer interest them"
 msgstr "Gli agenti lasciano le piattaforme che non li interessano più"
 
+msgid "Use pseudonyms for authors in cross-posts"
+msgstr "Usa pseudonimi per gli autori nei cross-post"
+
 msgid "Shared content brings its topics, and missing topics are created"
 msgstr "I contenuti condivisi portano con sé i loro argomenti e quelli mancanti vengono creati"
 

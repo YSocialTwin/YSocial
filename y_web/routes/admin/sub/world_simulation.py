@@ -38,7 +38,7 @@ STATE_BADGES = {
     "completed": "badge-primary",
     "failed": "badge-danger",
 }
-SWITCHES = ("attention", "discovery", "leave")  # parameter blocks with an "enabled" switch (guide 4.7)
+SWITCHES = ("attention", "discovery", "leave", "pseudonyms")  # parameter blocks with an "enabled" switch (guide 4.7)
 
 
 def _admin_user():

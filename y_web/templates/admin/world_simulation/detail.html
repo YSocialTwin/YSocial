@@ -51,7 +51,7 @@
                                 <form method="post" action="{{ url_for('world_simulation.configure', fed_id=fed.id) }}">
                                     <fieldset {% if not editable %}disabled{% endif %}>
                                     {% set seed_value = fed.seed %}{% set granularity_value = fed.granularity %}
-                                    {% set attention_on = options.get('attention', {}).get('enabled') %}{% set discovery_on = options.get('discovery', {}).get('enabled') %}{% set leave_on = options.get('leave', {}).get('enabled') %}
+                                    {% set attention_on = options.get('attention', {}).get('enabled') %}{% set discovery_on = options.get('discovery', {}).get('enabled') %}{% set leave_on = options.get('leave', {}).get('enabled') %}{% set pseudonyms_on = options.get('pseudonyms', {}).get('enabled') %}
                                     {% set advanced_value = options_text if options_text != '{}' else '' %}
 <div class="ws-field"><label for="ws-seed">{{ _('Seed') }}</label>
     <input class="input" type="number" id="ws-seed" name="seed" value="{{ seed_value }}" placeholder="{{ _('random') }}"></div>
@@ -64,6 +64,7 @@
     <label class="ws-check"><input type="checkbox" name="attention_enabled" {% if attention_on %}checked{% endif %}> {{ _('Share the daily attention of each agent among its platforms') }}</label>
     <label class="ws-check"><input type="checkbox" name="discovery_enabled" {% if discovery_on %}checked{% endif %}> {{ _('Agents discover and join new platforms') }}</label>
     <label class="ws-check"><input type="checkbox" name="leave_enabled" {% if leave_on %}checked{% endif %}> {{ _('Agents leave platforms that no longer interest them') }}</label>
+    <label class="ws-check"><input type="checkbox" name="pseudonyms_enabled" {% if pseudonyms_on %}checked{% endif %}> {{ _('Use pseudonyms for authors in cross-posts') }}</label>
     {% set topics_on = options.get('topics', {}).get('migration', True) %}<input type="hidden" name="topics_present" value="1">
     <label class="ws-check"><input type="checkbox" name="topic_migration" {% if topics_on %}checked{% endif %}> {{ _('Shared content brings its topics, and missing topics are created') }}</label></div>
 <div class="ws-field"><label for="ws-advanced">{{ _('Advanced parameters (JSON)') }}</label>

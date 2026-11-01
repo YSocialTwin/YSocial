@@ -34,7 +34,7 @@ MIN_MEMBERS, MAX_MEMBERS = 2, 5
 PROTOCOL = "1.0"
 SLOTS_PER_DAY = 24
 GRANULARITIES = ("slot", "day")
-OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics")
+OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics", "pseudonyms")
 # platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
 ALLOWED_SIMULATORS = {
     "microblogging": ("Standard", "HPC"),
