@@ -54,6 +54,7 @@
                                     {% set seed_value = fed.seed %}{% set granularity_value = fed.granularity %}
                                     {% set attention_on = options.get('attention', {}).get('enabled') %}{% set discovery_on = options.get('discovery', {}).get('enabled') %}{% set leave_on = options.get('leave', {}).get('enabled') %}{% set pseudonyms_on = options.get('pseudonyms', {}).get('enabled') %}
                                     {% set advanced_value = options_text if options_text != '{}' else '' %}
+                                    {% set cp_content = options.get('crosspost', {}).get('content', []) %}
 <div class="ws-field"><label for="ws-seed">{{ _('Seed') }}</label>
     <input class="input" type="number" id="ws-seed" name="seed" value="{{ seed_value }}" placeholder="{{ _('random') }}"></div>
 <div class="ws-field"><label for="ws-granularity">{{ _('Clock granularity') }}</label>
@@ -68,6 +69,12 @@
     <label class="ws-check"><input type="checkbox" name="pseudonyms_enabled" {% if pseudonyms_on %}checked{% endif %}> {{ _('Use pseudonyms for authors in cross-posts') }}</label>
     {% set topics_on = options.get('topics', {}).get('migration', True) %}<input type="hidden" name="topics_present" value="1">
     <label class="ws-check"><input type="checkbox" name="topic_migration" {% if topics_on %}checked{% endif %}> {{ _('Shared content brings its topics, and missing topics are created') }}</label></div>
+<div class="ws-field" id="ws-crosspost-content"><label>{{ _('Agent content that can be cross-posted') }}</label>
+    <input type="hidden" name="crosspost_content_present" value="1">
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_posts" {% if 'own_posts' in cp_content %}checked{% endif %}> {{ _('Only the original posts written by the agent (not shares or replies to other content)') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {% if 'news' in cp_content %}checked{% endif %}> {{ _('Only posts that contain news (a link)') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {% if 'images' in cp_content %}checked{% endif %}> {{ _('Only posts that contain images') }}</label>
+    <div class="ws-sub">{{ _('Nothing selected: all the content of the agents. Selected options apply together (for example own posts and news: the original posts that contain a link). The setting is read when the World Simulation starts: a change takes effect at the next start or restart.') }}</div></div>
 <div class="ws-field"><label for="ws-advanced">{{ _('Advanced parameters (JSON)') }}</label>
     <textarea class="textarea" id="ws-advanced" name="advanced" rows="6" placeholder="{{ '{\"attention\": {\"temperature\": 1.0}}' }}">{{ advanced_value }}</textarea>
     <div class="ws-sub">{{ _('Optional. Blocks: attention, crosspost, discovery, leave, membership.') }}</div></div>

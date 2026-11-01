@@ -144,6 +144,7 @@ def start_federation(fed, *, resume=True):
     fed.status = "starting"
     db.session.commit()
     try:
+        service.write_federation_files(fed)  # federation.json is regenerated from the saved parameters at every (re)start
         cp.start_coordinator(fed)
         service.write_member_configs(fed)
         db.session.commit()

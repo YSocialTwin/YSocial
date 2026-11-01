@@ -38,6 +38,9 @@ OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "
 # Blocks read by YWeb only (not part of federation.json): ``provisioning = {"members": ["microblogging"]}`` lets the agents
 # of the other members discover those platforms and get an account there on the fly (INV-19).
 LOCAL_BLOCKS = ("provisioning",)
+# crosspost.content (P13): which content of the agents may be cross-posted; absent or ["all"] = everything (the default).
+# Selected restrictions apply together (AND). The coordinator enforces it (ysocial_federation.content_policy).
+CROSSPOST_CONTENT = ("own_posts", "news", "images")
 # Platforms whose runtime can create an account on request and whose client adopts it (reference path: YServer + YClient).
 PROVISIONABLE = (("microblogging", "Standard"),)
 # platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
@@ -235,6 +238,19 @@ def _clean_options(options) -> dict:
     for key, value in options.items():
         if not isinstance(value, dict):
             raise WorldSimulationError({"code": "options", "message": f"'{key}' must be an object."})
+    content = (options.get("crosspost") or {}).get("content")
+    if content is not None:
+        if not isinstance(content, list) or not content or any(c not in ("all",) + CROSSPOST_CONTENT for c in content) or (
+                "all" in content and len(set(content)) > 1):
+            raise WorldSimulationError({"code": "options", "message": "crosspost.content must be [\"all\"] or a non-empty list of "
+                                        f"{list(CROSSPOST_CONTENT)}."})
+        if "all" in content:  # the default: not stored, so that the file stays as it was without the option
+            crosspost = {k: v for k, v in options["crosspost"].items() if k != "content"}
+            options = {k: v for k, v in options.items() if k != "crosspost"}
+            if crosspost:
+                options["crosspost"] = crosspost
+        else:
+            options["crosspost"] = {**options["crosspost"], "content": [c for c in CROSSPOST_CONTENT if c in content]}
     return options
 
 
@@ -430,6 +446,8 @@ def member_section(fed, row, exp, enabled=True) -> dict:
     humans = accounts_by_member(fed).get(row.member)
     if humans:
         section["accounts"] = humans
+    if crosspost.get("content") and "all" not in crosspost["content"]:
+        section["crosspost_content"] = list(crosspost["content"])  # P13: runtimes add the news link; the clients skip shares
     if "propensity" in crosspost:
         section["crosspost_propensity"] = float(crosspost["propensity"])
         section["seed"] = int(fed.seed)

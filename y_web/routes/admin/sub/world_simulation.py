@@ -126,6 +126,16 @@ def _options_from_form(form):
                 options[key] = {**value, **options[key]}
             else:
                 options[key] = value
+    if form.get("crosspost_content_present") and isinstance(options.get("crosspost", {}), dict):
+        # nothing checked = all content = the default, not stored; the form wins over a stale copy of the setting in the advanced JSON (the detail page pre-fills it there)
+        form_content = [c for c in service.CROSSPOST_CONTENT if c in form.getlist("crosspost_content")]
+        crosspost = {k: v for k, v in (options.get("crosspost") or {}).items() if k != "content"}
+        if form_content:
+            crosspost["content"] = form_content
+        if crosspost:
+            options["crosspost"] = crosspost
+        else:
+            options.pop("crosspost", None)
     return options
 
 

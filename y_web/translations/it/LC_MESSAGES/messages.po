@@ -16735,6 +16735,21 @@ msgstr "Gli agenti lasciano le piattaforme che non li interessano più"
 msgid "Use pseudonyms for authors in cross-posts"
 msgstr "Usa pseudonimi per gli autori nei cross-post"
 
+msgid "Agent content that can be cross-posted"
+msgstr "Contenuti degli agenti che possono essere cross-postati"
+
+msgid "Only the original posts written by the agent (not shares or replies to other content)"
+msgstr "Solo i post originali scritti dall'agente (non condivisioni né risposte a contenuti altrui)"
+
+msgid "Only posts that contain news (a link)"
+msgstr "Solo i post che contengono notizie (un link)"
+
+msgid "Only posts that contain images"
+msgstr "Solo i post che contengono immagini"
+
+msgid "Nothing selected: all the content of the agents. Selected options apply together (for example own posts and news: the original posts that contain a link). The setting is read when the World Simulation starts: a change takes effect at the next start or restart."
+msgstr "Nessuna scelta: tutti i contenuti degli agenti. Le opzioni scelte valgono insieme (per esempio post propri e notizie: i post originali che contengono un link). L'impostazione viene letta all'avvio della World Simulation: una modifica ha effetto al successivo avvio o riavvio."
+
 msgid "Shared content brings its topics, and missing topics are created"
 msgstr "I contenuti condivisi portano con sé i loro argomenti e quelli mancanti vengono creati"
 
