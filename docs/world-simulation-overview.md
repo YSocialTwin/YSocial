@@ -88,7 +88,6 @@ The interface is available in English and Italian.
 
 - Agents are language-model characters; results describe the model's world, not proof of how real people act.
 - Runs with real people are not repeatable; runs with only agents can be.
-- Real people cannot join microblogging experiments on the HPC backend (no gateway yet).
 - No pilot has been run yet; its protocol is in [World Simulation pilot](world-simulation-pilot.md).
 - Two experiments of the same platform type cannot be in one simulation; remote experiments and real-time clocks are not
   supported.

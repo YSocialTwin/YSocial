@@ -44,6 +44,7 @@ def _err(code: str, message: str):
 
 # -- the account of a person on each platform ----------------------------------------------------------
 def _ensure_micro_like(platform_type, exp, user, hid, session=None, offline=None):
+    from y_web.src.federation import human_gateways as hg
     from y_web.src.federation.human_gateways import GatewayUnavailable, RuntimeGateway
 
     folder = service.experiment_dir(exp)
@@ -51,7 +52,7 @@ def _ensure_micro_like(platform_type, exp, user, hid, session=None, offline=None
     # photo sharing derives the identity from the key (``human:<key>``): the key is the user id
     key = str(int(user.id)) if platform_type == "photo_sharing" else f"u{int(user.id)}"
     gateway = RuntimeGateway(platform_type, folder, server_config=config, database=folder / "database_server.db",
-                             session=session, offline=offline)
+                             session=session, offline=offline, hpc=hg.is_hpc(exp) and platform_type == "microblogging")
     try:
         status, payload = gateway.ensure(key, str(user.username)[:15], hid, getattr(exp, "prompt_language", None))
     except GatewayUnavailable as exc:
@@ -95,10 +96,8 @@ ENSURERS = {
 
 
 def supported(row, exp) -> bool:
-    """HPC microblogging (YSimulator) has no human gateway."""
-    if row.platform_type not in ENSURERS:
-        return False
-    return not (row.platform_type == "microblogging" and (getattr(exp, "simulator_type", None) or "Standard") == "HPC")
+    """Every platform of a World Simulation has a human gateway (microblogging on HPC through the YSimulator script)."""
+    return row.platform_type in ENSURERS
 
 
 # -- records -------------------------------------------------------------------------------------------

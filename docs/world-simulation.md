@@ -65,8 +65,9 @@ A person (a YWeb user) can take part in a World Simulation next to the agents. I
 - gives the person the identity `human:<user id>` (the same in every World Simulation) and **one account on each platform you
   ticked**; they can cross-post only to platforms where they are enrolled;
 - creates the account through the platform's *gateway* (YWeb never writes the databases of the runtimes): instant
-  messaging, dating, microblogging, forum and photo sharing each have one, and it also works with the server stopped. The
-  microblogging experiments that run on the HPC backend (YSimulator) have no gateway and cannot be enrolled;
+  messaging, dating, microblogging, forum and photo sharing each have one, and it also works with the server stopped. On the
+  HPC backend (YSimulator, microblogging) the gateway is a script of the runtime, `run_human_gateway.py`, that works with the
+  server running or stopped;
 - **dating** asks the person for a profile (photos, preferences), so there the enrolment stays *waiting for the profile*
   until the person has joined;
 - can be done **while the World Simulation runs**: the coordinator learns the identity at once (`POST /v1/identity`) and the

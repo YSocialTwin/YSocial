@@ -116,17 +116,33 @@ def test_invalid_selections(world, members, code):
     assert err.value.errors[0]["code"] == code
 
 
-def test_hpc_microblogging_has_no_gateway(world):
+def test_hpc_microblogging_is_enrolled_through_the_ysimulator_script(world):
     from y_web import db
-    from y_web.src.models.admin import Exps
 
     fed, _ = make(world)
     row, exp = [(r, e) for r, e in service.members_of(fed) if r.member == "microblogging"][0]
     exp.simulator_type = "HPC"
     db.session.commit()
-    with pytest.raises(humans.HumanEnrolmentError) as err:
-        humans.enrol(fed, user(), ["microblogging"], offline=Offline())
-    assert err.value.errors[0]["code"] == "platform_not_supported"
+    off = Offline()
+    h = humans.enrol(fed, user(), ["microblogging"], offline=off)
+    assert json.loads(h.members_json) == {"microblogging": {"account_id": "101", "created": True}}
+    (platform, request), = off.requests
+    assert platform == "microblogging" and request["op"] == "ensure"
+    assert request["body"] == {"human_key": "u7", "username": "giulio", "language": request["body"]["language"], "human_id": "human:7"}
+
+
+def test_the_hpc_gateway_uses_the_ysimulator_script_for_every_request(tmp_path):
+    seen = []
+
+    def runner(spec, request):
+        seen.append((spec.repo, spec.script, request))
+        return 200, {"ok": True}
+
+    gw = human_gateways.RuntimeGateway("microblogging", tmp_path, offline=runner, hpc=True)
+    gw.actions("a1b2", "ann", "u7", [{"type": "post", "text": "hi"}])
+    assert seen == [("YSimulator", "run_human_gateway.py", {"op": "actions", "body": {"account_id": "a1b2", "actions": [{"type": "post", "text": "hi"}]}})]
+    with pytest.raises(human_gateways.GatewayUnavailable):
+        human_gateways.RuntimeGateway("forum", tmp_path, hpc=True)
 
 
 def test_unenrol_keeps_accounts_and_links_and_drops_the_configuration_entry(world):

@@ -164,9 +164,11 @@ def requested_members(values) -> List[str]:
 def _runtime_gateway(exp, platform_type, session=None, offline=None):
     from y_web.src.federation.human_gateways import RuntimeGateway
 
+    from y_web.src.federation.human_gateways import is_hpc
+
     folder = service.experiment_dir(exp)
     return RuntimeGateway(platform_type, folder, server_config=service.server_config_path(exp), database=folder / "database_server.db",
-                          session=session, offline=offline)
+                          session=session, offline=offline, hpc=is_hpc(exp) and platform_type == "microblogging")
 
 
 def _ok(status, payload) -> bool:
