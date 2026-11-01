@@ -61,3 +61,11 @@ it when it stops. Without it, or with `enabled: false`, a runtime does not chang
 | `crosspost_propensity`, `seed` | written only when `crosspost.propensity` is set |
 | `topic_migration` | forum member only: `topics.migration` (default true) |
 | `create_topics` | microblogging member on HPC (YSimulator) only: `topics.migration` (default true) |
+
+### People enrolled (`accounts`)
+
+When people are enrolled, the `federation` section of a member also carries `accounts`: `{"human:<user id>": "<local account id>"}`
+for the active people of that member. The runtimes use it to give a person their `human:` identity (never the local id, which could
+be an agent's) and to keep people out of the agent rules. The microblogging gateway reads its token from `human_gateway.token` in the
+server configuration; the forum and photo-sharing gateways are processes that YWeb starts with a per-run token in
+`human_gateway.token` and an address in `human_gateway.json` of the experiment folder.

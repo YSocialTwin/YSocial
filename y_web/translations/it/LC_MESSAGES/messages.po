@@ -19136,3 +19136,47 @@ msgstr "Annullata"
 #~ "sopra; gli interessi sono quelli di "
 #~ "Interessi e opinioni."
 
+msgid "Pick at least one platform."
+msgstr "Scegli almeno una piattaforma."
+
+msgid "That platform is not a member of this World Simulation."
+msgstr "Quella piattaforma non fa parte di questa World Simulation."
+
+msgid "This platform has no gateway for human participants."
+msgstr "Questa piattaforma non ha un gateway per i partecipanti umani."
+
+msgid "The gateway of a platform cannot be reached."
+msgstr "Il gateway di una piattaforma non è raggiungibile."
+
+msgid "The gateway of a platform refused the account."
+msgstr "Il gateway di una piattaforma ha rifiutato l'account."
+
+msgid "The coordinator did not accept the participant."
+msgstr "Il coordinatore non ha accettato il partecipante."
+
+msgid "Choose a user."
+msgstr "Scegli un utente."
+
+msgid "Participant enrolled."
+msgstr "Partecipante iscritto."
+
+msgid "Participant removed from the World Simulation. Their accounts stay in the experiments."
+msgstr "Partecipante rimosso dalla World Simulation. I suoi account restano negli esperimenti."
+
+msgid "People take part with one account on each platform they are enrolled in, and can cross-post only there. They can be enrolled while the World Simulation runs; they stay outside the rules that apply to agents."
+msgstr "Le persone partecipano con un account su ogni piattaforma a cui sono iscritte e possono fare cross-post solo lì. Possono essere iscritte anche mentre la World Simulation è in corso; restano fuori dalle regole che valgono per gli agenti."
+
+msgid "Platforms"
+msgstr "Piattaforme"
+
+msgid "waiting for the profile"
+msgstr "in attesa del profilo"
+
+msgid "Enrolled"
+msgstr "Iscritto"
+
+msgid "Removed"
+msgstr "Rimosso"
+
+msgid "Enrol"
+msgstr "Iscrivi"

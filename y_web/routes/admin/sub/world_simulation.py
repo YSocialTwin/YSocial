@@ -142,6 +142,12 @@ ERROR_TEXT = {
     "already_queued": lambda: _("The World Simulation is already in the queue."),
     "member_busy": lambda: _("Member experiments are running or in the experiment schedule."),
     "state": lambda: _("The World Simulation is not in the right state for this operation."),
+    "no_member": lambda: _("Pick at least one platform."),
+    "unknown_member": lambda: _("That platform is not a member of this World Simulation."),
+    "platform_not_supported": lambda: _("This platform has no gateway for human participants."),
+    "gateway_unavailable": lambda: _("The gateway of a platform cannot be reached."),
+    "gateway_refused": lambda: _("The gateway of a platform refused the account."),
+    "coordinator_refused": lambda: _("The coordinator did not accept the participant."),
 }
 
 
@@ -185,10 +191,56 @@ def detail(user, fed_id):
     return render_template(
         "admin/world_simulation/detail.html",
         row=_row(fed),
+        participants=_participants(fed),
+        candidates_users=db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all(),
         options=options,
         options_text=json.dumps({k: v for k, v in options.items() if k != "exposures"}, indent=2, sort_keys=True),
         editable=fed.status in ("stopped", "completed", "failed"),
     )
+
+
+def _participants(fed):
+    """The people enrolled: ``[(user, status, [(member label, account id, created)])]`` for the Configuration tab."""
+    from y_web.src.federation import humans
+
+    labels = {m.member: PLATFORM_LABELS.get(m.platform_type, m.platform_type) for m, _exp in service.members_of(fed)}
+    out = []
+    for h in humans.list_humans(fed):
+        u = db.session.get(Admin_users, h.user_id)
+        state = humans.members_state(h)
+        out.append({"user_id": h.user_id, "username": u.username if u else str(h.user_id), "human_id": h.human_id, "status": h.status,
+                    "members": [(labels.get(m, m), i["account_id"], bool(i.get("created", True))) for m, i in sorted(state.items())]})
+    return out
+
+
+@world_simulation.route("/<int:fed_id>/humans/enrol", methods=["POST"])
+@guarded
+def humans_enrol(user, fed_id):
+    """Enrol a person (a YWeb user) in some platforms; allowed also while the World Simulation runs (D3)."""
+    from y_web.src.federation import humans
+
+    fed = _get_or_404(fed_id, user)
+    person = db.session.get(Admin_users, int(request.form.get("user_id") or 0))
+    if person is None:
+        flash(_("Choose a user."), "error")
+        return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+    try:
+        humans.enrol(fed, person, request.form.getlist("members"))
+        flash(_("Participant enrolled."), "success")
+    except service.WorldSimulationError as exc:
+        _flash_errors(exc)
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+
+
+@world_simulation.route("/<int:fed_id>/humans/<int:user_id>/unenrol", methods=["POST"])
+@guarded
+def humans_unenrol(user, fed_id, user_id):
+    from y_web.src.federation import humans
+
+    fed = _get_or_404(fed_id, user)
+    if humans.unenrol(fed, user_id):
+        flash(_("Participant removed from the World Simulation. Their accounts stay in the experiments."), "success")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
 
 
 @world_simulation.route("/<int:fed_id>/configuration", methods=["POST"])

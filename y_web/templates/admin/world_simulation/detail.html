@@ -72,6 +72,27 @@
                                     <button class="button is-solid primary-button" type="submit">{{ _('Save') }}</button>
                                     </fieldset>
                                 </form>
+                                <h4 class="title is-6" style="margin-top:18px;">{{ _('Participants') }}</h4>
+                                <p class="ws-sub">{{ _('People take part with one account on each platform they are enrolled in, and can cross-post only there. They can be enrolled while the World Simulation runs; they stay outside the rules that apply to agents.') }}</p>
+                                {% if participants %}
+                                <table class="ws-table" id="ws-participants"><thead><tr><th>{{ _('User') }}</th><th>{{ _('Platforms') }}</th><th>{{ _('State') }}</th><th></th></tr></thead><tbody>
+                                    {% for p in participants %}
+                                    <tr><td>{{ p.username }} <span class="ws-sub">{{ p.human_id }}</span></td>
+                                        <td>{% for label, account, created in p.members %}{{ label }}{% if not created %} ({{ _('waiting for the profile') }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+                                        <td>{% if p.status == 'active' %}{{ _('Enrolled') }}{% else %}{{ _('Removed') }}{% endif %}</td>
+                                        <td>{% if p.status == 'active' %}<form method="post" action="{{ url_for('world_simulation.humans_unenrol', fed_id=fed.id, user_id=p.user_id) }}"><button class="button is-light" type="submit">{{ _('Remove') }}</button></form>{% endif %}</td></tr>
+                                    {% endfor %}
+                                </tbody></table>
+                                {% endif %}
+                                <form method="post" action="{{ url_for('world_simulation.humans_enrol', fed_id=fed.id) }}" id="ws-enrol" style="margin-top:8px;">
+                                    <div class="ws-field"><label for="ws-enrol-user">{{ _('User') }}</label>
+                                        <select class="input" id="ws-enrol-user" name="user_id" required>
+                                            {% for u in candidates_users %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}
+                                        </select></div>
+                                    <div class="ws-field"><label>{{ _('Platforms') }}</label>
+                                        {% for member, label, exp in row.members %}<label class="ws-check"><input type="checkbox" name="members" value="{{ member }}"> {{ label }}</label>{% endfor %}</div>
+                                    <button class="button is-light" type="submit">{{ _('Enrol') }}</button>
+                                </form>
                                 <h4 class="title is-6" style="margin-top:18px;">{{ _('Export, copy and reset') }}</h4>
                                 <p class="ws-sub">{{ _('The export holds the settings, the database of the run and the archive of each experiment. A copy starts from nothing. Resetting removes the data of the run; the experiments keep their own reset.') }}</p>
                                 <div class="ws-actions" style="margin-top:8px;">

@@ -45,6 +45,27 @@ Two modes, chosen with `crosspost.mode`:
 A cross-post sent at a tick is visible on the destination from the next tick. Sending the same message twice has no
 effect.
 
+## Participants (people)
+
+A person (a YWeb user) can take part in a World Simulation next to the agents. In the **Configuration** tab, section
+*Participants*, pick the user and the platforms to enrol them in. Each enrolment:
+
+- gives the person the identity `human:<user id>` (the same in every World Simulation) and **one account on each platform you
+  ticked**; they can cross-post only to platforms where they are enrolled;
+- creates the account through the platform's *gateway* (YWeb never writes the databases of the runtimes): instant
+  messaging, dating, microblogging, forum and photo sharing each have one, and it also works with the server stopped. The
+  microblogging experiments that run on the HPC backend (YSimulator) have no gateway and cannot be enrolled;
+- **dating** asks the person for a profile (photos, preferences), so there the enrolment stays *waiting for the profile*
+  until the person has joined;
+- can be done **while the World Simulation runs**: the coordinator learns the identity at once (`POST /v1/identity`) and the
+  member configurations are updated. A runtime that is already running picks the person up from its gateway; one that
+  started before the enrolment may need a restart to read the new `accounts` entry of its configuration.
+
+People are outside the rules that apply to agents: they do not take part in the daily attention, in the discovery of new
+platforms, in leaving a platform or in the affective report. *Remove* only stops offering them the destinations: their
+accounts stay in the experiments. A copy of a World Simulation starts without people (they are enrolled again); a reset
+keeps them; export and import carry them (the identities and the accounts already in the archives of the members).
+
 ## Run it
 
 The **Execution** tab starts, pauses, resumes and stops the World Simulation as one unit: coordinator, servers,
