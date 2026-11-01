@@ -1,4 +1,4 @@
-"""P13: the content of the agents that can be cross-posted (own posts, news, images) is a World Simulation parameter."""
+"""P13: the content of the agents that can be cross-posted (own content, news, images) is a World Simulation parameter."""
 
 import importlib
 import json
@@ -29,8 +29,8 @@ def federation_json(fed):
 
 
 def test_the_form_checkboxes_become_the_crosspost_content_in_a_fixed_order():
-    got = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["images", "own_posts"]))
-    assert got == {"crosspost": {"content": ["own_posts", "images"]}}
+    got = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["images", "own_content"]))
+    assert got == {"crosspost": {"content": ["own_content", "images"]}}
 
 
 def test_nothing_checked_is_the_default_and_stores_nothing():
@@ -49,10 +49,10 @@ def test_the_form_wins_over_a_stale_copy_in_the_advanced_json_and_keeps_the_othe
 def test_the_setting_reaches_federation_json_and_the_member_sections(world):  # noqa: F811
     app, exps, tmp = world
     fed = service.create_federation("p", list(exps.values()), owner="admin", seed=3,
-                                    options={"crosspost": {"mode": "agent_action", "content": ["news", "own_posts"]}})
-    assert federation_json(fed)["crosspost"] == {"mode": "agent_action", "content": ["own_posts", "news"]}
+                                    options={"crosspost": {"mode": "agent_action", "content": ["news", "own_content"]}})
+    assert federation_json(fed)["crosspost"] == {"mode": "agent_action", "content": ["own_content", "news"]}
     for row, exp in service.members_of(fed):
-        assert service.member_section(fed, row, exp)["crosspost_content"] == ["own_posts", "news"]
+        assert service.member_section(fed, row, exp)["crosspost_content"] == ["own_content", "news"]
 
 
 def test_unset_or_all_changes_nothing_in_either_file(world):  # noqa: F811
@@ -80,8 +80,8 @@ def test_editing_while_stopped_is_written_at_save_and_again_at_every_start(site,
     client = login(app, "admin")
     assert "content" not in (federation_json(fed).get("crosspost") or {})
     assert _post(client, f"/admin/world_simulation/{fed.id}/configuration", seed="1", crosspost_content_present="1",
-                 crosspost_content=["own_posts", "news"]).status_code == 302
-    assert federation_json(fed)["crosspost"]["content"] == ["own_posts", "news"]
+                 crosspost_content=["own_content", "news"]).status_code == 302
+    assert federation_json(fed)["crosspost"]["content"] == ["own_content", "news"]
     # a start regenerates the file from the saved parameters, even if the file on disk is stale
     open(os.path.join(fed.folder, "federation.json"), "w").write("{}")
     seen = {}
@@ -90,7 +90,7 @@ def test_editing_while_stopped_is_written_at_save_and_again_at_every_start(site,
     monkeypatch.setattr(eb, "start_server_for_experiment", lambda e: None)
     monkeypatch.setattr(eb, "_start_federation_clients", lambda e, resume=True: None)
     eb.start_federation(fed)
-    assert seen["file"]["crosspost"]["content"] == ["own_posts", "news"] and fed.status == "running"
+    assert seen["file"]["crosspost"]["content"] == ["own_content", "news"] and fed.status == "running"
 
 
 def test_the_detail_page_shows_the_setting_and_it_is_locked_while_running(site):
@@ -100,7 +100,7 @@ def test_the_detail_page_shows_the_setting_and_it_is_locked_while_running(site):
     client = login(app, "admin")
     html = client.get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
     box = lambda value: re.search(rf'<input type="checkbox" name="crosspost_content" value="{value}"([^>]*)>', html).group(1)
-    assert "checked" in box("news") and "checked" not in box("own_posts") and "checked" not in box("images")
+    assert "checked" in box("news") and "checked" not in box("own_content") and "checked" not in box("images")
     assert "takes effect at the next start or restart" in html
     fed.status = "running"
     running = client.get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
@@ -137,9 +137,31 @@ def test_the_forms_and_the_italian_catalog_carry_the_control():
     root = os.path.join(os.path.dirname(__file__), "..")
     for name in ("new.html", "detail.html"):
         text = open(os.path.join(root, "templates", "admin", "world_simulation", name)).read()
-        for value in ("own_posts", "news", "images"):
+        for value in ("own_content", "news", "images"):
             assert f'name="crosspost_content" value="{value}"' in text
         assert 'name="crosspost_content_present"' in text
     po = {m.id: m.string for m in read_po(open(os.path.join(root, "translations", "it", "LC_MESSAGES", "messages.po"), "rb")) if m.id}
-    for text in ("Agent content that can be cross-posted", "Only posts that contain news (a link)", "Only posts that contain images"):
+    for text in ("Agent content that can be cross-posted", "Only the agent's own content", "Only content with news (a link)", "Only content with images"):
         assert po[text]
+
+
+def test_own_posts_is_a_legacy_alias_everywhere(world):  # noqa: F811
+    assert ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["own_posts"])) == {"crosspost": {"content": ["own_content"]}}
+    assert service._clean_options({"crosspost": {"content": ["own_posts", "news"]}}) == {"crosspost": {"content": ["own_content", "news"]}}
+    with pytest.raises(WorldSimulationError):
+        service._clean_options({"crosspost": {"content": ["all", "own_posts"]}})
+    app, exps, tmp = world
+    fed = service.create_federation("legacy", list(exps.values()), owner="admin", options={"crosspost": {"content": ["own_posts"]}})
+    assert federation_json(fed)["crosspost"]["content"] == ["own_content"]
+    fed.config_json = json.dumps({"crosspost": {"content": ["own_posts", "images"]}})  # saved by an earlier build
+    assert service.crosspost_content_of(json.loads(fed.config_json)) == ["own_content", "images"]
+    for row, exp in service.members_of(fed):
+        assert service.member_section(fed, row, exp)["crosspost_content"] == ["own_content", "images"]
+
+
+def test_the_detail_page_checks_the_box_of_a_legacy_saved_value(site):
+    app, exps, tmp = site
+    fed = service.create_federation("W", list(exps.values()), owner="admin")
+    fed.config_json = json.dumps({"crosspost": {"content": ["own_posts"]}})
+    html = login(app, "admin").get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
+    assert re.search(r'name="crosspost_content" value="own_content" checked', html)

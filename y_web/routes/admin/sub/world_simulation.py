@@ -128,7 +128,7 @@ def _options_from_form(form):
                 options[key] = value
     if form.get("crosspost_content_present") and isinstance(options.get("crosspost", {}), dict):
         # nothing checked = all content = the default, not stored; the form wins over a stale copy of the setting in the advanced JSON (the detail page pre-fills it there)
-        form_content = [c for c in service.CROSSPOST_CONTENT if c in form.getlist("crosspost_content")]
+        form_content = [c for c in service.CROSSPOST_CONTENT if c in [service.CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]]
         crosspost = {k: v for k, v in (options.get("crosspost") or {}).items() if k != "content"}
         if form_content:
             crosspost["content"] = form_content
@@ -204,6 +204,7 @@ def detail(user, fed_id):
         participants=_participants(fed),
         candidates_users=db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all(),
         options=options,
+        crosspost_content=service.crosspost_content_of(options),
         options_text=json.dumps({k: v for k, v in options.items() if k != "exposures"}, indent=2, sort_keys=True),
         editable=fed.status in ("stopped", "completed", "failed"),
     )

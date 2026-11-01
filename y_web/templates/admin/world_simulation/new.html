@@ -68,10 +68,10 @@
     <label class="ws-check"><input type="checkbox" name="topic_migration" {% if topics_on %}checked{% endif %}> {{ _('Shared content brings its topics, and missing topics are created') }}</label></div>
 <div class="ws-field" id="ws-crosspost-content"><label>{{ _('Agent content that can be cross-posted') }}</label>
     <input type="hidden" name="crosspost_content_present" value="1">
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_posts" {% if 'own_posts' in cp_content %}checked{% endif %}> {{ _('Only the original posts written by the agent (not shares or replies to other content)') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {% if 'news' in cp_content %}checked{% endif %}> {{ _('Only posts that contain news (a link)') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {% if 'images' in cp_content %}checked{% endif %}> {{ _('Only posts that contain images') }}</label>
-    <div class="ws-sub">{{ _('Nothing selected: all the content of the agents. Selected options apply together (for example own posts and news: the original posts that contain a link). The setting is read when the World Simulation starts: a change takes effect at the next start or restart.') }}</div></div>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_content" {% if 'own_content' in cp_content %}checked{% endif %}> {{ _('Only the agent\'s own content') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {% if 'news' in cp_content %}checked{% endif %}> {{ _('Only content with news (a link)') }}</label>
+    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {% if 'images' in cp_content %}checked{% endif %}> {{ _('Only content with images') }}</label>
+    <div class="ws-sub">{{ _('Nothing selected: all the content of the agents (posts, comments, messages, photos). Selected options apply together (for example own content and news: the original content of the agent that contains a link; shares, replies to and forwards of the content of others are not own content). The setting is read when the World Simulation starts: a change takes effect at the next start or restart.') }}</div></div>
 <div class="ws-field"><label for="ws-advanced">{{ _('Advanced parameters (JSON)') }}</label>
     <textarea class="textarea" id="ws-advanced" name="advanced" rows="6" placeholder="{{ '{\"attention\": {\"temperature\": 1.0}}' }}">{{ advanced_value }}</textarea>
     <div class="ws-sub">{{ _('Optional. Blocks: attention, crosspost, discovery, leave, membership.') }}</div></div>
