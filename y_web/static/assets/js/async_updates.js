@@ -10,6 +10,7 @@ $(document).on('click','#publish-button',function(e) {
           post: document.getElementById("publish").value,
             url: document.getElementById("link_post").value,
             annotation: document.getElementById("activities").value,
+            crosspost: window.wsCrossposts ? window.wsCrossposts() : '',
         },
       })
     });
@@ -130,6 +131,7 @@ $(document).on('click','.share-button',function(e) {
         url:(window.EXP_PREFIX || '') + '/share_content',
         data: {
             post_id: elem_id,
+            crosspost: window.wsCrossposts ? window.wsCrossposts() : '',
         },
       })
     });

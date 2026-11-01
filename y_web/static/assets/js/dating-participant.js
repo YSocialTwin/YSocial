@@ -29,8 +29,13 @@
   }
 
   // one action; resolves to {ok, outcome, error, data}
+  var CROSSPOST_TYPES = { ACCEPT_DATE: 1, UNMATCH: 1, IGNORE: 1, SEND_MESSAGE: 1, REPLY: 1 };
   function act(type, payload) {
-    return post(actUrl, { actions: [{ type: type, payload: payload || {} }] }).then(function (res) {
+    var item = { type: type, payload: payload || {} };
+    if (CROSSPOST_TYPES[type] && window.wsCrossposts && window.wsCrossposts()) {
+      item.crosspost = window.wsCrosspostList();  // World Simulation (F8): the server computes crosspost_to
+    }
+    return post(actUrl, { actions: [item] }).then(function (res) {
       var out = (res.data.outcomes || [])[0];
       if (res.status === 200 && out) return { ok: !!out.success, outcome: out, error: out.error, data: res.data };
       return { ok: false, error: res.data.error || String(res.status), data: res.data, status: res.status };

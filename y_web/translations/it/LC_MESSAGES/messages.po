@@ -19180,3 +19180,11 @@ msgstr "Rimosso"
 
 msgid "Enrol"
 msgstr "Iscrivi"
+
+#: y_web/templates/world_simulation/_crosspost.html
+msgid "The post could not be sent to the other platforms."
+msgstr "Non è stato possibile inviare il post alle altre piattaforme."
+
+#: y_web/templates/world_simulation/_crosspost.html
+msgid "Also post on"
+msgstr "Pubblica anche su"

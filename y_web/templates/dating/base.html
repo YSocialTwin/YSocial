@@ -23,6 +23,7 @@
       <a href="{{ link('/search') }}"{% if nav == 'search' %} aria-current="page"{% endif %}>{{ _('Search') }}</a>
     </nav>
     <div class="dt-tools">
+      {% if participant %}{% set ws_exp = exp.idexp %}{% include 'world_simulation/_crosspost.html' %}{% endif %}
       {% if is_staff %}<a class="dt-btn dt-btn-ghost" href="/admin/dashboard">{{ _('Dashboard') }}</a>{% endif %}
       <button type="button" class="dt-btn dt-btn-ghost" id="dt-theme" aria-label="{{ _('Switch light or dark theme') }}">◐</button>
     </div>

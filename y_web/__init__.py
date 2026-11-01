@@ -290,6 +290,19 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["world_simulation_of"] = world_simulation_of  # badge and disabled commands of the members
 
+    def _ws_destinations(exp_id):
+        """Where the logged-in person can also post (F8): empty unless enrolled in the World Simulation of the experiment."""
+        try:
+            from flask_login import current_user
+
+            from y_web.src.federation.human_outbox import destinations_for
+
+            return destinations_for(exp_id, getattr(current_user, "id", None)) if current_user.is_authenticated else []
+        except Exception:  # noqa: BLE001 - a composer never fails because of the federation
+            return []
+
+    app.jinja_env.globals["ws_destinations"] = _ws_destinations
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)

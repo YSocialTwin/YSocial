@@ -42,6 +42,9 @@
   function act(payload, key) {
     var id = pending[key] || (pending[key] = uuid());
     payload.client_action_id = id;
+    if ((payload.type === 'post' || payload.type === 'forward') && window.wsCrossposts && window.wsCrossposts()) {
+      payload.crosspost = window.wsCrosspostList();  // World Simulation (F8): the server computes crosspost_to
+    }
     return fetch(url, {
       method: 'POST',
       credentials: 'same-origin',

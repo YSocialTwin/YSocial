@@ -1676,6 +1676,9 @@
         formData.append('image', state.currentShareFile);
         formData.append('alt_text', elements.altText ? String(elements.altText.value || '').trim() : '');
         formData.append('caption', elements.caption ? String(elements.caption.value || '').trim() : '');
+        if (window.wsCrossposts && window.wsCrossposts()) {
+            formData.append('crosspost', window.wsCrossposts());  // World Simulation (F8): also post on these members
+        }
 
         state.currentShareSubmitting = true;
         if (elements.submit) {

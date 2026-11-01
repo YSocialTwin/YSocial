@@ -1,0 +1,14 @@
+{#- F8 (H6): "Also post on" for a person enrolled in a World Simulation. Set `ws_exp` (the experiment id) before including.
+    Nothing is rendered for anybody else. The ticked members are read by world-simulation-crosspost.js (`wsCrossposts()`). -#}
+{% set ws_dest = ws_destinations(ws_exp) if ws_exp is defined and ws_destinations is defined else [] %}
+{% if ws_dest %}
+<fieldset class="ws-crosspost-box" data-ws-crosspost style="border:0;margin:.5rem 0;padding:0">
+  <legend style="font-size:.85em;opacity:.8;padding:0">{{ _('Also post on') }}</legend>
+  {% for d in ws_dest %}
+  <label style="margin-right:.9rem;white-space:nowrap">
+    <input type="checkbox" class="ws-crosspost" name="crosspost" value="{{ d.member }}"> {{ d.member|replace('_', ' ')|capitalize }}
+  </label>
+  {% endfor %}
+</fieldset>
+<script src="{{ url_for('static', filename='assets/js/world-simulation-crosspost.js') }}"></script>
+{% endif %}
