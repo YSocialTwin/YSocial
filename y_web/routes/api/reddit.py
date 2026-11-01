@@ -1226,8 +1226,11 @@ def api_post(exp_id: int):
     _wanted = _wanted if isinstance(_wanted, list) else [_wanted] if _wanted else []
     if _wanted and not url:
         _plain = f"{title}. {body}" if title and body else (title or body or legacy_content)
+        from y_web.src.models import Exps as _Exps  # the community the person chose, as the topic name the forum server lists
+
+        _community = _ho.forum_community(db.session.get(_Exps, int(exp_id)), community_slug)
         _sent = _ho.try_deliver(exp_id, current_user, _ho.requested_members(_wanted), _plain,
-                                lambda t: _ho.forum_post(content, t), only="forum")
+                                lambda t: _ho.forum_post(content, t, _community), only="forum")
         if _sent is not None:
             return _json_success({"post_id": None, "crossposted": True}) if _sent else _json_error("The gateway refused the post.", 502)
 

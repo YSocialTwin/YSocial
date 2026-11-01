@@ -10,9 +10,13 @@ Nothing here runs for a person who is not enrolled: every other action keeps its
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Dict, List, Optional
+
+import requests
 
 from y_web import db
 from y_web.src.federation import service
@@ -131,8 +135,48 @@ def micro_share(post_id, text: str, targets: list) -> dict:
     return {"type": "share", "post_id": post_id, "text": text, "crosspost_to": targets}
 
 
-def forum_post(text: str, targets: list) -> dict:
-    return {"action": "post", "text": text, "crosspost_to": targets}
+def forum_post(text: str, targets: list, community: Optional[str] = None) -> dict:
+    action = {"action": "post", "text": text, "crosspost_to": targets}
+    if community:
+        action["community"] = community  # a topic name as the forum server lists it (GET /get_topics)
+    return action
+
+
+def _community_slug(value) -> str:
+    """The slug the forum composer uses for a community (same rule as the forum pages)."""
+    raw = str(value or "").strip().lower().replace("\\", "/")
+    if not raw:
+        return ""
+    match = re.search(r"(?:^|/)r/([a-z0-9_]+)", raw)
+    if match:
+        return match.group(1)
+    raw = re.sub(r"[^a-z0-9_/-]+", "-", raw.removeprefix("r/").strip("/")).strip("-_/")
+    return raw.split("/")[0] if raw else ""
+
+
+def forum_topics(exp, session=None) -> list:
+    """``[{id, name}]`` the forum server lists at ``GET /get_topics`` (read-only, no token); ``[]`` when it cannot be reached
+    (a stopped server: the thread then goes to the default board, as before)."""
+    try:
+        cfg = json.loads(Path(service.server_config_path(exp)).read_text(encoding="utf-8"))
+        host, port = cfg.get("host") or "127.0.0.1", int(cfg["port"])
+        resp = (session or requests).get(f"http://{host}:{port}/get_topics", timeout=5)
+        data = resp.json()
+        return [t for t in data if isinstance(t, dict) and t.get("name")] if resp.status_code == 200 and isinstance(data, list) else []
+    except Exception:  # noqa: BLE001 - no community known: the default one
+        return []
+
+
+def forum_community(exp, slug, session=None) -> Optional[str]:
+    """The forum topic name behind the community the person chose in the composer (its slug), or ``None`` (default board:
+    a community that is not a topic, an empty choice, or a server that cannot be reached)."""
+    wanted = _community_slug(slug)
+    if not wanted:
+        return None
+    for topic in forum_topics(exp, session):
+        if _community_slug(topic["name"]) == wanted:
+            return str(topic["name"])
+    return None
 
 
 def photo_post(caption: str, targets: list, *, image_base64: str = "", extension: str = "", image_url: str = "") -> dict:

@@ -281,6 +281,17 @@ def members_of(fed) -> list:
     return [(row, db.session.get(Exps, row.exp_id)) for row in rows]
 
 
+def member_databases(fed) -> dict:
+    """``{member: path of the server database}`` of the members of a World Simulation, for the analytics (read-only use)."""
+    out = {}
+    for row, exp in members_of(fed):
+        try:
+            out[row.member] = str(experiment_dir(exp) / "database_server.db")
+        except Exception:  # noqa: BLE001 - an experiment without a folder simply has no database to read
+            continue
+    return out
+
+
 def build_federation_config(fed) -> dict:
     """The content of federation.json (coordinator configuration, guide 4.8)."""
     from y_web.src.models.admin import FederationIdentityLink
@@ -347,6 +358,8 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         section["topic_migration"] = migrate
     elif row.platform_type == "microblogging" and (getattr(exp, "simulator_type", None) or "Standard") == "HPC":
         section["create_topics"] = migrate
+    elif row.platform_type == "microblogging" and not migrate:
+        section["topic_migration"] = False  # YServer reads it; absent means on (its default)
     # F8: the people enrolled in this member (``human:<id>`` -> local account); the runtimes keep them out of the agent rules
     from y_web.src.federation.humans import accounts_by_member
 
