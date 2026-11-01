@@ -1,0 +1,16 @@
+{#- F8 (P1): explicit "share how the date went" for a person enrolled in a World Simulation, dating composer only. Set `ws_exp`
+    (the experiment id) before including. Nothing is rendered for anybody else. A message is never cross-posted by itself:
+    the story needs this choice and the person's own words (read by dating-participant.js). -#}
+{% set ws_dest = ws_destinations(ws_exp) if ws_exp is defined and ws_destinations is defined else [] %}
+{% if ws_dest %}
+<fieldset class="ws-dating-story" style="border:0;margin:.5rem 0;padding:0">
+  <legend style="font-size:.85em;opacity:.8;padding:0">{{ _('Share how the date went') }}</legend>
+  <select id="ws-dating-story" aria-label="{{ _('Share how the date went') }}">
+    <option value="">{{ _("Don't share") }}</option>
+    <option value="after_date_continue">{{ _('We keep seeing each other') }}</option>
+    <option value="after_date_ghost">{{ _('They ghosted me') }}</option>
+    <option value="after_date_close">{{ _("It didn't work out") }}</option>
+  </select>
+  <input id="ws-dating-story-text" type="text" maxlength="200" placeholder="{{ _('In your own words') }}" aria-label="{{ _('In your own words') }}">
+</fieldset>
+{% endif %}

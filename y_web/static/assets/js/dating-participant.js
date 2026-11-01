@@ -32,8 +32,19 @@
   var CROSSPOST_TYPES = { ACCEPT_DATE: 1, UNMATCH: 1, IGNORE: 1, SEND_MESSAGE: 1, REPLY: 1 };
   function act(type, payload) {
     var item = { type: type, payload: payload || {} };
+    var isMessage = type === 'SEND_MESSAGE' || type === 'REPLY';
+    var storyEl = document.getElementById('ws-dating-story');
+    var storyText = document.getElementById('ws-dating-story-text');
     if (CROSSPOST_TYPES[type] && window.wsCrossposts && window.wsCrossposts()) {
-      item.crosspost = window.wsCrosspostList();  // World Simulation (F8): the server computes crosspost_to
+      if (!isMessage) {
+        item.crosspost = window.wsCrosspostList();  // World Simulation (F8): the server computes crosspost_to
+      } else if (storyEl && storyEl.value && storyText && storyText.value.trim()) {
+        // a message is shared only with the explicit "share how the date went" choice and the person's own words
+        item.crosspost = window.wsCrosspostList();
+        item.story = { event: storyEl.value };
+        item.crosspost_text = storyText.value.trim();
+        storyEl.value = ''; storyText.value = '';
+      }
     }
     return post(actUrl, { actions: [item] }).then(function (res) {
       var out = (res.data.outcomes || [])[0];
