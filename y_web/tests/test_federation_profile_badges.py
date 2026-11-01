@@ -18,9 +18,23 @@ TEMPLATES = os.path.join(os.path.dirname(__file__), "..", "templates")
 
 
 def accounts(fed, gid):
+    """The accounts the runtimes created for the agent: the coordinator learns them by username (INV-17)."""
     from y_web.src.models.admin import FederationIdentityLink
 
-    return {l.member: l.local_account_id for l in FederationIdentityLink.query.filter_by(federation_pk=fed.id, global_agent_id=gid)}
+    return {l.member: (l.local_account_id or f"{l.member}-{gid}") for l in FederationIdentityLink.query.filter_by(federation_pk=fed.id, global_agent_id=gid)}
+
+
+def bind_all(fed):
+    """A coordinator database in which every expected identity has been bound by its runtime."""
+    from y_web.src.models.admin import FederationIdentityLink
+
+    conn = sqlite3.connect(os.path.join(fed.folder, "federation.db"))
+    conn.execute("CREATE TABLE IF NOT EXISTS federation_identity (global_agent_id TEXT, member TEXT, local_account_id TEXT, state TEXT)")
+    for l in FederationIdentityLink.query.filter_by(federation_pk=fed.id):
+        if l.username:
+            conn.execute("INSERT INTO federation_identity VALUES (?,?,?,?)", (l.global_agent_id, l.member, f"{l.member}-{l.global_agent_id}", "active"))
+    conn.commit()
+    conn.close()
 
 
 def first_agent(fed):
@@ -34,6 +48,7 @@ def test_each_profile_links_to_the_other_platforms_of_the_same_agent(world):
     _, exps, _ = world
     gid = first_agent(fed)
     acc = accounts(fed, gid)
+    bind_all(fed)
     on_forum = pb.badges_for(exps["forum"], acc["forum"])
     assert on_forum == [{"member": "microblogging", "platform_type": "microblogging", "label": "Microblogging",
                          "href": f"/{exps['microblogging']}/profile/{acc['microblogging']}/recent/1"}]
@@ -62,7 +77,7 @@ def test_an_agent_that_is_dormant_or_left_on_a_platform_is_not_shown_there(world
     gid = first_agent(fed)
     acc = accounts(fed, gid)
     conn = sqlite3.connect(os.path.join(fed.folder, "federation.db"))
-    conn.execute("CREATE TABLE federation_identity (global_agent_id TEXT, member TEXT, local_account_id TEXT, state TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS federation_identity (global_agent_id TEXT, member TEXT, local_account_id TEXT, state TEXT)")
     conn.execute("INSERT INTO federation_identity VALUES (?,?,?,?)", (gid, "microblogging", acc["microblogging"], "dormant"))
     conn.execute("INSERT INTO federation_identity VALUES (?,?,?,?)", (gid, "forum", acc["forum"], "active"))
     conn.commit()
@@ -109,3 +124,12 @@ def test_the_partial_renders_one_link_per_badge_and_nothing_without(world):
 def test_every_profile_page_includes_the_badges(name):
     text = open(os.path.join(TEMPLATES, name, "profile.html"), encoding="utf-8").read()
     assert "shared/world_simulation_profile_badges.html" in text
+
+
+def test_an_agent_whose_accounts_are_not_reported_yet_has_no_badges(world):
+    fed, _ = make(world)
+    _, exps, _ = world
+    gid = first_agent(fed)
+    assert pb.badges_for(exps["forum"], f"forum-{gid}") == []  # nothing is bound: the profile page does not know the account yet
+    bind_all(fed)
+    assert [b["member"] for b in pb.badges_for(exps["forum"], f"forum-{gid}")] == ["microblogging"]

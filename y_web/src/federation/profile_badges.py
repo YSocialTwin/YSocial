@@ -30,8 +30,9 @@ def profile_href(platform_type: str, exp_id, account_id) -> Optional[str]:
     return path.format(exp=int(exp_id), account=str(account_id)) if path else None
 
 
-def _states(folder) -> Optional[Dict[tuple, str]]:
-    """``{(global_agent_id, member): state}`` from the coordinator database, or ``None`` when it cannot be read."""
+def _rows(folder) -> Optional[List[tuple]]:
+    """``[(global_agent_id, member, local_account_id, state)]`` of the accounts the coordinator knows (INV-17: the runtime
+    reported them), from its database, or ``None`` when it cannot be read."""
     path = os.path.join(str(folder or ""), "federation.db")
     if not folder or not os.path.isfile(path):
         return None
@@ -41,7 +42,8 @@ def _states(folder) -> Optional[Dict[tuple, str]]:
         return None
     try:
         conn.execute("PRAGMA query_only = ON")
-        return {(g, m): s for g, m, s in conn.execute("SELECT global_agent_id, member, state FROM federation_identity")}
+        return [(str(g), m, str(a), s) for g, m, a, s in conn.execute(
+            "SELECT global_agent_id, member, local_account_id, state FROM federation_identity WHERE local_account_id IS NOT NULL")]
     except sqlite3.Error:
         return None
     finally:
@@ -59,30 +61,44 @@ def badges_for(exp_id, account_id) -> List[dict]:
     own = db.session.query(FederationMember).filter_by(exp_id=int(exp_id)).first()
     if own is None:
         return []
-    link = db.session.query(FederationIdentityLink).filter_by(
-        federation_pk=own.federation_pk, member=own.member, local_account_id=str(account_id)).first()
-    if link is None:
-        return []
     fed = db.session.get(Federation, own.federation_pk)
+    rows = _rows(getattr(fed, "folder", None))
+    gid = None
+    for g, m, a, _state in rows or ():
+        if m == own.member and a == str(account_id):
+            gid = g
+            break
+    link = None
+    if gid is None:  # people (accounts known to YWeb) and links of older releases
+        link = db.session.query(FederationIdentityLink).filter_by(
+            federation_pk=own.federation_pk, member=own.member, local_account_id=str(account_id)).first()
+        if link is None:
+            return []
+        gid = link.global_agent_id
     members = {m.member: m for m in db.session.query(FederationMember).filter_by(federation_pk=own.federation_pk)}
-    states = _states(getattr(fed, "folder", None))
     pending = set()
-    if str(link.global_agent_id).startswith("human:"):  # an account that does not exist yet has no profile to open
-        human = db.session.query(FederationHuman).filter_by(federation_pk=own.federation_pk, human_id=link.global_agent_id,
+    if str(gid).startswith("human:"):  # an account that does not exist yet has no profile to open
+        human = db.session.query(FederationHuman).filter_by(federation_pk=own.federation_pk, human_id=gid,
                                                             status="active").first()
         if human is None:
             return []
         pending = {m for m, info in members_state(human).items() if not info.get("created", True)}
     out = []
+    accounts = {}  # {member: (account, state)}: what the coordinator reports first, then what YWeb knows (people)
     for other in db.session.query(FederationIdentityLink).filter_by(
-            federation_pk=own.federation_pk, global_agent_id=link.global_agent_id).order_by(FederationIdentityLink.member):
-        member = members.get(other.member)
-        if member is None or other.member == own.member or other.member in pending:
+            federation_pk=own.federation_pk, global_agent_id=gid).order_by(FederationIdentityLink.member):
+        if other.local_account_id:
+            accounts[other.member] = (other.local_account_id, "active")
+    for g, m, a, state in rows or ():
+        if g == gid:
+            accounts[m] = (a, state)
+    for name in sorted(accounts):
+        account, state = accounts[name]
+        member = members.get(name)
+        if member is None or name == own.member or name in pending or state != "active":
             continue
-        if states is not None and states.get((other.global_agent_id, other.member), "active") != "active":
-            continue
-        href = profile_href(member.platform_type, member.exp_id, other.local_account_id)
+        href = profile_href(member.platform_type, member.exp_id, account)
         if href:
-            out.append({"member": other.member, "platform_type": member.platform_type,
-                        "label": other.member.replace("_", " ").capitalize(), "href": href})
+            out.append({"member": name, "platform_type": member.platform_type,
+                        "label": name.replace("_", " ").capitalize(), "href": href})
     return out

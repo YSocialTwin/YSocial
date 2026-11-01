@@ -89,8 +89,8 @@ def manifest(fed) -> dict:
         "exposures": bool(options.get("exposures", False)),
         "members": [{"member": row.member, "platform_type": row.platform_type, "exp_name": exp.exp_name,
                      "archive": f"members/{row.member}.zip"} for row, exp in service.members_of(fed)],
-        "identity": [{"global_agent_id": l.global_agent_id, "member": l.member, "local_account_id": l.local_account_id}
-                     for l in links],
+        "identity": [{"global_agent_id": l.global_agent_id, "member": l.member, "local_account_id": l.local_account_id,
+                      "username": l.username} for l in links],
         "humans": _humans_of(fed),
     }
 
@@ -204,10 +204,14 @@ def read_bundle(path) -> dict:
 
 
 def _identity_of_database(path):
+    """``{(global_agent_id, member, account)}``; the account of an agent is reported by its runtime (INV-17), so for agents it
+    is ``None`` here: only the pairs count. Placeholders without an account (agents that can still discover a platform) are
+    not accounts."""
     conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     try:
-        return {(str(g), m, None if a is None else str(a))
-                for g, m, a in conn.execute("SELECT global_agent_id, member, local_account_id FROM federation_identity")}
+        return {(str(g), m, str(a) if str(g).startswith("human:") else None)
+                for g, m, a in conn.execute("SELECT global_agent_id, member, local_account_id FROM federation_identity")
+                if a is not None}
     finally:
         conn.close()
 
@@ -262,9 +266,9 @@ def import_bundle(path, owner="", name=None, member_import=None):
             report["notes"].append("The identifier of the bundle is already in use: the World Simulation starts fresh.")
         elif "federation.db" in data["files"]:
             stored = bundle.extract("federation.db", tmp)
-            links = {(l.global_agent_id, l.member, l.local_account_id)
+            links = {(l.global_agent_id, l.member, l.local_account_id if l.global_agent_id.startswith("human:") else None)
                      for l in db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).all()}
-            if _identity_of_database(stored) != links:
+            if not _identity_of_database(stored) <= links:  # the pairs that were bound are a subset of the declared ones
                 report["notes"].append("The agents of the imported experiments differ from those of the bundle: the World Simulation starts fresh.")
             else:
                 conn = sqlite3.connect(stored, isolation_level=None)

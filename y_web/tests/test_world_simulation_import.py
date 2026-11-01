@@ -42,7 +42,7 @@ def run_data(fed):
     for row, exp in service.members_of(fed):
         db.execute("INSERT INTO federation_member VALUES (?,?,?,?,5)", (row.member, str(exp.idexp), row.platform_type, "finished"))
     for l in __import__("y_web").db.session.query(__import__("y_web.src.models.admin", fromlist=["x"]).FederationIdentityLink).filter_by(federation_pk=fed.id):
-        db.execute("INSERT INTO federation_identity VALUES (?,?,?,'active',0,NULL)", (l.global_agent_id, l.member, l.local_account_id))
+        db.execute("INSERT INTO federation_identity VALUES (?,?,?,'active',0,NULL)", (l.global_agent_id, l.member, l.local_account_id or f"{l.member}-{l.global_agent_id}"))  # the runtime's binding
     db.execute("INSERT INTO federation_event (tick, kind, detail_json, at) VALUES (3,'ready','{}',1.5)")
     db.execute("INSERT INTO federation_message VALUES ('x:0','coordinator','forum',3,4,'crosspost.v1','{}')")
     db.close()
@@ -129,7 +129,7 @@ def test_a_different_set_of_agents_means_a_fresh_start(world, tmp_path):
     stored = tmp_path / "x.db"
     stored.write_bytes(files["federation.db"])
     c = sqlite3.connect(stored)
-    c.execute("UPDATE federation_identity SET local_account_id='999' WHERE rowid=1")
+    c.execute("UPDATE federation_identity SET global_agent_id='9999' WHERE rowid=1")  # an agent the experiments do not have
     c.commit()
     c.close()
     import hashlib

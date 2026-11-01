@@ -1070,7 +1070,10 @@ class FederationIdentityLink(db.Model):
     )
     global_agent_id = db.Column(db.String(64), nullable=False)
     member = db.Column(db.String(50), nullable=False)
-    local_account_id = db.Column(db.String(64), nullable=False)
+    # "" until the runtime reports the account: agents are bound by username (INV-17), people carry their account
+    local_account_id = db.Column(db.String(64), nullable=False, default="", server_default="")
+    # the username the agent has on this member (the agent name); NULL for people and for links of older releases
+    username = db.Column(db.String(120))
 
 
 class FederationHuman(db.Model):

@@ -45,8 +45,10 @@ def test_remote_experiments_are_refused():
     assert "remote" in codes([info("microblogging", is_remote=True), info("forum")])
 
 
-def test_same_population():
-    assert "population" in codes([info("microblogging"), info("forum", population_ids=frozenset({2}))])
+def test_populations_may_differ_but_not_all_be_empty():
+    """INV-17: disjoint or partly overlapping populations are allowed; a member may start empty (clients can be added later)."""
+    assert "population" not in codes([info("microblogging"), info("forum", population_ids=frozenset({2}))])
+    assert "population" not in codes([info("microblogging"), info("forum", population_ids=frozenset())])
     assert "population" in codes([info("microblogging", population_ids=frozenset()), info("forum", population_ids=frozenset())])
 
 
@@ -249,3 +251,84 @@ def test_member_sections_carry_the_topic_migration_switch_only_where_a_runtime_r
     off = service.create_federation("topics-off", list(exps.values()), options={"topics": {"migration": False}})
     by_platform = {row.platform_type: service.member_section(off, row, exp) for row, exp in service.members_of(off)}
     assert by_platform["forum"]["topic_migration"] is False
+
+
+def _use_population(exp_id, agent_names, new_agents=()):
+    """Give the experiment a population made of existing agents (by name) and new ones; the old populations are detached."""
+    from y_web import db
+    from y_web.src.models.admin import Agent, Agent_Population, Population, Population_Experiment
+
+    Population_Experiment.query.filter_by(id_exp=exp_id).delete()
+    pop = Population(name=f"p{exp_id}", descr="d", size=len(agent_names) + len(new_agents))
+    db.session.add(pop)
+    db.session.flush()
+    agents = [Agent.query.filter_by(name=n).first() for n in agent_names]
+    for name in new_agents:
+        agent = Agent(name=name)
+        db.session.add(agent)
+        db.session.flush()
+        agents.append(agent)
+    for agent in agents:
+        db.session.add(Agent_Population(agent_id=agent.id, population_id=pop.id))
+    db.session.add(Population_Experiment(id_population=pop.id, id_exp=exp_id))
+    db.session.commit()
+    return {a.name: a.id for a in agents}
+
+
+def test_members_with_disjoint_and_overlapping_populations(world):
+    """INV-17: each member declares the agents of its own populations by username; nothing carries a local id."""
+    from y_web.src.models.admin import FederationIdentityLink
+
+    app, exps, tmp = world
+    ids = _use_population(exps["microblogging"], ["a0", "a1"])
+    ids.update(_use_population(exps["forum"], ["a1"], new_agents=["z9"]))  # a1 on both, a0 only micro, z9 only forum
+    fed = service.create_federation("flex", list(exps.values()), owner="admin")
+    links = {(l.global_agent_id, l.member, l.username, l.local_account_id) for l in FederationIdentityLink.query.filter_by(federation_pk=fed.id)}
+    assert links == {(str(ids["a0"]), "microblogging", "a0", ""), (str(ids["a1"]), "microblogging", "a1", ""),
+                     (str(ids["a1"]), "forum", "a1", ""), (str(ids["z9"]), "forum", "z9", "")}
+    config = service.build_federation_config(fed)
+    assert {(r["global_agent_id"], r["member"], r["username"]) for r in config["identity"]} == {(g, m, u) for g, m, u, _ in links}
+    assert all("local_account_id" not in r for r in config["identity"])
+
+
+def test_a_member_may_start_without_agents_but_not_all_of_them(world):
+    from y_web.src.models.admin import FederationIdentityLink, Population_Experiment
+
+    app, exps, tmp = world
+    Population_Experiment.query.filter_by(id_exp=exps["forum"]).delete()
+    fed = service.create_federation("late", list(exps.values()), owner="admin")  # the forum gets its clients later
+    assert {l.member for l in FederationIdentityLink.query.filter_by(federation_pk=fed.id)} == {"microblogging"}
+    Population_Experiment.query.filter_by(id_exp=exps["microblogging"]).delete()
+    with pytest.raises(service.WorldSimulationError) as e:
+        service.create_federation("none", list(exps.values()), owner="admin")
+    assert "population" in e.value.codes
+
+
+def test_two_agents_with_the_same_name_on_one_member_are_refused(world):
+    from y_web import db
+    from y_web.src.models.admin import Agent, Agent_Population, Population_Experiment
+
+    app, exps, tmp = world
+    pop = Population_Experiment.query.filter_by(id_exp=exps["forum"]).first().id_population
+    twin = Agent(name="a0")  # same name as an agent of the population
+    db.session.add(twin)
+    db.session.flush()
+    db.session.add(Agent_Population(agent_id=twin.id, population_id=pop))
+    db.session.commit()
+    with pytest.raises(service.WorldSimulationError) as e:
+        service.create_federation("twins", list(exps.values()), owner="admin")
+    assert "username" in e.value.codes
+
+
+def test_links_of_older_releases_are_declared_by_name_not_by_local_id(world):
+    """Before INV-17 a link carried local id = agent id, which no runtime guaranteed: the configuration now ignores it."""
+    from y_web import db
+    from y_web.src.models.admin import FederationIdentityLink
+
+    app, exps, tmp = world
+    fed = service.create_federation("old", list(exps.values()), owner="admin")
+    for link in FederationIdentityLink.query.filter_by(federation_pk=fed.id):
+        link.username, link.local_account_id = None, link.global_agent_id  # as an old release wrote them
+    db.session.commit()
+    rows = service.build_federation_config(fed)["identity"]
+    assert len(rows) == 6 and all(r["username"].startswith("a") and "local_account_id" not in r for r in rows)

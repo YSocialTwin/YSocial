@@ -114,10 +114,16 @@ def validate_members(infos) -> list:
             err("clock", f"'{i.exp_name}' must use the simulated clock with hourly slots ({SLOTS_PER_DAY} a day).")
         if i.other_federation:
             err("already_member", f"'{i.exp_name}' already belongs to the World Simulation '{i.other_federation}'.")
-    populations = {frozenset(i.population_ids) for i in infos}
-    if len(populations) > 1 or (populations and not next(iter(populations))):
-        err("population", "All experiments must use the same, non-empty population.")
+    # Populations may be disjoint or partly overlapping (INV-17): an agent takes part on the members whose populations
+    # contain it. A member may even start without agents (clients can be added later), but not all of them.
+    if not any(i.population_ids for i in infos):
+        err("population", "At least one experiment needs a population.")
     return errors
+
+
+def username_of(agent) -> str:
+    """The username an agent has on every platform: its name (the runtime registers the account under it, INV-17)."""
+    return str(agent.name)
 
 
 # --------------------------------------------------------------------------------------------- database access
@@ -203,6 +209,19 @@ def _population_agents(population_ids) -> list:
     )
 
 
+def _check_usernames(exp, agents) -> None:
+    """Agents are matched to their accounts by username: two agents of one member must not share it."""
+    seen = {}
+    for agent in agents:
+        name = username_of(agent)
+        if name in seen and seen[name] != agent.id:
+            raise WorldSimulationError(
+                [{"code": "username", "message": f"'{exp.exp_name}': the agents {seen[name]} and {agent.id} have the same name '{name}': "
+                  "a World Simulation identifies the accounts of a platform by name."}]
+            )
+        seen[name] = agent.id
+
+
 def _clean_options(options) -> dict:
     options = dict(options or {})
     unknown = set(options) - set(OPTION_BLOCKS)
@@ -256,12 +275,19 @@ def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", op
                 federation_pk=fed.id, exp_id=exp.idexp, member=exp.platform_type, platform_type=exp.platform_type, position=position
             )
         )
-    agents = _population_agents(infos[0].population_ids)
-    for agent in agents:
-        for exp in sorted(exps, key=lambda e: e.platform_type):  # the same order whatever the order of the selection
+    member_agents = {}
+    for exp, info in sorted(zip(exps, infos), key=lambda pair: pair[0].platform_type):  # the same order whatever the selection
+        agents = _population_agents(info.population_ids) if info.population_ids else []
+        _check_usernames(exp, agents)
+        member_agents[exp.platform_type] = agents
+        for agent in agents:
             db.session.add(
                 FederationIdentityLink(
-                    federation_pk=fed.id, global_agent_id=str(agent.id), member=exp.platform_type, local_account_id=str(agent.id)
+                    federation_pk=fed.id,
+                    global_agent_id=str(agent.id),
+                    member=exp.platform_type,
+                    local_account_id="",
+                    username=username_of(agent),
                 )
             )
     try:
@@ -292,6 +318,16 @@ def member_databases(fed) -> dict:
     return out
 
 
+def _legacy_names(links) -> dict:
+    """{global_agent_id: name} for the agents of links written by older releases (no username stored)."""
+    from y_web.src.models.admin import Agent
+
+    ids = {int(l.global_agent_id) for l in links if l.username is None and l.global_agent_id.isdigit()}
+    if not ids:
+        return {}
+    return {str(a.id): username_of(a) for a in db.session.query(Agent).filter(Agent.id.in_(ids)).all()}
+
+
 def build_federation_config(fed) -> dict:
     """The content of federation.json (coordinator configuration, guide 4.8)."""
     from y_web.src.models.admin import FederationIdentityLink
@@ -302,10 +338,16 @@ def build_federation_config(fed) -> dict:
         for row, exp in members_of(fed)
     ]
     links = db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).order_by(FederationIdentityLink.id).all()
-    identity = [
-        {"global_agent_id": l.global_agent_id, "member": l.member, "local_account_id": l.local_account_id, "eligible": True}
-        for l in links
-    ]
+    names = _legacy_names(links)
+    identity = []
+    for l in links:
+        username = None if l.global_agent_id.startswith("human:") else (l.username or names.get(l.global_agent_id))
+        if username:
+            # an agent: the coordinator learns the account from the runtime (INV-17); links of older releases carried a local
+            # id equal to the agent id, which no runtime ever guaranteed
+            identity.append({"global_agent_id": l.global_agent_id, "member": l.member, "username": username, "eligible": True})
+        else:
+            identity.append({"global_agent_id": l.global_agent_id, "member": l.member, "local_account_id": l.local_account_id, "eligible": True})
     config = {
         "federation_id": int(fed.federation_id),
         "seed": fed.seed,
