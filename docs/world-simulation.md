@@ -26,8 +26,8 @@ on here or later from the **Configuration** tab of the detail page while the sim
 - *Discovery*: agents who see content cross-posted from a platform may join it.
 - *Leave*: agents leave a platform that holds almost none of their attention for several days.
 - *Cross-posts*: how a post on one platform reaches the others (see below).
-- *Agent content that can be cross-posted*: all of it (default), or only what you tick: the agent's own content, content with news
-  (a link), content with images (see below).
+- *Agent content that can be cross-posted*: all content (default), or the kinds you add: the agent's own content, content with
+  news (a link), content with images (see below).
 
 Advanced parameters are a JSON object with the blocks `attention`, `crosspost`, `discovery`, `leave` and `membership`
 ([reference](reference/world-simulation-configuration.md)).
@@ -51,22 +51,29 @@ effect.
 
 ### Which content can be cross-posted
 
-By default every piece of agent content can be cross-posted. In the **Configuration** tab (and in the new-simulation form)
-*Agent content that can be cross-posted* narrows it, in both modes:
+By default **all content** can be cross-posted: the agent's own and that of other agents (shares, replies, forwards). In the
+**Configuration** tab (and in the new-simulation form) *Agent content that can be cross-posted* has the first option
+*All content (the agent's own and that of other agents)*, ticked by default. Untick it to choose instead the kinds of
+content to **add**, in both modes:
 
-- *Only the agent's own content*: content the agent wrote itself (a post, a comment, a message, a photo); shares, reshares and
-  forwards of other people's content are left out;
-- *Only content with news (a link)*: the content links a news article (or has an `http(s)://` address in its text);
-- *Only content with images*.
+- *The agent's own content*: what the agent wrote itself (a post, a comment, a message, a photo); shares, reshares and
+  forwards of other people's content are not own content;
+- *Content with news (a link)*: any content, the agent's or another's, that links a news article (or has an `http(s)://`
+  address in its text);
+- *Content with images*: any content with an image.
 
-Nothing ticked means everything. Ticked options apply **together**: own content and news is "the agent's own content that
-contains a link". Content that does not qualify stays on its platform and is recorded as `crosspost_filtered` with the
-reason (`not_own_content`, `no_news`, `no_image`) in the event log of the coordinator; nobody waits for it. People who take
-part are never filtered, because they choose what they share. The setting is read when the World Simulation starts, so
-edit it while the simulation is stopped and start it again; while it runs the page shows the saved value and it
-cannot be changed. It is saved in `crosspost.content` (`own_content`, `news`, `images`; `own_posts` is the legacy name of `own_content` and is still accepted), exported with the simulation and
-copied by *Copy*; a simulation created before the option existed behaves as "all". Forum and microblogging runtimes pass the
-article link of news content; on the other platforms a link counts only if it is in the text.
+The options **add up**: content is eligible when it fits at least one chosen option, so choosing more never reduces what can
+travel. Own content and news is "the agent's own content plus any content with a link". At least one choice is required (the
+page refuses an empty choice), and *All* excludes the others. Content that is not eligible stays on its platform and is
+recorded as `crosspost_filtered` (reason `not_eligible`, with the chosen options) in the event log of the coordinator; nobody
+waits for it. People who take part are never filtered, because they choose what they share. The setting is read when the World
+Simulation starts, so edit it while the simulation is stopped and start it again; while it runs the page shows the saved value
+and it cannot be changed. It is saved in `crosspost.content` (`["all"]`, or a list of `own_content`, `news`, `images`;
+`own_posts` is the legacy name of `own_content` and is still accepted), exported with the simulation and copied by *Copy*; a
+simulation created before the option existed behaves as "all". A list of two or more entries saved by the first version of
+this option (which combined them with AND) now reads as OR. Agents are offered the cross-post of something they share only
+when it can be eligible. Forum and microblogging runtimes pass the article link of news content; on the other platforms a
+link counts only if it is in the text.
 
 ### Shared content shows its origin
 

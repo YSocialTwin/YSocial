@@ -99,7 +99,7 @@ Measured end to end (`tests/integration/test_p12_quantitative.py`, 4 passed in 1
 
 ### P13: which agent content may be cross-posted (`crosspost.content`)
 
-`crosspost.content` is `["all"]` (default, nothing changes) or a non-empty subset of `own_content`, `news`, `images`, combined with AND. The coordinator is the single authority (`content_policy.py`): content that does not qualify is dropped (agent_action) or not drawn (coordinator_rule), the batch is never rejected, and one `crosspost_filtered` event records the reasons; people are never filtered. Optional `link` field in `content.v1` and `crosspost.v1` (article URL), written by the servers only when `crosspost.content` includes `news`. The clients do not offer the cross-post of a share when `own_content` is selected. YWeb: three checkboxes in the creation form and in the detail page, editable while the simulation is stopped (read at each start or restart), exported, imported and cloned.
+`crosspost.content` is `["all"]` (default, nothing changes: all content, the agent's own and that of other agents) or a non-empty list of additive options `own_content`, `news`, `images` (`own_posts` is the legacy alias): each adds a category and content is eligible when it fits at least one (OR), so choosing more never reduces what travels; a stored list of two or more entries from the earlier AND form now reads as OR. The coordinator is the single authority (`content_policy.py`): content that is eligible for none is dropped (agent_action) or not drawn (coordinator_rule), the batch is never rejected, and one `crosspost_filtered` event (`not_eligible`, with the chosen options) records it; people are never filtered. Optional `link` field in `content.v1` and `crosspost.v1` (article URL), written by the servers only when `crosspost.content` includes `news`. The clients offer the cross-post of a share only when it can be eligible (`all`, `news` or `images`). YWeb: an explicit "All content" option ticked by default plus three additive checkboxes in the creation form and in the detail page, at least one required, editable while the simulation is stopped (read at each start or restart), exported, imported and cloned.
 
 | Repo | Commit |
 |---|---|
@@ -107,7 +107,7 @@ Measured end to end (`tests/integration/test_p12_quantitative.py`, 4 passed in 1
 | YServer | `9c284ff` P13.2 article link in the content |
 | YServerReddit | `85d7059` P13.3 |
 | YSimulator | `023f57b` P13.4 |
-| YClient | `06fae46` P13.5 no cross-posted share with `own_content` |
+| YClient | `06fae46` P13.5 no cross-posted share when only `own_content` is chosen |
 | YClientReddit | `4721d76` P13.6 |
 | YSocial | `7c75418d` P13.7 YWeb option; `01ada0e7` P13.8 docs |
 
