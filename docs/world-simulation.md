@@ -86,6 +86,14 @@ gateways, clients. While it is starting, running, paused or stopping, its experi
 and their own start and stop commands are disabled. When it is stopped, each experiment can be started alone again.
 Several World Simulations can be queued from **Schedule**.
 
+### Who is active where (Agents tab)
+
+The **Agents** tab of a World Simulation lists every agent and enrolled person with one state per platform: *active*,
+*dormant* (the account exists but has not joined or been discovered), *left*, *ineligible* or, before the first run, *not
+started*. A summary table counts the states per platform, the list can be filtered by name, platform, state and kind, and
+**Download agents (CSV)** exports one line per account with the ticks of joining and leaving. The states are read from the
+coordinator's database, read-only; `membership.initial` decides who starts active.
+
 ### Profile badges
 
 On the profile page of an agent (or of an enrolled person), every platform shows one badge for each *other* platform of the

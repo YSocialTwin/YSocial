@@ -38,6 +38,7 @@
                                 <button type="button" class="ws-tab is-active" data-ws-tab="configuration">{{ _('Configuration') }}</button>
                                 <button type="button" class="ws-tab" data-ws-tab="execution">{{ _('Execution') }}</button>
                                 <button type="button" class="ws-tab" data-ws-tab="analytics">{{ _('Analytics') }}</button>
+                                <a class="ws-tab" href="{{ url_for('world_simulation.agents', fed_id=fed.id) }}" style="text-decoration:none">{{ _('Agents') }}</a>
                                                             </div>
 
                             <div class="ws-pane" data-ws-pane="configuration">

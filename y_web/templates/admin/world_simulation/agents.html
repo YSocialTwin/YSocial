@@ -1,0 +1,86 @@
+{% include "admin/head.html" %}
+<style>
+    .ws-page { --ws-border:#e5e7eb; --ws-muted:#6b7280; --ws-dark:#111827; }
+    .ws-page .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
+    .ws-intro { font-size:.82rem; color:var(--ws-muted); margin-bottom:14px; }
+    .ws-table { width:100%; border-collapse:collapse; }
+    .ws-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ws-muted); padding:8px 10px; border-bottom:1px solid var(--ws-border); }
+    .ws-table td { padding:10px; border-bottom:1px solid var(--ws-border); vertical-align:middle; font-size:.84rem; }
+    .ws-name { font-weight:700; color:var(--ws-dark); }
+    .ws-sub { font-size:.72rem; color:var(--ws-muted); }
+    .ws-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .ws-actions form { margin:0; }
+    .ws-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
+    .ws-tabs { display:flex; gap:4px; border-bottom:1px solid var(--ws-border); margin-bottom:16px; }
+    .ws-tab { border:0; background:none; padding:8px 16px; font-weight:600; font-size:.85rem; color:var(--ws-muted); cursor:pointer; border-bottom:2px solid transparent; }
+    .ws-tab.is-active { color:var(--ws-dark); border-bottom-color:#039be5; }
+    .ws-pane[hidden] { display:none; }
+    .ws-log { background:#0f172a; color:#e2e8f0; font-family:monospace; font-size:.74rem; padding:10px; border-radius:6px; max-height:260px; overflow:auto; white-space:pre-wrap; }
+    .ws-field { margin-bottom:12px; }
+    .ws-field label { display:block; font-size:.78rem; font-weight:600; margin-bottom:4px; }
+    .ws-check { display:flex; gap:8px; align-items:center; font-size:.84rem; margin:4px 0; }
+    .ws-pick { border:1px solid var(--ws-border); border-radius:6px; padding:8px 12px; margin-bottom:6px; }
+    .ws-pick.is-off { opacity:.55; }
+    .ws-counter { display:inline-block; margin-right:18px; font-size:.84rem; }
+</style>
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    {% set fed = row.fed %}
+                    <div class="dashboard-box" id="world-simulation-agents">
+                        <h3 class="title is-5 is-thin">{{ fed.name }} <span class="badge {{ row.badge }}">{{ _(fed.status|capitalize) }}</span></h3>
+                        <div class="box-content">
+                            <div class="ws-tabs" role="tablist">
+                                <a class="ws-tab" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}" style="text-decoration:none">{{ _('Configuration') }}</a>
+                                <a class="ws-tab" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}#execution" style="text-decoration:none">{{ _('Execution') }}</a>
+                                <a class="ws-tab" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}#analytics" style="text-decoration:none">{{ _('Analytics') }}</a>
+                                <span class="ws-tab is-active">{{ _('Agents') }}</span>
+                            </div>
+                            <p class="ws-intro">
+                                {% if source == 'coordinator' %}{{ _('State of every account, read from the coordinator.') }}
+                                {% else %}{{ _('The World Simulation has not run yet: states are shown once it starts.') }}{% endif %}
+                            </p>
+                            <table class="ws-table" id="ws-agent-counts"><thead><tr><th>{{ _('Platform') }}</th>{% for s in states %}<th>{{ _(s|capitalize) }}</th>{% endfor %}</tr></thead><tbody>
+                            {% for m in members %}<tr><td>{{ labels[m] }}</td>{% for s in states %}<td>{{ counts[m].get(s, 0) }}</td>{% endfor %}</tr>{% endfor %}
+                            </tbody></table>
+                            <form method="get" class="ws-actions" id="ws-agent-filter" style="margin:14px 0">
+                                <input class="input" type="search" name="q" value="{{ f.q }}" placeholder="{{ _('Name or id') }}" style="max-width:14rem">
+                                <select class="input" name="member" style="max-width:12rem">
+                                    <option value="">{{ _('All platforms') }}</option>
+                                    {% for m in members %}<option value="{{ m }}" {{ 'selected' if f.member == m }}>{{ labels[m] }}</option>{% endfor %}
+                                </select>
+                                <select class="input" name="state" style="max-width:12rem">
+                                    <option value="">{{ _('Any state') }}</option>
+                                    {% for s in states %}<option value="{{ s }}" {{ 'selected' if f.state == s }}>{{ _(s|capitalize) }}</option>{% endfor %}
+                                </select>
+                                <select class="input" name="kind" style="max-width:10rem">
+                                    <option value="">{{ _('Agents and people') }}</option>
+                                    <option value="agent" {{ 'selected' if f.kind == 'agent' }}>{{ _('Agents') }}</option>
+                                    <option value="human" {{ 'selected' if f.kind == 'human' }}>{{ _('People') }}</option>
+                                </select>
+                                <button class="button is-light" type="submit">{{ _('Filter') }}</button>
+                                <a class="button is-light" href="{{ url_for('world_simulation.agents_csv', fed_id=fed.id) }}">{{ _('Download %(what)s (CSV)', what=_('agents')) }}</a>
+                            </form>
+                            <table class="ws-table" id="ws-agent-table"><thead><tr><th>{{ _('Agent') }}</th>{% for m in members %}<th>{{ labels[m] }}</th>{% endfor %}</tr></thead><tbody>
+                            {% for r in rows %}
+                            <tr><td><span class="ws-name">{{ r.name }}</span> <span class="ws-sub">{{ r.id }}{% if r.kind == 'human' %} · {{ _('person') }}{% endif %}</span></td>
+                            {% for m in members %}{% set c = r.states.get(m) %}<td>{% if c %}<span class="badge {{ {'active': 'is-success', 'dormant': 'is-warning', 'left': 'is-danger'}.get(c.state, 'is-light') }}" data-state="{{ c.state }}" title="{{ _('Account') }} {{ c.account }}{% if c.joined is not none %} · {{ _('joined at tick') }} {{ c.joined }}{% endif %}{% if c.left is not none %} · {{ _('left at tick') }} {{ c.left }}{% endif %}">{{ _(c.state|capitalize) }}</span>{% else %}<span class="ws-sub">-</span>{% endif %}</td>{% endfor %}</tr>
+                            {% else %}<tr><td colspan="{{ members|length + 1 }}" class="ws-sub">{{ _('No account matches.') }}</td></tr>{% endfor %}
+                            </tbody></table>
+                            {% if pages > 1 %}
+                            <p class="ws-sub" style="margin-top:10px">{{ _('Page %(page)s of %(pages)s', page=page, pages=pages) }} ·
+                                {% if page > 1 %}<a href="{{ url_for('world_simulation.agents', fed_id=fed.id, page=page-1, q=f.q, member=f.member, state=f.state, kind=f.kind) }}">{{ _('Previous') }}</a>{% endif %}
+                                {% if page < pages %}<a href="{{ url_for('world_simulation.agents', fed_id=fed.id, page=page+1, q=f.q, member=f.member, state=f.state, kind=f.kind) }}">{{ _('Next') }}</a>{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

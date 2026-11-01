@@ -464,6 +464,60 @@ def status(user, fed_id):
     )
 
 
+@world_simulation.route("/<int:fed_id>/agents")
+@guarded
+def agents(user, fed_id):
+    """Who is active on which platform: one row per agent or person, one state per platform (read from the coordinator)."""
+    from y_web.src.federation import agent_states as ast
+
+    fed = _get_or_404(fed_id, user)
+    data = ast.table(fed)
+    member, state = request.args.get("member", ""), request.args.get("state", "")
+    kind, q = request.args.get("kind", ""), request.args.get("q", "")
+    if member not in data["members"]:
+        member = ""
+    if state not in ast.STATES:
+        state = ""
+    if kind not in ("agent", "human"):
+        kind = ""
+    rows = ast.filtered(data, member, state, q, kind)
+    page = max(1, request.args.get("page", 1, type=int) or 1)
+    pages = max(1, -(-len(rows) // ast.PAGE_SIZE))
+    page = min(page, pages)
+    labels = {m.member: PLATFORM_LABELS.get(m.platform_type, m.platform_type) for m, _exp in service.members_of(fed)}
+    return render_template(
+        "admin/world_simulation/agents.html", row=_row(fed), members=data["members"], labels=labels, source=data["source"],
+        rows=rows[(page - 1) * ast.PAGE_SIZE: page * ast.PAGE_SIZE], total=len(rows), page=page, pages=pages,
+        counts=ast.counts(data), states=ast.STATES, f={"member": member, "state": state, "kind": kind, "q": q},
+    )
+
+
+@world_simulation.route("/<int:fed_id>/agents.csv")
+@guarded
+def agents_csv(user, fed_id):
+    """Every account of the World Simulation with its state (one line per identity and platform)."""
+    import csv
+    import io
+
+    from flask import Response
+
+    from y_web.src.federation import agent_states as ast
+
+    fed = _get_or_404(fed_id, user)
+    data = ast.table(fed)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["global_agent_id", "name", "kind", "member", "account_id", "state", "joined_tick", "left_tick"])
+    for r in data["rows"]:
+        for m in data["members"]:
+            c = r["states"].get(m)
+            if c:
+                writer.writerow([r["id"], r["name"], r["kind"], m, c["account"], c["state"], c["joined"] if c["joined"] is not None else "",
+                                 c["left"] if c["left"] is not None else ""])
+    return Response(out.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_agents.csv"})
+
+
 @world_simulation.route("/<int:fed_id>/analytics.json")
 @guarded
 def analytics_data(user, fed_id):

@@ -19285,3 +19285,60 @@ msgstr "Presente anche su"
 #, python-format
 msgid "Open the profile on %(platform)s"
 msgstr "Apri il profilo su %(platform)s"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "State of every account, read from the coordinator."
+msgstr "Stato di ogni account, letto dal coordinatore."
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "The World Simulation has not run yet: states are shown once it starts."
+msgstr "La World Simulation non è ancora partita: gli stati compaiono dopo l'avvio."
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "Name or id"
+msgstr "Nome o id"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "All platforms"
+msgstr "Tutte le piattaforme"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "Any state"
+msgstr "Qualsiasi stato"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "Agents and people"
+msgstr "Agenti e persone"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "person"
+msgstr "persona"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "joined at tick"
+msgstr "entrato al tick"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "left at tick"
+msgstr "uscito al tick"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "No account matches."
+msgstr "Nessun account corrisponde."
+
+#: y_web/templates/admin/world_simulation/agents.html
+#, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr "Pagina %(page)s di %(pages)s"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "Dormant"
+msgstr "Dormiente"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "Ineligible"
+msgstr "Non idoneo"
+
+#: y_web/templates/admin/world_simulation/agents.html
+msgid "Not started"
+msgstr "Non avviato"
