@@ -16564,6 +16564,36 @@ msgstr "✔️ Usa"
 msgid "World Simulation"
 msgstr "World Simulation"
 
+msgid "Export, copy and reset"
+msgstr "Esporta, copia e reimposta"
+
+msgid "The export holds the settings, the database of the run and the archive of each experiment. A copy starts from nothing. Resetting removes the data of the run; the experiments keep their own reset."
+msgstr "L'esportazione contiene le impostazioni, il database della simulazione e l'archivio di ogni esperimento. Una copia parte da zero. Il reset elimina i dati della simulazione; gli esperimenti mantengono il proprio reset."
+
+msgid "Name of the copy"
+msgstr "Nome della copia"
+
+msgid "Copy"
+msgstr "Copia"
+
+msgid "Reset this World Simulation? The data of the run are removed."
+msgstr "Reimpostare questa World Simulation? I dati della simulazione vengono eliminati."
+
+msgid "The export failed: %(why)s"
+msgstr "Esportazione non riuscita: %(why)s"
+
+msgid "The World Simulation could not be copied: %(why)s"
+msgstr "Impossibile copiare la World Simulation: %(why)s"
+
+msgid "World Simulation copied."
+msgstr "World Simulation copiata."
+
+msgid "World Simulation reset."
+msgstr "World Simulation reimpostata."
+
+msgid "Stop the World Simulation before resetting it."
+msgstr "Ferma la World Simulation prima di reimpostarla."
+
 msgid "Computed from the database of the coordinator; days are numbered from 0."
 msgstr "Calcolato dal database del coordinatore; i giorni sono numerati da 0."
 

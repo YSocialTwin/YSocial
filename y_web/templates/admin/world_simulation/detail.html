@@ -70,6 +70,20 @@
                                     <button class="button is-solid primary-button" type="submit">{{ _('Save') }}</button>
                                     </fieldset>
                                 </form>
+                                <h4 class="title is-6" style="margin-top:18px;">{{ _('Export, copy and reset') }}</h4>
+                                <p class="ws-sub">{{ _('The export holds the settings, the database of the run and the archive of each experiment. A copy starts from nothing. Resetting removes the data of the run; the experiments keep their own reset.') }}</p>
+                                <div class="ws-actions" style="margin-top:8px;">
+                                    <a class="button is-light" id="ws-export" href="{{ url_for('world_simulation.export', fed_id=fed.id) }}">{{ _('Export') }}</a>
+                                    {% if editable %}
+                                    <form method="post" action="{{ url_for('world_simulation.clone', fed_id=fed.id) }}" class="ys-inline-flex-gap">
+                                        <input type="text" name="name" class="input ys-input-sm" maxlength="40" required placeholder="{{ _('Name of the copy') }}">
+                                        <button class="button is-light" type="submit">{{ _('Copy') }}</button>
+                                    </form>
+                                    <form method="post" action="{{ url_for('world_simulation.reset', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Reset this World Simulation? The data of the run are removed.') }}');">
+                                        <button class="button is-light" type="submit">{{ _('Reset') }}</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
                                 {% if editable %}
                                 <form method="post" action="{{ url_for('world_simulation.delete', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Delete this World Simulation? The experiments are not deleted.') }}');" style="margin-top:14px;">
                                     <button class="button is-light" type="submit">{{ _('Delete') }}</button>

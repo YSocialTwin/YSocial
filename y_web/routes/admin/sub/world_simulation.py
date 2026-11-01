@@ -259,6 +259,59 @@ for _action in ("start", "pause", "resume", "stop"):
     world_simulation.add_url_rule(f"/<int:fed_id>/{_action}", f"command_{_action}", _make(_action), methods=["POST"])
 
 
+@world_simulation.route("/<int:fed_id>/export")
+@guarded
+def export(user, fed_id):
+    """Bundle of the World Simulation: manifest, coordinator database, analytics and the archive of every member."""
+    import tempfile
+
+    from flask import send_file
+
+    from y_web.src.federation import lifecycle
+
+    fed = _get_or_404(fed_id, user)
+    handle = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    handle.close()
+    try:
+        name = lifecycle.export_bundle(fed, handle.name)
+    except Exception as exc:  # noqa: BLE001 - shown to the admin, the page stays usable
+        Path(handle.name).unlink(missing_ok=True)
+        flash(_("The export failed: %(why)s", why=str(exc)), "error")
+        return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+    response = send_file(handle.name, mimetype="application/zip", as_attachment=True, download_name=name)
+    response.call_on_close(lambda: Path(handle.name).unlink(missing_ok=True))
+    return response
+
+
+@world_simulation.route("/<int:fed_id>/clone", methods=["POST"])
+@guarded
+def clone(user, fed_id):
+    from y_web.src.federation import lifecycle
+
+    fed = _get_or_404(fed_id, user)
+    try:
+        new = lifecycle.clone(fed, request.form.get("name"), owner=user.username)
+    except service.WorldSimulationError as exc:
+        flash(_("The World Simulation could not be copied: %(why)s", why=str(exc)), "error")
+        return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+    flash(_("World Simulation copied."), "success")
+    return redirect(url_for("world_simulation.detail", fed_id=new.id))
+
+
+@world_simulation.route("/<int:fed_id>/reset", methods=["POST"])
+@guarded
+def reset(user, fed_id):
+    from y_web.src.federation import lifecycle
+
+    fed = _get_or_404(fed_id, user)
+    try:
+        lifecycle.reset(fed)
+        flash(_("World Simulation reset."), "success")
+    except service.WorldSimulationError:
+        flash(_("Stop the World Simulation before resetting it."), "error")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+
+
 @world_simulation.route("/<int:fed_id>/delete", methods=["POST"])
 @guarded
 def delete(user, fed_id):
