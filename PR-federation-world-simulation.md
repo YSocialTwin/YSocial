@@ -99,7 +99,7 @@ Measured end to end (`tests/integration/test_p12_quantitative.py`, 4 passed in 1
 
 ### P13: which agent content may be cross-posted (`crosspost.content`)
 
-`crosspost.content` is `["all"]` (default, nothing changes) or a non-empty subset of `own_posts`, `news`, `images`, combined with AND. The coordinator is the single authority (`content_policy.py`): content that does not qualify is dropped (agent_action) or not drawn (coordinator_rule), the batch is never rejected, and one `crosspost_filtered` event records the reasons; people are never filtered. Optional `link` field in `content.v1` and `crosspost.v1` (article URL), written by the servers only when `crosspost.content` includes `news`. The clients do not offer the cross-post of a share when `own_posts` is selected. YWeb: three checkboxes in the creation form and in the detail page, editable while the simulation is stopped (read at each start or restart), exported, imported and cloned.
+`crosspost.content` is `["all"]` (default, nothing changes) or a non-empty subset of `own_content`, `news`, `images`, combined with AND. The coordinator is the single authority (`content_policy.py`): content that does not qualify is dropped (agent_action) or not drawn (coordinator_rule), the batch is never rejected, and one `crosspost_filtered` event records the reasons; people are never filtered. Optional `link` field in `content.v1` and `crosspost.v1` (article URL), written by the servers only when `crosspost.content` includes `news`. The clients do not offer the cross-post of a share when `own_content` is selected. YWeb: three checkboxes in the creation form and in the detail page, editable while the simulation is stopped (read at each start or restart), exported, imported and cloned.
 
 | Repo | Commit |
 |---|---|
@@ -107,7 +107,7 @@ Measured end to end (`tests/integration/test_p12_quantitative.py`, 4 passed in 1
 | YServer | `9c284ff` P13.2 article link in the content |
 | YServerReddit | `85d7059` P13.3 |
 | YSimulator | `023f57b` P13.4 |
-| YClient | `06fae46` P13.5 no cross-posted share with `own_posts` |
+| YClient | `06fae46` P13.5 no cross-posted share with `own_content` |
 | YClientReddit | `4721d76` P13.6 |
 | YSocial | `7c75418d` P13.7 YWeb option; `01ada0e7` P13.8 docs |
 
