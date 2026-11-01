@@ -48,6 +48,17 @@ def publish_post(exp_id):
     text = request.args.get("post")
     url = request.args.get("url")
 
+    # World Simulation (F8): an enrolled person who picked other platforms posts through the runtime gateway
+    from y_web.src.federation import human_outbox as _ho
+
+    if not url:
+        _sent = _ho.try_deliver(exp_id, current_user, _ho.requested_members(request.args.getlist("crosspost")), text,
+                                lambda t: _ho.micro_post(text, t), only="microblogging")
+        if _sent is not None:
+            if not _sent:
+                flash(_("The post could not be sent to the other platforms."), "error")
+            return redirect(request.referrer)
+
     # Get experiment user (not admin user)
     exp_user = db.session.scalars(
         select(User_mgmt).filter_by(username=current_user.username)

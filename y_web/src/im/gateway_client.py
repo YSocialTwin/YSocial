@@ -111,6 +111,21 @@ class GatewayClient:
             {"human_key": key, "username": username, "language": language},
         )
 
+    def ensure_with_identity(
+        self, key: str, username: str, language: Optional[str], human_id: str
+    ):
+        """``ensure`` for a person enrolled in a World Simulation: the federation identity ``human:<id>`` is stored once."""
+        return self.request(
+            "POST",
+            "/v1/humans/ensure",
+            {
+                "human_key": key,
+                "username": username,
+                "language": language,
+                "human_id": human_id,
+            },
+        )
+
     def actions(self, account_id: str, actions: list):
         return self.request(
             "POST", "/v1/actions", {"account_id": account_id, "actions": actions}

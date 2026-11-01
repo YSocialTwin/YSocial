@@ -143,10 +143,41 @@ class RuntimeGateway:
                 raise
         return self._offline(body)
 
+    # -- publishing (F8, H5): the actions of an enrolled person, with their optional ``crosspost_to`` -------------------
+    def actions(self, account_id, username: str, key: str, actions: list):
+        """Send ``actions`` of the person on this runtime through its gateway (offline when no server runs).
+
+        The shape differs per runtime (see the ``docs/human-gateway.md`` of each): microblogging and photo sharing take an
+        ``account_id``, the forum the username and e-mail the account was created with. Returns ``(status, payload)``."""
+        t = self.spec.platform_type
+        if t == "forum":
+            email = f"{key.replace(':', '_')}@human.invalid"[:50]
+            body = {"username": str(username)[:15], "email": email, "actions": actions}
+            path = "/act"
+        else:
+            acct = int(account_id) if t == "microblogging" and str(account_id).isdigit() else account_id
+            body = {"account_id": acct, "actions": actions}
+            path = "/gateway/v1/actions" if t == "microblogging" else "/v1/actions"
+        try:
+            return self._http_path(path, body)
+        except GatewayUnavailable:
+            if server_up(self.folder):
+                raise
+        if t == "microblogging":
+            argv, request = [str(self.server_config)], {"op": "actions", "body": body}
+        elif t == "forum":
+            argv, request = [str(self.server_config), str(self.database)], {"op": "act", "body": body}
+        else:
+            argv, request = [str(self.folder)], {"method": "POST", "path": path, "body": body}
+        return self._run_offline(argv, request)
+
     def _http(self, body: dict):
+        return self._http_path(self.spec.ensure_path, body)
+
+    def _http_path(self, path: str, body: dict):
         base, token = self._base()
         try:
-            resp = self.session.post(base + self.spec.ensure_path, json=body,
+            resp = self.session.post(base + path, json=body,
                                      headers={self.spec.token_header: token}, timeout=TIMEOUT)
         except requests.RequestException as exc:
             raise GatewayUnavailable(str(exc)) from exc
@@ -166,6 +197,9 @@ class RuntimeGateway:
 
     def _offline(self, body: dict):
         argv, request = self._request_of(body)
+        return self._run_offline(argv, request)
+
+    def _run_offline(self, argv, request):
         if self._offline_runner is not None:
             return self._offline_runner(self.spec, request)
         from y_web.src.simulation.server import detect_env_handler

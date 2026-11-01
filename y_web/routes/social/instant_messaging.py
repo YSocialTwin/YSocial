@@ -813,8 +813,20 @@ def im_act(exp_id):
         return _json_error(
             400, "invalid_request", "client_action_id is required (up to 64 chars)"
         )
-    fields = {k: v for k, v in body.items() if k not in ("type", "client_action_id")}
+    # World Simulation (F8): ``crosspost`` lists the members the person also posts on; ``crosspost_to`` is never taken
+    # from the client, it is computed here for an enrolled person (post and forward only)
+    from y_web.src.federation import human_outbox as _ho
+
+    _requested = body.get("crosspost")
+    _text = body.get("crosspost_text") or body.get("text") or ""
+    fields = {k: v for k, v in body.items() if k not in ("type", "client_action_id", "crosspost", "crosspost_text", "crosspost_to")}
     action = {"type": action_type, "client_action_id": action_id, **fields}
+    if action_type in ("post", "forward"):
+        _targets = _ho.targets_for_request(
+            exp_id, current_user, _ho.requested_members(_requested if isinstance(_requested, list) else [_requested] if _requested else []), _text
+        )
+        if _targets:
+            action["crosspost_to"] = _targets
     try:
         code, payload = GatewayClient(part.exp_folder).actions(
             part.account_id, [action]

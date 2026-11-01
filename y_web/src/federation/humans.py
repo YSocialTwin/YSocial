@@ -69,7 +69,8 @@ def _ensure_im(platform_type, exp, user, hid, session=None, offline=None):
     uid = human_identity.experiment_uid(exp)
     key = human_identity.human_key(uid, user.id)
     try:
-        status, _payload = GatewayClient(folder, session=session).ensure(key, str(user.username)[:15], getattr(exp, "prompt_language", None))
+        status, _payload = GatewayClient(folder, session=session).ensure_with_identity(
+            key, str(user.username)[:15], getattr(exp, "prompt_language", None), hid)
     except GatewayUnavailable as exc:
         _err("gateway_unavailable", f"{platform_type}: {exc}")
     if status not in (200, 201):
@@ -232,3 +233,52 @@ def unenrol(fed, user_id, *, write_files: bool = True) -> bool:
     if write_files:
         _refresh_files(fed)
     return True
+
+
+# -- the gateways with the run of a member (called by the World Simulation lifecycle) --------------------
+def _has_humans(fed, member) -> bool:
+    return bool(accounts_by_member(fed).get(member))
+
+
+def _member_name(fed, exp):
+    return next((row.member for row, e in service.members_of(fed) if e.idexp == exp.idexp), None)
+
+
+def prepare_member(fed, exp) -> None:
+    """Before the server of a member starts: the token of the microblogging gateway goes in its server configuration
+    (the forum and photo sharing gateways are separate processes with their own token, written when they start)."""
+    from y_web.src.federation.human_gateways import set_microblogging_token
+
+    member = _member_name(fed, exp)
+    row = next((r for r, e in service.members_of(fed) if e.idexp == exp.idexp), None)
+    if member is None or row is None or row.platform_type != "microblogging" or not _has_humans(fed, member):
+        return
+    path = service.server_config_path(exp)
+    if path is not None and (getattr(exp, "simulator_type", None) or "Standard") != "HPC":
+        set_microblogging_token(path)
+
+
+def after_server_started(fed, exp):
+    """After the server of a member is up: start the human gateway of the forum or of photo sharing (a failure is only a
+    warning in the log: the person can still act offline through the runtime script when the server is stopped)."""
+    from y_web.src.federation import human_gateways as hg
+
+    member = _member_name(fed, exp)
+    row = next((r for r, e in service.members_of(fed) if e.idexp == exp.idexp), None)
+    if member is None or row is None or row.platform_type not in ("forum", "photo_sharing") or not _has_humans(fed, member):
+        return None
+    from y_web.src.simulation.server import detect_env_handler
+    from y_web.src.system.path_utils import get_external_repo_dir
+
+    config = hg._load_json(service.server_config_path(exp)) if service.server_config_path(exp) else {}
+    url = f"http://{config.get('host') or '127.0.0.1'}:{int(config.get('port') or getattr(exp, 'port', 0) or 0)}"
+    return hg.start_gateway(row.platform_type, service.experiment_dir(exp), get_external_repo_dir(hg.SPECS[row.platform_type].repo),
+                            python_cmd=detect_env_handler() or None, server_url=url)
+
+
+def after_server_stopped(exp) -> bool:
+    """The server of a member stopped: so does its human gateway process (nothing to do for the other platforms)."""
+    from y_web.src.federation import human_gateways as hg
+
+    folder = service.experiment_dir(exp)
+    return hg.stop_gateway(folder) if hg.is_running(folder) else False

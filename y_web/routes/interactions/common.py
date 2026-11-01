@@ -299,6 +299,19 @@ def share_content(exp_id):
 
     post_id = request.args.get("post_id")
 
+    # World Simulation (F8): an enrolled person who picked other platforms shares through the runtime gateway
+    from y_web.src.federation import human_outbox as _ho
+
+    _requested = _ho.requested_members(request.args.getlist("crosspost"))
+    if _requested and post_id:
+        _comment = request.args.get("comment") or ""
+        _sent = _ho.try_deliver(exp_id, current_user, _requested, _comment,
+                                lambda t: _ho.micro_share(post_id, _comment, t), only="microblogging")
+        if _sent is not None:
+            if not _sent:
+                flash(_("The post could not be sent to the other platforms."), "error")
+            return ("", 204) if _sent else (redirect(request.referrer) if request.referrer else ("", 204))
+
     # Normalise post_id: Standard experiments use integer IDs, HPC experiments use UUID strings.
     # Try numeric conversion so SQLAlchemy can match the Integer column; keep as string for UUIDs.
     try:

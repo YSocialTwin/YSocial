@@ -1218,6 +1218,19 @@ def api_post(exp_id: int):
     if not content:
         return _json_error("content is required.", 400)
 
+    # World Simulation (F8): an enrolled person who picked other platforms posts through the forum gateway (which has no
+    # community field: the thread goes to the default one); every other post keeps the direct path
+    from y_web.src.federation import human_outbox as _ho
+
+    _wanted = payload.get("crosspost")
+    _wanted = _wanted if isinstance(_wanted, list) else [_wanted] if _wanted else []
+    if _wanted and not url:
+        _plain = f"{title}. {body}" if title and body else (title or body or legacy_content)
+        _sent = _ho.try_deliver(exp_id, current_user, _ho.requested_members(_wanted), _plain,
+                                lambda t: _ho.forum_post(content, t), only="forum")
+        if _sent is not None:
+            return _json_success({"post_id": None, "crossposted": True}) if _sent else _json_error("The gateway refused the post.", 502)
+
     try:
         post = create_post_reddit(current_user, content, url, community_slug)
     except ValueError as exc:

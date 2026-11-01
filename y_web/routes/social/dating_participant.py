@@ -40,6 +40,8 @@ from y_web.src.dating.reader import DatingReadError, open_reader
 
 MAX_BODY = 16384
 MAX_ACTIONS = 20
+# the actions whose outcome a person may share (YDating docs/human-gateway.md, Federation)
+CROSSPOST_ACTIONS = ("ACCEPT_DATE", "UNMATCH", "IGNORE", "SEND_MESSAGE", "REPLY")
 MAX_JOIN_PHOTOS = 3
 MAX_UPLOAD = photos.MAX_BYTES + 65536  # the picture and the form around it
 
@@ -200,8 +202,18 @@ def dating_join(exp_id):
             error = _photo_error(exc.code)
         else:
             account = human.account_from_form(form, language, shown, pictures)
+            # World Simulation (F8): an enrolled person registers with their federation identity
+            from y_web.src.federation import human_outbox as _ho
+
+            _enrolment = _ho.enrolment_of(exp_id, getattr(current_user, "id", None))
+            if _enrolment is not None:
+                account["human_id"] = _enrolment[2].human_id
             status, payload = _gateway(exp, part, "register", part.key, account)
             if status in (200, 201):
+                if _enrolment is not None:
+                    from y_web.src.federation.humans import confirm_account
+
+                    confirm_account(_enrolment[0], current_user.id, _enrolment[1])
                 if status == 200 and not payload.get("created"):
                     for (
                         url
@@ -389,7 +401,18 @@ def dating_api_act(exp_id):
         payload = raw.get("payload") if isinstance(raw, dict) else None
         if kind not in human.ACTION_TYPES or not isinstance(payload or {}, dict):
             return _json_error(400, "invalid_request", "unknown action")
-        clean.append({"type": kind, "payload": payload or {}})
+        item = {"type": kind, "payload": payload or {}}
+        # World Simulation (F8): the person's progress of a match may also be posted on the platforms they picked;
+        # ``crosspost_to`` is never taken from the client
+        if kind in CROSSPOST_ACTIONS and isinstance(raw, dict) and raw.get("crosspost"):
+            from y_web.src.federation import human_outbox as _ho
+
+            wanted = raw["crosspost"] if isinstance(raw["crosspost"], list) else [raw["crosspost"]]
+            story = raw.get("crosspost_text") or (payload or {}).get("text") or ""
+            targets = _ho.targets_for_request(exp_id, current_user, _ho.requested_members(wanted), story)
+            if targets:
+                item["crosspost_to"] = targets
+        clean.append(item)
     # the account is the session's, never a request field; the server checks every rule again
     status, payload = _gateway(exp, part, "act", part.account_id, clean)
     return jsonify(payload), status

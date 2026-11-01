@@ -147,11 +147,15 @@ def start_federation(fed, *, resume=True):
         cp.start_coordinator(fed)
         service.write_member_configs(fed)
         db.session.commit()
+        from y_web.src.federation import humans as _humans
+
         for _, exp in members:
             exp.running = 1
             exp.exp_status = "active"
             db.session.commit()
+            _humans.prepare_member(fed, exp)  # token of the microblogging human gateway, before its server starts
             start_server_for_experiment(exp)
+            _humans.after_server_started(fed, exp)  # forum and photo sharing: their gateway processes
         for _, exp in members:
             _start_federation_clients(exp, resume=resume)
         fed.status = "running"
@@ -177,6 +181,12 @@ def _stop_federation_processes(fed, members=None):
     for _, exp in reversed(members):
         errors += _stop_federation_clients(exp, pause=False)
     for _, exp in reversed(members):
+        try:
+            from y_web.src.federation import humans as _humans
+
+            _humans.after_server_stopped(exp)
+        except Exception as exc:  # a gateway that does not stop never blocks the stop
+            errors.append(f"human gateway '{exp.exp_name}': {exc}")
         try:
             stop_server_for_experiment(exp)
         except Exception as exc:
