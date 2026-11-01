@@ -65,7 +65,7 @@
         <button type="submit">{{ _('Join') }}</button>
       </form>
       {% endif %}
-      {% set ws_exp = exp.idexp %}{% include 'world_simulation/_crosspost.html' %}
+      {% set ws_exp = exp.idexp %}{% include 'shared/world_simulation_crosspost.html' %}
       <a role="menuitem" class="im-menu-item" id="im-logout" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a>
     </div>
     {% endif %}

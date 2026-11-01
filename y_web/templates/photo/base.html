@@ -1860,7 +1860,7 @@
                                     <label for="photo-share-caption">{{ _('Text') }}</label>
                                     <textarea id="photo-share-caption" data-photo-share-caption placeholder="{{ _('Write the post text...') }}"></textarea>
                                 </div>
-                                {% set ws_exp = exp_id %}{% include 'world_simulation/_crosspost.html' %}
+                                {% set ws_exp = exp_id %}{% include 'shared/world_simulation_crosspost.html' %}
                                 <div class="photo-share-overlay__helper">
                                     {{ _('The selected image will be copied into the experiment media folder before publishing.') }}
                                 </div>

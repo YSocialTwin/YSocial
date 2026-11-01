@@ -12,7 +12,7 @@ def _render(app, dests):
 
     env = jinja2.Environment(loader=jinja2.FileSystemLoader("y_web/templates"), autoescape=True)
     env.globals.update(ws_destinations=lambda exp_id: dests, _=lambda s, **k: s, url_for=lambda endpoint, **k: "/static/" + k["filename"])
-    return env.get_template("world_simulation/_crosspost.html").render(ws_exp=1)
+    return env.get_template("shared/world_simulation_crosspost.html").render(ws_exp=1)
 
 
 def test_the_also_post_on_box_shows_only_enrolled_destinations(world):
