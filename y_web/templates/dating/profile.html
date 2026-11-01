@@ -27,6 +27,7 @@
     </div>
     <div class="dt-pf-idcard">
       <h2 class="dt-pf-title">{{ profile.username }}{% if profile.age %}<span class="dt-pf-age">, {{ profile.age }}</span>{% endif %}</h2>
+      {% set ws_exp = exp.idexp %}{% set ws_account = profile.id %}{% include 'shared/world_simulation_profile_badges.html' %}
       <ul class="dt-pf-facts">
         {% if profile.city %}<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9.5A2.5 2.5 0 1 1 12 7.5a2.5 2.5 0 0 1 0 5z" fill="currentColor"/></svg>{{ profile.city }}</li>{% endif %}
         {% if profile.intent %}<li class="dt-pf-intent">{{ profile.intent }}</li>{% endif %}

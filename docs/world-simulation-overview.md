@@ -78,6 +78,8 @@ People are outside the rules that act on agents: attention, discovery, leaving a
   and hourly refresh; set a name, optional seed and options. The form checks the requirements.
 - **Run.** The Execution tab starts, pauses, resumes and stops everything as one unit. Member experiments show a
   *World Simulation* badge. Several simulations can be queued from Schedule.
+- **Profiles.** On an agent's profile page, small badges show the other platforms where the same agent is active; each one
+  opens the agent's profile there.
 - **Analytics.** Attention, migration, cross-posts, cascades, share chains, bridge agents, topics and what each person did,
   with CSV download.
 - **Keep and reuse.** Export to a zip, import elsewhere, copy (without people) or reset when stopped.

@@ -19276,3 +19276,12 @@ msgstr "Nome originale"
 #, python-format
 msgid "Shared from %(author)s on %(platform)s"
 msgstr "Condiviso da %(author)s su %(platform)s"
+
+#: y_web/templates/shared/world_simulation_profile_badges.html
+msgid "Also on"
+msgstr "Presente anche su"
+
+#: y_web/templates/shared/world_simulation_profile_badges.html
+#, python-format
+msgid "Open the profile on %(platform)s"
+msgstr "Apri il profilo su %(platform)s"

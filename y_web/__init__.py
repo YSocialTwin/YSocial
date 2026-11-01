@@ -320,6 +320,17 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["ws_pending"] = _ws_pending
 
+    def _ws_profile_badges(exp_id, account_id):
+        """The other platforms where the account of a profile page takes part (World Simulation); empty elsewhere."""
+        try:
+            from y_web.src.federation.profile_badges import badges_for
+
+            return badges_for(exp_id, account_id)
+        except Exception:  # noqa: BLE001 - a profile page never fails because of the federation
+            return []
+
+    app.jinja_env.globals["ws_profile_badges"] = _ws_profile_badges
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)

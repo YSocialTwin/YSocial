@@ -20,6 +20,7 @@
     <div class="im-profile-title">
       <h2 id="im-p-h">{{ profile.username }} {% if ui.get('annotation_agent_type', True) %}<span class="im-kind" data-kind="{{ profile.kind }}">{{ profile.kind }}</span>{% endif %}</h2>
       <p>{{ profile.status }}{% if profile.language %} · {{ profile.language }}{% endif %}{% if P.get('profession') %} · {{ P.get('profession') }}{% endif %}</p>
+      {% set ws_exp = exp.idexp %}{% set ws_account = profile.id %}{% include 'shared/world_simulation_profile_badges.html' %}
     </div>
     {% if is_staff and ctx.vp.kind != 'public' and not (ctx.vp.kind == 'account' and ctx.vp.account_id == profile.id) %}
     <a class="im-viewas-btn" href="/{{ exp.idexp }}/im?vp=account&acc={{ profile.id }}">{{ _('View as this account') }}</a>
