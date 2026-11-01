@@ -100,7 +100,7 @@ Agents whose shares carry content from one platform to another, most active firs
 
 ### `topics_carried`
 
-Topics that travelled with cross-posted content, by platform pair. Coordinator data only: whether the destination had to create the topic is in the member databases (federation_topic), which this analysis does not open. Source: federation_message (crosspost.v1, topics).
+Topics that travelled with cross-posted content, by platform pair. Coordinator data only: which platform created the topic on arrival is in `topics_created`, read from the member databases when they can be reached. Source: federation_message (crosspost.v1, topics).
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -136,4 +136,40 @@ What each person did across the platforms, most active first. Source: federation
 | `destinations` | INTEGER | distinct platforms the cross-posts reached |
 | `first_day` | INTEGER | day of the first cross-post |
 | `last_day` | INTEGER | day of the last one |
+
+### `topics_created`
+
+Topics a platform created on arrival of cross-posted content (topic migration), read READ-ONLY from the `federation_topic` (and `federation_topic_origin`) tables of the member databases. Empty when no member database can be reached. Source: member databases: federation_topic, federation_topic_origin.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name as the platform stored it (runtimes may cut long names) |
+| `member` | TEXT | platform member that created it |
+| `day` | INTEGER | day of the creation (NULL when the runtime did not record the tick) |
+| `source` | TEXT | member whose content brought it |
+| `original` | TEXT | full name as sent when the platform cut it, otherwise the same as topic |
+
+### `topic_first_seen`
+
+First time a topic shows up on each platform, through the migration only (never counts topics a platform had before). Source: federation_message (crosspost.v1, topics) and topics_created.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name, lower case |
+| `member` | TEXT | platform member |
+| `first_tick` | INTEGER | canonical tick: emission for the platform that posted the content, delivery for the one that received it, creation when known |
+| `via` | TEXT | source (posted there), received (delivered there) or created (the platform created it) |
+
+### `topic_diffusion`
+
+How far each topic travelled, most carried first. Source: federation_message (crosspost.v1, topics) and topics_created.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name, lower case |
+| `platforms` | INTEGER | platforms where it appeared through the migration |
+| `carried` | INTEGER | cross-posts that carried it |
+| `created_on` | INTEGER | platforms that created it on arrival (0 when the member databases were not reachable) |
+| `first_day` | INTEGER | day of the first appearance |
+| `last_day` | INTEGER | day of the last cross-post carrying it |
 

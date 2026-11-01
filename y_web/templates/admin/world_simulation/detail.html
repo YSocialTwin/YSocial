@@ -119,7 +119,7 @@
                                     <span id="ws-an-state"></span></p>
                                 <div class="ws-actions" style="margin-bottom:14px;">
                                     <form method="post" action="{{ url_for('world_simulation.analytics_rebuild', fed_id=fed.id) }}"><button class="button is-light" type="submit">{{ _('Recalculate') }}</button></form>
-                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival')), ('shares', _('Shares')), ('share_depth', _('Share chains')), ('bridge_agents', _('Bridge agents')), ('topics_carried', _('Topics carried')), ('human_activity', _('People')), ('human_crossposts', _('Cross-posts of people'))) %}
+                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival')), ('shares', _('Shares')), ('share_depth', _('Share chains')), ('bridge_agents', _('Bridge agents')), ('topics_carried', _('Topics carried')), ('topic_diffusion', _('Topic diffusion')), ('topics_created', _('Topics created')), ('topic_first_seen', _('Topic first seen')), ('human_activity', _('People')), ('human_crossposts', _('Cross-posts of people'))) %}
                                     <a class="button is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}">{{ _('Download %(what)s (CSV)', what=label) }}</a>
                                     {% endfor %}
                                 </div>
@@ -139,6 +139,11 @@
                                 <h4 class="title is-6" style="margin-top:14px;">{{ _('Topics carried between platforms') }}</h4>
                                 <p class="ws-sub">{{ _('From the cross-posts of the coordinator; the topics a platform had to create are in its own database.') }}</p>
                                 <table class="ws-table" id="ws-an-topics"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('From') }}</th><th>{{ _('To') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('First day') }}</th></tr></thead><tbody></tbody></table>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Topic diffusion') }}</h4>
+                                <p class="ws-sub">{{ _('Platforms where each topic appeared through the migration, and the platforms that created it on arrival (read from the platform databases when they can be reached).') }}</p>
+                                <table class="ws-table" id="ws-an-diffusion"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('Platforms') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Created on') }}</th><th>{{ _('First day') }}</th><th>{{ _('Last day') }}</th></tr></thead><tbody></tbody></table>
+                                <h4 class="title is-6" style="margin-top:14px;">{{ _('Topics created on arrival') }}</h4>
+                                <table class="ws-table" id="ws-an-created"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Day') }}</th><th>{{ _('Brought by') }}</th><th>{{ _('Original name') }}</th></tr></thead><tbody></tbody></table>
                                 <h4 class="title is-6" style="margin-top:14px;">{{ _('People') }}</h4>
                                 <p class="ws-sub">{{ _('People enrolled in the World Simulation (identity human:<id>); agents are not listed here.') }}</p>
                                 <table class="ws-table" id="ws-an-humans"><thead><tr><th>{{ _('Person') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Shares') }}</th><th>{{ _('Platforms of origin') }}</th><th>{{ _('Platforms reached') }}</th><th>{{ _('First day') }}</th><th>{{ _('Last day') }}</th></tr></thead><tbody></tbody></table>
@@ -264,6 +269,8 @@
         }
         fill('#ws-an-bridges', t.bridge_agents || [], ['agent', 'shares', 'origins', 'destinations'], 20);
         fill('#ws-an-humans', t.human_activity || [], ['human', 'crossposts', 'shares', 'origins', 'destinations', 'first_day', 'last_day'], 20);
+        fill('#ws-an-diffusion', t.topic_diffusion || [], ['topic', 'platforms', 'carried', 'created_on', 'first_day', 'last_day'], 30);
+        fill('#ws-an-created', t.topics_created || [], ['topic', 'member', 'day', 'source', 'original'], 30);
         fill('#ws-an-topics', (t.topics_carried || []).slice().sort(function (a, b) { return b.n - a.n; }), ['topic', 'source', 'target', 'n', 'first_day'], 30);
         var sDays = uniq(sur, 'day').map(Number).sort(function (a, b) { return a - b; });
         draw('ws-chart-survival', 'line', sDays, perMember(sur, 'survival', sDays, uniq(sur, 'member')), {scales: {y: {min: 0}}});

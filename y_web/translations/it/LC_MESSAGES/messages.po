@@ -19204,3 +19204,59 @@ msgstr "Persone iscritte alla World Simulation (identità human:<id>); gli agent
 #: y_web/templates/admin/world_simulation/detail.html
 msgid "Last day"
 msgstr "Ultimo giorno"
+
+#: y_web/templates/shared/world_simulation_dating_story.html
+msgid "Share how the date went"
+msgstr "Racconta com'è andato l'appuntamento"
+
+#: y_web/templates/shared/world_simulation_dating_story.html
+msgid "Don't share"
+msgstr "Non condividere"
+
+#: y_web/templates/shared/world_simulation_dating_story.html
+msgid "We keep seeing each other"
+msgstr "Continuiamo a vederci"
+
+#: y_web/templates/shared/world_simulation_dating_story.html
+msgid "They ghosted me"
+msgstr "Mi ha lasciato senza risposta"
+
+#: y_web/templates/shared/world_simulation_dating_story.html
+msgid "It didn't work out"
+msgstr "Non è andata"
+
+#: y_web/templates/shared/world_simulation_dating_story.html
+msgid "In your own words"
+msgstr "Con parole tue"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Topic diffusion"
+msgstr "Diffusione dei topic"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Topics created"
+msgstr "Topic creati"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Topic first seen"
+msgstr "Primo avvistamento dei topic"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Platforms where each topic appeared through the migration, and the platforms that created it on arrival (read from the platform databases when they can be reached)."
+msgstr "Piattaforme dove ogni topic è comparso con la migrazione e piattaforme che lo hanno creato all'arrivo (letto dai database delle piattaforme quando sono raggiungibili)."
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Created on"
+msgstr "Creato su"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Topics created on arrival"
+msgstr "Topic creati all'arrivo"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Brought by"
+msgstr "Portato da"
+
+#: y_web/templates/admin/world_simulation/detail.html
+msgid "Original name"
+msgstr "Nome originale"

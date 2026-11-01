@@ -468,20 +468,20 @@ def status(user, fed_id):
 @guarded
 def analytics_data(user, fed_id):
     """Derived analytics of one World Simulation (built on first use and when the run has moved on)."""
-    from y_web.src.federation import analytics_etl
+    from y_web.src.federation import analytics_etl, service
 
     fed = _get_or_404(fed_id, user)
-    return jsonify(analytics_etl.cards(fed.folder))
+    return jsonify(analytics_etl.cards(fed.folder, service.member_databases(fed)))
 
 
 @world_simulation.route("/<int:fed_id>/analytics/rebuild", methods=["POST"])
 @guarded
 def analytics_rebuild(user, fed_id):
     """Manual recalculation of the derived analytics."""
-    from y_web.src.federation import analytics_etl
+    from y_web.src.federation import analytics_etl, service
 
     fed = _get_or_404(fed_id, user)
-    result = analytics_etl.build(fed.folder)
+    result = analytics_etl.build(fed.folder, service.member_databases(fed))
     if not result["ok"]:
         flash(_("The analytics could not be recalculated: %(why)s", why=result["message"]), "warning")
     return redirect(url_for("world_simulation.detail", fed_id=fed.id) + "#analytics")
@@ -496,12 +496,12 @@ def analytics_csv(user, fed_id, table):
 
     from flask import Response
 
-    from y_web.src.federation import analytics_etl
+    from y_web.src.federation import analytics_etl, service
 
     fed = _get_or_404(fed_id, user)
     if table not in analytics_etl.EXPORT_TABLES:
         abort(404)
-    analytics_etl.ensure_derived(fed.folder)
+    analytics_etl.ensure_derived(fed.folder, service.member_databases(fed))
     if not Path(analytics_etl.analytics_path(fed.folder)).is_file():
         abort(404)
     columns, rows = analytics_etl.table_rows(fed.folder, table)

@@ -84,10 +84,17 @@ platform where they are enrolled (nothing is shown to anybody else). Tick the pl
 - the text on each destination is the person's own, shaped for it with a plain rule (a title for a forum, the limit of each
   platform); no language model is involved, and there is no per-destination editing yet;
 - sharing another's content carries the original author as `quoted`, with the author's local name;
-- limits: the forum gateway has no *community* field, so a thread posted with other platforms ticked goes to the default
-  community; a post that carries an image link keeps the direct path (nothing is cross-posted); a person who ticks nothing
-  posts exactly as before. With the server stopped the request is recorded and leaves at the first barrier after the restart;
-  a person on a stopped platform sees what others cross-posted to it only after it restarts.
+- the forum composer keeps its *community* selector: the community is resolved to a topic of the forum server
+  (`GET /get_topics`) and sent as `community` on the gateway action, so the thread lands in that community; if the forum
+  server cannot be reached, or the community is not a topic there, the thread goes to the default community;
+- dating: a private message or reply is **never** shared by itself. The dating composer has a separate *Share how the date
+  went* choice (we keep seeing each other, they ghosted me, it didn't work out) plus a text in the person's own words;
+  only then the message action carries `story: {"event": ...}` together with `crosspost_to`. Accepting a date, unmatching
+  and ignoring keep their own story events;
+- limits: a post that carries a link or an image link keeps the direct path, because the microblogging and forum gateways
+  have no link support: the *Also post on* boxes are hidden while a link is filled and nothing is cross-posted; a person
+  who ticks nothing posts exactly as before. With the server stopped the request is recorded and leaves at the first
+  barrier after the restart; a person on a stopped platform sees what others cross-posted to it only after it restarts.
 
 ## Read the results
 
@@ -95,9 +102,13 @@ The **Analytics** tab shows the share of attention per platform and day, migrati
 per day and direction, the cascades of cross-posted contents and survival per platform. The tables can be downloaded
 as CSV and recalculated by hand. When agents share the content of other agents across platforms
 (`crosspost.mode = agent_action`), the tab also shows the depth of the share chains, the bridge agents (who carries
-content from one platform to another) and the topics that travelled with cross-posted content; the last one comes from
-the coordinator only, so the topics a platform had to create are recorded in that platform's own database
-(`federation_topic`). The *People* table lists what each person did across platforms (cross-posts and shares, platforms of origin and reached,
+content from one platform to another) and the topics that travelled with cross-posted content. *Topic diffusion* lists,
+per topic, the platforms where it appeared, how many cross-posts carried it, the platforms that created it on arrival and
+the first and last day; *Topics created on arrival* lists what each destination actually created (and the original name when
+it had to be shortened). The creations are read, read-only, from `federation_topic` and `federation_topic_origin` in the
+member databases; if a database cannot be reached the tables fall back to the coordinator-only data (what travelled, with no
+creations). The first tick of each topic on each platform is in the CSV `topic_first_seen`. The staleness check of the derived
+database looks at the coordinator database only, so a creation that happens after the last cross-post shows up at the next rebuild. The *People* table lists what each person did across platforms (cross-posts and shares, platforms of origin and reached,
 first and last day; people are told apart by the `human:` prefix of their identity, which agents never use). The tables of the tab and their columns are listed in
 [the analytics mapping](world-simulation-analytics-mapping.md). The per-platform analytics of each experiment
 (dating, instant messaging, ...) stay on the pages of those experiments.
