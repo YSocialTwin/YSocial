@@ -1148,6 +1148,9 @@ def add_to_experiment():
 
     db.session.add(ap)
     db.session.commit()
+    from y_web.src.federation.dynamic import population_added  # INV-18: the agents join a World Simulation the experiment belongs to
+
+    population_added(experiment_id, population_id)
 
     return population_details(population_id)
 

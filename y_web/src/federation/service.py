@@ -34,7 +34,12 @@ MIN_MEMBERS, MAX_MEMBERS = 2, 5
 PROTOCOL = "1.0"
 SLOTS_PER_DAY = 24
 GRANULARITIES = ("slot", "day")
-OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics", "pseudonyms")
+OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics", "pseudonyms", "provisioning")
+# Blocks read by YWeb only (not part of federation.json): ``provisioning = {"members": ["microblogging"]}`` lets the agents
+# of the other members discover those platforms and get an account there on the fly (INV-19).
+LOCAL_BLOCKS = ("provisioning",)
+# Platforms whose runtime can create an account on request and whose client adopts it (reference path: YServer + YClient).
+PROVISIONABLE = (("microblogging", "Standard"),)
 # platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
 ALLOWED_SIMULATORS = {
     "microblogging": ("Standard", "HPC"),
@@ -337,6 +342,9 @@ def build_federation_config(fed) -> dict:
         {"member": row.member, "exp_id": row.exp_id, "platform": row.platform_type, "db_uri": experiment_db_uri(exp)}
         for row, exp in members_of(fed)
     ]
+    for entry, (row, exp) in zip(members, members_of(fed)):
+        if provisions(fed, row, exp):
+            entry["provision"] = True
     links = db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).order_by(FederationIdentityLink.id).all()
     names = _legacy_names(links)
     identity = []
@@ -357,12 +365,18 @@ def build_federation_config(fed) -> dict:
         "identity": identity,
     }
     for block in OPTION_BLOCKS:
-        if block in options:
+        if block in options and block not in LOCAL_BLOCKS:
             config[block] = options[block]
     if options.get("exposures") and "quoted" not in config:
         # members send exposures: a quoted cross-post is kept only if its author saw the content (P3, INV-16)
         config["quoted"] = {"require_exposure": True}
     return config
+
+
+def provisions(fed, row, exp) -> bool:
+    """True when this member creates accounts for agents that discover it (``provisioning.members`` and a runtime that can)."""
+    wanted = (json.loads(fed.config_json or "{}").get("provisioning") or {}).get("members") or []
+    return row.member in wanted and (row.platform_type, getattr(exp, "simulator_type", None) or "Standard") in PROVISIONABLE
 
 
 def write_federation_files(fed) -> None:
@@ -405,6 +419,11 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         section["create_topics"] = migrate
     elif row.platform_type == "microblogging" and not migrate:
         section["topic_migration"] = False  # YServer reads it; absent means on (its default)
+    # INV-17: the runtime keeps who is who in a file of its own (accounts are reported by username, the coordinator answers)
+    section["bindings_file"] = str(folder / f"bindings_{row.member}.db")
+    if provisions(fed, row, exp):
+        section["provision"] = True  # the server creates the accounts the coordinator asks for ...
+        section["adopt"] = True  # ... and the client gives each an agent
     # F8: the people enrolled in this member (``human:<id>`` -> local account); the runtimes keep them out of the agent rules
     from y_web.src.federation.humans import accounts_by_member
 

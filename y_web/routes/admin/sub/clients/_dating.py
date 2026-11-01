@@ -278,6 +278,9 @@ def create_dating_client():
             Population_Experiment(id_population=population.id, id_exp=exp.idexp)
         )
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp.idexp, population.id)
     client = Client(
         name=name,
         prompt_language=language,

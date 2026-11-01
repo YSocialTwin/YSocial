@@ -332,3 +332,102 @@ def test_links_of_older_releases_are_declared_by_name_not_by_local_id(world):
     db.session.commit()
     rows = service.build_federation_config(fed)["identity"]
     assert len(rows) == 6 and all(r["username"].startswith("a") and "local_account_id" not in r for r in rows)
+
+
+# ------------------------------------------------------------------ INV-17/18/19: bindings, late populations, provisioning
+def _sections(fed):
+    return {row.member: service.member_section(fed, row, exp) for row, exp in service.members_of(fed)}
+
+
+def test_member_sections_carry_a_bindings_file_and_provision_only_where_asked_and_supported(world):
+    app, exps, tmp = world
+    plain = service.create_federation("plain", list(exps.values()))
+    for member, section in _sections(plain).items():
+        assert section["bindings_file"].endswith(f"bindings_{member}.db") and "provision" not in section
+    assert not any("provision" in m for m in json.load(open(os.path.join(plain.folder, "federation.json")))["members"])
+
+
+def test_provisioning_is_local_to_yweb_and_limited_to_runtimes_that_can_create_accounts(world):
+    app, exps, tmp = world
+    fed = service.create_federation("p", list(exps.values()), options={"discovery": {"enabled": True}, "provisioning": {"members": ["microblogging", "forum"]}})
+    sections = _sections(fed)
+    assert sections["microblogging"]["provision"] and sections["microblogging"]["adopt"]
+    assert "provision" not in sections["forum"]  # no runtime support: asked, not honoured
+    config = json.load(open(os.path.join(fed.folder, "federation.json")))
+    assert "provisioning" not in config and config["discovery"] == {"enabled": True}
+    assert [m["member"] for m in config["members"] if m.get("provision")] == ["microblogging"]
+
+
+def test_a_population_added_to_a_running_world_simulation_is_declared_by_username(world, monkeypatch):
+    from y_web import db
+    from y_web.src.federation import dynamic
+    from y_web.src.models.admin import Agent, Agent_Population, FederationIdentityLink, Population
+
+    app, exps, tmp = world
+    fed = service.create_federation("late", list(exps.values()))
+    pop = Population(name="late pop", descr="", size=2)
+    db.session.add(pop)
+    db.session.flush()
+    new = []
+    for n in ("zed", "zoe"):
+        a = Agent(name=n)
+        db.session.add(a)
+        db.session.flush()
+        db.session.add(Agent_Population(agent_id=a.id, population_id=pop.id))
+        new.append(a)
+    db.session.commit()
+    sent = []
+
+    class Fake:
+        def declare_expected(self, identities):
+            sent.append(identities)
+
+    monkeypatch.setattr(dynamic, "_coordinator_client", lambda fed, member: Fake())
+    assert dynamic.population_added(exps["forum"], pop.id)[0][1] == ["zed", "zoe"]  # stopped: recorded, nothing sent
+    assert sent == []
+    assert FederationIdentityLink.query.filter_by(federation_pk=fed.id, member="forum").count() == 5
+    config = json.load(open(os.path.join(fed.folder, "federation.json")))
+    assert {i["username"] for i in config["identity"] if i["member"] == "forum"} >= {"zed", "zoe"}
+    assert dynamic.population_added(exps["forum"], pop.id) == []  # idempotent
+    other = Population(name="other", descr="", size=1)
+    db.session.add(other)
+    db.session.flush()
+    b = Agent(name="yan")
+    db.session.add(b)
+    db.session.flush()
+    db.session.add(Agent_Population(agent_id=b.id, population_id=other.id))
+    fed.status = "running"
+    db.session.commit()
+    dynamic.population_added(exps["microblogging"], other.id)
+    assert sent == [[{"global_agent_id": str(b.id), "username": "yan", "name": "yan"}]]
+
+
+def test_a_failing_coordinator_never_breaks_the_creation_of_a_client(world, monkeypatch):
+    from y_web import db
+    from y_web.src.federation import dynamic
+    from y_web.src.models.admin import Agent, Agent_Population, Population
+
+    app, exps, tmp = world
+    fed = service.create_federation("late", list(exps.values()))
+    pop = Population(name="p2", descr="", size=1)
+    db.session.add(pop)
+    db.session.flush()
+    a = Agent(name="kim")
+    db.session.add(a)
+    db.session.flush()
+    db.session.add(Agent_Population(agent_id=a.id, population_id=pop.id))
+    fed.status = "running"
+    db.session.commit()
+
+    def boom(fed, member):
+        raise OSError("down")
+
+    monkeypatch.setattr(dynamic, "_coordinator_client", boom)
+    assert dynamic.population_added(exps["forum"], pop.id) == []  # swallowed, and nothing recorded ...
+    from y_web.src.models.admin import FederationIdentityLink
+
+    assert FederationIdentityLink.query.filter_by(federation_pk=fed.id, member="forum").count() == 3
+    sent = []
+    monkeypatch.setattr(dynamic, "_coordinator_client", lambda fed, member: type("F", (), {"declare_expected": lambda self, i: sent.append(i)})())
+    assert dynamic.population_added(exps["forum"], pop.id)[0][1] == ["kim"] and len(sent) == 1  # ... so the next call declares it
+    assert dynamic.population_added(99999, pop.id) == []  # not a member of anything

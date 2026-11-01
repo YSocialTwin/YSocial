@@ -3394,6 +3394,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp.idexp)
         db.session.add(pop_exp)
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp.idexp, population_id)
 
     # Create client record in database
     client = Client(
@@ -4177,6 +4180,9 @@ def _create_standard_client_internal():
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
         db.session.add(pop_exp)
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp_id, population_id)
 
     # create the Client object
     prompt_language = prompt_packs.resolve(
@@ -5512,6 +5518,9 @@ def _create_forum_client_internal():
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
         db.session.add(pop_exp)
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp_id, population_id)
 
     # create the Client object
     prompt_language = prompt_packs.resolve(
