@@ -19192,6 +19192,14 @@ msgstr "Non è stato possibile inviare il post alle altre piattaforme."
 msgid "Also post on"
 msgstr "Pubblica anche su"
 
+#: y_web/templates/shared/world_simulation_crosspost.html
+msgid "%(n)s cross-posts are waiting and will appear when this platform restarts"
+msgstr "%(n)s cross-post sono in attesa e compariranno al riavvio di questa piattaforma"
+
+#: y_web/templates/shared/world_simulation_crosspost.html
+msgid "Text on %(platform)s"
+msgstr "Testo su %(platform)s"
+
 #: y_web/templates/admin/world_simulation/detail.html
 msgid "Cross-posts of people"
 msgstr "Cross-post delle persone"

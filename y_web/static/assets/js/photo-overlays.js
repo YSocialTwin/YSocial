@@ -1678,6 +1678,9 @@
         formData.append('caption', elements.caption ? String(elements.caption.value || '').trim() : '');
         if (window.wsCrossposts && window.wsCrossposts()) {
             formData.append('crosspost', window.wsCrossposts());  // World Simulation (F8): also post on these members
+            if (window.wsCrosspostTexts && window.wsCrosspostTexts()) {
+                formData.append('crosspost_texts', window.wsCrosspostTexts());  // P7: the text edited for each destination
+            }
         }
 
         state.currentShareSubmitting = true;

@@ -92,10 +92,64 @@ def destinations_for(exp_id, user_id) -> List[dict]:
     return [{"member": m, "platform_type": p} for m, p in (ctx.destinations.items() if ctx else [])]
 
 
-def crosspost_to(ctx: HumanContext, requested, text) -> List[dict]:
-    """``[{member, text}]``: the requested members that are enrolled destinations, in a stable order, each with its text."""
+def request_overrides() -> Dict[str, str]:
+    """The texts the person edited per destination (``crosspost_texts``: ``{member: text}``, a JSON object or its string), read
+    from the current request (query, form or JSON body); ``{}`` outside a request or when the field is absent or malformed.
+    Only text is taken from here: which members receive the post is always decided by ``crosspost_to`` below."""
+    try:
+        from flask import has_request_context, request
+
+        if not has_request_context():
+            return {}
+        raw = request.values.get("crosspost_texts")
+        if raw is None:
+            body = request.get_json(silent=True)
+            raw = body.get("crosspost_texts") if isinstance(body, dict) else None
+        if isinstance(raw, (str, bytes)):
+            raw = json.loads(raw)
+        return {str(k): v for k, v in raw.items() if isinstance(v, str)} if isinstance(raw, dict) else {}
+    except Exception:  # noqa: BLE001 - a malformed field means "no edits": the rule text
+        return {}
+
+
+def edited_text(dest_platform: str, text) -> str:
+    """The person's edited text for a destination, cut to the platform limit; an empty text is ``""`` (rule text applies)."""
+    text = str(text or "").strip()
+    if not text:
+        return ""
+    if dest_platform == "forum":
+        return rule_text("forum", text)  # a title line is added when the person wrote a single line
+    return _cut(" ".join(text.split()), LIMITS.get(dest_platform, 280))
+
+
+def suggested_texts(ctx: HumanContext, text, members=None) -> Dict[str, str]:
+    """``{member: rule_text}`` for the enrolled destinations (all, or the ``members`` given): what the composer prefills."""
+    wanted = [m for m in (members if members is not None else ctx.destinations) if m in ctx.destinations]
+    return {m: rule_text(ctx.destinations[m], text) for m in sorted(set(wanted))}
+
+
+def suggestions_for(exp_id, user_id, text, members=None) -> dict:
+    """``{member: {text, limit}}`` the composer prefills (empty when the person is not enrolled): the rule text and the limit
+    of each destination, single-sourced here so the page never repeats the rule."""
+    ctx = context_for(exp_id, user_id)
+    if ctx is None:
+        return {}
+    return {m: {"text": t, "limit": LIMITS.get(ctx.destinations[m], 280)} for m, t in suggested_texts(ctx, text, members).items()}
+
+
+def crosspost_to(ctx: HumanContext, requested, text, overrides: Optional[Dict[str, str]] = None) -> List[dict]:
+    """``[{member, text}]``: the requested members that are enrolled destinations, in a stable order, each with its text.
+
+    The text is the rule text unless the person edited it for that destination (``overrides``, by default the
+    ``crosspost_texts`` of the request): an edited text is cut to the limit of the destination platform, an empty one falls
+    back to the rule text, and an edit for a member that is not an enrolled, requested destination is ignored."""
     wanted = sorted({str(m) for m in requested or [] if str(m) in ctx.destinations})[:MAX_TARGETS]
-    return [{"member": m, "text": rule_text(ctx.destinations[m], text)} for m in wanted]
+    edits = request_overrides() if overrides is None else overrides
+    out = []
+    for m in wanted:
+        platform = ctx.destinations[m]
+        out.append({"member": m, "text": edited_text(platform, edits.get(m)) or rule_text(platform, text)})
+    return out
 
 
 def requested_members(values) -> List[str]:

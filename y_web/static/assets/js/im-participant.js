@@ -44,6 +44,8 @@
     payload.client_action_id = id;
     if ((payload.type === 'post' || payload.type === 'forward') && window.wsCrossposts && window.wsCrossposts()) {
       payload.crosspost = window.wsCrosspostList();  // World Simulation (F8): the server computes crosspost_to
+      var texts = window.wsCrosspostTexts && window.wsCrosspostTexts();
+      if (texts) payload.crosspost_texts = JSON.parse(texts);  // P7: the text edited for each destination
     }
     return fetch(url, {
       method: 'POST',

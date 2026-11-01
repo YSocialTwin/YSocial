@@ -307,6 +307,19 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["ws_destinations"] = _ws_destinations
 
+    def _ws_pending(exp_id):
+        """What others cross-posted to the logged-in person's stopped platform (P7); empty for everybody else."""
+        try:
+            from flask_login import current_user
+
+            from y_web.src.federation.pending_notice import pending_for
+
+            return pending_for(exp_id, getattr(current_user, "id", None)) if current_user.is_authenticated else []
+        except Exception:  # noqa: BLE001 - a page never fails because of the federation
+            return []
+
+    app.jinja_env.globals["ws_pending"] = _ws_pending
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)

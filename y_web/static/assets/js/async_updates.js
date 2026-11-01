@@ -11,6 +11,7 @@ $(document).on('click','#publish-button',function(e) {
             url: document.getElementById("link_post").value,
             annotation: document.getElementById("activities").value,
             crosspost: window.wsCrossposts ? window.wsCrossposts() : '',
+            crosspost_texts: window.wsCrosspostTexts ? window.wsCrosspostTexts() : '',
         },
       })
     });
@@ -132,6 +133,7 @@ $(document).on('click','.share-button',function(e) {
         data: {
             post_id: elem_id,
             crosspost: window.wsCrossposts ? window.wsCrossposts() : '',
+            crosspost_texts: window.wsCrosspostTexts ? window.wsCrosspostTexts() : '',
         },
       })
     });

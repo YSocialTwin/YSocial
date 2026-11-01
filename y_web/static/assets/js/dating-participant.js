@@ -35,6 +35,7 @@
     var isMessage = type === 'SEND_MESSAGE' || type === 'REPLY';
     var storyEl = document.getElementById('ws-dating-story');
     var storyText = document.getElementById('ws-dating-story-text');
+    var edited = window.wsCrosspostTexts ? window.wsCrosspostTexts() : '';  // P7: the text edited for each destination
     if (CROSSPOST_TYPES[type] && window.wsCrossposts && window.wsCrossposts()) {
       if (!isMessage) {
         item.crosspost = window.wsCrosspostList();  // World Simulation (F8): the server computes crosspost_to
@@ -46,7 +47,9 @@
         storyEl.value = ''; storyText.value = '';
       }
     }
-    return post(actUrl, { actions: [item] }).then(function (res) {
+    var body = { actions: [item] };
+    if (item.crosspost && edited) body.crosspost_texts = JSON.parse(edited);
+    return post(actUrl, body).then(function (res) {
       var out = (res.data.outcomes || [])[0];
       if (res.status === 200 && out) return { ok: !!out.success, outcome: out, error: out.error, data: res.data };
       return { ok: false, error: res.data.error || String(res.status), data: res.data, status: res.status };

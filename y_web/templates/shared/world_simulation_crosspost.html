@@ -1,14 +1,35 @@
-{#- F8 (H6): "Also post on" for a person enrolled in a World Simulation. Set `ws_exp` (the experiment id) before including.
-    Nothing is rendered for anybody else. The ticked members are read by world-simulation-crosspost.js (`wsCrossposts()`). -#}
+{#- F8 (H6) + P7: "Also post on" for a person enrolled in a World Simulation. Set `ws_exp` (the experiment id) before including.
+    Nothing is rendered for anybody else. The ticked members are read by world-simulation-crosspost.js (`wsCrossposts()`);
+    under each ticked member the person can edit the text that will be posted there (`wsCrosspostTexts()`), prefilled from the
+    server's rule. When the platform of the person is stopped while the World Simulation runs, the cross-posts waiting for it
+    are listed (`ws_pending`; empty and without any request for everybody else). -#}
 {% set ws_dest = ws_destinations(ws_exp) if ws_exp is defined and ws_destinations is defined else [] %}
+{% set ws_wait = ws_pending(ws_exp) if ws_exp is defined and ws_pending is defined else [] %}
+{% if ws_wait %}
+<aside class="ws-pending-box" data-ws-pending style="margin:.5rem 0;padding:.5rem .75rem;border:1px solid rgba(128,128,128,.4);border-radius:.4rem;font-size:.85em">
+  <strong>{{ _('%(n)s cross-posts are waiting and will appear when this platform restarts', n=ws_wait|length) }}</strong>
+  <ul style="margin:.3rem 0 0;padding-left:1.1rem">
+    {% for p in ws_wait %}
+    <li>{{ p.text }}{% if p.attribution %}<br><small>{{ p.attribution }}</small>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</aside>
+{% endif %}
 {% if ws_dest %}
-<fieldset class="ws-crosspost-box" data-ws-crosspost style="border:0;margin:.5rem 0;padding:0">
+<fieldset class="ws-crosspost-box" data-ws-crosspost data-ws-exp="{{ ws_exp }}" style="border:0;margin:.5rem 0;padding:0">
   <legend style="font-size:.85em;opacity:.8;padding:0">{{ _('Also post on') }}</legend>
   {% for d in ws_dest %}
   <label style="margin-right:.9rem;white-space:nowrap">
     <input type="checkbox" class="ws-crosspost" name="crosspost" value="{{ d.member }}"> {{ d.member|replace('_', ' ')|capitalize }}
   </label>
   {% endfor %}
+  {% for d in ws_dest %}
+  <div class="ws-crosspost-edit" data-member="{{ d.member }}" hidden style="margin-top:.4rem">
+    <label style="display:block;font-size:.8em;opacity:.8">{{ _('Text on %(platform)s', platform=d.member|replace('_', ' ')|capitalize) }}</label>
+    <textarea class="ws-crosspost-text" data-member="{{ d.member }}" rows="2" style="width:100%" aria-label="{{ _('Text on %(platform)s', platform=d.member|replace('_', ' ')|capitalize) }}"></textarea>
+    <small class="ws-crosspost-count" style="opacity:.7"></small>
+  </div>
+  {% endfor %}
 </fieldset>
-<script src="{{ url_for('static', filename='assets/js/world-simulation-crosspost.js') }}"></script>
 {% endif %}
+{% if ws_dest %}<script src="{{ url_for('static', filename='assets/js/world-simulation-crosspost.js') }}"></script>{% endif %}

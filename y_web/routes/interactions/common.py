@@ -270,6 +270,22 @@ def follow(exp_id, user_id, follower_id):
             engine.dispose()
 
 
+@user.route("/<int:exp_id>/federation/crosspost_suggest")
+@login_required
+def federation_crosspost_suggest(exp_id):
+    """World Simulation (P7): the text the composer prefills for each destination (``{member: {text, limit}}``).
+
+    Query params: ``text`` (what the person wrote), ``crosspost`` (optional: only these members). Empty for a person who is
+    not enrolled. The server never trusts what the page sends back: ``crosspost_to`` is recomputed on publishing."""
+    from y_web.src.federation import human_outbox as _ho
+
+    try:
+        members = _ho.requested_members(request.args.getlist("crosspost")) or None
+        return jsonify({"texts": _ho.suggestions_for(exp_id, getattr(current_user, "id", None), request.args.get("text", ""), members)})
+    except Exception:  # noqa: BLE001 - a composer never fails because of the federation
+        return jsonify({"texts": {}})
+
+
 @user.route("/<int:exp_id>/share_content")
 @login_required
 def share_content(exp_id):

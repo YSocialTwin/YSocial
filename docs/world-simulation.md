@@ -92,7 +92,12 @@ platform where they are enrolled (nothing is shown to anybody else). Tick the pl
   photo and share; instant messaging: message and forward; dating: accepting a date, unmatching, ignoring, messages and
   replies) with `crosspost_to`, the same field the agents send, so it leaves at the next barrier and arrives once;
 - the text on each destination is the person's own, shaped for it with a plain rule (a title for a forum, the limit of each
-  platform); no language model is involved, and there is no per-destination editing yet;
+  platform); no language model is involved. Ticking a platform opens a text box under it, **prefilled with that rule's
+  text** (the page asks the server for it, `GET /<exp>/federation/crosspost_suggest`, so the rule lives only in
+  `human_outbox.py`) and refreshed while the person types, until they edit it. The person can change the text for each
+  destination; it is limited to the platform's limit, an emptied box goes back to the rule text, and the page sends only the
+  edited texts (`crosspost_texts`). The server never trusts the page for *where* the post goes: it recomputes the
+  destinations (enrolled members only) and cuts every text to the platform's limit;
 - sharing another's content carries the original author as `quoted`, with the author's local name;
 - the forum composer keeps its *community* selector: the community is resolved to a topic of the forum server
   (`GET /get_topics`) and sent as `community` on the gateway action, so the thread lands in that community; if the forum
@@ -105,6 +110,13 @@ platform where they are enrolled (nothing is shown to anybody else). Tick the pl
   have no link support: the *Also post on* boxes are hidden while a link is filled and nothing is cross-posted; a person
   who ticks nothing posts exactly as before. With the server stopped the request is recorded and leaves at the first
   barrier after the restart; a person on a stopped platform sees what others cross-posted to it only after it restarts.
+- **cross-posts waiting for a stopped platform**: when the World Simulation runs but the platform of an enrolled person is
+  stopped, the composer area shows *N cross-posts are waiting and will appear when this platform restarts* with the text of
+  each (and the `↪ author @ platform: «excerpt»` line of a share). It reads the coordinator's read-only `GET /v1/pending`
+  (nothing is acknowledged), is cached for a few seconds, and makes no request at all for anybody who is not enrolled, when
+  the World Simulation is not running or the platform's server is up. Any error just hides the notice. It shows exactly what
+  the endpoint returns: with `crosspost.mode = coordinator_rule` a cross-post that has not been materialised yet is not in
+  the answer, so it is not listed either;
 
 ## Read the results
 
