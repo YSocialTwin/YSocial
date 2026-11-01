@@ -35,6 +35,8 @@ starts. Values shown are the defaults.
 `rejoin_cooldown_days` (14), `social_cap` (5), `threshold_probability` (0.5) and `beta`, the weights of the logit with the
 keys `0`, `A`, `S`, `I`, `N`, `F` (defaults -3.0, 1.0, 0.5, 1.5, 0.5, 0.5).
 
+`quoted_weight` (0.0, between 0 and 1): when above 0, an exposure to a cross-post that quotes content from a third platform also adds awareness of that platform, at `quoted_weight` times the usual weight; 0 switches it off. It is set in the advanced options of the World Simulation (`discovery.quoted_weight`).
+
 ## `leave`
 
 | Key | Default | Meaning |
