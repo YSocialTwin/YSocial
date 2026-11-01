@@ -190,3 +190,25 @@ def test_unknown_parameter_block_and_bad_granularity_are_refused(world):
         service.create_federation("w", list(exps.values()), granularity="hour")
     with pytest.raises(WorldSimulationError):
         service.create_federation("  ", list(exps.values()))
+
+
+def test_member_sections_carry_the_crosspost_mode_and_the_agent_propensity(world):
+    app, exps, tmp = world
+    plain = service.create_federation("plain", list(exps.values()))
+    assert service.member_section(plain, plain.members[0] if hasattr(plain, "members") else _first_member(plain), _exp_of(plain))["crosspost_mode"] == "coordinator_rule"
+    service.delete_federation(plain)
+    fed = service.create_federation("agents", list(exps.values()), seed=11,
+                                    options={"crosspost": {"mode": "agent_action", "propensity": 0.25}})
+    service.write_member_configs(fed)
+    for platform in exps:
+        for name in ("config_server.json", f"client_x-{platform}.json"):
+            section = json.loads((tmp / "experiments" / platform / name).read_text())["federation"]
+            assert section["crosspost_mode"] == "agent_action" and section["crosspost_propensity"] == 0.25 and section["seed"] == 11
+
+
+def _first_member(fed):
+    return service.members_of(fed)[0][0]
+
+
+def _exp_of(fed):
+    return service.members_of(fed)[0][1]

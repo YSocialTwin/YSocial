@@ -326,7 +326,8 @@ def member_section(fed, row, exp, enabled=True) -> dict:
     """The ``federation`` section of the configuration of a member (server and clients)."""
     folder = Path(fed.folder)
     options = json.loads(fed.config_json or "{}")
-    return {
+    crosspost = options.get("crosspost") or {}
+    section = {
         "enabled": bool(enabled),
         "member": row.member,
         "federation_id": int(fed.federation_id),
@@ -335,7 +336,13 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         "token_file": str(folder / "federation.token"),
         "protocol": PROTOCOL,
         "exposures": bool(options.get("exposures", False)),
+        # F6.2: who decides the cross-posts (coordinator rule or the agent itself) and how often an agent tries
+        "crosspost_mode": str(crosspost.get("mode") or "coordinator_rule"),
     }
+    if "propensity" in crosspost:
+        section["crosspost_propensity"] = float(crosspost["propensity"])
+        section["seed"] = int(fed.seed)
+    return section
 
 
 def _update_json(path: Path, section: Optional[dict]) -> None:
