@@ -34,7 +34,7 @@ MIN_MEMBERS, MAX_MEMBERS = 2, 5
 PROTOCOL = "1.0"
 SLOTS_PER_DAY = 24
 GRANULARITIES = ("slot", "day")
-OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership")
+OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics")
 # platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
 ALLOWED_SIMULATORS = {
     "microblogging": ("Standard", "HPC"),
@@ -339,6 +339,14 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         # F6.2: who decides the cross-posts (coordinator rule or the agent itself) and how often an agent tries
         "crosspost_mode": str(crosspost.get("mode") or "coordinator_rule"),
     }
+    # Topic migration: content that crosses platforms brings its topics and a missing one is created (default on).
+    # Written only under the key each runtime reads: the forum server `topic_migration`, YSimulator `create_topics`;
+    # the other runtimes migrate topics by default and have no switch.
+    migrate = bool((options.get("topics") or {}).get("migration", True))
+    if row.platform_type == "forum":
+        section["topic_migration"] = migrate
+    elif row.platform_type == "microblogging" and (getattr(exp, "simulator_type", None) or "Standard") == "HPC":
+        section["create_topics"] = migrate
     if "propensity" in crosspost:
         section["crosspost_propensity"] = float(crosspost["propensity"])
         section["seed"] = int(fed.seed)

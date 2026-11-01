@@ -236,3 +236,16 @@ def test_the_experiment_pages_show_the_badge_and_disable_the_member_commands():
         assert "world_simulation_of(experiment.idexp)" in text and text.count("ws and ws.locked") == 2
     assert "world_simulation_locked" in (root / "static" / "assets" / "js" / "admin-settings.js").read_text()
     assert "world_simulation_of" in (root / "__init__.py").read_text()
+
+
+def test_member_sections_carry_the_topic_migration_switch_only_where_a_runtime_reads_it(world):
+    """Topic migration is on by default; the forum reads `topic_migration`, an HPC microblogging `create_topics`."""
+    app, exps, tmp = world
+    on = service.create_federation("topics-on", list(exps.values()))
+    by_platform = {row.platform_type: service.member_section(on, row, exp) for row, exp in service.members_of(on)}
+    assert by_platform["forum"]["topic_migration"] is True and "create_topics" not in by_platform["forum"]
+    assert "topic_migration" not in by_platform["microblogging"] and "create_topics" not in by_platform["microblogging"]  # Standard
+    service.delete_federation(on)
+    off = service.create_federation("topics-off", list(exps.values()), options={"topics": {"migration": False}})
+    by_platform = {row.platform_type: service.member_section(off, row, exp) for row, exp in service.members_of(off)}
+    assert by_platform["forum"]["topic_migration"] is False

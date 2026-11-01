@@ -111,6 +111,8 @@ def _options_from_form(form):
     for block in SWITCHES:
         if form.get(f"{block}_enabled"):
             options[block] = {"enabled": True}
+    if form.get("topics_present") and not form.get("topic_migration"):
+        options["topics"] = {"migration": False}  # on by default: only the opt-out is stored
     raw = (form.get("advanced") or "").strip()
     if raw:
         try:
