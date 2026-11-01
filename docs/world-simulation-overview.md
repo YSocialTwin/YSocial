@@ -74,7 +74,7 @@ People are outside the rules that act on agents: attention, discovery, leaving a
 
 ## What you see in the app
 
-- **Create.** Choose two to five existing experiments, one per platform type, with the same population, simulated clock
+- **Create.** Choose two to five existing experiments, one per platform type, simulated clock
   and hourly refresh; set a name, optional seed and options. The form checks the requirements.
 - **Run.** The Execution tab starts, pauses, resumes and stops everything as one unit. Member experiments show a
   *World Simulation* badge. Several simulations can be queued from Schedule.
@@ -135,3 +135,12 @@ The interface is available in English and Italian.
 | Pseudonym | A stable label replacing a real name. |
 | Gateway | The door through which a real person acts on a platform. |
 | Pilot | A small first run used to check the setup. |
+
+
+## Populations: shared, disjoint or partly overlapping
+
+Each platform's client can have its own population. Agents are matched across platforms by user name: the same name on two platforms is the same person. Populations may be completely separate, partly shared or identical.
+
+- **Adding a client later.** You can add a client with new agents while the simulation is running. The new agents are active from the current moment and are not slowed down: an agent present on one platform acts at full rate, an agent on several starts with equal attention on each.
+- **Discovering other platforms.** An agent can discover a platform where it was not deployed. When it decides to join, the platform creates its account and the agent becomes active there.
+- **Where is everyone?** The Agents tab of the World Simulation lists each agent, the platform and its state (active, waiting for registration, unaware, and so on).

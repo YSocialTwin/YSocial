@@ -185,3 +185,8 @@ Run once, with a local model, before an expensive experiment:
    (length, form, no mention of the other platform).
 
 A longer protocol, covering shares with attribution, topics, quoted content, pseudonyms and people, is in [World Simulation pilot](world-simulation-pilot.md).
+
+
+## Flexible populations (INV-17, INV-18, INV-19)
+
+Clients of a World Simulation may have disjoint or partly overlapping populations. Identity is bound by user name: the runtime reports each account, the coordinator assigns the global id (`Agent.id`) and the runtime never falls back to its local id (INV-17). Agents and clients added while the simulation runs are active at the current tick and keep full action rates (INV-18). An agent may discover a platform where it was not deployed: the coordinator records `provision_requested`, the runtime creates the account at the next day start (member option `provision`) and binds it, and the agent becomes `active` (INV-19). Specification: `external/YFederation/docs/flexible-populations.md`.
