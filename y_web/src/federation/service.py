@@ -317,6 +317,9 @@ def build_federation_config(fed) -> dict:
     for block in OPTION_BLOCKS:
         if block in options:
             config[block] = options[block]
+    if options.get("exposures") and "quoted" not in config:
+        # members send exposures: a quoted cross-post is kept only if its author saw the content (P3, INV-16)
+        config["quoted"] = {"require_exposure": True}
     return config
 
 
