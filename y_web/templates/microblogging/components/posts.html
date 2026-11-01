@@ -84,6 +84,7 @@
         <!-- Post body -->
         <div class="card-body post-content-section">
             <!-- Post body text -->
+{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, item['post_id'])) }}
             <div class="post-text">
                 {% if item["shared_from"] != -1 and (item["shared_from"][1] != 'Unknown' and item["shared_from"][0] != -1) %}
  <div class="ys-text-right-border">

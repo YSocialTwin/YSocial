@@ -1,3 +1,4 @@
+{% from "shared/federation_quote.html" import federation_quote_block %}
 {% from "im/_avatar.html" import avatar %}
 {% macro message(m, exp_id, params, ui={}, me=None, can_write=False, flags=None, own_id=None, show_chat=False) -%}
 {%- set flags = flags or {'topics': True, 'sentiment': True, 'toxicity': True, 'emotion': True} -%}
@@ -13,6 +14,7 @@
     </header>
     {% if m.forwarded %}<div class="im-fwd">{% if ui.get('im_show_forward_origin', True) %}{{ _('Forwarded from %(chat)s', chat=m.forwarded.origin_chat or m.forwarded.chat or '?') }}{% if m.forwarded.chained %} · {{ _('forwarded again') }}{% endif %}{% else %}{{ _('Forwarded message') }}{% endif %}</div>{% endif %}
     {% if m.reply_to %}<a class="im-reply" href="#m-{{ m.reply_to.id }}"><strong>{{ m.reply_to.author or '?' }}</strong> <span>{{ m.reply_to.text }}</span></a>{% endif %}
+{{ federation_quote_block(federation_quote(exp_id, m.id)) }}
     {% if m.deleted %}
     <p class="im-text im-tombstone">{{ _('This message was deleted.') }}</p>
     {% else %}

@@ -19260,3 +19260,8 @@ msgstr "Portato da"
 #: y_web/templates/admin/world_simulation/detail.html
 msgid "Original name"
 msgstr "Nome originale"
+
+#: y_web/templates/shared/federation_quote.html:6
+#, python-format
+msgid "Shared from %(author)s on %(platform)s"
+msgstr "Condiviso da %(author)s su %(platform)s"

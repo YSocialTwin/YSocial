@@ -290,6 +290,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["world_simulation_of"] = world_simulation_of  # badge and disabled commands of the members
 
+    from y_web.src.federation.quotes import federation_quote
+
+    app.jinja_env.globals["federation_quote"] = federation_quote  # attribution of shared content (P4)
+
     def _ws_destinations(exp_id):
         """Where the logged-in person can also post (F8): empty unless enrolled in the World Simulation of the experiment."""
         try:

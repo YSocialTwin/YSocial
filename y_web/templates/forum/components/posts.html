@@ -101,6 +101,7 @@
         <!-- Post body -->
         <div class="card-body" style="padding: 12px 16px;">
             <!-- Post body text -->
+{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, item['post_id'])) }}
             <div class="post-text">
                 {% if item["shared_from"] != -1 %}
  <div class="ys-text-right-border">
