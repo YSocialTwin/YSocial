@@ -245,6 +245,7 @@ APP_SCRIPT = textwrap.dedent(
         out["menu_flag"] = g["ws_sdk_available"]()
         from flask import render_template_string
         out["badge_include"] = render_template_string("{% set ws_exp = 1 %}{% set ws_account = 1 %}{% include 'shared/world_simulation_profile_badges.html' %}").strip()
+        out["badge_variants"] = [render_template_string("{% set ws_exp = 1 %}{% set ws_account = 1 %}{% set ws_variant = '" + v + "' %}{% include 'shared/world_simulation_profile_badges.html' %}").strip() for v in ("microblogging", "forum", "photo", "dating", "im")]
         out["classic_exp_info"] = g["world_simulation_of"](1)
     # classic start paths: the runtime modules import without the SDK and a classic experiment is not federated
     import y_web.src.simulation.execution_backend as eb, y_web.src.simulation.server, y_web.src.simulation.client
@@ -268,7 +269,7 @@ def test_the_web_application_and_its_classic_pages_work_without_the_sdk(tmp_path
     assert out["sdk_loaded_by_create_app"] == [] and out["sdk_loaded_at_end"] == []
     assert out["login_page"] == 200 and out["world_simulation_anonymous"] == 302 and out["experiments_anonymous"] == 302
     assert out["badges"] == [] and out["destinations"] == [] and out["pending"] == [] and out["menu_flag"] is False
-    assert out["badge_include"] == "" and out["classic_exp_info"] in (None, {}, False) and out["classic_probe"] == "ok"
+    assert out["badge_include"] == "" and out["badge_variants"] == [""] * 5 and out["classic_exp_info"] in (None, {}, False) and out["classic_probe"] == "ok"
 
 
 # ------------------------------------------------------------------------------------- guard in the pages

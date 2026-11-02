@@ -141,12 +141,13 @@ def test_the_origin_partial_shows_names_not_types(cw):
 
 
 def test_profile_badges_show_the_experiment_name(world):  # noqa: F811
-    from y_web.tests.test_federation_profile_badges import accounts, bind_all, first_agent
+    from y_web.tests.test_federation_profile_badges import accounts, bind_all, first_agent, open_interfaces
     from y_web.src.federation import profile_badges as pb
 
     fed, _ = make(world)
     _, exps, _ = world
     rename(exps)
+    open_interfaces(exps["microblogging"])
     gid = first_agent(fed)
     acc = accounts(fed, gid)
     bind_all(fed)

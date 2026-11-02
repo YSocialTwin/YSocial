@@ -93,7 +93,7 @@
                                 <div class="ys-profile-header-row">
                                     <h2>{{ user["user_data"]["username"]|display_name }}</h2>
                                 </div>
-                                {% set ws_exp = exp_id %}{% set ws_account = user_id %}{% include 'shared/world_simulation_profile_badges.html' %}
+                                {% set ws_exp = exp_id %}{% set ws_account = user_id %}{% set ws_variant = 'microblogging' %}{% include 'shared/world_simulation_profile_badges.html' %}
                             </div>
 
 

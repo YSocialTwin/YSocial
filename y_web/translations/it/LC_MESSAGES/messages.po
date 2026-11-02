@@ -18310,6 +18310,30 @@ msgstr "✔️ Gioca con"
 msgid "✔️ Use"
 msgstr "✔️ Usa"
 
+#, python-format
+msgid "%(platform)s is not running: its profile cannot be opened now"
+msgstr "%(platform)s non è in esecuzione: il profilo non può essere aperto ora"
+
+msgid "Dormant there: the agent takes a break on this platform"
+msgstr "In pausa: l'agente si ferma su questa piattaforma"
+
+msgid "Left this platform"
+msgstr "Ha lasciato questa piattaforma"
+
+msgid "Not active there"
+msgstr "Non attivo su questa piattaforma"
+
+#, python-format
+msgid "Username there: %(name)s"
+msgstr "Nome utente: %(name)s"
+
+#, python-format
+msgid "Cross-posts delivered there: %(n)s"
+msgstr "Cross-post consegnati: %(n)s"
+
+msgid "Dormant"
+msgstr "In pausa"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 

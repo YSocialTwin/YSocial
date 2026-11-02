@@ -1818,3 +1818,17 @@
     border-radius: 22px;
   }
 }
+
+/* World Simulation: "Also on" card of the profile page, built like the "About" card (rows of the same list). */
+.ws-also--forum .ws-also-chip {
+    display: inline-flex; align-items: center; gap: 0.45rem; text-align: left; font-weight: 700; color: #9a3412; text-decoration: none;
+}
+.ws-also--forum .ws-also-chip .ws-origin-icon { width: 15px; height: 15px; flex: none; color: #ea580c; }
+.ws-also--forum a.ws-also-chip:hover { color: #c2410c; text-decoration: underline; }
+.ws-also--forum .ws-also-chip:focus-visible { outline: 2px solid #fb923c; outline-offset: 2px; border-radius: 4px; }
+.ws-also--forum .ws-also-chip .ws-also-name { color: inherit; text-align: left; font-weight: inherit; }
+.ws-also--forum .ws-also-chip.is-nolink { color: #374151; cursor: default; }
+.ws-also--forum .ws-also-chip.is-dormant, .ws-also--forum .ws-also-chip.is-left, .ws-also--forum .ws-also-chip.is-inactive { color: #6b7280; }
+.ws-also--forum .ws-also-chip.is-dormant .ws-origin-icon, .ws-also--forum .ws-also-chip.is-left .ws-origin-icon,
+.ws-also--forum .ws-also-chip.is-inactive .ws-origin-icon { color: #9ca3af; }
+.forum-profile-about-row span.ws-also-aside { color: #6b7280; font-size: 0.82rem; overflow-wrap: anywhere; }

@@ -16494,3 +16494,26 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
+#, python-format
+msgid "%(platform)s is not running: its profile cannot be opened now"
+msgstr ""
+
+msgid "Dormant there: the agent takes a break on this platform"
+msgstr ""
+
+msgid "Left this platform"
+msgstr ""
+
+msgid "Not active there"
+msgstr ""
+
+#, python-format
+msgid "Username there: %(name)s"
+msgstr ""
+
+#, python-format
+msgid "Cross-posts delivered there: %(n)s"
+msgstr ""
+
+msgid "Dormant"
+msgstr ""

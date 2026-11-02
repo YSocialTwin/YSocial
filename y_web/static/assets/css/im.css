@@ -236,3 +236,12 @@ summary.im-icon-btn::-webkit-details-marker { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .im-scroll { scroll-behavior: auto; } }
 .im-avatar { overflow: hidden; } .im-avatar > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* World Simulation: "Also on" card of the contact profile, rows of the same facts list as "About". */
+.ws-also--im .ws-also-chip { display: inline-flex; align-items: center; gap: 6px; color: var(--im-accent); font-weight: 600; font-size: 14px; text-decoration: none; }
+.ws-also--im a.ws-also-chip:hover { text-decoration: underline; }
+.ws-also--im .ws-also-chip.is-nolink { color: var(--im-ink); cursor: default; }
+.ws-also--im .ws-also-chip.is-dormant, .ws-also--im .ws-also-chip.is-left, .ws-also--im .ws-also-chip.is-inactive { color: var(--im-muted); }
+.ws-also--im .ws-also-handle { text-transform: none; color: var(--im-muted); font-weight: 400; }
+.ws-also--im .ws-also-state { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--im-chip-bg); color: var(--im-muted); font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
+.ws-also--im .im-facts dt { color: inherit; }

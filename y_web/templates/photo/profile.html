@@ -366,7 +366,6 @@
                 <i data-feather="settings"></i>
             </div>
             <div class="photo-profile-subtitle">{{ user.get('username', '') }}</div>
-            {% set ws_exp = exp_id %}{% set ws_account = user.get('id') %}{% include 'shared/world_simulation_profile_badges.html' %}
 
             <div class="photo-profile-stats">
                 <div class="photo-profile-stat">{{ ngettext('<strong>%(num)s</strong> post', '<strong>%(num)s</strong> posts', total_posts|int) }}</div>
@@ -382,6 +381,7 @@
                 <a href="#">about.{{ user.get('username', '').lower() }}</a>
                 <span>@{{ user.get('username', '').lower() }}</span>
             </div>
+            {% set ws_exp = exp_id %}{% set ws_account = user.get('id') %}{% set ws_variant = 'photo' %}{% include 'shared/world_simulation_profile_badges.html' %}
 
             <div class="photo-profile-actions">
                 {% if can_follow_profile %}

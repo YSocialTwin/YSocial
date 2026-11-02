@@ -579,3 +579,15 @@ a.dt-ico:hover { border-color: var(--dt-accent); } .dt-ico.is-off { opacity: .35
 .dt-them.is-like, .dt-them.is-superlike { color: #15803d; } .dt-them.is-pass { color: var(--dt-muted); }
 .dt-dk-match { position: absolute; top: 62px; right: 8px; z-index: 2; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--dt-accent); color: var(--dt-accent-ink); }
 .dt-dk-them.is-match { background: rgba(225,29,72,.85); } .dt-them.is-match { color: var(--dt-accent); }
+
+/* World Simulation: "Also on" of the profile page, a second row of the same pills as the facts under the name. */
+.dt-pf-facts.ws-also--dating .ws-also-label { padding: 0 2px 0 0; background: none; border: 0; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.ws-also--dating .ws-also-item { padding: 0; }
+.ws-also--dating .ws-also-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; color: var(--dt-text); font-weight: 600; text-decoration: none; }
+.ws-also--dating a.ws-also-chip:hover { color: var(--dt-accent); }
+.ws-also--dating .ws-also-chip:focus-visible { outline: 3px solid var(--dt-accent); outline-offset: 2px; }
+.ws-also--dating .ws-also-handle { font-weight: 400; color: var(--dt-muted); }
+.ws-also--dating .ws-also-state { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--dt-muted); }
+.ws-also--dating .ws-also-item.is-quiet { border-style: dashed; background: transparent; }
+.ws-also--dating .ws-also-item.is-quiet .ws-also-chip { color: var(--dt-muted); font-weight: 500; }
+.ws-also--dating .ws-also-chip.is-nolink { cursor: default; }

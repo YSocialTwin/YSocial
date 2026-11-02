@@ -2283,3 +2283,39 @@
 }
 .ys-ep-topic-card__title { font-size: .92rem; font-weight: 700; color: #1a1a2e; margin: 0 0 2px; }
 .ys-ep-topic-card__sub   { font-size: .76rem; color: #999; margin: 0; }
+
+/* World Simulation: "Also on" of the profile page (microblogging: chips under the name, in the language of the follow pill;
+   photo sharing: a row under the profile links, in the language of the links). Chips are named after the experiment. */
+.ws-also-chip .ws-origin-icon { width: 14px; height: 14px; flex: none; }
+.ws-also--microblogging {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 8px; margin-top: 10px;
+}
+.ws-also--microblogging .ws-also-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #64748b;
+}
+.ws-also--microblogging .ws-also-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; max-width: 100%; padding: 0 12px;
+  border-radius: 999px; border: 1px solid rgba(148, 163, 184, 0.28); background: #ffffff; color: #475569;
+  font-size: .82rem; font-weight: 600; line-height: 1; text-decoration: none; white-space: nowrap;
+}
+.ws-also--microblogging a.ws-also-chip:hover { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.18); }
+.ws-also--microblogging .ws-also-chip:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.ws-also--microblogging .ws-also-name { overflow: hidden; text-overflow: ellipsis; }
+.ws-also--microblogging .ws-also-handle { font-weight: 500; color: #64748b; }
+.ws-also--microblogging .ws-also-state, .ws-also--photo .ws-also-state {
+  padding: 2px 7px; border-radius: 999px; background: #e2e8f0; color: #475569; font-size: .68rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+}
+.ws-also--microblogging .ws-also-chip.is-dormant, .ws-also--microblogging .ws-also-chip.is-left, .ws-also--microblogging .ws-also-chip.is-inactive {
+  border-style: dashed; background: #f8fafc; color: #64748b;
+}
+.ws-also--microblogging .ws-also-chip.is-nolink { cursor: default; }
+
+.ws-also--photo { align-items: center; gap: 6px 16px; margin-top: 8px; }
+.ws-also--photo .ws-also-label { color: #666; font-size: .95rem; }
+.ws-also--photo .ws-also-chip { display: inline-flex; align-items: center; gap: 6px; color: #111; font-weight: 700; text-decoration: none; }
+.ws-also--photo a.ws-also-chip:hover { text-decoration: underline; }
+.ws-also--photo .ws-also-chip:focus-visible { outline: 2px solid #111; outline-offset: 3px; border-radius: 4px; }
+.ws-also--photo .ws-also-handle { font-weight: 400; color: #666; }
+.ws-also--photo .ws-also-chip.is-dormant, .ws-also--photo .ws-also-chip.is-left, .ws-also--photo .ws-also-chip.is-inactive { color: #666; font-weight: 600; }
+.ws-also--photo .ws-also-chip.is-nolink { cursor: default; }
+@media (max-width: 760px) { .ws-also--photo { justify-content: center; } }

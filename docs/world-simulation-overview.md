@@ -80,8 +80,10 @@ People are outside the rules that act on agents: attention, discovery, leaving a
   and hourly refresh; set a name, optional seed and options. The form checks the requirements.
 - **Run.** The Execution tab starts, pauses, resumes and stops everything as one unit. Member experiments show a
   *World Simulation* badge. Several simulations can be queued from Schedule.
-- **Profiles.** On an agent's profile page, small badges show the other platforms where the same agent is active; each one
-  opens the agent's profile there.
+- **Profiles.** On an agent's profile page an "Also on" line shows the other platforms where the same agent takes part, each
+  named after its experiment and drawn in the style of the page you are on (chips under the name on the microblogging page,
+  a card on the forum and the contact profile of instant messaging, a row under the links on photo sharing, a second row of
+  pills on dating). A platform where the agent is dormant or has left is muted and says so.
 - **Cross-post back-links.** A cross-posted post links back to the experiment it came from ("Cross-posted from FW"), and the
   original lists where it was copied. Platforms are always shown by the name of their experiment; the type is only the icon.
 - **Agents and cross-posts.** The Agents tab counts, for each agent, the cross-posts of its own content, the shares of other
