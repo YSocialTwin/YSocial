@@ -135,8 +135,11 @@ def _info(member, kind, found, local_id) -> dict:
     ptype = member["platform_type"]
     author, author_id = found if found else ("", "")
     href = content_href(ptype, member["exp_id"], local_id, author_id) if found and member["active"] else None
+    # ``label`` is the name of the experiment (never the platform type: a World Simulation can hold several experiments of the
+    # same type); ``type_label`` and ``icon`` describe the type
     return {"member": member["member"], "platform_type": ptype,
-            "label": PLATFORM_LABELS.get(ptype, member["member"].replace("_", " ").capitalize()),
+            "label": member["exp_name"] or member["member"].replace("_", " ").capitalize(),
+            "type_label": PLATFORM_LABELS.get(ptype, member["member"].replace("_", " ").capitalize()),
             "icon": ICONS.get(ptype, "link"), "exp_id": member["exp_id"], "exp_name": member["exp_name"],
             "kind": kind, "id": str(local_id), "author": author or None, "available": bool(found), "href": href}
 

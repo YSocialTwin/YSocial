@@ -50,8 +50,8 @@ def test_each_profile_links_to_the_other_platforms_of_the_same_agent(world):
     acc = accounts(fed, gid)
     bind_all(fed)
     on_forum = pb.badges_for(exps["forum"], acc["forum"])
-    assert on_forum == [{"member": "microblogging", "platform_type": "microblogging", "label": "Microblogging",
-                         "href": f"/{exps['microblogging']}/profile/{acc['microblogging']}/recent/1"}]
+    assert on_forum == [{"member": "microblogging", "platform_type": "microblogging", "label": "microblogging",
+                         "exp_id": exps["microblogging"], "icon": "message-circle", "href": f"/{exps['microblogging']}/profile/{acc['microblogging']}/recent/1"}]
     on_micro = pb.badges_for(exps["microblogging"], acc["microblogging"])
     assert [b["member"] for b in on_micro] == ["forum"] and on_micro[0]["href"] == f"/{exps['forum']}/profile/{acc['forum']}/recent/1"
 
@@ -115,9 +115,9 @@ def render(badges):
 
 def test_the_partial_renders_one_link_per_badge_and_nothing_without(world):
     assert render([]).strip() == ""
-    html = render([{"member": "forum", "label": "Forum", "href": "/2/profile/9/recent/1"},
-                   {"member": "photo_sharing", "label": "Photo sharing", "href": "/3/photo/profile/5/recent/1"}])
-    assert html.count('class="ws-profile-badge"') == 2 and 'href="/2/profile/9/recent/1"' in html and ">Photo sharing<" in html
+    html = render([{"member": "forum", "label": "FW", "icon": "message-square", "href": "/2/profile/9/recent/1"},
+                   {"member": "photo_sharing", "label": "PW", "icon": "camera", "href": "/3/photo/profile/5/recent/1"}])
+    assert html.count('class="ws-profile-badge"') == 2 and 'href="/2/profile/9/recent/1"' in html and "PW</a>" in html and "Photo sharing" not in html and "<svg" in html
 
 
 @pytest.mark.parametrize("name", ["microblogging", "forum", "photo", "dating", "im"])

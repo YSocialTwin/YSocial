@@ -78,7 +78,7 @@ def test_inside_a_world_simulation_the_rows_are_filtered_and_cached_per_request(
     calls = []
     monkeypatch.setattr(service, "world_simulation_of", lambda exp_id: {"id": 1, "name": "w", "status": "stopped"})
     monkeypatch.setattr(quotes, "_database_path", lambda exp_id: "fake")
-    monkeypatch.setattr(quotes, "read_quotes", lambda path: calls.append(path) or {"7": {"author_name": "ann"}, "8": {"author_name": "bob"}})
+    monkeypatch.setattr(quotes, "read_quotes", lambda path, names=None: calls.append(path) or {"7": {"author_name": "ann"}, "8": {"author_name": "bob"}})
     with app.test_request_context():
         assert quotes.quotes_for(1, [7]) == {"7": {"author_name": "ann"}}
         calls.clear()

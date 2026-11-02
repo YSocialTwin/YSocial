@@ -20,13 +20,13 @@
   <legend style="font-size:.85em;opacity:.8;padding:0">{{ _('Also post on') }}</legend>
   {% for d in ws_dest %}
   <label style="margin-right:.9rem;white-space:nowrap">
-    <input type="checkbox" class="ws-crosspost" name="crosspost" value="{{ d.member }}"> {{ d.member|replace('_', ' ')|capitalize }}
+    <input type="checkbox" class="ws-crosspost" name="crosspost" value="{{ d.member }}"> {{ d.label }}
   </label>
   {% endfor %}
   {% for d in ws_dest %}
   <div class="ws-crosspost-edit" data-member="{{ d.member }}" hidden style="margin-top:.4rem">
-    <label style="display:block;font-size:.8em;opacity:.8">{{ _('Text on %(platform)s', platform=d.member|replace('_', ' ')|capitalize) }}</label>
-    <textarea class="ws-crosspost-text" data-member="{{ d.member }}" rows="2" style="width:100%" aria-label="{{ _('Text on %(platform)s', platform=d.member|replace('_', ' ')|capitalize) }}"></textarea>
+    <label style="display:block;font-size:.8em;opacity:.8">{{ _('Text on %(platform)s', platform=d.label) }}</label>
+    <textarea class="ws-crosspost-text" data-member="{{ d.member }}" rows="2" style="width:100%" aria-label="{{ _('Text on %(platform)s', platform=d.label) }}"></textarea>
     <small class="ws-crosspost-count" style="opacity:.7"></small>
   </div>
   {% endfor %}

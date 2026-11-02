@@ -19,8 +19,8 @@ def test_the_also_post_on_box_shows_only_enrolled_destinations(world):
     app, _, _ = world
     html = _render(app, [])
     assert "ws-crosspost" not in html and html.strip() == ""
-    html = _render(app, [{"member": "photo_sharing", "platform_type": "photo_sharing"}, {"member": "forum", "platform_type": "forum"}])
-    assert html.count('type="checkbox"') == 2 and 'value="forum"' in html and "Photo sharing" in html and "Also post on" in html
+    html = _render(app, [{"member": "photo_sharing", "platform_type": "photo_sharing", "label": "PW"}, {"member": "forum", "platform_type": "forum", "label": "FW"}])
+    assert html.count('type="checkbox"') == 2 and 'value="forum"' in html and "PW" in html and "FW" in html and "Photo sharing" not in html and "Also post on" in html
     assert "world-simulation-crosspost.js" in html
 
 

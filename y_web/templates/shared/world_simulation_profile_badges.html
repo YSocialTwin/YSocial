@@ -1,12 +1,13 @@
 {#- World Simulation: one badge for each other platform where this account takes part, linking to its profile there.
     Set `ws_exp` (the experiment id) and `ws_account` (the account id on this platform) before including. Nothing is
     rendered for an account outside a World Simulation. -#}
+{% from "shared/world_simulation_icon.html" import ws_icon %}
 {% set ws_badges = ws_profile_badges(ws_exp, ws_account) if ws_exp is defined and ws_account is defined and ws_profile_badges is defined else [] %}
 {% if ws_badges %}
 <div class="ws-profile-badges" data-ws-profile-badges style="display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0" aria-label="{{ _('Also on') }}">
   {% for b in ws_badges %}
   <a class="ws-profile-badge" href="{{ b.href }}" data-ws-member="{{ b.member }}" title="{{ _('Open the profile on %(platform)s', platform=b.label) }}"
-     style="display:inline-block;padding:.1rem .6rem;border:1px solid rgba(128,128,128,.5);border-radius:999px;font-size:.8em;text-decoration:none;white-space:nowrap">{{ b.label }}</a>
+     style="display:inline-block;padding:.1rem .6rem;border:1px solid rgba(128,128,128,.5);border-radius:999px;font-size:.8em;text-decoration:none;white-space:nowrap">{{ ws_icon(b.icon) }} {{ b.label }}</a>
   {% endfor %}
 </div>
 {% endif %}

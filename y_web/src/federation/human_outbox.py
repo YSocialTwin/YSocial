@@ -87,9 +87,13 @@ def context_for(exp_id, user_id) -> Optional[HumanContext]:
 
 
 def destinations_for(exp_id, user_id) -> List[dict]:
-    """``[{member, platform_type}]`` the composer offers (empty for a person who is not enrolled)."""
+    """``[{member, platform_type, label}]`` the composer offers (empty for a person who is not enrolled); ``label`` is the name
+    of the experiment of the member (the platform type is only its icon)."""
+    from y_web.src.federation.names import label_of, names_of
+
     ctx = context_for(exp_id, user_id)
-    return [{"member": m, "platform_type": p} for m, p in (ctx.destinations.items() if ctx else [])]
+    names = names_of(ctx.federation.id) if ctx else {}
+    return [{"member": m, "platform_type": p, "label": label_of(names, m)} for m, p in (ctx.destinations.items() if ctx else [])]
 
 
 def request_overrides() -> Dict[str, str]:

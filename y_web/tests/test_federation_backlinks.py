@@ -54,7 +54,7 @@ def crossposted(world):
 def test_a_copy_knows_where_it_comes_from(crossposted):
     _, exps, _ = crossposted
     origin = bl.origin_for(exps["microblogging"], 13)
-    assert origin["member"] == "forum" and origin["label"] == "Forum" and origin["icon"] == "message-square"
+    assert origin["member"] == "forum" and origin["label"] == "forum" and origin["type_label"] == "Forum" and origin["icon"] == "message-square"
     assert origin["author"] == "bob" and origin["exp_name"] == "forum" and origin["id"] == "10"
     assert origin["href"] == f"/{exps['forum']}/rthread/10" and origin["available"] is True
 
@@ -63,7 +63,7 @@ def test_the_original_knows_where_it_was_copied(crossposted):
     _, exps, _ = crossposted
     copies = bl.copies_for(exps["forum"], 10)
     assert [(c["member"], c["label"], c["href"]) for c in copies] == [
-        ("microblogging", "Microblogging", f"/{exps['microblogging']}/thread/13")]
+        ("microblogging", "microblogging", f"/{exps['microblogging']}/thread/13")]
     assert bl.copies_for(exps["forum"], 11) == []
 
 
@@ -86,14 +86,14 @@ def test_a_removed_origin_is_shown_without_link(world):
     server_db(tmp, "microblogging", posts=[(13, 1)], refs=[("post", 13, "ysocial://1/forum/post/10")])
     activate(app, exps, forum=1, microblogging=1)
     origin = bl.origin_for(exps["microblogging"], 13)
-    assert origin["label"] == "Forum" and origin["href"] is None and origin["author"] is None and origin["available"] is False
+    assert origin["label"] == "forum" and origin["href"] is None and origin["author"] is None and origin["available"] is False
 
 
 def test_an_origin_whose_frontend_is_not_active_has_no_link(crossposted):
     app, exps, _ = crossposted
     activate(app, exps, forum=0)
     origin = bl.origin_for(exps["microblogging"], 13)
-    assert origin["label"] == "Forum" and origin["author"] == "bob" and origin["href"] is None
+    assert origin["label"] == "forum" and origin["author"] == "bob" and origin["href"] is None
     activate(app, exps, forum=1, microblogging=0)  # an inactive destination does not hide the link to an active copy's page
     assert bl.copies_for(exps["forum"], 10)[0]["href"] is None
 
@@ -196,19 +196,19 @@ def render(origin=None, copies=(), quote=None):
     return env.from_string("{% set ws_exp = 1 %}{% set ws_id = 5 %}{% include 'shared/world_simulation_origin.html' %}").render()
 
 
-FORUM = {"member": "forum", "label": "Forum", "icon": "message-square", "author": "bob", "href": "/2/rthread/10"}
+FORUM = {"member": "forum", "label": "FW", "icon": "message-square", "author": "bob", "href": "/2/rthread/10"}
 MICRO = {"member": "microblogging", "label": "Microblogging", "icon": "message-circle", "href": "/1/thread/13"}
 
 
 def test_the_partial_links_a_copy_to_its_original():
     html = render(origin=FORUM)
-    assert "Cross-posted from" in html and 'href="/2/rthread/10"' in html and "@bob" in html and "Forum" in html and "<svg" in html
+    assert "Cross-posted from" in html and 'href="/2/rthread/10"' in html and "@bob" in html and "FW" in html and "Forum" not in html and "<svg" in html
     assert "Cross-posted to" not in html
 
 
 def test_the_partial_shows_the_label_without_link_when_the_original_is_not_reachable():
     html = render(origin=dict(FORUM, href=None, author=None))
-    assert "Forum" in html and "<a " not in html and "@" not in html and "The original is not available" in html
+    assert "FW" in html and "<a " not in html and "@" not in html and "The original is not available" in html
 
 
 def test_the_partial_lists_every_copy_of_an_original():

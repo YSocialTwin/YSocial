@@ -14,6 +14,8 @@ import sqlite3
 from typing import Dict, List, Optional
 
 from y_web import db
+from y_web.src.federation.backlinks import ICONS  # icon of each platform type (``shared/world_simulation_icon.html``)
+from y_web.src.federation.names import label_of, names_of
 
 # the profile page of an account on each platform (see the routes of ``y_web/routes/social``)
 PROFILE_PATHS = {
@@ -76,6 +78,7 @@ def badges_for(exp_id, account_id) -> List[dict]:
             return []
         gid = link.global_agent_id
     members = {m.member: m for m in db.session.query(FederationMember).filter_by(federation_pk=own.federation_pk)}
+    names = names_of(own.federation_pk)
     pending = set()
     if str(gid).startswith("human:"):  # an account that does not exist yet has no profile to open
         human = db.session.query(FederationHuman).filter_by(federation_pk=own.federation_pk, human_id=gid,
@@ -99,6 +102,7 @@ def badges_for(exp_id, account_id) -> List[dict]:
             continue
         href = profile_href(member.platform_type, member.exp_id, account)
         if href:
-            out.append({"member": name, "platform_type": member.platform_type,
-                        "label": name.replace("_", " ").capitalize(), "href": href})
+            # the label is the name of the experiment (several experiments can have the same platform type); the type is the icon
+            out.append({"member": name, "platform_type": member.platform_type, "exp_id": member.exp_id,
+                        "label": label_of(names, name), "icon": ICONS.get(member.platform_type, "link"), "href": href})
     return out

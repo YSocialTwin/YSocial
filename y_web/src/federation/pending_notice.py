@@ -35,15 +35,15 @@ def _client(fed, member):
     return CoordinatorClient.from_files(folder / "federation_coordinator.json", folder / "federation.token", member, retry_budget=1.0)
 
 
-def _line(item: dict) -> dict:
+def _line(item: dict, names=None) -> dict:
     """``{text, attribution, source}`` of one pending cross-post (attribution only when it quotes someone)."""
     quoted = item.get("quoted") or None
     attribution = ""
     if isinstance(quoted, dict) and quoted.get("author_name"):
-        attribution = f"↪ {quoted['author_name']} @ {platform_label(quoted.get('member'))}"
+        attribution = f"↪ {quoted['author_name']} @ {platform_label(quoted.get('member'), names)}"
         if quoted.get("text_excerpt"):
             attribution += f": «{quoted['text_excerpt']}»"
-    return {"text": str(item.get("text_excerpt") or ""), "attribution": attribution, "source": platform_label(item.get("source_member"))}
+    return {"text": str(item.get("text_excerpt") or ""), "attribution": attribution, "source": platform_label(item.get("source_member"), names)}
 
 
 def pending_for(exp_id, user_id, *, client_factory: Optional[Callable] = None, clock: Callable[[], float] = time.monotonic) -> List[dict]:
@@ -68,7 +68,10 @@ def pending_for(exp_id, user_id, *, client_factory: Optional[Callable] = None, c
         if hit is not None and now - hit[0] < CACHE_SECONDS:
             return hit[1]
         client = (client_factory or _client)(fed, member)
-        lines = [_line(i) for i in client.pending(info["account_id"])[:MAX_SHOWN]]
+        from y_web.src.federation.names import names_of
+
+        names = names_of(fed.id)  # the platforms are named after their experiments
+        lines = [_line(i, names) for i in client.pending(info["account_id"])[:MAX_SHOWN]]
         _cache[key] = (now, lines)
         return lines
     except Exception:  # noqa: BLE001 - a page never fails because of the federation

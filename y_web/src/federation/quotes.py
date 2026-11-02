@@ -25,15 +25,19 @@ PLATFORM_LABELS = {
 MAX_ROWS = 5000
 
 
-def platform_label(member) -> str:
-    """Display name of the platform where the shared content was seen (the member name when it is not a known type)."""
+def platform_label(member, names=None) -> str:
+    """Display name of the platform where the shared content was seen: the name of its experiment when ``names`` knows the
+    member, otherwise the member name (spelled as a platform type when it is one)."""
+    if names and names.get(str(member)):
+        return names[str(member)]
     return PLATFORM_LABELS.get(str(member), str(member))
 
 
-def read_quotes(path) -> dict:
+def read_quotes(path, names=None) -> dict:
     """``{local id (str): {author_name, member, platform, excerpt, source_ref}}`` of one server database, read only.
 
-    Empty when the file or the table does not exist or cannot be read."""
+    ``platform`` is the name of the experiment the content was seen on (``names``: ``{member: experiment name}``), the platform
+    type is never shown. Empty when the file or the table does not exist or cannot be read."""
     out: dict = {}
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=2)
@@ -50,7 +54,7 @@ def read_quotes(path) -> dict:
             out[str(row[0])] = {
                 "author_name": row[1] or "",
                 "member": row[2] or "",
-                "platform": platform_label(row[2]),
+                "platform": platform_label(row[2], names),
                 "excerpt": row[3] or "",
                 "source_ref": row[4],
             }
@@ -79,8 +83,10 @@ def quotes_for(exp_id, ids=None) -> dict:
 
         if exp_id is None or world_simulation_of(exp_id) is None:
             return {}
+        from y_web.src.federation.names import world_names
+
         path = _database_path(exp_id)
-        rows = read_quotes(path) if path else {}
+        rows = read_quotes(path, world_names(exp_id)) if path else {}
         if ids is None:
             return rows
         wanted = {str(i) for i in ids}
