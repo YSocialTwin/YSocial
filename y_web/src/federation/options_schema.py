@@ -37,6 +37,17 @@ PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging", "da
 # Platforms whose runtime creates an account on request (service.PROVISIONABLE, repeated here to stay import free).
 PROVISIONABLE = ("microblogging",)
 MEMBERSHIP_CHOICES = ("all", "one_random", "custom")
+# P14: crosspost.decision_triggers (the events decided by the agent's LLM) and the clients that support them. A platform that is
+# not listed (or a trigger not listed for it) keeps the random draw: the option is documented as supported by these clients only.
+DECISION_TRIGGERS = ("publish", "interaction")
+LLM_DECISION_SUPPORT = {  # platform type -> triggers its client supports
+    "microblogging": ("publish", "interaction"),  # YClient (Standard); the HPC simulator below
+    "forum": ("publish", "interaction"),
+    "photo_sharing": ("publish", "interaction"),
+    "instant_messaging": ("publish", "interaction"),
+    "dating": ("publish",),  # profile updates only: match stories are not content of others
+}
+LLM_DECISION_SUPPORT_HPC = {"microblogging": ("publish",)}  # YSimulator: shares are not exported
 
 
 @dataclass(frozen=True)
@@ -140,9 +151,20 @@ CROSSPOST = (
           N_("By rule: the coordinator copies content to other platforms with the probabilities below. By the agent: each agent "
              "chooses where to post, with the propensity below."),
           choices=(("coordinator_rule", N_("The coordinator, by rule")), ("agent_action", N_("The agent, by its own action")))),
+    Param(("crosspost", "decision"), "choice", "random", N_("Who decides whether to cross-post"),
+          N_("Random draw: each post an agent publishes is marked for cross-posting with the propensity below, as in earlier "
+             "versions. The agent decides: the language model of the agent is asked, once for each event, whether to cross-post "
+             "the content and, when the agents choose their own cross-posts, towards which platforms; it costs one extra model "
+             "call for each event (at most the daily limit below for each agent). Agents without a language model, and any "
+             "failed or invalid answer, use the random draw. Read at each start or restart."),
+          choices=(("random", N_("Random draw (propensity)")), ("llm", N_("The agent decides (LLM)")))),
+    Param(("crosspost", "decision_max_per_day"), "int", 5, N_("Most model decisions for each agent in a day"),
+          N_("Only when the agent decides. Bounds the extra model calls: after this many decisions in a simulated day an agent "
+             "uses the random draw until the next day. 0 means no limit."), minimum=0),
     Param(("crosspost", "propensity"), "float", 0.2, N_("Propensity to cross-post"),
-          N_("The probability that an agent marks a post it publishes for cross-posting. It is a random draw, not a decision of "
-             "the language model. By rule, a marked post can then be copied to other platforms with the probabilities of the "
+          N_("The probability that an agent marks a post it publishes for cross-posting. With the random draw it is a random draw, "
+             "not a decision of the language model; when the agent decides it is only the fallback used if the model fails or "
+             "the agent has none. By rule, a marked post can then be copied to other platforms with the probabilities of the "
              "pairs below; by agent action, one draw is made for each destination platform and the model only writes the text "
              "adapted to the destination. 0 means never. Between 0 and 1. YWeb default 0.2 (the coordinator itself defaults to 0)."),
           minimum=0.0, maximum=1.0),
@@ -174,7 +196,7 @@ BY_PATH = {p.path: p for p in PARAMS}
 PRESENCE = {("topics", "migration"): "topics_present", ("frontends", "activate_on_start"): "frontends_present"}
 
 # Keys covered by the form besides the table (blocks of their own handling).
-SPECIAL_PATHS = {("crosspost", "content"), ("crosspost", "probability"), ("membership", "initial"), ("provisioning", "members")}
+SPECIAL_PATHS = {("crosspost", "content"), ("crosspost", "decision_triggers"), ("crosspost", "probability"), ("membership", "initial"), ("provisioning", "members")}
 COVERED = {p.path for p in PARAMS} | SPECIAL_PATHS
 
 SECTIONS = (
@@ -263,6 +285,7 @@ def values_from_options(options) -> dict:
     content = (options.get("crosspost") or {}).get("content") or []
     names = {CROSSPOST_CONTENT_ALIASES.get(c, c) for c in content if isinstance(c, str)}
     out["crosspost_content"] = [] if ("all" in names or not names) else [c for c in CROSSPOST_CONTENT if c in names]
+    out["crosspost_decision_triggers"] = decision_triggers_of(options)
     probability = (options.get("crosspost") or {}).get("probability") or {}
     for src in PLATFORMS:
         for dst in PLATFORMS:
@@ -290,6 +313,8 @@ def values_from_form(form) -> dict:
     if form.get("crosspost_content_present"):
         chosen = [CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]
         out["crosspost_content"] = [c for c in CROSSPOST_CONTENT if c in chosen] if "all" not in chosen else []
+    if form.get("crosspost_decision_triggers_present"):
+        out["crosspost_decision_triggers"] = [t for t in DECISION_TRIGGERS if t in form.getlist("crosspost_decision_triggers")]
     for key in form.keys():
         if key.startswith(("prob__", "membership_p__")):
             out[key] = form.get(key, "")
@@ -381,6 +406,7 @@ def apply_form(form, base=None, members=None):
     _apply_membership(form, base, options, members, errors)
     _apply_provisioning(form, base, options)
     _apply_content(form, options, errors)
+    _apply_decision_triggers(form, base, options, errors)
     errors.extend(validate(options))
     errors.extend(check_dependencies(options))
     return options, list(dict.fromkeys(errors))
@@ -475,6 +501,31 @@ def _apply_content(form, options, errors):
         options.pop("crosspost", None)
 
 
+def decision_triggers_of(options) -> list:
+    """The stored ``crosspost.decision_triggers`` in the order of ``DECISION_TRIGGERS`` (both when none is stored)."""
+    stored = ((options or {}).get("crosspost") or {}).get("decision_triggers")
+    if not isinstance(stored, (list, tuple)) or not stored:
+        return list(DECISION_TRIGGERS)
+    return [t for t in DECISION_TRIGGERS if t in stored]
+
+
+def _apply_decision_triggers(form, base, options, errors):
+    """The events decided by the agent's model: both is the default and is not written; a stored list that is unchanged stays."""
+    if not form.get("crosspost_decision_triggers_present"):
+        return
+    chosen = [t for t in DECISION_TRIGGERS if t in form.getlist("crosspost_decision_triggers")]
+    if not chosen:
+        errors.append(_("Choose at least one event for the agent to decide on: publishing its own content or interacting with the content of others."))
+        return
+    stored = _get(base, ("crosspost", "decision_triggers"))
+    if stored is not MISSING and isinstance(stored, (list, tuple)) and decision_triggers_of(base) == chosen:
+        return  # unchanged: the stored text of the key stays
+    if chosen == list(DECISION_TRIGGERS):
+        _remove(options, ("crosspost", "decision_triggers"))
+    else:
+        _set(options, ("crosspost", "decision_triggers"), chosen)
+
+
 # ----------------------------------------------------------------------------------------------------- validation
 def _range_message(p: Param) -> str:
     if p.minimum is not None and p.maximum is not None:
@@ -522,6 +573,9 @@ def validate(options) -> list:
                     ok = False
                 if not ok:
                     errors.append(_("The probability %(pair)s must be between 0 and 1.", pair=str(key)))
+    triggers = crosspost.get("decision_triggers") if isinstance(crosspost, dict) else None
+    if triggers is not None and (not isinstance(triggers, list) or not triggers or any(t not in DECISION_TRIGGERS for t in triggers)):
+        errors.append(_("Choose at least one event for the agent to decide on: publishing its own content or interacting with the content of others."))
     initial = (options.get("membership") or {}).get("initial", "all") if isinstance(options.get("membership"), dict) else "all"
     if isinstance(initial, dict):
         for key, value in initial.items():
@@ -570,13 +624,41 @@ def _positive(value) -> bool:
         return False
 
 
-def crosspost_causes(mode, propensity, probabilities) -> list:
+def llm_decision_support(platform, simulator_type=None) -> tuple:
+    """The triggers the client of ``platform`` supports when the agent decides with its LLM (empty: it keeps the random draw)."""
+    if (simulator_type or "") == "HPC" and platform in LLM_DECISION_SUPPORT_HPC:
+        return LLM_DECISION_SUPPORT_HPC[platform]
+    return LLM_DECISION_SUPPORT.get(platform, ())
+
+
+def llm_decision_notes(platforms=None) -> list:
+    """[(platform, publish supported, interaction supported, note)] for the note of the form: which platforms support each event.
+
+    The note of a platform names what is not supported (an empty note: both events are)."""
+    rows = []
+    for platform in (platforms if platforms is not None else PLATFORMS):
+        triggers = llm_decision_support(platform)
+        hpc = LLM_DECISION_SUPPORT_HPC.get(platform)
+        missing = [t for t in DECISION_TRIGGERS if t not in triggers]
+        if hpc is not None and any(t not in hpc for t in triggers):
+            note = _("with the HPC simulator only when publishing")
+        elif not triggers:
+            note = _("not supported: the random draw is used")
+        elif missing:
+            note = _("only when publishing own content")
+        else:
+            note = ""
+        rows.append((platform, "publish" in triggers, "interaction" in triggers, note))
+    return rows
+
+
+def crosspost_causes(mode, propensity, probabilities, decision="random") -> list:
     """Why a configuration cannot produce any cross-post: a list of ``"propensity"`` and/or ``"probability"`` (empty: it can).
 
     ``mode`` is the crosspost mode, ``propensity`` the share of posts the agents mark for cross-posting and
     ``probabilities`` the probability of each pair of platforms (only used when the coordinator decides)."""
     causes = []
-    if not _positive(propensity):
+    if decision != "llm" and not _positive(propensity):  # when the agent decides, the propensity is only the fallback
         causes.append("propensity")
     if mode != "agent_action" and not any(_positive(v) for v in probabilities):
         causes.append("probability")
@@ -593,7 +675,7 @@ def effective_crosspost(options, members=None) -> dict:
     names = list(members) if members is not None else list(PLATFORMS)
     probability = {f"{s}->{d}": DEFAULT_PAIR_PROBABILITY for s in names for d in names if s != d}
     probability.update(stored)
-    return {"mode": crosspost.get("mode", "coordinator_rule"),
+    return {"mode": crosspost.get("mode", "coordinator_rule"), "decision": crosspost.get("decision", "random"),
             "propensity": crosspost.get("propensity", BY_PATH[("crosspost", "propensity")].default),
             "probability": probability}
 
@@ -606,7 +688,7 @@ def crosspost_causes_from_options(options, members=None) -> list:
         src, _arrow, dst = str(key).partition("->")
         if members is None or (src in members and dst in members):
             pairs.append(value)
-    return crosspost_causes(eff["mode"], eff["propensity"], pairs)
+    return crosspost_causes(eff["mode"], eff["propensity"], pairs, eff["decision"])
 
 
 def crosspost_causes_from_values(values, platforms) -> list:
@@ -617,7 +699,8 @@ def crosspost_causes_from_values(values, platforms) -> list:
 
     pairs = [number(f"prob__{s}__{d}", DEFAULT_PAIR_PROBABILITY) for s in platforms for d in platforms if s != d]
     return crosspost_causes(values.get("opt__crosspost__mode", "coordinator_rule"),
-                            number("opt__crosspost__propensity", BY_PATH[("crosspost", "propensity")].default), pairs)
+                            number("opt__crosspost__propensity", BY_PATH[("crosspost", "propensity")].default), pairs,
+                            values.get("opt__crosspost__decision", "random"))
 
 
 def crosspost_warning(causes) -> str:

@@ -295,3 +295,107 @@ def test_create_page_lists_the_populations_and_blocks_what_cannot_be_chosen(site
     service.create_federation("Taken", list(exps.values()), owner="admin")
     html = login(app, "admin").get("/admin/world_simulation/new").get_data(as_text=True)
     assert "Already part of the World Simulation Taken." in html
+
+
+# ------------------------------------------------------------------------------------------------ P14: the agent decides
+def test_decision_defaults_reproduce_the_random_draw_and_write_nothing():
+    assert schema.BY_PATH[("crosspost", "decision")].default == "random"
+    assert schema.BY_PATH[("crosspost", "decision_max_per_day")].default == 5
+    values = schema.values_from_options({})
+    assert values["opt__crosspost__decision"] == "random" and values["crosspost_decision_triggers"] == ["publish", "interaction"]
+    form = form_of(values, crosspost_decision_triggers_present="1")
+    form["crosspost_decision_triggers"] = ["publish", "interaction"]
+    assert schema.apply_form(form, {}) == ({}, [])
+    # the SDK of the coordinator has the same defaults (when it is installed)
+    policy = pytest.importorskip("ysocial_federation.decision_policy")
+    assert policy.DEFAULT_MAX_PER_DAY == 5 and policy.TRIGGERS == schema.DECISION_TRIGGERS and policy.DECISIONS == ("random", "llm")
+
+
+def test_decision_triggers_round_trip():
+    def submit(chosen, base=None):
+        form = form_of(schema.values_from_options(base or {}), crosspost_decision_triggers_present="1")
+        form["crosspost_decision_triggers"] = chosen
+        return schema.apply_form(form, base or {})
+
+    assert submit(["publish"]) == ({"crosspost": {"decision_triggers": ["publish"]}}, [])
+    assert submit(["interaction", "publish"])[0] == {}  # both is the default: not written
+    options, _errors = submit(["interaction"])
+    assert options == {"crosspost": {"decision_triggers": ["interaction"]}}
+    assert schema.values_from_options(options)["crosspost_decision_triggers"] == ["interaction"]
+    assert submit(["interaction"], options)[0] == options  # saved unchanged: the same
+    assert submit(["publish", "interaction"], options)[0] == {}  # back to both: the key goes away
+    both = {"crosspost": {"decision_triggers": ["publish", "interaction"]}}
+    assert submit(["publish", "interaction"], both)[0] == both  # an explicit stored default stays as it is
+    options, errors = submit([])
+    assert errors and "at least one event" in errors[0]
+    # an older page without the marker leaves the stored list alone
+    assert schema.apply_form(Form(), {"crosspost": {"decision_triggers": ["publish"]}})[0] == {"crosspost": {"decision_triggers": ["publish"]}}
+
+
+def test_decision_values_are_validated():
+    assert schema.validate({"crosspost": {"decision": "oracle"}})
+    assert schema.validate({"crosspost": {"decision_max_per_day": -1}})
+    assert schema.validate({"crosspost": {"decision_max_per_day": 2.5}})
+    assert schema.validate({"crosspost": {"decision_triggers": []}}) and schema.validate({"crosspost": {"decision_triggers": ["x"]}})
+    assert schema.validate({"crosspost": {"decision": "llm", "decision_triggers": ["publish"], "decision_max_per_day": 0}}) == []
+    form = form_of(schema.values_from_options({}), opt__crosspost__decision="oracle", opt__crosspost__decision_max_per_day="-2")
+    assert len(schema.apply_form(form, {})[1]) == 2
+
+
+def test_the_decision_keys_are_covered_and_not_listed_as_unknown():
+    options = {"crosspost": {"decision": "llm", "decision_triggers": ["publish"], "decision_max_per_day": 3, "mystery": 1}}
+    assert schema.unknown_paths(options) == ["crosspost.mystery"]
+
+
+def test_the_registry_of_the_platforms_that_support_the_llm_decision():
+    for platform in schema.PLATFORMS:
+        assert schema.llm_decision_support(platform)  # every client supports at least the publish trigger
+    assert schema.llm_decision_support("microblogging") == ("publish", "interaction")
+    assert schema.llm_decision_support("microblogging", "HPC") == ("publish",)
+    assert schema.llm_decision_support("dating") == ("publish",) and schema.llm_decision_support("forum", "Standard") == ("publish", "interaction")
+    assert schema.llm_decision_support("unknown") == ()
+    rows = {r[0]: r for r in schema.llm_decision_notes()}
+    assert rows["forum"][1:3] == (True, True) and rows["forum"][3] == ""
+    assert rows["dating"][1:3] == (True, False) and rows["dating"][3]
+    assert rows["microblogging"][3] == "with the HPC simulator only when publishing"
+
+
+def test_with_the_agent_deciding_a_zero_propensity_is_not_a_silent_failure():
+    assert schema.crosspost_causes("agent_action", 0, []) == ["propensity"]
+    assert schema.crosspost_causes("agent_action", 0, [], "llm") == []
+    assert schema.crosspost_causes("coordinator_rule", 0, [0.0], "llm") == ["probability"]
+    options = {"crosspost": {"decision": "llm", "propensity": 0, "mode": "agent_action"}}
+    assert schema.crosspost_causes_from_options(options) == []
+    assert schema.crosspost_causes_from_options({"crosspost": {"propensity": 0, "mode": "agent_action"}}) == ["propensity"]
+    values = schema.values_from_options(options)
+    assert schema.crosspost_causes_from_values(values, schema.PLATFORMS) == []
+
+
+def test_the_pages_show_the_decision_controls_and_the_support_note(site):
+    app, exps, tmp = site
+    html = login(app, "admin").get("/admin/world_simulation/new").get_data(as_text=True)
+    assert 'name="opt__crosspost__decision"' in html and "Random draw (propensity)" in html and "The agent decides (LLM)" in html
+    assert 'name="crosspost_decision_triggers" value="publish"' in html and 'name="crosspost_decision_triggers" value="interaction"' in html
+    assert 'name="crosspost_decision_triggers_present"' in html and 'name="opt__crosspost__decision_max_per_day"' in html
+    assert 'id="ws-crosspost-decision-options" hidden' in html  # random is the default: the options are hidden
+    assert "Supported by the clients of:" in html and "with the HPC simulator only when publishing" in html
+    assert "one extra model" in html or "extra model call" in html
+
+
+def test_the_decision_options_are_visible_when_the_agent_decides(site):
+    app, exps, tmp = site
+    fed = service.create_federation("D", list(exps.values()), owner="admin", options={"crosspost": {"decision": "llm"}})
+    html = login(app, "admin").get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)
+    assert re.search(r'<option value="llm" selected', html) and 'id="ws-crosspost-decision-options" hidden' not in html
+
+
+def test_the_italian_catalog_translates_the_decision_texts():
+    from babel.support import Translations
+
+    root = Path(__file__).resolve().parents[1] / "translations"
+    it = Translations.load(str(root), ["it"])
+    for text in ("Who decides whether to cross-post", "Random draw (propensity)", "The agent decides (LLM)", "Events the agent decides on",
+                 "After publishing its own content", "After interacting with the content of others", "Supported by the clients of:",
+                 "Most model decisions for each agent in a day", schema.BY_PATH[("crosspost", "decision")].help,
+                 schema.BY_PATH[("crosspost", "decision_max_per_day")].help, schema.BY_PATH[("crosspost", "propensity")].help):
+        assert it.gettext(text) != text, text

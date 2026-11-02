@@ -49,7 +49,7 @@ Take Maria, a simulated resident with accounts on the microblog, the forum and t
 | Discover a platform | Agents who see content cross-posted from a platform may join it. |
 | Leave a platform | Agents leave a platform that holds almost none of their attention for several days. |
 
-The researcher can also choose what is eligible for cross-posting: all content (default), or the agent's own content, plus content with news (a link), plus content with images, whichever are added (choosing more never reduces what travels). The choice is made in the Cross-posting section of the form (New page or Configuration tab) and applies from the next start.
+The researcher can let each agent ask its own language model whether to cross-post (one extra model call per event, with a daily cap; the random draw is the fallback). The researcher can also choose what is eligible for cross-posting: all content (default), or the agent's own content, plus content with news (a link), plus content with images, whichever are added (choosing more never reduces what travels). The choice is made in the Cross-posting section of the form (New page or Configuration tab) and applies from the next start.
 
 An agent can only credit someone whose content they have seen; otherwise the post goes out without the credit line.
 Content is never sent back to the platform it came from.
@@ -102,7 +102,7 @@ The interface is available in English and Italian.
 
 **Does it change my existing platforms?** No, not unless they are part of a running World Simulation.
 
-**Who decides what gets cross-posted?** A probability the researcher sets (YWeb defaults: propensity 0.2, 0.3 per pair of platforms; set 0 to switch it off), or the agent's own choice, depending on the mode. The researcher can also choose which content is eligible (all, or own content, news, images added together).
+**Who decides what gets cross-posted?** A probability the researcher sets (YWeb defaults: propensity 0.2, 0.3 per pair of platforms; set 0 to switch it off), or the agent's own choice, depending on the mode; optionally the agent's language model decides, one extra call per event. The researcher can also choose which content is eligible (all, or own content, news, images added together).
 
 **Can content loop back to where it started?** No.
 

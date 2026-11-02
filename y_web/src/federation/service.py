@@ -474,6 +474,17 @@ def member_section(fed, row, exp, enabled=True) -> dict:
     from y_web.src.federation.options_schema import effective_crosspost
 
     section["crosspost_propensity"] = float(effective_crosspost(options)["propensity"])
+    # P14: the agent's LLM decides whether to cross-post. Written only when it is not the default (`random`) and the client of
+    # the platform supports it (options_schema.LLM_DECISION_SUPPORT); the clients ignore the triggers they do not support.
+    from y_web.src.federation.options_schema import llm_decision_support
+
+    if str(crosspost.get("decision") or "random") == "llm" and llm_decision_support(
+            row.platform_type, getattr(exp, "simulator_type", None)):
+        section["crosspost_decision"] = "llm"
+        if isinstance(crosspost.get("decision_triggers"), list):
+            section["crosspost_decision_triggers"] = list(crosspost["decision_triggers"])
+        if "decision_max_per_day" in crosspost:
+            section["crosspost_decision_max_per_day"] = int(crosspost["decision_max_per_day"])
     section["seed"] = int(fed.seed)
     return section
 

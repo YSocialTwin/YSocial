@@ -197,6 +197,12 @@
             var sync = function () { probability.hidden = mode.value === 'agent_action'; };
             mode.addEventListener('change', sync); sync();
         }
+        var decision = document.getElementById('opt__crosspost__decision');
+        var decisionOptions = document.getElementById('ws-crosspost-decision-options');
+        if (decision && decisionOptions) {
+            var syncDecision = function () { decisionOptions.hidden = decision.value !== 'llm'; };
+            decision.addEventListener('change', syncDecision); syncDecision();
+        }
         var initial = document.getElementById('ws-membership-initial');
         var custom = document.getElementById('ws-membership-custom');
         if (initial && custom) {
@@ -224,7 +230,8 @@
         function positive(input) { var v = parseFloat(input.value === '' ? input.placeholder : input.value); return !isNaN(v) && v > 0; }  /* empty = the default shown as placeholder */
         function check() {
             var causes = [];
-            if (!propensity || !positive(propensity)) { causes.push('propensity'); }
+            var decides = document.getElementById('opt__crosspost__decision');  /* the agent decides: the propensity is only the fallback */
+            if ((!decides || decides.value !== 'llm') && (!propensity || !positive(propensity))) { causes.push('propensity'); }
             if (!mode || mode.value !== 'agent_action') {
                 var any = $all('#ws-probability-matrix input').some(function (i) { return !i.disabled && positive(i); });
                 if (!any) { causes.push('probability'); }
@@ -233,7 +240,7 @@
             label.textContent = key ? box.getAttribute('data-text-' + key) : '';
             box.hidden = !key;
         }
-        $all('#opt__crosspost__mode, #opt__crosspost__propensity, #ws-probability-matrix input').forEach(function (el) {
+        $all('#opt__crosspost__mode, #opt__crosspost__decision, #opt__crosspost__propensity, #ws-probability-matrix input').forEach(function (el) {
             el.addEventListener('input', check); el.addEventListener('change', check);
         });
         var pick = document.getElementById('ws-members-pick');

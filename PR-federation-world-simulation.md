@@ -55,7 +55,7 @@ Open the PRs in dependency order: YFederation first, then the runtimes and clien
 - Human participants on HPC: now implemented for microblogging through the gateway script (H9, see below); photo sharing, messaging and dating were already on HPC with their own gateways.
 - Forum share is gated (off unless `share.enabled` or agent_action); interpretation of the maintainer's request to re-enable it is by that gate.
 
-## Extensions H9, H10, P12, P13
+## Extensions H9, H10, P12, P13, P14
 
 All of them are additive and off by default: without a `federation` section nothing runs, and a World Simulation that does not use the new options writes the same files as before, with one deliberate exception: the YWeb defaults of the cross-posts are explicit in the generated files (propensity 0.2, probability 0.3 for every ordered pair of member platforms; the SDK/coordinator defaults stay 0), also for a World Simulation stored before, at its next start; a stored value, an explicit 0 included, wins.
 
@@ -110,6 +110,10 @@ Measured end to end (`tests/integration/test_p12_quantitative.py`, 4 passed in 1
 | YClient | `06fae46` P13.5 no cross-posted share when only `own_content` is chosen |
 | YClientReddit | `4721d76` P13.6 |
 | YSocial | `7c75418d` P13.7 YWeb option; `01ada0e7` P13.8 docs |
+
+### P14: LLM decision to cross-post (`crosspost.decision`)
+
+`crosspost.decision` is `random` (default, bit-identical to before, nothing written) or `llm`: one model call per trigger event (`crosspost.decision_triggers`: `publish`, `interaction`), strict JSON, destinations limited to those the coordinator allows, per-agent per-day cap `decision_max_per_day` (default 5), fallback to the Bernoulli draw on timeout, error or invalid JSON. Clients with the hook: YClient, YClientReddit, YPhotoSharing, YInstantMessaging (both triggers), YSimulator and YDating (publish only). No protocol change. See technical reference 6.14.
 
 ### What was and was not verified for these extensions
 

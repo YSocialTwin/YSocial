@@ -76,7 +76,8 @@ def test_the_message_says_what_to_set():
 def test_the_yweb_defaults_are_0_2_and_0_3():
     assert schema.BY_PATH[("crosspost", "propensity")].default == 0.2 and schema.DEFAULT_PAIR_PROBABILITY == 0.3
     assert schema.BY_PATH[("crosspost", "mode")].default == "coordinator_rule"
-    assert schema.default_options()["crosspost"] == {"mode": "coordinator_rule", "propensity": 0.2}
+    assert schema.default_options()["crosspost"] == {"mode": "coordinator_rule", "propensity": 0.2, "decision": "random",
+                                                     "decision_max_per_day": 5}  # P14: the random draw, 5 model decisions a day if it is switched on
 
 
 def federation_json(fed):

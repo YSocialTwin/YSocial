@@ -431,3 +431,43 @@ def test_a_failing_coordinator_never_breaks_the_creation_of_a_client(world, monk
     monkeypatch.setattr(dynamic, "_coordinator_client", lambda fed, member: type("F", (), {"declare_expected": lambda self, i: sent.append(i)})())
     assert dynamic.population_added(exps["forum"], pop.id)[0][1] == ["kim"] and len(sent) == 1  # ... so the next call declares it
     assert dynamic.population_added(99999, pop.id) == []  # not a member of anything
+
+
+def test_member_sections_carry_the_decision_only_when_the_agent_decides(world):
+    app, exps, tmp = world
+    plain = service.create_federation("rand", list(exps.values()), seed=5, options={"crosspost": {"mode": "agent_action", "decision": "random"}})
+    service.write_member_configs(plain)
+    for platform in exps:
+        section = json.loads((tmp / "experiments" / platform / "config_server.json").read_text())["federation"]
+        assert not any(k.startswith("crosspost_decision") for k in section), section  # the default is never written
+    service.delete_federation(plain)
+    fed = service.create_federation("llm", list(exps.values()), seed=5, options={
+        "crosspost": {"mode": "agent_action", "decision": "llm", "decision_triggers": ["interaction"], "decision_max_per_day": 3}})
+    service.write_member_configs(fed)
+    for platform in exps:
+        for name in ("config_server.json", f"client_x-{platform}.json"):
+            section = json.loads((tmp / "experiments" / platform / name).read_text())["federation"]
+            assert section["crosspost_decision"] == "llm" and section["crosspost_decision_triggers"] == ["interaction"]
+            assert section["crosspost_decision_max_per_day"] == 3 and section["crosspost_mode"] == "agent_action"
+    service.delete_federation(fed)
+    minimal = service.create_federation("llm2", list(exps.values()), seed=5, options={"crosspost": {"decision": "llm"}})
+    service.write_member_configs(minimal)
+    section = json.loads((tmp / "experiments" / next(iter(exps)) / "config_server.json").read_text())["federation"]
+    assert section["crosspost_decision"] == "llm" and "crosspost_decision_triggers" not in section and "crosspost_decision_max_per_day" not in section
+    # the coordinator receives the keys in its crosspost block and accepts them
+    config = service.build_federation_config(minimal)
+    assert config["crosspost"]["decision"] == "llm"
+    policy = pytest.importorskip("ysocial_federation.decision_policy")
+    assert policy.normalize(config["crosspost"])["decision"] == "llm"
+
+
+def test_a_platform_without_support_does_not_get_the_decision(world, monkeypatch):
+    from y_web.src.federation import options_schema as schema
+
+    app, exps, tmp = world
+    monkeypatch.setattr(schema, "LLM_DECISION_SUPPORT", {})
+    fed = service.create_federation("nosupport", list(exps.values()), seed=5, options={"crosspost": {"decision": "llm"}})
+    service.write_member_configs(fed)
+    for platform in exps:
+        section = json.loads((tmp / "experiments" / platform / "config_server.json").read_text())["federation"]
+        assert "crosspost_decision" not in section

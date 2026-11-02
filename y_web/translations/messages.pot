@@ -995,6 +995,21 @@ msgstr ""
 msgid "After a date"
 msgstr ""
 
+msgid "After interacting with the content of others"
+msgstr ""
+
+msgid "After publishing its own content"
+msgstr ""
+
+msgid ""
+"After publishing: the agent has just published its own content. After "
+"interacting: the agent has just shared or forwarded content of somebody "
+"else, which becomes the candidate (comments, replies and reactions cannot"
+" leave the platform). Both are on by default. With the coordinator rule "
+"only publishing counts, because the content of others never leaves its "
+"platform."
+msgstr ""
+
 msgid "Age"
 msgstr ""
 
@@ -2371,6 +2386,11 @@ msgid "Choose an image from your gallery or upload a new one."
 msgstr ""
 
 msgid "Choose another user."
+msgstr ""
+
+msgid ""
+"Choose at least one event for the agent to decide on: publishing its own "
+"content or interacting with the content of others."
 msgstr ""
 
 msgid "Choose at least one of the available activities."
@@ -4888,6 +4908,9 @@ msgid "Event weights"
 msgstr ""
 
 msgid "Events"
+msgstr ""
+
+msgid "Events the agent decides on"
 msgstr ""
 
 msgid ""
@@ -7965,6 +7988,9 @@ msgstr ""
 msgid "Most commented"
 msgstr ""
 
+msgid "Most model decisions for each agent in a day"
+msgstr ""
+
 msgid "Most platforms an agent can be active on"
 msgstr ""
 
@@ -9039,6 +9065,12 @@ msgid "Only owner/admin/shared researchers can edit stress/reward settings"
 msgstr ""
 
 msgid "Only show profiles within the distance"
+msgstr ""
+
+msgid ""
+"Only when the agent decides. Bounds the extra model calls: after this "
+"many decisions in a simulated day an agent uses the random draw until the"
+" next day. 0 means no limit."
 msgstr ""
 
 msgid "Open"
@@ -10472,6 +10504,20 @@ msgid "Random Network (Erdős-Rényi)"
 msgstr ""
 
 msgid "Random Seed"
+msgstr ""
+
+msgid "Random draw (propensity)"
+msgstr ""
+
+msgid ""
+"Random draw: each post an agent publishes is marked for cross-posting "
+"with the propensity below, as in earlier versions. The agent decides: the"
+" language model of the agent is asked, once for each event, whether to "
+"cross-post the content and, when the agents choose their own cross-posts,"
+" towards which platforms; it costs one extra model call for each event "
+"(at most the daily limit below for each agent). Agents without a language"
+" model, and any failed or invalid answer, use the random draw. Read at "
+"each start or restart."
 msgstr ""
 
 msgid "Random if empty"
@@ -12642,6 +12688,9 @@ msgstr ""
 msgid "Supergroup"
 msgstr ""
 
+msgid "Supported by the clients of:"
+msgstr ""
+
 #, python-format
 msgid ""
 "Supported sources include standard RSS or Atom feeds and Reddit JSON "
@@ -12936,6 +12985,9 @@ msgid "The ad hoc agent type is no longer available."
 msgstr ""
 
 msgid "The agent age."
+msgstr ""
+
+msgid "The agent decides (LLM)"
 msgstr ""
 
 msgid "The agent education level."
@@ -13322,12 +13374,13 @@ msgstr ""
 
 msgid ""
 "The probability that an agent marks a post it publishes for cross-"
-"posting. It is a random draw, not a decision of the language model. By "
-"rule, a marked post can then be copied to other platforms with the "
-"probabilities of the pairs below; by agent action, one draw is made for "
-"each destination platform and the model only writes the text adapted to "
-"the destination. 0 means never. Between 0 and 1. YWeb default 0.2 (the "
-"coordinator itself defaults to 0)."
+"posting. With the random draw it is a random draw, not a decision of the "
+"language model; when the agent decides it is only the fallback used if "
+"the model fails or the agent has none. By rule, a marked post can then be"
+" copied to other platforms with the probabilities of the pairs below; by "
+"agent action, one draw is made for each destination platform and the "
+"model only writes the text adapted to the destination. 0 means never. "
+"Between 0 and 1. YWeb default 0.2 (the coordinator itself defaults to 0)."
 msgstr ""
 
 msgid ""
@@ -15301,6 +15354,9 @@ msgstr ""
 msgid "Who decides the swipes"
 msgstr ""
 
+msgid "Who decides whether to cross-post"
+msgstr ""
+
 msgid ""
 "Who starts where, whether names are hidden and whether a platform can "
 "open accounts for agents that discover it."
@@ -15345,6 +15401,16 @@ msgid "With photo"
 msgstr ""
 
 msgid "With photos"
+msgstr ""
+
+msgid ""
+"With the coordinator rule the model only decides whether the content is "
+"marked for cross-posting: the destinations stay under the probabilities "
+"of the pairs of platforms below. When the agents choose their own cross-"
+"posts the model also chooses the destinations and may write the text for "
+"each. The coordinator still applies the content filter and the "
+"destinations the agent is active on. A model decision is not reproducible"
+" from the seed (the draws of the random mode are)."
 msgstr ""
 
 msgid ""
@@ -15769,6 +15835,9 @@ msgstr ""
 msgid "bk-sdm-tiny: compact Stable Diffusion, similar size (about 1 GB)"
 msgstr ""
 
+msgid "both"
+msgstr ""
+
 #, python-format
 msgid "branch %(name)s"
 msgstr ""
@@ -15997,10 +16066,16 @@ msgstr ""
 msgid "not sent"
 msgstr ""
 
+msgid "not supported: the random draw is used"
+msgstr ""
+
 msgid "off-topic"
 msgstr ""
 
 msgid "ok"
+msgstr ""
+
+msgid "only when publishing own content"
 msgstr ""
 
 msgid "opened by this agent"
@@ -16175,6 +16250,9 @@ msgid "what anyone can read"
 msgstr ""
 
 msgid "with messages"
+msgstr ""
+
+msgid "with the HPC simulator only when publishing"
 msgstr ""
 
 msgid "y-not.social"

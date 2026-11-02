@@ -84,6 +84,10 @@ Two modes, chosen with `crosspost.mode`:
 A cross-post sent at a tick is visible on the destination from the next tick. Sending the same message twice has no
 effect.
 
+
+### Who decides whether to cross-post
+
+By default a **random draw** decides, using the propensity above. In the Cross-posting section, *Who decides whether to cross-post* can be set to *The agent decides (LLM)*: then each agent asks its own language model, once per event, whether the content is worth posting elsewhere (and, in the *agent_action* mode, where and with which words). You choose the events that trigger the question (the agent publishes a post; the agent shares, comments, replies or reacts) and the maximum number of questions per agent per day (default 5; over the cap the random draw is used). Costs: **one extra model call per event** that is asked, so a large population can add many calls; rule-based agents, content that is not eligible and platforms with no other destination cost nothing. If the model does not answer in time or answers badly, the random draw is used instead and the run goes on; in this mode the propensity only serves as that fallback. Runs with LLM decisions are not reproducible from the seed. The form lists the member platforms that support the option; the others keep the random draw. Each decision is written in the client log (`federation decision ...`). It is read at start, so change it while the simulation is stopped.
 ### Which content can be cross-posted
 
 By default **all content** can be cross-posted: the agent's own and that of other agents (shares, replies, forwards). In the

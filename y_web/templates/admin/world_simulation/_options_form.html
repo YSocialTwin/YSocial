@@ -73,6 +73,24 @@
 {% call ws.section('crosspost', _('Cross-posting'), _('What travels between platforms, who decides it and with which probability.'), next_step()|trim) %}
 <div class="box-lines">
     {{ ws.param(schema.BY_PATH[('crosspost', 'mode')], values) }}
+    {{ ws.param(schema.BY_PATH[('crosspost', 'decision')], values) }}
+    <div class="ws-block" id="ws-crosspost-decision-options" {{ 'hidden' if values['opt__crosspost__decision'] != 'llm' }}>
+        <div class="box-line ws-param" id="ws-crosspost-decision-triggers" data-param="crosspost.decision_triggers">
+            <span class="left"><span class="ws-label">{{ _('Events the agent decides on') }}</span>
+                <span class="ws-help">{{ _('After publishing: the agent has just published its own content. After interacting: the agent has just shared or forwarded content of somebody else, which becomes the candidate (comments, replies and reactions cannot leave the platform). Both are on by default. With the coordinator rule only publishing counts, because the content of others never leaves its platform.') }}</span>
+                <span class="ws-default">{{ _('Default') }}: {{ _('both') }}</span></span>
+            <span class="right ws-checks">
+                <input type="hidden" name="crosspost_decision_triggers_present" value="1">
+                {% set cp_triggers = values['crosspost_decision_triggers'] %}
+                <label class="ws-check"><input type="checkbox" name="crosspost_decision_triggers" value="publish" {{ 'checked' if 'publish' in cp_triggers }}> {{ _('After publishing its own content') }}</label>
+                <label class="ws-check"><input type="checkbox" name="crosspost_decision_triggers" value="interaction" {{ 'checked' if 'interaction' in cp_triggers }}> {{ _('After interacting with the content of others') }}</label>
+            </span>
+        </div>
+        {{ ws.param(schema.BY_PATH[('crosspost', 'decision_max_per_day')], values) }}
+        <p class="ws-help" id="ws-crosspost-decision-note">{{ _('With the coordinator rule the model only decides whether the content is marked for cross-posting: the destinations stay under the probabilities of the pairs of platforms below. When the agents choose their own cross-posts the model also chooses the destinations and may write the text for each. The coordinator still applies the content filter and the destinations the agent is active on. A model decision is not reproducible from the seed (the draws of the random mode are).') }}</p>
+        <p class="ws-help" id="ws-crosspost-decision-support">{{ _('Supported by the clients of:') }}
+            {% for platform, publish, interaction, note in schema.llm_decision_notes(ws_platforms) %}{{ _(platform_labels[platform]) }}{% if note %} ({{ note }}){% endif %}{{ ', ' if not loop.last else '.' }}{% endfor %}</p>
+    </div>
     {{ ws.param(schema.BY_PATH[('crosspost', 'propensity')], values) }}
     {% set cp_warning = schema.crosspost_warning(schema.crosspost_causes_from_values(values, ws_platforms)) %}
     <p class="ws-note is-warning" id="ws-crosspost-warning" role="alert" {{ 'hidden' if not cp_warning }}
