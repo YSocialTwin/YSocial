@@ -19,6 +19,7 @@ from collections import defaultdict
 import numpy as np
 
 from y_web.src.models import ActivityProfile, PopulationActivityProfile
+from y_web.src.simulation import federation_hooks
 
 _REPLY_TO_MENTION_DISABLED = False
 
@@ -356,8 +357,14 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
         if g.is_page == 1:
             rounds = 1
         else:
-            lower = max(int(g.round_actions) - 2, 1)
-            rounds = local_random.randint(lower, int(g.round_actions))
+            round_actions = int(g.round_actions)
+            # attention multiplier of the federation (F4.3): the same number without it
+            round_actions = federation_hooks.scaled_round_actions(g, round_actions)
+            if round_actions < 1 and int(g.round_actions) >= 1:
+                rounds = 0  # the multiplier took the agent out of this slot
+            else:
+                lower = max(round_actions - 2, 1)
+                rounds = local_random.randint(lower, round_actions)
             # Round_actions max is set for each agent by sampling from a user defined distribution.
             # Execute at least "lower" actions per user (to guarantee the activity level distribution).
 

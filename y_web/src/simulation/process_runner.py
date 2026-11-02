@@ -114,6 +114,7 @@ import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from y_web.src.simulation import federation_hooks
 from y_web.src.simulation.agent_sampler import (
     archetype_of,
     ensure_agents_have_archetype,
@@ -717,13 +718,23 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
         for _ in range(daily_slots):
             tid, d, h = cl.sim_clock.get_current_slot()
 
+            # World Simulation: adopt the accounts the federation created and hide the agents that must not act
+            # (the same lists, nothing drawn, without a federation)
+            common_agents, hour_to_users, pool = federation_hooks.prepare_slot(
+                cl,
+                common_agents,
+                hour_to_users,
+                h,
+                lambda agents: get_users_per_hour(population, agents, session),
+            )
+
             # get expected active users for this time slot considering the global population (at least 1)
             expected_active_users = max(
                 int(len(cl.agents.agents) * cl.hourly_activity[str(h)]), 1
             )
 
             # take the minimum between expected active over the whole population and available users at time h
-            expected_active_users = min(expected_active_users, len(hour_to_users[h]))
+            expected_active_users = min(expected_active_users, len(pool))
 
             # get active pages at this hour
             active_pages = hour_to_page[h]
@@ -742,9 +753,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
             # get the daily activities of each agent (stratified on archetypes if enabled)
             try:
-                sagents = sample_agents(
-                    hour_to_users[h], expected_active_users, archetypes
-                )
+                sagents = sample_agents(pool, expected_active_users, archetypes)
             except Exception as e:
                 print(f"Error sampling agents: {e}", file=sys.stderr)
                 sagents = []
@@ -755,7 +764,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                 h,
                 len(common_agents),
                 sagents,
-                hour_to_users[h],
+                pool,
                 expected_active_users,
                 archetypes,
             )

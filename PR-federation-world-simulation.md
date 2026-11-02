@@ -131,6 +131,20 @@ Not verified, stated honestly:
 - World Simulations created before protocol 1.2 must be relaunched (created again, or saved and started again) to get `bindings_file` and identities by username; the same holds for `crosspost.content`, which is read at each start.
 - The three extra commits `[MP-F8.1..3]` keep a mislabeled phase tag (deviation 6).
 
+### U3: the federation in the clients and in the loop that YWeb runs
+
+Found on a live World Simulation (agent action, LLM decision, propensity 0.4): the forum produced cross-posts, the microblogging none
+(the server log had `GET /federation/destinations` for the forum only).
+
+- `YClientWeb` (YClient, microblogging) never called `federation.install(config)`; the YClientReddit one did. Fixed, and both `YClientWeb`
+  got `adopt_federated_account` (`federation.adopt_provisioned` needs it; the base clients had it, the web ones did not).
+- YWeb does not run `YClient.run_simulation`: `process_runner.run_simulation` and `agent_sampler.process_agent` drive the slots. They lacked the
+  hooks of the client loops: `adopt_provisioned` (INV-19), `filter_pool` (membership; also reads the attention of the day) and
+  `scale_actions` (attention multipliers, F4.3). Added in `y_web/src/simulation/federation_hooks.py`, a no-op without a federation
+  (module absent, not enabled, or a hook failing: the same lists and numbers, nothing drawn).
+- Tests: `y_web/tests/test_federation_loop_hooks.py` (also through the real `run_simulation`), `test_client_web_federation.py` in YClient and
+  YClientReddit. Not verified: no live run after the fix. A running World Simulation must be stopped and started again.
+
 ## Deviations from the plan
 
 1. F6.3 pilot not executed (above).
