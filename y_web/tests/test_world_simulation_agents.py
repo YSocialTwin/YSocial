@@ -96,6 +96,7 @@ def test_the_page_and_the_csv(site):
     got = client.get(f"/admin/world_simulation/{fed.id}/agents.csv")
     assert got.mimetype == "text/csv"
     lines = list(csv.reader(io.StringIO(got.get_data(as_text=True))))
-    assert lines[0] == ["global_agent_id", "name", "kind", "member", "account_id", "state", "joined_tick", "left_tick"]
+    assert lines[0] == ["global_agent_id", "name", "kind", "member", "account_id", "state", "joined_tick", "left_tick", "crossposts_own",
+                        "crossposts_of_others", "times_crossposted", "times_crossposted_by_destination"]
     assert (a, "forum", "active") in {(l[0], l[3], l[5]) for l in lines[1:]}
     assert client.get("/admin/world_simulation/99999/agents").status_code == 404

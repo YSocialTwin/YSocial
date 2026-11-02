@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 09:41+0000\n"
+"POT-Creation-Date: 2026-11-02 17:35+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -188,6 +188,10 @@ msgstr ""
 #, python-format
 msgid "%(n)s configurable values"
 msgstr "%(n)s valori configurabili"
+
+#, python-format
+msgid "%(n)s cross-posts"
+msgstr "%(n)s cross-post"
 
 #, python-format
 msgid "%(n)s cross-posts are waiting and will appear when this platform restarts"
@@ -589,6 +593,10 @@ msgstr "Esiste già un client con questo nome e questa popolazione."
 
 msgid "A dating agent needs a numeric age."
 msgstr "Un agente di dating ha bisogno di un'età numerica."
+
+#, python-format
+msgid "A day has %(n)s ticks (slots)"
+msgstr "Un giorno ha %(n)s tick (slot)"
 
 msgid "A discussion thread."
 msgstr "Una discussione."
@@ -1249,6 +1257,9 @@ msgstr "Contenuti degli agenti che possono essere cross-postati"
 msgid "Agent gender"
 msgstr "Genere dell'agente"
 
+msgid "Agent id"
+msgstr "Id agente"
+
 msgid "Agent interaction and engagement parameters."
 msgstr "Parametri di interazione e coinvolgimento degli agenti."
 
@@ -1669,12 +1680,24 @@ msgstr ""
 "I dati d'uso anonimi aiutano a migliorare YSocial. Non vengono raccolti "
 "dati personali."
 
+msgid "Any cross-posting"
+msgstr "Qualsiasi cross-post"
+
+msgid "Any destination"
+msgstr "Qualsiasi destinazione"
+
 msgid ""
 "Any integer. Leave it empty to draw one at random when the World "
 "Simulation is created."
 msgstr ""
 "Un numero intero qualsiasi. Lascialo vuoto per estrarne uno a caso quando"
 " la World Simulation viene creata."
+
+msgid "Any mode"
+msgstr "Qualsiasi modalità"
+
+msgid "Any origin"
+msgstr "Qualsiasi origine"
 
 msgid "Any state"
 msgstr "Qualsiasi stato"
@@ -2558,6 +2581,13 @@ msgid ""
 msgstr ""
 "Controlla che gli agenti pubblichino e che il filtro dei contenuti lasci "
 "passare i loro post."
+
+msgid ""
+"Check that the clients of this member sample agents (see the warnings in "
+"the client log)."
+msgstr ""
+"Verifica che i client di questo membro campionino degli agenti (vedi gli "
+"avvisi nel log del client)."
 
 msgid "Checks"
 msgstr "Controlli"
@@ -3539,6 +3569,9 @@ msgstr "Visibilità dei contenuti (ore)"
 msgid "Content already reported."
 msgstr "Contenuto già segnalato."
 
+msgid "Content cross-posted"
+msgstr "Contenuto cross-postato"
+
 msgid "Content not found."
 msgstr "Contenuto non trovato."
 
@@ -3890,6 +3923,15 @@ msgstr "Croata"
 msgid "Cross-post cascades"
 msgstr "Cascate di cross-post"
 
+msgid "Cross-posted"
+msgstr "Cross-postati"
+
+msgid "Cross-posted from"
+msgstr "Cross-postato da"
+
+msgid "Cross-posted to"
+msgstr "Cross-postato su"
+
 msgid "Cross-posting"
 msgstr "Cross-posting"
 
@@ -3901,6 +3943,24 @@ msgstr "Cross-post tra piattaforme, per giorno"
 
 msgid "Cross-posts of people"
 msgstr "Cross-post delle persone"
+
+msgid "Cross-posts the agent made of its own content (one per destination)"
+msgstr ""
+"Cross-post che l'agente ha fatto dei propri contenuti (uno per "
+"destinazione)"
+
+msgid "Cross-posts the agent made of other agents' content (shares)"
+msgstr ""
+"Cross-post che l'agente ha fatto dei contenuti di altri agenti "
+"(condivisioni)"
+
+#, python-format
+msgid ""
+"Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: "
+"%(delivered)s"
+msgstr ""
+"Cross-post: %(sent)s inviati dagli agenti (%(directions)s) · consegnati: "
+"%(delivered)s"
 
 #, python-format
 msgid ""
@@ -4574,6 +4634,15 @@ msgstr "%(label)s eliminato."
 
 msgid "Deleted (researcher only)"
 msgstr "Eliminato (solo ricercatore)"
+
+msgid "Delivered"
+msgstr "Consegnato"
+
+msgid "Delivered copies of its own content on other platforms"
+msgstr "Copie consegnate dei propri contenuti sulle altre piattaforme"
+
+msgid "Delivered or pending"
+msgstr "Consegnato o in attesa"
 
 msgid "Deliveries"
 msgstr "Consegne"
@@ -5499,6 +5568,17 @@ msgstr ""
 "predefinito compaiono sotto di esso."
 
 msgid ""
+"Every content copied from one experiment to another: where it was posted,"
+" where it was sent and whether it arrived. Click an icon to open the "
+"content in the web interface of its experiment (only while that "
+"experiment is active)."
+msgstr ""
+"Ogni contenuto copiato da un esperimento a un altro: dove è stato "
+"pubblicato, dove è stato inviato e se è arrivato. Clicca un'icona per "
+"aprire il contenuto nell'interfaccia web del suo esperimento (solo finché"
+" l'esperimento è attivo)."
+
+msgid ""
 "Every day each agent splits its activity among the platforms where it is "
 "active, according to how rewarding they were. Off: every agent keeps its "
 "own activity on each platform."
@@ -6333,6 +6413,9 @@ msgid ""
 msgstr ""
 "Dai cross-post del coordinatore; gli argomenti che una piattaforma ha "
 "dovuto creare sono nel suo database."
+
+msgid "From tick"
+msgstr "Dal tick"
 
 msgid "Frontend Extensions"
 msgstr "Estensioni del frontend"
@@ -8339,6 +8422,9 @@ msgstr ""
 "Fattore minimo applicato alla probabilità di una sessione di un agente su"
 " una piattaforma. Almeno 0."
 
+msgid "Made cross-posts"
+msgstr "Hanno fatto cross-post"
+
 msgid "Maintain the active simulation topics from the overview card"
 msgstr "Gestisci gli argomenti attivi della simulazione dalla scheda di panoramica"
 
@@ -8767,6 +8853,9 @@ msgstr "Interazioni MoP"
 msgid "MoP Puppet"
 msgstr "MoP Puppet"
 
+msgid "Mode"
+msgstr "Modalità"
+
 msgid "Model"
 msgstr "Modello"
 
@@ -9181,6 +9270,9 @@ msgstr "Più recenti"
 msgid "Newer messages"
 msgstr "Messaggi più recenti"
 
+msgid "Newest first"
+msgstr "Più recenti prima"
+
 msgid "Newest posts first; within the same hour, the most commented come first."
 msgstr "Prima i post più recenti; nella stessa ora, prima i più commentati."
 
@@ -9391,6 +9483,12 @@ msgid ""
 msgstr ""
 "Nessun cross-post può avvenire: la propensione è 0. Imposta la "
 "propensione (la quota di post che gli agenti marcano per il cross-post)."
+
+msgid "No cross-post matches."
+msgstr "Nessun cross-post corrisponde."
+
+msgid "No cross-posts"
+msgstr "Nessun cross-post"
 
 msgid "No data provided"
 msgstr "Nessun dato fornito"
@@ -9879,6 +9977,9 @@ msgstr "Messaggi precedenti"
 msgid "Oldest"
 msgstr "Età massima"
 
+msgid "Oldest first"
+msgstr "Più vecchi prima"
+
 msgid "Ollama"
 msgstr "Ollama"
 
@@ -9970,6 +10071,10 @@ msgstr ""
 msgid "Only administrators can manage external runtime repositories."
 msgstr "Solo gli amministratori possono gestire i repository dei runtime esterni."
 
+#, python-format
+msgid "Only copies of %(ref)s"
+msgstr "Solo le copie di %(ref)s"
+
 msgid ""
 "Only embedding models are listed. Choose one that is actually installed "
 "on the target Ollama instance before saving."
@@ -10025,6 +10130,9 @@ msgstr ""
 
 msgid "Only show profiles within the distance"
 msgstr "Mostra solo profili entro la distanza"
+
+msgid "Only this agent"
+msgstr "Solo questo agente"
 
 msgid ""
 "Only when the agent decides. Bounds the extra model calls: after this "
@@ -10091,12 +10199,20 @@ msgstr "Frequenza degli slot aperti"
 msgid "Open the active experiment dashboards from a single compact panel."
 msgstr "Apri le dashboard degli esperimenti attivi da un unico pannello compatto."
 
+#, python-format
+msgid "Open the copy on %(platform)s"
+msgstr "Apri la copia su %(platform)s"
+
 msgid ""
 "Open the menu to see the experiment as a single account or as a public "
 "observer."
 msgstr ""
 "Apri il menu per vedere l'esperimento come un singolo account o come "
 "osservatore pubblico."
+
+#, python-format
+msgid "Open the original on %(platform)s"
+msgstr "Apri l'originale su %(platform)s"
 
 msgid "Open the profile"
 msgstr "Apri il profilo"
@@ -10302,6 +10418,19 @@ msgstr "Panoramica"
 msgid "Own Recsys"
 msgstr "Raccomandazione propria"
 
+msgid "Own cross-posts"
+msgstr "Cross-post propri"
+
+msgid ""
+"Own cross-posts and Shares: cross-posts the agent made, as the author, of"
+" its own content and of other agents' content. Cross-posted: delivered "
+"copies of its own content (hover for the destinations)."
+msgstr ""
+"Cross-post propri e Condivisioni: cross-post che l'agente ha fatto, come "
+"autore, dei propri contenuti e di quelli di altri agenti. Cross-postati: "
+"copie consegnate dei propri contenuti (passa il mouse per le "
+"destinazioni)."
+
 msgid "Owned Experiments"
 msgstr "Esperimenti posseduti"
 
@@ -10486,6 +10615,9 @@ msgstr "Picco di tossicità del bersaglio"
 
 msgid "Peak Toxicity"
 msgstr "Picco di tossicità"
+
+msgid "Pending"
+msgstr "In attesa"
 
 msgid "People"
 msgstr "Persone"
@@ -12309,6 +12441,9 @@ msgstr "Round da attendere prima di rispondere di nuovo allo stesso utente"
 msgid "Route args:"
 msgstr "Argomenti della route:"
 
+msgid "Rows per page"
+msgstr "Righe per pagina"
+
 msgid "Rule threshold"
 msgstr "Soglia della regola"
 
@@ -12575,6 +12710,9 @@ msgstr "Cerca uno username"
 
 msgid "Search agents"
 msgstr "Cerca agenti"
+
+msgid "Search author or text"
+msgstr "Cerca autore o testo"
 
 msgid "Search by username"
 msgstr "Cerca per nome utente"
@@ -14235,6 +14373,13 @@ msgstr "Impossibile copiare la World Simulation: %(why)s"
 msgid "The World Simulation could not complete the operation: %(error)s"
 msgstr "La World Simulation non ha potuto completare l'operazione: %(error)s"
 
+msgid ""
+"The World Simulation has not run yet: cross-posts are shown once it "
+"starts."
+msgstr ""
+"La World Simulation non è ancora stata avviata: i cross-post compaiono "
+"dopo l'avvio."
+
 msgid "The World Simulation has not run yet: states are shown once it starts."
 msgstr ""
 "La World Simulation non è ancora partita: gli stati compaiono dopo "
@@ -14678,6 +14823,9 @@ msgid ""
 msgstr ""
 "Impossibile scrivere lo snapshot delle notizie: le pagine di notizie non "
 "condivideranno nulla finché non esiste."
+
+msgid "The original is not available"
+msgstr "L'originale non è disponibile"
 
 msgid ""
 "The packages of the image model (torch, diffusers) are not installed: "
@@ -15455,6 +15603,9 @@ msgid ""
 msgstr ""
 "Per eseguire più World Simulation una dopo l'altra, aggiungile alla "
 "%(link)s."
+
+msgid "To tick"
+msgstr "Al tick"
 
 msgid "Toggle chat panel"
 msgstr "Mostra o nascondi il pannello della chat"
@@ -17577,6 +17728,14 @@ msgstr "attivi"
 msgid "advanced population settings"
 msgstr "impostazioni avanzate delle popolazioni"
 
+#, python-format
+msgid ""
+"advances but its server received no post, comment or reaction for %(n)s "
+"ticks (last one at tick %(last)s)"
+msgstr ""
+"avanza ma il suo server non ha ricevuto post, commenti o reazioni da "
+"%(n)s tick (l'ultimo al tick %(last)s)"
+
 msgid "agents"
 msgstr "agenti"
 
@@ -17637,8 +17796,14 @@ msgstr "modificato"
 msgid "click to cancel"
 msgstr "clicca per annullare"
 
+msgid "count stopped at the limit"
+msgstr "conteggio fermato al limite"
+
 msgid "created"
 msgstr "creato"
+
+msgid "cross-posts"
+msgstr "cross-post"
 
 #, python-format
 msgid "d%(d)s · %(s)s"
@@ -17738,13 +17903,6 @@ msgstr "group_ids è obbligatorio"
 #, python-format
 msgid "has not advanced for %(s)s (limit %(limit)s)"
 msgstr "non avanza da %(s)s (limite %(limit)s)"
-
-#, python-format
-msgid "advances but its server received no post, comment or reaction for %(n)s ticks (last one at tick %(last)s)"
-msgstr "avanza ma il suo server non ha ricevuto post, commenti o reazioni da %(n)s tick (l'ultimo al tick %(last)s)"
-
-msgid "Check that the clients of this member sample agents (see the warnings in the client log)."
-msgstr "Verifica che i client di questo membro campionino degli agenti (vedi gli avvisi nel log del client)."
 
 #, python-format
 msgid "has not said hello %(s)s s after the start (limit %(limit)s s)"
@@ -17850,6 +18008,9 @@ msgstr "mai"
 
 msgid "none published"
 msgstr "nessuna pubblicata"
+
+msgid "not delivered yet"
+msgstr "non ancora consegnato"
 
 msgid "not entered yet"
 msgstr "non ancora entrato"
@@ -17968,6 +18129,10 @@ msgid "settings"
 msgstr "impostazioni"
 
 #, python-format
+msgid "shares a content of %(who)s"
+msgstr "condivide un contenuto di %(who)s"
+
+#, python-format
 msgid "showing the first %(n)s"
 msgstr "mostro i primi %(n)s"
 
@@ -17992,6 +18157,16 @@ msgstr "super like rimasti"
 
 msgid "symlink"
 msgstr "collegamento simbolico"
+
+msgid "the content is not available"
+msgstr "il contenuto non è disponibile"
+
+msgid "the web interface of this experiment is not active"
+msgstr "l'interfaccia web di questo esperimento non è attiva"
+
+#, python-format
+msgid "tick %(t)s"
+msgstr "tick %(t)s"
 
 msgid "tiny-sd: the smallest, fastest (about 1 GB). Default"
 msgstr "tiny-sd: il più piccolo e veloce (circa 1 GB). Predefinito"
@@ -18133,31 +18308,6 @@ msgstr "✔️ Gioca con"
 
 msgid "✔️ Use"
 msgstr "✔️ Usa"
-
-msgid "Cross-posted from"
-msgstr "Cross-postato da"
-
-msgid "Cross-posted to"
-msgstr "Cross-postato su"
-
-#, python-format
-msgid "Open the original on %(platform)s"
-msgstr "Apri l'originale su %(platform)s"
-
-#, python-format
-msgid "Open the copy on %(platform)s"
-msgstr "Apri la copia su %(platform)s"
-
-msgid "The original is not available"
-msgstr "L'originale non è disponibile"
-
-#, python-format
-msgid ""
-"Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: "
-"%(delivered)s"
-msgstr ""
-"Cross-post: %(sent)s inviati dagli agenti (%(directions)s) · consegnati: "
-"%(delivered)s"
 
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"

@@ -106,8 +106,18 @@ def _unavailable():
     return render_template("admin/world_simulation/unavailable.html", message=message, reason=availability.sdk_reason()), 503
 
 
+def _label_of(row, exp, repeated):
+    """The label of a member in the admin pages: its platform type, or the name of its experiment when the World Simulation has
+    several members of that type (P15: a type no longer tells them apart)."""
+    if repeated and exp is not None:
+        return exp.exp_name
+    return PLATFORM_LABELS.get(row.platform_type, row.platform_type)
+
+
 def _member_labels(fed):
-    return {m.member: PLATFORM_LABELS.get(m.platform_type, m.platform_type) for m, _exp in service.members_of(fed)}
+    pairs = service.members_of(fed)
+    repeated = service.has_repeated_platform(pairs)
+    return {m.member: _label_of(m, _exp, repeated) for m, _exp in pairs}
 
 
 def _badge_text(code, waiting_for=(), labels=None):
@@ -203,14 +213,15 @@ def _progress_text(progress):
 
 def _row(fed):
     members = service.members_of(fed)
+    repeated = service.has_repeated_platform(members)
     status = cp.coordinator_status(fed, timeout=1.0) if fed.status in ("running", "paused") else None
     return {
         "fed": fed,
         "badge": STATE_BADGES.get(fed.status, "badge-secondary"),
         "state_class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
-        "members": [(m.member, PLATFORM_LABELS.get(m.platform_type, m.platform_type), exp) for m, exp in members],
+        "members": [(m.member, _label_of(m, exp, repeated), exp) for m, exp in members],
         "member_rows": [
-            {"member": m.member, "label": PLATFORM_LABELS.get(m.platform_type, m.platform_type),
+            {"member": m.member, "label": _label_of(m, exp, repeated),
              "icon": PLATFORM_ICONS.get(m.platform_type, "mdi-web"), "exp": exp, "simulator": getattr(exp, "simulator_type", "") or "Standard"}
             for m, exp in members
         ],
@@ -246,7 +257,7 @@ def _candidates(user):
             if pop is not None:
                 agents = Agent_Population.query.filter_by(population_id=pop.id).count()
                 pops.append({"name": pop.name, "agents": agents})
-        out.append({"exp": exp, "platform_type": exp.platform_type, "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type),
+        out.append({"exp": exp, "key": f"{exp.platform_type}-{exp.idexp}", "platform_type": exp.platform_type, "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type),
                     "icon": PLATFORM_ICONS.get(exp.platform_type, "mdi-web"), "info": info, "populations": pops,
                     "problems": [p["code"] for p in problems]})
     return out
@@ -269,23 +280,38 @@ def _options_from_form(form, base=None, members=None):
     return options
 
 
-def _form_context(values, members=None):
-    """What ``_options_form.html`` needs: the schema, the values to show and the platforms the matrices are for."""
+def _form_context(values, members=None, labels=None):
+    """What ``_options_form.html`` needs: the schema, the values to show and the members the matrices are for.
+
+    ``members`` are member names (or, in the creation form, the keys of the candidate experiments), in order; ``labels`` maps each to
+    what a person reads (the name of its experiment). Without them every platform type is offered, as before P15."""
+    keys = [m for m in schema.PLATFORMS] if members is None else list(members)
     return {
         "schema": schema,
         "values": values,
-        "ws_platforms": [m for m in schema.PLATFORMS if members is None or m in members],
+        "ws_platforms": keys,
+        "ws_labels": {k: (labels or {}).get(k) or PLATFORM_LABELS.get(k, k) for k in keys},
+        "ws_platform_types": [t for t in schema.PLATFORMS if t in set(_types_of(keys).values())],
         "platform_labels": PLATFORM_LABELS,
         "platform_icons": PLATFORM_ICONS,
     }
 
 
+def _types_of(keys):
+    """{key: platform type} of member names / candidate keys: the type is the name up to the last ``-<number>``."""
+    out = {}
+    for k in keys:
+        base, _dash, tail = str(k).rpartition("-")
+        out[k] = base if base and tail.isdigit() else k
+    return out
+
+
 ERROR_TEXT = {
-    "member_count": lambda: _("A World Simulation needs 2 to 5 experiments."),
+    "member_count": lambda: _("A World Simulation needs 2 to 8 experiments."),
+    "duplicate_experiment": lambda: _("The same experiment was chosen twice."),
     "experiment_running": lambda: _("An experiment is running: stop it first."),
     "remote": lambda: _("Remote experiments cannot take part in a World Simulation."),
     "population": lambda: _("All experiments must use the same population."),
-    "duplicate_platform": lambda: _("Choose at most one experiment for each platform."),
     "platform": lambda: _("One of the platforms cannot take part in a World Simulation."),
     "simulator_type": lambda: _("One of the experiments uses a backend that is not supported for its platform."),
     "clock": lambda: _("All experiments must use the simulated clock with 24 slots a day."),
@@ -311,6 +337,24 @@ def _flash_errors(error):
         flash(message, "error")
 
 
+def _translate_form(form, keymap):
+    """The creation form speaks of candidate experiments (``<platform>-<experiment id>``, known before anything is chosen); the
+    World Simulation is made of members whose names depend on the choice (service.member_names). The pair and start fields are
+    renamed from the first to the second; fields of experiments that were not chosen are left out by ``apply_form``."""
+    from werkzeug.datastructures import MultiDict
+
+    out = MultiDict()
+    for key, value in form.items(multi=True):
+        if key.startswith("prob__"):
+            parts = key.split("__")
+            if len(parts) == 3:
+                key = f"prob__{keymap.get(parts[1], parts[1])}__{keymap.get(parts[2], parts[2])}"
+        elif key.startswith("membership_p__"):
+            key = "membership_p__" + keymap.get(key.split("__", 1)[1], key.split("__", 1)[1])
+        out.add(key, value)
+    return out
+
+
 @world_simulation.route("/new", methods=["GET", "POST"])
 @guarded
 def new(user):
@@ -319,14 +363,17 @@ def new(user):
         try:
             seed = form.get("seed", "").strip()
             chosen = [int(i) for i in form.getlist("experiments")]
-            platforms = {e.platform_type for e in (db.session.get(Exps, i) for i in chosen) if e is not None}
+            picked = [e for e in (db.session.get(Exps, i) for i in chosen) if e is not None]
+            names = service.member_names(picked)
+            keymap = {f"{e.platform_type}-{e.idexp}": names[e.idexp] for e in picked}
+            platforms = set(names.values())
             fed = service.create_federation(
                 form.get("name"),
                 chosen,
                 owner=user.username,
                 seed=int(seed) if seed else None,
                 granularity=form.get("granularity", "slot"),
-                options=_options_from_form(form, members=platforms),
+                options=_options_from_form(_translate_form(form, keymap), members=platforms),
                 exposures=bool(form.get("discovery_enabled")),
             )
             flash(_("World Simulation created."), "success")
@@ -335,10 +382,12 @@ def new(user):
             _flash_errors(exc)
         except ValueError:
             flash(_("The seed must be an integer."), "error")
-    values = schema.values_from_form(form) if request.method == "POST" else schema.values_from_options({})
     candidates = _candidates(user)
+    offered = [c for c in candidates if not c["problems"]]  # the matrices have a row for each experiment that can be chosen
+    keys = [c["key"] for c in offered]
+    values = schema.values_from_form(form) if request.method == "POST" else schema.values_from_options({}, keys)
     return render_template("admin/world_simulation/new.html", candidates=candidates, groups=_grouped_candidates(candidates), form=form,
-                           **_form_context(values))
+                           **_form_context(values, keys, {c["key"]: c["exp"].exp_name for c in offered}))
 
 
 def _stored_options(fed):
@@ -363,7 +412,8 @@ def detail(user, fed_id):
     fed = _get_or_404(fed_id, user)
     options = json.loads(fed.config_json or "{}")
     row = _row(fed)
-    members = {m.member for m, _exp in service.members_of(fed)}
+    pairs = service.members_of(fed)
+    members = {m.member for m, _exp in pairs}
     return render_template(
         "admin/world_simulation/detail.html",
         row=row,
@@ -376,7 +426,8 @@ def detail(user, fed_id):
         unknown=schema.unknown_paths(options),
         config_preview=_config_preview(fed),
         editable=fed.status in ("stopped", "completed", "failed"),
-        **_form_context(schema.values_from_options(options), members),
+        **_form_context(schema.values_from_options(options, [m.member for m, _exp in pairs]), [m.member for m, _exp in pairs],
+                        {m.member: _exp.exp_name for m, _exp in pairs}),
     )
 
 
@@ -384,7 +435,7 @@ def _participants(fed):
     """The people enrolled: ``[(user, status, [(member label, account id, created)])]`` for the Configuration tab."""
     from y_web.src.federation import humans
 
-    labels = {m.member: PLATFORM_LABELS.get(m.platform_type, m.platform_type) for m, _exp in service.members_of(fed)}
+    labels = _member_labels(fed)
     out = []
     for h in humans.list_humans(fed):
         u = db.session.get(Admin_users, h.user_id)
@@ -736,6 +787,7 @@ def status(user, fed_id):
         health = {}
     states = health.get("members", {})
     labels = _member_labels(fed)
+    repeated = service.has_repeated_platform(service.members_of(fed))
     members = []
     for row, exp in service.members_of(fed):
         live = ((coordinator or {}).get("members") or {}).get(row.member, {})
@@ -743,7 +795,7 @@ def status(user, fed_id):
         members.append(
             {
                 "member": row.member,
-                "label": PLATFORM_LABELS.get(row.platform_type, row.platform_type),
+                "label": _label_of(row, exp, repeated),
                 "experiment": exp.exp_name,
                 "state": live.get("status"),
                 "tick": live.get("last_ready_tick"),
@@ -783,21 +835,39 @@ def agents(user, fed_id):
     data = ast.table(fed)
     member, state = request.args.get("member", ""), request.args.get("state", "")
     kind, q = request.args.get("kind", ""), request.args.get("q", "")
+    activity = request.args.get("activity", "")
+    sort, direction = request.args.get("sort", "name"), request.args.get("dir", "")
     if member not in data["members"]:
         member = ""
     if state not in ast.STATES:
         state = ""
     if kind not in ("agent", "human"):
         kind = ""
-    rows = ast.filtered(data, member, state, q, kind)
+    if activity not in ast.ACTIVITIES:
+        activity = ""
+    if sort not in ast.SORTS:
+        sort = "name"
+    if direction not in ("asc", "desc"):
+        direction = ""
+    rows = ast.sorted_rows(ast.filtered(data, member, state, q, kind, activity), sort, direction)
     page = max(1, request.args.get("page", 1, type=int) or 1)
     pages = max(1, -(-len(rows) // ast.PAGE_SIZE))
     page = min(page, pages)
-    labels = {m.member: PLATFORM_LABELS.get(m.platform_type, m.platform_type) for m, _exp in service.members_of(fed)}
+    labels = _member_labels(fed)
+    f = {"member": member, "state": state, "kind": kind, "q": q, "activity": activity, "sort": sort, "dir": direction}
+    effective = direction or ast.default_direction(sort)
+
+    def sort_url(column):
+        """Address of the table sorted by ``column``: the same filters, the opposite direction when it is already the sort."""
+        flip = "asc" if effective == "desc" else "desc"
+        args = {**f, "sort": column, "dir": flip if column == sort else ast.default_direction(column)}
+        return url_for("world_simulation.agents", fed_id=fed.id, **{k: v for k, v in args.items() if v})
+
     return render_template(
         "admin/world_simulation/agents.html", row=_row(fed), members=data["members"], labels=labels, source=data["source"],
         rows=rows[(page - 1) * ast.PAGE_SIZE: page * ast.PAGE_SIZE], total=len(rows), page=page, pages=pages,
-        counts=ast.counts(data), states=ast.STATES, platform_icons=PLATFORM_ICONS, f={"member": member, "state": state, "kind": kind, "q": q},
+        counts=ast.counts(data), states=ast.STATES, platform_icons=PLATFORM_ICONS, f=f, names=data["names"],
+        stats_available=data["stats_available"], activities=ast.ACTIVITIES, sort_url=sort_url, sort=sort, direction=effective,
     )
 
 
@@ -816,15 +886,71 @@ def agents_csv(user, fed_id):
     data = ast.table(fed)
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["global_agent_id", "name", "kind", "member", "account_id", "state", "joined_tick", "left_tick"])
+    writer.writerow(["global_agent_id", "name", "kind", "member", "account_id", "state", "joined_tick", "left_tick",
+                     "crossposts_own", "crossposts_of_others", "times_crossposted", "times_crossposted_by_destination"])
     for r in data["rows"]:
+        st = r["stats"]  # the same numbers on every line of the identity: made (own, of others) and delivered copies of its content
+        by_dest = "; ".join(f"{data['names'].get(m, m)}: {n}" for m, n in sorted(st["by_dest"].items()))
         for m in data["members"]:
             c = r["states"].get(m)
             if c:
-                writer.writerow([r["id"], r["name"], r["kind"], m, c["account"], c["state"], c["joined"] if c["joined"] is not None else "",
-                                 c["left"] if c["left"] is not None else ""])
+                writer.writerow([r["id"], r["name"], r["kind"], m, c["account"], c["state"],
+                                 c["joined"] if c["joined"] is not None else "", c["left"] if c["left"] is not None else "",
+                                 st["made_own"], st["made_others"], st["times"], by_dest])
     return Response(out.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_agents.csv"})
+
+
+@world_simulation.route("/<int:fed_id>/crossposts")
+@guarded
+def crossposts(user, fed_id):
+    """Cross-posted contents: one row per content copied to a destination, searchable and paged on the server (GET parameters)."""
+    from y_web.src.federation import crossposts as cps
+
+    fed = _get_or_404(fed_id, user)
+    members = service.members_of(fed)
+    f = cps.parse_filters(request.args, [m.member for m, _exp in members])
+    result = cps.search(fed, f)
+    pages = max(1, -(-min(result["total"], cps.MAX_OFFSET + f["size"]) // f["size"]))
+    f["page"] = min(f["page"], pages)
+    if result["total"] and not result["rows"] and f["page"] != request.args.get("page", 1, type=int):
+        result = cps.search(fed, f)
+
+    def page_url(page=None, **over):
+        args = cps.query_args(f, **over)
+        if page and page > 1:
+            args["page"] = page
+        return url_for("world_simulation.crossposts", fed_id=fed.id, **args)
+
+    return render_template(
+        "admin/world_simulation/crossposts.html", row=_row(fed), f=f, rows=result["rows"], total=result["total"], capped=result["capped"],
+        available=result["available"], page=f["page"], pages=pages, page_sizes=cps.PAGE_SIZES, page_url=page_url,
+        platform_icons=PLATFORM_ICONS, statuses=cps.STATUSES, modes=cps.MODES,
+        member_options=[(m.member, exp.exp_name if exp is not None else m.member) for m, exp in members],
+        export_args=cps.query_args(f), slots_per_day=cps.SLOTS_PER_DAY,
+    )
+
+
+@world_simulation.route("/<int:fed_id>/crossposts.csv")
+@guarded
+def crossposts_csv(user, fed_id):
+    """The cross-posted contents that match the same filters as the page, as CSV (bounded to ``EXPORT_MAX`` rows)."""
+    import csv
+    import io
+
+    from flask import Response
+
+    from y_web.src.federation import crossposts as cps
+
+    fed = _get_or_404(fed_id, user)
+    f = cps.parse_filters(request.args, [m.member for m, _exp in service.members_of(fed)])
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(cps.CSV_COLUMNS)
+    for r in cps.export_rows(fed, f):
+        writer.writerow(cps.csv_row(r))
+    return Response(out.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_crossposts.csv"})
 
 
 @world_simulation.route("/<int:fed_id>/analytics.json")

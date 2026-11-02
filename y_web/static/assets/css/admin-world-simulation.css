@@ -139,3 +139,9 @@
 .ws-health.ws-health-ok, .ws-health.ws-health-finished { background: #e6f6ec; color: #1b7a43; }
 .ws-health.ws-health-waiting, .ws-health.ws-health-starting, .ws-health.ws-health-unknown { background: #eaf1fb; color: #2d5fa8; }
 .ws-health.is-problem { background: #fdecea; color: #b3261e; }
+
+/* cross-posts table: icon of a platform (type) that links to the content, inactive when it cannot be opened */
+.ws-icon-link { display: inline-block; font-size: 1.25rem; line-height: 1; margin: 0 2px; }
+.ws-icon-link.is-off { opacity: .35; cursor: help; }
+.ws-from-to { white-space: nowrap; }
+.ws-table th.ws-stat, .ws-table td.ws-stat { text-align: right; white-space: nowrap; }

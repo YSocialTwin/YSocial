@@ -43,7 +43,7 @@
 </div>
 {%- endmacro %}
 
-{# Tabs of a World Simulation. ``active``: configuration, execution, analytics or agents. The first three switch panes on the detail page. #}
+{# Tabs of a World Simulation. ``active``: configuration, execution, analytics, agents or crossposts. The first three switch panes on the detail page. #}
 {% macro tabs(fed, active, panes=True) -%}
 <div class="ws-tabs" role="tablist">
     {% for key, label, icon in (('configuration', _('Configuration'), 'mdi-cog-outline'), ('execution', _('Execution'), 'mdi-play-circle-outline'), ('analytics', _('Analytics'), 'mdi-chart-line')) %}
@@ -51,6 +51,7 @@
     {% else %}<a class="ws-tab" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}{{ '#' + key if key != 'configuration' }}"><i class="mdi {{ icon }}"></i> {{ label }}</a>{% endif %}
     {% endfor %}
     <a class="ws-tab {{ 'is-active' if active == 'agents' }}" href="{{ url_for('world_simulation.agents', fed_id=fed.id) }}"><i class="mdi mdi-account-group-outline"></i> {{ _('Agents') }}</a>
+    <a class="ws-tab {{ 'is-active' if active == 'crossposts' }}" href="{{ url_for('world_simulation.crossposts', fed_id=fed.id) }}"><i class="mdi mdi-share-variant-outline"></i> {{ _('Cross-posts') }}</a>
 </div>
 {%- endmacro %}
 

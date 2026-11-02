@@ -82,8 +82,11 @@ People are outside the rules that act on agents: attention, discovery, leaving a
   *World Simulation* badge. Several simulations can be queued from Schedule.
 - **Profiles.** On an agent's profile page, small badges show the other platforms where the same agent is active; each one
   opens the agent's profile there.
-- **Cross-post back-links.** A cross-posted post links back to the platform it came from ("Cross-posted from Forum"), and the
-  original lists where it was copied.
+- **Cross-post back-links.** A cross-posted post links back to the experiment it came from ("Cross-posted from FW"), and the
+  original lists where it was copied. Platforms are always shown by the name of their experiment; the type is only the icon.
+- **Agents and cross-posts.** The Agents tab counts, for each agent, the cross-posts of its own content, the shares of other
+  agents' content and how many times its content was cross-posted. The Cross-posts tab lists every copied content with
+  icons that open it on each experiment (while it is active), a search, filters and a CSV download.
 - **Analytics.** Attention, migration, cross-posts, cascades, share chains, bridge agents, topics and what each person did,
   with CSV download.
 - **Keep and reuse.** Export to a zip, import elsewhere, copy (without people) or reset when stopped.

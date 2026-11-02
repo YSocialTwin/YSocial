@@ -52,20 +52,32 @@
                                     <option value="agent" {{ 'selected' if f.kind == 'agent' }}>{{ _('Agents') }}</option>
                                     <option value="human" {{ 'selected' if f.kind == 'human' }}>{{ _('People') }}</option>
                                 </select></div>
+                                <div class="select"><select name="activity" id="ws-agent-activity">
+                                    <option value="">{{ _('Any cross-posting') }}</option>
+                                    <option value="made" {{ 'selected' if f.activity == 'made' }}>{{ _('Made cross-posts') }}</option>
+                                    <option value="crossposted" {{ 'selected' if f.activity == 'crossposted' }}>{{ _('Content cross-posted') }}</option>
+                                    <option value="none" {{ 'selected' if f.activity == 'none' }}>{{ _('No cross-posts') }}</option>
+                                </select></div>
+                                <input type="hidden" name="sort" value="{{ f.sort }}"><input type="hidden" name="dir" value="{{ f.dir }}">
                                 <button class="button is-light" type="submit"><i class="mdi mdi-filter-outline"></i> <span>{{ _('Filter') }}</span></button>
                             </form>
+                            <p class="ws-sub" id="ws-agent-stats-help">{{ _('Own cross-posts and Shares: cross-posts the agent made, as the author, of its own content and of other agents\' content. Cross-posted: delivered copies of its own content (hover for the destinations).') }}</p>
                             <div class="table-container">
-                            <table class="table is-fullwidth is-hoverable ws-table" id="ws-agent-table"><thead><tr><th>{{ _('Agent') }}</th>{% for m in members %}<th>{{ _(labels[m]) }}</th>{% endfor %}</tr></thead><tbody>
+                            <table class="table is-fullwidth is-hoverable ws-table" id="ws-agent-table"><thead><tr><th><a href="{{ sort_url('name') }}">{{ _('Agent') }}{{ (' ▲' if direction == 'asc' else ' ▼') if sort == 'name' }}</a></th>{% for m in members %}<th>{{ _(labels[m]) }}</th>{% endfor %}
+                            {% for col, title, hint in (('made_own', _('Own cross-posts'), _('Cross-posts the agent made of its own content (one per destination)')), ('made_others', _('Shares'), _('Cross-posts the agent made of other agents\' content (shares)')), ('times', _('Cross-posted'), _('Delivered copies of its own content on other platforms')),) %}<th class="ws-stat" title="{{ hint }}"><a href="{{ sort_url(col) }}">{{ title }}{{ (' ▲' if direction == 'asc' else ' ▼') if sort == col }}</a></th>{% endfor %}</tr></thead><tbody>
                             {% for r in rows %}
                             <tr><td><span class="ws-name">{{ r.name }}</span> <span class="ws-sub">{{ r.id }}{% if r.kind == 'human' %} · {{ _('person') }}{% endif %}</span></td>
-                            {% for m in members %}{% set c = r.states.get(m) %}<td>{% if c %}<span class="exp-tag ws-agent-{{ c.state }}" data-state="{{ c.state }}" title="{{ _('Account') }} {{ c.account }}{% if c.joined is not none %} · {{ _('joined at tick') }} {{ c.joined }}{% endif %}{% if c.left is not none %} · {{ _('left at tick') }} {{ c.left }}{% endif %}">{{ _(c.state|capitalize) }}</span>{% else %}<span class="ws-sub">-</span>{% endif %}</td>{% endfor %}</tr>
-                            {% else %}<tr><td colspan="{{ members|length + 1 }}"><div class="empty-state">{{ _('No account matches.') }}</div></td></tr>{% endfor %}
+                            {% for m in members %}{% set c = r.states.get(m) %}<td>{% if c %}<span class="exp-tag ws-agent-{{ c.state }}" data-state="{{ c.state }}" title="{{ _('Account') }} {{ c.account }}{% if c.joined is not none %} · {{ _('joined at tick') }} {{ c.joined }}{% endif %}{% if c.left is not none %} · {{ _('left at tick') }} {{ c.left }}{% endif %}">{{ _(c.state|capitalize) }}</span>{% else %}<span class="ws-sub">-</span>{% endif %}</td>{% endfor %}
+                            <td class="ws-stat" data-stat="made_own">{{ r.stats.made_own if stats_available else '-' }}</td>
+                            <td class="ws-stat" data-stat="made_others">{{ r.stats.made_others if stats_available else '-' }}</td>
+                            <td class="ws-stat" data-stat="times" {% if r.stats.by_dest %}title="{% for m, n in r.stats.by_dest|dictsort %}{{ names.get(m, m) }}: {{ n }}{{ '; ' if not loop.last }}{% endfor %}"{% endif %}>{% if not stats_available %}-{% elif r.stats.times %}<a href="{{ url_for('world_simulation.crossposts', fed_id=fed.id, agent=r.id, status='delivered') }}">{{ r.stats.times }}</a>{% else %}0{% endif %}</td></tr>
+                            {% else %}<tr><td colspan="{{ members|length + 4 }}"><div class="empty-state">{{ _('No account matches.') }}</div></td></tr>{% endfor %}
                             </tbody></table>
                             </div>
                             {% if pages > 1 %}
                             <p class="ws-sub ws-pager">{{ _('Page %(page)s of %(pages)s', page=page, pages=pages) }} ·
-                                {% if page > 1 %}<a href="{{ url_for('world_simulation.agents', fed_id=fed.id, page=page-1, q=f.q, member=f.member, state=f.state, kind=f.kind) }}">{{ _('Previous') }}</a>{% endif %}
-                                {% if page < pages %}<a href="{{ url_for('world_simulation.agents', fed_id=fed.id, page=page+1, q=f.q, member=f.member, state=f.state, kind=f.kind) }}">{{ _('Next') }}</a>{% endif %}
+                                {% if page > 1 %}<a href="{{ url_for('world_simulation.agents', fed_id=fed.id, page=page-1, q=f.q, member=f.member, state=f.state, kind=f.kind, activity=f.activity, sort=f.sort, dir=f.dir) }}">{{ _('Previous') }}</a>{% endif %}
+                                {% if page < pages %}<a href="{{ url_for('world_simulation.agents', fed_id=fed.id, page=page+1, q=f.q, member=f.member, state=f.state, kind=f.kind, activity=f.activity, sort=f.sort, dir=f.dir) }}">{{ _('Next') }}</a>{% endif %}
                             </p>
                             {% endif %}
                         </div>

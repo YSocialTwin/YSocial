@@ -153,11 +153,20 @@
                 return {label: k, backgroundColor: COLORS[i % COLORS.length], data: cpDays.map(function (d) {
                     return cp.filter(function (r) { return r.day === d && (r.source + ' → ' + r.target) === k; }).reduce(function (s, r) { return s + r.n; }, 0); })};
             }), {scales: {x: {stacked: true}, y: {stacked: true}}});
-            var body = $('#ws-an-cascades tbody');
+            var body = $('#ws-an-cascades tbody'), base = $('#ws-an-cascades').getAttribute('data-crossposts-url');
             body.textContent = '';
             (t.cascades || []).slice().sort(function (a, b) { return b.size - a.size; }).slice(0, 20).forEach(function (r) {
                 var tr = document.createElement('tr');
-                [r.source_ref, r.origin, r.day, r.size, r.targets].forEach(function (v) { var td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+                [r.source_ref, r.origin, r.day, r.size, r.targets].forEach(function (v, i) {
+                    var td = document.createElement('td');
+                    if (i === 0 && base) {  // the original content opens the Cross-posts tab filtered on its copies
+                        var a = document.createElement('a');
+                        a.href = base + '?ref=' + encodeURIComponent(v);
+                        a.textContent = v;
+                        td.appendChild(a);
+                    } else { td.textContent = v; }
+                    tr.appendChild(td);
+                });
                 body.appendChild(tr);
             });
             var sd = t.share_depth || [];

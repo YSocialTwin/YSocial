@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 09:41+0000\n"
+"POT-Creation-Date: 2026-11-02 17:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -165,6 +165,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s configurable values"
+msgstr ""
+
+#, python-format
+msgid "%(n)s cross-posts"
 msgstr ""
 
 #, python-format
@@ -534,6 +538,10 @@ msgid "A client with this name and population already exists."
 msgstr ""
 
 msgid "A dating agent needs a numeric age."
+msgstr ""
+
+#, python-format
+msgid "A day has %(n)s ticks (slots)"
 msgstr ""
 
 msgid "A discussion thread."
@@ -1130,6 +1138,9 @@ msgstr ""
 msgid "Agent gender"
 msgstr ""
 
+msgid "Agent id"
+msgstr ""
+
 msgid "Agent interaction and engagement parameters."
 msgstr ""
 
@@ -1496,9 +1507,21 @@ msgstr ""
 msgid "Anonymous usage data helps improve YSocial. No personal data is collected."
 msgstr ""
 
+msgid "Any cross-posting"
+msgstr ""
+
+msgid "Any destination"
+msgstr ""
+
 msgid ""
 "Any integer. Leave it empty to draw one at random when the World "
 "Simulation is created."
+msgstr ""
+
+msgid "Any mode"
+msgstr ""
+
+msgid "Any origin"
 msgstr ""
 
 msgid "Any state"
@@ -2328,6 +2351,11 @@ msgid ""
 "posts through."
 msgstr ""
 
+msgid ""
+"Check that the clients of this member sample agents (see the warnings in "
+"the client log)."
+msgstr ""
+
 msgid "Checks"
 msgstr ""
 
@@ -3148,6 +3176,9 @@ msgstr ""
 msgid "Content already reported."
 msgstr ""
 
+msgid "Content cross-posted"
+msgstr ""
+
 msgid "Content not found."
 msgstr ""
 
@@ -3461,6 +3492,15 @@ msgstr ""
 msgid "Cross-post cascades"
 msgstr ""
 
+msgid "Cross-posted"
+msgstr ""
+
+msgid "Cross-posted from"
+msgstr ""
+
+msgid "Cross-posted to"
+msgstr ""
+
 msgid "Cross-posting"
 msgstr ""
 
@@ -3471,6 +3511,18 @@ msgid "Cross-posts between platforms, per day"
 msgstr ""
 
 msgid "Cross-posts of people"
+msgstr ""
+
+msgid "Cross-posts the agent made of its own content (one per destination)"
+msgstr ""
+
+msgid "Cross-posts the agent made of other agents' content (shares)"
+msgstr ""
+
+#, python-format
+msgid ""
+"Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: "
+"%(delivered)s"
 msgstr ""
 
 #, python-format
@@ -4087,6 +4139,15 @@ msgid "Deleted %(label)s."
 msgstr ""
 
 msgid "Deleted (researcher only)"
+msgstr ""
+
+msgid "Delivered"
+msgstr ""
+
+msgid "Delivered copies of its own content on other platforms"
+msgstr ""
+
+msgid "Delivered or pending"
 msgstr ""
 
 msgid "Deliveries"
@@ -4925,6 +4986,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Every content copied from one experiment to another: where it was posted,"
+" where it was sent and whether it arrived. Click an icon to open the "
+"content in the web interface of its experiment (only while that "
+"experiment is active)."
+msgstr ""
+
+msgid ""
 "Every day each agent splits its activity among the platforms where it is "
 "active, according to how rewarding they were. Off: every agent keeps its "
 "own activity on each platform."
@@ -5691,6 +5759,9 @@ msgstr ""
 msgid ""
 "From the cross-posts of the coordinator; the topics a platform had to "
 "create are in its own database."
+msgstr ""
+
+msgid "From tick"
 msgstr ""
 
 msgid "Frontend Extensions"
@@ -7508,6 +7579,9 @@ msgid ""
 " least 0."
 msgstr ""
 
+msgid "Made cross-posts"
+msgstr ""
+
 msgid "Maintain the active simulation topics from the overview card"
 msgstr ""
 
@@ -7901,6 +7975,9 @@ msgid "MoP Interactions"
 msgstr ""
 
 msgid "MoP Puppet"
+msgstr ""
+
+msgid "Mode"
 msgstr ""
 
 msgid "Model"
@@ -8301,6 +8378,9 @@ msgstr ""
 msgid "Newer messages"
 msgstr ""
 
+msgid "Newest first"
+msgstr ""
+
 msgid "Newest posts first; within the same hour, the most commented come first."
 msgstr ""
 
@@ -8494,6 +8574,12 @@ msgstr ""
 msgid ""
 "No cross-post can happen: the propensity is 0. Set the propensity (the "
 "share of posts the agents mark for cross-posting)."
+msgstr ""
+
+msgid "No cross-post matches."
+msgstr ""
+
+msgid "No cross-posts"
 msgstr ""
 
 msgid "No data provided"
@@ -8953,6 +9039,9 @@ msgstr ""
 msgid "Oldest"
 msgstr ""
 
+msgid "Oldest first"
+msgstr ""
+
 msgid "Ollama"
 msgstr ""
 
@@ -9029,6 +9118,10 @@ msgstr ""
 msgid "Only administrators can manage external runtime repositories."
 msgstr ""
 
+#, python-format
+msgid "Only copies of %(ref)s"
+msgstr ""
+
 msgid ""
 "Only embedding models are listed. Choose one that is actually installed "
 "on the target Ollama instance before saving."
@@ -9065,6 +9158,9 @@ msgid "Only owner/admin/shared researchers can edit stress/reward settings"
 msgstr ""
 
 msgid "Only show profiles within the distance"
+msgstr ""
+
+msgid "Only this agent"
 msgstr ""
 
 msgid ""
@@ -9128,9 +9224,17 @@ msgstr ""
 msgid "Open the active experiment dashboards from a single compact panel."
 msgstr ""
 
+#, python-format
+msgid "Open the copy on %(platform)s"
+msgstr ""
+
 msgid ""
 "Open the menu to see the experiment as a single account or as a public "
 "observer."
+msgstr ""
+
+#, python-format
+msgid "Open the original on %(platform)s"
 msgstr ""
 
 msgid "Open the profile"
@@ -9321,6 +9425,15 @@ msgstr ""
 msgid "Own Recsys"
 msgstr ""
 
+msgid "Own cross-posts"
+msgstr ""
+
+msgid ""
+"Own cross-posts and Shares: cross-posts the agent made, as the author, of"
+" its own content and of other agents' content. Cross-posted: delivered "
+"copies of its own content (hover for the destinations)."
+msgstr ""
+
 msgid "Owned Experiments"
 msgstr ""
 
@@ -9491,6 +9604,9 @@ msgid "Peak Target Toxicity"
 msgstr ""
 
 msgid "Peak Toxicity"
+msgstr ""
+
+msgid "Pending"
 msgstr ""
 
 msgid "People"
@@ -11191,6 +11307,9 @@ msgstr ""
 msgid "Route args:"
 msgstr ""
 
+msgid "Rows per page"
+msgstr ""
+
 msgid "Rule threshold"
 msgstr ""
 
@@ -11442,6 +11561,9 @@ msgid "Search a username"
 msgstr ""
 
 msgid "Search agents"
+msgstr ""
+
+msgid "Search author or text"
 msgstr ""
 
 msgid "Search by username"
@@ -12957,6 +13079,11 @@ msgstr ""
 msgid "The World Simulation could not complete the operation: %(error)s"
 msgstr ""
 
+msgid ""
+"The World Simulation has not run yet: cross-posts are shown once it "
+"starts."
+msgstr ""
+
 msgid "The World Simulation has not run yet: states are shown once it starts."
 msgstr ""
 
@@ -13310,6 +13437,9 @@ msgstr ""
 msgid ""
 "The news snapshot could not be written (%(error)s): the news pages will "
 "share nothing until it exists."
+msgstr ""
+
+msgid "The original is not available"
 msgstr ""
 
 msgid ""
@@ -13938,6 +14068,9 @@ msgstr ""
 msgid ""
 "To run several World Simulations one after the other, add them to the "
 "%(link)s."
+msgstr ""
+
+msgid "To tick"
 msgstr ""
 
 msgid "Toggle chat panel"
@@ -15794,6 +15927,12 @@ msgstr ""
 msgid "advanced population settings"
 msgstr ""
 
+#, python-format
+msgid ""
+"advances but its server received no post, comment or reaction for %(n)s "
+"ticks (last one at tick %(last)s)"
+msgstr ""
+
 msgid "agents"
 msgstr ""
 
@@ -15854,7 +15993,13 @@ msgstr ""
 msgid "click to cancel"
 msgstr ""
 
+msgid "count stopped at the limit"
+msgstr ""
+
 msgid "created"
+msgstr ""
+
+msgid "cross-posts"
 msgstr ""
 
 #, python-format
@@ -16057,6 +16202,9 @@ msgstr ""
 msgid "none published"
 msgstr ""
 
+msgid "not delivered yet"
+msgstr ""
+
 msgid "not entered yet"
 msgstr ""
 
@@ -16172,6 +16320,10 @@ msgid "settings"
 msgstr ""
 
 #, python-format
+msgid "shares a content of %(who)s"
+msgstr ""
+
+#, python-format
 msgid "showing the first %(n)s"
 msgstr ""
 
@@ -16195,6 +16347,16 @@ msgid "super likes left"
 msgstr ""
 
 msgid "symlink"
+msgstr ""
+
+msgid "the content is not available"
+msgstr ""
+
+msgid "the web interface of this experiment is not active"
+msgstr ""
+
+#, python-format
+msgid "tick %(t)s"
 msgstr ""
 
 msgid "tiny-sd: the smallest, fastest (about 1 GB). Default"
@@ -16334,25 +16496,3 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
-msgid "Cross-posted from"
-msgstr ""
-
-msgid "Cross-posted to"
-msgstr ""
-
-#, python-format
-msgid "Open the original on %(platform)s"
-msgstr ""
-
-#, python-format
-msgid "Open the copy on %(platform)s"
-msgstr ""
-
-msgid "The original is not available"
-msgstr ""
-
-#, python-format
-msgid ""
-"Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: "
-"%(delivered)s"
-msgstr ""
