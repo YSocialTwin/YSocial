@@ -74,6 +74,11 @@
 <div class="box-lines">
     {{ ws.param(schema.BY_PATH[('crosspost', 'mode')], values) }}
     {{ ws.param(schema.BY_PATH[('crosspost', 'propensity')], values) }}
+    {% set cp_warning = schema.crosspost_warning(schema.crosspost_causes_from_values(values, ws_platforms)) %}
+    <p class="ws-note is-warning" id="ws-crosspost-warning" role="alert" {{ 'hidden' if not cp_warning }}
+       data-text-propensity="{{ schema.crosspost_warning(['propensity']) }}"
+       data-text-probability="{{ schema.crosspost_warning(['probability']) }}"
+       data-text-both="{{ schema.crosspost_warning(['propensity', 'probability']) }}"><i class="mdi mdi-alert-outline"></i> <span id="ws-crosspost-warning-text">{{ cp_warning }}</span></p>
     <div class="box-line ws-param ws-block" id="ws-crosspost-content">
         <span class="left"><span class="ws-label">{{ _('Agent content that can be cross-posted') }}</span>
             <span class="ws-help">{{ _('Choose All, or add the kinds of content that may be cross-posted: each option you add widens what can travel (own content, plus content with news, plus content with images). Read at each start or restart.') }}</span></span>
@@ -139,6 +144,12 @@
             {% endfor %}
         </span>
     </div>
+</div>
+{% endcall %}
+
+{% call ws.section('frontends', _('Web interface of the members'), _('Open the web interface of the member experiments from the World Simulation, without activating each experiment by hand.'), next_step()|trim) %}
+<div class="box-lines">
+    {{ ws.param(schema.BY_PATH[('frontends', 'activate_on_start')], values) }}
 </div>
 {% endcall %}
 

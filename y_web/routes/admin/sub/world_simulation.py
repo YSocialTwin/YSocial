@@ -19,6 +19,7 @@ from y_web import db
 from y_web.i18n import gettext as _
 from y_web.src.federation import availability
 from y_web.src.federation import coordinator_process as cp
+from y_web.src.federation import frontends
 from y_web.src.federation import member_health as mh
 from y_web.src.federation import options_schema as schema
 from y_web.src.federation import service
@@ -354,6 +355,8 @@ def detail(user, fed_id):
     return render_template(
         "admin/world_simulation/detail.html",
         row=row,
+        frontends=frontends.frontend_rows(fed, user),
+        crosspost_warning=schema.crosspost_warning(schema.crosspost_causes_from_options(options, members)),
         participants=_participants(fed),
         candidates_users=db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all(),
         options=options,
@@ -448,8 +451,10 @@ def _command(fed_id, user, action):
     fed = _get_or_404(fed_id, user)
     try:
         if action == "start":
-            eb.start_federation(fed)
+            eb.start_federation(fed, admin_user=user)
             flash(_("World Simulation started."), "success")
+            for message in getattr(fed, "frontend_warnings", None) or []:
+                flash(_("Web interface not activated: %(reason)s", reason=message), "warning")
         elif action == "pause":
             eb.pause_federation(fed)
             flash(_("World Simulation paused."), "success")
@@ -480,6 +485,41 @@ for _action in ("start", "pause", "resume", "stop"):
         return view
 
     world_simulation.add_url_rule(f"/<int:fed_id>/{_action}", f"command_{_action}", _make(_action), methods=["POST"])
+
+
+def _frontends_command(fed_id, user, activating):
+    """Activate or deactivate the web interface of every member (allowed in any state of the World Simulation)."""
+    fed = _get_or_404(fed_id, user)
+    try:
+        outcomes = (frontends.activate_frontends if activating else frontends.deactivate_frontends)(fed, user)
+    except Exception as exc:  # noqa: BLE001 - reported, never a 500
+        db.session.rollback()
+        outcomes = []
+        problems = [_("The web interfaces could not be changed: %(error)s", error=str(exc))]
+    else:
+        problems = frontends.warnings_of(outcomes)
+    summary = frontends.summary(outcomes, activating) if outcomes else None
+    wants_json = request.accept_mimetypes.best == "application/json" or request.is_json
+    if wants_json:
+        return jsonify({"ok": not problems, "message": summary, "problems": problems, "members": outcomes,
+                        "frontends": frontends.frontend_rows(fed, user)}), (200 if not problems else 207)
+    if summary:
+        flash(summary, "success")
+    for message in problems:
+        flash(message, "error")
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id) + "#execution")
+
+
+@world_simulation.route("/<int:fed_id>/frontends/activate", methods=["POST"])
+@guarded
+def frontends_activate(user, fed_id):
+    return _frontends_command(fed_id, user, True)
+
+
+@world_simulation.route("/<int:fed_id>/frontends/deactivate", methods=["POST"])
+@guarded
+def frontends_deactivate(user, fed_id):
+    return _frontends_command(fed_id, user, False)
 
 
 @world_simulation.route("/<int:fed_id>/export")
@@ -576,13 +616,17 @@ def delete(user, fed_id):
 def _read_bus(fed):
     """Counters of the bus and the last events, read from the database of the coordinator (read only)."""
     path = Path(fed.folder) / "federation.db"
-    out = {"messages": 0, "deliveries": 0, "events": []}
+    out = {"messages": 0, "deliveries": 0, "events": [], "by_type": {}, "crosspost_ticks": 0, "crosspost_total": 0, "available": False}
     if not path.is_file():
         return out
+    out["available"] = True
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=1.0)
         try:
-            out["messages"] = conn.execute("SELECT COUNT(*) FROM federation_message").fetchone()[0]
+            for kind, n in conn.execute("SELECT payload_type, COUNT(*) FROM federation_message GROUP BY payload_type").fetchall():
+                out["by_type"][kind] = n  # one pass: the total and the exported content come from the same scan
+            out["messages"] = sum(out["by_type"].values())
+            _read_crossposts(conn, out)
             out["deliveries"] = conn.execute("SELECT COUNT(*) FROM federation_delivery").fetchone()[0]
             rows = conn.execute("SELECT tick, kind, detail_json FROM federation_event ORDER BY rowid DESC LIMIT 30").fetchall()
             out["events"] = [{"tick": t, "kind": k, "detail": d} for t, k, d in rows]
@@ -591,6 +635,43 @@ def _read_bus(fed):
     except sqlite3.Error:
         pass
     return out
+
+
+def _read_crossposts(conn, out, limit=20000):
+    """Ticks with at least one cross-post and their total, from the ``crosspost_materialized`` events (one per tick, bounded)."""
+    try:
+        for (detail,) in conn.execute("SELECT detail_json FROM federation_event WHERE kind='crosspost_materialized' "
+                                      "ORDER BY id DESC LIMIT ?", (limit,)):
+            try:
+                n = int(json.loads(detail).get("crossposts", 0))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if n > 0:
+                out["crosspost_ticks"] += 1
+                out["crosspost_total"] += n
+    except sqlite3.Error:
+        pass  # no event table yet: counted as none
+
+
+# the hint of the Execution tab appears once the run is past this tick with nothing exported and nothing materialised
+CROSSPOST_HINT_AFTER_TICK = 6
+
+
+def _crosspost_status(fed, bus, tick):
+    """Text of the Cross-posts line and, when the run is past tick 6 with none, the hint with the probable cause."""
+    if not bus.get("available"):
+        return {"exported": 0, "ticks": 0, "total": 0, "text": None, "hint": None}
+    exported = bus["by_type"].get("content.v1", 0)
+    total, ticks = bus["crosspost_total"], bus["crosspost_ticks"]
+    text = _("Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content exported: %(exported)s", total=total, ticks=ticks, exported=exported)
+    hint = None
+    if fed.status in ("running", "paused") and tick is not None and tick > CROSSPOST_HINT_AFTER_TICK and exported == 0 and total == 0:
+        options = json.loads(fed.config_json or "{}")
+        members = {m.member for m, _exp in service.members_of(fed)}
+        cause = schema.crosspost_warning(schema.crosspost_causes_from_options(options, members))
+        hint = _("No content has been marked for cross-posting after %(tick)s ticks.", tick=tick) + " " + (
+            cause or _("Check that the agents are posting and that the content filter lets their posts through."))
+    return {"exported": exported, "ticks": ticks, "total": total, "text": text, "hint": hint}
 
 
 def _log_tail(fed, lines=40):
@@ -630,6 +711,8 @@ def status(user, fed_id):
             }
         )
     progress = health.get("progress")
+    bus = _read_bus(fed)
+    crossposts = _crosspost_status(fed, bus, None if not coordinator else coordinator.get("global_tick"))
     return jsonify(
         {
             "state": fed.status,
@@ -641,7 +724,8 @@ def status(user, fed_id):
             "progress": progress,
             "progress_text": _progress_text(progress),
             "log_hint": _("The logs are in the folder of each experiment (server_stderr.log and <client>_client_stderr.log)."),
-            "bus": _read_bus(fed),
+            "bus": bus,
+            "crossposts": crossposts,
             "log": _log_tail(fed),
         }
     )

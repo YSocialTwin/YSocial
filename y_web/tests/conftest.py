@@ -348,3 +348,18 @@ def _clear_external_runtime_remote_cache():
     manager.clear_remote_cache()
     yield
     manager.clear_remote_cache()
+
+
+@pytest.fixture(autouse=True)
+def _world_simulation_start_leaves_experiment_databases_alone(request, monkeypatch):
+    """Starting a World Simulation activates the web interface of its members (registers their database, creates the
+    participant). The start tests only look at the processes: without this the activation would write into the real
+    ``y_web/experiments`` folder. The tests of the activation itself request the ``toggle`` fixture, which stubs those steps."""
+    node = request.node.nodeid
+    if "toggle" in request.fixturenames or not any(k in node for k in ("federation", "world_simulation")):
+        yield
+        return
+    from y_web.src.simulation import execution_backend as eb
+
+    monkeypatch.setattr(eb, "_activate_member_frontends", lambda fed, admin_user=None: None)
+    yield

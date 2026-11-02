@@ -25,6 +25,7 @@
                                 {% for m in row.member_rows %}{{ ws.platform_tag(m.label, m.icon) }}{% endfor %}
                                 <span class="ws-sub">{{ _('Seed') }} {{ fed.seed }} · {{ _('Slot (hourly)') if fed.granularity == 'slot' else _('Day') }}{% if fed.owner %} · {{ fed.owner }}{% endif %}</span>
                             </div>
+                            {% if crosspost_warning %}<p class="ws-note is-warning" id="ws-saved-crosspost-warning" role="alert"><i class="mdi mdi-alert-outline"></i> {{ crosspost_warning }}</p>{% endif %}
                             {{ ws.tabs(fed, 'configuration') }}
                         </div>
                     </div>
@@ -136,10 +137,35 @@
                                     <div class="stat-box"><div class="stat-value" id="ws-messages">0</div><div class="stat-label">{{ _('Messages') }}</div></div>
                                     <div class="stat-box"><div class="stat-value" id="ws-deliveries">0</div><div class="stat-label">{{ _('Deliveries') }}</div></div>
                                 </div>
+                                <p class="ws-sub" id="ws-crosspost-line" hidden></p>
+                                <p class="ws-note is-warning" id="ws-crosspost-hint" role="alert" hidden></p>
                                 <div class="table-container">
                                 <table class="table is-fullwidth ws-table" id="ws-members"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th><th>{{ _('Status') }}</th><th>{{ _('Health') }}</th><th>{{ _('Tick') }}</th><th>{{ _('Waiting for') }}</th></tr></thead><tbody></tbody></table>
                                 </div>
                                 <p class="empty-state" id="ws-members-empty">{{ _('The members report their state once the World Simulation runs.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box" id="ws-frontends-box">
+                            <h3 class="title is-5 is-thin">{{ _('Web interface of the members') }}</h3>
+                            <div class="box-content">
+                                <p class="ws-sub">{{ _('A member can be opened from the web only while its experiment is active. Stopping the World Simulation does not deactivate the experiments.') }}</p>
+                                <table class="table is-fullwidth ws-table" id="ws-frontends"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th><th>{{ _('Web interface') }}</th><th></th></tr></thead><tbody>
+                                {% for f in frontends %}
+                                <tr data-member="{{ f.member }}"><td>{{ _(platform_labels.get(f.platform, f.platform)) }}</td><td>{{ f.experiment }}</td>
+                                    <td>{% if f.active %}<span class="exp-tag ws-state-running">{{ _('Active') }}</span>{% else %}<span class="exp-tag ws-state-stopped">{{ _('Inactive') }}</span>{% endif %}</td>
+                                    <td>{% if f.url %}<a class="button is-small is-light" href="{{ f.url }}" target="_blank" rel="noopener"><i class="mdi mdi-open-in-new"></i> <span>{{ _('Open') }}</span></a>{% endif %}</td></tr>
+                                {% endfor %}
+                                </tbody></table>
+                                <div class="ws-actions" id="ws-frontends-actions">
+                                    <form method="post" action="{{ url_for('world_simulation.frontends_activate', fed_id=fed.id) }}">
+                                        <button class="button is-solid green-button" type="submit"><i class="mdi mdi-monitor-dashboard"></i> <span>{{ _('Activate frontends') }}</span></button></form>
+                                    <form method="post" action="{{ url_for('world_simulation.frontends_deactivate', fed_id=fed.id) }}">
+                                        <button class="button is-light" type="submit"><i class="mdi mdi-monitor-off"></i> <span>{{ _('Deactivate frontends') }}</span></button></form>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -186,16 +186,9 @@ def _get_exp_default_recsys(exp_id: int):
 
     Returns "default" for either field when no override is configured.
     """
-    try:
-        row = db.session.get(ExpFrontendSettings, exp_id)
-        if row is None:
-            return "default", "default"
-        settings = json.loads(row.settings_json or "{}")
-    except Exception:
-        return "default", "default"
-    content = settings.get("default_content_recsys") or "default"
-    follow = settings.get("default_follow_recsys") or "default"
-    return content, follow
+    from y_web.src.experiment.activation import get_exp_default_recsys
+
+    return get_exp_default_recsys(exp_id)
 
 
 @experiments.route("/admin/experiments")
@@ -744,9 +737,6 @@ def change_active_experiment(exp_id):
     """
     check_privileges(current_user.username)
     uname = str(current_user.username)
-    admin_user_id = current_user.id
-    admin_user_email = current_user.email
-    admin_user_password = current_user.password
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
@@ -759,81 +749,19 @@ def change_active_experiment(exp_id):
         flash(_("You are not allowed to access this experiment."), "error")
         return redirect(url_for("admin.dashboard"))
 
-    # Toggle experiment status
+    # Toggle experiment status (the steps are shared with the World Simulation: y_web.src.experiment.activation)
+    from y_web.src.experiment.activation import (
+        activate_experiment,
+        deactivate_experiment,
+    )
+
     if exp.status == 1:
-        # Deactivate the experiment
-        exp.status = 0
-        db.session.commit()
-        flash(_("Experiment '%(exp_name)s' deactivated.", exp_name=exp.exp_name))
+        result = deactivate_experiment(exp)
     else:
-        # Activate the experiment
-        exp.status = 1
-        db.session.commit()
-
-        # Register the experiment database dynamically
-        from y_web.src.experiment.context import register_experiment_database
-
-        if is_im_experiment(exp) or is_dating_experiment(exp):
-            # IM and dating own their database and have no YWeb participant row: nothing to bind or provision here
-            user_exp = (
-                db.session.query(User_Experiment)
-                .filter_by(user_id=admin_user_id, exp_id=exp_id)
-                .first()
-            )
-            if user_exp is None:
-                db.session.add(User_Experiment(user_id=admin_user_id, exp_id=exp_id))
-                db.session.commit()
-            flash(_("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name))
-            admin_user = db.session.scalars(
-                select(Admin_users).filter_by(username=uname)
-            ).first()
-            if admin_user:
-                login_user(admin_user, remember=True, force=True)
-            return redirect("/admin/dashboard")
-
-        register_experiment_database(current_app, exp_id, exp.db_name)
-
-        if exp.platform_type == "photo_sharing":
-            participant_id = admin_user_id
-        elif exp.simulator_type == "HPC":
-            participant_id = str(uuid.uuid4())
-        else:
-            participant_id = admin_user_id
-        _exp_content_recsys, _exp_follow_recsys = _get_exp_default_recsys(exp_id)
-        participant, created = ensure_experiment_user(
-            exp,
-            user_id=participant_id,
-            username=uname,
-            email=admin_user_email,
-            password=admin_user_password,
-            cover_image=random_cover_image_url(),
-            recsys_type=_exp_content_recsys,
-            frecsys_type=_exp_follow_recsys,
-            joined_on=int(time.time()),
-            account_id=admin_user_id,
-        )
-        if participant is None:
-            flash(_("Unable to prepare the experiment user."))
-            return redirect(url_for("admin.dashboard"))
-        if created:
-            current_app.logger.info(
-                "Created experiment participant %s for experiment %s",
-                uname,
-                exp_id,
-            )
-
-        # Add user to experiment if not present
-        user_exp = (
-            db.session.query(User_Experiment)
-            .filter_by(user_id=admin_user_id, exp_id=exp_id)
-            .first()
-        )
-        if user_exp is None:
-            user_exp = User_Experiment(user_id=admin_user_id, exp_id=exp_id)
-            db.session.add(user_exp)
-            db.session.commit()
-
-        flash(_("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name))
+        result = activate_experiment(exp, admin_user)
+    flash(result.message)
+    if not result.ok:
+        return redirect(url_for("admin.dashboard"))
 
     # Reload user session from admin database (not experiment database)
     # Use Admin_users which is in the main database

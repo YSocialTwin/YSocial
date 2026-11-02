@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 08:26+0000\n"
+"POT-Creation-Date: 2026-11-02 08:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -101,6 +101,10 @@ msgstr ""
 msgid ""
 "%(display_name)s agents must be assigned to at least one matching custom "
 "population."
+msgstr ""
+
+#, python-format
+msgid "%(experiment)s: %(error)s"
 msgstr ""
 
 #, python-format
@@ -540,6 +544,11 @@ msgid ""
 "experiment. Several clients can run in the same experiment."
 msgstr ""
 
+msgid ""
+"A member can be opened from the web only while its experiment is active. "
+"Stopping the World Simulation does not deactivate the experiments."
+msgstr ""
+
 #, python-format
 msgid "A new %(display_name)s population name is required."
 msgstr ""
@@ -707,7 +716,15 @@ msgstr ""
 msgid "Activate agent memory"
 msgstr ""
 
+msgid "Activate frontends"
+msgstr ""
+
 msgid "Activate run-scoped memory"
+msgstr ""
+
+msgid ""
+"Activate the web interface of the member experiments when the simulation "
+"starts"
 msgstr ""
 
 msgid "Active"
@@ -2291,6 +2308,11 @@ msgstr ""
 msgid "Check interval must be between 1 and 300 seconds"
 msgstr ""
 
+msgid ""
+"Check that the agents are posting and that the content filter lets their "
+"posts through."
+msgstr ""
+
 msgid "Checks"
 msgstr ""
 
@@ -3431,6 +3453,12 @@ msgstr ""
 msgid "Cross-posts of people"
 msgstr ""
 
+#, python-format
+msgid ""
+"Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content "
+"exported: %(exported)s"
+msgstr ""
+
 msgid "Cumulative Trends"
 msgstr ""
 
@@ -3861,6 +3889,9 @@ msgid "Days without a match that raise it"
 msgstr ""
 
 msgid "Deactivate"
+msgstr ""
+
+msgid "Deactivate frontends"
 msgstr ""
 
 msgid "Debug Information:"
@@ -6457,6 +6488,9 @@ msgstr ""
 msgid "In-Degree CCDF"
 msgstr ""
 
+msgid "Inactive"
+msgstr ""
+
 msgid "Inactive Alter"
 msgstr ""
 
@@ -8416,6 +8450,26 @@ msgstr ""
 msgid "No configuration files were found for this experiment."
 msgstr ""
 
+#, python-format
+msgid "No content has been marked for cross-posting after %(tick)s ticks."
+msgstr ""
+
+msgid ""
+"No cross-post can happen with this configuration. Set the propensity (the"
+" share of posts the agents mark for cross-posting) and the probability "
+"for at least one pair of platforms."
+msgstr ""
+
+msgid ""
+"No cross-post can happen: every probability is 0 or empty. Set the "
+"probability for at least one pair of platforms."
+msgstr ""
+
+msgid ""
+"No cross-post can happen: the propensity is 0. Set the propensity (the "
+"share of posts the agents mark for cross-posting)."
+msgstr ""
+
 msgid "No data provided"
 msgstr ""
 
@@ -8894,6 +8948,13 @@ msgid "On"
 msgstr ""
 
 msgid ""
+"On by default: at start every member experiment is activated, so that you"
+" can open its web interface from the World Simulation. Stopping the World"
+" Simulation does not deactivate them: use Deactivate frontends on the "
+"Execution tab. Only YWeb reads this option."
+msgstr ""
+
+msgid ""
 "On by default: content that crosses a platform carries its topics and the"
 " destination creates the ones it lacks."
 msgstr ""
@@ -9045,6 +9106,11 @@ msgstr ""
 
 #, python-format
 msgid "Open the profile on %(platform)s"
+msgstr ""
+
+msgid ""
+"Open the web interface of the member experiments from the World "
+"Simulation, without activating each experiment by hand."
 msgstr ""
 
 msgid "Openness"
@@ -13469,6 +13535,10 @@ msgid ""
 "or underscores."
 msgstr ""
 
+#, python-format
+msgid "The web interfaces could not be changed: %(error)s"
+msgstr ""
+
 msgid ""
 "The weights of the swiping utility use the same 0 to 10 scale as the "
 "actions of the other platforms: 0 means that factor is ignored."
@@ -14925,6 +14995,24 @@ msgstr ""
 
 #, python-format
 msgid "Wearing glasses (%%)"
+msgstr ""
+
+msgid "Web interface"
+msgstr ""
+
+#, python-format
+msgid "Web interface not activated: %(reason)s"
+msgstr ""
+
+msgid "Web interface of the members"
+msgstr ""
+
+#, python-format
+msgid "Web interfaces activated: %(n)s (already active: %(m)s)."
+msgstr ""
+
+#, python-format
+msgid "Web interfaces deactivated: %(n)s (already inactive: %(m)s)."
 msgstr ""
 
 msgid "Website:"

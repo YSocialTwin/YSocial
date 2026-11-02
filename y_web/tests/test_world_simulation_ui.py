@@ -144,7 +144,7 @@ def test_create_start_pause_resume_stop_delete_through_the_interface(site, monke
     app, exps, tmp = site
     calls = []
     for name in ("start", "pause", "resume"):
-        monkeypatch.setattr(eb, f"{name}_federation", lambda fed, _n=name: calls.append(_n) or setattr(fed, "status", {"start": "running", "pause": "paused", "resume": "running"}[_n]))
+        monkeypatch.setattr(eb, f"{name}_federation", lambda fed, _n=name, **kw: calls.append(_n) or setattr(fed, "status", {"start": "running", "pause": "paused", "resume": "running"}[_n]))
     monkeypatch.setattr(eb, "stop_federation", lambda fed: calls.append("stop") or setattr(fed, "status", "stopped") or [])
     client = login(app, "admin")
     response = _post(client, "/admin/world_simulation/new", name="W1", experiments=[str(i) for i in exps.values()], seed="5",
@@ -211,7 +211,8 @@ def test_status_json_reports_members_and_bus(site):
     data = login(app, "admin").get(f"/admin/world_simulation/{fed.id}/status.json").get_json()
     assert data["state"] == "stopped" and not data["coordinator_up"]
     assert {m["member"] for m in data["members"]} == {"microblogging", "forum"}
-    assert data["bus"] == {"messages": 0, "deliveries": 0, "events": []}
+    assert {k: data["bus"][k] for k in ("messages", "deliveries", "events")} == {"messages": 0, "deliveries": 0, "events": []}
+    assert data["crossposts"]["text"] is None and data["crossposts"]["hint"] is None  # no database of the run yet
 
 
 def test_the_interface_never_says_federation(site):

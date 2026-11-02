@@ -154,12 +154,20 @@ PSEUDONYMS = (
           legacy_name="pseudonyms_enabled"),
 )
 
-PARAMS = ATTENTION + LEAVE + DISCOVERY + BETA + CROSSPOST + TOPICS + PSEUDONYMS
+FRONTENDS = (
+    Param(("frontends", "activate_on_start"), "bool", True, N_("Activate the web interface of the member experiments when the simulation starts"),
+          N_("On by default: at start every member experiment is activated, so that you can open its web interface from the "
+             "World Simulation. Stopping the World Simulation does not deactivate them: use Deactivate frontends on the "
+             "Execution tab. Only YWeb reads this option."),
+          legacy_name="frontends_activate_on_start"),
+)
+
+PARAMS = ATTENTION + LEAVE + DISCOVERY + BETA + CROSSPOST + TOPICS + PSEUDONYMS + FRONTENDS
 BY_NAME = {p.name: p for p in PARAMS}
 BY_PATH = {p.path: p for p in PARAMS}
 # Boolean switches without a presence marker: an absent checkbox means off (as in earlier pages).
-# ``topics.migration`` has a hidden marker (``topics_present``) because it is on by default.
-PRESENCE = {("topics", "migration"): "topics_present"}
+# ``topics.migration`` and ``frontends.activate_on_start`` have a hidden marker because they are on by default.
+PRESENCE = {("topics", "migration"): "topics_present", ("frontends", "activate_on_start"): "frontends_present"}
 
 # Keys covered by the form besides the table (blocks of their own handling).
 SPECIAL_PATHS = {("crosspost", "content"), ("crosspost", "probability"), ("membership", "initial"), ("provisioning", "members")}
@@ -548,3 +556,55 @@ def default_options() -> dict:
     for p in PARAMS:
         _set(out, p.path, p.default)
     return out
+
+
+# ------------------------------------------------------------------------------------- silent no-cross-post check
+def _positive(value) -> bool:
+    try:
+        return float(value) > 0.0
+    except (TypeError, ValueError):
+        return False
+
+
+def crosspost_causes(mode, propensity, probabilities) -> list:
+    """Why a configuration cannot produce any cross-post: a list of ``"propensity"`` and/or ``"probability"`` (empty: it can).
+
+    ``mode`` is the crosspost mode, ``propensity`` the share of posts the agents mark for cross-posting and
+    ``probabilities`` the probability of each pair of platforms (only used when the coordinator decides)."""
+    causes = []
+    if not _positive(propensity):
+        causes.append("propensity")
+    if mode != "agent_action" and not any(_positive(v) for v in probabilities):
+        causes.append("probability")
+    return causes
+
+
+def crosspost_causes_from_options(options, members=None) -> list:
+    """:func:`crosspost_causes` for stored options (defaults applied); ``members`` limits the pairs to those platforms."""
+    crosspost = (options or {}).get("crosspost") or {}
+    crosspost = crosspost if isinstance(crosspost, dict) else {}
+    probability = crosspost.get("probability") or {}
+    pairs = []
+    for key, value in (probability.items() if isinstance(probability, dict) else ()):
+        src, _arrow, dst = str(key).partition("->")
+        if members is None or (src in members and dst in members):
+            pairs.append(value)
+    return crosspost_causes(crosspost.get("mode", "coordinator_rule"), crosspost.get("propensity", 0.0), pairs)
+
+
+def crosspost_causes_from_values(values, platforms) -> list:
+    """:func:`crosspost_causes` for the values of the form (see :func:`values_from_options`)."""
+    pairs = [values.get(f"prob__{s}__{d}") for s in platforms for d in platforms if s != d]
+    return crosspost_causes(values.get("opt__crosspost__mode", "coordinator_rule"), values.get("opt__crosspost__propensity"), pairs)
+
+
+def crosspost_warning(causes) -> str:
+    """The text that says what to set (empty when ``causes`` is empty)."""
+    if not causes:
+        return ""
+    if causes == ["propensity"]:
+        return _("No cross-post can happen: the propensity is 0. Set the propensity (the share of posts the agents mark for cross-posting).")
+    if causes == ["probability"]:
+        return _("No cross-post can happen: every probability is 0 or empty. Set the probability for at least one pair of platforms.")
+    return _("No cross-post can happen with this configuration. Set the propensity (the share of posts the agents mark for "
+             "cross-posting) and the probability for at least one pair of platforms.")

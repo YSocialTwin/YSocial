@@ -59,6 +59,11 @@
                 document.getElementById('ws-skew').textContent = text(s.skew);
                 document.getElementById('ws-messages').textContent = s.bus.messages;
                 document.getElementById('ws-deliveries').textContent = s.bus.deliveries;
+                var cpLine = document.getElementById('ws-crosspost-line');
+                var cpHint = document.getElementById('ws-crosspost-hint');
+                var cps = s.crossposts || {};
+                if (cpLine) { cpLine.textContent = cps.text || ''; cpLine.hidden = !cps.text; }
+                if (cpHint) { cpHint.textContent = cps.hint || ''; cpHint.hidden = !cps.hint; }
                 var body = $('#ws-members tbody');
                 body.innerHTML = '';
                 var top = 1;
@@ -209,6 +214,33 @@
         }
     }
 
+    /* The warning of the Cross-posting section: appears while the values typed cannot produce any cross-post. */
+    function initCrosspostWarning() {
+        var box = document.getElementById('ws-crosspost-warning');
+        if (!box) { return; }
+        var mode = document.getElementById('opt__crosspost__mode');
+        var propensity = document.getElementById('opt__crosspost__propensity');
+        var label = document.getElementById('ws-crosspost-warning-text');
+        function positive(input) { var v = parseFloat(input.value); return !isNaN(v) && v > 0; }
+        function check() {
+            var causes = [];
+            if (!propensity || !positive(propensity)) { causes.push('propensity'); }
+            if (!mode || mode.value !== 'agent_action') {
+                var any = $all('#ws-probability-matrix input').some(function (i) { return !i.disabled && positive(i); });
+                if (!any) { causes.push('probability'); }
+            }
+            var key = causes.length === 2 ? 'both' : causes[0];
+            label.textContent = key ? box.getAttribute('data-text-' + key) : '';
+            box.hidden = !key;
+        }
+        $all('#opt__crosspost__mode, #opt__crosspost__propensity, #ws-probability-matrix input').forEach(function (el) {
+            el.addEventListener('input', check); el.addEventListener('change', check);
+        });
+        var pick = document.getElementById('ws-members-pick');
+        if (pick) { pick.addEventListener('change', check); }
+        check();
+    }
+
     /* ---------------------------------------------------------------- creation page */
     function initCreate() {
         var form = document.getElementById('world-simulation-form');
@@ -274,6 +306,7 @@
         initContentChoice();
         initDependencies();
         initCreate();
+        initCrosspostWarning();
     }
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
 }());

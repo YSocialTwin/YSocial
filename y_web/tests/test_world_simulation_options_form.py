@@ -24,7 +24,7 @@ class Form(dict):
 
 def form_of(values, **extra):
     """What a browser posts for the given form values (unchecked boxes are absent, markers are always there)."""
-    out = Form(topics_present="1", crosspost_content_present="1", provisioning_present="1")
+    out = Form(topics_present="1", crosspost_content_present="1", provisioning_present="1", frontends_present="1")
     for key, value in values.items():
         if isinstance(value, bool):
             if value:

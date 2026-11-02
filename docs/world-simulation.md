@@ -135,6 +135,21 @@ gateways, clients. While it is starting, running, paused or stopping, its experi
 and their own start and stop commands are disabled. When it is stopped, each experiment can be started alone again.
 Several World Simulations can be queued from **Schedule**.
 
+### Open the member experiments in the browser
+
+An experiment can be opened from the web only while it is *active* (the **Activate** switch of the experiments page). A World
+Simulation can activate the web interface of all its members for you:
+
+- When it starts, unless you switch off *Activate the web interface of the member experiments when the simulation starts* (a
+  field of the form, on by default). It is done before the servers start; a member that cannot be activated is reported as a
+  warning and the start goes on.
+- With the **Activate frontends** and **Deactivate frontends** buttons of the Execution tab, in any state of the World
+  Simulation. The same box lists each member with *Active* or *Inactive* and an **Open** link for the active ones. Pressing a
+  button twice changes nothing; members of experiments you may not see are skipped with a message.
+
+Stopping the World Simulation does **not** deactivate the experiments: use **Deactivate frontends** when you want to close them.
+Instant messaging and dating members get the same access row as with the single switch (they keep their own database).
+
 ### Is every member alive? (health of a running World Simulation)
 
 While the World Simulation is running, the **Execution** tab (and the list page) watch the members, using only what the
@@ -175,6 +190,23 @@ A run where every member is equally slow is not reported as stalled (nobody is w
 - **Everything looks stuck but nobody is flagged**: check the time per tick in the progress line. With a large language
   model one tick can take minutes; the ETA is computed from it.
 - **The banner says the coordinator does not answer**: read the *Coordinator log* below the table.
+
+#### No cross-posts appear
+
+The Execution tab shows a **Cross-posts** line: how many cross-posts the coordinator has materialised (and in how many ticks)
+and how many contents were exported to it. When the run is past tick 6 with nothing exported and nothing materialised, a notice
+gives the probable cause. It is not an error: with the defaults **no cross-post can ever happen**.
+
+- **Propensity 0** (`crosspost.propensity`, default 0, written as `crosspost_propensity` in the members only when set): no
+  agent marks a post for cross-posting (by rule) or posts on another platform (by agent action), so no content is exported.
+- **No probability** (`crosspost.probability`, default 0 for every pair, rule mode only): content is exported, but the
+  coordinator copies it to no platform. The probability is given for each pair, e.g. `microblogging->forum`.
+
+The form warns while you type (Cross-posting section) and the detail page repeats the warning for the saved values. Set the
+propensity (the share of posts the agents mark for cross-posting) and the probability for at least one pair of platforms. As a
+starting point for a pilot: propensity 0.2 and probability 0.3 to 0.5 for the pairs you care about; lower them for large
+populations. If both are set and still nothing is exported, check the content filter (*Agent content that can be cross-posted*)
+and that the agents are posting (the *Events* list shows `crosspost_filtered`).
 
 ### Who is active where (Agents tab)
 

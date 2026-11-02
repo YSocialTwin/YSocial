@@ -45,6 +45,12 @@ and get an account there on the fly (needs `discovery.enabled`). Honoured only f
 adopts them (today microblogging on the Standard backend: YServer + YClient); asking for another member has no effect. The member entry in
 `federation.json` then carries `provision: true`, and the `federation` section of that member `provision` and `adopt`. See `flexible-populations.md` in the YFederation docs.
 
+## `frontends`
+
+Read by YSocial only (it is not written to `federation.json`): `{"activate_on_start": false}` switches off the activation of the web
+interface of the member experiments at start. Absent means on (the default, not stored). Set in the form (*Activate the web interface of
+the member experiments when the simulation starts*). See *Open the member experiments in the browser* in the guide.
+
 ## `pseudonyms`
 
 | Key | Default | Meaning |

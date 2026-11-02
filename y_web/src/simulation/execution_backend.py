@@ -125,14 +125,44 @@ def _stop_federation_clients(exp, *, pause=False):
     return errors
 
 
-def start_federation(fed, *, resume=True):
+def _activate_member_frontends(fed, admin_user=None):
+    """Activate the web interface of the members when the option is on; problems become warnings, never errors."""
+    import json
+
+    from y_web.src.federation import frontends
+
+    try:
+        if not frontends.activate_on_start(json.loads(fed.config_json or "{}")):
+            return
+        user = admin_user or frontends.owner_user(fed)
+        outcomes = frontends.activate_frontends(fed, user)
+        fed.frontend_warnings = frontends.warnings_of(outcomes)
+    except Exception as exc:  # noqa: BLE001 - the web interfaces are a convenience: the start goes on
+        from y_web import db
+
+        db.session.rollback()
+        fed.frontend_warnings = [f"{exc}"]
+    for message in fed.frontend_warnings:
+        try:
+            from flask import current_app
+
+            current_app.logger.warning("World Simulation %s: web interface not activated: %s", fed.id, message)
+        except Exception:  # noqa: BLE001 - no application context: nothing to log to
+            pass
+
+
+def start_federation(fed, *, resume=True, admin_user=None):
     """Start a World Simulation: coordinator, then the server of every member, then their clients.
 
-    On any failure what was started is stopped again, the state becomes "failed" and the error is raised."""
+    On any failure what was started is stopped again, the state becomes "failed" and the error is raised.
+    Unless the World Simulation says otherwise (``frontends.activate_on_start``) the web interface of every member is activated
+    before the servers start, for ``admin_user`` (the owner when not given); a member that cannot be activated is only
+    reported in ``fed.frontend_warnings``, it never stops the start."""
     from y_web import db
     from y_web.src.federation import coordinator_process as cp
     from y_web.src.federation import service
 
+    fed.frontend_warnings = []
     if fed.status in FEDERATION_ACTIVE_STATES:
         raise service.WorldSimulationError({"code": "state", "message": f"The World Simulation is {fed.status}."})
     from y_web.src.federation import availability
@@ -152,6 +182,7 @@ def start_federation(fed, *, resume=True):
         cp.start_coordinator(fed)
         service.write_member_configs(fed)
         db.session.commit()
+        _activate_member_frontends(fed, admin_user)
         from y_web.src.federation import humans as _humans
 
         for _, exp in members:

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 08:26+0000\n"
+"POT-Creation-Date: 2026-11-02 08:44+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -116,6 +116,10 @@ msgid ""
 msgstr ""
 "Gli agenti %(display_name)s devono essere assegnati ad almeno una "
 "popolazione personalizzata corrispondente."
+
+#, python-format
+msgid "%(experiment)s: %(error)s"
+msgstr "%(experiment)s: %(error)s"
 
 #, python-format
 msgid "%(label)s Operation Log"
@@ -597,6 +601,13 @@ msgstr ""
 "conversazioni in questo esperimento. Più client possono girare nello "
 "stesso esperimento."
 
+msgid ""
+"A member can be opened from the web only while its experiment is active. "
+"Stopping the World Simulation does not deactivate the experiments."
+msgstr ""
+"Un membro si può aprire dal web solo finché il suo esperimento è attivo. "
+"Fermare la World Simulation non disattiva gli esperimenti."
+
 #, python-format
 msgid "A new %(display_name)s population name is required."
 msgstr "È necessario un nuovo nome di popolazione %(display_name)s."
@@ -798,8 +809,18 @@ msgstr "Attiva"
 msgid "Activate agent memory"
 msgstr "Attiva la memoria degli agenti"
 
+msgid "Activate frontends"
+msgstr "Attiva le interfacce"
+
 msgid "Activate run-scoped memory"
 msgstr "Attiva la memoria limitata all'esecuzione"
+
+msgid ""
+"Activate the web interface of the member experiments when the simulation "
+"starts"
+msgstr ""
+"Attiva l'interfaccia web degli esperimenti membri all'avvio della "
+"simulazione"
 
 msgid "Active"
 msgstr "Attivo"
@@ -2509,6 +2530,13 @@ msgstr ""
 msgid "Check interval must be between 1 and 300 seconds"
 msgstr "L'intervallo di controllo deve essere compreso tra 1 e 300 secondi"
 
+msgid ""
+"Check that the agents are posting and that the content filter lets their "
+"posts through."
+msgstr ""
+"Controlla che gli agenti pubblichino e che il filtro dei contenuti lasci "
+"passare i loro post."
+
 msgid "Checks"
 msgstr "Controlli"
 
@@ -3845,6 +3873,14 @@ msgstr "Cross-post tra piattaforme, per giorno"
 msgid "Cross-posts of people"
 msgstr "Cross-post delle persone"
 
+#, python-format
+msgid ""
+"Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content "
+"exported: %(exported)s"
+msgstr ""
+"Cross-post: %(total)s materializzati (in %(ticks)s tick) · contenuti "
+"esportati: %(exported)s"
+
 msgid "Cumulative Trends"
 msgstr "Andamenti cumulativi"
 
@@ -4317,6 +4353,9 @@ msgstr "Giorni senza match che la aumentano"
 
 msgid "Deactivate"
 msgstr "Disattiva"
+
+msgid "Deactivate frontends"
+msgstr "Disattiva le interfacce"
 
 msgid "Debug Information:"
 msgstr "Informazioni di debug:"
@@ -7185,6 +7224,9 @@ msgstr "Con parole tue"
 msgid "In-Degree CCDF"
 msgstr "CCDF del grado entrante"
 
+msgid "Inactive"
+msgstr "Non attiva"
+
 msgid "Inactive Alter"
 msgstr "Alter inattivo"
 
@@ -9288,6 +9330,33 @@ msgstr "Nessun valore configurabile trovato in questo file."
 msgid "No configuration files were found for this experiment."
 msgstr "Non sono stati trovati file di configurazione per questo esperimento."
 
+#, python-format
+msgid "No content has been marked for cross-posting after %(tick)s ticks."
+msgstr "Dopo %(tick)s tick nessun contenuto è stato marcato per il cross-post."
+
+msgid ""
+"No cross-post can happen with this configuration. Set the propensity (the"
+" share of posts the agents mark for cross-posting) and the probability "
+"for at least one pair of platforms."
+msgstr ""
+"Con questa configurazione nessun cross-post può avvenire. Imposta la "
+"propensione (la quota di post che gli agenti marcano per il cross-post) e"
+" la probabilità per almeno una coppia di piattaforme."
+
+msgid ""
+"No cross-post can happen: every probability is 0 or empty. Set the "
+"probability for at least one pair of platforms."
+msgstr ""
+"Nessun cross-post può avvenire: tutte le probabilità sono 0 o vuote. "
+"Imposta la probabilità per almeno una coppia di piattaforme."
+
+msgid ""
+"No cross-post can happen: the propensity is 0. Set the propensity (the "
+"share of posts the agents mark for cross-posting)."
+msgstr ""
+"Nessun cross-post può avvenire: la propensione è 0. Imposta la "
+"propensione (la quota di post che gli agenti marcano per il cross-post)."
+
 msgid "No data provided"
 msgstr "Nessun dato fornito"
 
@@ -9798,6 +9867,17 @@ msgid "On"
 msgstr "Attivo"
 
 msgid ""
+"On by default: at start every member experiment is activated, so that you"
+" can open its web interface from the World Simulation. Stopping the World"
+" Simulation does not deactivate them: use Deactivate frontends on the "
+"Execution tab. Only YWeb reads this option."
+msgstr ""
+"Attiva per impostazione predefinita: all'avvio ogni esperimento membro "
+"viene attivato, così puoi aprire la sua interfaccia web dalla World "
+"Simulation. Fermare la World Simulation non li disattiva: usa Disattiva "
+"le interfacce nella scheda Esecuzione. Solo YWeb legge questa opzione."
+
+msgid ""
 "On by default: content that crosses a platform carries its topics and the"
 " destination creates the ones it lacks."
 msgstr ""
@@ -9979,6 +10059,13 @@ msgstr "Apri il profilo"
 #, python-format
 msgid "Open the profile on %(platform)s"
 msgstr "Apri il profilo su %(platform)s"
+
+msgid ""
+"Open the web interface of the member experiments from the World "
+"Simulation, without activating each experiment by hand."
+msgstr ""
+"Apri l'interfaccia web degli esperimenti membri dalla World Simulation, "
+"senza attivare a mano ogni esperimento."
 
 msgid "Openness"
 msgstr "Apertura"
@@ -14868,6 +14955,10 @@ msgstr ""
 "Il nome utente deve avere da 3 a 15 caratteri: lettere, cifre, punti, "
 "trattini o underscore."
 
+#, python-format
+msgid "The web interfaces could not be changed: %(error)s"
+msgstr "Non è stato possibile cambiare le interfacce web: %(error)s"
+
 msgid ""
 "The weights of the swiping utility use the same 0 to 10 scale as the "
 "actions of the other platforms: 0 means that factor is ignored."
@@ -16553,6 +16644,24 @@ msgstr "Porta gli occhiali"
 #, python-format
 msgid "Wearing glasses (%%)"
 msgstr "Con occhiali (%%)"
+
+msgid "Web interface"
+msgstr "Interfaccia web"
+
+#, python-format
+msgid "Web interface not activated: %(reason)s"
+msgstr "Interfaccia web non attivata: %(reason)s"
+
+msgid "Web interface of the members"
+msgstr "Interfaccia web dei membri"
+
+#, python-format
+msgid "Web interfaces activated: %(n)s (already active: %(m)s)."
+msgstr "Interfacce web attivate: %(n)s (già attive: %(m)s)."
+
+#, python-format
+msgid "Web interfaces deactivated: %(n)s (already inactive: %(m)s)."
+msgstr "Interfacce web disattivate: %(n)s (già inattive: %(m)s)."
 
 msgid "Website:"
 msgstr "Sito web:"

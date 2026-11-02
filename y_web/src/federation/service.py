@@ -34,10 +34,12 @@ MIN_MEMBERS, MAX_MEMBERS = 2, 5
 PROTOCOL = "1.0"
 SLOTS_PER_DAY = 24
 GRANULARITIES = ("slot", "day")
-OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics", "pseudonyms", "provisioning")
+OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics", "pseudonyms", "provisioning", "frontends")
 # Blocks read by YWeb only (not part of federation.json): ``provisioning = {"members": ["microblogging"]}`` lets the agents
-# of the other members discover those platforms and get an account there on the fly (INV-19).
-LOCAL_BLOCKS = ("provisioning",)
+# of the other members discover those platforms and get an account there on the fly (INV-19);
+# ``frontends = {"activate_on_start": false}`` switches off the activation of the web interface of the members at start
+# (absent = on). The activation is not undone at stop (y_web.src.federation.frontends).
+LOCAL_BLOCKS = ("provisioning", "frontends")
 # crosspost.content (P13): which content of the agents may be cross-posted; absent or ["all"] = everything (the default).
 # Selected restrictions apply together (AND). The coordinator enforces it (ysocial_federation.content_policy).
 CROSSPOST_CONTENT = ("own_content", "news", "images")
