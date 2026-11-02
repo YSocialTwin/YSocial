@@ -38,7 +38,7 @@ already filled in, so a World Simulation can be created by choosing the members 
    none of their attention for several days (it needs attention to be on).
 4. *Discovery*: agents who see content cross-posted from a platform may join it (decay, thresholds, quoted weight and, under
    *Advanced*, the weights per platform type).
-5. *Cross-posting*: the mode, the probability from each platform to each other one, which agent content can travel
+5. *Cross-posting*: the mode, the **propensity** and the probability from each platform to each other one (defaults 0.2 and 0.3), which agent content can travel
    (all content by default, or the kinds you add: the agent's own content, content with news, content with images) and
    whether authors are shown with a pseudonym.
 6. *Identity and populations*: how agents are present on the members (initial membership: all, one random member, or a
@@ -55,13 +55,27 @@ resulting `federation.json` read-only. The values are described in the
 
 ## Cross-posts
 
+Two numbers drive the cross-posts, both set in the **Cross-posting** section of the form (creation page and the Configuration
+tab of the detail page):
+
+- **Propensity to cross-post**: the probability that an agent marks a post it publishes for cross-posting. It is a random draw,
+  not a decision of the language model. YWeb default **0.2**.
+- **Probability of a cross-post for each pair of platforms** (the matrix, *From* the row *To* the column): in `coordinator_rule`
+  mode, the chance that a marked post is copied from the source to the destination platform. YWeb default **0.3** for every
+  ordered pair of member platforms.
+
+These are the YWeb defaults: they are written explicitly into the member configurations and `federation.json`, so the
+coordinator's own defaults (0 for both) are never relied on. A World Simulation stored without them (for example one created
+before this default) gets them at its next start; a value you stored, **an explicit 0 included**, is always kept. Set 0 on
+purpose to switch cross-posting off for everyone or for a pair (the form then warns that no cross-post can happen).
+
 Two modes, chosen with `crosspost.mode`:
 
 - `coordinator_rule` (default): an agent marks a post as one to share (`crosspost_propensity` of the client), and the
   coordinator decides, platform by platform, with the probabilities in `crosspost.probability`. The text is the
   original excerpt.
 - `agent_action`: the agent itself decides, for each platform where it also has an account, whether to post there
-  (a draw with `crosspost_propensity`) and with which text: a version adapted to the destination, written by the
+  (one random draw per destination platform with `crosspost_propensity`; the model does not decide) and with which text: a version adapted to the destination, written by the
   language model with the prompts `crosspost_adapt_<platform>` (English and Italian), or the same words shaped and
   cut for the platform when there is no model. The coordinator only checks and forwards. The probabilities in
   `crosspost.probability` are ignored in this mode. The destination platform has to be named like its type
@@ -195,17 +209,16 @@ A run where every member is equally slow is not reported as stalled (nobody is w
 
 The Execution tab shows a **Cross-posts** line: how many cross-posts the coordinator has materialised (and in how many ticks)
 and how many contents were exported to it. When the run is past tick 6 with nothing exported and nothing materialised, a notice
-gives the probable cause. It is not an error: with the defaults **no cross-post can ever happen**.
+gives the probable cause. It is not an error: it happens when the propensity or every probability was set to 0 on purpose or by mistake.
 
-- **Propensity 0** (`crosspost.propensity`, default 0, written as `crosspost_propensity` in the members only when set): no
+- **Propensity 0** (`crosspost.propensity`, YWeb default 0.2, written as `crosspost_propensity` in the members; the SDK default is 0): no
   agent marks a post for cross-posting (by rule) or posts on another platform (by agent action), so no content is exported.
-- **No probability** (`crosspost.probability`, default 0 for every pair, rule mode only): content is exported, but the
+- **Every probability 0** (`crosspost.probability`, YWeb default 0.3 for every pair, SDK default 0; rule mode only): content is exported, but the
   coordinator copies it to no platform. The probability is given for each pair, e.g. `microblogging->forum`.
 
 The form warns while you type (Cross-posting section) and the detail page repeats the warning for the saved values. Set the
-propensity (the share of posts the agents mark for cross-posting) and the probability for at least one pair of platforms. As a
-starting point for a pilot: propensity 0.2 and probability 0.3 to 0.5 for the pairs you care about; lower them for large
-populations. If both are set and still nothing is exported, check the content filter (*Agent content that can be cross-posted*)
+propensity (the share of posts the agents mark for cross-posting) and the probability for at least one pair of platforms; an
+empty field takes the default (0.2 and 0.3). Lower them for large populations. If both are set and still nothing is exported, check the content filter (*Agent content that can be cross-posted*)
 and that the agents are posting (the *Events* list shows `crosspost_filtered`).
 
 ### Who is active where (Agents tab)

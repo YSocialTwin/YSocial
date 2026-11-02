@@ -221,7 +221,7 @@
         var mode = document.getElementById('opt__crosspost__mode');
         var propensity = document.getElementById('opt__crosspost__propensity');
         var label = document.getElementById('ws-crosspost-warning-text');
-        function positive(input) { var v = parseFloat(input.value); return !isNaN(v) && v > 0; }
+        function positive(input) { var v = parseFloat(input.value === '' ? input.placeholder : input.value); return !isNaN(v) && v > 0; }  /* empty = the default shown as placeholder */
         function check() {
             var causes = [];
             if (!propensity || !positive(propensity)) { causes.push('propensity'); }

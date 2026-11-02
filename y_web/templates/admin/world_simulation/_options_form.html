@@ -93,14 +93,14 @@
     </div>
     <div class="ws-block" id="ws-crosspost-probability">
         <div class="ws-subhead">{{ _('Probability of a cross-post for each pair of platforms') }}</div>
-        <p class="ws-help">{{ _('Used when the coordinator decides. A pair left empty has probability 0, so nothing is cross-posted between those two platforms. Between 0 and 1.') }}</p>
+        <p class="ws-help">{{ _('Used when the coordinator decides: the chance that a post marked for cross-posting (see the propensity above) is copied from the platform in the row to the platform in the column. Between 0 and 1; 0 means never for that pair. An empty cell takes the default, %(default)s.', default=schema.DEFAULT_PAIR_PROBABILITY) }}</p>
         <div class="table-container">
         <table class="table is-fullwidth ws-matrix" id="ws-probability-matrix">
             <thead><tr><th>{{ _('From') }} \ {{ _('To') }}</th>{% for dst in ws_platforms %}<th data-platform="{{ dst }}">{{ _(platform_labels[dst]) }}</th>{% endfor %}</tr></thead>
             <tbody>
             {% for src in ws_platforms %}
             <tr data-platform="{{ src }}"><th>{{ _(platform_labels[src]) }}</th>
-                {% for dst in ws_platforms %}<td data-platform="{{ dst }}">{% if src != dst %}<input class="input" type="number" min="0" max="1" step="any" name="prob__{{ src }}__{{ dst }}" value="{{ values['prob__' ~ src ~ '__' ~ dst] }}" placeholder="0" aria-label="{{ _(platform_labels[src]) }} &rarr; {{ _(platform_labels[dst]) }}">{% else %}<span class="ws-sub">&ndash;</span>{% endif %}</td>{% endfor %}
+                {% for dst in ws_platforms %}<td data-platform="{{ dst }}">{% if src != dst %}<input class="input" type="number" min="0" max="1" step="any" name="prob__{{ src }}__{{ dst }}" value="{{ values['prob__' ~ src ~ '__' ~ dst] }}" placeholder="{{ schema.DEFAULT_PAIR_PROBABILITY }}" aria-label="{{ _(platform_labels[src]) }} &rarr; {{ _(platform_labels[dst]) }}">{% else %}<span class="ws-sub">&ndash;</span>{% endif %}</td>{% endfor %}
             </tr>
             {% endfor %}
             </tbody>

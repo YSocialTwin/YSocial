@@ -32,6 +32,7 @@ MISSING = object()
 CROSSPOST_CONTENT = ("own_content", "news", "images")
 CROSSPOST_CONTENT_ALIASES = {"own_posts": "own_content"}
 # Platforms of a World Simulation: the member of each platform is called as the platform type.
+DEFAULT_PAIR_PROBABILITY = 0.3  # YWeb default of every ordered pair of member platforms (the SDK default is 0)
 PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating")
 # Platforms whose runtime creates an account on request (service.PROVISIONABLE, repeated here to stay import free).
 PROVISIONABLE = ("microblogging",)
@@ -139,9 +140,12 @@ CROSSPOST = (
           N_("By rule: the coordinator copies content to other platforms with the probabilities below. By the agent: each agent "
              "chooses where to post, with the propensity below."),
           choices=(("coordinator_rule", N_("The coordinator, by rule")), ("agent_action", N_("The agent, by its own action")))),
-    Param(("crosspost", "propensity"), "float", 0.0, N_("Propensity to cross-post"),
-          N_("Probability that an agent marks a post for cross-posting (by rule) or posts on another platform (by agent action). "
-             "0 means never. Between 0 and 1."), minimum=0.0, maximum=1.0),
+    Param(("crosspost", "propensity"), "float", 0.2, N_("Propensity to cross-post"),
+          N_("The probability that an agent marks a post it publishes for cross-posting. It is a random draw, not a decision of "
+             "the language model. By rule, a marked post can then be copied to other platforms with the probabilities of the "
+             "pairs below; by agent action, one draw is made for each destination platform and the model only writes the text "
+             "adapted to the destination. 0 means never. Between 0 and 1. YWeb default 0.2 (the coordinator itself defaults to 0)."),
+          minimum=0.0, maximum=1.0),
 )
 TOPICS = (
     Param(("topics", "migration"), "bool", True, N_("Shared content brings its topics, and missing topics are created"),
@@ -264,7 +268,7 @@ def values_from_options(options) -> dict:
         for dst in PLATFORMS:
             if src != dst:
                 v = probability.get(f"{src}->{dst}")
-                out[f"prob__{src}__{dst}"] = "" if v is None else fmt(v)
+                out[f"prob__{src}__{dst}"] = fmt(DEFAULT_PAIR_PROBABILITY if v is None else v)
     initial = (options.get("membership") or {}).get("initial", "all")
     out["membership_initial"] = "custom" if isinstance(initial, dict) else (initial if initial in MEMBERSHIP_CHOICES else "all")
     for m in PLATFORMS:
@@ -393,11 +397,11 @@ def _apply_probability(form, base, options, members, errors):
         if members is not None and (src not in members or dst not in members):
             continue
         label = f"{src}->{dst}"
-        probe = Param(("crosspost", "probability", label), "float", 0.0, _("Probability %(pair)s", pair=label))
+        probe = Param(("crosspost", "probability", label), "float", DEFAULT_PAIR_PROBABILITY, _("Probability %(pair)s", pair=label))
         value = _number(probe, form.get(key), errors)
         if value is MISSING:
             continue
-        _store(options, base, probe.path, value, 0.0)
+        _store(options, base, probe.path, value, DEFAULT_PAIR_PROBABILITY)
 
 
 def _apply_membership(form, base, options, members, errors):
@@ -579,23 +583,41 @@ def crosspost_causes(mode, propensity, probabilities) -> list:
     return causes
 
 
-def crosspost_causes_from_options(options, members=None) -> list:
-    """:func:`crosspost_causes` for stored options (defaults applied); ``members`` limits the pairs to those platforms."""
+def effective_crosspost(options, members=None) -> dict:
+    """The cross-post settings in force: stored values, else the YWeb defaults (propensity 0.2, 0.3 for every ordered pair of
+    ``members``). A stored value, an explicit 0 included, is always kept. ``members`` default to all platforms."""
     crosspost = (options or {}).get("crosspost") or {}
     crosspost = crosspost if isinstance(crosspost, dict) else {}
-    probability = crosspost.get("probability") or {}
+    stored = crosspost.get("probability") or {}
+    stored = stored if isinstance(stored, dict) else {}
+    names = list(members) if members is not None else list(PLATFORMS)
+    probability = {f"{s}->{d}": DEFAULT_PAIR_PROBABILITY for s in names for d in names if s != d}
+    probability.update(stored)
+    return {"mode": crosspost.get("mode", "coordinator_rule"),
+            "propensity": crosspost.get("propensity", BY_PATH[("crosspost", "propensity")].default),
+            "probability": probability}
+
+
+def crosspost_causes_from_options(options, members=None) -> list:
+    """:func:`crosspost_causes` for stored options (YWeb defaults applied); ``members`` limits the pairs to those platforms."""
+    eff = effective_crosspost(options, members)
     pairs = []
-    for key, value in (probability.items() if isinstance(probability, dict) else ()):
+    for key, value in eff["probability"].items():
         src, _arrow, dst = str(key).partition("->")
         if members is None or (src in members and dst in members):
             pairs.append(value)
-    return crosspost_causes(crosspost.get("mode", "coordinator_rule"), crosspost.get("propensity", 0.0), pairs)
+    return crosspost_causes(eff["mode"], eff["propensity"], pairs)
 
 
 def crosspost_causes_from_values(values, platforms) -> list:
-    """:func:`crosspost_causes` for the values of the form (see :func:`values_from_options`)."""
-    pairs = [values.get(f"prob__{s}__{d}") for s in platforms for d in platforms if s != d]
-    return crosspost_causes(values.get("opt__crosspost__mode", "coordinator_rule"), values.get("opt__crosspost__propensity"), pairs)
+    """:func:`crosspost_causes` for the values of the form (see :func:`values_from_options`); a blank field is its default."""
+    def number(key, default):
+        v = values.get(key)
+        return default if v is None or (isinstance(v, str) and v.strip() == "") else v
+
+    pairs = [number(f"prob__{s}__{d}", DEFAULT_PAIR_PROBABILITY) for s in platforms for d in platforms if s != d]
+    return crosspost_causes(values.get("opt__crosspost__mode", "coordinator_rule"),
+                            number("opt__crosspost__propensity", BY_PATH[("crosspost", "propensity")].default), pairs)
 
 
 def crosspost_warning(causes) -> str:

@@ -19,8 +19,8 @@ starts. Values shown are the defaults.
 | Key | Default | Meaning |
 |---|---|---|
 | `mode` | `"coordinator_rule"` | `coordinator_rule` or `agent_action` |
-| `probability` | `{}` | `{"<source>-><target>": p}` with member names or platform types, each p in [0, 1]; a pair that is not listed has probability 0; used by `coordinator_rule` only |
-| `propensity` | not set | how often an agent tries to cross-post (client side); written into the `federation` section of the members |
+| `probability` | SDK: `{}` (a pair that is not listed has probability 0). YWeb: 0.3 for every ordered pair of member platforms | `{"<source>-><target>": p}` with member names or platform types, each p in [0, 1]; used by `coordinator_rule` only: the chance that a post marked for cross-posting is copied from the source to the destination. YWeb writes the defaults explicitly into `federation.json` (a World Simulation stored without them gets them at its next start); a stored value, an explicit 0 included, wins |
+| `propensity` | SDK: not set (0). YWeb: 0.2 | the probability that an agent marks a post it publishes for cross-posting: a random draw, not a model decision (in `agent_action` one draw per destination platform). Written explicitly into `federation.json` and the `federation` section of the members; a stored value, an explicit 0 included, wins |
 | `content` | `["all"]` (not stored) | which agent content may be cross-posted, in both modes. `["all"]`: all content, the agent's own and that of other agents (shares, replies, forwards). Otherwise a non-empty list of additive options `own_content` (the agent's original content of any kind; `own_posts` is the legacy alias), `news` (any content with a link: the article of the content or an `http(s)://` address in the text), `images` (any content with an image). Eligible = at least one selected option (OR); selecting more never reduces what is eligible; `all` cannot be mixed with the others. Lists of two or more entries from the first, AND, version now mean OR. Content that is eligible for none is dropped by the coordinator with a `crosspost_filtered` event (`not_eligible`); people are never filtered. Read at every start; also written as `crosspost_content` in the `federation` section of the members when it is not `all`. Set in the form (*Agent content that can be cross-posted*). |
 
 ## `topics`
@@ -80,7 +80,7 @@ it when it stops. Without it, or with `enabled: false`, a runtime does not chang
 | `coordinator_file`, `token_file`, `protocol` | where to find the coordinator, its token and the protocol version (`1.0`) |
 | `exposures` | send what each agent was shown, for discovery |
 | `crosspost_mode` | `coordinator_rule` or `agent_action` |
-| `crosspost_propensity`, `seed` | written only when `crosspost.propensity` is set |
+| `crosspost_propensity`, `seed` | always written by YWeb (`crosspost.propensity`, YWeb default 0.2; the SDK default stays 0 when the key is absent) |
 | `topic_migration` | forum member, and microblogging member (YServer): written as `false` only when the admin opted out of `topics.migration`; absent means the runtime default (on) |
 | `create_topics` | microblogging member on HPC (YSimulator) only: `topics.migration` (default true) |
 | `bindings_file` | file where the runtime keeps who is who: it reports its accounts by username and the coordinator answers with the global id of the agent it expected under that name (`bindings_<member>.db` in the folder of the World Simulation) |

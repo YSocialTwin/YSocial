@@ -40,7 +40,7 @@ Take Maria, a simulated resident with accounts on the microblog, the forum and t
 
 | Action | In plain words |
 | --- | --- |
-| Cross-post | Publish something on another platform where they also have an account, by a probability the researcher sets or by the agent's own choice. |
+| Cross-post | Publish something on another platform where they also have an account, by a probability the researcher sets (default: 0.2 of the posts are marked, and a marked post is copied to each other platform with probability 0.3) or by the agent's own choice. |
 | Share with credit | Pass on someone else's content with a visible line saying who wrote it and where (`↪ author @ platform: «excerpt»`). |
 | Carry a topic | A shared item brings its topic; if the destination lacks it, the topic is created there. |
 | Share a match story | On dating, tell others how a match went (we keep seeing each other, ghosted, it did not work out). |
@@ -102,7 +102,7 @@ The interface is available in English and Italian.
 
 **Does it change my existing platforms?** No, not unless they are part of a running World Simulation.
 
-**Who decides what gets cross-posted?** A probability the researcher sets, or the agent's own choice, depending on the mode. The researcher can also choose which content is eligible (all, or own content, news, images added together).
+**Who decides what gets cross-posted?** A probability the researcher sets (YWeb defaults: propensity 0.2, 0.3 per pair of platforms; set 0 to switch it off), or the agent's own choice, depending on the mode. The researcher can also choose which content is eligible (all, or own content, news, images added together).
 
 **Can content loop back to where it started?** No.
 

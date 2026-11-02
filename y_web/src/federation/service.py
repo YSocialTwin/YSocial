@@ -400,6 +400,12 @@ def build_federation_config(fed) -> dict:
     for block in OPTION_BLOCKS:
         if block in options and block not in LOCAL_BLOCKS:
             config[block] = options[block]
+    # YWeb defaults of the cross-posts (the SDK defaults stay 0): explicit in the file, so a World Simulation stored without
+    # them gets them at its next start; a stored value, an explicit 0 included, wins
+    from y_web.src.federation.options_schema import effective_crosspost
+
+    eff = effective_crosspost(options, [m["member"] for m in members])
+    config["crosspost"] = {**(options.get("crosspost") or {}), "propensity": eff["propensity"], "probability": eff["probability"]}
     if options.get("exposures") and "quoted" not in config:
         # members send exposures: a quoted cross-post is kept only if its author saw the content (P3, INV-16)
         config["quoted"] = {"require_exposure": True}
@@ -465,9 +471,10 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         section["accounts"] = humans
     if crosspost_content_of(options):
         section["crosspost_content"] = crosspost_content_of(options)  # P13: runtimes add the news link; the clients skip shares
-    if "propensity" in crosspost:
-        section["crosspost_propensity"] = float(crosspost["propensity"])
-        section["seed"] = int(fed.seed)
+    from y_web.src.federation.options_schema import effective_crosspost
+
+    section["crosspost_propensity"] = float(effective_crosspost(options)["propensity"])
+    section["seed"] = int(fed.seed)
     return section
 
 

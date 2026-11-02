@@ -126,7 +126,7 @@ def test_membership_probabilities_provisioning_and_topics_round_trip():
     options, errors = schema.apply_form(form, {}, members={"microblogging", "forum"})
     assert errors == []
     assert options["membership"] == {"initial": {"microblogging": 0.7, "forum": 0.4}}
-    assert options["crosspost"] == {"probability": {"microblogging->forum": 0.3}}  # 0 is the default: not written
+    assert options["crosspost"] == {"probability": {"forum->microblogging": 0.0}}  # an explicit 0 is kept; 0.3, the default, is not written
     assert options["provisioning"] == {"members": ["microblogging"]}
     assert schema.apply_form(form_of(schema.values_from_options(options)), options, members={"microblogging", "forum"})[0] == options
     one = form_of(schema.values_from_options({}), membership_initial="one_random")
@@ -242,7 +242,9 @@ def test_create_then_open_then_save_unchanged_leaves_the_files_identical(site):
     first, first_json = federation_json(fed), fed.config_json
     assert first["attention"] == {"enabled": True, "temperature": 2.5, "normalization": "zscore"}
     assert first["discovery"] == {"enabled": True, "quoted_weight": 0.4, "beta": {"A": 1.5}}
-    assert first["crosspost"] == {"mode": "agent_action", "propensity": 0.2, "content": ["news", "images"]}
+    both = {"microblogging->forum": 0.3, "forum->microblogging": 0.3}
+    assert first["crosspost"] == {"mode": "agent_action", "propensity": 0.2, "probability": both, "content": ["news", "images"]}  # defaults, explicit
+    assert json.loads(first_json)["crosspost"] == {"mode": "agent_action", "content": ["news", "images"]}  # but not stored: they are the defaults
     assert first["membership"] == {"initial": "one_random"} and first["pseudonyms"] == {"enabled": True} and first["quoted"] == {"require_exposure": True}
     stored = json.loads(first_json)
     resave = dict(form_of(schema.values_from_options(stored)), seed="11", granularity="day", discovery_enabled="1")

@@ -57,7 +57,7 @@ Open the PRs in dependency order: YFederation first, then the runtimes and clien
 
 ## Extensions H9, H10, P12, P13
 
-All of them are additive and off by default: without a `federation` section nothing runs, and a World Simulation that does not use the new options writes the same files as before.
+All of them are additive and off by default: without a `federation` section nothing runs, and a World Simulation that does not use the new options writes the same files as before, with one deliberate exception: the YWeb defaults of the cross-posts are explicit in the generated files (propensity 0.2, probability 0.3 for every ordered pair of member platforms; the SDK/coordinator defaults stay 0), also for a World Simulation stored before, at its next start; a stored value, an explicit 0 included, wins.
 
 ### H9: people on microblogging experiments of the HPC backend
 

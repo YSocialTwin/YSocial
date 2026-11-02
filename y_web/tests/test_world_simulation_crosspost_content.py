@@ -74,7 +74,8 @@ def test_the_setting_reaches_federation_json_and_the_member_sections(world):  # 
     app, exps, tmp = world
     fed = service.create_federation("p", list(exps.values()), owner="admin", seed=3,
                                     options={"crosspost": {"mode": "agent_action", "content": ["news", "own_content"]}})
-    assert federation_json(fed)["crosspost"] == {"mode": "agent_action", "content": ["own_content", "news"]}
+    assert federation_json(fed)["crosspost"] == {"mode": "agent_action", "content": ["own_content", "news"], "propensity": 0.2,
+                                                 "probability": {"microblogging->forum": 0.3, "forum->microblogging": 0.3}}
     for row, exp in service.members_of(fed):
         assert service.member_section(fed, row, exp)["crosspost_content"] == ["own_content", "news"]
 
