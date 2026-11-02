@@ -291,3 +291,65 @@ def test_list_of_a_healthy_run_has_no_warning(running):
               ready=[("microblogging", 4, now - 2), ("forum", 4, now - 3)])
     coordinator["members"]["microblogging"]["last_ready_tick"] = 4
     assert "ws-warning" not in login(app, "admin").get(BASE).get_data(as_text=True)
+
+
+# ------------------------------------------------------------------ hint: the member advances but nobody acts
+def make_member_db(path, *, posts=(), reactions=(), imported=(), federation_ref=True):
+    conn = sqlite3.connect(path)
+    conn.execute("CREATE TABLE post (id INTEGER PRIMARY KEY, round INTEGER)")
+    conn.execute("CREATE TABLE reactions (id INTEGER PRIMARY KEY, round INTEGER)")
+    conn.executemany("INSERT INTO post (id, round) VALUES (?,?)", posts)
+    conn.executemany("INSERT INTO reactions (id, round) VALUES (?,?)", reactions)
+    if federation_ref:
+        conn.execute("CREATE TABLE federation_ref (local_kind TEXT, local_id INTEGER, source_ref TEXT, fed_msg_id TEXT)")
+        conn.executemany("INSERT INTO federation_ref VALUES ('post', ?, 'x', 'y')", [(i,) for i in imported])
+    conn.commit()
+    conn.close()
+
+
+def test_silent_members_reports_the_member_that_advances_without_content_actions():
+    # a last action at a tick later than the member's own tick (a resumed run) or one tick ago is not silence
+    assert mh.silent_members(ticks={"a": 30, "b": 30}, last_action_tick={"a": 143, "b": 29}) == {}
+    out = mh.silent_members(ticks={"a": 158, "b": 30}, last_action_tick={"a": 143, "b": 29})
+    assert out == {"a": {"tick": 158, "last_action_tick": 143, "ticks": 15}}
+
+
+def test_silent_members_threshold_unknown_and_skipped():
+    assert mh.silent_members(ticks={"a": 20}, last_action_tick={"a": 9}, threshold=12) == {}  # 11 ticks
+    assert "a" in mh.silent_members(ticks={"a": 21}, last_action_tick={"a": 9}, threshold=12)  # 12 ticks
+    assert mh.silent_members(ticks={"a": 99}, last_action_tick={"a": None}) == {}  # unknown is never reported
+    assert mh.silent_members(ticks={"a": 99}, last_action_tick={}) == {}
+    assert mh.silent_members(ticks={"a": 99}, last_action_tick={"a": 1}, skip=["a"]) == {}
+    assert "a" in mh.silent_members(ticks={"a": 99}, last_action_tick={"a": -1})  # never acted
+
+
+def test_last_action_tick_ignores_content_imported_by_the_federation(tmp_path):
+    db = tmp_path / "database_server.db"
+    make_member_db(db, posts=[(1, 10), (2, 143), (3, 160)], reactions=[(1, 120)], imported=[3])
+    assert mh.last_action_tick(db) == 143  # post 3 (round 160) came from another member
+    make_member_db(tmp_path / "plain.db", posts=[(1, 7)], reactions=[(1, 9)], federation_ref=False)
+    assert mh.last_action_tick(tmp_path / "plain.db") == 9
+    make_member_db(tmp_path / "empty.db")
+    assert mh.last_action_tick(tmp_path / "empty.db") == -1
+    assert mh.last_action_tick(tmp_path / "missing.db") is None
+    (tmp_path / "junk.db").write_text("not a database")
+    assert mh.last_action_tick(tmp_path / "junk.db") is None
+
+
+def test_collect_and_status_hint_a_member_whose_agents_do_not_act(running):
+    app, fed, exps, tmp, coordinator = running
+    now = time.time()
+    coordinator["members"]["microblogging"]["last_ready_tick"] = 158
+    coordinator["members"]["forum"]["last_ready_tick"] = 158
+    write_run(fed, started=now - 300, hello=[("microblogging", now - 290), ("forum", now - 290)],
+              ready=[("microblogging", 158, now - 2), ("forum", 158, now - 3)],
+              advances=[(156, now - 70), (157, now - 40), (158, now - 10)])
+    make_member_db(tmp / "experiments" / "microblogging" / "database_server.db", posts=[(1, 143)], reactions=[(1, 143)])
+    make_member_db(tmp / "experiments" / "forum" / "database_server.db", posts=[(1, 157)], reactions=[(1, 158)])
+    report = mh.collect(fed, coordinator, now=now)
+    assert report["problems"] == []  # a hint, not a problem
+    assert report["silent"] == {"microblogging": {"tick": 158, "last_action_tick": 143, "ticks": 15}}
+    assert report["members"]["microblogging"]["silent"]["ticks"] == 15 and "silent" not in report["members"]["forum"]
+    data = login(app, "admin").get(f"{BASE}/{fed.id}/status.json").get_json()
+    [hint] = data["problems"]
+    assert hint["member"] == "microblogging" and hint["code"] == "silent" and "15 ticks" in hint["text"]

@@ -23,6 +23,17 @@ from y_web.src.models import ActivityProfile, PopulationActivityProfile
 _REPLY_TO_MENTION_DISABLED = False
 
 
+DEFAULT_ARCHETYPE = "broadcaster"
+
+
+def archetype_of(agent):
+    """Archetype of an agent; ``None`` or empty (an agent rebuilt from a server that does not store it) is the default.
+
+    ``getattr(agent, "archetype", default)`` is not enough: the attribute exists and is ``None``, so the default was
+    never used and the agent matched no archetype of the distribution (nobody was sampled)."""
+    return getattr(agent, "archetype", None) or DEFAULT_ARCHETYPE
+
+
 def _is_fatal_reply_error(exc: Exception) -> bool:
     """Return True when a reply failure is irrecoverable for the current runtime."""
     message = f"{type(exc).__name__}: {exc}".lower()
@@ -171,7 +182,7 @@ def sample_agents(agents, expected_active_users, archetypes=None):
         for a in agents:
             # Use getattr with default to handle agents without archetype attribute (e.g., when resuming old simulations)
             # Default to 'broadcaster' as it's the most permissive archetype with full action capabilities
-            agent_archetype = getattr(a, "archetype", "broadcaster")
+            agent_archetype = archetype_of(a)
             if agent_archetype not in candidates_per_archetype:
                 candidates_per_archetype[agent_archetype] = []
                 weights_per_archetype[agent_archetype] = []
@@ -251,6 +262,38 @@ def ensure_agents_have_archetype(agents, archetypes):
                 )
 
 
+def describe_empty_slot(candidates, expected_active_users, archetypes):
+    """Why a slot sampled nobody although the client has agents (a short text for the log)."""
+    if not candidates:
+        return "no agent has an activity profile that covers this hour"
+    counts = {}
+    for a in candidates:
+        key = str(getattr(a, "archetype", None))
+        counts[key] = counts.get(key, 0) + 1
+    wanted = sorted((archetypes or {}).get("distribution", {})) if (archetypes or {}).get("enabled") else []
+    return (
+        f"{len(candidates)} candidates, {expected_active_users} expected, archetypes of the candidates {counts}"
+        + (f", archetypes of the distribution {wanted}" if wanted else "")
+    )
+
+
+def warn_if_empty_slot(warned_days, day, hour, n_agents, sampled, candidates, expected_active_users, archetypes, stream=None):
+    """Warn on stderr, once per simulated day, when a slot ends with nobody sampled although agents exist.
+
+    ``warned_days`` is a set kept by the caller (one per run). Returns the message written or ``None``. Nothing is
+    written for a slot that sampled somebody, for a client without agents, or for a day already warned about."""
+    if n_agents <= 0 or len(sampled) > 0 or day in warned_days:
+        return None
+    warned_days.add(day)
+    message = (
+        f"Warning: day {day} hour {hour}: no agent was sampled although the client has {n_agents} agents "
+        f"({describe_empty_slot(candidates, expected_active_users, archetypes)}); the client advances without acting. "
+        "Further empty slots of this day are not reported."
+    )
+    print(message, file=stream or sys.stderr, flush=True)
+    return message
+
+
 def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
     """
     Process a single agent's actions for one time slot.
@@ -283,7 +326,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
             # filtering the actions based on the archetype
             # Use getattr with default to handle agents without archetype attribute (e.g., when resuming old simulations)
             # Default to 'broadcaster' as it's the most permissive archetype with full action capabilities
-            agent_archetype = getattr(g, "archetype", "broadcaster")
+            agent_archetype = archetype_of(g)
             if agent_archetype == "validator":
                 acts = [
                     a
@@ -302,6 +345,8 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                     getattr(cl, "config", {})
                 ):
                     g.__class__ = FakeAgent
+            else:  # an archetype this experiment does not define: act as the most permissive one
+                acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
 
         else:
             acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
@@ -351,7 +396,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                         if archetypes["enabled"]:
                             # Use getattr with default to handle agents without archetype attribute
                             should_reply = (
-                                getattr(g, "archetype", "broadcaster") == "broadcaster"
+                                archetype_of(g) == "broadcaster"
                             )
 
                         if should_reply:

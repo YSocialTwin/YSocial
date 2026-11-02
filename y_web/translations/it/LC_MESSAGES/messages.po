@@ -17740,6 +17740,13 @@ msgid "has not advanced for %(s)s (limit %(limit)s)"
 msgstr "non avanza da %(s)s (limite %(limit)s)"
 
 #, python-format
+msgid "advances but its server received no post, comment or reaction for %(n)s ticks (last one at tick %(last)s)"
+msgstr "avanza ma il suo server non ha ricevuto post, commenti o reazioni da %(n)s tick (l'ultimo al tick %(last)s)"
+
+msgid "Check that the clients of this member sample agents (see the warnings in the client log)."
+msgstr "Verifica che i client di questo membro campionino degli agenti (vedi gli avvisi nel log del client)."
+
+#, python-format
 msgid "has not said hello %(s)s s after the start (limit %(limit)s s)"
 msgstr "non ha salutato il coordinatore %(s)s s dopo l'avvio (limite %(limit)s s)"
 

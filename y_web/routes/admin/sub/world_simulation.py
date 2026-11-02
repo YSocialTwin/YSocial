@@ -169,6 +169,18 @@ def _problems_from(health, labels):
     return out
 
 
+def _hints_from(health, labels):
+    """Entries like those of ``_problems_from`` for the members that advance without any agent acting (a hint)."""
+    out = []
+    for name, info in sorted(((health or {}).get("silent") or {}).items()):
+        out.append({"member": name, "label": labels.get(name, name), "code": "silent",
+                    "text": _("advances but its server received no post, comment or reaction for %(n)s ticks (last one at tick %(last)s)",
+                              n=info["ticks"], last=info["last_action_tick"]),
+                    "cause": _("Check that the clients of this member sample agents (see the warnings in the client log)."),
+                    "log": ""})
+    return out
+
+
 def _problem_lines(fed, coordinator):
     try:
         return _problems_from(mh.collect(fed, coordinator), _member_labels(fed))
@@ -720,7 +732,7 @@ def status(user, fed_id):
             "skew": None if not coordinator else coordinator.get("skew"),
             "coordinator_up": coordinator is not None,
             "members": members,
-            "problems": _problems_from(health, labels),
+            "problems": _problems_from(health, labels) + _hints_from(health, labels),
             "progress": progress,
             "progress_text": _progress_text(progress),
             "log_hint": _("The logs are in the folder of each experiment (server_stderr.log and <client>_client_stderr.log)."),

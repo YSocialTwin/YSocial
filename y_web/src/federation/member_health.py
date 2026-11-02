@@ -15,6 +15,11 @@ tested with fixtures; ``collect`` gathers the values. Definitions:
 * stalled   no new ``ready`` for ``max(STALL_FLOOR, STALL_FACTOR * median tick time)`` seconds while the other members
             wait for it (it is one of the slowest and somebody is ahead);
 * dead      the server process, or every client process, of the member exited.
+
+A hint, not a problem (``silent_members``): the member advances its ticks but its server has received no content action
+(post, comment, reaction written by its own clients; content imported by the federation does not count) for
+``SILENT_TICKS`` ticks. It means the clock runs while no agent acts (World Simulation 1: a resumed microblogging client
+that sampled nobody).
 """
 
 from __future__ import annotations
@@ -33,6 +38,7 @@ STALL_FACTOR = 5.0
 SLOTS_PER_DAY = 24
 RECENT_ADVANCES = 40  # global_advance events read to estimate the time of a tick
 RECENT_READY = 200
+SILENT_TICKS = 12  # ticks without a content action on the server of a member that keeps advancing
 LOG_TAIL_BYTES = 8192
 
 OK, WAITING, STARTING, MISSING, STALLED, DEAD, FAILED, FINISHED, UNKNOWN = (
@@ -162,7 +168,69 @@ def classify_members(*, now: float, started_at: Optional[float], members: Dict[s
     return out
 
 
+def silent_members(*, ticks: Dict[str, Optional[int]], last_action_tick: Dict[str, Optional[int]],
+                   skip: Iterable[str] = (), threshold: int = SILENT_TICKS) -> Dict[str, dict]:
+    """Members that advance but whose server has received no content action for ``threshold`` ticks or more.
+
+    ``ticks``: last tick of each member (``last_ready_tick``); ``last_action_tick``: tick (round) of the last content
+    action in its server database, ``-1`` when it has none, ``None`` when it cannot be known (such a member is never
+    reported). ``skip``: members already in trouble (dead, stalled ...). Returns
+    ``{member: {"tick", "last_action_tick", "ticks"}}``."""
+    skipped = set(skip)
+    out = {}
+    for member, tick in ticks.items():
+        last = last_action_tick.get(member)
+        if member in skipped or tick is None or last is None or tick < 0:
+            continue
+        silent_for = int(tick) - int(last)
+        if silent_for >= threshold:
+            out[member] = {"tick": int(tick), "last_action_tick": int(last), "ticks": silent_for}
+    return out
+
+
 # ------------------------------------------------------------------------------------------- data collection
+def last_action_tick(db_path) -> Optional[int]:
+    """Tick of the last content action received by a member server: the highest ``round`` of ``reactions`` and of the
+    ``post`` rows that were not imported by the federation (``federation_ref``). ``-1``: tables there, no action yet;
+    ``None``: the database or its tables cannot be read (unknown, never reported)."""
+    path = Path(db_path)
+    if not path.is_file():
+        return None
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=1.0)
+    except sqlite3.Error:
+        return None
+    try:
+        tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if "post" not in tables:
+            return None
+        imported = " WHERE id NOT IN (SELECT local_id FROM federation_ref WHERE local_kind='post')" if "federation_ref" in tables else ""
+        rounds = [conn.execute(f"SELECT MAX(round) FROM post{imported}").fetchone()[0]]
+        if "reactions" in tables:
+            rounds.append(conn.execute("SELECT MAX(round) FROM reactions").fetchone()[0])
+        known = [int(r) for r in rounds if r is not None]
+        return max(known) if known else -1
+    except (sqlite3.Error, ValueError, TypeError):
+        return None
+    finally:
+        conn.close()
+
+
+def silent_of(pairs, members: Dict[str, dict], states: Dict[str, dict]) -> Dict[str, dict]:
+    """``silent_members`` for the members of a running World Simulation (``pairs``: ``service.members_of``)."""
+    from y_web.src.federation import service
+
+    ticks, last = {}, {}
+    for row, exp in pairs:
+        info = members.get(row.member) or {}
+        if info.get("status") not in ("registered", "running"):
+            continue
+        ticks[row.member] = info.get("last_ready_tick")
+        last[row.member] = last_action_tick(service.experiment_dir(exp) / "database_server.db")
+    return silent_members(ticks=ticks, last_action_tick=last, skip=[m for m, s in states.items() if s.get("problem")])
+
+
+
 def read_tail(path, max_bytes: int = LOG_TAIL_BYTES, lines: int = 30) -> str:
     """The last lines of a log file ("" when it cannot be read)."""
     try:
@@ -291,9 +359,15 @@ def collect(fed, coordinator: Optional[dict], *, now: Optional[float] = None, he
                 state["cause"], state["log"] = cause, str(path)
                 break
         state.setdefault("log", str(files[0]))
+    try:
+        silent = silent_of(pairs, members, states)
+    except Exception:  # noqa: BLE001 - a hint is never worth an error
+        silent = {}
+    for m, info in silent.items():
+        states[m]["silent"] = info
     every_client = [c for cs in clients_of.values() for c in cs]
     gtick = (coordinator or {}).get("global_tick")
     return {"members": states, "problems": sorted(n for n, s in states.items() if s["problem"]),
             "progress": progress(gtick, total_ticks(every_client), tick_seconds),
-            "coordinator_up": coordinator is not None,
+            "coordinator_up": coordinator is not None, "silent": silent,
             "stall_after": int(stall_threshold(tick_seconds)), "hello_timeout": int(hello_timeout)}
