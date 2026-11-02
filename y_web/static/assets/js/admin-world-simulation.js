@@ -267,9 +267,11 @@
         var count = document.getElementById('ws-summary-count');
         function update() {
             var chosen = boxes.filter(function (b) { return b.checked; });
+            /* `platforms` are the keys of the chosen experiments (data-platform, one per experiment: several can share a type), `types` their platform types */
             var platforms = chosen.map(function (b) { return b.dataset.platform; });
+            var types = chosen.map(function (b) { return b.dataset.type; });
             $all('.ws-platform-card', pick).forEach(function (card) {
-                card.classList.toggle('has-choice', platforms.indexOf(card.dataset.platform) >= 0);
+                card.classList.toggle('has-choice', types.indexOf(card.dataset.type) >= 0);
             });
             list.textContent = '';
             if (!chosen.length) {
@@ -300,17 +302,12 @@
                 });
             }
             $all('#ws-provisioning input[type="checkbox"]', form).forEach(function (i) {
-                i.disabled = any && platforms.indexOf(i.value) < 0;
+                i.disabled = any && types.indexOf(i.value) < 0;
                 if (i.disabled) { i.checked = false; }
             });
         }
         boxes.forEach(function (b) {
-            b.addEventListener('change', function () {
-                if (b.checked) {
-                    boxes.forEach(function (o) { if (o !== b && o.dataset.platform === b.dataset.platform) { o.checked = false; } });
-                }
-                update();
-            });
+            b.addEventListener('change', update);  /* several experiments of one platform type may be chosen */
         });
         update();
     }

@@ -13,15 +13,15 @@
         <div class="dashboard-body">
             {{ ws.breadcrumb([(_('New simulation'), None)]) }}
             <form method="post" action="{{ url_for('world_simulation.new') }}" id="world-simulation-form"
-                  data-text-none="{{ _('No platform chosen yet.') }}" data-text-count="{{ _('{n} of 2 to 5 platforms chosen') }}">
+                  data-text-none="{{ _('No platform chosen yet.') }}" data-text-count="{{ _('{n} of 2 to 8 experiments chosen') }}">
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box" id="world-simulation-new">
                         <h3 class="title is-5 is-thin">{{ _('New simulation') }}</h3>
                         <div class="box-content">
-                            <p class="ws-intro">{{ _('A World Simulation runs several experiments, one for each platform, on one shared clock. Work through the steps below: every parameter has a default, so you only change what you need.') }}</p>
+                            <p class="ws-intro">{{ _('A World Simulation runs several experiments on one shared clock. Work through the steps below: every parameter has a default, so you only change what you need.') }}</p>
 
-                            {% call ws.section('members', _('Name and platforms'), _('Choose two to five stopped experiments, at most one for each platform, that use the simulated clock with hourly slots. Their populations may differ: an agent is active on the platforms whose population contains it.'), 1) %}
+                            {% call ws.section('members', _('Name and platforms'), _('Choose two to eight stopped experiments that use the simulated clock with hourly slots; several can be of the same platform. Their populations may differ: an agent is active on the experiments whose population contains it.'), 1) %}
                             <div class="box-lines">
                                 <div class="box-line ws-param">
                                     <span class="left"><label class="ws-label" for="ws-name">{{ _('Name') }} <span class="text-danger">*</span></label></span>
@@ -30,13 +30,13 @@
                             </div>
                             <div class="ws-platforms" id="ws-members-pick">
                                 {% for group in groups %}
-                                <div class="ws-platform-card" data-platform="{{ group.platform_type }}">
+                                <div class="ws-platform-card" data-type="{{ group.platform_type }}">
                                     <div class="ws-platform-head"><i class="mdi {{ group.icon }}"></i> <span class="ws-name">{{ _(group.label) }}</span>
                                         <span class="ws-sub">{{ group.experiments|length }}</span></div>
                                     {% for c in group.experiments %}
                                     {% set blocked = c.problems %}
                                     <label class="ws-pick {{ 'is-off' if blocked }}">
-                                        <input type="checkbox" name="experiments" value="{{ c.exp.idexp }}" data-platform="{{ c.platform_type }}" data-name="{{ c.exp.exp_name }}"
+                                        <input type="checkbox" name="experiments" value="{{ c.exp.idexp }}" data-platform="{{ c.key }}" data-type="{{ c.platform_type }}" data-name="{{ c.exp.exp_name }}"
                                                {{ 'checked' if c.exp.idexp|string in form.getlist('experiments') }} {{ 'disabled' if blocked }}>
                                         <span class="ws-pick-body">
                                             <span class="ws-name">{{ c.exp.exp_name }}</span>

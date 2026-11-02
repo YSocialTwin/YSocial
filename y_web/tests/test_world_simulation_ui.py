@@ -169,7 +169,7 @@ def test_invalid_creation_shows_the_error_and_creates_nothing(site):
     app, exps, tmp = site
     client = login(app, "admin")
     response = client.post("/admin/world_simulation/new", data={"name": "W", "experiments": [str(list(exps.values())[0])]})
-    assert response.status_code == 200 and "2 to 5 experiments" in response.get_data(as_text=True)
+    assert response.status_code == 200 and "2 to 8 experiments" in response.get_data(as_text=True)
     assert Federation.query.count() == 0
     bad = client.post("/admin/world_simulation/new", data={"name": "W", "experiments": [str(i) for i in exps.values()], "opt__attention__temperature": "nope"})
     assert "Temperature must be a number" in bad.get_data(as_text=True) and Federation.query.count() == 0

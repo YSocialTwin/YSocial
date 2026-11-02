@@ -1,7 +1,7 @@
 # World Simulation: researcher guide
 
-A World Simulation runs several experiments you already have, one per platform (microblogging, forum, photo sharing,
-instant messaging, dating), as one simulation: they share a clock, the agents can post on more than one platform, and
+A World Simulation runs several experiments you already have (microblogging, forum, photo sharing, instant messaging,
+dating; several of the same platform are fine), as one simulation: they share a clock, the agents can post on more than one platform, and
 their attention, arrival and departure can follow what happens to them across platforms. In the interface the feature
 is called **World Simulation**; in the code and in the protocol it is the *federation*.
 
@@ -9,9 +9,17 @@ New to the idea? Start with the [plain-language overview](world-simulation-overv
 
 ## Before you start
 
-- Create the experiments first, one for each platform, all with the **same, non-empty population**, the **simulated
-  clock** and **hourly** feed refresh (24 slots a day). Two experiments of the same platform type cannot be in the
-  same World Simulation, and an experiment can belong to only one.
+- Create the experiments first (2 to 8), with a **non-empty population** in at least one of them, the **simulated
+  clock** and **hourly** feed refresh (24 slots a day). Several experiments of the same platform type can be in the
+  same World Simulation (two microblogging experiments and a forum, say); an experiment can belong to only one World
+  Simulation, and can be chosen only once.
+- Member names: with one experiment per platform type the members are called as the platform (`microblogging`, `forum`),
+  exactly as before. When a type appears more than once, each member of that type is called `<platform>-<experiment id>`
+  (`microblogging-3`): it does not change when the experiment is renamed and it is the name used in the generated files
+  (`bindings_<member>.db`, the configuration sections) and in the probability pairs (`microblogging-3->microblogging-7`).
+  The pages show the experiment name. In the probability table every ordered pair of experiments has its own cell
+  (default 0.3); a stored pair of platform types (`microblogging->forum`) is the default for every pair between those two
+  types, and an exact pair of members always wins. The same agent has one account on each experiment of the same type.
 - Allowed runtimes: forum on the Standard stack; photo sharing, instant messaging and dating on HPC; microblogging on
   Standard or HPC. Remote experiments are not supported.
 - Everything is off by default. An experiment that is not part of a running World Simulation behaves exactly as before.
@@ -29,8 +37,9 @@ Open **World Simulation → New**. The page is one form in numbered sections; ev
 already filled in, so a World Simulation can be created by choosing the members and a name. The same sections are on the
 **Configuration** tab of the detail page, editable while the simulation is stopped. There is no JSON to write.
 
-1. *Basics*: the name, an optional description and seed, and the members: pick, per platform, the experiments (2 to 5
-   in all) that take part, each shown with its populations.
+1. *Basics*: the name, an optional description and seed, and the members: pick the experiments (2 to 8 in all, several
+   of one platform type if you like) that take part, each shown with its populations. The matrices below (probability
+   of each pair, starting probability) list the chosen experiments by their names.
 2. *Clock and schedule*: the granularity of the barrier (`slot`: members stay within one hour of each other; `day`:
    within one day).
 3. *Attention*: each agent's day is shared among its platforms according to the stress and reward it had on each

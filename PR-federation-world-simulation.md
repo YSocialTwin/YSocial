@@ -1,4 +1,4 @@
-# Federation / World Simulation: multi-platform simulations (F0–F7 + extensions X/H/P0–P7, H9/H10, P12/P13)
+# Federation / World Simulation: multi-platform simulations (F0–F7 + extensions X/H/P0–P7, H9/H10, P12/P13, P15)
 
 Branch `federation` in every touched repository. Nothing has been pushed, merged or tagged. Federation is **off by default**: with no `federation` section in a member's config, every runtime behaves as before.
 
@@ -55,7 +55,7 @@ Open the PRs in dependency order: YFederation first, then the runtimes and clien
 - Human participants on HPC: now implemented for microblogging through the gateway script (H9, see below); photo sharing, messaging and dating were already on HPC with their own gateways.
 - Forum share is gated (off unless `share.enabled` or agent_action); interpretation of the maintainer's request to re-enable it is by that gate.
 
-## Extensions H9, H10, P12, P13, P14
+## Extensions H9, H10, P12, P13, P14, P15
 
 All of them are additive and off by default: without a `federation` section nothing runs, and a World Simulation that does not use the new options writes the same files as before, with one deliberate exception: the YWeb defaults of the cross-posts are explicit in the generated files (propensity 0.2, probability 0.3 for every ordered pair of member platforms; the SDK/coordinator defaults stay 0), also for a World Simulation stored before, at its next start; a stored value, an explicit 0 included, wins.
 
@@ -115,6 +115,19 @@ Measured end to end (`tests/integration/test_p12_quantitative.py`, 4 passed in 1
 
 `crosspost.decision` is `random` (default, bit-identical to before, nothing written) or `llm`: one model call per trigger event (`crosspost.decision_triggers`: `publish`, `interaction`), strict JSON, destinations limited to those the coordinator allows, per-agent per-day cap `decision_max_per_day` (default 5), fallback to the Bernoulli draw on timeout, error or invalid JSON. Clients with the hook: YClient, YClientReddit, YPhotoSharing, YInstantMessaging (both triggers), YSimulator and YDating (publish only). No protocol change. See technical reference 6.14.
 
+### P15: several members of the same platform type
+
+The rule "one member per platform type" was an early simplification (the member name was the platform type) and has been lifted: a World Simulation may hold, for example, two microblogging experiments and one forum (2 to 8 members; `MAX_MEMBERS` was 5).
+
+- **Naming.** A member is an experiment. Its name is the platform type when that type is unique in the world (the old behaviour: `federation.json`, member sections, config files and the folder list of such a world are byte-identical to the previous version, checked by loading the HEAD `service.py` next to the new one) and `<platform>-<exp_id>` when the type repeats. The platform type is carried as a separate field; a repeated member also gets `name` (the experiment name) in its section. Names cannot contain `:` (`fed_msg_id`) or `__` (form fields).
+- **Coordinator.** `add_identity` no longer refuses a second account on the same platform; INV-14 is now "one account per agent on each member". `destinations()` returns `member`, `local_account_id`, `platform` and `name` (additive). Probability lookup: exact `src->dst` member pair, then the platform pair, then 0; the prompt key and eligibility use the platform.
+- **Servers and clients.** `destination_info` on the six adapters; `/federation/destinations` (YServer, YServerReddit) and `federation_destinations` (YInstantMessaging) return `members` next to `destinations`; the Ray servers (YSimulator, YPhotoSharing, YDating) get `get_federation_destination_info`. The clients learn peers (`platform_of`), build the prompt key and the rule text from the platform, and list a repeated member as `member (name, platform, limit)`. Without the new fields they behave as before.
+- **YWeb.** Creation page: one card and checkbox per experiment (`<type>-<id>` keys); the matrix and membership labels use the experiment name when a type repeats; the options form, validation (2 to 8, `duplicate_platform` removed) and the JS no longer deselect a second experiment of the same type; Italian catalogue updated.
+- **Commits.** YFederation `6f0dc1d` P15.1, YServer `8d19713` P15.2, YServerReddit `17f204e` P15.3, YClient `c74cc47` P15.4, YClientReddit `f9a4a0b` P15.5, YSimulator `2fc1721` P15.6, YPhotoSharing `66ec261` P15.7, YInstantMessaging `4743692` P15.8, YDating `7279981` P15.9, YSocial P15.10. The route changes of YSocial (`world_simulation.py`) were swept into `c27878a7` (U4.2) by a concurrent commit of that file; they depend on `service.member_names` from P15.10.
+- **Verified.** YFederation unit 357 passed; real-server integration with a real coordinator, two YServer and one YServerReddit (posts reach the right members): passed; YServer 57, YServerReddit 77, YClient 83, YClientReddit 86, YDating 89, YPhotoSharing 84, YInstantMessaging (unit federation) 88; YWeb `test_world_simulation*` 281 passed and `test_federation*` 204 passed with 3 failures from the committed U4.1 `label` field, not from P15.
+- **Not verified.** No live World Simulation with a real LLM; no browser check of the creation page and its JS (HTML output and `node --check` only); YSimulator federation tests: 82 passed, 6 errors from a missing `redis` module in this environment (`test_federation_bindings`); YPhotoSharing ran with a stub of the missing `perspective` module; `test_two_servers` failed 2 tests once when run in parallel (shared ports) and passes alone. Other-surface labels (composers, Cross-posts tab) may show only the type until their naming covers repeated types.
+- **Relaunch.** Stored federations keep their member names; a running World Simulation must be stopped and started again to load the new servers and clients (the new fields are additive and the clients fall back without them).
+
 ### What was and was not verified for these extensions
 
 Verified: unit and integration tests of each commit (see the commit messages), the quantitative run above, and the YServer and YServerReddit quick golden runs (identical to the baselines).
@@ -148,7 +161,7 @@ Found on a live World Simulation (agent action, LLM decision, propensity 0.4): t
 ## Deviations from the plan
 
 1. F6.3 pilot not executed (above).
-2. Cross-post destination member names must equal the platform type (needed to find the `crosspost_adapt_<dest>` prompt).
+2. ~~Cross-post destination member names must equal the platform type~~ lifted by P15: the prompt key uses the platform type, member names may be `<platform>-<exp_id>`.
 3. The YFederation registry entry is in `registry.json`, not in the builtin list.
 4. The `external/plugins.json` commit also includes the previously local YDating/IM entries (per maintainer's decision).
 5. D-04 = B: `attention.normalization` defaults to raw.

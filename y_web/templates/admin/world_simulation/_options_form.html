@@ -1,6 +1,6 @@
 {#- The parameter sections of a World Simulation, shared by the creation page and the Configuration tab: every option has its own
     control with its default pre-filled; the groups of tuning values are collapsed by default. Context: schema, values,
-    ws_platforms, platform_labels, platform_icons, mode ("new" or "edit"), and for "edit" unknown and config_preview.
+    ws_platforms (member names, or candidate keys in the creation form), ws_labels (their labels: experiment names), ws_platform_types, platform_labels, platform_icons, mode ("new" or "edit"), and for "edit" unknown and config_preview.
     ``first_step`` is the number of the first section on the creation page. -#}
 {% import 'admin/world_simulation/_macros.html' as ws with context %}
 {% set step = namespace(n=first_step if first_step is defined else 0) %}
@@ -89,7 +89,7 @@
         {{ ws.param(schema.BY_PATH[('crosspost', 'decision_max_per_day')], values) }}
         <p class="ws-help" id="ws-crosspost-decision-note">{{ _('With the coordinator rule the model only decides whether the content is marked for cross-posting: the destinations stay under the probabilities of the pairs of platforms below. When the agents choose their own cross-posts the model also chooses the destinations and may write the text for each. The coordinator still applies the content filter and the destinations the agent is active on. A model decision is not reproducible from the seed (the draws of the random mode are).') }}</p>
         <p class="ws-help" id="ws-crosspost-decision-support">{{ _('Supported by the clients of:') }}
-            {% for platform, publish, interaction, note in schema.llm_decision_notes(ws_platforms) %}{{ _(platform_labels[platform]) }}{% if note %} ({{ note }}){% endif %}{{ ', ' if not loop.last else '.' }}{% endfor %}</p>
+            {% for platform, publish, interaction, note in schema.llm_decision_notes(ws_platform_types) %}{{ _(platform_labels[platform]) }}{% if note %} ({{ note }}){% endif %}{{ ', ' if not loop.last else '.' }}{% endfor %}</p>
     </div>
     {{ ws.param(schema.BY_PATH[('crosspost', 'propensity')], values) }}
     {% set cp_warning = schema.crosspost_warning(schema.crosspost_causes_from_values(values, ws_platforms)) %}
@@ -114,11 +114,11 @@
         <p class="ws-help">{{ _('Used when the coordinator decides: the chance that a post marked for cross-posting (see the propensity above) is copied from the platform in the row to the platform in the column. Between 0 and 1; 0 means never for that pair. An empty cell takes the default, %(default)s.', default=schema.DEFAULT_PAIR_PROBABILITY) }}</p>
         <div class="table-container">
         <table class="table is-fullwidth ws-matrix" id="ws-probability-matrix">
-            <thead><tr><th>{{ _('From') }} \ {{ _('To') }}</th>{% for dst in ws_platforms %}<th data-platform="{{ dst }}">{{ _(platform_labels[dst]) }}</th>{% endfor %}</tr></thead>
+            <thead><tr><th>{{ _('From') }} \ {{ _('To') }}</th>{% for dst in ws_platforms %}<th data-platform="{{ dst }}">{{ ws_labels[dst] }}</th>{% endfor %}</tr></thead>
             <tbody>
             {% for src in ws_platforms %}
-            <tr data-platform="{{ src }}"><th>{{ _(platform_labels[src]) }}</th>
-                {% for dst in ws_platforms %}<td data-platform="{{ dst }}">{% if src != dst %}<input class="input" type="number" min="0" max="1" step="any" name="prob__{{ src }}__{{ dst }}" value="{{ values['prob__' ~ src ~ '__' ~ dst] }}" placeholder="{{ schema.DEFAULT_PAIR_PROBABILITY }}" aria-label="{{ _(platform_labels[src]) }} &rarr; {{ _(platform_labels[dst]) }}">{% else %}<span class="ws-sub">&ndash;</span>{% endif %}</td>{% endfor %}
+            <tr data-platform="{{ src }}"><th>{{ ws_labels[src] }}</th>
+                {% for dst in ws_platforms %}<td data-platform="{{ dst }}">{% if src != dst %}<input class="input" type="number" min="0" max="1" step="any" name="prob__{{ src }}__{{ dst }}" value="{{ values['prob__' ~ src ~ '__' ~ dst] }}" placeholder="{{ schema.DEFAULT_PAIR_PROBABILITY }}" aria-label="{{ ws_labels[src] }} &rarr; {{ ws_labels[dst] }}">{% else %}<span class="ws-sub">&ndash;</span>{% endif %}</td>{% endfor %}
             </tr>
             {% endfor %}
             </tbody>
@@ -144,7 +144,7 @@
     <div class="ws-block" id="ws-membership-custom">
         <div class="ws-beta">
             {% for m in ws_platforms %}
-            <div class="ws-beta-item" data-platform="{{ m }}"><label class="ws-label" for="membership_p__{{ m }}">{{ _(platform_labels[m]) }}</label>
+            <div class="ws-beta-item" data-platform="{{ m }}"><label class="ws-label" for="membership_p__{{ m }}">{{ ws_labels[m] }}</label>
                 <input class="input" type="number" min="0" max="1" step="any" id="membership_p__{{ m }}" name="membership_p__{{ m }}" value="{{ values['membership_p__' ~ m] }}" placeholder="0">
                 <span class="ws-default">{{ _('Probability of starting here') }}</span></div>
             {% endfor %}

@@ -149,7 +149,9 @@ def warning_tag(page):
 def test_the_forms_are_prefilled_and_warn_only_for_an_explicit_zero(site):
     app, exps, tmp = site
     creation = login(app, "admin").get(f"{BASE}/new").get_data(as_text=True)
-    assert 'name="opt__crosspost__propensity" value="0.2"' in creation and 'name="prob__forum__microblogging" value="0.3"' in creation
+    # P15: the creation form has a row and a column for each experiment (key `<platform>-<experiment id>`), a stored world one per member
+    pair = f'name="prob__forum-{exps["forum"]}__microblogging-{exps["microblogging"]}" value="0.3"'
+    assert 'name="opt__crosspost__propensity" value="0.2"' in creation and pair in creation
     assert " hidden" in warning_tag(creation).split(">")[0]  # with the defaults nothing is wrong
     fed = service.create_federation("W", list(exps.values()), owner="admin")
     page = login(app, "admin").get(f"{BASE}/{fed.id}").get_data(as_text=True)

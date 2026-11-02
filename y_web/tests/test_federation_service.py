@@ -33,8 +33,9 @@ def test_a_valid_group_has_no_errors():
 
 def test_member_count():
     assert "member_count" in codes([info("microblogging")])
-    six = [info(p, i) for i, p in enumerate(("microblogging", "forum", "photo_sharing", "instant_messaging", "dating", "x"))]
-    assert "member_count" in codes(six)
+    nine = [info("microblogging", i) for i in range(9)]  # P15: up to eight, several of the same platform type
+    assert "member_count" in codes(nine)
+    assert "member_count" not in codes(nine[:8])
 
 
 def test_experiments_must_be_stopped():
@@ -52,8 +53,11 @@ def test_populations_may_differ_but_not_all_be_empty():
     assert "population" in codes([info("microblogging", population_ids=frozenset()), info("forum", population_ids=frozenset())])
 
 
-def test_one_member_per_platform_type():
-    assert "duplicate_platform" in codes([info("microblogging", 1), info("microblogging", 2)])
+def test_several_members_of_the_same_platform_type_are_allowed():
+    """P15: the one-member-per-platform-type rule is gone; an experiment can still belong to one World Simulation only."""
+    assert validate_members([info("microblogging", 1), info("microblogging", 2), info("forum", 3)]) == []
+    assert validate_members([info("forum", 1), info("forum", 2)]) == []
+    assert "duplicate_platform" not in codes([info("microblogging", 1), info("microblogging", 2)])
 
 
 def test_simulator_type_is_coherent_with_the_platform():
@@ -77,8 +81,8 @@ def test_an_experiment_belongs_to_one_world_simulation():
 
 
 def test_every_error_is_reported_at_once():
-    found = codes([info("microblogging", running=True, is_remote=True), info("microblogging", 2)])
-    assert {"experiment_running", "remote", "duplicate_platform"} <= found
+    found = codes([info("microblogging", running=True, is_remote=True), info("microblogging", 2, clock_mode="real_time")])
+    assert {"experiment_running", "remote", "clock"} <= found
 
 
 # ------------------------------------------------------------------------------------- creation with a database

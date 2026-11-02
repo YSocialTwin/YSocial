@@ -1,15 +1,15 @@
 """World Simulation service (guide F5.2): creation, validation and configuration files of a federation.
 
-A World Simulation groups two to five stopped experiments, one per platform type, that share the same population and run
-on one simulated 24-slot clock. In the interface the feature is always called "World Simulation"; in code and files it is
+A World Simulation groups two to eight stopped experiments that run on one simulated 24-slot clock. Several experiments may
+have the same platform type (two microblogging experiments and a forum, say): every experiment is one *member* with a unique
+member name (see :func:`member_names`) and keeps its platform type in ``platform``. In the interface the feature is always called "World Simulation"; in code and files it is
 "federation" (guide 6, F5).
 
 Rules checked at creation (each one has its own error code):
-    member_count        2 to 5 experiments
+    member_count        2 to 8 experiments
     experiment_running  every experiment is stopped
     remote              no remote experiment
     population          every experiment uses the same, non-empty set of populations
-    duplicate_platform  one experiment per platform type (D-05)
     platform            the platform supports federation
     simulator_type      forum runs on Standard, photo sharing / instant messaging / dating on HPC, microblogging on either (D-06)
     clock               clock mode "simulated" with hourly feed refresh (24 slots a day)
@@ -30,7 +30,7 @@ from typing import Optional
 from y_web import db
 from y_web.src.hpc.platforms import find_hpc_platform
 
-MIN_MEMBERS, MAX_MEMBERS = 2, 5
+MIN_MEMBERS, MAX_MEMBERS = 2, 8
 PROTOCOL = "1.0"
 SLOTS_PER_DAY = 24
 GRANULARITIES = ("slot", "day")
@@ -104,11 +104,8 @@ def validate_members(infos) -> list:
 
     if not MIN_MEMBERS <= len(infos) <= MAX_MEMBERS:
         err("member_count", f"A World Simulation needs {MIN_MEMBERS} to {MAX_MEMBERS} experiments, got {len(infos)}.")
-    seen = {}
-    for i in infos:
-        if i.platform_type in seen:
-            err("duplicate_platform", f"'{i.exp_name}' and '{seen[i.platform_type]}' are both {i.platform_type} experiments.")
-        seen.setdefault(i.platform_type, i.exp_name)
+    # P15: several experiments of the same platform type are allowed: each one is its own member (member_names). The same
+    # experiment cannot be chosen twice: create_federation keeps each id once, so it counts once towards member_count.
     for i in infos:
         if i.running:
             err("experiment_running", f"'{i.exp_name}' is running: stop it first.")
@@ -130,6 +127,28 @@ def validate_members(infos) -> list:
     if not any(i.population_ids for i in infos):
         err("population", "At least one experiment needs a population.")
     return errors
+
+
+def member_names(exps) -> dict:
+    """``{exp.idexp: member name}`` for the experiments of one World Simulation (P15).
+
+    The member name is the key of everything that belongs to a member: identities, ``bindings_<member>.db``, the sections of the
+    configuration files, the pairs of ``crosspost.probability`` and the URLs. A platform type that appears once keeps the
+    type as the member name (``microblogging``, ``forum``): a world with one member per type is named exactly as before. A type
+    that appears more than once names every member of that type ``<platform_type>-<experiment id>`` (``microblogging-3``): unique,
+    stable (the experiment id never changes, unlike its name), made of letters, digits, ``_`` and ``-`` only (safe in a file name,
+    a form field and a URL) and free of ``:``, ``/`` and ``__`` (used as separators by the coordinator and the forms)."""
+    exps = list(exps)
+    count = {}
+    for e in exps:
+        count[e.platform_type] = count.get(e.platform_type, 0) + 1
+    return {e.idexp: (e.platform_type if count[e.platform_type] == 1 else f"{e.platform_type}-{e.idexp}") for e in exps}
+
+
+def has_repeated_platform(rows) -> bool:
+    """True when two members of the group share a platform type (``rows``: FederationMember rows or (row, exp) pairs)."""
+    types = [(r[0] if isinstance(r, tuple) else r).platform_type for r in rows]
+    return len(types) != len(set(types))
 
 
 def username_of(agent) -> str:
@@ -307,23 +326,24 @@ def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", op
     fed.federation_id = str(fed.id)  # numeric: the runtimes put it into source_ref and read it as an integer
     folder = federations_root() / f"federation_{fed.id}_{uuid.uuid4().hex[:8]}"
     fed.folder = str(folder)
-    for position, exp in enumerate(sorted(exps, key=lambda e: e.platform_type)):
+    names = member_names(exps)
+    for position, exp in enumerate(sorted(exps, key=lambda e: (e.platform_type, e.idexp))):  # the same order whatever the selection
         db.session.add(
             FederationMember(
-                federation_pk=fed.id, exp_id=exp.idexp, member=exp.platform_type, platform_type=exp.platform_type, position=position
+                federation_pk=fed.id, exp_id=exp.idexp, member=names[exp.idexp], platform_type=exp.platform_type, position=position
             )
         )
     member_agents = {}
-    for exp, info in sorted(zip(exps, infos), key=lambda pair: pair[0].platform_type):  # the same order whatever the selection
+    for exp, info in sorted(zip(exps, infos), key=lambda pair: (pair[0].platform_type, pair[0].idexp)):
         agents = _population_agents(info.population_ids) if info.population_ids else []
         _check_usernames(exp, agents)
-        member_agents[exp.platform_type] = agents
+        member_agents[names[exp.idexp]] = agents
         for agent in agents:
             db.session.add(
                 FederationIdentityLink(
                     federation_pk=fed.id,
                     global_agent_id=str(agent.id),
-                    member=exp.platform_type,
+                    member=names[exp.idexp],
                     local_account_id="",
                     username=username_of(agent),
                 )
@@ -375,7 +395,11 @@ def build_federation_config(fed) -> dict:
         {"member": row.member, "exp_id": row.exp_id, "platform": row.platform_type, "db_uri": experiment_db_uri(exp)}
         for row, exp in members_of(fed)
     ]
-    for entry, (row, exp) in zip(members, members_of(fed)):
+    pairs = members_of(fed)
+    repeated = has_repeated_platform(pairs)
+    for entry, (row, exp) in zip(members, pairs):
+        if repeated:
+            entry["name"] = exp.exp_name  # P15: the label of the member; a world with one member per type is written as before
         if provisions(fed, row, exp):
             entry["provision"] = True
     links = db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).order_by(FederationIdentityLink.id).all()
@@ -415,7 +439,8 @@ def build_federation_config(fed) -> dict:
 def provisions(fed, row, exp) -> bool:
     """True when this member creates accounts for agents that discover it (``provisioning.members`` and a runtime that can)."""
     wanted = (json.loads(fed.config_json or "{}").get("provisioning") or {}).get("members") or []
-    return row.member in wanted and (row.platform_type, getattr(exp, "simulator_type", None) or "Standard") in PROVISIONABLE
+    # an entry is a member name or (P15) a platform type: every member of that type provisions
+    return (row.member in wanted or row.platform_type in wanted) and (row.platform_type, getattr(exp, "simulator_type", None) or "Standard") in PROVISIONABLE
 
 
 def write_federation_files(fed) -> None:
@@ -485,6 +510,8 @@ def member_section(fed, row, exp, enabled=True) -> dict:
             section["crosspost_decision_triggers"] = list(crosspost["decision_triggers"])
         if "decision_max_per_day" in crosspost:
             section["crosspost_decision_max_per_day"] = int(crosspost["decision_max_per_day"])
+    if has_repeated_platform(members_of(fed)):
+        section["name"] = exp.exp_name  # P15: how the clients call this member in the prompts (the member name is `<type>-<id>`)
     section["seed"] = int(fed.seed)
     return section
 

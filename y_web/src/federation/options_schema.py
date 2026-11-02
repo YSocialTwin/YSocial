@@ -31,7 +31,8 @@ MISSING = object()
 
 CROSSPOST_CONTENT = ("own_content", "news", "images")
 CROSSPOST_CONTENT_ALIASES = {"own_posts": "own_content"}
-# Platforms of a World Simulation: the member of each platform is called as the platform type.
+# Platform types of a World Simulation. A member is called as its type when the type is unique in the World Simulation, else
+# `<type>-<experiment id>` (service.member_names, P15); the matrices below are keyed by member names.
 DEFAULT_PAIR_PROBABILITY = 0.3  # YWeb default of every ordered pair of member platforms (the SDK default is 0)
 PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating")
 # Platforms whose runtime creates an account on request (service.PROVISIONABLE, repeated here to stay import free).
@@ -118,7 +119,7 @@ DISCOVERY = (
           "(logistic), or a fixed probability once awareness passes the threshold."),
        choices=(("logit", N_("Logistic (graded)")), ("threshold", N_("Fixed probability"))), advanced=False),
     _p("discovery", "max_active_platforms", "int", 5, N_("Most platforms an agent can be active on"),
-       N_("At least 1; there are at most five platforms."), minimum=1, advanced=False),
+       N_("At least 1."), minimum=1, advanced=False),
     _p("discovery", "rejoin_cooldown_days", "int", 14, N_("Days before an agent can rejoin a platform it left"),
        N_("0 or more."), minimum=0, advanced=False),
     _p("discovery", "decay", "float", 0.1, N_("Daily decay of awareness"),
@@ -274,7 +275,7 @@ def _g(value) -> str:
 
 
 # ------------------------------------------------------------------------------------------------ options -> form values
-def values_from_options(options) -> dict:
+def values_from_options(options, members=None) -> dict:
     """Form values (name -> string, bool or list) for a stored options dict: stored value, else the SDK default."""
     options = options or {}
     out = {}
@@ -287,14 +288,15 @@ def values_from_options(options) -> dict:
     out["crosspost_content"] = [] if ("all" in names or not names) else [c for c in CROSSPOST_CONTENT if c in names]
     out["crosspost_decision_triggers"] = decision_triggers_of(options)
     probability = (options.get("crosspost") or {}).get("probability") or {}
-    for src in PLATFORMS:
-        for dst in PLATFORMS:
+    names = list(members) if members is not None else list(PLATFORMS)  # member names (P15); every platform type by default
+    for src in names:
+        for dst in names:
             if src != dst:
                 v = probability.get(f"{src}->{dst}")
                 out[f"prob__{src}__{dst}"] = fmt(DEFAULT_PAIR_PROBABILITY if v is None else v)
     initial = (options.get("membership") or {}).get("initial", "all")
     out["membership_initial"] = "custom" if isinstance(initial, dict) else (initial if initial in MEMBERSHIP_CHOICES else "all")
-    for m in PLATFORMS:
+    for m in names:
         v = initial.get(m) if isinstance(initial, dict) else None
         out[f"membership_p__{m}"] = "" if v is None else fmt(v)
     out["provisioning_members"] = [m for m in PROVISIONABLE if m in ((options.get("provisioning") or {}).get("members") or [])]

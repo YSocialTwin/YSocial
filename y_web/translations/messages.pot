@@ -485,19 +485,19 @@ msgstr ""
 msgid "A Hugging Face diffusers model, downloaded on first use."
 msgstr ""
 
-msgid "A World Simulation needs 2 to 5 experiments."
+msgid "A World Simulation needs 2 to 8 experiments."
 msgstr ""
 
 msgid ""
-"A World Simulation runs several experiments, one for each platform, on "
-"one shared clock. The same agents can be active on more than one "
-"platform."
+"A World Simulation runs several experiments on one shared clock; several "
+"can be of the same platform. The same agents can be active on more than "
+"one experiment."
 msgstr ""
 
 msgid ""
-"A World Simulation runs several experiments, one for each platform, on "
-"one shared clock. Work through the steps below: every parameter has a "
-"default, so you only change what you need."
+"A World Simulation runs several experiments on one shared clock. Work "
+"through the steps below: every parameter has a default, so you only "
+"change what you need."
 msgstr ""
 
 msgid ""
@@ -1640,9 +1640,6 @@ msgstr ""
 msgid "At least 1."
 msgstr ""
 
-msgid "At least 1; there are at most five platforms."
-msgstr ""
-
 msgid "At least one number"
 msgstr ""
 
@@ -2457,9 +2454,10 @@ msgid "Choose two dating experiments to compare."
 msgstr ""
 
 msgid ""
-"Choose two to five stopped experiments, at most one for each platform, "
-"that use the simulated clock with hourly slots. Their populations may "
-"differ: an agent is active on the platforms whose population contains it."
+"Choose two to eight stopped experiments that use the simulated clock with"
+" hourly slots; several can be of the same platform. Their populations may"
+" differ: an agent is active on the experiments whose population contains "
+"it."
 msgstr ""
 
 msgid ""
@@ -16424,7 +16422,7 @@ msgid "ySights"
 msgstr ""
 
 #, python-brace-format
-msgid "{n} of 2 to 5 platforms chosen"
+msgid "{n} of 2 to 8 experiments chosen"
 msgstr ""
 
 #, python-format

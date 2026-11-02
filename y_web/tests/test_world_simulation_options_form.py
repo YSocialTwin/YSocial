@@ -204,15 +204,17 @@ def test_service_level_validation_covers_stored_values(world):  # noqa: F811
 # ------------------------------------------------------------------------------------------------ pages
 def test_the_pages_have_a_control_for_every_option_and_no_json_box(site):
     app, exps, tmp = site
-    fed = service.create_federation("W", list(exps.values()), owner="admin")
     client = login(app, "admin")
-    pages = [client.get("/admin/world_simulation/new").get_data(as_text=True), client.get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)]
-    for html in pages:
+    creation = client.get("/admin/world_simulation/new").get_data(as_text=True)  # before the experiments are taken by a world
+    fed = service.create_federation("W", list(exps.values()), owner="admin")
+    pages = [creation, client.get(f"/admin/world_simulation/{fed.id}").get_data(as_text=True)]
+    m, f = exps["microblogging"], exps["forum"]
+    pair = (f"prob__microblogging-{m}__forum-{f}", f"membership_p__forum-{f}"), ("prob__microblogging__forum", "membership_p__forum")
+    for html, (prob, start) in zip(pages, pair):  # P15: the creation form is keyed by experiment, a stored world by member
         assert "<textarea" not in html and 'name="advanced"' not in html
         for p in schema.PARAMS:
             assert f'name="{p.name}"' in html, p.dotted
-        for name in ("seed", "granularity", "membership_initial", "crosspost_content", "provisioning_members", "prob__microblogging__forum",
-                     "membership_p__forum"):
+        for name in ("seed", "granularity", "membership_initial", "crosspost_content", "provisioning_members", prob, start):
             assert f'name="{name}"' in html, name
     assert 'id="ws-config-preview"' in pages[1] and 'id="ws-config-preview"' not in pages[0]
     assert "Advanced attention parameters" in pages[0] and "<details" in pages[0]
@@ -291,7 +293,7 @@ def test_the_list_agents_and_schedule_pages_render_with_the_admin_look(site):
 def test_create_page_lists_the_populations_and_blocks_what_cannot_be_chosen(site):
     app, exps, tmp = site
     html = login(app, "admin").get("/admin/world_simulation/new").get_data(as_text=True)
-    assert "Population:" in html and "(3 agents)" in html and 'data-platform="microblogging"' in html
+    assert "Population:" in html and "(3 agents)" in html and f'data-platform="microblogging-{exps["microblogging"]}"' in html and 'data-type="microblogging"' in html
     service.create_federation("Taken", list(exps.values()), owner="admin")
     html = login(app, "admin").get("/admin/world_simulation/new").get_data(as_text=True)
     assert "Already part of the World Simulation Taken." in html

@@ -308,7 +308,6 @@ def _types_of(keys):
 
 ERROR_TEXT = {
     "member_count": lambda: _("A World Simulation needs 2 to 8 experiments."),
-    "duplicate_experiment": lambda: _("The same experiment was chosen twice."),
     "experiment_running": lambda: _("An experiment is running: stop it first."),
     "remote": lambda: _("Remote experiments cannot take part in a World Simulation."),
     "population": lambda: _("All experiments must use the same population."),

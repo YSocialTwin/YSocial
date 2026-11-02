@@ -64,7 +64,7 @@ is stable within one simulation and differs in another. The stored data are unch
 
 ## When real people take part
 
-A person with a YSocial account can join next to the agents, with one identity and at most one account per platform.
+A person with a YSocial account can join next to the agents, with one identity and at most one account in each experiment.
 
 1. **Enrol.** In the Configuration tab, under Participants, choose the user and the platforms. This also works while the
    simulation runs. On dating, the enrolment waits until the person has filled in a profile.
@@ -76,7 +76,7 @@ People are outside the rules that act on agents: attention, discovery, leaving a
 
 ## What you see in the app
 
-- **Create.** Choose two to five existing experiments, one per platform type, simulated clock
+- **Create.** Choose two to eight existing experiments (several can be of the same platform), simulated clock
   and hourly refresh; set a name, optional seed and options. The form checks the requirements.
 - **Run.** The Execution tab starts, pauses, resumes and stops everything as one unit. Member experiments show a
   *World Simulation* badge. Several simulations can be queued from Schedule.
@@ -98,8 +98,7 @@ The interface is available in English and Italian.
 - Agents are language-model characters; results describe the model's world, not proof of how real people act.
 - Runs with real people are not repeatable; runs with only agents can be.
 - No pilot has been run yet; its protocol is in [World Simulation pilot](world-simulation-pilot.md).
-- Two experiments of the same platform type cannot be in one simulation; remote experiments and real-time clocks are not
-  supported.
+- Remote experiments and real-time clocks are not supported.
 
 ## Frequently asked questions
 

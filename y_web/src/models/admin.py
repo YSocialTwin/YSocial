@@ -1036,7 +1036,7 @@ class Federation(db.Model):
 
 
 class FederationMember(db.Model):
-    """An experiment taking part in a World Simulation (one member per platform type)."""
+    """An experiment taking part in a World Simulation (one member per experiment; several members may share a platform type)."""
 
     __bind_key__ = "db_admin"
     __tablename__ = "federation_member"
