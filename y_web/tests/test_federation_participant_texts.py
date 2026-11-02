@@ -83,8 +83,8 @@ def _render(dests, waiting):
 
 
 def test_each_destination_has_an_editable_text_and_the_experiment_id_for_the_suggestions():
-    html = _render([{"member": "forum", "platform_type": "forum"}, {"member": "dating", "platform_type": "dating"}], [])
-    assert html.count("<textarea") == 2 and 'data-ws-exp="3"' in html and "Text on Forum" in html and "data-ws-pending" not in html
+    html = _render([{"member": "forum", "platform_type": "forum", "label": "FW"}, {"member": "dating", "platform_type": "dating", "label": "DW"}], [])
+    assert html.count("<textarea") == 2 and 'data-ws-exp="3"' in html and "Text on FW" in html and "data-ws-pending" not in html
 
 
 def test_the_pending_notice_lists_the_waiting_cross_posts_with_their_attribution():
@@ -138,7 +138,7 @@ def test_a_stopped_member_of_a_running_world_simulation_shows_what_is_waiting(en
             "quoted": {"author_name": "ann", "member": "microblogging", "text_excerpt": "orig"}}
     fake, seen = FakeCoordinator([item, {"fed_msg_id": "m2", "source_member": "microblogging", "text_excerpt": "again"}]), []
     got = pending_notice.pending_for(exps["forum"], 7, client_factory=_factory(fake, seen))
-    assert [g["text"] for g in got] == ["hello", "again"] and got[0]["attribution"] == "↪ ann @ Microblogging: «orig»" and got[1]["attribution"] == ""
+    assert [g["text"] for g in got] == ["hello", "again"] and got[0]["attribution"] == "↪ ann @ microblogging: «orig»" and got[1]["attribution"] == ""
     assert seen == ["forum"] and fake.calls == ["101"]
 
 

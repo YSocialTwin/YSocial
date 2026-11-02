@@ -47,7 +47,7 @@ def test_context_and_destinations_only_for_an_enrolled_person(world):
     fed, exps = enrolled(world)
     ctx = ho.context_for(exps["forum"], 7)
     assert ctx.member == "forum" and ctx.human_id == "human:7" and ctx.destinations == {"microblogging": "microblogging"}
-    assert ho.destinations_for(exps["microblogging"], 7) == [{"member": "forum", "platform_type": "forum"}]
+    assert ho.destinations_for(exps["microblogging"], 7) == [{"member": "forum", "platform_type": "forum", "label": "forum"}]
     assert ho.context_for(exps["forum"], 8) is None and ho.destinations_for(exps["forum"], 8) == []
     humans.unenrol(fed, 7)
     assert ho.context_for(exps["forum"], 7) is None
