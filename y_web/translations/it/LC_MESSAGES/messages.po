@@ -18334,6 +18334,19 @@ msgstr "Cross-post consegnati: %(n)s"
 msgid "Dormant"
 msgstr "In pausa"
 
+msgid "Stopping"
+msgstr "In arresto"
+
+msgid "Experiments that run together on one shared clock. They are listed here and not among the experiments below."
+msgstr "Esperimenti che girano insieme su un unico orologio condiviso. Sono elencati qui e non tra gli esperimenti qui sotto."
+
+msgid "See the details"
+msgstr "Vedi i dettagli"
+
+#, python-format
+msgid "%(n)s more members"
+msgstr "altri %(n)s membri"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 

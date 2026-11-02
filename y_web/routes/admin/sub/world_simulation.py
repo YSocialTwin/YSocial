@@ -230,6 +230,88 @@ def _row(fed):
     }
 
 
+# ------------------------------------------------------------------------------------- the box of the admin home page
+DASHBOARD_MAX_MEMBERS = 8  # members listed on a card (one line each); the rest is summarised as "+N"
+DASHBOARD_MAX_PROBLEMS = 3  # problems listed on a card; the detail page has them all
+_ACTIVE_STATES = ("starting", "running", "paused", "stopping")
+_HEALTH_CLASSES = {
+    mh.OK: "ws-state-running", mh.WAITING: "ws-state-starting", mh.STARTING: "ws-state-starting", mh.MISSING: "ws-state-failed",
+    mh.STALLED: "ws-state-paused", mh.DEAD: "ws-state-failed", mh.FAILED: "ws-state-failed", mh.FINISHED: "ws-state-completed",
+    mh.UNKNOWN: "ws-state-stopped",
+}
+
+
+def state_label(state):
+    """The word shown on the status badge of a World Simulation (in the language of the request)."""
+    return {
+        "stopped": lambda: _("Stopped"), "starting": lambda: _("Starting"), "running": lambda: _("Running"),
+        "paused": lambda: _("Paused"), "stopping": lambda: _("Stopping"), "completed": lambda: _("Completed"),
+        "failed": lambda: _("Failed"),
+    }.get(state, lambda: str(state))()
+
+
+def dashboard_card(fed, user):
+    """Everything the admin home page shows of one World Simulation (plain data: it also is the polling answer).
+
+    The progress and the problems are those of the Execution tab (``member_health`` and the coordinator status, read with a
+    short timeout and only while the World Simulation runs)."""
+    pairs = service.members_of(fed)
+    coordinator = cp.coordinator_status(fed, timeout=1.0) if fed.status in ("running", "paused") else None
+    try:
+        health = mh.collect(fed, coordinator)  # {} unless running
+    except Exception:  # noqa: BLE001 - the box keeps working without the warnings
+        health = {}
+    labels = {m.member: (exp.exp_name if exp is not None else m.member) for m, exp in pairs}
+    problems = _problems_from(health, labels) + _hints_from(health, labels)
+    states = health.get("members", {})
+    live_members = (coordinator or {}).get("members") or {}
+    fronts = {f["member"]: f for f in frontends.frontend_rows(fed, user)}
+    members = []
+    for row, exp in pairs:
+        front = fronts.get(row.member) or {}
+        hs = states.get(row.member)
+        if hs is not None:
+            badge = {"code": hs["code"], "text": _badge_text(hs["code"], hs["waiting_for"], labels),
+                     "class": _HEALTH_CLASSES.get(hs["code"], "ws-state-stopped"), "problem": bool(hs["problem"])}
+        else:
+            badge = {"code": fed.status, "text": state_label(fed.status), "class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
+                     "problem": False}
+        members.append({
+            "member": row.member, "name": exp.exp_name if exp is not None else row.member,
+            "icon": PLATFORM_ICONS.get(row.platform_type, "mdi-web"), "platform": PLATFORM_LABELS.get(row.platform_type, row.platform_type),
+            "badge": badge, "tick": live_members.get(row.member, {}).get("last_ready_tick"),
+            "frontend_active": bool(front.get("active")), "url": front.get("url"),
+        })
+    progress = health.get("progress") or {}
+    tick = None if not coordinator else coordinator.get("global_tick")
+    done, total = progress.get("tick"), progress.get("total")
+    percent = None
+    if done is not None and total:
+        percent = max(0, min(100, int(done * 100 / total)))
+    elif fed.status == "completed":
+        percent = 100
+    return {
+        "id": fed.id, "name": fed.name, "state": fed.status, "state_label": state_label(fed.status),
+        "badge": STATE_BADGES.get(fed.status, "badge-secondary"), "state_class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
+        "active": fed.status in _ACTIVE_STATES, "owner": fed.owner,
+        "tick": tick, "day": None if tick is None or tick < 0 else tick // 24, "slot": None if tick is None or tick < 0 else tick % 24,
+        "progress": {"done": done, "total": total, "percent": percent, "seconds_per_tick": progress.get("seconds_per_tick"),
+                     "eta_seconds": progress.get("eta_seconds"), "text": _progress_text(progress)},
+        "coordinator_down": fed.status == "running" and coordinator is None,
+        "problems": problems[:DASHBOARD_MAX_PROBLEMS], "problems_total": len(problems),
+        "members": members[:DASHBOARD_MAX_MEMBERS], "members_more": max(0, len(members) - DASHBOARD_MAX_MEMBERS),
+        "detail_url": url_for("world_simulation.detail", fed_id=fed.id),
+    }
+
+
+def dashboard_cards(user):
+    """The cards of the admin home page: the World Simulations the person may see (the rules of the list page), the ones in
+    progress first. One query for the simulations; the rest is read from the coordinator and the health files of the running ones."""
+    feds = _visible_federations(user)
+    feds.sort(key=lambda f: f.status not in _ACTIVE_STATES)  # stable: newest first inside each group
+    return [dashboard_card(f, user) for f in feds]
+
+
 @world_simulation.route("", strict_slashes=False)
 @guarded
 def simulations(user):
@@ -507,6 +589,14 @@ def configure(user, fed_id):
     return redirect(url_for("world_simulation.detail", fed_id=fed.id))
 
 
+def _back(fed, fragment=""):
+    """Where a command sends the person back to: the admin home page when the box of the dashboard asked for it
+    (``next=dashboard``, nothing else is accepted), the detail page otherwise."""
+    if request.form.get("next") == "dashboard":
+        return redirect(url_for("admin.dashboard"))
+    return redirect(url_for("world_simulation.detail", fed_id=fed.id) + fragment)
+
+
 def _command(fed_id, user, action):
     from y_web.src.simulation import execution_backend as eb
 
@@ -533,7 +623,7 @@ def _command(fed_id, user, action):
     except Exception as exc:
         db.session.rollback()
         flash(_("The World Simulation could not complete the operation: %(error)s", error=str(exc)), "error")
-    return redirect(url_for("world_simulation.detail", fed_id=fed.id))
+    return _back(fed)
 
 
 for _action in ("start", "pause", "resume", "stop"):
@@ -569,7 +659,7 @@ def _frontends_command(fed_id, user, activating):
         flash(summary, "success")
     for message in problems:
         flash(message, "error")
-    return redirect(url_for("world_simulation.detail", fed_id=fed.id) + "#execution")
+    return _back(fed, "#execution")
 
 
 @world_simulation.route("/<int:fed_id>/frontends/activate", methods=["POST"])

@@ -162,6 +162,31 @@ gateways, clients. While it is starting, running, paused or stopping, its experi
 and their own start and stop commands are disabled. When it is stopped, each experiment can be started alone again.
 Several World Simulations can be queued from **Schedule**.
 
+### The World Simulation box of the home page
+
+When the YFederation plugin is installed and at least one World Simulation is visible to you, the **home page** (the
+dashboard) opens with a **World Simulation** box, above the experiment boxes. You see the World Simulations you may see on
+the list page: an administrator sees all of them, a researcher only their own. There is one card per World Simulation
+(those in progress first), coloured like the experiment boxes by its state (stopped, starting, running, paused, completed,
+failed). A card shows:
+
+- the name and the state;
+- the progress: tick *x*/total, day and slot, a bar, the seconds per tick and the estimated end, the same figures as the
+  Execution tab;
+- a compact warning when a member is missing, stalled, not running, failed or silent, or when the coordinator does not answer,
+  with the probable cause, and a link to the detail page;
+- the buttons **Start**, **Pause**/**Resume**, **Stop** (it asks for confirmation), **Activate frontends**,
+  **Deactivate frontends** and **Details**. They are the commands of the detail page; afterwards you are brought back to the
+  home page;
+- a line for each member (at most eight; the rest is counted): the icon of its platform, the **name of its experiment**, its
+  state or health, whether its web interface is active and, when it is, an **Open** link.
+
+The cards refresh by themselves (every 5 seconds while a World Simulation is in progress, every 30 seconds otherwise, and not
+at all while the browser tab is hidden). The experiments that belong to a World Simulation are **not** listed in the standard
+boxes of the home page ("Currently running", "Completed", "Stopped / Scheduled"), whatever the state of the World Simulation, and
+are not counted there; use the card, or the experiments page, to reach them. Without the plugin, or without any World
+Simulation, the home page is exactly the classic one.
+
 ### Open the member experiments in the browser
 
 An experiment can be opened from the web only while it is *active* (the **Activate** switch of the experiments page). A World

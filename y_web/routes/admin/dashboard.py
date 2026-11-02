@@ -202,6 +202,36 @@ def _dashboard_news(limit=4):
         return []
 
 
+def _world_simulation_member_ids():
+    """Ids of the experiments that belong to a World Simulation, whatever its state: they are shown in the World Simulation box
+    and never in the standard experiment boxes. Empty (nothing is hidden) when the YFederation plugin is not available."""
+    try:
+        from y_web.src.federation import availability
+
+        if not availability.sdk_available():
+            return set()
+        from y_web.src.federation.service import world_simulation_map
+
+        return set(world_simulation_map())
+    except Exception:  # noqa: BLE001 - the page must work where the federation tables cannot be read
+        return set()
+
+
+def _world_simulation_box(user):
+    """The cards of the World Simulation box (first block of the page) or None when it is not rendered."""
+    try:
+        from y_web.src.federation import availability
+
+        if not availability.sdk_available():
+            return None
+        from y_web.routes.admin.sub.world_simulation import dashboard_cards
+
+        return dashboard_cards(user) or None
+    except Exception:  # noqa: BLE001 - a failing box must never take the home page down
+        current_app.logger.exception("World Simulation box of the dashboard failed")
+        return None
+
+
 @admin.route("/admin/dashboard")
 @login_required
 def dashboard():
@@ -227,6 +257,9 @@ def dashboard():
         all_experiments = (
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
+        hidden_ids = _world_simulation_member_ids()
+        if hidden_ids:
+            all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
@@ -465,6 +498,44 @@ def dashboard():
         show_telemetry_notice=show_telemetry_notice,
         can_manage_experiment=can_manage_experiment_for_current_user,
         news_posts=_dashboard_news(),
+        world_simulation_cards=_world_simulation_box(user),
+    )
+
+
+@admin.route("/admin/dashboard/world_simulations")
+@login_required
+def dashboard_world_simulations():
+    """
+    Polling endpoint of the World Simulation box: the cards (data and the rendered HTML of each) visible to the person.
+
+    Returns:
+        JSON ``{"available": bool, "cards": [{"id", "state", "active", "html", "data"}]}``; ``available`` is false (and the
+        list empty) when the YFederation plugin is not installed.
+    """
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if user is None or user.role not in ("admin", "researcher"):
+        return jsonify({"error": _("Access denied")}), 403
+    cards = _world_simulation_box(user) or []
+    from y_web.src.federation import availability
+
+    return jsonify(
+        {
+            "available": availability.sdk_available(),
+            "cards": [
+                {
+                    "id": c["id"],
+                    "state": c["state"],
+                    "active": c["active"],
+                    "html": render_template(
+                        "admin/world_simulation/_dashboard_card.html", c=c
+                    ),
+                    "data": c,
+                }
+                for c in cards
+            ],
+        }
     )
 
 
@@ -499,6 +570,9 @@ def dashboard_experiments_by_status(status):
         all_experiments = (
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
+        hidden_ids = _world_simulation_member_ids()
+        if hidden_ids:
+            all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
         return jsonify({"error": _("Access denied")}), 403
 
@@ -634,6 +708,9 @@ def dashboard_status():
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
         all_experiments = get_visible_experiment_query(user).all()
+        hidden_ids = _world_simulation_member_ids()
+        if hidden_ids:
+            all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
         return jsonify({"error": _("Access denied")}), 403
 

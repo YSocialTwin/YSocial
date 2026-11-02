@@ -145,3 +145,40 @@
 .ws-icon-link.is-off { opacity: .35; cursor: help; }
 .ws-from-to { white-space: nowrap; }
 .ws-table th.ws-stat, .ws-table td.ws-stat { text-align: right; white-space: nowrap; }
+
+/* World Simulation box of the admin home page (cards in the style of the experiment boxes; band colour = state) */
+.ws-dash-card { background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid #6c757d; border-radius: 8px; padding: 8px 15px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.ws-dash-card.ws-state-running { border-left-color: #28a745; }
+.ws-dash-card.ws-state-starting, .ws-dash-card.ws-state-stopping { border-left-color: #039be5; }
+.ws-dash-card.ws-state-paused { border-left-color: #f59e0b; }
+.ws-dash-card.ws-state-completed { border-left-color: #3d70b2; }
+.ws-dash-card.ws-state-failed { border-left-color: #f71416; }
+.ws-dash-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ws-dash-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ws-dash-icon { color: #039be5; }
+.ws-dash-name { font-weight: 600; color: #0d95e8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.ws-dash-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.ws-dash-actions form { margin: 0; }
+.ws-dash-actions .button .mdi { font-size: 1.1em; }
+.ws-dash-pill { display: inline-block; color: #fff; background: #6c757d; font-size: .7em; font-weight: 600; padding: 2px 8px; border-radius: 10px; line-height: 1.4; white-space: nowrap; }
+.ws-dash-pill.ws-state-running { background: #28a745; }
+.ws-dash-pill.ws-state-starting, .ws-dash-pill.ws-state-stopping { background: #039be5; }
+.ws-dash-pill.ws-state-paused { background: #f59e0b; }
+.ws-dash-pill.ws-state-completed { background: #3d70b2; }
+.ws-dash-pill.ws-state-failed { background: #f71416; }
+.ws-dash-progress { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; flex-wrap: wrap; }
+.ws-dash-bar { flex: 1 1 160px; min-width: 120px; height: 14px; background: #e9ecef; border-radius: 7px; overflow: hidden; }
+.ws-dash-bar .sleek-progress-bar { height: 100%; min-width: 0; background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: #fff; font-size: .65em; line-height: 14px; text-align: center; }
+.ws-dash-progress-text { flex: 2 1 200px; }
+.ws-dash-dayslot { margin-left: 8px; }
+.ws-dash-banner { font-size: .8rem; padding: 6px 10px; margin: 6px 0; }
+.ws-dash-banner ul { margin: .2rem 0 .2rem 1.2rem; list-style: disc; }
+.ws-dash-members { margin-top: 6px; border-top: 1px solid #ececec; padding-top: 4px; }
+.ws-dash-member { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 0; font-size: .85rem; }
+.ws-dash-member-name { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
+.ws-dash-member-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-dash-member-state { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ws-dash-fe { color: #b0b5be; }
+.ws-dash-fe.is-active { color: #28a745; }
+.ws-dash-open { font-size: .8em; color: #039be5; }
+@media (max-width: 768px) { .ws-dash-name { max-width: 160px; } }

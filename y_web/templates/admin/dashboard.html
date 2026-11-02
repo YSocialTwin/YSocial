@@ -1,5 +1,5 @@
 {% include "admin/head.html" %}
-<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>{% if world_simulation_cards %}<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>{% endif %}
 {# Macro for rendering an experiment box (full version with client details for running experiments) #}
 {% macro render_experiment_box(experiments, section_color, show_run_buttons=true) %}
     {% for exp in experiments %}
@@ -261,7 +261,24 @@
             <div class="columns">
                      <!--Dashboard column-->
 
-                <div class="column is-8">
+                <div class="column is-8">{% if world_simulation_cards %}
+                    <!-- ===== World Simulation section (first block of the page) ===== -->
+                    <div class="dash-section dash-section-world-simulation ws-page" id="section-world-simulation">
+                        <div class="dash-section-head">
+                            <span class="dash-section-icon"><i class="mdi mdi-earth"></i></span>
+                            <div>
+                                <h2 class="dash-section-title">{{ _('World Simulation') }}</h2>
+                                <p class="dash-section-sub">{{ _('Experiments that run together on one shared clock. They are listed here and not among the experiments below.') }}</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-box" id="box-world-simulations" data-poll-url="{{ url_for('admin.dashboard_world_simulations') }}" data-poll-active-ms="5000" data-poll-idle-ms="30000">
+                            <div id="world-simulation-cards">
+                                {% for c in world_simulation_cards %}{% include "admin/world_simulation/_dashboard_card.html" %}{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ===== end World Simulation section ===== -->
+                    {% endif %}
 
                     <!-- ===== Simulations section ===== -->
                     <div class="dash-section dash-section-simulations" id="section-simulations">
@@ -578,5 +595,5 @@ var YS_DATA_DASHBOARD = {
     stoppedPages: {{ stopped_group_pages | tojson }}
 };
 </script>
-<script src="{{ url_for('static', filename='assets/js/admin-dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/admin-dashboard.js') }}"></script>{% if world_simulation_cards %}<script src="{{ url_for('static', filename='assets/js/admin-dashboard-world-simulation.js') }}"></script>{% endif %}
 {% include "admin/footer.html" %}

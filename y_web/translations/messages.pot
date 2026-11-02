@@ -16517,3 +16517,16 @@ msgstr ""
 
 msgid "Dormant"
 msgstr ""
+
+msgid "Stopping"
+msgstr ""
+
+msgid "Experiments that run together on one shared clock. They are listed here and not among the experiments below."
+msgstr ""
+
+msgid "See the details"
+msgstr ""
+
+#, python-format
+msgid "%(n)s more members"
+msgstr ""

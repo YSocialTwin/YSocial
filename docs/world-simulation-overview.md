@@ -80,6 +80,10 @@ People are outside the rules that act on agents: attention, discovery, leaving a
   and hourly refresh; set a name, optional seed and options. The form checks the requirements.
 - **Run.** The Execution tab starts, pauses, resumes and stops everything as one unit. Member experiments show a
   *World Simulation* badge. Several simulations can be queued from Schedule.
+- **Home page.** A *World Simulation* box at the top of the home page has a card for each World Simulation you may see: state,
+  progress with the estimated end, a warning when a member has a problem, start/pause/stop and web-interface buttons, and one line
+  for each member (named after its experiment) with an **Open** link when its web interface is active. It refreshes by itself. The
+  member experiments are shown there and not in the experiment boxes below.
 - **Profiles.** On an agent's profile page an "Also on" line shows the other platforms where the same agent takes part, each
   named after its experiment and drawn in the style of the page you are on (chips under the name on the microblogging page,
   a card on the forum and the contact profile of instant messaging, a row under the links on photo sharing, a second row of
