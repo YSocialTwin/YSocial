@@ -1,0 +1,27 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-unavailable">
+                        <h3 class="title is-5 is-thin">{{ _('World Simulation') }}</h3>
+                        <div class="box-content">
+                            <div class="empty-state ws-empty"><i class="mdi mdi-puzzle-outline"></i>
+                                <p><b>{{ message }}</b></p>
+                                <p>{{ _('The World Simulation runs several experiments on one shared clock and needs the optional YFederation plugin (the folder external/YFederation). Experiments that do not belong to a World Simulation are not affected.') }}</p>
+                                <p class="ws-sub">{{ _('Install the plugin and reload this page; nothing else has to be restarted.') }}</p>
+                                {% if reason %}<p class="ws-sub" id="ws-unavailable-reason">{{ reason }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

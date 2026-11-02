@@ -122,6 +122,13 @@
                         <div class="dashboard-box" id="ws-execution-box">
                             <h3 class="title is-5 is-thin">{{ _('Execution') }}</h3>
                             <div class="box-content">
+                                <div class="notification is-warning is-light ws-banner" id="ws-problems" role="alert" hidden>
+                                    <b id="ws-problems-title">{{ _('Some members need attention') }}</b>
+                                    <ul id="ws-problems-list"></ul>
+                                    <p class="ws-sub" id="ws-problems-hint"></p>
+                                </div>
+                                <div class="notification is-danger is-light ws-banner" id="ws-coordinator-down" role="alert" hidden>{{ _('The coordinator does not answer: the members cannot advance.') }} {{ _('See the coordinator log below.') }}</div>
+                                <p class="ws-progress-line" id="ws-progress-line" hidden></p>
                                 <div class="stats-row" id="ws-counters">
                                     <div class="stat-box"><div class="stat-value" id="ws-tick">-</div><div class="stat-label">{{ _('Global tick') }}</div></div>
                                     <div class="stat-box"><div class="stat-value" id="ws-dayslot">-</div><div class="stat-label">{{ _('Day / slot') }}</div></div>
@@ -130,7 +137,7 @@
                                     <div class="stat-box"><div class="stat-value" id="ws-deliveries">0</div><div class="stat-label">{{ _('Deliveries') }}</div></div>
                                 </div>
                                 <div class="table-container">
-                                <table class="table is-fullwidth ws-table" id="ws-members"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th><th>{{ _('Status') }}</th><th>{{ _('Tick') }}</th><th>{{ _('Waiting for') }}</th></tr></thead><tbody></tbody></table>
+                                <table class="table is-fullwidth ws-table" id="ws-members"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th><th>{{ _('Status') }}</th><th>{{ _('Health') }}</th><th>{{ _('Tick') }}</th><th>{{ _('Waiting for') }}</th></tr></thead><tbody></tbody></table>
                                 </div>
                                 <p class="empty-state" id="ws-members-empty">{{ _('The members report their state once the World Simulation runs.') }}</p>
                             </div>

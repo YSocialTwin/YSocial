@@ -27,6 +27,30 @@
         if (!box || !box.dataset.statusUrl) { return; }
         var url = box.dataset.statusUrl;
         function cell(tr, v) { var td = document.createElement('td'); td.textContent = text(v); tr.appendChild(td); return td; }
+        function showProblems(s) {
+            var banner = document.getElementById('ws-problems');
+            var list = document.getElementById('ws-problems-list');
+            var line = document.getElementById('ws-progress-line');
+            var down = document.getElementById('ws-coordinator-down');
+            if (down) { down.hidden = !(s.state === 'running' && s.coordinator_up === false); }
+            if (line) { line.textContent = s.progress_text || ''; line.hidden = !s.progress_text; }
+            if (!banner || !list) { return; }
+            list.innerHTML = '';
+            (s.problems || []).forEach(function (p) {
+                var li = document.createElement('li');
+                var b = document.createElement('b'); b.textContent = p.label;
+                li.appendChild(b);
+                li.appendChild(document.createTextNode(' ' + p.text + (p.cause ? '. ' + p.cause : '')));
+                if (p.log) {
+                    var code = document.createElement('code'); code.textContent = p.log;
+                    li.appendChild(document.createTextNode(' ')); li.appendChild(code);
+                }
+                list.appendChild(li);
+            });
+            var hint = document.getElementById('ws-problems-hint');
+            if (hint) { hint.textContent = s.log_hint || ''; }
+            banner.hidden = !(s.problems && s.problems.length);
+        }
         function refresh() {
             fetch(url, {credentials: 'same-origin'}).then(function (r) { return r.json(); }).then(function (s) {
                 document.getElementById('ws-tick').textContent = text(s.global_tick);
@@ -43,12 +67,20 @@
                     var tr = document.createElement('tr');
                     cell(tr, m.label); cell(tr, m.experiment);
                     var state = cell(tr, '');
+                    var healthCell = null;
                     if (m.state) {
                         var tag = document.createElement('span');
                         tag.className = ['exp-tag', 'ws-state-' + m.state].join(' ');
                         tag.textContent = m.state.charAt(0).toUpperCase() + m.state.slice(1);
                         state.appendChild(tag);
                     } else { state.textContent = '-'; }
+                    healthCell = cell(tr, '');
+                    if (m.health) {
+                        var hb = document.createElement('span');
+                        hb.className = 'exp-tag ws-health ws-health-' + m.health.code + (m.health.problem ? ' is-problem' : '');
+                        hb.textContent = m.health.text;
+                        healthCell.appendChild(hb);
+                    }
                     var tickCell = cell(tr, '');
                     tickCell.textContent = text(m.tick) + ' ';
                     if (m.tick !== null && m.tick !== undefined) {
@@ -60,6 +92,7 @@
                     cell(tr, (m.waiting_for || []).join(', '));
                     body.appendChild(tr);
                 });
+                showProblems(s);
                 var empty = document.getElementById('ws-members-empty');
                 if (empty) { empty.hidden = s.members.length > 0 && s.members.some(function (m) { return m.state; }); }
                 var stateTag = document.getElementById('ws-state');

@@ -135,12 +135,16 @@ def start_federation(fed, *, resume=True):
 
     if fed.status in FEDERATION_ACTIVE_STATES:
         raise service.WorldSimulationError({"code": "state", "message": f"The World Simulation is {fed.status}."})
+    from y_web.src.federation import availability
+
+    availability.require_sdk()  # up-front: the plugin is optional, a missing one must not show up as dead servers
     members = service.members_of(fed)
     busy = [exp.exp_name for _, exp in members if exp.running or str(exp.exp_status) in ("active", "scheduled")]
     if busy:
         raise service.WorldSimulationError(
             {"code": "experiment_running", "message": "Member experiments are running: " + ", ".join(busy)}
         )
+    availability.require_child_sdk()  # the servers and clients import the SDK in their own environment
     fed.status = "starting"
     db.session.commit()
     try:

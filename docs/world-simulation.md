@@ -15,6 +15,13 @@ New to the idea? Start with the [plain-language overview](world-simulation-overv
 - Allowed runtimes: forum on the Standard stack; photo sharing, instant messaging and dating on HPC; microblogging on
   Standard or HPC. Remote experiments are not supported.
 - Everything is off by default. An experiment that is not part of a running World Simulation behaves exactly as before.
+- The World Simulation needs the **optional YFederation plugin** (the folder `external/YFederation`, the `ysocial_federation`
+  package). It is not a pip dependency. Without it YSocial works as before for every classic experiment: the
+  *World Simulation* menu entry is hidden, its pages answer "The YFederation plugin is not installed" instead of an error,
+  and profile badges and cross-post options do not appear. Install the plugin and reload the page; nothing else has to be
+  restarted. When you start a World Simulation YSocial first checks that the plugin can be imported, and also that the
+  servers and clients of the members (which run as their own processes) can import it; if not, the start stops with the
+  reason and nothing is launched.
 
 ## Create one
 
@@ -127,6 +134,47 @@ The **Execution** tab starts, pauses, resumes and stops the World Simulation as 
 gateways, clients. While it is starting, running, paused or stopping, its experiments show the *World Simulation* badge
 and their own start and stop commands are disabled. When it is stopped, each experiment can be started alone again.
 Several World Simulations can be queued from **Schedule**.
+
+### Is every member alive? (health of a running World Simulation)
+
+While the World Simulation is running, the **Execution** tab (and the list page) watch the members, using only what the
+coordinator and YSocial already know:
+
+- A **Health** badge for each member: *OK*, *Waiting for X* (it is ahead and waits for the slowest member), *Starting*,
+  *Missing*, *Stalled*, *Not running*, *Failed*, *Finished*.
+- A **banner** on top lists the members in trouble, with the probable cause when the end of the member's log shows one
+  (for example `Python module 'ysocial_federation' not found`, `connection refused`, `the port is already in use`) and the
+  log file to open.
+- A **progress line**: `Tick 3/720, ~65 s per tick, ETA 13 h`. The time per tick is the median of the recent advances of
+  the shared clock, so a slow LLM run is not mistaken for a stuck one. Ticks are hours; the total is the longest client
+  (days x 24).
+
+Definitions:
+
+| State | Meaning |
+|-------|---------|
+| Missing | the member did not say *hello* to the coordinator within 60 s of the start of the run |
+| Stalled | no new *ready* for max(120 s, 5 x the median tick time) **while the other members wait for it** |
+| Not running | the server process of the member exited, or all its clients did (one of several clients is also reported) |
+| Waiting for X | not a problem: the member is ahead and the gate holds it until X catches up |
+
+A run where every member is equally slow is not reported as stalled (nobody is waiting); use the tick time and the logs.
+
+### Troubleshooting
+
+- **"The YFederation plugin is not installed"**: the folder `external/YFederation` is missing or `ysocial_federation` cannot be
+  imported by YSocial. Install the plugin; classic experiments are not affected.
+- **The start fails with "cannot import the YFederation plugin"**: the processes of the members could not import it. The
+  message carries the Python error; check the interpreter YSocial runs with and the `PYTHONPATH` of the members.
+- **A member shows *Missing* or *Not running***: open the log named in the banner. For a server it is `server_stderr.log` in
+  the folder of the experiment, for a client `<client name>_client_stderr.log` in the same folder. The usual causes are a
+  missing Python module, a port already in use, or a database that cannot be opened. Stop the World Simulation, fix the
+  cause and start it again: it resumes from where it stopped.
+- **A member shows *Stalled***: it is slower than the others or blocked (for example a language model that does not
+  answer). Check its client log and the model server; the other members wait for it.
+- **Everything looks stuck but nobody is flagged**: check the time per tick in the progress line. With a large language
+  model one tick can take minutes; the ETA is computed from it.
+- **The banner says the coordinator does not answer**: read the *Coordinator log* below the table.
 
 ### Who is active where (Agents tab)
 

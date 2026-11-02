@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 07:41+0000\n"
+"POT-Creation-Date: 2026-11-02 08:26+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -270,6 +270,12 @@ msgid "%(num)d file"
 msgid_plural "%(num)d files"
 msgstr[0] "%(num)d file"
 msgstr[1] "%(num)d file"
+
+#, python-format
+msgid "%(num)d member needs attention"
+msgid_plural "%(num)d members need attention"
+msgstr[0] "%(n)d membro richiede attenzione"
+msgstr[1] "%(n)d membri richiedono attenzione"
 
 #, python-format
 msgid "%(num)s photo"
@@ -4840,6 +4846,10 @@ msgstr ""
 "Tasso EMA per gli aggiornamenti in tempo reale dell'interesse dopo le "
 "reazioni."
 
+#, python-format
+msgid "ETA %(eta)s"
+msgstr "Fine stimata tra %(eta)s"
+
 msgid ""
 "Each News Page is associated with an RSS feed - the feed is used to "
 "populate, in real time, the page timeline with real-world articles."
@@ -5816,6 +5826,9 @@ msgstr "Colore degli occhi"
 msgid "Facial hair"
 msgstr "Barba e baffi"
 
+msgid "Failed"
+msgstr "Fallito"
+
 #, python-format
 msgid "Failed to clear experiment logs: %(error)s"
 msgstr "Impossibile eliminare i log dell'esperimento: %(error)s"
@@ -6694,6 +6707,9 @@ msgstr "Hashtag da visualizzare"
 msgid "Header Image URL"
 msgstr "URL dell'immagine di copertina"
 
+msgid "Health"
+msgstr "Salute"
+
 msgid "Heartbeat interval (seconds)"
 msgstr "Intervallo di heartbeat (secondi)"
 
@@ -7284,6 +7300,9 @@ msgid "Install Detoxify from Miscellanea before enabling toxicity annotation."
 msgstr ""
 "Installa Detoxify da Miscellanea prima di attivare l'annotazione della "
 "tossicità."
+
+msgid "Install the plugin and reload this page; nothing else has to be restarted."
+msgstr "Installa il plugin e ricarica questa pagina; non serve riavviare altro."
 
 msgid "Installed"
 msgstr "Installato"
@@ -7883,6 +7902,10 @@ msgstr "Ultima comparsa"
 
 msgid "Last day"
 msgstr "Ultimo giorno"
+
+#, python-format
+msgid "Last error in the log: %(line)s"
+msgstr "Ultimo errore nel log: %(line)s"
 
 msgid "Latent Variables and Affective Traits"
 msgstr "Variabili latenti e tratti affettivi"
@@ -8642,6 +8665,9 @@ msgstr "Numero minimo di topic di un forum"
 
 msgid "Miscellanea"
 msgstr "Varie"
+
+msgid "Missing"
+msgstr "Assente"
 
 msgid "Missing exp_id"
 msgstr "exp_id mancante"
@@ -9583,6 +9609,9 @@ msgstr "Non possiede alcun esperimento"
 msgid "Not participating in any experiments"
 msgstr "Non partecipa ad alcun esperimento"
 
+msgid "Not running"
+msgstr "Non in esecuzione"
+
 msgid "Not set"
 msgstr "Non impostato"
 
@@ -9689,6 +9718,9 @@ msgstr ""
 
 msgid "Number of topics:"
 msgstr "Numero di argomenti:"
+
+msgid "OK"
+msgstr "OK"
 
 msgid "OR"
 msgstr "OPPURE"
@@ -11091,6 +11123,26 @@ msgstr ""
 "Probabilità che, in un dato giorno di simulazione, a un agente attivo "
 "venga chiesto se vuole connettersi con un altro agente"
 
+#, python-format
+msgid "Probable cause: Python module '%(name)s' not found"
+msgstr "Causa probabile: modulo Python '%(name)s' non trovato"
+
+#, python-format
+msgid "Probable cause: cannot import '%(name)s'"
+msgstr "Causa probabile: impossibile importare '%(name)s'"
+
+msgid "Probable cause: connection refused"
+msgstr "Causa probabile: connessione rifiutata"
+
+msgid "Probable cause: database error"
+msgstr "Causa probabile: errore del database"
+
+msgid "Probable cause: out of memory"
+msgstr "Causa probabile: memoria esaurita"
+
+msgid "Probable cause: the port is already in use"
+msgstr "Causa probabile: la porta è già in uso"
+
 msgid "Process Watchdog"
 msgstr "Controllo dei processi"
 
@@ -12453,6 +12505,9 @@ msgstr "Vedi l'intera discussione"
 msgid "See how others see you"
 msgstr "Vedi come ti vedono gli altri"
 
+msgid "See the coordinator log below."
+msgstr "Vedi il log del coordinatore qui sotto."
+
 msgid "Seed"
 msgstr "Seed"
 
@@ -13329,6 +13384,9 @@ msgstr "Evidenza sociale"
 msgid "Solitary/Reserved"
 msgstr "Solitario/Riservato"
 
+msgid "Some members need attention"
+msgstr "Alcuni membri richiedono attenzione"
+
 msgid "Someone replied to you"
 msgstr "Qualcuno ti ha risposto"
 
@@ -13413,6 +13471,9 @@ msgstr "Dispersione del ritardo della reazione"
 msgid "Stacks"
 msgstr "Mazzi"
 
+msgid "Stalled"
+msgstr "Bloccato"
+
 msgid "Standard agents can only be assigned to standard populations."
 msgstr "Gli agenti standard possono essere assegnati solo a popolazioni standard."
 
@@ -13459,6 +13520,9 @@ msgstr "Avviata"
 #, python-format
 msgid "Started %(started_count)s experiments in group '%(name)s'"
 msgstr "Avviati %(started_count)s esperimenti nel gruppo '%(name)s'"
+
+msgid "Starting"
+msgstr "In avvio"
 
 msgid "Starting state of the agents"
 msgstr "Stato iniziale degli agenti"
@@ -14033,6 +14097,22 @@ msgstr "La World Simulation è già in coda."
 msgid "The World Simulation is not in the right state for this operation."
 msgstr "La World Simulation non è nello stato giusto per questa operazione."
 
+msgid ""
+"The World Simulation runs several experiments on one shared clock and "
+"needs the optional YFederation plugin (the folder external/YFederation). "
+"Experiments that do not belong to a World Simulation are not affected."
+msgstr ""
+"La World Simulation esegue più esperimenti su un unico orologio condiviso"
+" e richiede il plugin opzionale YFederation (la cartella "
+"external/YFederation). Gli esperimenti che non fanno parte di una World "
+"Simulation non sono interessati."
+
+msgid "The YFederation plugin is not installed"
+msgstr "Il plugin YFederation non è installato"
+
+msgid "The YFederation plugin is not installed."
+msgstr "Il plugin YFederation non è installato."
+
 msgid "The action was refused."
 msgstr "L'azione è stata rifiutata."
 
@@ -14164,6 +14244,9 @@ msgstr "Le conversazioni non possono essere mostrate in questo momento."
 
 msgid "The coordinator did not accept the participant."
 msgstr "Il coordinatore non ha accettato il partecipante."
+
+msgid "The coordinator does not answer: the members cannot advance."
+msgstr "Il coordinatore non risponde: i membri non possono avanzare."
 
 msgid "The coordinator, by rule"
 msgstr "Il coordinatore, per regola"
@@ -14382,6 +14465,13 @@ msgid ""
 msgstr ""
 "La regola di abbandono richiede la ripartizione dell'attenzione: attiva "
 "l'Attenzione oppure disattiva l'Abbandono."
+
+msgid ""
+"The logs are in the folder of each experiment (server_stderr.log and "
+"<client>_client_stderr.log)."
+msgstr ""
+"I log sono nella cartella di ogni esperimento (server_stderr.log e "
+"<client>_client_stderr.log)."
 
 msgid "The lower bound of the uncertain band cannot exceed the upper one"
 msgstr ""
@@ -14642,6 +14732,13 @@ msgid ""
 msgstr ""
 "Il server non era pronto o non è raggiungibile, oppure il suo actor è "
 "terminato: avvia prima il server dell'esperimento."
+
+msgid ""
+"The servers and clients of the members cannot import the YFederation "
+"plugin."
+msgstr ""
+"I server e i client dei membri non riescono a importare il plugin "
+"YFederation."
 
 #, python-format
 msgid "The settings were not saved: %(why)s."
@@ -15071,6 +15168,14 @@ msgstr "Reazione «pollice in su»"
 
 msgid "Tick"
 msgstr "Tick"
+
+#, python-format
+msgid "Tick %(done)s"
+msgstr "Tick %(done)s"
+
+#, python-format
+msgid "Tick %(done)s/%(total)s"
+msgstr "Tick %(done)s/%(total)s"
 
 msgid "Ticks per Round"
 msgstr "Tick per round"
@@ -15655,6 +15760,9 @@ msgstr "Università di Trento"
 
 msgid "Université Lyon 1"
 msgstr "Université Lyon 1"
+
+msgid "Unknown"
+msgstr "Sconosciuto"
 
 msgid "Unknown action"
 msgstr "Azione sconosciuta"
@@ -16309,6 +16417,10 @@ msgstr "Voti solo come segnale"
 
 msgid "Waiting for"
 msgstr "In attesa di"
+
+#, python-format
+msgid "Waiting for %(who)s"
+msgstr "In attesa di %(who)s"
 
 msgid "Waiting for an answer to your date proposal."
 msgstr "In attesa di una risposta alla tua proposta di appuntamento."
@@ -17400,6 +17512,14 @@ msgstr "l'intera discussione"
 msgid "group_ids is required"
 msgstr "group_ids è obbligatorio"
 
+#, python-format
+msgid "has not advanced for %(s)s (limit %(limit)s)"
+msgstr "non avanza da %(s)s (limite %(limit)s)"
+
+#, python-format
+msgid "has not said hello %(s)s s after the start (limit %(limit)s s)"
+msgstr "non ha salutato il coordinatore %(s)s s dopo l'avvio (limite %(limit)s s)"
+
 msgid "http://127.0.0.1:11434"
 msgstr "http://127.0.0.1:11434"
 
@@ -17418,6 +17538,13 @@ msgstr "immagini"
 
 msgid "in context."
 msgstr "nel suo contesto."
+
+#, python-format
+msgid "is not running: %(what)s exited"
+msgstr "non è in esecuzione: %(what)s è terminato"
+
+msgid "its process"
+msgstr "il suo processo"
 
 msgid "joined"
 msgstr "iscritto"
@@ -17574,6 +17701,9 @@ msgstr "ha risposto al tuo commento"
 msgid "replied to your post"
 msgstr "ha risposto al tuo post"
 
+msgid "reported a failure to the coordinator"
+msgstr "ha segnalato un errore al coordinatore"
+
 #, python-format
 msgid "round %(h)s"
 msgstr "round %(h)s"
@@ -17691,6 +17821,10 @@ msgstr "ySights"
 #, python-brace-format
 msgid "{n} of 2 to 5 platforms chosen"
 msgstr "{n} piattaforme scelte su 2-5"
+
+#, python-format
+msgid "~%(t)s per tick"
+msgstr "~%(t)s per tick"
 
 msgid "— installed and updated independently"
 msgstr "— installati e aggiornati separatamente"

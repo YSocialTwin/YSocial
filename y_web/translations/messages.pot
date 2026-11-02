@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 08:39+0000\n"
+"POT-Creation-Date: 2026-11-02 08:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -118,11 +118,35 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid "%(label)s must be %(kind)s."
+msgstr ""
+
+#, python-format
+msgid "%(label)s must be at least %(low)s."
+msgstr ""
+
+#, python-format
+msgid "%(label)s must be between %(low)s and %(high)s."
+msgstr ""
+
+#, python-format
+msgid "%(label)s must be greater than %(low)s."
+msgstr ""
+
+#, python-format
+msgid "%(n)s accounts (not listed)"
+msgstr ""
+
+#, python-format
 msgid "%(n)s active runs"
 msgstr ""
 
 #, python-format
 msgid "%(n)s activity profiles"
+msgstr ""
+
+#, python-format
+msgid "%(n)s agents"
 msgstr ""
 
 #, python-format
@@ -137,6 +161,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s configurable values"
+msgstr ""
+
+#, python-format
+msgid "%(n)s cross-posts are waiting and will appear when this platform restarts"
 msgstr ""
 
 #, python-format
@@ -216,6 +244,12 @@ msgstr[1] ""
 #, python-format
 msgid "%(num)d file"
 msgid_plural "%(num)d files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(num)d member needs attention"
+msgid_plural "%(num)d members need attention"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -364,6 +398,9 @@ msgstr ""
 msgid "0 / 5 photos selected"
 msgstr ""
 
+msgid "0 or more."
+msgstr ""
+
 msgid "1. Create one or more Agent Populations"
 msgstr ""
 
@@ -438,6 +475,21 @@ msgid "@katie_abramski"
 msgstr ""
 
 msgid "A Hugging Face diffusers model, downloaded on first use."
+msgstr ""
+
+msgid "A World Simulation needs 2 to 5 experiments."
+msgstr ""
+
+msgid ""
+"A World Simulation runs several experiments, one for each platform, on "
+"one shared clock. The same agents can be active on more than one "
+"platform."
+msgstr ""
+
+msgid ""
+"A World Simulation runs several experiments, one for each platform, on "
+"one shared clock. Work through the steps below: every parameter has a "
+"default, so you only change what you need."
 msgstr ""
 
 msgid ""
@@ -853,6 +905,12 @@ msgstr ""
 msgid "Add to Population"
 msgstr ""
 
+msgid "Add to the queue"
+msgstr ""
+
+msgid "Added"
+msgstr ""
+
 msgid "Additional Configuration"
 msgstr ""
 
@@ -883,6 +941,15 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
+msgid "Advanced attention parameters"
+msgstr ""
+
+msgid "Advanced discovery parameters"
+msgstr ""
+
+msgid "Advanced leave parameters"
+msgstr ""
+
 msgid "Advanced parameters"
 msgstr ""
 
@@ -900,6 +967,9 @@ msgid "Advanced settings and recommender"
 msgstr ""
 
 msgid "Advanced settings updated."
+msgstr ""
+
+msgid "Advanced: stored parameters and generated file"
 msgstr ""
 
 msgid "Affective traits"
@@ -1022,6 +1092,9 @@ msgstr ""
 msgid "Agent behaviour over time"
 msgstr ""
 
+msgid "Agent content that can be cross-posted"
+msgstr ""
+
 msgid "Agent gender"
 msgstr ""
 
@@ -1080,7 +1153,22 @@ msgstr ""
 msgid "Agents and pages"
 msgstr ""
 
+msgid "Agents and people"
+msgstr ""
+
+msgid ""
+"Agents become aware of a platform from what they see of it (cross-posts) "
+"and may open an account there. Switching it on also makes the platforms "
+"report what each agent was shown."
+msgstr ""
+
+msgid "Agents discover and join new platforms"
+msgstr ""
+
 msgid "Agents evaluate the relationship after a date"
+msgstr ""
+
+msgid "Agents leave platforms that no longer interest them"
 msgstr ""
 
 msgid "Agents leave the platform"
@@ -1173,10 +1261,22 @@ msgstr ""
 msgid "All annotations"
 msgstr ""
 
+msgid "All content (the agent's own and that of other agents)"
+msgstr ""
+
+msgid "All experiments must use the same population."
+msgstr ""
+
+msgid "All experiments must use the simulated clock with 24 slots a day."
+msgstr ""
+
 msgid "All interactions"
 msgstr ""
 
 msgid "All members"
+msgstr ""
+
+msgid "All platforms"
 msgstr ""
 
 msgid "All posts"
@@ -1189,6 +1289,13 @@ msgstr ""
 msgid ""
 "All telemetry data is GDPR compliant. You can disable it anytime from the"
 " application %(link)s."
+msgstr ""
+
+msgid ""
+"All: every agent is active on every platform where it has an account. One"
+" at random: each agent starts on a single platform and may discover the "
+"others. Custom: each agent starts on a platform with the probability you "
+"give."
 msgstr ""
 
 msgid "Allow forum topics"
@@ -1206,7 +1313,17 @@ msgstr ""
 msgid "Allow search"
 msgstr ""
 
+#, python-format
+msgid "Already part of the World Simulation %(name)s."
+msgstr ""
+
 msgid "Already registered?"
+msgstr ""
+
+msgid "Also on"
+msgstr ""
+
+msgid "Also post on"
 msgstr ""
 
 msgid "Also show the log on the console"
@@ -1249,16 +1366,31 @@ msgstr ""
 msgid "An ad hoc client config named '%(safe_client_name)s' already exists."
 msgstr ""
 
+msgid "An agent is eligible to join once its awareness reaches this value."
+msgstr ""
+
 msgid ""
 "An agent is not tied to a platform: it can belong to any population. Turn"
 " a section on to store the custom fields that only that platform reads; "
 "the sections of platforms that are not installed are not offered."
 msgstr ""
 
+msgid ""
+"An agent leaves a platform when its share of attention there stays low "
+"for several days, as long as it stays active somewhere else. Needs the "
+"attention sharing above."
+msgstr ""
+
+msgid "An experiment already belongs to another World Simulation."
+msgstr ""
+
 #, python-format
 msgid ""
 "An experiment defines the simulation environment. For more options, visit"
 " the %(link)s page."
+msgstr ""
+
+msgid "An experiment is running: stop it first."
 msgstr ""
 
 #, python-format
@@ -1272,6 +1404,9 @@ msgid "Analysis of client(s) execution."
 msgstr ""
 
 msgid "Analytical Environment"
+msgstr ""
+
+msgid "Analytics"
 msgstr ""
 
 msgid "Analytics Pages"
@@ -1327,6 +1462,14 @@ msgid "Annotations and stress/reward"
 msgstr ""
 
 msgid "Anonymous usage data helps improve YSocial. No personal data is collected."
+msgstr ""
+
+msgid ""
+"Any integer. Leave it empty to draw one at random when the World "
+"Simulation is created."
+msgstr ""
+
+msgid "Any state"
 msgstr ""
 
 msgid "Appearance"
@@ -1439,6 +1582,12 @@ msgstr ""
 msgid "Async Embedding"
 msgstr ""
 
+msgid "At least 1."
+msgstr ""
+
+msgid "At least 1; there are at most five platforms."
+msgstr ""
+
 msgid "At least one number"
 msgstr ""
 
@@ -1469,6 +1618,9 @@ msgid "Attention Budget"
 msgstr ""
 
 msgid "Attention budget"
+msgstr ""
+
+msgid "Attention share below which an agent is losing interest"
 msgstr ""
 
 msgid "Attractiveness"
@@ -1625,6 +1777,24 @@ msgstr ""
 msgid "Avg. Reach of People This Author Follows"
 msgstr ""
 
+msgid "Awareness"
+msgstr ""
+
+msgid "Awareness added by interacting with content of the platform."
+msgstr ""
+
+msgid "Awareness added by seeing content of the platform."
+msgstr ""
+
+msgid "Awareness added when the author is followed by the agent."
+msgstr ""
+
+msgid "Awareness credit for the platform of quoted content"
+msgstr ""
+
+msgid "Awareness needed to consider joining"
+msgstr ""
+
 msgid "Azerbaijani"
 msgstr ""
 
@@ -1668,6 +1838,9 @@ msgid "Background activity that does not come from the agents."
 msgstr ""
 
 msgid "Background and profile attributes shaping this account."
+msgstr ""
+
+msgid "Background awareness rate"
 msgstr ""
 
 msgid "Background indexing"
@@ -1861,6 +2034,9 @@ msgstr ""
 msgid "Brazilian"
 msgstr ""
 
+msgid "Bridge agents"
+msgstr ""
+
 msgid "Brief explanation of the client's purpose"
 msgstr ""
 
@@ -1884,6 +2060,9 @@ msgid ""
 msgstr ""
 
 msgid "Broadcaster:"
+msgstr ""
+
+msgid "Brought by"
 msgstr ""
 
 msgid "Browse banner previews in small batches."
@@ -1930,6 +2109,12 @@ msgstr ""
 msgid "Business Hours (9-17)"
 msgstr ""
 
+msgid ""
+"By rule: the coordinator copies content to other platforms with the "
+"probabilities below. By the agent: each agent chooses where to post, with"
+" the propensity below."
+msgstr ""
+
 msgid "Call Volume by Method"
 msgstr ""
 
@@ -1971,6 +2156,9 @@ msgstr ""
 msgid "Cannot remove experiments from a running group"
 msgstr ""
 
+msgid "Cap on social evidence"
+msgstr ""
+
 msgid "Card"
 msgstr ""
 
@@ -1989,6 +2177,9 @@ msgstr ""
 msgid "Cartesian product"
 msgstr ""
 
+msgid "Cascades"
+msgstr ""
+
 msgid "Cast Vote"
 msgstr ""
 
@@ -2005,6 +2196,14 @@ msgid "Central catalog"
 msgstr ""
 
 msgid "Centrist"
+msgstr ""
+
+msgid ""
+"Chain depth: 1 for content of the platform where it was seen, +1 for each"
+" cross-post it went through."
+msgstr ""
+
+msgid "Chance per day of becoming aware without any exposure. Between 0 and 1."
 msgstr ""
 
 msgid "Change the human participation settings"
@@ -2101,16 +2300,40 @@ msgstr ""
 msgid "Chinese"
 msgstr ""
 
+msgid ""
+"Choose All content, or at least one kind of content that may be cross-"
+"posted."
+msgstr ""
+
+msgid ""
+"Choose All, or add the kinds of content that may be cross-posted: each "
+"option you add widens what can travel (own content, plus content with "
+"news, plus content with images). Read at each start or restart."
+msgstr ""
+
 msgid "Choose JSON file..."
 msgstr ""
 
 msgid "Choose ZIP file..."
 msgstr ""
 
+msgid "Choose a World Simulation to see its analytics."
+msgstr ""
+
+msgid "Choose a bundle to import."
+msgstr ""
+
 msgid "Choose a population file first."
 msgstr ""
 
 msgid "Choose a source experiment from the selected group."
+msgstr ""
+
+msgid "Choose a user."
+msgstr ""
+
+#, python-format
+msgid "Choose a valid option for %(label)s."
 msgstr ""
 
 msgid "Choose an account…"
@@ -2129,6 +2352,9 @@ msgid "Choose another user."
 msgstr ""
 
 msgid "Choose at least one of the available activities."
+msgstr ""
+
+msgid "Choose at most one experiment for each platform."
 msgstr ""
 
 msgid "Choose edge list file (CSV)..."
@@ -2158,6 +2384,12 @@ msgid "Choose the language of the interface."
 msgstr ""
 
 msgid "Choose two dating experiments to compare."
+msgstr ""
+
+msgid ""
+"Choose two to five stopped experiments, at most one for each platform, "
+"that use the simulated clock with hourly slots. Their populations may "
+"differ: an agent is active on the platforms whose population contains it."
 msgstr ""
 
 msgid ""
@@ -2377,10 +2609,19 @@ msgstr ""
 msgid "Clients needed to start"
 msgstr ""
 
+msgid "Clock"
+msgstr ""
+
 msgid "Clock Timezone"
 msgstr ""
 
 msgid "Clock Timezone:"
+msgstr ""
+
+msgid "Clock and schedule"
+msgstr ""
+
+msgid "Clock granularity"
 msgstr ""
 
 #, python-format
@@ -2505,6 +2746,9 @@ msgstr ""
 msgid "Compare with another experiment"
 msgstr ""
 
+msgid "Comparison of platforms"
+msgstr ""
+
 msgid "Complete Graph"
 msgstr ""
 
@@ -2534,6 +2778,9 @@ msgstr ""
 msgid "Computational Social Science"
 msgstr ""
 
+msgid "Computed from the database of the coordinator; days are numbered from 0."
+msgstr ""
+
 msgid "Concurrency, timeouts and the failure guard of the language model calls."
 msgstr ""
 
@@ -2541,6 +2788,9 @@ msgid "Concurrent calls"
 msgstr ""
 
 msgid "Configurable Features"
+msgstr ""
+
+msgid "Configuration"
 msgstr ""
 
 msgid "Configuration file not found."
@@ -2865,6 +3115,12 @@ msgstr ""
 msgid "Content reported."
 msgstr ""
 
+msgid "Content with images"
+msgstr ""
+
+msgid "Content with news (a link)"
+msgstr ""
+
 msgid "Content-Based Filtering"
 msgstr ""
 
@@ -2913,6 +3169,12 @@ msgid "Conversations and dates"
 msgstr ""
 
 msgid "Conversations started"
+msgstr ""
+
+msgid "Coordinator log"
+msgstr ""
+
+msgid "Copy"
 msgstr ""
 
 msgid "Copy Experiment"
@@ -3111,6 +3373,9 @@ msgstr ""
 msgid "Created %(created_groups)s groups"
 msgstr ""
 
+msgid "Created on"
+msgstr ""
+
 msgid "Created using predefined parameters. Agents are automatically generated."
 msgstr ""
 
@@ -3149,6 +3414,21 @@ msgid "Critical/Judgmental"
 msgstr ""
 
 msgid "Croatian"
+msgstr ""
+
+msgid "Cross-post cascades"
+msgstr ""
+
+msgid "Cross-posting"
+msgstr ""
+
+msgid "Cross-posts"
+msgstr ""
+
+msgid "Cross-posts between platforms, per day"
+msgstr ""
+
+msgid "Cross-posts of people"
 msgstr ""
 
 msgid "Cumulative Trends"
@@ -3317,6 +3597,9 @@ msgstr ""
 msgid "Custom fields"
 msgstr ""
 
+msgid "Custom probabilities"
+msgstr ""
+
 msgid "Customize Hourly Rates"
 msgstr ""
 
@@ -3348,6 +3631,9 @@ msgid "Daily average score for each toxicity category up to the selected time."
 msgstr ""
 
 msgid "Daily counts for the most frequent emotions so far."
+msgstr ""
+
+msgid "Daily decay of awareness"
 msgstr ""
 
 msgid "Daily evolution of active nodes and directed follow edges."
@@ -3529,6 +3815,9 @@ msgstr ""
 msgid "Day %(day)s, Hour %(hour)s"
 msgstr ""
 
+msgid "Day / slot"
+msgstr ""
+
 msgid "Day by day"
 msgstr ""
 
@@ -3544,7 +3833,16 @@ msgstr ""
 msgid "Days before a passed profile returns (0 = never)"
 msgstr ""
 
+msgid "Days before an agent can rejoin a platform it left"
+msgstr ""
+
 msgid "Days before resuming"
+msgstr ""
+
+msgid "Days in a row before leaving"
+msgstr ""
+
+msgid "Days observed"
 msgstr ""
 
 msgid "Days to add"
@@ -3598,6 +3896,9 @@ msgstr ""
 msgid "Decided by"
 msgstr ""
 
+msgid "Decision rule"
+msgstr ""
+
 #, python-format
 msgid "Decision: %(d)s"
 msgstr ""
@@ -3612,6 +3913,9 @@ msgid "Declared preferences and location"
 msgstr ""
 
 msgid "Decline"
+msgstr ""
+
+msgid "Default"
 msgstr ""
 
 msgid "Default (English)"
@@ -3717,6 +4021,9 @@ msgstr ""
 msgid "Delete photo"
 msgstr ""
 
+msgid "Delete this World Simulation? The experiments are not deleted."
+msgstr ""
+
 msgid "Delete this message?"
 msgstr ""
 
@@ -3729,6 +4036,9 @@ msgid "Deleted %(label)s."
 msgstr ""
 
 msgid "Deleted (researcher only)"
+msgstr ""
+
+msgid "Deliveries"
 msgstr ""
 
 msgid "Democrat"
@@ -3896,6 +4206,9 @@ msgstr ""
 msgid "Discover"
 msgstr ""
 
+msgid "Discovery"
+msgstr ""
+
 msgid "Discovery mode"
 msgstr ""
 
@@ -3941,7 +4254,14 @@ msgstr ""
 msgid "Distribution:"
 msgstr ""
 
+msgid "Don't share"
+msgstr ""
+
 msgid "Download"
+msgstr ""
+
+#, python-format
+msgid "Download %(what)s (CSV)"
 msgstr ""
 
 msgid "Download Agent List"
@@ -4030,6 +4350,10 @@ msgid "Dynamic fill"
 msgstr ""
 
 msgid "EMA rate for real-time interest updates after reactions."
+msgstr ""
+
+#, python-format
+msgid "ETA %(eta)s"
 msgstr ""
 
 msgid ""
@@ -4359,6 +4683,15 @@ msgstr ""
 msgid "English"
 msgstr ""
 
+msgid "Enrol"
+msgstr ""
+
+msgid "Enrol and remove people in the Participants box."
+msgstr ""
+
+msgid "Enrolled"
+msgstr ""
+
 msgid "Ensemble"
 msgstr ""
 
@@ -4523,6 +4856,9 @@ msgstr ""
 msgid "Event weights"
 msgstr ""
 
+msgid "Events"
+msgstr ""
+
 msgid ""
 "Every box has its own Save button: only the settings of that box are "
 "changed."
@@ -4535,8 +4871,25 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Every day each agent splits its activity among the platforms where it is "
+"active, according to how rewarding they were. Off: every agent keeps its "
+"own activity on each platform."
+msgstr ""
+
+msgid ""
 "Every few slots it pairs agents with a stable matching on symmetric "
 "weights; the assigned partners lead the stack."
+msgstr ""
+
+msgid ""
+"Every member runs on one simulated clock of 24 slots a day. The seed "
+"fixes every random draw, so the same seed and parameters give the same "
+"run."
+msgstr ""
+
+msgid ""
+"Every parameter is a field above. After creation this section shows the "
+"configuration file the coordinator reads."
 msgstr ""
 
 msgid "Every prompt is the default one."
@@ -4569,6 +4922,9 @@ msgid "Exception:"
 msgstr ""
 
 msgid "Excerpt"
+msgstr ""
+
+msgid "Execution"
 msgstr ""
 
 #, python-format
@@ -4820,6 +5176,9 @@ msgstr ""
 msgid "Export finished. The files are listed in the Export and reports panel."
 msgstr ""
 
+msgid "Export, copy and reset"
+msgstr ""
+
 msgid ""
 "Exposure and outcome per recommender model. The Gini coefficients go from"
 " 0 (equal) to 1 (one profile holds everything)."
@@ -4874,6 +5233,9 @@ msgid "Eye colour"
 msgstr ""
 
 msgid "Facial hair"
+msgstr ""
+
+msgid "Failed"
 msgstr ""
 
 #, python-format
@@ -5057,10 +5419,16 @@ msgid ""
 "panels called Advanced parameters: open one to change it."
 msgstr ""
 
+msgid "Finished"
+msgstr ""
+
 msgid "Finnish"
 msgstr ""
 
 msgid "First Seen"
+msgstr ""
+
+msgid "First day"
 msgstr ""
 
 msgid "First group has no experiments"
@@ -5070,6 +5438,9 @@ msgid "First message (optional)"
 msgstr ""
 
 msgid "First messages, replies, unmatching and date proposals."
+msgstr ""
+
+msgid "Fixed probability"
 msgstr ""
 
 msgid "Flirtation"
@@ -5109,6 +5480,9 @@ msgid "Follow:"
 msgstr ""
 
 msgid "Followed"
+msgstr ""
+
+msgid "Followed authors counted at most. 0 or more."
 msgstr ""
 
 msgid "Follower"
@@ -5254,7 +5628,15 @@ msgstr ""
 msgid "Friendship RecSys"
 msgstr ""
 
+msgid "From"
+msgstr ""
+
 msgid "From / To"
+msgstr ""
+
+msgid ""
+"From the cross-posts of the coordinator; the topics a platform had to "
+"create are in its own database."
 msgstr ""
 
 msgid "Frontend Extensions"
@@ -5264,6 +5646,9 @@ msgid "Frontend Settings"
 msgstr ""
 
 msgid "Frontend Settings:"
+msgstr ""
+
+msgid "Frustration"
 msgstr ""
 
 msgid ""
@@ -5457,6 +5842,11 @@ msgid "Give the likes and super likes of today back"
 msgstr ""
 
 msgid ""
+"Give the probability of starting on at least one platform, or choose "
+"another starting state."
+msgstr ""
+
+msgid ""
 "Gives every profile a desirability rating that moves with the swipes it "
 "receives, and shows each agent profiles of a similar level."
 msgstr ""
@@ -5470,6 +5860,9 @@ msgid "Global"
 msgstr ""
 
 msgid "Global Actions Likelihood"
+msgstr ""
+
+msgid "Global tick"
 msgstr ""
 
 msgid "Go"
@@ -5510,6 +5903,9 @@ msgstr ""
 msgid ""
 "Granted group '%(group)s' visibility to selected researchers (%(count)s "
 "new assignment(s))."
+msgstr ""
+
+msgid "Granularity must be slot or day."
 msgstr ""
 
 msgid "Graph Proximity"
@@ -5655,6 +6051,9 @@ msgstr ""
 msgid "Header Image URL"
 msgstr ""
 
+msgid "Health"
+msgstr ""
+
 msgid "Heartbeat interval (seconds)"
 msgstr ""
 
@@ -5698,6 +6097,11 @@ msgid "High energy, viral-focused, controversial"
 msgstr ""
 
 msgid "Higher-order Modeling"
+msgstr ""
+
+msgid ""
+"Highest factor applied to an agent's chance of a session on a platform. "
+"Not below the smallest multiplier."
 msgstr ""
 
 msgid "Histogram of how many times individual posts have been recommended."
@@ -5775,6 +6179,12 @@ msgid ""
 "compared with a threshold. The weights are relative to each other."
 msgstr ""
 
+msgid ""
+"How an aware agent decides to join: a probability that grows with "
+"awareness, ties, interest and frustration (logistic), or a fixed "
+"probability once awareness passes the threshold."
+msgstr ""
+
 msgid "How do you feel?"
 msgstr ""
 
@@ -5832,6 +6242,11 @@ msgid "How often memory reflections are generated."
 msgstr ""
 
 msgid ""
+"How sharply the agent favours its best platform. Low values concentrate "
+"attention, high values spread it evenly. Greater than 0."
+msgstr ""
+
+msgid ""
 "How the agents talk to their matches: who writes the messages, how often "
 "they check a chat, reply, react or leave it, and when they propose or "
 "accept a date. Limits and dates are rules of the platform: see the "
@@ -5858,6 +6273,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"How the daily activity of an agent is shared among the platforms where it"
+" is active, and when it leaves one."
+msgstr ""
+
+msgid ""
 "How the experiment topics map onto agents and chats: whether interests "
 "come from the population or are drawn at random, how many public chats an"
 " agent joins per topic, and how often it writes off-topic."
@@ -5869,6 +6289,11 @@ msgid ""
 msgstr ""
 
 msgid "How the prompts work"
+msgstr ""
+
+msgid ""
+"How the reward of different platforms is compared before sharing "
+"attention."
 msgstr ""
 
 msgid ""
@@ -5928,6 +6353,9 @@ msgid "ISTI-CNR"
 msgstr ""
 
 msgid "Identity Attack"
+msgstr ""
+
+msgid "Identity and populations"
 msgstr ""
 
 msgid "If >1, creates copies named: name_1, name_2, etc. There is no hard cap."
@@ -5998,6 +6426,12 @@ msgstr ""
 msgid "Images are cropped to a square preview when needed."
 msgstr ""
 
+msgid "Import"
+msgstr ""
+
+msgid "Import a World Simulation"
+msgstr ""
+
 msgid "Importance 0-10"
 msgstr ""
 
@@ -6015,6 +6449,9 @@ msgid ""
 msgstr ""
 
 msgid "In their words"
+msgstr ""
+
+msgid "In your own words"
 msgstr ""
 
 msgid "In-Degree CCDF"
@@ -6041,6 +6478,9 @@ msgid ""
 msgstr ""
 
 msgid "Indonesian"
+msgstr ""
+
+msgid "Inertia"
 msgstr ""
 
 msgid "Infer Opinion (System)"
@@ -6111,6 +6551,9 @@ msgid "Install Detoxify first from %(link)s to enable toxicity annotation."
 msgstr ""
 
 msgid "Install Detoxify from Miscellanea before enabling toxicity annotation."
+msgstr ""
+
+msgid "Install the plugin and reload this page; nothing else has to be restarted."
 msgstr ""
 
 msgid "Installed"
@@ -6449,6 +6892,9 @@ msgstr ""
 msgid "Israeli"
 msgstr ""
 
+msgid "It didn't work out"
+msgstr ""
+
 msgid "It is a match!"
 msgstr ""
 
@@ -6652,6 +7098,9 @@ msgstr ""
 msgid "Largest distance (km)"
 msgstr ""
 
+msgid "Largest multiplier"
+msgstr ""
+
 msgid "Largest request (bytes)"
 msgstr ""
 
@@ -6662,6 +7111,13 @@ msgid "Last Run"
 msgstr ""
 
 msgid "Last Seen"
+msgstr ""
+
+msgid "Last day"
+msgstr ""
+
+#, python-format
+msgid "Last error in the log: %(line)s"
 msgstr ""
 
 msgid "Latent Variables and Affective Traits"
@@ -6743,6 +7199,9 @@ msgid "Leave the platform"
 msgstr ""
 
 msgid "Leave the platform? Your matches will end."
+msgstr ""
+
+msgid "Leaving a platform"
 msgstr ""
 
 msgid "Leaving the platform"
@@ -6918,6 +7377,9 @@ msgstr ""
 msgid "Login"
 msgstr ""
 
+msgid "Logistic (graded)"
+msgstr ""
+
 msgid "Logo"
 msgstr ""
 
@@ -6984,6 +7446,11 @@ msgstr ""
 msgid "Lower bound must be less than or equal to upper bound."
 msgstr ""
 
+msgid ""
+"Lowest factor applied to an agent's chance of a session on a platform. At"
+" least 0."
+msgstr ""
+
 msgid "Maintain the active simulation topics from the overview card"
 msgstr ""
 
@@ -7026,6 +7493,9 @@ msgstr ""
 msgid ""
 "Manage your self-hosted Large Language Model server, view available "
 "models, and pull new models from the repository."
+msgstr ""
+
+msgid "Managed by the World Simulation"
 msgstr ""
 
 msgid "Management"
@@ -7210,6 +7680,9 @@ msgstr ""
 msgid "Medium-Low"
 msgstr ""
 
+msgid "Member experiments are running or in the experiment schedule."
+msgstr ""
+
 msgid "Member roles"
 msgstr ""
 
@@ -7298,6 +7771,12 @@ msgid ""
 " installed and updated independently from its page."
 msgstr ""
 
+msgid "Migration"
+msgstr ""
+
+msgid "Migration between platforms"
+msgstr ""
+
 msgid "Min Probability Ratio"
 msgstr ""
 
@@ -7338,6 +7817,9 @@ msgid "Minimum topics of a forum"
 msgstr ""
 
 msgid "Miscellanea"
+msgstr ""
+
+msgid "Missing"
 msgstr ""
 
 msgid "Missing exp_id"
@@ -7449,6 +7931,9 @@ msgstr ""
 msgid "Most commented"
 msgstr ""
 
+msgid "Most platforms an agent can be active on"
+msgstr ""
+
 msgid "Most recent"
 msgstr ""
 
@@ -7495,7 +7980,13 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
+msgid "Name (optional)"
+msgstr ""
+
 msgid "Name and hours are required."
+msgstr ""
+
+msgid "Name and platforms"
 msgstr ""
 
 msgid "Name is required"
@@ -7504,9 +7995,15 @@ msgstr ""
 msgid "Name of the channel or group, shown to the agents."
 msgstr ""
 
+msgid "Name of the copy"
+msgstr ""
+
 msgid ""
 "Name of the environment variable holding the key; the key itself is never"
 " written to the configuration."
+msgstr ""
+
+msgid "Name or id"
 msgstr ""
 
 msgid "Name shown to others"
@@ -7524,6 +8021,9 @@ msgstr ""
 msgid "Nationality not found."
 msgstr ""
 
+msgid "Native values"
+msgstr ""
+
 msgid "Nearby and recently active profiles come first."
 msgstr ""
 
@@ -7531,6 +8031,9 @@ msgid "Nearest neighbors (k)"
 msgstr ""
 
 msgid "Need for visibility"
+msgstr ""
+
+msgid "Needs the simulated clock with hourly slots (24 a day)."
 msgstr ""
 
 msgid "Negative"
@@ -7725,6 +8228,9 @@ msgstr ""
 msgid "New rounds are available."
 msgstr ""
 
+msgid "New simulation"
+msgstr ""
+
 #, python-format
 msgid "New version available: %(get)s (v%(get2)s)"
 msgstr ""
@@ -7814,6 +8320,15 @@ msgid "No Active Experiments"
 msgstr ""
 
 msgid "No URL provided"
+msgstr ""
+
+msgid "No World Simulation to add."
+msgstr ""
+
+msgid "No World Simulation yet."
+msgstr ""
+
+msgid "No account matches."
 msgstr ""
 
 msgid "No account with that name."
@@ -7914,6 +8429,9 @@ msgid "No emotion annotations have been recorded up to the selected time."
 msgstr ""
 
 msgid "No emotions are trending yet."
+msgstr ""
+
+msgid "No experiment is available."
 msgstr ""
 
 msgid "No experiment matrix combinations were created."
@@ -8019,6 +8537,9 @@ msgstr ""
 msgid "No pages assigned"
 msgstr ""
 
+msgid "No participants yet."
+msgstr ""
+
 msgid "No people following this profile yet"
 msgstr ""
 
@@ -8037,10 +8558,19 @@ msgstr ""
 msgid "No photos matched your search yet."
 msgstr ""
 
+msgid "No platform chosen yet."
+msgstr ""
+
+msgid "No platform."
+msgstr ""
+
 msgid "No plugin is available."
 msgstr ""
 
 msgid "No population is available."
+msgstr ""
+
+msgid "No population yet."
 msgstr ""
 
 #, python-format
@@ -8152,6 +8682,9 @@ msgstr ""
 msgid "None"
 msgstr ""
 
+msgid "None."
+msgstr ""
+
 msgid "Normal"
 msgstr ""
 
@@ -8198,6 +8731,9 @@ msgid "Not owning any experiments"
 msgstr ""
 
 msgid "Not participating in any experiments"
+msgstr ""
+
+msgid "Not running"
 msgstr ""
 
 msgid "Not set"
@@ -8255,6 +8791,9 @@ msgstr ""
 msgid "Number of Copies"
 msgstr ""
 
+msgid "Number of active platforms"
+msgstr ""
+
 msgid "Number of blocks"
 msgstr ""
 
@@ -8288,6 +8827,9 @@ msgid "Number of top semantic memory items considered per retrieval."
 msgstr ""
 
 msgid "Number of topics:"
+msgstr ""
+
+msgid "OK"
 msgstr ""
 
 msgid "OR"
@@ -8348,6 +8890,14 @@ msgid ""
 " This is not what a participant sees."
 msgstr ""
 
+msgid "On"
+msgstr ""
+
+msgid ""
+"On by default: content that crosses a platform carries its topics and the"
+" destination creates the ones it lacks."
+msgstr ""
+
 msgid "Onboarding screen"
 msgstr ""
 
@@ -8364,10 +8914,24 @@ msgstr ""
 msgid "One line per photo; the image can be added later from the profile."
 msgstr ""
 
+msgid ""
+"One of the experiments uses a backend that is not supported for its "
+"platform."
+msgstr ""
+
+msgid "One of the platforms cannot take part in a World Simulation."
+msgstr ""
+
+msgid "One platform at random"
+msgstr ""
+
 msgid "Only LLM agents are listed."
 msgstr ""
 
 msgid "Only Ollama is currently supported for memory embeddings."
+msgstr ""
+
+msgid "Only a waiting World Simulation can be removed from the queue."
 msgstr ""
 
 msgid ""
@@ -8477,6 +9041,10 @@ msgid ""
 msgstr ""
 
 msgid "Open the profile"
+msgstr ""
+
+#, python-format
+msgid "Open the profile on %(platform)s"
 msgstr ""
 
 msgid "Openness"
@@ -8606,6 +9174,12 @@ msgid ""
 "change it)"
 msgstr ""
 
+msgid "Original content"
+msgstr ""
+
+msgid "Original name"
+msgstr ""
+
 msgid "Other"
 msgstr ""
 
@@ -8678,6 +9252,10 @@ msgid "Page %(page)s"
 msgstr ""
 
 #, python-format
+msgid "Page %(page)s of %(pages)s"
+msgstr ""
+
+#, python-format
 msgid "Page %(page)s of %(total)s"
 msgstr ""
 
@@ -8715,6 +9293,20 @@ msgstr ""
 msgid "Palestinian"
 msgstr ""
 
+msgid "Parameters"
+msgstr ""
+
+msgid "Parameters can be changed later, while the World Simulation is stopped."
+msgstr ""
+
+msgid "Parameters saved."
+msgstr ""
+
+msgid ""
+"Parameters stored with this World Simulation that this form does not "
+"show. They are kept as they are when you save."
+msgstr ""
+
 msgid "Parent post not found"
 msgstr ""
 
@@ -8727,10 +9319,18 @@ msgstr ""
 msgid "Participant"
 msgstr ""
 
+msgid "Participant enrolled."
+msgstr ""
+
 msgid "Participant mode"
 msgstr ""
 
 msgid "Participant notice"
+msgstr ""
+
+msgid ""
+"Participant removed from the World Simulation. Their accounts stay in the"
+" experiments."
 msgstr ""
 
 msgid "Participants"
@@ -8807,6 +9407,11 @@ msgstr ""
 msgid "People and pages you can follow in this experiment."
 msgstr ""
 
+msgid ""
+"People are enrolled after the World Simulation has been created, also "
+"while it runs."
+msgstr ""
+
 msgid "People assigned to this experiment"
 msgstr ""
 
@@ -8818,6 +9423,22 @@ msgstr ""
 msgid ""
 "People can play in this experiment when human participation is on in the "
 "server settings"
+msgstr ""
+
+msgid ""
+"People enrolled in the World Simulation (identity human:<id>); agents are"
+" not listed here."
+msgstr ""
+
+msgid ""
+"People take part with one account on each platform they are enrolled in, "
+"and can cross-post only there. They can be enrolled while the World "
+"Simulation runs; they stay outside the rules that apply to agents."
+msgstr ""
+
+msgid ""
+"People take part with one account on each platform they are enrolled in. "
+"They stay outside the rules that apply to agents."
 msgstr ""
 
 msgid "People who play next to the agents, gateway status"
@@ -8832,6 +9453,9 @@ msgid ""
 msgstr ""
 
 msgid "Persist memory events"
+msgstr ""
+
+msgid "Person"
 msgstr ""
 
 msgid "Persona"
@@ -8939,6 +9563,9 @@ msgid ""
 "recommender internals."
 msgstr ""
 
+msgid "Pick at least one platform."
+msgstr ""
+
 #, python-format
 msgid "Picture %(n)s"
 msgstr ""
@@ -8970,6 +9597,24 @@ msgstr ""
 
 #, python-format
 msgid "Platform: %(platform)s"
+msgstr ""
+
+msgid "Platforms"
+msgstr ""
+
+msgid "Platforms of origin"
+msgstr ""
+
+msgid "Platforms reached"
+msgstr ""
+
+msgid "Platforms that open accounts for agents that discover them"
+msgstr ""
+
+msgid ""
+"Platforms where each topic appeared through the migration, and the "
+"platforms that created it on arrival (read from the platform databases "
+"when they can be reached)."
 msgstr ""
 
 msgid "Play"
@@ -9172,6 +9817,9 @@ msgstr ""
 msgid "Population:"
 msgstr ""
 
+msgid "Population: shared by all members."
+msgstr ""
+
 msgid "Populations"
 msgstr ""
 
@@ -9362,6 +10010,10 @@ msgstr ""
 msgid "Pro:"
 msgstr ""
 
+#, python-format
+msgid "Probability %(pair)s"
+msgstr ""
+
 msgid "Probability Daily Follow"
 msgstr ""
 
@@ -9377,10 +10029,16 @@ msgstr ""
 msgid "Probability Secondary Follow:"
 msgstr ""
 
+msgid "Probability of a cross-post for each pair of platforms"
+msgstr ""
+
 msgid "Probability of checking a chat"
 msgstr ""
 
 msgid "Probability of ending a match"
+msgstr ""
+
+msgid "Probability of joining (fixed rule)"
 msgstr ""
 
 msgid "Probability of leaving a chat"
@@ -9395,6 +10053,13 @@ msgstr ""
 msgid "Probability of reacting to a message"
 msgstr ""
 
+msgid "Probability of starting here"
+msgstr ""
+
+#, python-format
+msgid "Probability of starting on %(platform)s"
+msgstr ""
+
 msgid "Probability of writing first"
 msgstr ""
 
@@ -9406,6 +10071,12 @@ msgid ""
 "of content he interacted with"
 msgstr ""
 
+msgid ""
+"Probability that an agent marks a post for cross-posting (by rule) or "
+"posts on another platform (by agent action). 0 means never. Between 0 and"
+" 1."
+msgstr ""
+
 #, python-format
 msgid ""
 "Probability that an agent transitions from one archetype to another (each"
@@ -9415,6 +10086,26 @@ msgstr ""
 msgid ""
 "Probability that, during a given simulation day, an active agent is asked"
 " if he wants to connect with a peer"
+msgstr ""
+
+#, python-format
+msgid "Probable cause: Python module '%(name)s' not found"
+msgstr ""
+
+#, python-format
+msgid "Probable cause: cannot import '%(name)s'"
+msgstr ""
+
+msgid "Probable cause: connection refused"
+msgstr ""
+
+msgid "Probable cause: database error"
+msgstr ""
+
+msgid "Probable cause: out of memory"
+msgstr ""
+
+msgid "Probable cause: the port is already in use"
 msgstr ""
 
 msgid "Process Watchdog"
@@ -9635,6 +10326,9 @@ msgid ""
 "recorded for the selected topic up to the selected time."
 msgstr ""
 
+msgid "Propensity to cross-post"
+msgstr ""
+
 msgid "Proposals per match"
 msgstr ""
 
@@ -9680,6 +10374,9 @@ msgid "Public:"
 msgstr ""
 
 msgid "Publish"
+msgstr ""
+
+msgid "Queue of World Simulations: one runs at a time, in order."
 msgstr ""
 
 msgid "Quick Reference Guide"
@@ -9817,6 +10514,9 @@ msgid "Real-time preview of hourly activity distribution."
 msgstr ""
 
 msgid "Reason"
+msgstr ""
+
+msgid "Recalculate"
 msgstr ""
 
 msgid "Recall emotionally charged episodes"
@@ -10042,6 +10742,9 @@ msgstr ""
 msgid "Remote dating experiments are not supported."
 msgstr ""
 
+msgid "Remote experiments cannot take part in a World Simulation."
+msgstr ""
+
 msgid "Remote host address is required for remote experiments."
 msgstr ""
 
@@ -10057,7 +10760,13 @@ msgstr ""
 msgid "Remove alternative value"
 msgstr ""
 
+msgid "Remove this World Simulation from the queue?"
+msgstr ""
+
 msgid "Remove this comment"
+msgstr ""
+
+msgid "Remove this participant? Their accounts stay in the experiments."
 msgstr ""
 
 msgid "Remove this photo from the feed"
@@ -10067,6 +10776,12 @@ msgid "Remove this photo?"
 msgstr ""
 
 msgid "Remove this post"
+msgstr ""
+
+msgid "Removed"
+msgstr ""
+
+msgid "Removed from the queue."
 msgstr ""
 
 msgid "Rename"
@@ -10205,6 +10920,9 @@ msgstr ""
 msgid "Reset is available only for HPC experiments."
 msgstr ""
 
+msgid "Reset this World Simulation? The data of the run are removed."
+msgstr ""
+
 msgid "Reset to default values"
 msgstr ""
 
@@ -10222,6 +10940,11 @@ msgstr ""
 
 #, python-format
 msgid "Restart required: %(label)s routes are loaded at startup."
+msgstr ""
+
+msgid ""
+"Restore a World Simulation from an export (a .zip file): its settings, "
+"the database of the run and the archive of each experiment."
 msgstr ""
 
 msgid "Restore defaults"
@@ -10397,6 +11120,9 @@ msgstr ""
 msgid "Running"
 msgstr ""
 
+msgid "Running: stop it first."
+msgstr ""
+
 msgid "Runs large-scale simulations in a distributed way on HPC clusters."
 msgstr ""
 
@@ -10551,6 +11277,9 @@ msgstr ""
 msgid "Scale of the stress and reward changes; 1 is the default."
 msgstr ""
 
+msgid "Schedule"
+msgstr ""
+
 msgid "Schedule already running"
 msgstr ""
 
@@ -10682,6 +11411,9 @@ msgid "See full discussion thread"
 msgstr ""
 
 msgid "See how others see you"
+msgstr ""
+
+msgid "See the coordinator log below."
 msgstr ""
 
 msgid "Seed"
@@ -11106,7 +11838,19 @@ msgstr ""
 msgid "Share and comment an Image"
 msgstr ""
 
+msgid "Share chains"
+msgstr ""
+
+msgid "Share how the date went"
+msgstr ""
+
 msgid "Share of agents owning a channel"
+msgstr ""
+
+msgid "Share of attention per day"
+msgstr ""
+
+msgid "Share of awareness lost every day. Between 0 and 1."
 msgstr ""
 
 msgid "Share of channels with a discussion group"
@@ -11135,6 +11879,14 @@ msgid ""
 "empty to use the defaults."
 msgstr ""
 
+msgid ""
+"Share of the exposure weight credited to the platform where a quoted "
+"content lives. 0 switches it off. Between 0 and 1."
+msgstr ""
+
+msgid "Share the daily attention of each agent among its platforms"
+msgstr ""
+
 msgid "Share the topology across clients"
 msgstr ""
 
@@ -11144,7 +11896,14 @@ msgstr ""
 msgid "Shared contacts between you and this profile."
 msgstr ""
 
+msgid "Shared content brings its topics, and missing topics are created"
+msgstr ""
+
 msgid "Shared from"
+msgstr ""
+
+#, python-format
+msgid "Shared from %(author)s on %(platform)s"
 msgstr ""
 
 msgid "Shared from:"
@@ -11160,6 +11919,9 @@ msgid "Shared post"
 msgstr ""
 
 msgid "Shares"
+msgstr ""
+
+msgid "Shares of other agents' content"
 msgstr ""
 
 msgid "Show Advanced Parameters"
@@ -11341,6 +12103,9 @@ msgstr ""
 msgid "Skeptical, fact-checks, brief responses"
 msgstr ""
 
+msgid "Skew"
+msgstr ""
+
 msgid "Skin tone"
 msgstr ""
 
@@ -11357,6 +12122,15 @@ msgid "Sliding Window Days"
 msgstr ""
 
 msgid "Slot"
+msgstr ""
+
+msgid "Slot (hourly)"
+msgstr ""
+
+msgid ""
+"Slot: a member starts the next hour of simulated time only when every "
+"member has finished the current one. Day: members may be up to a day "
+"apart."
 msgstr ""
 
 msgid "Slots before a proposal expires"
@@ -11384,6 +12158,9 @@ msgid "Slower"
 msgstr ""
 
 msgid "Small World (Watts-Strogatz)"
+msgstr ""
+
+msgid "Smallest multiplier"
 msgstr ""
 
 msgid "Snapshot: fixed articles, reproducible, no network"
@@ -11416,7 +12193,13 @@ msgstr ""
 msgid "Social attributes"
 msgstr ""
 
+msgid "Social evidence"
+msgstr ""
+
 msgid "Solitary/Reserved"
+msgstr ""
+
+msgid "Some members need attention"
 msgstr ""
 
 msgid "Someone replied to you"
@@ -11494,10 +12277,16 @@ msgstr ""
 msgid "Stacks"
 msgstr ""
 
+msgid "Stalled"
+msgstr ""
+
 msgid "Standard agents can only be assigned to standard populations."
 msgstr ""
 
 msgid "Standard:"
+msgstr ""
+
+msgid "Standardised per platform (z-score)"
 msgstr ""
 
 msgid "Start"
@@ -11531,11 +12320,23 @@ msgstr ""
 msgid "Start the experiment server before running ad hoc clients."
 msgstr ""
 
+msgid "Started"
+msgstr ""
+
 #, python-format
 msgid "Started %(started_count)s experiments in group '%(name)s'"
 msgstr ""
 
+msgid "Starting"
+msgstr ""
+
+msgid "Starting state of the agents"
+msgstr ""
+
 msgid "State"
+msgstr ""
+
+msgid "State of every account, read from the coordinator."
 msgstr ""
 
 msgid "Status"
@@ -11565,6 +12366,15 @@ msgid ""
 "%(names)s%(extra)s."
 msgstr ""
 
+msgid "Stop the World Simulation before changing its parameters."
+msgstr ""
+
+msgid "Stop the World Simulation before deleting it."
+msgstr ""
+
+msgid "Stop the World Simulation before resetting it."
+msgstr ""
+
 #, python-format
 msgid ""
 "Stop the active experiments that use this plugin before changing it: "
@@ -11590,6 +12400,9 @@ msgid "Stop the experiment before deleting it."
 msgstr ""
 
 msgid "Stop the experiment before renaming it."
+msgstr ""
+
+msgid "Stop this World Simulation? Every member experiment stops with it."
 msgstr ""
 
 msgid "Stopped"
@@ -11754,6 +12567,9 @@ msgstr ""
 msgid "Suite modules"
 msgstr ""
 
+msgid "Summary"
+msgstr ""
+
 msgid "Super like"
 msgstr ""
 
@@ -11776,6 +12592,12 @@ msgid "Supporting Institutions"
 msgstr ""
 
 msgid "Supporting Projects"
+msgstr ""
+
+msgid "Survival"
+msgstr ""
+
+msgid "Survival per platform"
 msgstr ""
 
 msgid "Swedish"
@@ -11946,7 +12768,14 @@ msgid ""
 "cannot add one the default prompt does not offer: the save is refused."
 msgstr ""
 
+#, python-format
+msgid "Text on %(platform)s"
+msgstr ""
+
 msgid "Thai"
+msgstr ""
+
+msgid "That platform is not a member of this World Simulation."
 msgstr ""
 
 #, python-format
@@ -12011,6 +12840,35 @@ msgstr ""
 msgid "The Website political leaning (if available)."
 msgstr ""
 
+#, python-format
+msgid "The World Simulation could not be copied: %(why)s"
+msgstr ""
+
+#, python-format
+msgid "The World Simulation could not complete the operation: %(error)s"
+msgstr ""
+
+msgid "The World Simulation has not run yet: states are shown once it starts."
+msgstr ""
+
+msgid "The World Simulation is already in the queue."
+msgstr ""
+
+msgid "The World Simulation is not in the right state for this operation."
+msgstr ""
+
+msgid ""
+"The World Simulation runs several experiments on one shared clock and "
+"needs the optional YFederation plugin (the folder external/YFederation). "
+"Experiments that do not belong to a World Simulation are not affected."
+msgstr ""
+
+msgid "The YFederation plugin is not installed"
+msgstr ""
+
+msgid "The YFederation plugin is not installed."
+msgstr ""
+
 msgid "The action was refused."
 msgstr ""
 
@@ -12051,6 +12909,12 @@ msgstr ""
 msgid "The agent spoken language."
 msgstr ""
 
+msgid "The agent's own content"
+msgstr ""
+
+msgid "The agent, by its own action"
+msgstr ""
+
 msgid ""
 "The agents must still answer in the JSON format the action instructions "
 "describe, so change the wording of the instructions carefully."
@@ -12066,12 +12930,20 @@ msgid "The algorithm that picks the posts in your feed"
 msgstr ""
 
 #, python-format
+msgid "The analytics could not be recalculated: %(why)s"
+msgstr ""
+
+#, python-format
 msgid ""
 "The annotator reported: %(error)s. Install or fix it in the environment "
 "that runs the simulation and restart it."
 msgstr ""
 
 msgid "The app cannot be shown right now."
+msgstr ""
+
+#, python-format
+msgid "The bundle could not be imported: %(why)s"
 msgstr ""
 
 msgid ""
@@ -12099,10 +12971,27 @@ msgid ""
 "restore the original files or reset the experiment."
 msgstr ""
 
+msgid ""
+"The configuration file the coordinator reads, as saved (read only). Save "
+"the form to refresh it."
+msgstr ""
+
 msgid "The conversations cannot be shown right now."
 msgstr ""
 
+msgid "The coordinator did not accept the participant."
+msgstr ""
+
+msgid "The coordinator does not answer: the members cannot advance."
+msgstr ""
+
+msgid "The coordinator, by rule"
+msgstr ""
+
 msgid "The credits could not be reset."
+msgstr ""
+
+msgid "The cross-post probabilities must be an object."
 msgstr ""
 
 #, python-format
@@ -12190,6 +13079,24 @@ msgid ""
 msgstr ""
 
 msgid ""
+"The experiments are not changed until the World Simulation starts, and "
+"they go back to normal when it stops."
+msgstr ""
+
+msgid "The experiments are not deleted."
+msgstr ""
+
+#, python-format
+msgid "The export failed: %(why)s"
+msgstr ""
+
+msgid ""
+"The export holds the settings, the database of the run and the archive of"
+" each experiment. A copy starts from nothing. Resetting removes the data "
+"of the run; the experiments keep their own reset."
+msgstr ""
+
+msgid ""
 "The feeds returned no articles: the news pages will share nothing. You "
 "can retry from the RSS feeds page."
 msgstr ""
@@ -12197,10 +13104,20 @@ msgstr ""
 msgid "The feelings surfacing most in the feed"
 msgstr ""
 
+#, python-format
+msgid "The file cannot be generated: %(error)s"
+msgstr ""
+
 msgid "The file is empty."
 msgstr ""
 
 msgid "The file is not a readable picture."
+msgstr ""
+
+msgid "The gateway of a platform cannot be reached."
+msgstr ""
+
+msgid "The gateway of a platform refused the account."
 msgstr ""
 
 msgid ""
@@ -12233,12 +13150,28 @@ msgid ""
 " never translated."
 msgstr ""
 
+msgid "The largest multiplier cannot be smaller than the smallest."
+msgstr ""
+
+msgid ""
+"The leave rule needs the attention sharing: switch Attention on, or "
+"switch Leave off."
+msgstr ""
+
+msgid ""
+"The logs are in the folder of each experiment (server_stderr.log and "
+"<client>_client_stderr.log)."
+msgstr ""
+
 msgid "The lower bound of the uncertain band cannot exceed the upper one"
 msgstr ""
 
 msgid ""
 "The matrix loader searched the experiment folder and its subfolders but "
 "did not find a readable server or client JSON config."
+msgstr ""
+
+msgid "The members report their state once the World Simulation runs."
 msgstr ""
 
 msgid ""
@@ -12275,6 +13208,9 @@ msgstr ""
 msgid "The page you are looking for does not exist."
 msgstr ""
 
+msgid "The parameters can be changed only while the World Simulation is stopped."
+msgstr ""
+
 #, python-format
 msgid "The password must have at least %(n)s characters."
 msgstr ""
@@ -12286,6 +13222,11 @@ msgid "The picture has too many pixels."
 msgstr ""
 
 msgid "The picture is larger than 5 MB."
+msgstr ""
+
+msgid ""
+"The platforms that receive a quoted post see a stable pseudonym instead "
+"of the name of its author."
 msgstr ""
 
 #, python-format
@@ -12305,7 +13246,18 @@ msgstr ""
 msgid "The population is not valid for dating: %(why)s"
 msgstr ""
 
+msgid "The post could not be sent to the other platforms."
+msgstr ""
+
 msgid "The post text."
+msgstr ""
+
+#, python-format
+msgid "The probability %(pair)s must be between 0 and 1."
+msgstr ""
+
+#, python-format
+msgid "The probability of starting on %(platform)s must be between 0 and 1."
 msgstr ""
 
 msgid ""
@@ -12317,6 +13269,9 @@ msgid "The provided passwords do not match."
 msgstr ""
 
 msgid "The public profiles can be browsed by people who are not in the experiment"
+msgstr ""
+
+msgid "The queue is empty."
 msgstr ""
 
 msgid ""
@@ -12367,6 +13322,9 @@ msgstr ""
 msgid "The same subreddit definition can be reused safely"
 msgstr ""
 
+msgid "The seed must be an integer."
+msgstr ""
+
 msgid ""
 "The selected ad hoc agent type requires opinion dynamics to be enabled "
 "for this experiment."
@@ -12407,6 +13365,11 @@ msgstr ""
 msgid ""
 "The server was not ready or not reachable, or its actor is dead: start "
 "the experiment server first."
+msgstr ""
+
+msgid ""
+"The servers and clients of the members cannot import the YFederation "
+"plugin."
 msgstr ""
 
 #, python-format
@@ -12582,12 +13545,21 @@ msgstr ""
 msgid "Theta (Backfire Strength)"
 msgstr ""
 
+msgid "They ghosted me"
+msgstr ""
+
 msgid ""
 "This ad hoc client requires an LLM model because at least one managed "
 "agent uses an LLM-backed behavior."
 msgstr ""
 
+msgid "This backend cannot take part in a World Simulation."
+msgstr ""
+
 msgid "This conversation is closed or not reachable right now."
+msgstr ""
+
+msgid "This experiment belongs to a World Simulation: it starts and stops with it"
 msgstr ""
 
 msgid "This experiment has at least one client set to run until manually stopped"
@@ -12599,6 +13571,10 @@ msgstr ""
 msgid ""
 "This experiment has no clients yet, so client log analysis is unavailable"
 " until a client is created."
+msgstr ""
+
+#, python-format
+msgid "This experiment is managed by the World Simulation '%(name)s'."
 msgstr ""
 
 msgid "This experiment is not an instant messaging experiment."
@@ -12666,6 +13642,9 @@ msgstr ""
 msgid "This person super liked the account"
 msgstr ""
 
+msgid "This platform has no gateway for human participants."
+msgstr ""
+
 msgid ""
 "This plugin comes from the community plugin registry and is not "
 "maintained by the YSocial team. Its code runs on this computer when it is"
@@ -12727,6 +13706,17 @@ msgid "Thumbs-down reaction"
 msgstr ""
 
 msgid "Thumbs-up reaction"
+msgstr ""
+
+msgid "Tick"
+msgstr ""
+
+#, python-format
+msgid "Tick %(done)s"
+msgstr ""
+
+#, python-format
+msgid "Tick %(done)s/%(total)s"
 msgstr ""
 
 msgid "Ticks per Round"
@@ -12802,6 +13792,9 @@ msgstr ""
 msgid "Title*"
 msgstr ""
 
+msgid "To"
+msgstr ""
+
 #, python-format
 msgid ""
 "To analyze your simulation data use %(link)s, A Python library to "
@@ -12812,6 +13805,12 @@ msgid "To do"
 msgstr ""
 
 msgid "To read"
+msgstr ""
+
+#, python-format
+msgid ""
+"To run several World Simulations one after the other, add them to the "
+"%(link)s."
 msgstr ""
 
 msgid "Toggle chat panel"
@@ -12880,7 +13879,13 @@ msgstr ""
 msgid "Topic classification chips"
 msgstr ""
 
+msgid "Topic diffusion"
+msgstr ""
+
 msgid "Topic evolution not available"
+msgstr ""
+
+msgid "Topic first seen"
 msgstr ""
 
 msgid "Topic guidance"
@@ -12926,7 +13931,19 @@ msgstr ""
 msgid "Topics and toxicity levels of generated content."
 msgstr ""
 
+msgid "Topics carried"
+msgstr ""
+
+msgid "Topics carried between platforms"
+msgstr ""
+
 msgid "Topics covered and population assignments."
+msgstr ""
+
+msgid "Topics created"
+msgstr ""
+
+msgid "Topics created on arrival"
 msgstr ""
 
 msgid "Topics of the posts"
@@ -13246,6 +14263,9 @@ msgstr ""
 msgid "Université Lyon 1"
 msgstr ""
 
+msgid "Unknown"
+msgstr ""
+
 msgid "Unknown action"
 msgstr ""
 
@@ -13478,6 +14498,9 @@ msgid ""
 "%(url)s. The parse step previews sample images before saving."
 msgstr ""
 
+msgid "Use pseudonyms for authors in cross-posts"
+msgstr ""
+
 msgid "Use selected header image"
 msgstr ""
 
@@ -13532,6 +14555,20 @@ msgid "Used for real-time wall-hour mapping (IANA timezone)."
 msgstr ""
 
 msgid "Used only when semantic retrieval is enabled."
+msgstr ""
+
+msgid "Used only with the fixed probability rule. Between 0 and 1."
+msgstr ""
+
+msgid ""
+"Used only with the logistic decision rule: the probability of joining is "
+"the logistic function of the intercept plus each weight times its "
+"evidence."
+msgstr ""
+
+msgid ""
+"Used when the coordinator decides. A pair left empty has probability 0, "
+"so nothing is cross-posted between those two platforms. Between 0 and 1."
 msgstr ""
 
 msgid "User"
@@ -13784,6 +14821,13 @@ msgstr ""
 msgid "Votes only as a signal"
 msgstr ""
 
+msgid "Waiting for"
+msgstr ""
+
+#, python-format
+msgid "Waiting for %(who)s"
+msgstr ""
+
 msgid "Waiting for an answer to your date proposal."
 msgstr ""
 
@@ -13870,6 +14914,9 @@ msgid ""
 "our research. If you are interested in our work, feel free to contact us!"
 msgstr ""
 
+msgid "We keep seeing each other"
+msgstr ""
+
 msgid "We're working to fix the issue. Please try again later."
 msgstr ""
 
@@ -13895,7 +14942,16 @@ msgstr ""
 msgid "Weight for shares / reposts"
 msgstr ""
 
+msgid "Weight of a view"
+msgstr ""
+
+msgid "Weight of a view from someone followed"
+msgstr ""
+
 msgid "Weight of age fit"
+msgstr ""
+
+msgid "Weight of an interaction"
 msgstr ""
 
 msgid "Weight of attractiveness"
@@ -13925,10 +14981,18 @@ msgstr ""
 msgid "Weight of the earlier decision on a profile seen again"
 msgstr ""
 
+msgid ""
+"Weight of the previous day: 0 follows only the latest day, 1 never "
+"changes the shares. Between 0 and 1."
+msgstr ""
+
 msgid "Weight of the visual match"
 msgstr ""
 
 msgid "Weight of topic affinity"
+msgstr ""
+
+msgid "Weights of the logistic rule"
 msgstr ""
 
 msgid "Weights of the utility"
@@ -14029,6 +15093,9 @@ msgstr ""
 msgid "What this view shows"
 msgstr ""
 
+msgid "What travels between platforms, who decides it and with which probability."
+msgstr ""
+
 msgid "What you assigned to posts and comments"
 msgstr ""
 
@@ -14040,6 +15107,13 @@ msgstr ""
 
 #, python-format
 msgid "When %(b)s is enabled, Detoxify is used automatically."
+msgstr ""
+
+msgid ""
+"When an agent discovers one of these platforms the platform creates its "
+"account on the fly. Available for Microblogging on the Standard backend, "
+"and only useful with Discovery on. Platforms not chosen need the account "
+"to exist already."
 msgstr ""
 
 msgid "When can I edit?"
@@ -14099,6 +15173,11 @@ msgid "Where the toxicity score comes from."
 msgstr ""
 
 msgid ""
+"Whether agents find out about the other platforms and join them while the"
+" World Simulation runs."
+msgstr ""
+
+msgid ""
 "Whether dates exist, how a date is proposed and answered, how its outcome"
 " is drawn and what happens to the people afterwards."
 msgstr ""
@@ -14121,7 +15200,15 @@ msgstr ""
 msgid "Who decides"
 msgstr ""
 
+msgid "Who decides the cross-posts"
+msgstr ""
+
 msgid "Who decides the swipes"
+msgstr ""
+
+msgid ""
+"Who starts where, whether names are hidden and whether a platform can "
+"open accounts for agents that discover it."
 msgstr ""
 
 msgid "Who the model is told it is and how the profile of the agent is worded."
@@ -14145,6 +15232,9 @@ msgid "Widening the preferences"
 msgstr ""
 
 msgid "Window of past slots"
+msgstr ""
+
+msgid "Window used to count the followed authors seen on a platform. At least 1."
 msgstr ""
 
 msgid "With a biography"
@@ -14173,6 +15263,42 @@ msgstr ""
 msgid ""
 "With the same seed, population and settings the choices of the agents are"
 " drawn again in the same way: use it to repeat a run."
+msgstr ""
+
+msgid "World Simulation"
+msgstr ""
+
+msgid "World Simulation added to the queue."
+msgstr ""
+
+msgid "World Simulation copied."
+msgstr ""
+
+msgid "World Simulation created."
+msgstr ""
+
+msgid "World Simulation deleted."
+msgstr ""
+
+msgid "World Simulation imported."
+msgstr ""
+
+msgid "World Simulation paused."
+msgstr ""
+
+msgid "World Simulation reset."
+msgstr ""
+
+msgid "World Simulation resumed."
+msgstr ""
+
+msgid "World Simulation started."
+msgstr ""
+
+msgid "World Simulation stopped."
+msgstr ""
+
+msgid "World Simulations"
 msgstr ""
 
 msgid "Wrapped exception:"
@@ -14495,6 +15621,9 @@ msgid ""
 "hour."
 msgstr ""
 
+msgid "a number"
+msgstr ""
+
 msgid "accepted"
 msgstr ""
 
@@ -14515,6 +15644,9 @@ msgid "ahead %(ahead)s / behind %(behind)s"
 msgstr ""
 
 msgid "algorithms"
+msgstr ""
+
+msgid "an integer"
 msgstr ""
 
 msgid "and"
@@ -14654,6 +15786,14 @@ msgstr ""
 msgid "group_ids is required"
 msgstr ""
 
+#, python-format
+msgid "has not advanced for %(s)s (limit %(limit)s)"
+msgstr ""
+
+#, python-format
+msgid "has not said hello %(s)s s after the start (limit %(limit)s s)"
+msgstr ""
+
 msgid "http://127.0.0.1:11434"
 msgstr ""
 
@@ -14671,10 +15811,23 @@ msgstr ""
 msgid "in context."
 msgstr ""
 
+#, python-format
+msgid "is not running: %(what)s exited"
+msgstr ""
+
+msgid "its process"
+msgstr ""
+
 msgid "joined"
 msgstr ""
 
+msgid "joined at tick"
+msgstr ""
+
 msgid "km"
+msgstr ""
+
+msgid "left at tick"
 msgstr ""
 
 msgid "liked"
@@ -14767,6 +15920,9 @@ msgstr ""
 msgid "passed on it"
 msgstr ""
 
+msgid "person"
+msgstr ""
+
 msgid "photos"
 msgstr ""
 
@@ -14788,12 +15944,18 @@ msgstr ""
 msgid "published"
 msgstr ""
 
+msgid "queue"
+msgstr ""
+
 #, python-format
 msgid "r/%(subreddit)s does not exist."
 msgstr ""
 
 #, python-format
 msgid "r/%(subreddit_input)s does not exist."
+msgstr ""
+
+msgid "random"
 msgstr ""
 
 msgid "ready"
@@ -14809,6 +15971,9 @@ msgid "replied to your comment"
 msgstr ""
 
 msgid "replied to your post"
+msgstr ""
+
+msgid "reported a failure to the coordinator"
 msgstr ""
 
 #, python-format
@@ -14908,6 +16073,9 @@ msgstr ""
 msgid "vLLM server not running. Start manually:"
 msgstr ""
 
+msgid "waiting for the profile"
+msgstr ""
+
 msgid "what anyone can read"
 msgstr ""
 
@@ -14918,6 +16086,14 @@ msgid "y-not.social"
 msgstr ""
 
 msgid "ySights"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} of 2 to 5 platforms chosen"
+msgstr ""
+
+#, python-format
+msgid "~%(t)s per tick"
 msgstr ""
 
 msgid "— installed and updated independently"

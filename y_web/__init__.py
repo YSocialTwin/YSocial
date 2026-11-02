@@ -286,6 +286,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["agent_picture"] = picture_of_username  # the IM avatars show the agent's picture
 
+    from y_web.src.federation.availability import sdk_available
+
+    app.jinja_env.globals["ws_sdk_available"] = sdk_available  # the World Simulation menu hides without the YFederation plugin
+
     from y_web.src.federation.service import world_simulation_of
 
     app.jinja_env.globals["world_simulation_of"] = world_simulation_of  # badge and disabled commands of the members
@@ -299,7 +303,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         try:
             from flask_login import current_user
 
+            from y_web.src.federation.availability import sdk_available
             from y_web.src.federation.human_outbox import destinations_for
+
+            if not sdk_available():
+                return []
 
             return destinations_for(exp_id, getattr(current_user, "id", None)) if current_user.is_authenticated else []
         except Exception:  # noqa: BLE001 - a composer never fails because of the federation
@@ -312,7 +320,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         try:
             from flask_login import current_user
 
+            from y_web.src.federation.availability import sdk_available
             from y_web.src.federation.pending_notice import pending_for
+
+            if not sdk_available():
+                return []
 
             return pending_for(exp_id, getattr(current_user, "id", None)) if current_user.is_authenticated else []
         except Exception:  # noqa: BLE001 - a page never fails because of the federation
@@ -323,8 +335,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     def _ws_profile_badges(exp_id, account_id):
         """The other platforms where the account of a profile page takes part (World Simulation); empty elsewhere."""
         try:
+            from y_web.src.federation.availability import sdk_available
             from y_web.src.federation.profile_badges import badges_for
 
+            if not sdk_available():
+                return []
             return badges_for(exp_id, account_id)
         except Exception:  # noqa: BLE001 - a profile page never fails because of the federation
             return []

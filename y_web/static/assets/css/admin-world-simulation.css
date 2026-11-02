@@ -130,3 +130,12 @@
 }
 
 .ws-pick-body .exp-tag { align-self: flex-start; }
+
+/* members that do not show up, stall or die (Execution tab and list) */
+.ws-banner ul { margin: .4rem 0 .2rem 1.2rem; list-style: disc; }
+.ws-banner code { font-size: .8em; word-break: break-all; }
+.ws-progress-line { margin: .25rem 0 .75rem; font-weight: 600; }
+.ws-warning { margin-top: .25rem; font-size: .8rem; color: #b86e00; }
+.ws-health.ws-health-ok, .ws-health.ws-health-finished { background: #e6f6ec; color: #1b7a43; }
+.ws-health.ws-health-waiting, .ws-health.ws-health-starting, .ws-health.ws-health-unknown { background: #eaf1fb; color: #2d5fa8; }
+.ws-health.is-problem { background: #fdecea; color: #b3261e; }

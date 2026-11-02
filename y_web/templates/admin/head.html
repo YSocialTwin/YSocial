@@ -117,7 +117,8 @@
             </div>
         </div>
 
-        <!-- World Simulation: configuration, execution and analysis of multi-platform simulations -->
+        <!-- World Simulation: configuration, execution and analysis of multi-platform simulations (needs an optional plugin) -->
+        {% if ws_sdk_available is not defined or ws_sdk_available() %}
         <div class="dashboard-aside-group" id="sidebar-group-world-simulation">
             <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-world-simulation" data-group="world-simulation" aria-expanded="false" aria-controls="sidebar-submenu-world-simulation">
                 <div>
@@ -146,6 +147,7 @@
                 </a>
             </div>
         </div>
+        {% endif %}
 
 {% endif %}
         <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,

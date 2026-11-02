@@ -34,7 +34,8 @@
                                 <tr data-world-simulation="{{ row.fed.id }}">
                                     <td><a class="ws-name" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}">{{ row.fed.name }}</a>
                                         <div class="ws-sub">{{ row.fed.description }}{% if row.fed.owner %}{{ ' · ' if row.fed.description }}{{ row.fed.owner }}{% endif %}</div></td>
-                                    <td>{{ ws.state_tag(row.fed.status) }}</td>
+                                    <td>{{ ws.state_tag(row.fed.status) }}
+                                        {% if row.problems %}<div class="ws-warning" title="{% for p in row.problems %}{{ p.label }} {{ p.text }}{% if p.cause %} - {{ p.cause }}{% endif %}{{ '; ' if not loop.last }}{% endfor %}"><i class="mdi mdi-alert-outline"></i> {{ ngettext('%(num)d member needs attention', '%(num)d members need attention', row.problems|length) }}</div>{% endif %}</td>
                                     <td class="ws-members-cell">{% for m in row.member_rows %}<div class="ws-member-line">{{ ws.platform_tag(m.label, m.icon) }} <a href="/admin/experiment_details/{{ m.exp.idexp }}">{{ m.exp.exp_name }}</a></div>{% endfor %}</td>
                                     <td><div>{{ _('Tick') }}: <b>{{ row.tick if row.tick is not none else '-' }}</b></div>
                                         <div class="ws-sub">{{ _('Slot (hourly)') if row.fed.granularity == 'slot' else _('Day') }} · {{ _('Seed') }} {{ row.fed.seed }}</div></td>

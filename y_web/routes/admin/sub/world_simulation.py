@@ -17,7 +17,9 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.src.federation import availability
 from y_web.src.federation import coordinator_process as cp
+from y_web.src.federation import member_health as mh
 from y_web.src.federation import options_schema as schema
 from y_web.src.federation import service
 from y_web.src.experiment.access import get_visible_experiment_query
@@ -88,9 +90,102 @@ def guarded(view):
             if request.path.endswith(".json"):
                 return jsonify({"error": _("Access denied")}), 403
             return redirect(url_for("main.index"))
+        if not availability.sdk_available():  # the optional YFederation plugin is missing: a friendly page, never a 500
+            return _unavailable()
         return view(user, *args, **kwargs)
 
     return wrapper
+
+
+def _unavailable():
+    """The page (or the JSON answer) shown instead of the World Simulation when the YFederation plugin is not installed."""
+    message = _("The YFederation plugin is not installed")
+    if request.path.endswith(".json"):
+        return jsonify({"error": message, "available": False}), 503
+    return render_template("admin/world_simulation/unavailable.html", message=message, reason=availability.sdk_reason()), 503
+
+
+def _member_labels(fed):
+    return {m.member: PLATFORM_LABELS.get(m.platform_type, m.platform_type) for m, _exp in service.members_of(fed)}
+
+
+def _badge_text(code, waiting_for=(), labels=None):
+    """The short text of the status badge of a member (OK / waiting for X / stalled / not running ...)."""
+    labels = labels or {}
+    if code == mh.WAITING:
+        return _("Waiting for %(who)s", who=", ".join(labels.get(w, w) for w in waiting_for))
+    return {
+        mh.OK: lambda: _("OK"),
+        mh.STARTING: lambda: _("Starting"),
+        mh.MISSING: lambda: _("Missing"),
+        mh.STALLED: lambda: _("Stalled"),
+        mh.DEAD: lambda: _("Not running"),
+        mh.FAILED: lambda: _("Failed"),
+        mh.FINISHED: lambda: _("Finished"),
+        mh.UNKNOWN: lambda: _("Unknown"),
+    }.get(code, lambda: code)()
+
+
+def _cause_text(cause):
+    if not cause:
+        return ""
+    kind, name = cause.get("kind"), cause.get("name")
+    if kind == "module":
+        return _("Probable cause: Python module '%(name)s' not found", name=name)
+    if kind == "import":
+        return _("Probable cause: cannot import '%(name)s'", name=name)
+    if kind == "port":
+        return _("Probable cause: the port is already in use")
+    if kind == "refused":
+        return _("Probable cause: connection refused")
+    if kind == "database":
+        return _("Probable cause: database error")
+    if kind == "memory":
+        return _("Probable cause: out of memory")
+    return _("Last error in the log: %(line)s", line=cause.get("line", ""))
+
+
+def _problem_text(code, state, health):
+    if code == mh.MISSING:
+        return _("has not said hello %(s)s s after the start (limit %(limit)s s)", s=state.get("since") or 0, limit=health.get("hello_timeout"))
+    if code == mh.STALLED:
+        return _("has not advanced for %(s)s (limit %(limit)s)", s=mh.format_duration(state.get("since")), limit=mh.format_duration(health.get("stall_after")))
+    if code == mh.DEAD:
+        return _("is not running: %(what)s exited", what=", ".join(state.get("dead") or []) or _("its process"))
+    if code == mh.FAILED:
+        return _("reported a failure to the coordinator")
+    return ""
+
+
+def _problems_from(health, labels):
+    """``[{member, label, code, text, cause, log}]`` of the members in trouble, texts in the language of the request."""
+    out = []
+    for name in (health or {}).get("problems", []):
+        state = health["members"][name]
+        out.append({"member": name, "label": labels.get(name, name), "code": state["code"],
+                    "text": _problem_text(state["code"], state, health), "cause": _cause_text(state.get("cause")),
+                    "log": state.get("log", "")})
+    return out
+
+
+def _problem_lines(fed, coordinator):
+    try:
+        return _problems_from(mh.collect(fed, coordinator), _member_labels(fed))
+    except Exception:  # noqa: BLE001 - a warning is never worth an error page
+        return []
+
+
+def _progress_text(progress):
+    """``Tick 3/720, ~65 s per tick, ETA 13 h`` (the parts not known yet are left out)."""
+    if not progress or not progress.get("tick"):
+        return ""
+    parts = [_("Tick %(done)s/%(total)s", done=progress["tick"], total=progress["total"]) if progress.get("total")
+             else _("Tick %(done)s", done=progress["tick"])]
+    if progress.get("seconds_per_tick"):
+        parts.append(_("~%(t)s per tick", t=mh.format_duration(progress["seconds_per_tick"])))
+    if progress.get("eta_seconds") is not None:
+        parts.append(_("ETA %(eta)s", eta=mh.format_duration(progress["eta_seconds"])))
+    return ", ".join(parts)
 
 
 def _row(fed):
@@ -107,6 +202,7 @@ def _row(fed):
             for m, exp in members
         ],
         "tick": None if not status else status.get("global_tick"),
+        "problems": _problem_lines(fed, status) if status is not None else [],
     }
 
 
@@ -190,6 +286,8 @@ ERROR_TEXT = {
     "gateway_unavailable": lambda: _("The gateway of a platform cannot be reached."),
     "gateway_refused": lambda: _("The gateway of a platform refused the account."),
     "coordinator_refused": lambda: _("The coordinator did not accept the participant."),
+    "sdk_missing": lambda: _("The YFederation plugin is not installed."),
+    "sdk_not_importable": lambda: _("The servers and clients of the members cannot import the YFederation plugin."),
 }
 
 
@@ -509,9 +607,16 @@ def status(user, fed_id):
     fed = _get_or_404(fed_id, user)
     coordinator = cp.coordinator_status(fed, timeout=1.5) if fed.status in ("running", "paused") else None
     waiting = cp.waiting_members(coordinator)
+    try:
+        health = mh.collect(fed, coordinator)  # {} unless running; cheap: three bounded reads and a few pid checks
+    except Exception:  # noqa: BLE001 - the page keeps working without the warnings
+        health = {}
+    states = health.get("members", {})
+    labels = _member_labels(fed)
     members = []
     for row, exp in service.members_of(fed):
         live = ((coordinator or {}).get("members") or {}).get(row.member, {})
+        hs = states.get(row.member)
         members.append(
             {
                 "member": row.member,
@@ -520,8 +625,11 @@ def status(user, fed_id):
                 "state": live.get("status"),
                 "tick": live.get("last_ready_tick"),
                 "waiting_for": waiting.get(row.member, []),
+                "health": None if hs is None else {"code": hs["code"], "problem": hs["problem"],
+                                                  "text": _badge_text(hs["code"], hs["waiting_for"], labels)},
             }
         )
+    progress = health.get("progress")
     return jsonify(
         {
             "state": fed.status,
@@ -529,6 +637,10 @@ def status(user, fed_id):
             "skew": None if not coordinator else coordinator.get("skew"),
             "coordinator_up": coordinator is not None,
             "members": members,
+            "problems": _problems_from(health, labels),
+            "progress": progress,
+            "progress_text": _progress_text(progress),
+            "log_hint": _("The logs are in the folder of each experiment (server_stderr.log and <client>_client_stderr.log)."),
             "bus": _read_bus(fed),
             "log": _log_tail(fed),
         }
