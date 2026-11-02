@@ -6,7 +6,7 @@ import os
 from typing import Dict, Optional
 
 from y_web.src.system.model_cache import get_model_cache_env
-from y_web.src.system.path_utils import get_writable_path
+from y_web.src.system.path_utils import get_base_path, get_writable_path
 
 _STRIP_ENV_KEYS = (
     "WERKZEUG_RUN_MAIN",
@@ -103,6 +103,21 @@ def agent_memory_source_dir() -> Optional[str]:
     return None
 
 
+def federation_sdk_dir() -> Optional[str]:
+    """Return the folder of the YFederation SDK (``ysocial_federation``) when it is available.
+
+    The servers, clients and HPC processes of a World Simulation member import the SDK
+    (``ysocial_federation``). It is not a pip dependency: it lives in ``external/YFederation``,
+    so it must be put on the child ``PYTHONPATH`` like the coordinator does.
+    """
+
+    for root in (get_writable_path(), get_base_path()):
+        candidate = os.path.join(root, "external", "YFederation")
+        if os.path.isdir(os.path.join(candidate, "ysocial_federation")):
+            return candidate
+    return None
+
+
 def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
     """
     Return a sanitized child-process environment.
@@ -125,10 +140,10 @@ def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, st
     if extra:
         env.update(extra)
 
-    memory_src = agent_memory_source_dir()
-    if memory_src:
-        parts = [p for p in env.get("PYTHONPATH", "").split(os.pathsep) if p]
-        if memory_src not in parts:
-            env["PYTHONPATH"] = os.pathsep.join([*parts, memory_src])
+    for extra_src in (agent_memory_source_dir(), federation_sdk_dir()):
+        if extra_src:
+            parts = [p for p in env.get("PYTHONPATH", "").split(os.pathsep) if p]
+            if extra_src not in parts:
+                env["PYTHONPATH"] = os.pathsep.join([*parts, extra_src])
 
     return env

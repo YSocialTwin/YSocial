@@ -405,3 +405,17 @@ def test_server_runner_repo_root_on_sys_path():
     assert (
         sr._REPO_ROOT in sys.path
     ), f"server_runner._REPO_ROOT ({sr._REPO_ROOT!r}) not found on sys.path"
+
+
+def test_child_env_carries_the_federation_sdk(monkeypatch, tmp_path):
+    """Servers and clients of a World Simulation member import ysocial_federation: it must be on their PYTHONPATH."""
+    from y_web.src.simulation import subprocess_env
+
+    sdk = tmp_path / "external" / "YFederation"
+    (sdk / "ysocial_federation").mkdir(parents=True)
+    monkeypatch.setattr(subprocess_env, "get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setenv("PYTHONPATH", "/somewhere")
+    env = subprocess_env.build_subprocess_env()
+    parts = env["PYTHONPATH"].split(subprocess_env.os.pathsep)
+    assert str(sdk) in parts and "/somewhere" in parts
+    assert subprocess_env.federation_sdk_dir() == str(sdk)
