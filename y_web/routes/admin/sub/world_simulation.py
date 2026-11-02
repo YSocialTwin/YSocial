@@ -628,7 +628,7 @@ def delete(user, fed_id):
 def _read_bus(fed):
     """Counters of the bus and the last events, read from the database of the coordinator (read only)."""
     path = Path(fed.folder) / "federation.db"
-    out = {"messages": 0, "deliveries": 0, "events": [], "by_type": {}, "crosspost_ticks": 0, "crosspost_total": 0, "available": False}
+    out = {"messages": 0, "deliveries": 0, "events": [], "by_type": {}, "crosspost_ticks": 0, "crosspost_total": 0, "crosspost_pairs": {}, "crosspost_delivered": 0, "available": False}
     if not path.is_file():
         return out
     out["available"] = True
@@ -639,6 +639,7 @@ def _read_bus(fed):
                 out["by_type"][kind] = n  # one pass: the total and the exported content come from the same scan
             out["messages"] = sum(out["by_type"].values())
             _read_crossposts(conn, out)
+            _read_agent_crossposts(conn, out)
             out["deliveries"] = conn.execute("SELECT COUNT(*) FROM federation_delivery").fetchone()[0]
             rows = conn.execute("SELECT tick, kind, detail_json FROM federation_event ORDER BY rowid DESC LIMIT 30").fetchall()
             out["events"] = [{"tick": t, "kind": k, "detail": d} for t, k, d in rows]
@@ -665,25 +666,54 @@ def _read_crossposts(conn, out, limit=20000):
         pass  # no event table yet: counted as none
 
 
+def _read_agent_crossposts(conn, out):
+    """``crosspost.v1`` messages (what the members emit with ``crosspost.mode = agent_action``) by origin and destination, and
+    how many of them have been delivered (read only, tolerant of missing tables)."""
+    try:
+        for source, target, n in conn.execute("SELECT source_member, target_member, COUNT(*) FROM federation_message "
+                                              "WHERE payload_type = 'crosspost.v1' GROUP BY source_member, target_member"):
+            out["crosspost_pairs"][f"{source}>{target}"] = n
+        out["crosspost_delivered"] = conn.execute(
+            "SELECT COUNT(*) FROM federation_delivery d JOIN federation_message m ON m.fed_msg_id = d.fed_msg_id "
+            "WHERE m.payload_type = 'crosspost.v1'").fetchone()[0]
+    except sqlite3.Error:
+        pass
+
+
 # the hint of the Execution tab appears once the run is past this tick with nothing exported and nothing materialised
 CROSSPOST_HINT_AFTER_TICK = 6
 
 
 def _crosspost_status(fed, bus, tick):
-    """Text of the Cross-posts line and, when the run is past tick 6 with none, the hint with the probable cause."""
+    """Text of the Cross-posts line and, when the run is past tick 6 with none, the hint with the probable cause.
+
+    The line follows the mode: with ``agent_action`` the members emit ``crosspost.v1`` messages (counted by direction, with
+    the deliveries); with ``coordinator_rule`` the coordinator marks ``content.v1`` and materialises it."""
     if not bus.get("available"):
         return {"exported": 0, "ticks": 0, "total": 0, "text": None, "hint": None}
-    exported = bus["by_type"].get("content.v1", 0)
+    options = json.loads(fed.config_json or "{}")
+    mode = (options.get("crosspost") or {}).get("mode") or "coordinator_rule"
     total, ticks = bus["crosspost_total"], bus["crosspost_ticks"]
-    text = _("Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content exported: %(exported)s", total=total, ticks=ticks, exported=exported)
+    exported = bus["by_type"].get("content.v1", 0)
+    if mode == "agent_action":
+        pairs = bus.get("crosspost_pairs") or {}
+        sent = sum(pairs.values())
+        label = lambda m: str(m).replace("_", " ")  # noqa: E731
+        directions = ", ".join(f"{label(k.split('>')[0])} → {label(k.split('>')[1])}: {n}" for k, n in sorted(pairs.items())) or "-"
+        text = _("Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: %(delivered)s", sent=sent,
+                 directions=directions, delivered=bus.get("crosspost_delivered", 0))
+        none = sent == 0
+    else:
+        text = _("Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content exported: %(exported)s", total=total, ticks=ticks, exported=exported)
+        none = exported == 0 and total == 0
     hint = None
-    if fed.status in ("running", "paused") and tick is not None and tick > CROSSPOST_HINT_AFTER_TICK and exported == 0 and total == 0:
-        options = json.loads(fed.config_json or "{}")
+    if fed.status in ("running", "paused") and tick is not None and tick > CROSSPOST_HINT_AFTER_TICK and none:
         members = {m.member for m, _exp in service.members_of(fed)}
         cause = schema.crosspost_warning(schema.crosspost_causes_from_options(options, members))
         hint = _("No content has been marked for cross-posting after %(tick)s ticks.", tick=tick) + " " + (
             cause or _("Check that the agents are posting and that the content filter lets their posts through."))
-    return {"exported": exported, "ticks": ticks, "total": total, "text": text, "hint": hint}
+    return {"exported": exported, "ticks": ticks, "total": total, "sent": sum((bus.get("crosspost_pairs") or {}).values()),
+            "delivered": bus.get("crosspost_delivered", 0), "mode": mode, "text": text, "hint": hint}
 
 
 def _log_tail(fed, lines=40):

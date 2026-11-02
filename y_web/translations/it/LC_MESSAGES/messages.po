@@ -18151,6 +18151,14 @@ msgstr "Apri la copia su %(platform)s"
 msgid "The original is not available"
 msgstr "L'originale non è disponibile"
 
+#, python-format
+msgid ""
+"Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: "
+"%(delivered)s"
+msgstr ""
+"Cross-post: %(sent)s inviati dagli agenti (%(directions)s) · consegnati: "
+"%(delivered)s"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 
