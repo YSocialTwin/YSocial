@@ -1,75 +1,71 @@
 {% include "admin/head.html" %}
-<style>
-    .ws-page { --ws-border:#e5e7eb; --ws-muted:#6b7280; --ws-dark:#111827; }
-    .ws-page .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
-    .ws-intro { font-size:.82rem; color:var(--ws-muted); margin-bottom:14px; }
-    .ws-table { width:100%; border-collapse:collapse; }
-    .ws-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ws-muted); padding:8px 10px; border-bottom:1px solid var(--ws-border); }
-    .ws-table td { padding:10px; border-bottom:1px solid var(--ws-border); vertical-align:middle; font-size:.84rem; }
-    .ws-name { font-weight:700; color:var(--ws-dark); }
-    .ws-sub { font-size:.72rem; color:var(--ws-muted); }
-    .ws-actions { display:flex; gap:6px; flex-wrap:wrap; }
-    .ws-actions form { margin:0; }
-    .ws-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
-    .ws-tabs { display:flex; gap:4px; border-bottom:1px solid var(--ws-border); margin-bottom:16px; }
-    .ws-tab { border:0; background:none; padding:8px 16px; font-weight:600; font-size:.85rem; color:var(--ws-muted); cursor:pointer; border-bottom:2px solid transparent; }
-    .ws-tab.is-active { color:var(--ws-dark); border-bottom-color:#039be5; }
-    .ws-pane[hidden] { display:none; }
-    .ws-log { background:#0f172a; color:#e2e8f0; font-family:monospace; font-size:.74rem; padding:10px; border-radius:6px; max-height:260px; overflow:auto; white-space:pre-wrap; }
-    .ws-field { margin-bottom:12px; }
-    .ws-field label { display:block; font-size:.78rem; font-weight:600; margin-bottom:4px; }
-    .ws-check { display:flex; gap:8px; align-items:center; font-size:.84rem; margin:4px 0; }
-    .ws-pick { border:1px solid var(--ws-border); border-radius:6px; padding:8px 12px; margin-bottom:6px; }
-    .ws-pick.is-off { opacity:.55; }
-    .ws-counter { display:inline-block; margin-right:18px; font-size:.84rem; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
 <div class="view-wrapper is-dashboard ws-page">
     <div id="creator-dashboard" class="dashboard-container">
         {% include "admin/dash_head.html" %}
         <div class="dashboard-body">
+            {{ ws.breadcrumb([]) }}
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" id="world-simulation-list">
-                        <h3 class="title is-5 is-thin">{{ _('World Simulations') }}</h3>
+                        <div class="ws-title-row">
+                            <h3 class="title is-5 is-thin">{{ _('World Simulations') }}</h3>
+                            <div class="ws-actions">
+                                <a class="button is-solid primary-button" href="{{ url_for('world_simulation.new') }}"><i class="mdi mdi-plus"></i> <span>{{ _('New simulation') }}</span></a>
+                                <a class="button is-light" href="{{ url_for('world_simulation.schedule') }}"><i class="mdi mdi-calendar-clock"></i> <span>{{ _('Schedule') }}</span></a>
+                                <a class="button is-light" href="{{ url_for('world_simulation.analytics') }}"><i class="mdi mdi-chart-line"></i> <span>{{ _('Analytics') }}</span></a>
+                            </div>
+                        </div>
                         <div class="box-content">
                             <p class="ws-intro">{{ _('A World Simulation runs several experiments, one for each platform, on one shared clock. The same agents can be active on more than one platform.') }}</p>
-                            <p class="ws-actions"><a class="button is-solid primary-button" href="{{ url_for('world_simulation.new') }}">{{ _('New simulation') }}</a></p>
-                            <form method="post" action="{{ url_for('world_simulation.import_bundle') }}" enctype="multipart/form-data" class="ws-actions" style="margin-bottom:14px;">
-                                <input type="file" name="bundle" accept=".zip" required>
-                                <input type="text" name="name" class="input ys-input-sm" maxlength="40" placeholder="{{ _('Name (optional)') }}">
-                                <button class="button is-light" type="submit">{{ _('Import') }}</button>
-                            </form>
-                            <div class="table-responsive">
-                            <table class="ws-table" id="world-simulation-table">
-                                <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Members') }}</th><th>{{ _('Current tick') }}</th><th></th></tr></thead>
+                            <div class="stats-row" id="ws-counters">
+                                <div class="stat-box"><div class="stat-value">{{ counts.total }}</div><div class="stat-label">{{ _('World Simulations') }}</div></div>
+                                <div class="stat-box"><div class="stat-value">{{ counts.running }}</div><div class="stat-label">{{ _('Running') }}</div></div>
+                                <div class="stat-box"><div class="stat-value">{{ counts.stopped }}</div><div class="stat-label">{{ _('Stopped') }}</div></div>
+                            </div>
+                            <div class="table-container">
+                            <table class="table is-fullwidth is-hoverable ws-table" id="world-simulation-table">
+                                <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Members') }}</th><th>{{ _('Clock') }}</th><th class="ws-col-actions">{{ _('Actions') }}</th></tr></thead>
                                 <tbody>
                                 {% for row in rows %}
                                 <tr data-world-simulation="{{ row.fed.id }}">
                                     <td><a class="ws-name" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}">{{ row.fed.name }}</a>
-                                        <div class="ws-sub">{{ row.fed.description }}</div></td>
-                                    <td><span class="badge {{ row.badge }}">{{ _(row.fed.status|capitalize) }}</span></td>
-                                    <td>{% for member, label, exp in row.members %}<div class="ws-sub">{{ label }}: {{ exp.exp_name }}</div>{% endfor %}</td>
-                                    <td>{{ row.tick if row.tick is not none else '-' }}</td>
-                                    <td><div class="ws-actions">
-                                        {% if row.fed.status in ('stopped', 'completed', 'failed') %}
-                                        <form method="post" action="{{ url_for('world_simulation.command_start', fed_id=row.fed.id) }}"><button class="button is-solid primary-button" type="submit">{{ _('Start') }}</button></form>
-                                        {% elif row.fed.status == 'running' %}
-                                        <form method="post" action="{{ url_for('world_simulation.command_pause', fed_id=row.fed.id) }}"><button class="button is-light" type="submit">{{ _('Pause') }}</button></form>
-                                        {% elif row.fed.status == 'paused' %}
-                                        <form method="post" action="{{ url_for('world_simulation.command_resume', fed_id=row.fed.id) }}"><button class="button is-solid primary-button" type="submit">{{ _('Resume') }}</button></form>
-                                        {% endif %}
-                                        {% if row.fed.status in ('running', 'paused', 'starting') %}
-                                        <form method="post" action="{{ url_for('world_simulation.command_stop', fed_id=row.fed.id) }}"><button class="button is-light" type="submit">{{ _('Stop') }}</button></form>
-                                        {% endif %}
-                                        <a class="button is-light" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}">{{ _('Open') }}</a>
+                                        <div class="ws-sub">{{ row.fed.description }}{% if row.fed.owner %}{{ ' · ' if row.fed.description }}{{ row.fed.owner }}{% endif %}</div></td>
+                                    <td>{{ ws.state_tag(row.fed.status) }}</td>
+                                    <td class="ws-members-cell">{% for m in row.member_rows %}<div class="ws-member-line">{{ ws.platform_tag(m.label, m.icon) }} <a href="/admin/experiment_details/{{ m.exp.idexp }}">{{ m.exp.exp_name }}</a></div>{% endfor %}</td>
+                                    <td><div>{{ _('Tick') }}: <b>{{ row.tick if row.tick is not none else '-' }}</b></div>
+                                        <div class="ws-sub">{{ _('Slot (hourly)') if row.fed.granularity == 'slot' else _('Day') }} · {{ _('Seed') }} {{ row.fed.seed }}</div></td>
+                                    <td class="ws-col-actions"><div class="ws-actions">
+                                        {{ ws.run_controls(row.fed, compact=True) }}
+                                        <a class="button is-small is-light" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}" title="{{ _('Open') }}"><i class="mdi mdi-open-in-new"></i><span>{{ _('Open') }}</span></a>
                                     </div></td>
                                 </tr>
                                 {% else %}
-                                <tr><td colspan="5" class="ws-sub">{{ _('No World Simulation yet.') }}</td></tr>
+                                <tr><td colspan="5"><div class="empty-state ws-empty"><i class="mdi mdi-earth"></i>
+                                    <p>{{ _('No World Simulation yet.') }}</p>
+                                    <a class="button is-solid primary-button is-small" href="{{ url_for('world_simulation.new') }}">{{ _('New simulation') }}</a></div></td></tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-import">
+                        <h3 class="title is-5 is-thin">{{ _('Import a World Simulation') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-intro">{{ _('Restore a World Simulation from an export (a .zip file): its settings, the database of the run and the archive of each experiment.') }}</p>
+                            <form method="post" action="{{ url_for('world_simulation.import_bundle') }}" enctype="multipart/form-data" class="ws-actions">
+                                <input type="file" name="bundle" accept=".zip" required>
+                                <input type="text" name="name" class="input ys-input-sm ws-input-name" maxlength="40" placeholder="{{ _('Name (optional)') }}">
+                                <button class="button is-light" type="submit"><i class="mdi mdi-upload"></i> <span>{{ _('Import') }}</span></button>
+                            </form>
                         </div>
                     </div>
                 </div>

@@ -1,97 +1,83 @@
 {% include "admin/head.html" %}
-<style>
-    .ws-page { --ws-border:#e5e7eb; --ws-muted:#6b7280; --ws-dark:#111827; }
-    .ws-page .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
-    .ws-intro { font-size:.82rem; color:var(--ws-muted); margin-bottom:14px; }
-    .ws-table { width:100%; border-collapse:collapse; }
-    .ws-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ws-muted); padding:8px 10px; border-bottom:1px solid var(--ws-border); }
-    .ws-table td { padding:10px; border-bottom:1px solid var(--ws-border); vertical-align:middle; font-size:.84rem; }
-    .ws-name { font-weight:700; color:var(--ws-dark); }
-    .ws-sub { font-size:.72rem; color:var(--ws-muted); }
-    .ws-actions { display:flex; gap:6px; flex-wrap:wrap; }
-    .ws-actions form { margin:0; }
-    .ws-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
-    .ws-tabs { display:flex; gap:4px; border-bottom:1px solid var(--ws-border); margin-bottom:16px; }
-    .ws-tab { border:0; background:none; padding:8px 16px; font-weight:600; font-size:.85rem; color:var(--ws-muted); cursor:pointer; border-bottom:2px solid transparent; }
-    .ws-tab.is-active { color:var(--ws-dark); border-bottom-color:#039be5; }
-    .ws-pane[hidden] { display:none; }
-    .ws-log { background:#0f172a; color:#e2e8f0; font-family:monospace; font-size:.74rem; padding:10px; border-radius:6px; max-height:260px; overflow:auto; white-space:pre-wrap; }
-    .ws-field { margin-bottom:12px; }
-    .ws-field label { display:block; font-size:.78rem; font-weight:600; margin-bottom:4px; }
-    .ws-check { display:flex; gap:8px; align-items:center; font-size:.84rem; margin:4px 0; }
-    .ws-pick { border:1px solid var(--ws-border); border-radius:6px; padding:8px 12px; margin-bottom:6px; }
-    .ws-pick.is-off { opacity:.55; }
-    .ws-counter { display:inline-block; margin-right:18px; font-size:.84rem; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+{% set mode = 'new' %}
+{% set seed_value = form.get('seed', '') %}{% set granularity_value = form.get('granularity', 'slot') %}
+{% set first_step = 1 %}
+
 <div class="view-wrapper is-dashboard ws-page">
     <div id="creator-dashboard" class="dashboard-container">
         {% include "admin/dash_head.html" %}
         <div class="dashboard-body">
+            {{ ws.breadcrumb([(_('New simulation'), None)]) }}
+            <form method="post" action="{{ url_for('world_simulation.new') }}" id="world-simulation-form"
+                  data-text-none="{{ _('No platform chosen yet.') }}" data-text-count="{{ _('{n} of 2 to 5 platforms chosen') }}">
             <div class="columns">
-                <div class="column is-12">
+                <div class="column is-8">
                     <div class="dashboard-box" id="world-simulation-new">
                         <h3 class="title is-5 is-thin">{{ _('New simulation') }}</h3>
                         <div class="box-content">
-                            <p class="ws-intro">{{ _('Choose two to five stopped experiments, at most one for each platform, that use the same population and the simulated clock.') }}</p>
-                            <form method="post" action="{{ url_for('world_simulation.new') }}" id="world-simulation-form">
-                                <div class="ws-field"><label for="ws-name">{{ _('Name') }} *</label>
-                                    <input class="input" id="ws-name" name="name" required value="{{ form.get('name', '') }}"></div>
-                                <div class="ws-field"><label>{{ _('Experiments') }} *</label>
-                                    {% for c in candidates %}
-                                    {% set blocked = c.info.running or c.info.other_federation %}
-                                    <div class="ws-pick {% if blocked %}is-off{% endif %}">
-                                        <label class="ws-check"><input type="checkbox" name="experiments" value="{{ c.exp.idexp }}" {% if c.exp.idexp|string in form.getlist('experiments') %}checked{% endif %} {% if blocked %}disabled{% endif %}>
-                                            <span class="ws-name">{{ c.exp.exp_name }}</span> <span class="badge badge-secondary">{{ c.platform }}</span>
-                                            {% if c.exp.platform_type == 'microblogging' %}<span class="ws-sub">{{ c.exp.simulator_type }}</span>{% endif %}</label>
-                                        {% if c.info.running %}<div class="ws-sub">{{ _('Running: stop it first.') }}</div>{% endif %}
-                                        {% if c.info.other_federation %}<div class="ws-sub">{{ _('Already part of the World Simulation %(name)s.', name=c.info.other_federation) }}</div>{% endif %}
-                                    </div>
-                                    {% else %}<div class="ws-sub">{{ _('No experiment is available.') }}</div>{% endfor %}
+                            <p class="ws-intro">{{ _('A World Simulation runs several experiments, one for each platform, on one shared clock. Work through the steps below: every parameter has a default, so you only change what you need.') }}</p>
+
+                            {% call ws.section('members', _('Name and platforms'), _('Choose two to five stopped experiments, at most one for each platform, that use the simulated clock with hourly slots. Their populations may differ: an agent is active on the platforms whose population contains it.'), 1) %}
+                            <div class="box-lines">
+                                <div class="box-line ws-param">
+                                    <span class="left"><label class="ws-label" for="ws-name">{{ _('Name') }} <span class="text-danger">*</span></label></span>
+                                    <span class="right"><input class="input" id="ws-name" name="name" required maxlength="100" value="{{ form.get('name', '') }}"></span>
                                 </div>
-                                {% set seed_value = form.get('seed', '') %}{% set granularity_value = form.get('granularity', 'slot') %}
-                                {% set attention_on = form.get('attention_enabled') %}{% set discovery_on = form.get('discovery_enabled') %}{% set leave_on = form.get('leave_enabled') %}{% set pseudonyms_on = form.get('pseudonyms_enabled') %}
-                                {% set advanced_value = form.get('advanced', '') %}
-                                {% set cp_content = form.getlist('crosspost_content') %}{% set cp_all = ('all' in cp_content) or not cp_content %}
-<div class="ws-field"><label for="ws-seed">{{ _('Seed') }}</label>
-    <input class="input" type="number" id="ws-seed" name="seed" value="{{ seed_value }}" placeholder="{{ _('random') }}"></div>
-<div class="ws-field"><label for="ws-granularity">{{ _('Clock granularity') }}</label>
-    <select class="input" id="ws-granularity" name="granularity">
-        <option value="slot" {% if granularity_value == 'slot' %}selected{% endif %}>{{ _('Slot (hourly)') }}</option>
-        <option value="day" {% if granularity_value == 'day' %}selected{% endif %}>{{ _('Day') }}</option>
-    </select></div>
-<div class="ws-field"><label>{{ _('Mechanisms') }}</label>
-    <label class="ws-check"><input type="checkbox" name="attention_enabled" {% if attention_on %}checked{% endif %}> {{ _('Share the daily attention of each agent among its platforms') }}</label>
-    <label class="ws-check"><input type="checkbox" name="discovery_enabled" {% if discovery_on %}checked{% endif %}> {{ _('Agents discover and join new platforms') }}</label>
-    <label class="ws-check"><input type="checkbox" name="leave_enabled" {% if leave_on %}checked{% endif %}> {{ _('Agents leave platforms that no longer interest them') }}</label>
-    <label class="ws-check"><input type="checkbox" name="pseudonyms_enabled" {% if pseudonyms_on %}checked{% endif %}> {{ _('Use pseudonyms for authors in cross-posts') }}</label>
-    {% set topics_on = request.method == 'GET' or form.get('topic_migration') %}<input type="hidden" name="topics_present" value="1">
-    <label class="ws-check"><input type="checkbox" name="topic_migration" {% if topics_on %}checked{% endif %}> {{ _('Shared content brings its topics, and missing topics are created') }}</label></div>
-<div class="ws-field" id="ws-crosspost-content"><label>{{ _('Agent content that can be cross-posted') }}</label>
-    <input type="hidden" name="crosspost_content_present" value="1">
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="all" {% if cp_all %}checked{% endif %}> {{ _('All content (the agent\'s own and that of other agents)') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_content" {% if not cp_all and 'own_content' in cp_content %}checked{% endif %} {% if cp_all %}disabled{% endif %}> {{ _('The agent\'s own content') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {% if not cp_all and 'news' in cp_content %}checked{% endif %} {% if cp_all %}disabled{% endif %}> {{ _('Content with news (a link)') }}</label>
-    <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {% if not cp_all and 'images' in cp_content %}checked{% endif %} {% if cp_all %}disabled{% endif %}> {{ _('Content with images') }}</label>
-    <div class="ws-sub">{{ _('Choose All, or add the kinds of content that may be cross-posted: each option you add widens what can travel (own content, plus content with news, plus content with images). Read at each start or restart.') }}</div>
-    <script>(function () {
-        var box = document.getElementById('ws-crosspost-content');
-        var all = box.querySelector('input[value="all"]');
-        var others = box.querySelectorAll('input[name="crosspost_content"]:not([value="all"])');
-        function sync() { others.forEach(function (o) { if (all.checked) { o.checked = false; } o.disabled = all.checked; }); }
-        all.addEventListener('change', sync);
-        others.forEach(function (o) { o.addEventListener('change', function () { if (o.checked) { all.checked = false; sync(); } }); });
-    })();</script></div>
-<div class="ws-field"><label for="ws-advanced">{{ _('Advanced parameters (JSON)') }}</label>
-    <textarea class="textarea" id="ws-advanced" name="advanced" rows="6" placeholder="{{ '{\"attention\": {\"temperature\": 1.0}}' }}">{{ advanced_value }}</textarea>
-    <div class="ws-sub">{{ _('Optional. Blocks: attention, crosspost, discovery, leave, membership.') }}</div></div>
-                                <button class="button is-solid primary-button" type="submit">{{ _('Create') }}</button>
+                            </div>
+                            <div class="ws-platforms" id="ws-members-pick">
+                                {% for group in groups %}
+                                <div class="ws-platform-card" data-platform="{{ group.platform_type }}">
+                                    <div class="ws-platform-head"><i class="mdi {{ group.icon }}"></i> <span class="ws-name">{{ _(group.label) }}</span>
+                                        <span class="ws-sub">{{ group.experiments|length }}</span></div>
+                                    {% for c in group.experiments %}
+                                    {% set blocked = c.problems %}
+                                    <label class="ws-pick {{ 'is-off' if blocked }}">
+                                        <input type="checkbox" name="experiments" value="{{ c.exp.idexp }}" data-platform="{{ c.platform_type }}" data-name="{{ c.exp.exp_name }}"
+                                               {{ 'checked' if c.exp.idexp|string in form.getlist('experiments') }} {{ 'disabled' if blocked }}>
+                                        <span class="ws-pick-body">
+                                            <span class="ws-name">{{ c.exp.exp_name }}</span>
+                                            {% if c.exp.simulator_type == 'HPC' %}<span class="exp-tag hpc">{{ _('HPC') }}</span>{% endif %}
+                                            <span class="ws-sub">{% if c.populations %}{{ _('Population') }}: {% for pop in c.populations %}{{ pop.name }} ({{ _('%(n)s agents', n=pop.agents) }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ _('No population yet.') }}{% endif %}</span>
+                                            {% if 'experiment_running' in blocked %}<span class="ws-problem">{{ _('Running: stop it first.') }}</span>{% endif %}
+                                            {% if 'already_member' in blocked %}<span class="ws-problem">{{ _('Already part of the World Simulation %(name)s.', name=c.info.other_federation) }}</span>{% endif %}
+                                            {% if 'clock' in blocked %}<span class="ws-problem">{{ _('Needs the simulated clock with hourly slots (24 a day).') }}</span>{% endif %}
+                                            {% if 'simulator_type' in blocked or 'platform' in blocked %}<span class="ws-problem">{{ _('This backend cannot take part in a World Simulation.') }}</span>{% endif %}
+                                        </span>
+                                    </label>
+                                    {% else %}<p class="empty-state">{{ _('No experiment is available.') }}</p>{% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endcall %}
+
+                            {% include 'admin/world_simulation/_options_form.html' %}
+
+                            <div class="ws-actions ws-form-actions">
+                                <button class="button is-solid primary-button" type="submit"><i class="mdi mdi-check"></i> <span>{{ _('Create') }}</span></button>
                                 <a class="button is-light" href="{{ url_for('world_simulation.simulations') }}">{{ _('Cancel') }}</a>
-                            </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box ws-summary" id="ws-summary-box">
+                        <h3 class="title is-5 is-thin">{{ _('Summary') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-sub" id="ws-summary-count"></p>
+                            <ul class="ws-summary-list" id="ws-summary-list"></ul>
+                            <div class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('The experiments are not changed until the World Simulation starts, and they go back to normal when it stops.') }}</div>
+                            <div class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('Parameters can be changed later, while the World Simulation is stopped.') }}</div>
                         </div>
                     </div>
                 </div>
             </div>
+            </form>
         </div>
     </div>
 </div>
 {% include "admin/footer.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-world-simulation.js') }}"></script>

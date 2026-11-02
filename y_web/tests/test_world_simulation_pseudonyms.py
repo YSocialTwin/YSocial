@@ -25,8 +25,12 @@ def test_the_block_is_written_to_federation_json(world):  # noqa: F811
 
 def test_the_forms_and_the_italian_catalog_carry_the_option():
     root = os.path.join(os.path.dirname(__file__), "..")
+    from y_web.src.federation import options_schema
+
+    param = options_schema.BY_NAME["pseudonyms_enabled"]
+    assert param.label == "Use pseudonyms for authors in cross-posts"
     for name in ("new.html", "detail.html"):
         text = open(os.path.join(root, "templates", "admin", "world_simulation", name)).read()
-        assert 'name="pseudonyms_enabled"' in text and "Use pseudonyms for authors in cross-posts" in text
+        assert "_options_form.html" in text
     po = open(os.path.join(root, "translations", "it", "LC_MESSAGES", "messages.po")).read()
     assert 'msgid "Use pseudonyms for authors in cross-posts"' in po

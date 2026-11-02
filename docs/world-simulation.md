@@ -18,19 +18,33 @@ New to the idea? Start with the [plain-language overview](world-simulation-overv
 
 ## Create one
 
-Open **World Simulation → New**, choose the experiments (2 to 5), a name, an optional seed and the granularity of the
-barrier (`slot`: members stay within one hour of each other; `day`: within one day). Optional mechanisms can be turned
-on here or later from the **Configuration** tab of the detail page while the simulation is stopped:
+Open **World Simulation → New**. The page is one form in numbered sections; every parameter is a field with its default
+already filled in, so a World Simulation can be created by choosing the members and a name. The same sections are on the
+**Configuration** tab of the detail page, editable while the simulation is stopped. There is no JSON to write.
 
-- *Attention*: each agent's day is shared among its platforms according to the stress and reward it had on each.
-- *Discovery*: agents who see content cross-posted from a platform may join it.
-- *Leave*: agents leave a platform that holds almost none of their attention for several days.
-- *Cross-posts*: how a post on one platform reaches the others (see below).
-- *Agent content that can be cross-posted*: all content (default), or the kinds you add: the agent's own content, content with
-  news (a link), content with images (see below).
+1. *Basics*: the name, an optional description and seed, and the members: pick, per platform, the experiments (2 to 5
+   in all) that take part, each shown with its populations.
+2. *Clock and schedule*: the granularity of the barrier (`slot`: members stay within one hour of each other; `day`:
+   within one day).
+3. *Attention*: each agent's day is shared among its platforms according to the stress and reward it had on each
+   (window, temperature, inertia, floor and the other limits), and the *Leave* rule: agents leave a platform that holds almost
+   none of their attention for several days (it needs attention to be on).
+4. *Discovery*: agents who see content cross-posted from a platform may join it (decay, thresholds, quoted weight and, under
+   *Advanced*, the weights per platform type).
+5. *Cross-posting*: the mode, the probability from each platform to each other one, which agent content can travel
+   (all content by default, or the kinds you add: the agent's own content, content with news, content with images) and
+   whether authors are shown with a pseudonym.
+6. *Identity and populations*: how agents are present on the members (initial membership: all, one random member, or a
+   chosen fraction per platform), topic migration and, for microblogging, whether the members are provisioned.
+7. *Humans*: the users enrolled (see below).
+8. *Advanced*: collapsed by default, with the less common values filled in.
 
-Advanced parameters are a JSON object with the blocks `attention`, `crosspost`, `discovery`, `leave` and `membership`
-([reference](reference/world-simulation-configuration.md)).
+A value left blank is not written and the default applies; a value equal to the default is not saved either, so the
+`federation.json` of a simulation that changes nothing is the same as before. Values outside the allowed range are
+refused with a message naming the field. Settings stored by another release that the form does not know are kept as
+they are when you save, and are listed under the form. **Show the generated file** on the detail page displays the
+resulting `federation.json` read-only. The values are described in the
+[reference](reference/world-simulation-configuration.md).
 
 ## Cross-posts
 

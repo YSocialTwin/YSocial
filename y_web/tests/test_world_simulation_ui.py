@@ -148,7 +148,7 @@ def test_create_start_pause_resume_stop_delete_through_the_interface(site, monke
     monkeypatch.setattr(eb, "stop_federation", lambda fed: calls.append("stop") or setattr(fed, "status", "stopped") or [])
     client = login(app, "admin")
     response = _post(client, "/admin/world_simulation/new", name="W1", experiments=[str(i) for i in exps.values()], seed="5",
-                     granularity="slot", attention_enabled="on", advanced='{"attention": {"temperature": 2.0}}')
+                     granularity="slot", attention_enabled="on", opt__attention__temperature="2.0")
     assert response.status_code == 302
     fed = Federation.query.one()
     options = json.loads(fed.config_json)
@@ -171,8 +171,8 @@ def test_invalid_creation_shows_the_error_and_creates_nothing(site):
     response = client.post("/admin/world_simulation/new", data={"name": "W", "experiments": [str(list(exps.values())[0])]})
     assert response.status_code == 200 and "2 to 5 experiments" in response.get_data(as_text=True)
     assert Federation.query.count() == 0
-    bad = client.post("/admin/world_simulation/new", data={"name": "W", "experiments": [str(i) for i in exps.values()], "advanced": "{nope"})
-    assert "not valid JSON" in bad.get_data(as_text=True) and Federation.query.count() == 0
+    bad = client.post("/admin/world_simulation/new", data={"name": "W", "experiments": [str(i) for i in exps.values()], "opt__attention__temperature": "nope"})
+    assert "Temperature must be a number" in bad.get_data(as_text=True) and Federation.query.count() == 0
 
 
 def test_a_researcher_sees_only_their_own_simulations(site):
@@ -195,8 +195,8 @@ def test_parameters_are_editable_only_when_stopped(site):
     app, exps, tmp = site
     fed = service.create_federation("W", list(exps.values()), owner="admin", seed=1)
     client = login(app, "admin")
-    assert _post(client, f"/admin/world_simulation/{fed.id}/configuration", seed="9", granularity="day", leave_enabled="on").status_code == 302
-    assert fed.seed == 9 and fed.granularity == "day" and json.loads(fed.config_json)["leave"] == {"enabled": True}
+    assert _post(client, f"/admin/world_simulation/{fed.id}/configuration", seed="9", granularity="day", attention_enabled="on", leave_enabled="on").status_code == 302
+    assert fed.seed == 9 and fed.granularity == "day" and json.loads(fed.config_json)["leave"] == {"enabled": True} and json.loads(fed.config_json)["attention"] == {"enabled": True}
     assert json.loads(open(f"{fed.folder}/federation.json").read())["granularity"] == "day"
     fed.status = "running"
     _post(client, f"/admin/world_simulation/{fed.id}/configuration", seed="11")
@@ -222,7 +222,7 @@ def test_the_interface_never_says_federation(site):
     client = login(app, "admin")
     for path in ("", "/new", f"/{fed.id}", "/analytics", "/schedule"):
         html = client.get("/admin/world_simulation" + path).get_data(as_text=True)
-        visible = re.sub(r"<script.*?</script>|<style.*?</style>", "", html, flags=re.S)
+        visible = re.sub(r"<script.*?</script>|<style.*?</style>|<pre .*?</pre>", "", html, flags=re.S)  # <pre>: the generated file, read only
         visible = re.sub(r"(href|action|src|id|data-[a-z-]+)=\"[^\"]*\"", "", visible)
         assert "federation" not in visible.lower() and "federazione" not in visible.lower(), path
         assert "World Simulation" in html
@@ -232,12 +232,18 @@ def test_every_text_has_an_italian_entry_and_the_label_is_the_same():
     catalog = read_po(open(Y_WEB / "translations" / "it" / "LC_MESSAGES" / "messages.po", "rb"))
     italian = {m.id: m.string for m in catalog if m.id and m.string}
     assert italian["World Simulation"] == "World Simulation"  # D-10
-    pattern = re.compile(r"""_\(\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")""")
-    files = list((TEMPLATES / "admin" / "world_simulation").glob("*.html")) + [Y_WEB / "routes" / "admin" / "sub" / "world_simulation.py"]
+    pattern = re.compile(r"""\b_\(\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")""")
     missing = []
-    for path in files:
+    for path in (TEMPLATES / "admin" / "world_simulation").glob("*.html"):
         for m in pattern.finditer(path.read_text()):
             text = (m.group(1) if m.group(1) is not None else m.group(2)).replace("\\'", "'")
             if text not in italian:
                 missing.append(text)
+    import ast
+
+    for path in (Y_WEB / "routes" / "admin" / "sub" / "world_simulation.py", Y_WEB / "src" / "federation" / "options_schema.py"):
+        for node in ast.walk(ast.parse(path.read_text())):  # implicit concatenations are joined by the parser
+            if isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("_", "N_") and node.args and isinstance(node.args[0], ast.Constant):
+                if node.args[0].value not in italian:
+                    missing.append(node.args[0].value)
     assert missing == []

@@ -49,7 +49,7 @@ Take Maria, a simulated resident with accounts on the microblog, the forum and t
 | Discover a platform | Agents who see content cross-posted from a platform may join it. |
 | Leave a platform | Agents leave a platform that holds almost none of their attention for several days. |
 
-The researcher can also choose what is eligible for cross-posting: all content (default), or the agent's own content, plus content with news (a link), plus content with images, whichever are added (choosing more never reduces what travels). The choice is made in the configuration of the World Simulation and applies from the next start.
+The researcher can also choose what is eligible for cross-posting: all content (default), or the agent's own content, plus content with news (a link), plus content with images, whichever are added (choosing more never reduces what travels). The choice is made in the Cross-posting section of the form (New page or Configuration tab) and applies from the next start.
 
 An agent can only credit someone whose content they have seen; otherwise the post goes out without the credit line.
 Content is never sent back to the platform it came from.

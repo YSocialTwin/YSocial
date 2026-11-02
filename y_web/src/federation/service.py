@@ -239,6 +239,11 @@ def _clean_options(options) -> dict:
     for key, value in options.items():
         if not isinstance(value, dict):
             raise WorldSimulationError({"code": "options", "message": f"'{key}' must be an object."})
+    from y_web.src.federation import options_schema
+
+    problems = options_schema.validate(options)  # the limits the coordinator checks at start
+    if problems:
+        raise WorldSimulationError([{"code": "options", "message": message} for message in problems])
     content = (options.get("crosspost") or {}).get("content")
     if isinstance(content, list):
         content = [CROSSPOST_CONTENT_ALIASES.get(c, c) for c in content]

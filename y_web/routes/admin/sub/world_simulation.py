@@ -2,7 +2,10 @@
 
 Pages: list of simulations, guided creation, detail with the Configuration and Execution tabs, analytics selection and
 the schedule. In the interface the feature is always called "World Simulation"; in code it is the federation.
-Only admins and researchers reach these routes (a researcher sees only the simulations they own)."""
+Only admins and researchers reach these routes (a researcher sees only the simulations they own).
+
+The parameters are edited with explicit form fields (``y_web.src.federation.options_schema`` is the table of fields,
+defaults and limits); the stored options keep every key the form does not cover."""
 
 import json
 import sqlite3
@@ -15,6 +18,7 @@ from sqlalchemy import select
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.src.federation import coordinator_process as cp
+from y_web.src.federation import options_schema as schema
 from y_web.src.federation import service
 from y_web.src.experiment.access import get_visible_experiment_query
 from y_web.src.models import Admin_users, Exps
@@ -29,6 +33,13 @@ PLATFORM_LABELS = {
     "instant_messaging": "Instant messaging",
     "dating": "Dating",
 }
+PLATFORM_ICONS = {
+    "microblogging": "mdi-message-text-outline",
+    "forum": "mdi-forum-outline",
+    "photo_sharing": "mdi-image-multiple-outline",
+    "instant_messaging": "mdi-chat-processing-outline",
+    "dating": "mdi-heart-outline",
+}
 STATE_BADGES = {
     "stopped": "badge-secondary",
     "starting": "badge-info",
@@ -38,6 +49,8 @@ STATE_BADGES = {
     "completed": "badge-primary",
     "failed": "badge-danger",
 }
+# Status pill of the experiments pages (``exp-tag``) plus one modifier per state, defined in admin-world-simulation.css.
+STATE_CLASSES = {state: "ws-state-" + state for state in STATE_BADGES}
 SWITCHES = ("attention", "discovery", "leave", "pseudonyms")  # parameter blocks with an "enabled" switch (guide 4.7)
 
 
@@ -86,7 +99,13 @@ def _row(fed):
     return {
         "fed": fed,
         "badge": STATE_BADGES.get(fed.status, "badge-secondary"),
+        "state_class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
         "members": [(m.member, PLATFORM_LABELS.get(m.platform_type, m.platform_type), exp) for m, exp in members],
+        "member_rows": [
+            {"member": m.member, "label": PLATFORM_LABELS.get(m.platform_type, m.platform_type),
+             "icon": PLATFORM_ICONS.get(m.platform_type, "mdi-web"), "exp": exp, "simulator": getattr(exp, "simulator_type", "") or "Standard"}
+            for m, exp in members
+        ],
         "tick": None if not status else status.get("global_tick"),
     }
 
@@ -94,52 +113,62 @@ def _row(fed):
 @world_simulation.route("", strict_slashes=False)
 @guarded
 def simulations(user):
-    return render_template("admin/world_simulation/list.html", rows=[_row(f) for f in _visible_federations(user)])
+    rows = [_row(f) for f in _visible_federations(user)]
+    counts = {"total": len(rows), "running": sum(1 for r in rows if r["fed"].status in ("running", "paused", "starting")),
+              "stopped": sum(1 for r in rows if r["fed"].status in ("stopped", "completed", "failed"))}
+    return render_template("admin/world_simulation/list.html", rows=rows, counts=counts)
+
+
+_BLOCKING = ("experiment_running", "clock", "simulator_type", "platform", "already_member", "remote")
 
 
 def _candidates(user):
+    """The experiments that can be chosen, with their populations and what keeps one from being chosen."""
+    from y_web.src.models.admin import Agent_Population, Population, Population_Experiment
+
     exps = get_visible_experiment_query(user).filter(Exps.is_remote == 0).order_by(Exps.exp_name).all()
     out = []
     for exp in exps:
         info = service.collect_member_info(exp)
-        out.append({"exp": exp, "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type), "info": info})
+        problems = [e for e in service.validate_members([info]) if e["code"] in _BLOCKING]
+        pops = []
+        for link in Population_Experiment.query.filter_by(id_exp=exp.idexp).all():
+            pop = db.session.get(Population, link.id_population)
+            if pop is not None:
+                agents = Agent_Population.query.filter_by(population_id=pop.id).count()
+                pops.append({"name": pop.name, "agents": agents})
+        out.append({"exp": exp, "platform_type": exp.platform_type, "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type),
+                    "icon": PLATFORM_ICONS.get(exp.platform_type, "mdi-web"), "info": info, "populations": pops,
+                    "problems": [p["code"] for p in problems]})
     return out
 
 
-def _options_from_form(form):
-    options = {}
-    for block in SWITCHES:
-        if form.get(f"{block}_enabled"):
-            options[block] = {"enabled": True}
-    if form.get("topics_present") and not form.get("topic_migration"):
-        options["topics"] = {"migration": False}  # on by default: only the opt-out is stored
-    raw = (form.get("advanced") or "").strip()
-    if raw:
-        try:
-            extra = json.loads(raw)
-        except ValueError:
-            raise service.WorldSimulationError({"code": "options", "message": _("The advanced parameters are not valid JSON.")})
-        if not isinstance(extra, dict):
-            raise service.WorldSimulationError({"code": "options", "message": _("The advanced parameters must be a JSON object.")})
-        for key, value in extra.items():
-            if isinstance(value, dict) and isinstance(options.get(key), dict):
-                options[key] = {**value, **options[key]}
-            else:
-                options[key] = value
-    if form.get("crosspost_content_present") and isinstance(options.get("crosspost", {}), dict):
-        # "all" or the additive options (OR); at least one must be chosen; the form wins over a stale copy in the advanced JSON
-        chosen = [service.CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]
-        if not chosen:
-            raise service.WorldSimulationError({"code": "options", "message": _("Choose All content, or at least one kind of content that may be cross-posted.")})
-        form_content = [c for c in ("all",) + service.CROSSPOST_CONTENT if c in chosen]
-        crosspost = {k: v for k, v in (options.get("crosspost") or {}).items() if k != "content"}
-        if form_content != ["all"]:  # all content is the default: not stored (a mix with "all" is refused by the validation)
-            crosspost["content"] = form_content
-        if crosspost:
-            options["crosspost"] = crosspost
-        else:
-            options.pop("crosspost", None)
+def _grouped_candidates(candidates):
+    """Candidates by platform, in the order of the platforms (one card for each)."""
+    groups = []
+    for platform in schema.PLATFORMS:
+        items = [c for c in candidates if c["platform_type"] == platform]
+        groups.append({"platform_type": platform, "label": PLATFORM_LABELS[platform], "icon": PLATFORM_ICONS[platform], "experiments": items})
+    return groups
+
+
+def _options_from_form(form, base=None, members=None):
+    """The options a submitted form describes, over the stored ones ``base`` (keys the form does not cover are kept)."""
+    options, errors = schema.apply_form(form, base, members)
+    if errors:
+        raise service.WorldSimulationError([{"code": "options", "message": message} for message in errors])
     return options
+
+
+def _form_context(values, members=None):
+    """What ``_options_form.html`` needs: the schema, the values to show and the platforms the matrices are for."""
+    return {
+        "schema": schema,
+        "values": values,
+        "ws_platforms": [m for m in schema.PLATFORMS if members is None or m in members],
+        "platform_labels": PLATFORM_LABELS,
+        "platform_icons": PLATFORM_ICONS,
+    }
 
 
 ERROR_TEXT = {
@@ -178,13 +207,15 @@ def new(user):
     if request.method == "POST":
         try:
             seed = form.get("seed", "").strip()
+            chosen = [int(i) for i in form.getlist("experiments")]
+            platforms = {e.platform_type for e in (db.session.get(Exps, i) for i in chosen) if e is not None}
             fed = service.create_federation(
                 form.get("name"),
-                [int(i) for i in form.getlist("experiments")],
+                chosen,
                 owner=user.username,
                 seed=int(seed) if seed else None,
                 granularity=form.get("granularity", "slot"),
-                options=_options_from_form(form),
+                options=_options_from_form(form, members=platforms),
                 exposures=bool(form.get("discovery_enabled")),
             )
             flash(_("World Simulation created."), "success")
@@ -193,7 +224,26 @@ def new(user):
             _flash_errors(exc)
         except ValueError:
             flash(_("The seed must be an integer."), "error")
-    return render_template("admin/world_simulation/new.html", candidates=_candidates(user), form=form)
+    values = schema.values_from_form(form) if request.method == "POST" else schema.values_from_options({})
+    candidates = _candidates(user)
+    return render_template("admin/world_simulation/new.html", candidates=candidates, groups=_grouped_candidates(candidates), form=form,
+                           **_form_context(values))
+
+
+def _stored_options(fed):
+    """The stored options without ``exposures`` (it follows the discovery switch)."""
+    return {k: v for k, v in json.loads(fed.config_json or "{}").items() if k != "exposures"}
+
+
+def _config_preview(fed):
+    """The saved ``federation.json`` as text for the read-only preview (the long identity list is summarised)."""
+    try:
+        config = service.build_federation_config(fed)
+    except Exception as exc:  # noqa: BLE001 - the preview must never stop the page
+        return _("The file cannot be generated: %(error)s", error=str(exc))
+    identity = config.pop("identity", [])
+    config["identity"] = _("%(n)s accounts (not listed)", n=len(identity))
+    return json.dumps(config, indent=2, sort_keys=False)
 
 
 @world_simulation.route("/<int:fed_id>")
@@ -201,15 +251,19 @@ def new(user):
 def detail(user, fed_id):
     fed = _get_or_404(fed_id, user)
     options = json.loads(fed.config_json or "{}")
+    row = _row(fed)
+    members = {m.member for m, _exp in service.members_of(fed)}
     return render_template(
         "admin/world_simulation/detail.html",
-        row=_row(fed),
+        row=row,
         participants=_participants(fed),
         candidates_users=db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all(),
         options=options,
         crosspost_content=service.crosspost_content_of(options),
-        options_text=json.dumps({k: v for k, v in options.items() if k != "exposures"}, indent=2, sort_keys=True),
+        unknown=schema.unknown_paths(options),
+        config_preview=_config_preview(fed),
         editable=fed.status in ("stopped", "completed", "failed"),
+        **_form_context(schema.values_from_options(options), members),
     )
 
 
@@ -266,8 +320,11 @@ def configure(user, fed_id):
         flash(_("Stop the World Simulation before changing its parameters."), "error")
         return redirect(url_for("world_simulation.detail", fed_id=fed.id))
     try:
-        options = _options_from_form(request.form)
-        options = service._clean_options(options)
+        members = {m.member for m, _exp in service.members_of(fed)}
+        stored = _stored_options(fed)
+        options = _options_from_form(request.form, base=stored, members=members)
+        kept = {k: v for k, v in options.items() if k in stored and k not in service.OPTION_BLOCKS}  # blocks of another release stay
+        options = {**service._clean_options({k: v for k, v in options.items() if k not in kept}), **kept}
         seed = request.form.get("seed", "").strip()
         granularity = request.form.get("granularity", fed.granularity)
         if granularity not in service.GRANULARITIES:
@@ -502,7 +559,7 @@ def agents(user, fed_id):
     return render_template(
         "admin/world_simulation/agents.html", row=_row(fed), members=data["members"], labels=labels, source=data["source"],
         rows=rows[(page - 1) * ast.PAGE_SIZE: page * ast.PAGE_SIZE], total=len(rows), page=page, pages=pages,
-        counts=ast.counts(data), states=ast.STATES, f={"member": member, "state": state, "kind": kind, "q": q},
+        counts=ast.counts(data), states=ast.STATES, platform_icons=PLATFORM_ICONS, f={"member": member, "state": state, "kind": kind, "q": q},
     )
 
 

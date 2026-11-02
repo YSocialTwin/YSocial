@@ -62,11 +62,11 @@ def test_nothing_chosen_is_refused_with_a_message_and_all_mixed_with_others_too(
     assert fed.config_json == before  # refused: nothing saved
 
 
-def test_the_form_wins_over_a_stale_copy_in_the_advanced_json_and_keeps_the_other_crosspost_keys():
-    advanced = json.dumps({"crosspost": {"mode": "agent_action", "propensity": 0.5, "content": ["news"]}})
-    got = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["images"], advanced=advanced))
+def test_the_form_wins_over_the_stored_content_and_keeps_the_other_crosspost_keys():
+    stored = {"crosspost": {"mode": "agent_action", "propensity": 0.5, "content": ["news"]}}
+    got = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["images"]), base=stored)
     assert got["crosspost"] == {"mode": "agent_action", "propensity": 0.5, "content": ["images"]}
-    cleared = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["all"], advanced=advanced))
+    cleared = ws._options_from_form(Form(crosspost_content_present="1", crosspost_content=["all"]), base=stored)
     assert cleared["crosspost"] == {"mode": "agent_action", "propensity": 0.5}
 
 
@@ -160,8 +160,11 @@ def test_the_forms_and_the_italian_catalog_carry_the_control():
     from babel.messages.pofile import read_po
 
     root = os.path.join(os.path.dirname(__file__), "..")
-    for name in ("new.html", "detail.html"):
-        text = open(os.path.join(root, "templates", "admin", "world_simulation", name)).read()
+    folder = os.path.join(root, "templates", "admin", "world_simulation")
+    for page in ("new.html", "detail.html"):
+        assert "_options_form.html" in open(os.path.join(folder, page)).read()  # one shared form for both pages
+    for name in ("_options_form.html",):
+        text = open(os.path.join(folder, name)).read()
         for value in ("all", "own_content", "news", "images"):
             assert f'name="crosspost_content" value="{value}"' in text
         assert 'name="crosspost_content_present"' in text

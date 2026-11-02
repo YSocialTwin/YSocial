@@ -1,6 +1,6 @@
 # World Simulation: configuration reference
 
-The advanced parameters of a World Simulation are a JSON object with five optional blocks. Unknown blocks are
+The parameters of a World Simulation are set in the form sections of the New and Configuration pages and stored as a JSON object with five optional blocks (shown read-only by *Show the generated file*). Unknown blocks are
 refused when the World Simulation is created or saved; unknown keys inside a block are refused when the coordinator
 starts. Values shown are the defaults.
 
@@ -36,7 +36,7 @@ starts. Values shown are the defaults.
 `rejoin_cooldown_days` (14), `social_cap` (5), `threshold_probability` (0.5) and `beta`, the weights of the logit with the
 keys `0`, `A`, `S`, `I`, `N`, `F` (defaults -3.0, 1.0, 0.5, 1.5, 0.5, 0.5).
 
-`quoted_weight` (0.0, between 0 and 1): when above 0, an exposure to a cross-post that quotes content from a third platform also adds awareness of that platform, at `quoted_weight` times the usual weight; 0 switches it off. It is set in the advanced options of the World Simulation (`discovery.quoted_weight`).
+`quoted_weight` (0.0, between 0 and 1): when above 0, an exposure to a cross-post that quotes content from a third platform also adds awareness of that platform, at `quoted_weight` times the usual weight; 0 switches it off. It is a field of the Discovery section (`discovery.quoted_weight`).
 
 ## `provisioning`
 

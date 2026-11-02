@@ -1,61 +1,42 @@
 {% include "admin/head.html" %}
-<style>
-    .ws-page { --ws-border:#e5e7eb; --ws-muted:#6b7280; --ws-dark:#111827; }
-    .ws-page .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
-    .ws-intro { font-size:.82rem; color:var(--ws-muted); margin-bottom:14px; }
-    .ws-table { width:100%; border-collapse:collapse; }
-    .ws-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ws-muted); padding:8px 10px; border-bottom:1px solid var(--ws-border); }
-    .ws-table td { padding:10px; border-bottom:1px solid var(--ws-border); vertical-align:middle; font-size:.84rem; }
-    .ws-name { font-weight:700; color:var(--ws-dark); }
-    .ws-sub { font-size:.72rem; color:var(--ws-muted); }
-    .ws-actions { display:flex; gap:6px; flex-wrap:wrap; }
-    .ws-actions form { margin:0; }
-    .ws-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
-    .ws-tabs { display:flex; gap:4px; border-bottom:1px solid var(--ws-border); margin-bottom:16px; }
-    .ws-tab { border:0; background:none; padding:8px 16px; font-weight:600; font-size:.85rem; color:var(--ws-muted); cursor:pointer; border-bottom:2px solid transparent; }
-    .ws-tab.is-active { color:var(--ws-dark); border-bottom-color:#039be5; }
-    .ws-pane[hidden] { display:none; }
-    .ws-log { background:#0f172a; color:#e2e8f0; font-family:monospace; font-size:.74rem; padding:10px; border-radius:6px; max-height:260px; overflow:auto; white-space:pre-wrap; }
-    .ws-field { margin-bottom:12px; }
-    .ws-field label { display:block; font-size:.78rem; font-weight:600; margin-bottom:4px; }
-    .ws-check { display:flex; gap:8px; align-items:center; font-size:.84rem; margin:4px 0; }
-    .ws-pick { border:1px solid var(--ws-border); border-radius:6px; padding:8px 12px; margin-bottom:6px; }
-    .ws-pick.is-off { opacity:.55; }
-    .ws-counter { display:inline-block; margin-right:18px; font-size:.84rem; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
 <div class="view-wrapper is-dashboard ws-page">
     <div id="creator-dashboard" class="dashboard-container">
         {% include "admin/dash_head.html" %}
         <div class="dashboard-body">
+            {{ ws.breadcrumb([(_('Schedule'), None)]) }}
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" id="world-simulation-schedule">
                         <h3 class="title is-5 is-thin">{{ _('Schedule') }}</h3>
                         <div class="box-content">
                             <p class="ws-intro">{{ _('Queue of World Simulations: one runs at a time, in order.') }}</p>
-                            <form method="post" action="{{ url_for('world_simulation.schedule_enqueue') }}" class="ws-actions" style="margin-bottom:14px;">
-                                <select class="input" name="simulation_id" required style="max-width:320px;">
+                            <form method="post" action="{{ url_for('world_simulation.schedule_enqueue') }}" class="ws-actions ws-filter">
+                                <div class="select"><select name="simulation_id" required>
                                     {% for fed in addable %}<option value="{{ fed.id }}">{{ fed.name }}</option>
                                     {% else %}<option value="" disabled selected>{{ _('No World Simulation to add.') }}</option>{% endfor %}
-                                </select>
-                                <button class="button is-solid primary-button" type="submit" {% if not addable %}disabled{% endif %}>{{ _('Add to the queue') }}</button>
+                                </select></div>
+                                <button class="button is-solid primary-button" type="submit" {% if not addable %}disabled{% endif %}><i class="mdi mdi-playlist-plus"></i> <span>{{ _('Add to the queue') }}</span></button>
                             </form>
-                            <div class="table-responsive">
-                            <table class="ws-table" id="world-simulation-queue">
-                                <thead><tr><th>#</th><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Added') }}</th><th>{{ _('Started') }}</th><th>{{ _('Finished') }}</th><th></th></tr></thead>
+                            <div class="table-container">
+                            <table class="table is-fullwidth is-hoverable ws-table" id="world-simulation-queue">
+                                <thead><tr><th>#</th><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Added') }}</th><th>{{ _('Started') }}</th><th>{{ _('Finished') }}</th><th class="ws-col-actions">{{ _('Actions') }}</th></tr></thead>
                                 <tbody>
                                 {% for item, fed in entries %}
                                 <tr data-queue-item="{{ item.id }}">
                                     <td>{{ item.position }}</td>
                                     <td><a class="ws-name" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}">{{ fed.name }}</a></td>
-                                    <td><span class="badge {{ 'badge-info' if item.status == 'queued' else badges.get(item.status, 'badge-secondary') }}">{{ _(item.status|capitalize) }}</span></td>
+                                    <td>{{ ws.state_tag(item.status) }}</td>
                                     <td>{{ item.enqueued_at.strftime('%Y-%m-%d %H:%M') if item.enqueued_at else '-' }}</td>
                                     <td>{{ item.started_at.strftime('%Y-%m-%d %H:%M') if item.started_at else '-' }}</td>
                                     <td>{{ item.finished_at.strftime('%Y-%m-%d %H:%M') if item.finished_at else '-' }}</td>
-                                    <td>{% if item.status == 'queued' %}<form method="post" action="{{ url_for('world_simulation.schedule_cancel', item_id=item.id) }}"><button class="button is-light" type="submit">{{ _('Remove') }}</button></form>{% endif %}</td>
+                                    <td class="ws-col-actions">{% if item.status == 'queued' %}<form method="post" action="{{ url_for('world_simulation.schedule_cancel', item_id=item.id) }}" onsubmit="return confirm('{{ _('Remove this World Simulation from the queue?') }}');"><button class="button is-small is-danger is-light" type="submit"><i class="mdi mdi-close"></i> <span>{{ _('Remove') }}</span></button></form>{% endif %}</td>
                                 </tr>
                                 {% else %}
-                                <tr><td colspan="7" class="ws-sub">{{ _('The queue is empty.') }}</td></tr>
+                                <tr><td colspan="7"><div class="empty-state ws-empty"><i class="mdi mdi-calendar-clock"></i><p>{{ _('The queue is empty.') }}</p></div></td></tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
