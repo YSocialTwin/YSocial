@@ -1,0 +1,32 @@
+{#- World Simulation: back-links of cross-posted content. Set `ws_exp` (the experiment id) and `ws_id` (the id of the post, photo
+    or message on this platform) before including. On a copy it shows "Cross-posted from <platform> · @author" linking to the
+    original (no link when the web interface of that experiment is not active or the original was removed); on an original,
+    "Cross-posted to <platform>" with one link for each copy. Content that shares a quote keeps its "Shared from" block, so
+    no origin line is shown there. Nothing is rendered for content outside a World Simulation or never cross-posted. -#}
+{% macro ws_icon(name) -%}
+<svg class="ws-origin-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">
+{%- if name == 'message-circle' %}<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>
+{%- elif name == 'message-square' %}<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+{%- elif name == 'camera' %}<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+{%- elif name == 'send' %}<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>
+{%- elif name == 'heart' %}<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1 7.8 7.8 7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>
+{%- else %}<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>{% endif %}</svg>
+{%- endmacro %}
+{% set ws_from = ws_origin(ws_exp, ws_id) if ws_exp is defined and ws_id is defined and ws_origin is defined and not (federation_quote is defined and federation_quote(ws_exp, ws_id)) else None %}
+{% set ws_to = ws_copies(ws_exp, ws_id) if ws_exp is defined and ws_id is defined and ws_copies is defined else [] %}
+{% if ws_from %}
+<div class="ws-origin" data-ws-origin data-ws-member="{{ ws_from.member }}" style="margin:0 0 .4rem 0;font-size:.8em;opacity:.85">
+  {{ _('Cross-posted from') }}
+  {% if ws_from.href %}<a class="ws-origin-link" href="{{ ws_from.href }}" title="{{ _('Open the original on %(platform)s', platform=ws_from.label) }}" style="text-decoration:none">{{ ws_icon(ws_from.icon) }} <strong>{{ ws_from.label }}</strong>{% if ws_from.author %} &middot; @{{ ws_from.author }}{% endif %} &#8599;</a>
+  {% else %}<span class="ws-origin-nolink" title="{{ _('The original is not available') }}">{{ ws_icon(ws_from.icon) }} <strong>{{ ws_from.label }}</strong>{% if ws_from.author %} &middot; @{{ ws_from.author }}{% endif %}</span>{% endif %}
+</div>
+{% endif %}
+{% if ws_to %}
+<div class="ws-copies" data-ws-copies style="margin:0 0 .4rem 0;font-size:.8em;opacity:.85">
+  {{ _('Cross-posted to') }}
+  {% for c in ws_to %}
+  {% if c.href %}<a class="ws-copy-link" href="{{ c.href }}" data-ws-member="{{ c.member }}" title="{{ _('Open the copy on %(platform)s', platform=c.label) }}" style="text-decoration:none;margin-right:.5rem;white-space:nowrap">{{ ws_icon(c.icon) }} <strong>{{ c.label }}</strong> &#8599;</a>
+  {% else %}<span class="ws-copy-nolink" data-ws-member="{{ c.member }}" style="margin-right:.5rem;white-space:nowrap">{{ ws_icon(c.icon) }} <strong>{{ c.label }}</strong></span>{% endif %}
+  {% endfor %}
+</div>
+{% endif %}

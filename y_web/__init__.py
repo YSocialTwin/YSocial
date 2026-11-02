@@ -346,6 +346,27 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.jinja_env.globals["ws_profile_badges"] = _ws_profile_badges
 
+    def _ws_origin(exp_id, local_id):
+        """Where a cross-posted post, photo or message comes from (World Simulation); None elsewhere."""
+        try:
+            from y_web.src.federation.backlinks import origin_for
+
+            return origin_for(exp_id, local_id)
+        except Exception:  # noqa: BLE001 - a page never fails because of the federation
+            return None
+
+    def _ws_copies(exp_id, local_id):
+        """Where a post, photo or message was cross-posted to (World Simulation); empty elsewhere."""
+        try:
+            from y_web.src.federation.backlinks import copies_for
+
+            return copies_for(exp_id, local_id)
+        except Exception:  # noqa: BLE001
+            return []
+
+    app.jinja_env.globals["ws_origin"] = _ws_origin
+    app.jinja_env.globals["ws_copies"] = _ws_copies
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)

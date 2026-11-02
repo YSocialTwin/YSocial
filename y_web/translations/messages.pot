@@ -16334,3 +16334,19 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
+msgid "Cross-posted from"
+msgstr ""
+
+msgid "Cross-posted to"
+msgstr ""
+
+#, python-format
+msgid "Open the original on %(platform)s"
+msgstr ""
+
+#, python-format
+msgid "Open the copy on %(platform)s"
+msgstr ""
+
+msgid "The original is not available"
+msgstr ""

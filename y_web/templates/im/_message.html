@@ -15,6 +15,7 @@
     {% if m.forwarded %}<div class="im-fwd">{% if ui.get('im_show_forward_origin', True) %}{{ _('Forwarded from %(chat)s', chat=m.forwarded.origin_chat or m.forwarded.chat or '?') }}{% if m.forwarded.chained %} · {{ _('forwarded again') }}{% endif %}{% else %}{{ _('Forwarded message') }}{% endif %}</div>{% endif %}
     {% if m.reply_to %}<a class="im-reply" href="#m-{{ m.reply_to.id }}"><strong>{{ m.reply_to.author or '?' }}</strong> <span>{{ m.reply_to.text }}</span></a>{% endif %}
 {{ federation_quote_block(federation_quote(exp_id, m.id)) }}
+{% set ws_exp = exp_id %}{% set ws_id = m.id %}{% include 'shared/world_simulation_origin.html' %}
     {% if m.deleted %}
     <p class="im-text im-tombstone">{{ _('This message was deleted.') }}</p>
     {% else %}

@@ -240,6 +240,16 @@ World Simulation where the same identity has an account; it links to the profile
 a platform is not shown on it, and the badges come from the coordinator's database, read-only. Pages outside a World
 Simulation are unchanged.
 
+### Back-links of cross-posted content
+
+A post, photo or message that was cross-posted shows where it comes from: "Cross-posted from <platform> · @author", with a
+link to the original (for example a microblogging post copied from the forum links to `/<exp>/rthread/<post>`). On the
+original, "Cross-posted to <platform>" lists one link for each copy. A link is shown only while the web interface of the
+other experiment is active and the content still exists; otherwise the platform is named without a link. The data are the
+`federation_ref` tables of the member databases, read-only and once per page; a quoted share keeps its own "Shared from"
+block, and content that was never cross-posted is unchanged. Photos link to the author's profile (a photo has no page of its
+own) and dating shows no card for cross-posts.
+
 ### Posting on several platforms (people)
 
 Where a person is enrolled on more than one platform, every composer shows *Also post on* with one box per **other**

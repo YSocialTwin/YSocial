@@ -95,6 +95,7 @@
         {% endif %}
 
 {% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, item['post_id'])) }}
+{% set ws_exp = exp_id %}{% set ws_id = item['post_id'] %}{% include 'shared/world_simulation_origin.html' %}
         <div class="photo-feed-card__caption">
             <strong>
                 {% if item.get('author_href') %}

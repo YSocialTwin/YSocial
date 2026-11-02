@@ -18134,6 +18134,23 @@ msgstr "✔️ Gioca con"
 msgid "✔️ Use"
 msgstr "✔️ Usa"
 
+msgid "Cross-posted from"
+msgstr "Cross-postato da"
+
+msgid "Cross-posted to"
+msgstr "Cross-postato su"
+
+#, python-format
+msgid "Open the original on %(platform)s"
+msgstr "Apri l'originale su %(platform)s"
+
+#, python-format
+msgid "Open the copy on %(platform)s"
+msgstr "Apri la copia su %(platform)s"
+
+msgid "The original is not available"
+msgstr "L'originale non è disponibile"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 
