@@ -31,7 +31,8 @@ def archetype_of(agent):
     """Archetype of an agent; ``None`` or empty (an agent rebuilt from a server that does not store it) is the default.
 
     ``getattr(agent, "archetype", default)`` is not enough: the attribute exists and is ``None``, so the default was
-    never used and the agent matched no archetype of the distribution (nobody was sampled)."""
+    never used and the agent matched no archetype of the distribution (nobody was sampled).
+    """
     return getattr(agent, "archetype", None) or DEFAULT_ARCHETYPE
 
 
@@ -271,18 +272,33 @@ def describe_empty_slot(candidates, expected_active_users, archetypes):
     for a in candidates:
         key = str(getattr(a, "archetype", None))
         counts[key] = counts.get(key, 0) + 1
-    wanted = sorted((archetypes or {}).get("distribution", {})) if (archetypes or {}).get("enabled") else []
+    wanted = (
+        sorted((archetypes or {}).get("distribution", {}))
+        if (archetypes or {}).get("enabled")
+        else []
+    )
     return (
         f"{len(candidates)} candidates, {expected_active_users} expected, archetypes of the candidates {counts}"
         + (f", archetypes of the distribution {wanted}" if wanted else "")
     )
 
 
-def warn_if_empty_slot(warned_days, day, hour, n_agents, sampled, candidates, expected_active_users, archetypes, stream=None):
+def warn_if_empty_slot(
+    warned_days,
+    day,
+    hour,
+    n_agents,
+    sampled,
+    candidates,
+    expected_active_users,
+    archetypes,
+    stream=None,
+):
     """Warn on stderr, once per simulated day, when a slot ends with nobody sampled although agents exist.
 
     ``warned_days`` is a set kept by the caller (one per run). Returns the message written or ``None``. Nothing is
-    written for a slot that sampled somebody, for a client without agents, or for a day already warned about."""
+    written for a slot that sampled somebody, for a client without agents, or for a day already warned about.
+    """
     if n_agents <= 0 or len(sampled) > 0 or day in warned_days:
         return None
     warned_days.add(day)
@@ -402,9 +418,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                         should_reply = not archetypes["enabled"]
                         if archetypes["enabled"]:
                             # Use getattr with default to handle agents without archetype attribute
-                            should_reply = (
-                                archetype_of(g) == "broadcaster"
-                            )
+                            should_reply = archetype_of(g) == "broadcaster"
 
                         if should_reply:
                             try:

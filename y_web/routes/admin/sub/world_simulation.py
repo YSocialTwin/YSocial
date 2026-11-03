@@ -11,23 +11,34 @@ import json
 import sqlite3
 from pathlib import Path
 
-from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.src.experiment.access import get_visible_experiment_query
 from y_web.src.federation import availability
 from y_web.src.federation import coordinator_process as cp
 from y_web.src.federation import frontends
 from y_web.src.federation import member_health as mh
 from y_web.src.federation import options_schema as schema
 from y_web.src.federation import service
-from y_web.src.experiment.access import get_visible_experiment_query
 from y_web.src.models import Admin_users, Exps
 from y_web.src.models.admin import Federation
 
-world_simulation = Blueprint("world_simulation", __name__, url_prefix="/admin/world_simulation")
+world_simulation = Blueprint(
+    "world_simulation", __name__, url_prefix="/admin/world_simulation"
+)
 
 PLATFORM_LABELS = {
     "microblogging": "Microblogging",
@@ -54,11 +65,18 @@ STATE_BADGES = {
 }
 # Status pill of the experiments pages (``exp-tag``) plus one modifier per state, defined in admin-world-simulation.css.
 STATE_CLASSES = {state: "ws-state-" + state for state in STATE_BADGES}
-SWITCHES = ("attention", "discovery", "leave", "pseudonyms")  # parameter blocks with an "enabled" switch (guide 4.7)
+SWITCHES = (
+    "attention",
+    "discovery",
+    "leave",
+    "pseudonyms",
+)  # parameter blocks with an "enabled" switch (guide 4.7)
 
 
 def _admin_user():
-    return db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    return db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
 
 def _allowed(user):
@@ -91,7 +109,9 @@ def guarded(view):
             if request.path.endswith(".json"):
                 return jsonify({"error": _("Access denied")}), 403
             return redirect(url_for("main.index"))
-        if not availability.sdk_available():  # the optional YFederation plugin is missing: a friendly page, never a 500
+        if (
+            not availability.sdk_available()
+        ):  # the optional YFederation plugin is missing: a friendly page, never a 500
             return _unavailable()
         return view(user, *args, **kwargs)
 
@@ -103,7 +123,14 @@ def _unavailable():
     message = _("The YFederation plugin is not installed")
     if request.path.endswith(".json"):
         return jsonify({"error": message, "available": False}), 503
-    return render_template("admin/world_simulation/unavailable.html", message=message, reason=availability.sdk_reason()), 503
+    return (
+        render_template(
+            "admin/world_simulation/unavailable.html",
+            message=message,
+            reason=availability.sdk_reason(),
+        ),
+        503,
+    )
 
 
 def _label_of(row, exp, repeated):
@@ -124,7 +151,9 @@ def _badge_text(code, waiting_for=(), labels=None):
     """The short text of the status badge of a member (OK / waiting for X / stalled / not running ...)."""
     labels = labels or {}
     if code == mh.WAITING:
-        return _("Waiting for %(who)s", who=", ".join(labels.get(w, w) for w in waiting_for))
+        return _(
+            "Waiting for %(who)s", who=", ".join(labels.get(w, w) for w in waiting_for)
+        )
     return {
         mh.OK: lambda: _("OK"),
         mh.STARTING: lambda: _("Starting"),
@@ -158,11 +187,22 @@ def _cause_text(cause):
 
 def _problem_text(code, state, health):
     if code == mh.MISSING:
-        return _("has not said hello %(s)s s after the start (limit %(limit)s s)", s=state.get("since") or 0, limit=health.get("hello_timeout"))
+        return _(
+            "has not said hello %(s)s s after the start (limit %(limit)s s)",
+            s=state.get("since") or 0,
+            limit=health.get("hello_timeout"),
+        )
     if code == mh.STALLED:
-        return _("has not advanced for %(s)s (limit %(limit)s)", s=mh.format_duration(state.get("since")), limit=mh.format_duration(health.get("stall_after")))
+        return _(
+            "has not advanced for %(s)s (limit %(limit)s)",
+            s=mh.format_duration(state.get("since")),
+            limit=mh.format_duration(health.get("stall_after")),
+        )
     if code == mh.DEAD:
-        return _("is not running: %(what)s exited", what=", ".join(state.get("dead") or []) or _("its process"))
+        return _(
+            "is not running: %(what)s exited",
+            what=", ".join(state.get("dead") or []) or _("its process"),
+        )
     if code == mh.FAILED:
         return _("reported a failure to the coordinator")
     return ""
@@ -173,9 +213,16 @@ def _problems_from(health, labels):
     out = []
     for name in (health or {}).get("problems", []):
         state = health["members"][name]
-        out.append({"member": name, "label": labels.get(name, name), "code": state["code"],
-                    "text": _problem_text(state["code"], state, health), "cause": _cause_text(state.get("cause")),
-                    "log": state.get("log", "")})
+        out.append(
+            {
+                "member": name,
+                "label": labels.get(name, name),
+                "code": state["code"],
+                "text": _problem_text(state["code"], state, health),
+                "cause": _cause_text(state.get("cause")),
+                "log": state.get("log", ""),
+            }
+        )
     return out
 
 
@@ -183,11 +230,22 @@ def _hints_from(health, labels):
     """Entries like those of ``_problems_from`` for the members that advance without any agent acting (a hint)."""
     out = []
     for name, info in sorted(((health or {}).get("silent") or {}).items()):
-        out.append({"member": name, "label": labels.get(name, name), "code": "silent",
-                    "text": _("advances but its server received no post, comment or reaction for %(n)s ticks (last one at tick %(last)s)",
-                              n=info["ticks"], last=info["last_action_tick"]),
-                    "cause": _("Check that the clients of this member sample agents (see the warnings in the client log)."),
-                    "log": ""})
+        out.append(
+            {
+                "member": name,
+                "label": labels.get(name, name),
+                "code": "silent",
+                "text": _(
+                    "advances but its server received no post, comment or reaction for %(n)s ticks (last one at tick %(last)s)",
+                    n=info["ticks"],
+                    last=info["last_action_tick"],
+                ),
+                "cause": _(
+                    "Check that the clients of this member sample agents (see the warnings in the client log)."
+                ),
+                "log": "",
+            }
+        )
     return out
 
 
@@ -202,10 +260,17 @@ def _progress_text(progress):
     """``Tick 3/720, ~65 s per tick, ETA 13 h`` (the parts not known yet are left out)."""
     if not progress or not progress.get("tick"):
         return ""
-    parts = [_("Tick %(done)s/%(total)s", done=progress["tick"], total=progress["total"]) if progress.get("total")
-             else _("Tick %(done)s", done=progress["tick"])]
+    parts = [
+        (
+            _("Tick %(done)s/%(total)s", done=progress["tick"], total=progress["total"])
+            if progress.get("total")
+            else _("Tick %(done)s", done=progress["tick"])
+        )
+    ]
     if progress.get("seconds_per_tick"):
-        parts.append(_("~%(t)s per tick", t=mh.format_duration(progress["seconds_per_tick"])))
+        parts.append(
+            _("~%(t)s per tick", t=mh.format_duration(progress["seconds_per_tick"]))
+        )
     if progress.get("eta_seconds") is not None:
         parts.append(_("ETA %(eta)s", eta=mh.format_duration(progress["eta_seconds"])))
     return ", ".join(parts)
@@ -214,15 +279,24 @@ def _progress_text(progress):
 def _row(fed):
     members = service.members_of(fed)
     repeated = service.has_repeated_platform(members)
-    status = cp.coordinator_status(fed, timeout=1.0) if fed.status in ("running", "paused") else None
+    status = (
+        cp.coordinator_status(fed, timeout=1.0)
+        if fed.status in ("running", "paused")
+        else None
+    )
     return {
         "fed": fed,
         "badge": STATE_BADGES.get(fed.status, "badge-secondary"),
         "state_class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
         "members": [(m.member, _label_of(m, exp, repeated), exp) for m, exp in members],
         "member_rows": [
-            {"member": m.member, "label": _label_of(m, exp, repeated),
-             "icon": PLATFORM_ICONS.get(m.platform_type, "mdi-web"), "exp": exp, "simulator": getattr(exp, "simulator_type", "") or "Standard"}
+            {
+                "member": m.member,
+                "label": _label_of(m, exp, repeated),
+                "icon": PLATFORM_ICONS.get(m.platform_type, "mdi-web"),
+                "exp": exp,
+                "simulator": getattr(exp, "simulator_type", "") or "Standard",
+            }
             for m, exp in members
         ],
         "tick": None if not status else status.get("global_tick"),
@@ -231,12 +305,20 @@ def _row(fed):
 
 
 # ------------------------------------------------------------------------------------- the box of the admin home page
-DASHBOARD_MAX_MEMBERS = 8  # members listed on a card (one line each); the rest is summarised as "+N"
+DASHBOARD_MAX_MEMBERS = (
+    8  # members listed on a card (one line each); the rest is summarised as "+N"
+)
 DASHBOARD_MAX_PROBLEMS = 3  # problems listed on a card; the detail page has them all
 _ACTIVE_STATES = ("starting", "running", "paused", "stopping")
 _HEALTH_CLASSES = {
-    mh.OK: "ws-state-running", mh.WAITING: "ws-state-starting", mh.STARTING: "ws-state-starting", mh.MISSING: "ws-state-failed",
-    mh.STALLED: "ws-state-paused", mh.DEAD: "ws-state-failed", mh.FAILED: "ws-state-failed", mh.FINISHED: "ws-state-completed",
+    mh.OK: "ws-state-running",
+    mh.WAITING: "ws-state-starting",
+    mh.STARTING: "ws-state-starting",
+    mh.MISSING: "ws-state-failed",
+    mh.STALLED: "ws-state-paused",
+    mh.DEAD: "ws-state-failed",
+    mh.FAILED: "ws-state-failed",
+    mh.FINISHED: "ws-state-completed",
     mh.UNKNOWN: "ws-state-stopped",
 }
 
@@ -244,8 +326,12 @@ _HEALTH_CLASSES = {
 def state_label(state):
     """The word shown on the status badge of a World Simulation (in the language of the request)."""
     return {
-        "stopped": lambda: _("Stopped"), "starting": lambda: _("Starting"), "running": lambda: _("Running"),
-        "paused": lambda: _("Paused"), "stopping": lambda: _("Stopping"), "completed": lambda: _("Completed"),
+        "stopped": lambda: _("Stopped"),
+        "starting": lambda: _("Starting"),
+        "running": lambda: _("Running"),
+        "paused": lambda: _("Paused"),
+        "stopping": lambda: _("Stopping"),
+        "completed": lambda: _("Completed"),
         "failed": lambda: _("Failed"),
     }.get(state, lambda: str(state))()
 
@@ -256,12 +342,18 @@ def dashboard_card(fed, user):
     The progress and the problems are those of the Execution tab (``member_health`` and the coordinator status, read with a
     short timeout and only while the World Simulation runs)."""
     pairs = service.members_of(fed)
-    coordinator = cp.coordinator_status(fed, timeout=1.0) if fed.status in ("running", "paused") else None
+    coordinator = (
+        cp.coordinator_status(fed, timeout=1.0)
+        if fed.status in ("running", "paused")
+        else None
+    )
     try:
         health = mh.collect(fed, coordinator)  # {} unless running
     except Exception:  # noqa: BLE001 - the box keeps working without the warnings
         health = {}
-    labels = {m.member: (exp.exp_name if exp is not None else m.member) for m, exp in pairs}
+    labels = {
+        m.member: (exp.exp_name if exp is not None else m.member) for m, exp in pairs
+    }
     problems = _problems_from(health, labels) + _hints_from(health, labels)
     states = health.get("members", {})
     live_members = (coordinator or {}).get("members") or {}
@@ -271,17 +363,31 @@ def dashboard_card(fed, user):
         front = fronts.get(row.member) or {}
         hs = states.get(row.member)
         if hs is not None:
-            badge = {"code": hs["code"], "text": _badge_text(hs["code"], hs["waiting_for"], labels),
-                     "class": _HEALTH_CLASSES.get(hs["code"], "ws-state-stopped"), "problem": bool(hs["problem"])}
+            badge = {
+                "code": hs["code"],
+                "text": _badge_text(hs["code"], hs["waiting_for"], labels),
+                "class": _HEALTH_CLASSES.get(hs["code"], "ws-state-stopped"),
+                "problem": bool(hs["problem"]),
+            }
         else:
-            badge = {"code": fed.status, "text": state_label(fed.status), "class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
-                     "problem": False}
-        members.append({
-            "member": row.member, "name": exp.exp_name if exp is not None else row.member,
-            "icon": PLATFORM_ICONS.get(row.platform_type, "mdi-web"), "platform": PLATFORM_LABELS.get(row.platform_type, row.platform_type),
-            "badge": badge, "tick": live_members.get(row.member, {}).get("last_ready_tick"),
-            "frontend_active": bool(front.get("active")), "url": front.get("url"),
-        })
+            badge = {
+                "code": fed.status,
+                "text": state_label(fed.status),
+                "class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
+                "problem": False,
+            }
+        members.append(
+            {
+                "member": row.member,
+                "name": exp.exp_name if exp is not None else row.member,
+                "icon": PLATFORM_ICONS.get(row.platform_type, "mdi-web"),
+                "platform": PLATFORM_LABELS.get(row.platform_type, row.platform_type),
+                "badge": badge,
+                "tick": live_members.get(row.member, {}).get("last_ready_tick"),
+                "frontend_active": bool(front.get("active")),
+                "url": front.get("url"),
+            }
+        )
     progress = health.get("progress") or {}
     tick = None if not coordinator else coordinator.get("global_tick")
     done, total = progress.get("tick"), progress.get("total")
@@ -291,24 +397,42 @@ def dashboard_card(fed, user):
     elif fed.status == "completed":
         percent = 100
     return {
-        "id": fed.id, "name": fed.name, "state": fed.status, "state_label": state_label(fed.status),
-        "badge": STATE_BADGES.get(fed.status, "badge-secondary"), "state_class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
-        "active": fed.status in _ACTIVE_STATES, "owner": fed.owner,
-        "tick": tick, "day": None if tick is None or tick < 0 else tick // 24, "slot": None if tick is None or tick < 0 else tick % 24,
-        "progress": {"done": done, "total": total, "percent": percent, "seconds_per_tick": progress.get("seconds_per_tick"),
-                     "eta_seconds": progress.get("eta_seconds"), "text": _progress_text(progress)},
+        "id": fed.id,
+        "name": fed.name,
+        "state": fed.status,
+        "state_label": state_label(fed.status),
+        "badge": STATE_BADGES.get(fed.status, "badge-secondary"),
+        "state_class": STATE_CLASSES.get(fed.status, "ws-state-stopped"),
+        "active": fed.status in _ACTIVE_STATES,
+        "owner": fed.owner,
+        "tick": tick,
+        "day": None if tick is None or tick < 0 else tick // 24,
+        "slot": None if tick is None or tick < 0 else tick % 24,
+        "progress": {
+            "done": done,
+            "total": total,
+            "percent": percent,
+            "seconds_per_tick": progress.get("seconds_per_tick"),
+            "eta_seconds": progress.get("eta_seconds"),
+            "text": _progress_text(progress),
+        },
         "coordinator_down": fed.status == "running" and coordinator is None,
-        "problems": problems[:DASHBOARD_MAX_PROBLEMS], "problems_total": len(problems),
-        "members": members[:DASHBOARD_MAX_MEMBERS], "members_more": max(0, len(members) - DASHBOARD_MAX_MEMBERS),
+        "problems": problems[:DASHBOARD_MAX_PROBLEMS],
+        "problems_total": len(problems),
+        "members": members[:DASHBOARD_MAX_MEMBERS],
+        "members_more": max(0, len(members) - DASHBOARD_MAX_MEMBERS),
         "detail_url": url_for("world_simulation.detail", fed_id=fed.id),
     }
 
 
 def dashboard_cards(user):
     """The cards of the admin home page: the World Simulations the person may see (the rules of the list page), the ones in
-    progress first. One query for the simulations; the rest is read from the coordinator and the health files of the running ones."""
+    progress first. One query for the simulations; the rest is read from the coordinator and the health files of the running ones.
+    """
     feds = _visible_federations(user)
-    feds.sort(key=lambda f: f.status not in _ACTIVE_STATES)  # stable: newest first inside each group
+    feds.sort(
+        key=lambda f: f.status not in _ACTIVE_STATES
+    )  # stable: newest first inside each group
     return [dashboard_card(f, user) for f in feds]
 
 
@@ -316,32 +440,66 @@ def dashboard_cards(user):
 @guarded
 def simulations(user):
     rows = [_row(f) for f in _visible_federations(user)]
-    counts = {"total": len(rows), "running": sum(1 for r in rows if r["fed"].status in ("running", "paused", "starting")),
-              "stopped": sum(1 for r in rows if r["fed"].status in ("stopped", "completed", "failed"))}
+    counts = {
+        "total": len(rows),
+        "running": sum(
+            1 for r in rows if r["fed"].status in ("running", "paused", "starting")
+        ),
+        "stopped": sum(
+            1 for r in rows if r["fed"].status in ("stopped", "completed", "failed")
+        ),
+    }
     return render_template("admin/world_simulation/list.html", rows=rows, counts=counts)
 
 
-_BLOCKING = ("experiment_running", "clock", "simulator_type", "platform", "already_member", "remote")
+_BLOCKING = (
+    "experiment_running",
+    "clock",
+    "simulator_type",
+    "platform",
+    "already_member",
+    "remote",
+)
 
 
 def _candidates(user):
     """The experiments that can be chosen, with their populations and what keeps one from being chosen."""
-    from y_web.src.models.admin import Agent_Population, Population, Population_Experiment
+    from y_web.src.models.admin import (
+        Agent_Population,
+        Population,
+        Population_Experiment,
+    )
 
-    exps = get_visible_experiment_query(user).filter(Exps.is_remote == 0).order_by(Exps.exp_name).all()
+    exps = (
+        get_visible_experiment_query(user)
+        .filter(Exps.is_remote == 0)
+        .order_by(Exps.exp_name)
+        .all()
+    )
     out = []
     for exp in exps:
         info = service.collect_member_info(exp)
-        problems = [e for e in service.validate_members([info]) if e["code"] in _BLOCKING]
+        problems = [
+            e for e in service.validate_members([info]) if e["code"] in _BLOCKING
+        ]
         pops = []
         for link in Population_Experiment.query.filter_by(id_exp=exp.idexp).all():
             pop = db.session.get(Population, link.id_population)
             if pop is not None:
                 agents = Agent_Population.query.filter_by(population_id=pop.id).count()
                 pops.append({"name": pop.name, "agents": agents})
-        out.append({"exp": exp, "key": f"{exp.platform_type}-{exp.idexp}", "platform_type": exp.platform_type, "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type),
-                    "icon": PLATFORM_ICONS.get(exp.platform_type, "mdi-web"), "info": info, "populations": pops,
-                    "problems": [p["code"] for p in problems]})
+        out.append(
+            {
+                "exp": exp,
+                "key": f"{exp.platform_type}-{exp.idexp}",
+                "platform_type": exp.platform_type,
+                "platform": PLATFORM_LABELS.get(exp.platform_type, exp.platform_type),
+                "icon": PLATFORM_ICONS.get(exp.platform_type, "mdi-web"),
+                "info": info,
+                "populations": pops,
+                "problems": [p["code"] for p in problems],
+            }
+        )
     return out
 
 
@@ -350,7 +508,14 @@ def _grouped_candidates(candidates):
     groups = []
     for platform in schema.PLATFORMS:
         items = [c for c in candidates if c["platform_type"] == platform]
-        groups.append({"platform_type": platform, "label": PLATFORM_LABELS[platform], "icon": PLATFORM_ICONS[platform], "experiments": items})
+        groups.append(
+            {
+                "platform_type": platform,
+                "label": PLATFORM_LABELS[platform],
+                "icon": PLATFORM_ICONS[platform],
+                "experiments": items,
+            }
+        )
     return groups
 
 
@@ -358,7 +523,9 @@ def _options_from_form(form, base=None, members=None):
     """The options a submitted form describes, over the stored ones ``base`` (keys the form does not cover are kept)."""
     options, errors = schema.apply_form(form, base, members)
     if errors:
-        raise service.WorldSimulationError([{"code": "options", "message": message} for message in errors])
+        raise service.WorldSimulationError(
+            [{"code": "options", "message": message} for message in errors]
+        )
     return options
 
 
@@ -366,14 +533,19 @@ def _form_context(values, members=None, labels=None):
     """What ``_options_form.html`` needs: the schema, the values to show and the members the matrices are for.
 
     ``members`` are member names (or, in the creation form, the keys of the candidate experiments), in order; ``labels`` maps each to
-    what a person reads (the name of its experiment). Without them every platform type is offered, as before P15."""
+    what a person reads (the name of its experiment). Without them every platform type is offered, as before P15.
+    """
     keys = [m for m in schema.PLATFORMS] if members is None else list(members)
     return {
         "schema": schema,
         "values": values,
         "ws_platforms": keys,
-        "ws_labels": {k: (labels or {}).get(k) or PLATFORM_LABELS.get(k, k) for k in keys},
-        "ws_platform_types": [t for t in schema.PLATFORMS if t in set(_types_of(keys).values())],
+        "ws_labels": {
+            k: (labels or {}).get(k) or PLATFORM_LABELS.get(k, k) for k in keys
+        },
+        "ws_platform_types": [
+            t for t in schema.PLATFORMS if t in set(_types_of(keys).values())
+        ],
         "platform_labels": PLATFORM_LABELS,
         "platform_icons": PLATFORM_ICONS,
     }
@@ -393,21 +565,39 @@ ERROR_TEXT = {
     "experiment_running": lambda: _("An experiment is running: stop it first."),
     "remote": lambda: _("Remote experiments cannot take part in a World Simulation."),
     "population": lambda: _("All experiments must use the same population."),
-    "platform": lambda: _("One of the platforms cannot take part in a World Simulation."),
-    "simulator_type": lambda: _("One of the experiments uses a backend that is not supported for its platform."),
-    "clock": lambda: _("All experiments must use the simulated clock with 24 slots a day."),
-    "already_member": lambda: _("An experiment already belongs to another World Simulation."),
+    "platform": lambda: _(
+        "One of the platforms cannot take part in a World Simulation."
+    ),
+    "simulator_type": lambda: _(
+        "One of the experiments uses a backend that is not supported for its platform."
+    ),
+    "clock": lambda: _(
+        "All experiments must use the simulated clock with 24 slots a day."
+    ),
+    "already_member": lambda: _(
+        "An experiment already belongs to another World Simulation."
+    ),
     "already_queued": lambda: _("The World Simulation is already in the queue."),
-    "member_busy": lambda: _("Member experiments are running or in the experiment schedule."),
-    "state": lambda: _("The World Simulation is not in the right state for this operation."),
+    "member_busy": lambda: _(
+        "Member experiments are running or in the experiment schedule."
+    ),
+    "state": lambda: _(
+        "The World Simulation is not in the right state for this operation."
+    ),
     "no_member": lambda: _("Pick at least one platform."),
-    "unknown_member": lambda: _("That platform is not a member of this World Simulation."),
-    "platform_not_supported": lambda: _("This platform has no gateway for human participants."),
+    "unknown_member": lambda: _(
+        "That platform is not a member of this World Simulation."
+    ),
+    "platform_not_supported": lambda: _(
+        "This platform has no gateway for human participants."
+    ),
     "gateway_unavailable": lambda: _("The gateway of a platform cannot be reached."),
     "gateway_refused": lambda: _("The gateway of a platform refused the account."),
     "coordinator_refused": lambda: _("The coordinator did not accept the participant."),
     "sdk_missing": lambda: _("The YFederation plugin is not installed."),
-    "sdk_not_importable": lambda: _("The servers and clients of the members cannot import the YFederation plugin."),
+    "sdk_not_importable": lambda: _(
+        "The servers and clients of the members cannot import the YFederation plugin."
+    ),
 }
 
 
@@ -421,7 +611,8 @@ def _flash_errors(error):
 def _translate_form(form, keymap):
     """The creation form speaks of candidate experiments (``<platform>-<experiment id>``, known before anything is chosen); the
     World Simulation is made of members whose names depend on the choice (service.member_names). The pair and start fields are
-    renamed from the first to the second; fields of experiments that were not chosen are left out by ``apply_form``."""
+    renamed from the first to the second; fields of experiments that were not chosen are left out by ``apply_form``.
+    """
     from werkzeug.datastructures import MultiDict
 
     out = MultiDict()
@@ -431,7 +622,9 @@ def _translate_form(form, keymap):
             if len(parts) == 3:
                 key = f"prob__{keymap.get(parts[1], parts[1])}__{keymap.get(parts[2], parts[2])}"
         elif key.startswith("membership_p__"):
-            key = "membership_p__" + keymap.get(key.split("__", 1)[1], key.split("__", 1)[1])
+            key = "membership_p__" + keymap.get(
+                key.split("__", 1)[1], key.split("__", 1)[1]
+            )
         out.add(key, value)
     return out
 
@@ -444,7 +637,9 @@ def new(user):
         try:
             seed = form.get("seed", "").strip()
             chosen = [int(i) for i in form.getlist("experiments")]
-            picked = [e for e in (db.session.get(Exps, i) for i in chosen) if e is not None]
+            picked = [
+                e for e in (db.session.get(Exps, i) for i in chosen) if e is not None
+            ]
             names = service.member_names(picked)
             keymap = {f"{e.platform_type}-{e.idexp}": names[e.idexp] for e in picked}
             platforms = set(names.values())
@@ -454,7 +649,9 @@ def new(user):
                 owner=user.username,
                 seed=int(seed) if seed else None,
                 granularity=form.get("granularity", "slot"),
-                options=_options_from_form(_translate_form(form, keymap), members=platforms),
+                options=_options_from_form(
+                    _translate_form(form, keymap), members=platforms
+                ),
                 exposures=bool(form.get("discovery_enabled")),
             )
             flash(_("World Simulation created."), "success")
@@ -464,16 +661,29 @@ def new(user):
         except ValueError:
             flash(_("The seed must be an integer."), "error")
     candidates = _candidates(user)
-    offered = [c for c in candidates if not c["problems"]]  # the matrices have a row for each experiment that can be chosen
+    offered = [
+        c for c in candidates if not c["problems"]
+    ]  # the matrices have a row for each experiment that can be chosen
     keys = [c["key"] for c in offered]
-    values = schema.values_from_form(form) if request.method == "POST" else schema.values_from_options({}, keys)
-    return render_template("admin/world_simulation/new.html", candidates=candidates, groups=_grouped_candidates(candidates), form=form,
-                           **_form_context(values, keys, {c["key"]: c["exp"].exp_name for c in offered}))
+    values = (
+        schema.values_from_form(form)
+        if request.method == "POST"
+        else schema.values_from_options({}, keys)
+    )
+    return render_template(
+        "admin/world_simulation/new.html",
+        candidates=candidates,
+        groups=_grouped_candidates(candidates),
+        form=form,
+        **_form_context(values, keys, {c["key"]: c["exp"].exp_name for c in offered}),
+    )
 
 
 def _stored_options(fed):
     """The stored options without ``exposures`` (it follows the discovery switch)."""
-    return {k: v for k, v in json.loads(fed.config_json or "{}").items() if k != "exposures"}
+    return {
+        k: v for k, v in json.loads(fed.config_json or "{}").items() if k != "exposures"
+    }
 
 
 def _config_preview(fed):
@@ -499,16 +709,23 @@ def detail(user, fed_id):
         "admin/world_simulation/detail.html",
         row=row,
         frontends=frontends.frontend_rows(fed, user),
-        crosspost_warning=schema.crosspost_warning(schema.crosspost_causes_from_options(options, members)),
+        crosspost_warning=schema.crosspost_warning(
+            schema.crosspost_causes_from_options(options, members)
+        ),
         participants=_participants(fed),
-        candidates_users=db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all(),
+        candidates_users=db.session.scalars(
+            select(Admin_users).order_by(Admin_users.username)
+        ).all(),
         options=options,
         crosspost_content=service.crosspost_content_of(options),
         unknown=schema.unknown_paths(options),
         config_preview=_config_preview(fed),
         editable=fed.status in ("stopped", "completed", "failed"),
-        **_form_context(schema.values_from_options(options, [m.member for m, _exp in pairs]), [m.member for m, _exp in pairs],
-                        {m.member: _exp.exp_name for m, _exp in pairs}),
+        **_form_context(
+            schema.values_from_options(options, [m.member for m, _exp in pairs]),
+            [m.member for m, _exp in pairs],
+            {m.member: _exp.exp_name for m, _exp in pairs},
+        ),
     )
 
 
@@ -521,8 +738,18 @@ def _participants(fed):
     for h in humans.list_humans(fed):
         u = db.session.get(Admin_users, h.user_id)
         state = humans.members_state(h)
-        out.append({"user_id": h.user_id, "username": u.username if u else str(h.user_id), "human_id": h.human_id, "status": h.status,
-                    "members": [(labels.get(m, m), i["account_id"], bool(i.get("created", True))) for m, i in sorted(state.items())]})
+        out.append(
+            {
+                "user_id": h.user_id,
+                "username": u.username if u else str(h.user_id),
+                "human_id": h.human_id,
+                "status": h.status,
+                "members": [
+                    (labels.get(m, m), i["account_id"], bool(i.get("created", True)))
+                    for m, i in sorted(state.items())
+                ],
+            }
+        )
     return out
 
 
@@ -552,7 +779,12 @@ def humans_unenrol(user, fed_id, user_id):
 
     fed = _get_or_404(fed_id, user)
     if humans.unenrol(fed, user_id):
-        flash(_("Participant removed from the World Simulation. Their accounts stay in the experiments."), "success")
+        flash(
+            _(
+                "Participant removed from the World Simulation. Their accounts stay in the experiments."
+            ),
+            "success",
+        )
     return redirect(url_for("world_simulation.detail", fed_id=fed.id))
 
 
@@ -568,15 +800,31 @@ def configure(user, fed_id):
         members = {m.member for m, _exp in service.members_of(fed)}
         stored = _stored_options(fed)
         options = _options_from_form(request.form, base=stored, members=members)
-        kept = {k: v for k, v in options.items() if k in stored and k not in service.OPTION_BLOCKS}  # blocks of another release stay
-        options = {**service._clean_options({k: v for k, v in options.items() if k not in kept}), **kept}
+        kept = {
+            k: v
+            for k, v in options.items()
+            if k in stored and k not in service.OPTION_BLOCKS
+        }  # blocks of another release stay
+        options = {
+            **service._clean_options(
+                {k: v for k, v in options.items() if k not in kept}
+            ),
+            **kept,
+        }
         seed = request.form.get("seed", "").strip()
         granularity = request.form.get("granularity", fed.granularity)
         if granularity not in service.GRANULARITIES:
-            raise service.WorldSimulationError({"code": "granularity", "message": _("Granularity must be slot or day.")})
+            raise service.WorldSimulationError(
+                {
+                    "code": "granularity",
+                    "message": _("Granularity must be slot or day."),
+                }
+            )
         fed.seed = int(seed) if seed else fed.seed
         fed.granularity = granularity
-        fed.config_json = json.dumps({**options, "exposures": bool(request.form.get("discovery_enabled"))})
+        fed.config_json = json.dumps(
+            {**options, "exposures": bool(request.form.get("discovery_enabled"))}
+        )
         service.write_federation_files(fed)
         db.session.commit()
         flash(_("Parameters saved."), "success")
@@ -606,7 +854,10 @@ def _command(fed_id, user, action):
             eb.start_federation(fed, admin_user=user)
             flash(_("World Simulation started."), "success")
             for message in getattr(fed, "frontend_warnings", None) or []:
-                flash(_("Web interface not activated: %(reason)s", reason=message), "warning")
+                flash(
+                    _("Web interface not activated: %(reason)s", reason=message),
+                    "warning",
+                )
         elif action == "pause":
             eb.pause_federation(fed)
             flash(_("World Simulation paused."), "success")
@@ -622,7 +873,13 @@ def _command(fed_id, user, action):
         _flash_errors(exc)
     except Exception as exc:
         db.session.rollback()
-        flash(_("The World Simulation could not complete the operation: %(error)s", error=str(exc)), "error")
+        flash(
+            _(
+                "The World Simulation could not complete the operation: %(error)s",
+                error=str(exc),
+            ),
+            "error",
+        )
     return _back(fed)
 
 
@@ -636,25 +893,43 @@ for _action in ("start", "pause", "resume", "stop"):
         view.__name__ = f"command_{action}"
         return view
 
-    world_simulation.add_url_rule(f"/<int:fed_id>/{_action}", f"command_{_action}", _make(_action), methods=["POST"])
+    world_simulation.add_url_rule(
+        f"/<int:fed_id>/{_action}",
+        f"command_{_action}",
+        _make(_action),
+        methods=["POST"],
+    )
 
 
 def _frontends_command(fed_id, user, activating):
     """Activate or deactivate the web interface of every member (allowed in any state of the World Simulation)."""
     fed = _get_or_404(fed_id, user)
     try:
-        outcomes = (frontends.activate_frontends if activating else frontends.deactivate_frontends)(fed, user)
+        outcomes = (
+            frontends.activate_frontends
+            if activating
+            else frontends.deactivate_frontends
+        )(fed, user)
     except Exception as exc:  # noqa: BLE001 - reported, never a 500
         db.session.rollback()
         outcomes = []
-        problems = [_("The web interfaces could not be changed: %(error)s", error=str(exc))]
+        problems = [
+            _("The web interfaces could not be changed: %(error)s", error=str(exc))
+        ]
     else:
         problems = frontends.warnings_of(outcomes)
     summary = frontends.summary(outcomes, activating) if outcomes else None
     wants_json = request.accept_mimetypes.best == "application/json" or request.is_json
     if wants_json:
-        return jsonify({"ok": not problems, "message": summary, "problems": problems, "members": outcomes,
-                        "frontends": frontends.frontend_rows(fed, user)}), (200 if not problems else 207)
+        return jsonify(
+            {
+                "ok": not problems,
+                "message": summary,
+                "problems": problems,
+                "members": outcomes,
+                "frontends": frontends.frontend_rows(fed, user),
+            }
+        ), (200 if not problems else 207)
     if summary:
         flash(summary, "success")
     for message in problems:
@@ -693,7 +968,9 @@ def export(user, fed_id):
         Path(handle.name).unlink(missing_ok=True)
         flash(_("The export failed: %(why)s", why=str(exc)), "error")
         return redirect(url_for("world_simulation.detail", fed_id=fed.id))
-    response = send_file(handle.name, mimetype="application/zip", as_attachment=True, download_name=name)
+    response = send_file(
+        handle.name, mimetype="application/zip", as_attachment=True, download_name=name
+    )
     response.call_on_close(lambda: Path(handle.name).unlink(missing_ok=True))
     return response
 
@@ -713,13 +990,19 @@ def import_bundle(user):
     handle.close()
     try:
         upload.save(handle.name)
-        fed, report = lifecycle.import_bundle(handle.name, owner=user.username, name=request.form.get("name") or None)
+        fed, report = lifecycle.import_bundle(
+            handle.name, owner=user.username, name=request.form.get("name") or None
+        )
     except service.WorldSimulationError as exc:
         flash(_("The bundle could not be imported: %(why)s", why=str(exc)), "error")
         return redirect(url_for("world_simulation.simulations"))
     finally:
         Path(handle.name).unlink(missing_ok=True)
-    flash(_("World Simulation imported.") + (" " + " ".join(_(n) for n in report["notes"]) if report["notes"] else ""), "success")
+    flash(
+        _("World Simulation imported.")
+        + (" " + " ".join(_(n) for n in report["notes"]) if report["notes"] else ""),
+        "success",
+    )
     return redirect(url_for("world_simulation.detail", fed_id=fed.id))
 
 
@@ -732,7 +1015,10 @@ def clone(user, fed_id):
     try:
         new = lifecycle.clone(fed, request.form.get("name"), owner=user.username)
     except service.WorldSimulationError as exc:
-        flash(_("The World Simulation could not be copied: %(why)s", why=str(exc)), "error")
+        flash(
+            _("The World Simulation could not be copied: %(why)s", why=str(exc)),
+            "error",
+        )
         return redirect(url_for("world_simulation.detail", fed_id=fed.id))
     flash(_("World Simulation copied."), "success")
     return redirect(url_for("world_simulation.detail", fed_id=new.id))
@@ -768,20 +1054,38 @@ def delete(user, fed_id):
 def _read_bus(fed):
     """Counters of the bus and the last events, read from the database of the coordinator (read only)."""
     path = Path(fed.folder) / "federation.db"
-    out = {"messages": 0, "deliveries": 0, "events": [], "by_type": {}, "crosspost_ticks": 0, "crosspost_total": 0, "crosspost_pairs": {}, "crosspost_delivered": 0, "available": False}
+    out = {
+        "messages": 0,
+        "deliveries": 0,
+        "events": [],
+        "by_type": {},
+        "crosspost_ticks": 0,
+        "crosspost_total": 0,
+        "crosspost_pairs": {},
+        "crosspost_delivered": 0,
+        "available": False,
+    }
     if not path.is_file():
         return out
     out["available"] = True
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=1.0)
         try:
-            for kind, n in conn.execute("SELECT payload_type, COUNT(*) FROM federation_message GROUP BY payload_type").fetchall():
-                out["by_type"][kind] = n  # one pass: the total and the exported content come from the same scan
+            for kind, n in conn.execute(
+                "SELECT payload_type, COUNT(*) FROM federation_message GROUP BY payload_type"
+            ).fetchall():
+                out["by_type"][
+                    kind
+                ] = n  # one pass: the total and the exported content come from the same scan
             out["messages"] = sum(out["by_type"].values())
             _read_crossposts(conn, out)
             _read_agent_crossposts(conn, out)
-            out["deliveries"] = conn.execute("SELECT COUNT(*) FROM federation_delivery").fetchone()[0]
-            rows = conn.execute("SELECT tick, kind, detail_json FROM federation_event ORDER BY rowid DESC LIMIT 30").fetchall()
+            out["deliveries"] = conn.execute(
+                "SELECT COUNT(*) FROM federation_delivery"
+            ).fetchone()[0]
+            rows = conn.execute(
+                "SELECT tick, kind, detail_json FROM federation_event ORDER BY rowid DESC LIMIT 30"
+            ).fetchall()
             out["events"] = [{"tick": t, "kind": k, "detail": d} for t, k, d in rows]
         finally:
             conn.close()
@@ -793,8 +1097,11 @@ def _read_bus(fed):
 def _read_crossposts(conn, out, limit=20000):
     """Ticks with at least one cross-post and their total, from the ``crosspost_materialized`` events (one per tick, bounded)."""
     try:
-        for (detail,) in conn.execute("SELECT detail_json FROM federation_event WHERE kind='crosspost_materialized' "
-                                      "ORDER BY id DESC LIMIT ?", (limit,)):
+        for (detail,) in conn.execute(
+            "SELECT detail_json FROM federation_event WHERE kind='crosspost_materialized' "
+            "ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ):
             try:
                 n = int(json.loads(detail).get("crossposts", 0))
             except (TypeError, ValueError, AttributeError):
@@ -810,12 +1117,15 @@ def _read_agent_crossposts(conn, out):
     """``crosspost.v1`` messages (what the members emit with ``crosspost.mode = agent_action``) by origin and destination, and
     how many of them have been delivered (read only, tolerant of missing tables)."""
     try:
-        for source, target, n in conn.execute("SELECT source_member, target_member, COUNT(*) FROM federation_message "
-                                              "WHERE payload_type = 'crosspost.v1' GROUP BY source_member, target_member"):
+        for source, target, n in conn.execute(
+            "SELECT source_member, target_member, COUNT(*) FROM federation_message "
+            "WHERE payload_type = 'crosspost.v1' GROUP BY source_member, target_member"
+        ):
             out["crosspost_pairs"][f"{source}>{target}"] = n
         out["crosspost_delivered"] = conn.execute(
             "SELECT COUNT(*) FROM federation_delivery d JOIN federation_message m ON m.fed_msg_id = d.fed_msg_id "
-            "WHERE m.payload_type = 'crosspost.v1'").fetchone()[0]
+            "WHERE m.payload_type = 'crosspost.v1'"
+        ).fetchone()[0]
     except sqlite3.Error:
         pass
 
@@ -828,7 +1138,8 @@ def _crosspost_status(fed, bus, tick):
     """Text of the Cross-posts line and, when the run is past tick 6 with none, the hint with the probable cause.
 
     The line follows the mode: with ``agent_action`` the members emit ``crosspost.v1`` messages (counted by direction, with
-    the deliveries); with ``coordinator_rule`` the coordinator marks ``content.v1`` and materialises it."""
+    the deliveries); with ``coordinator_rule`` the coordinator marks ``content.v1`` and materialises it.
+    """
     if not bus.get("available"):
         return {"exported": 0, "ticks": 0, "total": 0, "text": None, "hint": None}
     options = json.loads(fed.config_json or "{}")
@@ -839,21 +1150,62 @@ def _crosspost_status(fed, bus, tick):
         pairs = bus.get("crosspost_pairs") or {}
         sent = sum(pairs.values())
         label = lambda m: str(m).replace("_", " ")  # noqa: E731
-        directions = ", ".join(f"{label(k.split('>')[0])} → {label(k.split('>')[1])}: {n}" for k, n in sorted(pairs.items())) or "-"
-        text = _("Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: %(delivered)s", sent=sent,
-                 directions=directions, delivered=bus.get("crosspost_delivered", 0))
+        directions = (
+            ", ".join(
+                f"{label(k.split('>')[0])} → {label(k.split('>')[1])}: {n}"
+                for k, n in sorted(pairs.items())
+            )
+            or "-"
+        )
+        text = _(
+            "Cross-posts: %(sent)s sent by the agents (%(directions)s) · delivered: %(delivered)s",
+            sent=sent,
+            directions=directions,
+            delivered=bus.get("crosspost_delivered", 0),
+        )
         none = sent == 0
     else:
-        text = _("Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content exported: %(exported)s", total=total, ticks=ticks, exported=exported)
+        text = _(
+            "Cross-posts: %(total)s materialised (in %(ticks)s ticks) · content exported: %(exported)s",
+            total=total,
+            ticks=ticks,
+            exported=exported,
+        )
         none = exported == 0 and total == 0
     hint = None
-    if fed.status in ("running", "paused") and tick is not None and tick > CROSSPOST_HINT_AFTER_TICK and none:
+    if (
+        fed.status in ("running", "paused")
+        and tick is not None
+        and tick > CROSSPOST_HINT_AFTER_TICK
+        and none
+    ):
         members = {m.member for m, _exp in service.members_of(fed)}
-        cause = schema.crosspost_warning(schema.crosspost_causes_from_options(options, members))
-        hint = _("No content has been marked for cross-posting after %(tick)s ticks.", tick=tick) + " " + (
-            cause or _("Check that the agents are posting and that the content filter lets their posts through."))
-    return {"exported": exported, "ticks": ticks, "total": total, "sent": sum((bus.get("crosspost_pairs") or {}).values()),
-            "delivered": bus.get("crosspost_delivered", 0), "mode": mode, "text": text, "hint": hint}
+        cause = schema.crosspost_warning(
+            schema.crosspost_causes_from_options(options, members)
+        )
+        hint = (
+            _(
+                "No content has been marked for cross-posting after %(tick)s ticks.",
+                tick=tick,
+            )
+            + " "
+            + (
+                cause
+                or _(
+                    "Check that the agents are posting and that the content filter lets their posts through."
+                )
+            )
+        )
+    return {
+        "exported": exported,
+        "ticks": ticks,
+        "total": total,
+        "sent": sum((bus.get("crosspost_pairs") or {}).values()),
+        "delivered": bus.get("crosspost_delivered", 0),
+        "mode": mode,
+        "text": text,
+        "hint": hint,
+    }
 
 
 def _log_tail(fed, lines=40):
@@ -868,10 +1220,16 @@ def _log_tail(fed, lines=40):
 @guarded
 def status(user, fed_id):
     fed = _get_or_404(fed_id, user)
-    coordinator = cp.coordinator_status(fed, timeout=1.5) if fed.status in ("running", "paused") else None
+    coordinator = (
+        cp.coordinator_status(fed, timeout=1.5)
+        if fed.status in ("running", "paused")
+        else None
+    )
     waiting = cp.waiting_members(coordinator)
     try:
-        health = mh.collect(fed, coordinator)  # {} unless running; cheap: three bounded reads and a few pid checks
+        health = mh.collect(
+            fed, coordinator
+        )  # {} unless running; cheap: three bounded reads and a few pid checks
     except Exception:  # noqa: BLE001 - the page keeps working without the warnings
         health = {}
     states = health.get("members", {})
@@ -889,13 +1247,22 @@ def status(user, fed_id):
                 "state": live.get("status"),
                 "tick": live.get("last_ready_tick"),
                 "waiting_for": waiting.get(row.member, []),
-                "health": None if hs is None else {"code": hs["code"], "problem": hs["problem"],
-                                                  "text": _badge_text(hs["code"], hs["waiting_for"], labels)},
+                "health": (
+                    None
+                    if hs is None
+                    else {
+                        "code": hs["code"],
+                        "problem": hs["problem"],
+                        "text": _badge_text(hs["code"], hs["waiting_for"], labels),
+                    }
+                ),
             }
         )
     progress = health.get("progress")
     bus = _read_bus(fed)
-    crossposts = _crosspost_status(fed, bus, None if not coordinator else coordinator.get("global_tick"))
+    crossposts = _crosspost_status(
+        fed, bus, None if not coordinator else coordinator.get("global_tick")
+    )
     return jsonify(
         {
             "state": fed.status,
@@ -906,7 +1273,9 @@ def status(user, fed_id):
             "problems": _problems_from(health, labels) + _hints_from(health, labels),
             "progress": progress,
             "progress_text": _progress_text(progress),
-            "log_hint": _("The logs are in the folder of each experiment (server_stderr.log and <client>_client_stderr.log)."),
+            "log_hint": _(
+                "The logs are in the folder of each experiment (server_stderr.log and <client>_client_stderr.log)."
+            ),
             "bus": bus,
             "crossposts": crossposts,
             "log": _log_tail(fed),
@@ -938,25 +1307,58 @@ def agents(user, fed_id):
         sort = "name"
     if direction not in ("asc", "desc"):
         direction = ""
-    rows = ast.sorted_rows(ast.filtered(data, member, state, q, kind, activity), sort, direction)
+    rows = ast.sorted_rows(
+        ast.filtered(data, member, state, q, kind, activity), sort, direction
+    )
     page = max(1, request.args.get("page", 1, type=int) or 1)
     pages = max(1, -(-len(rows) // ast.PAGE_SIZE))
     page = min(page, pages)
     labels = _member_labels(fed)
-    f = {"member": member, "state": state, "kind": kind, "q": q, "activity": activity, "sort": sort, "dir": direction}
+    f = {
+        "member": member,
+        "state": state,
+        "kind": kind,
+        "q": q,
+        "activity": activity,
+        "sort": sort,
+        "dir": direction,
+    }
     effective = direction or ast.default_direction(sort)
 
     def sort_url(column):
         """Address of the table sorted by ``column``: the same filters, the opposite direction when it is already the sort."""
         flip = "asc" if effective == "desc" else "desc"
-        args = {**f, "sort": column, "dir": flip if column == sort else ast.default_direction(column)}
-        return url_for("world_simulation.agents", fed_id=fed.id, **{k: v for k, v in args.items() if v})
+        args = {
+            **f,
+            "sort": column,
+            "dir": flip if column == sort else ast.default_direction(column),
+        }
+        return url_for(
+            "world_simulation.agents",
+            fed_id=fed.id,
+            **{k: v for k, v in args.items() if v},
+        )
 
     return render_template(
-        "admin/world_simulation/agents.html", row=_row(fed), members=data["members"], labels=labels, source=data["source"],
-        rows=rows[(page - 1) * ast.PAGE_SIZE: page * ast.PAGE_SIZE], total=len(rows), page=page, pages=pages,
-        counts=ast.counts(data), states=ast.STATES, platform_icons=PLATFORM_ICONS, f=f, names=data["names"],
-        stats_available=data["stats_available"], activities=ast.ACTIVITIES, sort_url=sort_url, sort=sort, direction=effective,
+        "admin/world_simulation/agents.html",
+        row=_row(fed),
+        members=data["members"],
+        labels=labels,
+        source=data["source"],
+        rows=rows[(page - 1) * ast.PAGE_SIZE : page * ast.PAGE_SIZE],
+        total=len(rows),
+        page=page,
+        pages=pages,
+        counts=ast.counts(data),
+        states=ast.STATES,
+        platform_icons=PLATFORM_ICONS,
+        f=f,
+        names=data["names"],
+        stats_available=data["stats_available"],
+        activities=ast.ACTIVITIES,
+        sort_url=sort_url,
+        sort=sort,
+        direction=effective,
     )
 
 
@@ -975,19 +1377,55 @@ def agents_csv(user, fed_id):
     data = ast.table(fed)
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["global_agent_id", "name", "kind", "member", "account_id", "state", "joined_tick", "left_tick",
-                     "crossposts_own", "crossposts_of_others", "times_crossposted", "times_crossposted_by_destination"])
+    writer.writerow(
+        [
+            "global_agent_id",
+            "name",
+            "kind",
+            "member",
+            "account_id",
+            "state",
+            "joined_tick",
+            "left_tick",
+            "crossposts_own",
+            "crossposts_of_others",
+            "times_crossposted",
+            "times_crossposted_by_destination",
+        ]
+    )
     for r in data["rows"]:
-        st = r["stats"]  # the same numbers on every line of the identity: made (own, of others) and delivered copies of its content
-        by_dest = "; ".join(f"{data['names'].get(m, m)}: {n}" for m, n in sorted(st["by_dest"].items()))
+        st = r[
+            "stats"
+        ]  # the same numbers on every line of the identity: made (own, of others) and delivered copies of its content
+        by_dest = "; ".join(
+            f"{data['names'].get(m, m)}: {n}" for m, n in sorted(st["by_dest"].items())
+        )
         for m in data["members"]:
             c = r["states"].get(m)
             if c:
-                writer.writerow([r["id"], r["name"], r["kind"], m, c["account"], c["state"],
-                                 c["joined"] if c["joined"] is not None else "", c["left"] if c["left"] is not None else "",
-                                 st["made_own"], st["made_others"], st["times"], by_dest])
-    return Response(out.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_agents.csv"})
+                writer.writerow(
+                    [
+                        r["id"],
+                        r["name"],
+                        r["kind"],
+                        m,
+                        c["account"],
+                        c["state"],
+                        c["joined"] if c["joined"] is not None else "",
+                        c["left"] if c["left"] is not None else "",
+                        st["made_own"],
+                        st["made_others"],
+                        st["times"],
+                        by_dest,
+                    ]
+                )
+    return Response(
+        out.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_agents.csv"
+        },
+    )
 
 
 @world_simulation.route("/<int:fed_id>/crossposts")
@@ -1002,7 +1440,11 @@ def crossposts(user, fed_id):
     result = cps.search(fed, f)
     pages = max(1, -(-min(result["total"], cps.MAX_OFFSET + f["size"]) // f["size"]))
     f["page"] = min(f["page"], pages)
-    if result["total"] and not result["rows"] and f["page"] != request.args.get("page", 1, type=int):
+    if (
+        result["total"]
+        and not result["rows"]
+        and f["page"] != request.args.get("page", 1, type=int)
+    ):
         result = cps.search(fed, f)
 
     def page_url(page=None, **over):
@@ -1012,11 +1454,26 @@ def crossposts(user, fed_id):
         return url_for("world_simulation.crossposts", fed_id=fed.id, **args)
 
     return render_template(
-        "admin/world_simulation/crossposts.html", row=_row(fed), f=f, rows=result["rows"], total=result["total"], capped=result["capped"],
-        available=result["available"], page=f["page"], pages=pages, page_sizes=cps.PAGE_SIZES, page_url=page_url,
-        platform_icons=PLATFORM_ICONS, statuses=cps.STATUSES, modes=cps.MODES,
-        member_options=[(m.member, exp.exp_name if exp is not None else m.member) for m, exp in members],
-        export_args=cps.query_args(f), slots_per_day=cps.SLOTS_PER_DAY,
+        "admin/world_simulation/crossposts.html",
+        row=_row(fed),
+        f=f,
+        rows=result["rows"],
+        total=result["total"],
+        capped=result["capped"],
+        available=result["available"],
+        page=f["page"],
+        pages=pages,
+        page_sizes=cps.PAGE_SIZES,
+        page_url=page_url,
+        platform_icons=PLATFORM_ICONS,
+        statuses=cps.STATUSES,
+        modes=cps.MODES,
+        member_options=[
+            (m.member, exp.exp_name if exp is not None else m.member)
+            for m, exp in members
+        ],
+        export_args=cps.query_args(f),
+        slots_per_day=cps.SLOTS_PER_DAY,
     )
 
 
@@ -1032,14 +1489,21 @@ def crossposts_csv(user, fed_id):
     from y_web.src.federation import crossposts as cps
 
     fed = _get_or_404(fed_id, user)
-    f = cps.parse_filters(request.args, [m.member for m, _exp in service.members_of(fed)])
+    f = cps.parse_filters(
+        request.args, [m.member for m, _exp in service.members_of(fed)]
+    )
     out = io.StringIO()
     writer = csv.writer(out)
     writer.writerow(cps.CSV_COLUMNS)
     for r in cps.export_rows(fed, f):
         writer.writerow(cps.csv_row(r))
-    return Response(out.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_crossposts.csv"})
+    return Response(
+        out.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_crossposts.csv"
+        },
+    )
 
 
 @world_simulation.route("/<int:fed_id>/analytics.json")
@@ -1061,7 +1525,13 @@ def analytics_rebuild(user, fed_id):
     fed = _get_or_404(fed_id, user)
     result = analytics_etl.build(fed.folder, service.member_databases(fed))
     if not result["ok"]:
-        flash(_("The analytics could not be recalculated: %(why)s", why=result["message"]), "warning")
+        flash(
+            _(
+                "The analytics could not be recalculated: %(why)s",
+                why=result["message"],
+            ),
+            "warning",
+        )
     return redirect(url_for("world_simulation.detail", fed_id=fed.id) + "#analytics")
 
 
@@ -1087,14 +1557,22 @@ def analytics_csv(user, fed_id, table):
     writer = csv.writer(out)
     writer.writerow(columns)
     writer.writerows(rows)
-    return Response(out.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_{table}.csv"})
+    return Response(
+        out.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=world_simulation_{fed.id}_{table}.csv"
+        },
+    )
 
 
 @world_simulation.route("/analytics")
 @guarded
 def analytics(user):
-    return render_template("admin/world_simulation/analytics.html", rows=[_row(f) for f in _visible_federations(user)])
+    return render_template(
+        "admin/world_simulation/analytics.html",
+        rows=[_row(f) for f in _visible_federations(user)],
+    )
 
 
 @world_simulation.route("/schedule")
@@ -1103,11 +1581,26 @@ def schedule(user):
     from y_web.src.federation import schedule_queue
 
     visible = {f.id: f for f in _visible_federations(user)}
-    entries = [(item, fed) for item, fed in schedule_queue.rows() if fed is not None and fed.id in visible]
-    queued = {item.federation_id for item, _fed in entries if item.status in schedule_queue.OPEN_STATES}
-    addable = [f for f in visible.values() if f.id not in queued and f.status in ("stopped", "completed", "failed")]
+    entries = [
+        (item, fed)
+        for item, fed in schedule_queue.rows()
+        if fed is not None and fed.id in visible
+    ]
+    queued = {
+        item.federation_id
+        for item, _fed in entries
+        if item.status in schedule_queue.OPEN_STATES
+    }
+    addable = [
+        f
+        for f in visible.values()
+        if f.id not in queued and f.status in ("stopped", "completed", "failed")
+    ]
     return render_template(
-        "admin/world_simulation/schedule.html", entries=entries, addable=addable, badges=STATE_BADGES
+        "admin/world_simulation/schedule.html",
+        entries=entries,
+        addable=addable,
+        badges=STATE_BADGES,
     )
 
 
@@ -1138,7 +1631,9 @@ def schedule_cancel(user, item_id):
     if schedule_queue.cancel(item):
         flash(_("Removed from the queue."), "success")
     else:
-        flash(_("Only a waiting World Simulation can be removed from the queue."), "error")
+        flash(
+            _("Only a waiting World Simulation can be removed from the queue."), "error"
+        )
     return redirect(url_for("world_simulation.schedule"))
 
 

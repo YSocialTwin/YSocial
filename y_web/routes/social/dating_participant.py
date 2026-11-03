@@ -43,7 +43,12 @@ MAX_ACTIONS = 20
 # the actions whose outcome a person may share (YDating docs/human-gateway.md, Federation)
 CROSSPOST_ACTIONS = ("ACCEPT_DATE", "UNMATCH", "IGNORE", "SEND_MESSAGE", "REPLY")
 MESSAGE_ACTIONS = ("SEND_MESSAGE", "REPLY")
-STORY_EVENTS = ("date_accepted", "after_date_continue", "after_date_ghost", "after_date_close")
+STORY_EVENTS = (
+    "date_accepted",
+    "after_date_continue",
+    "after_date_ghost",
+    "after_date_close",
+)
 MAX_JOIN_PHOTOS = 3
 MAX_UPLOAD = photos.MAX_BYTES + 65536  # the picture and the form around it
 
@@ -409,15 +414,29 @@ def dating_api_act(exp_id):
         if kind in CROSSPOST_ACTIONS and isinstance(raw, dict) and raw.get("crosspost"):
             from y_web.src.federation import human_outbox as _ho
 
-            wanted = raw["crosspost"] if isinstance(raw["crosspost"], list) else [raw["crosspost"]]
-            event = (raw.get("story") or {}).get("event") if isinstance(raw.get("story"), dict) else None
+            wanted = (
+                raw["crosspost"]
+                if isinstance(raw["crosspost"], list)
+                else [raw["crosspost"]]
+            )
+            event = (
+                (raw.get("story") or {}).get("event")
+                if isinstance(raw.get("story"), dict)
+                else None
+            )
             event = event if event in STORY_EVENTS else None
             if kind in MESSAGE_ACTIONS:
                 # a private message is never the story: it needs the explicit choice and the person's own words for it
                 story = (raw.get("crosspost_text") or "") if event else ""
             else:
                 story = raw.get("crosspost_text") or (payload or {}).get("text") or ""
-            targets = _ho.targets_for_request(exp_id, current_user, _ho.requested_members(wanted), story) if story or kind not in MESSAGE_ACTIONS else []
+            targets = (
+                _ho.targets_for_request(
+                    exp_id, current_user, _ho.requested_members(wanted), story
+                )
+                if story or kind not in MESSAGE_ACTIONS
+                else []
+            )
             if targets:
                 item["crosspost_to"] = targets
                 if event:

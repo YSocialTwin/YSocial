@@ -66,7 +66,9 @@ def _federation_clients(exp):
     from y_web import db
     from y_web.src.models import Client
 
-    return db.session.query(Client).filter_by(id_exp=exp.idexp).order_by(Client.id).all()
+    return (
+        db.session.query(Client).filter_by(id_exp=exp.idexp).order_by(Client.id).all()
+    )
 
 
 def _start_federation_clients(exp, *, resume=True):
@@ -79,7 +81,9 @@ def _start_federation_clients(exp, *, resume=True):
             continue
         population = db.session.get(Population, client.population_id)
         if population is None:
-            raise RuntimeError(f"no population for client '{client.name}' of '{exp.exp_name}'")
+            raise RuntimeError(
+                f"no population for client '{client.name}' of '{exp.exp_name}'"
+            )
         start_client_for_experiment(exp, client, population, resume=resume)
         client.status = 1
         db.session.commit()
@@ -99,10 +103,14 @@ def _register_gate_probe(exp, client):
     fed = cp.federation_of_experiment(exp.idexp)
     if fed is None:
         return
-    member = next((row.member for row, e in service.members_of(fed) if e.idexp == exp.idexp), None)
+    member = next(
+        (row.member for row, e in service.members_of(fed) if e.idexp == exp.idexp), None
+    )
     snapshot = SimpleNamespace(folder=fed.folder, token=fed.token)
     register_gate_wait_probe(
-        f"client_{client.id}", lambda: member in cp.waiting_members(cp.coordinator_status(snapshot, timeout=2.0))
+        f"client_{client.id}",
+        lambda: member
+        in cp.waiting_members(cp.coordinator_status(snapshot, timeout=2.0)),
     )
 
 
@@ -137,7 +145,9 @@ def _activate_member_frontends(fed, admin_user=None):
         user = admin_user or frontends.owner_user(fed)
         outcomes = frontends.activate_frontends(fed, user)
         fed.frontend_warnings = frontends.warnings_of(outcomes)
-    except Exception as exc:  # noqa: BLE001 - the web interfaces are a convenience: the start goes on
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 - the web interfaces are a convenience: the start goes on
         from y_web import db
 
         db.session.rollback()
@@ -146,7 +156,9 @@ def _activate_member_frontends(fed, admin_user=None):
         try:
             from flask import current_app
 
-            current_app.logger.warning("World Simulation %s: web interface not activated: %s", fed.id, message)
+            current_app.logger.warning(
+                "World Simulation %s: web interface not activated: %s", fed.id, message
+            )
         except Exception:  # noqa: BLE001 - no application context: nothing to log to
             pass
 
@@ -164,21 +176,32 @@ def start_federation(fed, *, resume=True, admin_user=None):
 
     fed.frontend_warnings = []
     if fed.status in FEDERATION_ACTIVE_STATES:
-        raise service.WorldSimulationError({"code": "state", "message": f"The World Simulation is {fed.status}."})
+        raise service.WorldSimulationError(
+            {"code": "state", "message": f"The World Simulation is {fed.status}."}
+        )
     from y_web.src.federation import availability
 
     availability.require_sdk()  # up-front: the plugin is optional, a missing one must not show up as dead servers
     members = service.members_of(fed)
-    busy = [exp.exp_name for _, exp in members if exp.running or str(exp.exp_status) in ("active", "scheduled")]
+    busy = [
+        exp.exp_name
+        for _, exp in members
+        if exp.running or str(exp.exp_status) in ("active", "scheduled")
+    ]
     if busy:
         raise service.WorldSimulationError(
-            {"code": "experiment_running", "message": "Member experiments are running: " + ", ".join(busy)}
+            {
+                "code": "experiment_running",
+                "message": "Member experiments are running: " + ", ".join(busy),
+            }
         )
     availability.require_child_sdk()  # the servers and clients import the SDK in their own environment
     fed.status = "starting"
     db.session.commit()
     try:
-        service.write_federation_files(fed)  # federation.json is regenerated from the saved parameters at every (re)start
+        service.write_federation_files(
+            fed
+        )  # federation.json is regenerated from the saved parameters at every (re)start
         cp.start_coordinator(fed)
         service.write_member_configs(fed)
         db.session.commit()
@@ -189,9 +212,13 @@ def start_federation(fed, *, resume=True, admin_user=None):
             exp.running = 1
             exp.exp_status = "active"
             db.session.commit()
-            _humans.prepare_member(fed, exp)  # token of the microblogging human gateway, before its server starts
+            _humans.prepare_member(
+                fed, exp
+            )  # token of the microblogging human gateway, before its server starts
             start_server_for_experiment(exp)
-            _humans.after_server_started(fed, exp)  # forum and photo sharing: their gateway processes
+            _humans.after_server_started(
+                fed, exp
+            )  # forum and photo sharing: their gateway processes
         for _, exp in members:
             _start_federation_clients(exp, resume=resume)
         fed.status = "running"
@@ -255,7 +282,12 @@ def pause_federation(fed):
     from y_web.src.federation import service
 
     if fed.status != "running":
-        raise service.WorldSimulationError({"code": "state", "message": f"Cannot pause: the World Simulation is {fed.status}."})
+        raise service.WorldSimulationError(
+            {
+                "code": "state",
+                "message": f"Cannot pause: the World Simulation is {fed.status}.",
+            }
+        )
     errors = []
     for _, exp in reversed(service.members_of(fed)):
         errors += _stop_federation_clients(exp, pause=True)
@@ -270,7 +302,12 @@ def resume_federation(fed):
     from y_web.src.federation import service
 
     if fed.status != "paused":
-        raise service.WorldSimulationError({"code": "state", "message": f"Cannot resume: the World Simulation is {fed.status}."})
+        raise service.WorldSimulationError(
+            {
+                "code": "state",
+                "message": f"Cannot resume: the World Simulation is {fed.status}.",
+            }
+        )
     for _, exp in service.members_of(fed):
         _start_federation_clients(exp, resume=True)
     fed.status = "running"

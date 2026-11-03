@@ -371,8 +371,12 @@ def _appearance_features_from_form() -> list[dict]:
         if not value:
             continue
         if value not in dp.APPEARANCE_OPTIONS.get(key, ()):
-            raise ValueError(_("Appearance: %(field)s has an unknown value.", field=key))
-        entries.append({"feature_type": "custom", "key": f"appearance.{key}", "value": value})
+            raise ValueError(
+                _("Appearance: %(field)s has an unknown value.", field=key)
+            )
+        entries.append(
+            {"feature_type": "custom", "key": f"appearance.{key}", "value": value}
+        )
     height = (form.get("appearance_height_cm") or "").strip()
     if height:
         try:
@@ -380,14 +384,26 @@ def _appearance_features_from_form() -> list[dict]:
         except ValueError:
             number = 0
         if not 100 <= number <= 250:
-            raise ValueError(_("Appearance: the height must be between 100 and 250 cm."))
-        entries.append({"feature_type": "custom", "key": "appearance.height_cm", "value": str(number)})
+            raise ValueError(
+                _("Appearance: the height must be between 100 and 250 cm.")
+            )
+        entries.append(
+            {
+                "feature_type": "custom",
+                "key": "appearance.height_cm",
+                "value": str(number),
+            }
+        )
     glasses = (form.get("appearance_glasses") or "").strip()
     if glasses:
         if glasses not in ("yes", "no"):
             raise ValueError(_("Appearance: glasses must be yes or no."))
         entries.append(
-            {"feature_type": "custom", "key": "appearance.glasses", "value": "true" if glasses == "yes" else "false"}
+            {
+                "feature_type": "custom",
+                "key": "appearance.glasses",
+                "value": "true" if glasses == "yes" else "false",
+            }
         )
     return entries
 
@@ -416,17 +432,25 @@ def _photo_sharing_ext_from_form() -> dict:
         if number <= 0:
             raise ValueError(_("Photo attention budget must be a positive integer."))
         ext["attention_budget"] = str(number)
-    filters = [t.strip() for t in (form.get("photo_favorite_filters") or "").split(",") if t.strip()]
+    filters = [
+        t.strip()
+        for t in (form.get("photo_favorite_filters") or "").split(",")
+        if t.strip()
+    ]
     if filters:
         ext["favorite_filters"] = json.dumps(list(dict.fromkeys(filters)))
-    for name, allowed in (("story_visibility", _STORY_VISIBILITY), ("creator_tier", _CREATOR_TIERS)):
+    for name, allowed in (
+        ("story_visibility", _STORY_VISIBILITY),
+        ("creator_tier", _CREATOR_TIERS),
+    ):
         value = (form.get("photo_" + name) or "").strip()
         if value:
             if value not in allowed:
-                raise ValueError(_("Photo Sharing: %(field)s has an unknown value.", field=name))
+                raise ValueError(
+                    _("Photo Sharing: %(field)s has an unknown value.", field=name)
+                )
             ext[name] = value
     return ext
-
 
 
 def _dating_runtime_available() -> bool:
@@ -858,12 +882,16 @@ def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
     form = request.form
     if not dp.runtime_available(current_user) or not agent_form.has_dating_fields(form):
         return feature_entries
-    if form.get("include_appearance"):  # the Appearance section feeds the Dating appearance too
+    if form.get(
+        "include_appearance"
+    ):  # the Appearance section feeds the Dating appearance too
         from werkzeug.datastructures import MultiDict
 
         form = MultiDict(form)
         for key in list(dp.APPEARANCE_LABELS) + ["height_cm", "glasses"]:
-            if form.get("appearance_" + key) and not form.get("dating_appearance_" + key):
+            if form.get("appearance_" + key) and not form.get(
+                "dating_appearance_" + key
+            ):
                 form["dating_appearance_" + key] = form.get("appearance_" + key)
     try:
         age = int(str(form.get("age") or "").strip())
@@ -1524,9 +1552,7 @@ def agent_details(uid):
     structured_features = summarize_agent_custom_features(uid)
     from y_web.src.agents.custom_field_stats import PHOTO_FIELDS, agent_groups
 
-    custom_groups = agent_groups(
-        structured_features["custom_features"], ext_features
-    )
+    custom_groups = agent_groups(structured_features["custom_features"], ext_features)
     other_ext = {k: v for k, v in ext_features.items() if k not in PHOTO_FIELDS}
     back_href = (
         f"/admin/custom_agent/{custom_spec['slug']}" if custom_spec else "/admin/agents"

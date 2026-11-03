@@ -557,9 +557,17 @@ def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
     # (badge of the platform, a switch, shown only when the simulator is installed), which keeps posting to its
     # own route; there is no separate box or page any more
     assert 'action="/admin/create_population"' in populations
-    assert 'name="include_dating"' in populations and "ys-plat-badge is-dating" in populations
-    assert 'name="username_type"' not in populations  # a population is not tied to a platform
-    assert 'id="dating-population-sections"' in form and 'data-optional-section="dating"' in form
+    assert (
+        'name="include_dating"' in populations
+        and "ys-plat-badge is-dating" in populations
+    )
+    assert (
+        'name="username_type"' not in populations
+    )  # a population is not tied to a platform
+    assert (
+        'id="dating-population-sections"' in form
+        and 'data-optional-section="dating"' in form
+    )
     assert "<form" not in form
     assert "dating_popcreate_form" not in populations
     assert "box-create-dating-population" not in populations
@@ -708,7 +716,14 @@ def test_genders_are_written_the_way_the_runtime_compares_them():
     """male/female of the other platforms become man/woman, so the seeking filter finds candidates."""
     from y_web.src.dating import population as dp
 
-    data = {"agents": [{"gender": "male"}, {"gender": "Female"}, {"gender": "non-binary"}, {"gender": None}]}
+    data = {
+        "agents": [
+            {"gender": "male"},
+            {"gender": "Female"},
+            {"gender": "non-binary"},
+            {"gender": None},
+        ]
+    }
     out = dp.runtime_genders(data)
     assert [a["gender"] for a in out["agents"]] == ["man", "woman", "non-binary", None]
     assert data["agents"][0]["gender"] == "male"  # the input is not changed

@@ -33,7 +33,9 @@ CROSSPOST_CONTENT = ("own_content", "news", "images")
 CROSSPOST_CONTENT_ALIASES = {"own_posts": "own_content"}
 # Platform types of a World Simulation. A member is called as its type when the type is unique in the World Simulation, else
 # `<type>-<experiment id>` (service.member_names, P15); the matrices below are keyed by member names.
-DEFAULT_PAIR_PROBABILITY = 0.3  # YWeb default of every ordered pair of member platforms (the SDK default is 0)
+DEFAULT_PAIR_PROBABILITY = (
+    0.3  # YWeb default of every ordered pair of member platforms (the SDK default is 0)
+)
 PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating")
 # Platforms whose runtime creates an account on request (service.PROVISIONABLE, repeated here to stay import free).
 PROVISIONABLE = ("microblogging",)
@@ -42,13 +44,20 @@ MEMBERSHIP_CHOICES = ("all", "one_random", "custom")
 # not listed (or a trigger not listed for it) keeps the random draw: the option is documented as supported by these clients only.
 DECISION_TRIGGERS = ("publish", "interaction")
 LLM_DECISION_SUPPORT = {  # platform type -> triggers its client supports
-    "microblogging": ("publish", "interaction"),  # YClient (Standard); the HPC simulator below
+    "microblogging": (
+        "publish",
+        "interaction",
+    ),  # YClient (Standard); the HPC simulator below
     "forum": ("publish", "interaction"),
     "photo_sharing": ("publish", "interaction"),
     "instant_messaging": ("publish", "interaction"),
-    "dating": ("publish",),  # profile updates only: match stories are not content of others
+    "dating": (
+        "publish",
+    ),  # profile updates only: match stories are not content of others
 }
-LLM_DECISION_SUPPORT_HPC = {"microblogging": ("publish",)}  # YSimulator: shares are not exported
+LLM_DECISION_SUPPORT_HPC = {
+    "microblogging": ("publish",)
+}  # YSimulator: shares are not exported
 
 
 @dataclass(frozen=True)
@@ -63,7 +72,9 @@ class Param:
     min_exclusive: bool = False
     choices: tuple = ()  # ((value, label), ...) for kind == "choice"
     advanced: bool = False
-    legacy_name: str = ""  # form name used by earlier pages (kept so that older posts keep working)
+    legacy_name: str = (
+        ""  # form name used by earlier pages (kept so that older posts keep working)
+    )
 
     @property
     def block(self) -> str:
@@ -84,129 +95,421 @@ def _p(block, key, kind, default, label, help="", **kw):
 
 # --------------------------------------------------------------------------------------------------------- the table
 ATTENTION = (
-    Param(("attention", "enabled"), "bool", False, N_("Share the daily attention of each agent among its platforms"),
-          N_("Every day each agent splits its activity among the platforms where it is active, according to how rewarding "
-             "they were. Off: every agent keeps its own activity on each platform."), legacy_name="attention_enabled"),
-    _p("attention", "temperature", "float", 1.0, N_("Temperature"),
-       N_("How sharply the agent favours its best platform. Low values concentrate attention, high values spread it evenly. Greater than 0."),
-       minimum=0.0, min_exclusive=True, advanced=True),
-    _p("attention", "inertia", "float", 0.3, N_("Inertia"),
-       N_("Weight of the previous day: 0 follows only the latest day, 1 never changes the shares. Between 0 and 1."),
-       minimum=0.0, maximum=1.0, advanced=True),
-    _p("attention", "min_multiplier", "float", 0.1, N_("Smallest multiplier"),
-       N_("Lowest factor applied to an agent's chance of a session on a platform. At least 0."), minimum=0.0, advanced=True),
-    _p("attention", "max_multiplier", "float", 3.0, N_("Largest multiplier"),
-       N_("Highest factor applied to an agent's chance of a session on a platform. Not below the smallest multiplier."),
-       minimum=0.0, advanced=True),
-    _p("attention", "normalization", "choice", "raw", N_("Comparison of platforms"),
-       N_("How the reward of different platforms is compared before sharing attention."),
-       choices=(("raw", N_("Native values")), ("zscore", N_("Standardised per platform (z-score)"))), advanced=True),
+    Param(
+        ("attention", "enabled"),
+        "bool",
+        False,
+        N_("Share the daily attention of each agent among its platforms"),
+        N_(
+            "Every day each agent splits its activity among the platforms where it is active, according to how rewarding "
+            "they were. Off: every agent keeps its own activity on each platform."
+        ),
+        legacy_name="attention_enabled",
+    ),
+    _p(
+        "attention",
+        "temperature",
+        "float",
+        1.0,
+        N_("Temperature"),
+        N_(
+            "How sharply the agent favours its best platform. Low values concentrate attention, high values spread it evenly. Greater than 0."
+        ),
+        minimum=0.0,
+        min_exclusive=True,
+        advanced=True,
+    ),
+    _p(
+        "attention",
+        "inertia",
+        "float",
+        0.3,
+        N_("Inertia"),
+        N_(
+            "Weight of the previous day: 0 follows only the latest day, 1 never changes the shares. Between 0 and 1."
+        ),
+        minimum=0.0,
+        maximum=1.0,
+        advanced=True,
+    ),
+    _p(
+        "attention",
+        "min_multiplier",
+        "float",
+        0.1,
+        N_("Smallest multiplier"),
+        N_(
+            "Lowest factor applied to an agent's chance of a session on a platform. At least 0."
+        ),
+        minimum=0.0,
+        advanced=True,
+    ),
+    _p(
+        "attention",
+        "max_multiplier",
+        "float",
+        3.0,
+        N_("Largest multiplier"),
+        N_(
+            "Highest factor applied to an agent's chance of a session on a platform. Not below the smallest multiplier."
+        ),
+        minimum=0.0,
+        advanced=True,
+    ),
+    _p(
+        "attention",
+        "normalization",
+        "choice",
+        "raw",
+        N_("Comparison of platforms"),
+        N_(
+            "How the reward of different platforms is compared before sharing attention."
+        ),
+        choices=(
+            ("raw", N_("Native values")),
+            ("zscore", N_("Standardised per platform (z-score)")),
+        ),
+        advanced=True,
+    ),
 )
 LEAVE = (
-    Param(("leave", "enabled"), "bool", False, N_("Agents leave platforms that no longer interest them"),
-          N_("An agent leaves a platform when its share of attention there stays low for several days, as long as it stays "
-             "active somewhere else. Needs the attention sharing above."), legacy_name="leave_enabled"),
-    _p("leave", "weight_threshold", "float", 0.1, N_("Attention share below which an agent is losing interest"),
-       N_("Between 0 and 1."), minimum=0.0, maximum=1.0, advanced=True),
-    _p("leave", "consecutive_days", "int", 3, N_("Days in a row before leaving"), N_("At least 1."), minimum=1, advanced=True),
+    Param(
+        ("leave", "enabled"),
+        "bool",
+        False,
+        N_("Agents leave platforms that no longer interest them"),
+        N_(
+            "An agent leaves a platform when its share of attention there stays low for several days, as long as it stays "
+            "active somewhere else. Needs the attention sharing above."
+        ),
+        legacy_name="leave_enabled",
+    ),
+    _p(
+        "leave",
+        "weight_threshold",
+        "float",
+        0.1,
+        N_("Attention share below which an agent is losing interest"),
+        N_("Between 0 and 1."),
+        minimum=0.0,
+        maximum=1.0,
+        advanced=True,
+    ),
+    _p(
+        "leave",
+        "consecutive_days",
+        "int",
+        3,
+        N_("Days in a row before leaving"),
+        N_("At least 1."),
+        minimum=1,
+        advanced=True,
+    ),
 )
 DISCOVERY = (
-    Param(("discovery", "enabled"), "bool", False, N_("Agents discover and join new platforms"),
-          N_("Agents become aware of a platform from what they see of it (cross-posts) and may open an account there. "
-             "Switching it on also makes the platforms report what each agent was shown."), legacy_name="discovery_enabled"),
-    _p("discovery", "decision", "choice", "logit", N_("Decision rule"),
-       N_("How an aware agent decides to join: a probability that grows with awareness, ties, interest and frustration "
-          "(logistic), or a fixed probability once awareness passes the threshold."),
-       choices=(("logit", N_("Logistic (graded)")), ("threshold", N_("Fixed probability"))), advanced=False),
-    _p("discovery", "max_active_platforms", "int", 5, N_("Most platforms an agent can be active on"),
-       N_("At least 1."), minimum=1, advanced=False),
-    _p("discovery", "rejoin_cooldown_days", "int", 14, N_("Days before an agent can rejoin a platform it left"),
-       N_("0 or more."), minimum=0, advanced=False),
-    _p("discovery", "decay", "float", 0.1, N_("Daily decay of awareness"),
-       N_("Share of awareness lost every day. Between 0 and 1."), minimum=0.0, maximum=1.0, advanced=True),
-    _p("discovery", "w_view", "float", 1.0, N_("Weight of a view"), N_("Awareness added by seeing content of the platform."), advanced=True),
-    _p("discovery", "w_view_tie", "float", 2.0, N_("Weight of a view from someone followed"),
-       N_("Awareness added when the author is followed by the agent."), advanced=True),
-    _p("discovery", "w_interact", "float", 3.0, N_("Weight of an interaction"),
-       N_("Awareness added by interacting with content of the platform."), advanced=True),
-    _p("discovery", "window_days", "int", 7, N_("Days observed"),
-       N_("Window used to count the followed authors seen on a platform. At least 1."), minimum=1, advanced=True),
-    _p("discovery", "aware_threshold", "float", 3.0, N_("Awareness needed to consider joining"),
-       N_("An agent is eligible to join once its awareness reaches this value."), advanced=True),
-    _p("discovery", "base_rate", "float", 0.0, N_("Background awareness rate"),
-       N_("Chance per day of becoming aware without any exposure. Between 0 and 1."), minimum=0.0, maximum=1.0, advanced=True),
-    _p("discovery", "social_cap", "int", 5, N_("Cap on social evidence"),
-       N_("Followed authors counted at most. 0 or more."), minimum=0, advanced=True),
-    _p("discovery", "threshold_probability", "float", 0.5, N_("Probability of joining (fixed rule)"),
-       N_("Used only with the fixed probability rule. Between 0 and 1."), minimum=0.0, maximum=1.0, advanced=True),
-    _p("discovery", "quoted_weight", "float", 0.0, N_("Awareness credit for the platform of quoted content"),
-       N_("Share of the exposure weight credited to the platform where a quoted content lives. 0 switches it off. Between 0 and 1."),
-       minimum=0.0, maximum=1.0, advanced=True),
+    Param(
+        ("discovery", "enabled"),
+        "bool",
+        False,
+        N_("Agents discover and join new platforms"),
+        N_(
+            "Agents become aware of a platform from what they see of it (cross-posts) and may open an account there. "
+            "Switching it on also makes the platforms report what each agent was shown."
+        ),
+        legacy_name="discovery_enabled",
+    ),
+    _p(
+        "discovery",
+        "decision",
+        "choice",
+        "logit",
+        N_("Decision rule"),
+        N_(
+            "How an aware agent decides to join: a probability that grows with awareness, ties, interest and frustration "
+            "(logistic), or a fixed probability once awareness passes the threshold."
+        ),
+        choices=(
+            ("logit", N_("Logistic (graded)")),
+            ("threshold", N_("Fixed probability")),
+        ),
+        advanced=False,
+    ),
+    _p(
+        "discovery",
+        "max_active_platforms",
+        "int",
+        5,
+        N_("Most platforms an agent can be active on"),
+        N_("At least 1."),
+        minimum=1,
+        advanced=False,
+    ),
+    _p(
+        "discovery",
+        "rejoin_cooldown_days",
+        "int",
+        14,
+        N_("Days before an agent can rejoin a platform it left"),
+        N_("0 or more."),
+        minimum=0,
+        advanced=False,
+    ),
+    _p(
+        "discovery",
+        "decay",
+        "float",
+        0.1,
+        N_("Daily decay of awareness"),
+        N_("Share of awareness lost every day. Between 0 and 1."),
+        minimum=0.0,
+        maximum=1.0,
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "w_view",
+        "float",
+        1.0,
+        N_("Weight of a view"),
+        N_("Awareness added by seeing content of the platform."),
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "w_view_tie",
+        "float",
+        2.0,
+        N_("Weight of a view from someone followed"),
+        N_("Awareness added when the author is followed by the agent."),
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "w_interact",
+        "float",
+        3.0,
+        N_("Weight of an interaction"),
+        N_("Awareness added by interacting with content of the platform."),
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "window_days",
+        "int",
+        7,
+        N_("Days observed"),
+        N_("Window used to count the followed authors seen on a platform. At least 1."),
+        minimum=1,
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "aware_threshold",
+        "float",
+        3.0,
+        N_("Awareness needed to consider joining"),
+        N_("An agent is eligible to join once its awareness reaches this value."),
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "base_rate",
+        "float",
+        0.0,
+        N_("Background awareness rate"),
+        N_("Chance per day of becoming aware without any exposure. Between 0 and 1."),
+        minimum=0.0,
+        maximum=1.0,
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "social_cap",
+        "int",
+        5,
+        N_("Cap on social evidence"),
+        N_("Followed authors counted at most. 0 or more."),
+        minimum=0,
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "threshold_probability",
+        "float",
+        0.5,
+        N_("Probability of joining (fixed rule)"),
+        N_("Used only with the fixed probability rule. Between 0 and 1."),
+        minimum=0.0,
+        maximum=1.0,
+        advanced=True,
+    ),
+    _p(
+        "discovery",
+        "quoted_weight",
+        "float",
+        0.0,
+        N_("Awareness credit for the platform of quoted content"),
+        N_(
+            "Share of the exposure weight credited to the platform where a quoted content lives. 0 switches it off. Between 0 and 1."
+        ),
+        minimum=0.0,
+        maximum=1.0,
+        advanced=True,
+    ),
 )
-BETA_KEYS = (("0", N_("Intercept")), ("A", N_("Awareness")), ("S", N_("Social evidence")), ("I", N_("Interest")),
-             ("N", N_("Number of active platforms")), ("F", N_("Frustration")))
+BETA_KEYS = (
+    ("0", N_("Intercept")),
+    ("A", N_("Awareness")),
+    ("S", N_("Social evidence")),
+    ("I", N_("Interest")),
+    ("N", N_("Number of active platforms")),
+    ("F", N_("Frustration")),
+)
 BETA_DEFAULTS = {"0": -3.0, "A": 1.0, "S": 0.5, "I": 1.5, "N": 0.5, "F": 0.5}
-BETA = tuple(Param(("discovery", "beta", k), "float", BETA_DEFAULTS[k], label, advanced=True) for k, label in BETA_KEYS)
+BETA = tuple(
+    Param(("discovery", "beta", k), "float", BETA_DEFAULTS[k], label, advanced=True)
+    for k, label in BETA_KEYS
+)
 CROSSPOST = (
-    Param(("crosspost", "mode"), "choice", "coordinator_rule", N_("Who decides the cross-posts"),
-          N_("By rule: the coordinator copies content to other platforms with the probabilities below. By the agent: each agent "
-             "chooses where to post, with the propensity below."),
-          choices=(("coordinator_rule", N_("The coordinator, by rule")), ("agent_action", N_("The agent, by its own action")))),
-    Param(("crosspost", "decision"), "choice", "random", N_("Who decides whether to cross-post"),
-          N_("Random draw: each post an agent publishes is marked for cross-posting with the propensity below, as in earlier "
-             "versions. The agent decides: the language model of the agent is asked, once for each event, whether to cross-post "
-             "the content and, when the agents choose their own cross-posts, towards which platforms; it costs one extra model "
-             "call for each event (at most the daily limit below for each agent). Agents without a language model, and any "
-             "failed or invalid answer, use the random draw. Read at each start or restart."),
-          choices=(("random", N_("Random draw (propensity)")), ("llm", N_("The agent decides (LLM)")))),
-    Param(("crosspost", "decision_max_per_day"), "int", 5, N_("Most model decisions for each agent in a day"),
-          N_("Only when the agent decides. Bounds the extra model calls: after this many decisions in a simulated day an agent "
-             "uses the random draw until the next day. 0 means no limit."), minimum=0),
-    Param(("crosspost", "propensity"), "float", 0.2, N_("Propensity to cross-post"),
-          N_("The probability that an agent marks a post it publishes for cross-posting. With the random draw it is a random draw, "
-             "not a decision of the language model; when the agent decides it is only the fallback used if the model fails or "
-             "the agent has none. By rule, a marked post can then be copied to other platforms with the probabilities of the "
-             "pairs below; by agent action, one draw is made for each destination platform and the model only writes the text "
-             "adapted to the destination. 0 means never. Between 0 and 1. YWeb default 0.2 (the coordinator itself defaults to 0)."),
-          minimum=0.0, maximum=1.0),
+    Param(
+        ("crosspost", "mode"),
+        "choice",
+        "coordinator_rule",
+        N_("Who decides the cross-posts"),
+        N_(
+            "By rule: the coordinator copies content to other platforms with the probabilities below. By the agent: each agent "
+            "chooses where to post, with the propensity below."
+        ),
+        choices=(
+            ("coordinator_rule", N_("The coordinator, by rule")),
+            ("agent_action", N_("The agent, by its own action")),
+        ),
+    ),
+    Param(
+        ("crosspost", "decision"),
+        "choice",
+        "random",
+        N_("Who decides whether to cross-post"),
+        N_(
+            "Random draw: each post an agent publishes is marked for cross-posting with the propensity below, as in earlier "
+            "versions. The agent decides: the language model of the agent is asked, once for each event, whether to cross-post "
+            "the content and, when the agents choose their own cross-posts, towards which platforms; it costs one extra model "
+            "call for each event (at most the daily limit below for each agent). Agents without a language model, and any "
+            "failed or invalid answer, use the random draw. Read at each start or restart."
+        ),
+        choices=(
+            ("random", N_("Random draw (propensity)")),
+            ("llm", N_("The agent decides (LLM)")),
+        ),
+    ),
+    Param(
+        ("crosspost", "decision_max_per_day"),
+        "int",
+        5,
+        N_("Most model decisions for each agent in a day"),
+        N_(
+            "Only when the agent decides. Bounds the extra model calls: after this many decisions in a simulated day an agent "
+            "uses the random draw until the next day. 0 means no limit."
+        ),
+        minimum=0,
+    ),
+    Param(
+        ("crosspost", "propensity"),
+        "float",
+        0.2,
+        N_("Propensity to cross-post"),
+        N_(
+            "The probability that an agent marks a post it publishes for cross-posting. With the random draw it is a random draw, "
+            "not a decision of the language model; when the agent decides it is only the fallback used if the model fails or "
+            "the agent has none. By rule, a marked post can then be copied to other platforms with the probabilities of the "
+            "pairs below; by agent action, one draw is made for each destination platform and the model only writes the text "
+            "adapted to the destination. 0 means never. Between 0 and 1. YWeb default 0.2 (the coordinator itself defaults to 0)."
+        ),
+        minimum=0.0,
+        maximum=1.0,
+    ),
 )
 TOPICS = (
-    Param(("topics", "migration"), "bool", True, N_("Shared content brings its topics, and missing topics are created"),
-          N_("On by default: content that crosses a platform carries its topics and the destination creates the ones it lacks."),
-          legacy_name="topic_migration"),
+    Param(
+        ("topics", "migration"),
+        "bool",
+        True,
+        N_("Shared content brings its topics, and missing topics are created"),
+        N_(
+            "On by default: content that crosses a platform carries its topics and the destination creates the ones it lacks."
+        ),
+        legacy_name="topic_migration",
+    ),
 )
 PSEUDONYMS = (
-    Param(("pseudonyms", "enabled"), "bool", False, N_("Use pseudonyms for authors in cross-posts"),
-          N_("The platforms that receive a quoted post see a stable pseudonym instead of the name of its author."),
-          legacy_name="pseudonyms_enabled"),
+    Param(
+        ("pseudonyms", "enabled"),
+        "bool",
+        False,
+        N_("Use pseudonyms for authors in cross-posts"),
+        N_(
+            "The platforms that receive a quoted post see a stable pseudonym instead of the name of its author."
+        ),
+        legacy_name="pseudonyms_enabled",
+    ),
 )
 
 FRONTENDS = (
-    Param(("frontends", "activate_on_start"), "bool", True, N_("Activate the web interface of the member experiments when the simulation starts"),
-          N_("On by default: at start every member experiment is activated, so that you can open its web interface from the "
-             "World Simulation. Stopping the World Simulation does not deactivate them: use Deactivate frontends on the "
-             "Execution tab. Only YWeb reads this option."),
-          legacy_name="frontends_activate_on_start"),
+    Param(
+        ("frontends", "activate_on_start"),
+        "bool",
+        True,
+        N_(
+            "Activate the web interface of the member experiments when the simulation starts"
+        ),
+        N_(
+            "On by default: at start every member experiment is activated, so that you can open its web interface from the "
+            "World Simulation. Stopping the World Simulation does not deactivate them: use Deactivate frontends on the "
+            "Execution tab. Only YWeb reads this option."
+        ),
+        legacy_name="frontends_activate_on_start",
+    ),
 )
 
-PARAMS = ATTENTION + LEAVE + DISCOVERY + BETA + CROSSPOST + TOPICS + PSEUDONYMS + FRONTENDS
+PARAMS = (
+    ATTENTION + LEAVE + DISCOVERY + BETA + CROSSPOST + TOPICS + PSEUDONYMS + FRONTENDS
+)
 BY_NAME = {p.name: p for p in PARAMS}
 BY_PATH = {p.path: p for p in PARAMS}
 # Boolean switches without a presence marker: an absent checkbox means off (as in earlier pages).
 # ``topics.migration`` and ``frontends.activate_on_start`` have a hidden marker because they are on by default.
-PRESENCE = {("topics", "migration"): "topics_present", ("frontends", "activate_on_start"): "frontends_present"}
+PRESENCE = {
+    ("topics", "migration"): "topics_present",
+    ("frontends", "activate_on_start"): "frontends_present",
+}
 
 # Keys covered by the form besides the table (blocks of their own handling).
-SPECIAL_PATHS = {("crosspost", "content"), ("crosspost", "decision_triggers"), ("crosspost", "probability"), ("membership", "initial"), ("provisioning", "members")}
+SPECIAL_PATHS = {
+    ("crosspost", "content"),
+    ("crosspost", "decision_triggers"),
+    ("crosspost", "probability"),
+    ("membership", "initial"),
+    ("provisioning", "members"),
+}
 COVERED = {p.path for p in PARAMS} | SPECIAL_PATHS
 
 SECTIONS = (
-    {"id": "attention", "title": N_("Attention"),
-     "intro": N_("How the daily activity of an agent is shared among the platforms where it is active, and when it leaves one."),
-     "groups": (ATTENTION, LEAVE)},
-    {"id": "discovery", "title": N_("Discovery"),
-     "intro": N_("Whether agents find out about the other platforms and join them while the World Simulation runs."),
-     "groups": (DISCOVERY,)},
+    {
+        "id": "attention",
+        "title": N_("Attention"),
+        "intro": N_(
+            "How the daily activity of an agent is shared among the platforms where it is active, and when it leaves one."
+        ),
+        "groups": (ATTENTION, LEAVE),
+    },
+    {
+        "id": "discovery",
+        "title": N_("Discovery"),
+        "intro": N_(
+            "Whether agents find out about the other platforms and join them while the World Simulation runs."
+        ),
+        "groups": (DISCOVERY,),
+    },
 )
 
 
@@ -282,24 +585,44 @@ def values_from_options(options, members=None) -> dict:
     for p in PARAMS:
         stored = _get(options, p.path)
         value = p.default if stored is MISSING else stored
-        out[p.name] = bool(value) if p.kind == "bool" else (value if p.kind == "choice" else fmt(value))
+        out[p.name] = (
+            bool(value)
+            if p.kind == "bool"
+            else (value if p.kind == "choice" else fmt(value))
+        )
     content = (options.get("crosspost") or {}).get("content") or []
     names = {CROSSPOST_CONTENT_ALIASES.get(c, c) for c in content if isinstance(c, str)}
-    out["crosspost_content"] = [] if ("all" in names or not names) else [c for c in CROSSPOST_CONTENT if c in names]
+    out["crosspost_content"] = (
+        []
+        if ("all" in names or not names)
+        else [c for c in CROSSPOST_CONTENT if c in names]
+    )
     out["crosspost_decision_triggers"] = decision_triggers_of(options)
     probability = (options.get("crosspost") or {}).get("probability") or {}
-    names = list(members) if members is not None else list(PLATFORMS)  # member names (P15); every platform type by default
+    names = (
+        list(members) if members is not None else list(PLATFORMS)
+    )  # member names (P15); every platform type by default
     for src in names:
         for dst in names:
             if src != dst:
                 v = probability.get(f"{src}->{dst}")
-                out[f"prob__{src}__{dst}"] = fmt(DEFAULT_PAIR_PROBABILITY if v is None else v)
+                out[f"prob__{src}__{dst}"] = fmt(
+                    DEFAULT_PAIR_PROBABILITY if v is None else v
+                )
     initial = (options.get("membership") or {}).get("initial", "all")
-    out["membership_initial"] = "custom" if isinstance(initial, dict) else (initial if initial in MEMBERSHIP_CHOICES else "all")
+    out["membership_initial"] = (
+        "custom"
+        if isinstance(initial, dict)
+        else (initial if initial in MEMBERSHIP_CHOICES else "all")
+    )
     for m in names:
         v = initial.get(m) if isinstance(initial, dict) else None
         out[f"membership_p__{m}"] = "" if v is None else fmt(v)
-    out["provisioning_members"] = [m for m in PROVISIONABLE if m in ((options.get("provisioning") or {}).get("members") or [])]
+    out["provisioning_members"] = [
+        m
+        for m in PROVISIONABLE
+        if m in ((options.get("provisioning") or {}).get("members") or [])
+    ]
     return out
 
 
@@ -309,21 +632,36 @@ def values_from_form(form) -> dict:
     for p in PARAMS:
         if p.kind == "bool":
             marker = PRESENCE.get(p.path)
-            out[p.name] = bool(form.get(p.name)) if marker is None or form.get(marker) else p.default
+            out[p.name] = (
+                bool(form.get(p.name))
+                if marker is None or form.get(marker)
+                else p.default
+            )
         elif p.name in form:
             out[p.name] = form.get(p.name)
     if form.get("crosspost_content_present"):
-        chosen = [CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]
-        out["crosspost_content"] = [c for c in CROSSPOST_CONTENT if c in chosen] if "all" not in chosen else []
+        chosen = [
+            CROSSPOST_CONTENT_ALIASES.get(v, v)
+            for v in form.getlist("crosspost_content")
+        ]
+        out["crosspost_content"] = (
+            [c for c in CROSSPOST_CONTENT if c in chosen] if "all" not in chosen else []
+        )
     if form.get("crosspost_decision_triggers_present"):
-        out["crosspost_decision_triggers"] = [t for t in DECISION_TRIGGERS if t in form.getlist("crosspost_decision_triggers")]
+        out["crosspost_decision_triggers"] = [
+            t
+            for t in DECISION_TRIGGERS
+            if t in form.getlist("crosspost_decision_triggers")
+        ]
     for key in form.keys():
         if key.startswith(("prob__", "membership_p__")):
             out[key] = form.get(key, "")
     if "membership_initial" in form:
         out["membership_initial"] = form.get("membership_initial")
     if form.get("provisioning_present"):
-        out["provisioning_members"] = [m for m in form.getlist("provisioning_members") if m in PROVISIONABLE]
+        out["provisioning_members"] = [
+            m for m in form.getlist("provisioning_members") if m in PROVISIONABLE
+        ]
     return out
 
 
@@ -360,7 +698,13 @@ def _number(p: Param, text, errors):
             return int(number)
         return float(text)
     except (TypeError, ValueError):
-        errors.append(_("%(label)s must be %(kind)s.", label=_(p.label), kind=_("an integer") if p.kind == "int" else _("a number")))
+        errors.append(
+            _(
+                "%(label)s must be %(kind)s.",
+                label=_(p.label),
+                kind=_("an integer") if p.kind == "int" else _("a number"),
+            )
+        )
         return MISSING
 
 
@@ -381,7 +725,8 @@ def apply_form(form, base=None, members=None):
     """Read a submitted form over the stored options ``base`` (without ``exposures``).
 
     Returns ``(options, errors)``: ``errors`` is a list of messages (empty when the form is valid). ``members`` are the platform
-    types of the World Simulation: the probabilities and the starting map keep only those."""
+    types of the World Simulation: the probabilities and the starting map keep only those.
+    """
     base = copy.deepcopy(base) if isinstance(base, dict) else {}
     options = copy.deepcopy(base)
     errors: list = []
@@ -396,7 +741,9 @@ def apply_form(form, base=None, members=None):
         elif p.kind == "choice":
             value = form.get(p.name)
             if value not in [c[0] for c in p.choices]:
-                errors.append(_("Choose a valid option for %(label)s.", label=_(p.label)))
+                errors.append(
+                    _("Choose a valid option for %(label)s.", label=_(p.label))
+                )
                 continue
             _store(options, base, p.path, value, p.default)
         else:
@@ -425,7 +772,12 @@ def _apply_probability(form, base, options, members, errors):
         if members is not None and (src not in members or dst not in members):
             continue
         label = f"{src}->{dst}"
-        probe = Param(("crosspost", "probability", label), "float", DEFAULT_PAIR_PROBABILITY, _("Probability %(pair)s", pair=label))
+        probe = Param(
+            ("crosspost", "probability", label),
+            "float",
+            DEFAULT_PAIR_PROBABILITY,
+            _("Probability %(pair)s", pair=label),
+        )
         value = _number(probe, form.get(key), errors)
         if value is MISSING:
             continue
@@ -438,7 +790,12 @@ def _apply_membership(form, base, options, members, errors):
         return
     path = ("membership", "initial")
     if choice not in MEMBERSHIP_CHOICES:
-        errors.append(_("Choose a valid option for %(label)s.", label=_("Starting state of the agents")))
+        errors.append(
+            _(
+                "Choose a valid option for %(label)s.",
+                label=_("Starting state of the agents"),
+            )
+        )
         return
     stored = _get(base, path)
     if choice == "all":
@@ -455,7 +812,12 @@ def _apply_membership(form, base, options, members, errors):
             member = key.split("__", 1)[1]
             if members is not None and member not in members:
                 continue
-            probe = Param(("membership", "initial", member), "float", 0.0, _("Probability of starting on %(platform)s", platform=member))
+            probe = Param(
+                ("membership", "initial", member),
+                "float",
+                0.0,
+                _("Probability of starting on %(platform)s", platform=member),
+            )
             value = _number(probe, form.get(key), errors)
             if value is MISSING:
                 continue
@@ -466,7 +828,11 @@ def _apply_membership(form, base, options, members, errors):
         if members is not None:
             mapping = {m: v for m, v in mapping.items() if m in members}
         if not mapping:
-            errors.append(_("Give the probability of starting on at least one platform, or choose another starting state."))
+            errors.append(
+                _(
+                    "Give the probability of starting on at least one platform, or choose another starting state."
+                )
+            )
         else:
             _set(options, path, mapping)
 
@@ -475,8 +841,10 @@ def _apply_provisioning(form, base, options):
     if not form.get("provisioning_present"):
         return
     chosen = [m for m in form.getlist("provisioning_members") if m in PROVISIONABLE]
-    stored = (_get(base, ("provisioning", "members"), []) or [])
-    kept = [m for m in stored if isinstance(m, str) and m not in PROVISIONABLE]  # members this page cannot show stay
+    stored = _get(base, ("provisioning", "members"), []) or []
+    kept = [
+        m for m in stored if isinstance(m, str) and m not in PROVISIONABLE
+    ]  # members this page cannot show stay
     members = [m for m in PROVISIONABLE if m in chosen] + kept
     if members == stored:
         return
@@ -489,13 +857,23 @@ def _apply_provisioning(form, base, options):
 def _apply_content(form, options, errors):
     if not form.get("crosspost_content_present"):
         return
-    chosen = [CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")]
+    chosen = [
+        CROSSPOST_CONTENT_ALIASES.get(v, v) for v in form.getlist("crosspost_content")
+    ]
     if not chosen:
-        errors.append(_("Choose All content, or at least one kind of content that may be cross-posted."))
+        errors.append(
+            _(
+                "Choose All content, or at least one kind of content that may be cross-posted."
+            )
+        )
         return
     form_content = [c for c in ("all",) + CROSSPOST_CONTENT if c in chosen]
-    crosspost = {k: v for k, v in (options.get("crosspost") or {}).items() if k != "content"}
-    if form_content != ["all"]:  # all content is the default: not stored (a mix with "all" is refused by the validation)
+    crosspost = {
+        k: v for k, v in (options.get("crosspost") or {}).items() if k != "content"
+    }
+    if form_content != [
+        "all"
+    ]:  # all content is the default: not stored (a mix with "all" is refused by the validation)
         crosspost["content"] = form_content
     if crosspost:
         options["crosspost"] = crosspost
@@ -515,12 +893,22 @@ def _apply_decision_triggers(form, base, options, errors):
     """The events decided by the agent's model: both is the default and is not written; a stored list that is unchanged stays."""
     if not form.get("crosspost_decision_triggers_present"):
         return
-    chosen = [t for t in DECISION_TRIGGERS if t in form.getlist("crosspost_decision_triggers")]
+    chosen = [
+        t for t in DECISION_TRIGGERS if t in form.getlist("crosspost_decision_triggers")
+    ]
     if not chosen:
-        errors.append(_("Choose at least one event for the agent to decide on: publishing its own content or interacting with the content of others."))
+        errors.append(
+            _(
+                "Choose at least one event for the agent to decide on: publishing its own content or interacting with the content of others."
+            )
+        )
         return
     stored = _get(base, ("crosspost", "decision_triggers"))
-    if stored is not MISSING and isinstance(stored, (list, tuple)) and decision_triggers_of(base) == chosen:
+    if (
+        stored is not MISSING
+        and isinstance(stored, (list, tuple))
+        and decision_triggers_of(base) == chosen
+    ):
         return  # unchanged: the stored text of the key stays
     if chosen == list(DECISION_TRIGGERS):
         _remove(options, ("crosspost", "decision_triggers"))
@@ -531,9 +919,18 @@ def _apply_decision_triggers(form, base, options, errors):
 # ----------------------------------------------------------------------------------------------------- validation
 def _range_message(p: Param) -> str:
     if p.minimum is not None and p.maximum is not None:
-        return _("%(label)s must be between %(low)s and %(high)s.", label=_(p.label), low=_g(p.minimum), high=_g(p.maximum))
+        return _(
+            "%(label)s must be between %(low)s and %(high)s.",
+            label=_(p.label),
+            low=_g(p.minimum),
+            high=_g(p.maximum),
+        )
     if p.min_exclusive:
-        return _("%(label)s must be greater than %(low)s.", label=_(p.label), low=_g(p.minimum))
+        return _(
+            "%(label)s must be greater than %(low)s.",
+            label=_(p.label),
+            low=_g(p.minimum),
+        )
     return _("%(label)s must be at least %(low)s.", label=_(p.label), low=_g(p.minimum))
 
 
@@ -546,21 +943,33 @@ def validate(options) -> list:
             continue
         if p.kind == "choice":
             if value not in [c[0] for c in p.choices]:
-                errors.append(_("Choose a valid option for %(label)s.", label=_(p.label)))
+                errors.append(
+                    _("Choose a valid option for %(label)s.", label=_(p.label))
+                )
             continue
         try:
             number = float(value)
         except (TypeError, ValueError):
-            errors.append(_("%(label)s must be %(kind)s.", label=_(p.label), kind=_("a number")))
+            errors.append(
+                _("%(label)s must be %(kind)s.", label=_(p.label), kind=_("a number"))
+            )
             continue
         if p.kind == "int" and number != int(number):
-            errors.append(_("%(label)s must be %(kind)s.", label=_(p.label), kind=_("an integer")))
-        elif (p.minimum is not None and (number < p.minimum or (p.min_exclusive and number == p.minimum))) or (
-                p.maximum is not None and number > p.maximum):
+            errors.append(
+                _("%(label)s must be %(kind)s.", label=_(p.label), kind=_("an integer"))
+            )
+        elif (
+            p.minimum is not None
+            and (number < p.minimum or (p.min_exclusive and number == p.minimum))
+        ) or (p.maximum is not None and number > p.maximum):
             errors.append(_range_message(p))
     attention = options.get("attention") or {}
-    if isinstance(attention, dict) and _numbers(attention, "min_multiplier", "max_multiplier") and float(
-            attention.get("min_multiplier", 0.1)) > float(attention.get("max_multiplier", 3.0)):
+    if (
+        isinstance(attention, dict)
+        and _numbers(attention, "min_multiplier", "max_multiplier")
+        and float(attention.get("min_multiplier", 0.1))
+        > float(attention.get("max_multiplier", 3.0))
+    ):
         errors.append(_("The largest multiplier cannot be smaller than the smallest."))
     crosspost = options.get("crosspost") or {}
     probability = crosspost.get("probability") if isinstance(crosspost, dict) else None
@@ -574,11 +983,30 @@ def validate(options) -> list:
                 except (TypeError, ValueError):
                     ok = False
                 if not ok:
-                    errors.append(_("The probability %(pair)s must be between 0 and 1.", pair=str(key)))
-    triggers = crosspost.get("decision_triggers") if isinstance(crosspost, dict) else None
-    if triggers is not None and (not isinstance(triggers, list) or not triggers or any(t not in DECISION_TRIGGERS for t in triggers)):
-        errors.append(_("Choose at least one event for the agent to decide on: publishing its own content or interacting with the content of others."))
-    initial = (options.get("membership") or {}).get("initial", "all") if isinstance(options.get("membership"), dict) else "all"
+                    errors.append(
+                        _(
+                            "The probability %(pair)s must be between 0 and 1.",
+                            pair=str(key),
+                        )
+                    )
+    triggers = (
+        crosspost.get("decision_triggers") if isinstance(crosspost, dict) else None
+    )
+    if triggers is not None and (
+        not isinstance(triggers, list)
+        or not triggers
+        or any(t not in DECISION_TRIGGERS for t in triggers)
+    ):
+        errors.append(
+            _(
+                "Choose at least one event for the agent to decide on: publishing its own content or interacting with the content of others."
+            )
+        )
+    initial = (
+        (options.get("membership") or {}).get("initial", "all")
+        if isinstance(options.get("membership"), dict)
+        else "all"
+    )
     if isinstance(initial, dict):
         for key, value in initial.items():
             try:
@@ -586,9 +1014,19 @@ def validate(options) -> list:
             except (TypeError, ValueError):
                 ok = False
             if not ok:
-                errors.append(_("The probability of starting on %(platform)s must be between 0 and 1.", platform=str(key)))
+                errors.append(
+                    _(
+                        "The probability of starting on %(platform)s must be between 0 and 1.",
+                        platform=str(key),
+                    )
+                )
     elif initial not in ("all", "one_random"):
-        errors.append(_("Choose a valid option for %(label)s.", label=_("Starting state of the agents")))
+        errors.append(
+            _(
+                "Choose a valid option for %(label)s.",
+                label=_("Starting state of the agents"),
+            )
+        )
     return errors
 
 
@@ -604,9 +1042,15 @@ def _numbers(section, *keys) -> bool:
 
 def check_dependencies(options) -> list:
     """Combinations the coordinator refuses (only checked when the form is read)."""
-    if (_get(options, ("leave", "enabled"), False) is True or _get(options, ("leave", "enabled"), False) == 1) and not _get(
-            options, ("attention", "enabled"), False):
-        return [_("The leave rule needs the attention sharing: switch Attention on, or switch Leave off.")]
+    if (
+        _get(options, ("leave", "enabled"), False) is True
+        or _get(options, ("leave", "enabled"), False) == 1
+    ) and not _get(options, ("attention", "enabled"), False):
+        return [
+            _(
+                "The leave rule needs the attention sharing: switch Attention on, or switch Leave off."
+            )
+        ]
     return []
 
 
@@ -636,7 +1080,8 @@ def llm_decision_support(platform, simulator_type=None) -> tuple:
 def llm_decision_notes(platforms=None) -> list:
     """[(platform, publish supported, interaction supported, note)] for the note of the form: which platforms support each event.
 
-    The note of a platform names what is not supported (an empty note: both events are)."""
+    The note of a platform names what is not supported (an empty note: both events are).
+    """
     rows = []
     for platform in (platforms if platforms is not None else PLATFORMS):
         triggers = llm_decision_support(platform)
@@ -658,9 +1103,12 @@ def crosspost_causes(mode, propensity, probabilities, decision="random") -> list
     """Why a configuration cannot produce any cross-post: a list of ``"propensity"`` and/or ``"probability"`` (empty: it can).
 
     ``mode`` is the crosspost mode, ``propensity`` the share of posts the agents mark for cross-posting and
-    ``probabilities`` the probability of each pair of platforms (only used when the coordinator decides)."""
+    ``probabilities`` the probability of each pair of platforms (only used when the coordinator decides).
+    """
     causes = []
-    if decision != "llm" and not _positive(propensity):  # when the agent decides, the propensity is only the fallback
+    if decision != "llm" and not _positive(
+        propensity
+    ):  # when the agent decides, the propensity is only the fallback
         causes.append("propensity")
     if mode != "agent_action" and not any(_positive(v) for v in probabilities):
         causes.append("probability")
@@ -669,17 +1117,25 @@ def crosspost_causes(mode, propensity, probabilities, decision="random") -> list
 
 def effective_crosspost(options, members=None) -> dict:
     """The cross-post settings in force: stored values, else the YWeb defaults (propensity 0.2, 0.3 for every ordered pair of
-    ``members``). A stored value, an explicit 0 included, is always kept. ``members`` default to all platforms."""
+    ``members``). A stored value, an explicit 0 included, is always kept. ``members`` default to all platforms.
+    """
     crosspost = (options or {}).get("crosspost") or {}
     crosspost = crosspost if isinstance(crosspost, dict) else {}
     stored = crosspost.get("probability") or {}
     stored = stored if isinstance(stored, dict) else {}
     names = list(members) if members is not None else list(PLATFORMS)
-    probability = {f"{s}->{d}": DEFAULT_PAIR_PROBABILITY for s in names for d in names if s != d}
+    probability = {
+        f"{s}->{d}": DEFAULT_PAIR_PROBABILITY for s in names for d in names if s != d
+    }
     probability.update(stored)
-    return {"mode": crosspost.get("mode", "coordinator_rule"), "decision": crosspost.get("decision", "random"),
-            "propensity": crosspost.get("propensity", BY_PATH[("crosspost", "propensity")].default),
-            "probability": probability}
+    return {
+        "mode": crosspost.get("mode", "coordinator_rule"),
+        "decision": crosspost.get("decision", "random"),
+        "propensity": crosspost.get(
+            "propensity", BY_PATH[("crosspost", "propensity")].default
+        ),
+        "probability": probability,
+    }
 
 
 def crosspost_causes_from_options(options, members=None) -> list:
@@ -695,14 +1151,25 @@ def crosspost_causes_from_options(options, members=None) -> list:
 
 def crosspost_causes_from_values(values, platforms) -> list:
     """:func:`crosspost_causes` for the values of the form (see :func:`values_from_options`); a blank field is its default."""
+
     def number(key, default):
         v = values.get(key)
         return default if v is None or (isinstance(v, str) and v.strip() == "") else v
 
-    pairs = [number(f"prob__{s}__{d}", DEFAULT_PAIR_PROBABILITY) for s in platforms for d in platforms if s != d]
-    return crosspost_causes(values.get("opt__crosspost__mode", "coordinator_rule"),
-                            number("opt__crosspost__propensity", BY_PATH[("crosspost", "propensity")].default), pairs,
-                            values.get("opt__crosspost__decision", "random"))
+    pairs = [
+        number(f"prob__{s}__{d}", DEFAULT_PAIR_PROBABILITY)
+        for s in platforms
+        for d in platforms
+        if s != d
+    ]
+    return crosspost_causes(
+        values.get("opt__crosspost__mode", "coordinator_rule"),
+        number(
+            "opt__crosspost__propensity", BY_PATH[("crosspost", "propensity")].default
+        ),
+        pairs,
+        values.get("opt__crosspost__decision", "random"),
+    )
 
 
 def crosspost_warning(causes) -> str:
@@ -710,8 +1177,14 @@ def crosspost_warning(causes) -> str:
     if not causes:
         return ""
     if causes == ["propensity"]:
-        return _("No cross-post can happen: the propensity is 0. Set the propensity (the share of posts the agents mark for cross-posting).")
+        return _(
+            "No cross-post can happen: the propensity is 0. Set the propensity (the share of posts the agents mark for cross-posting)."
+        )
     if causes == ["probability"]:
-        return _("No cross-post can happen: every probability is 0 or empty. Set the probability for at least one pair of platforms.")
-    return _("No cross-post can happen with this configuration. Set the propensity (the share of posts the agents mark for "
-             "cross-posting) and the probability for at least one pair of platforms.")
+        return _(
+            "No cross-post can happen: every probability is 0 or empty. Set the probability for at least one pair of platforms."
+        )
+    return _(
+        "No cross-post can happen with this configuration. Set the propensity (the share of posts the agents mark for "
+        "cross-posting) and the probability for at least one pair of platforms."
+    )

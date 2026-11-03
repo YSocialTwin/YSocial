@@ -276,12 +276,22 @@ def federation_crosspost_suggest(exp_id):
     """World Simulation (P7): the text the composer prefills for each destination (``{member: {text, limit}}``).
 
     Query params: ``text`` (what the person wrote), ``crosspost`` (optional: only these members). Empty for a person who is
-    not enrolled. The server never trusts what the page sends back: ``crosspost_to`` is recomputed on publishing."""
+    not enrolled. The server never trusts what the page sends back: ``crosspost_to`` is recomputed on publishing.
+    """
     from y_web.src.federation import human_outbox as _ho
 
     try:
         members = _ho.requested_members(request.args.getlist("crosspost")) or None
-        return jsonify({"texts": _ho.suggestions_for(exp_id, getattr(current_user, "id", None), request.args.get("text", ""), members)})
+        return jsonify(
+            {
+                "texts": _ho.suggestions_for(
+                    exp_id,
+                    getattr(current_user, "id", None),
+                    request.args.get("text", ""),
+                    members,
+                )
+            }
+        )
     except Exception:  # noqa: BLE001 - a composer never fails because of the federation
         return jsonify({"texts": {}})
 
@@ -321,12 +331,22 @@ def share_content(exp_id):
     _requested = _ho.requested_members(request.args.getlist("crosspost"))
     if _requested and post_id:
         _comment = request.args.get("comment") or ""
-        _sent = _ho.try_deliver(exp_id, current_user, _requested, _comment,
-                                lambda t: _ho.micro_share(post_id, _comment, t), only="microblogging")
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _requested,
+            _comment,
+            lambda t: _ho.micro_share(post_id, _comment, t),
+            only="microblogging",
+        )
         if _sent is not None:
             if not _sent:
                 flash(_("The post could not be sent to the other platforms."), "error")
-            return ("", 204) if _sent else (redirect(request.referrer) if request.referrer else ("", 204))
+            return (
+                ("", 204)
+                if _sent
+                else (redirect(request.referrer) if request.referrer else ("", 204))
+            )
 
     # Normalise post_id: Standard experiments use integer IDs, HPC experiments use UUID strings.
     # Try numeric conversion so SQLAlchemy can match the Integer column; keep as string for UUIDs.

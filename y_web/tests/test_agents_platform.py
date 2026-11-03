@@ -110,7 +110,13 @@ def test_a_population_matches_every_platform():
         "y_web.src.agents.platform.infer_population_username_type",
         return_value="forum",
     ):
-        for platform in ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating"):
+        for platform in (
+            "microblogging",
+            "forum",
+            "photo_sharing",
+            "instant_messaging",
+            "dating",
+        ):
             assert population_matches_platform(pop, platform) is True
 
 

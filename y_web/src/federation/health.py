@@ -1,6 +1,7 @@
 """Health of running World Simulations (F5.5, F5.6): coordinator down, member failed, run completed.
 
-``check_federation`` is called by the schedule monitor on every poll; it acts only on running or paused simulations."""
+``check_federation`` is called by the schedule monitor on every poll; it acts only on running or paused simulations.
+"""
 
 from __future__ import annotations
 
@@ -24,8 +25,12 @@ def check_federation(fed, *, status_timeout: float = 2.0) -> str:
         return "failed"
     status = cp.coordinator_status(fed, timeout=status_timeout)
     members = (status or {}).get("members") or {}
-    if members and all(m.get("status") in ("finished", "failed") for m in members.values()):
-        failed = sorted(name for name, m in members.items() if m.get("status") == "failed")
+    if members and all(
+        m.get("status") in ("finished", "failed") for m in members.values()
+    ):
+        failed = sorted(
+            name for name, m in members.items() if m.get("status") == "failed"
+        )
         eb.stop_federation(fed)
         if failed:
             notify_failure(fed, "member", "failed: " + ", ".join(failed))

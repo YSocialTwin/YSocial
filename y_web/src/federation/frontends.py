@@ -19,7 +19,13 @@ from y_web.i18n import gettext as _
 
 # Outcomes of one member
 ACTIVATED, ALREADY_ACTIVE, DEACTIVATED, ALREADY_INACTIVE, NOT_ALLOWED, FAILED = (
-    "activated", "already_active", "deactivated", "already_inactive", "not_allowed", "failed")
+    "activated",
+    "already_active",
+    "deactivated",
+    "already_inactive",
+    "not_allowed",
+    "failed",
+)
 PROBLEMS = (NOT_ALLOWED, FAILED)
 
 
@@ -42,7 +48,13 @@ def owner_user(fed):
 
 
 def _outcome(row, exp, state, message=""):
-    return {"member": row.member, "platform": row.platform_type, "experiment": exp.exp_name if exp else "", "state": state, "message": message}
+    return {
+        "member": row.member,
+        "platform": row.platform_type,
+        "experiment": exp.exp_name if exp else "",
+        "state": state,
+        "message": message,
+    }
 
 
 def _apply(fed, admin_user, action):
@@ -55,7 +67,14 @@ def _apply(fed, admin_user, action):
             outcomes.append(_outcome(row, exp, FAILED, _("Experiment not found.")))
             continue
         if not user_can_view_experiment(admin_user, exp):
-            outcomes.append(_outcome(row, exp, NOT_ALLOWED, _("You are not allowed to access this experiment.")))
+            outcomes.append(
+                _outcome(
+                    row,
+                    exp,
+                    NOT_ALLOWED,
+                    _("You are not allowed to access this experiment."),
+                )
+            )
             continue
         try:
             result = action(exp)
@@ -63,7 +82,9 @@ def _apply(fed, admin_user, action):
             db.session.rollback()
             outcomes.append(_outcome(row, exp, FAILED, str(exc)))
             continue
-        outcomes.append(_outcome(row, exp, result.kind, result.message if not result.ok else ""))
+        outcomes.append(
+            _outcome(row, exp, result.kind, result.message if not result.ok else "")
+        )
     return outcomes
 
 
@@ -74,8 +95,15 @@ def activate_frontends(fed, admin_user) -> list:
     if admin_user is None:
         from y_web.src.federation import service
 
-        return [_outcome(row, exp, FAILED, _("Unable to resolve current user.")) for row, exp in service.members_of(fed)]
-    return _apply(fed, admin_user, lambda exp: activate_experiment(exp, admin_user, rollback_on_failure=True))
+        return [
+            _outcome(row, exp, FAILED, _("Unable to resolve current user."))
+            for row, exp in service.members_of(fed)
+        ]
+    return _apply(
+        fed,
+        admin_user,
+        lambda exp: activate_experiment(exp, admin_user, rollback_on_failure=True),
+    )
 
 
 def deactivate_frontends(fed, admin_user) -> list:
@@ -87,16 +115,38 @@ def deactivate_frontends(fed, admin_user) -> list:
 
 def warnings_of(outcomes) -> list:
     """Texts for the outcomes that are problems (``Member (experiment): reason``)."""
-    return [_("%(experiment)s: %(error)s", experiment=o["experiment"] or o["member"], error=o["message"]) for o in outcomes if o["state"] in PROBLEMS]
+    return [
+        _(
+            "%(experiment)s: %(error)s",
+            experiment=o["experiment"] or o["member"],
+            error=o["message"],
+        )
+        for o in outcomes
+        if o["state"] in PROBLEMS
+    ]
 
 
 def summary(outcomes, activating: bool) -> Optional[str]:
     """One line for the person: how many members were switched and how many were already as asked."""
-    changed = sum(1 for o in outcomes if o["state"] == (ACTIVATED if activating else DEACTIVATED))
-    already = sum(1 for o in outcomes if o["state"] == (ALREADY_ACTIVE if activating else ALREADY_INACTIVE))
+    changed = sum(
+        1 for o in outcomes if o["state"] == (ACTIVATED if activating else DEACTIVATED)
+    )
+    already = sum(
+        1
+        for o in outcomes
+        if o["state"] == (ALREADY_ACTIVE if activating else ALREADY_INACTIVE)
+    )
     if activating:
-        return _("Web interfaces activated: %(n)s (already active: %(m)s).", n=changed, m=already)
-    return _("Web interfaces deactivated: %(n)s (already inactive: %(m)s).", n=changed, m=already)
+        return _(
+            "Web interfaces activated: %(n)s (already active: %(m)s).",
+            n=changed,
+            m=already,
+        )
+    return _(
+        "Web interfaces deactivated: %(n)s (already inactive: %(m)s).",
+        n=changed,
+        m=already,
+    )
 
 
 def frontend_rows(fed, admin_user) -> list:
@@ -110,6 +160,19 @@ def frontend_rows(fed, admin_user) -> list:
             continue
         allowed = bool(user_can_view_experiment(admin_user, exp))
         active = exp.status == 1
-        rows.append({"member": row.member, "platform": row.platform_type, "experiment": exp.exp_name, "exp_id": exp.idexp,
-                     "active": active, "allowed": allowed, "url": f"/admin/join_experiment/{exp.idexp}" if active and allowed else None})
+        rows.append(
+            {
+                "member": row.member,
+                "platform": row.platform_type,
+                "experiment": exp.exp_name,
+                "exp_id": exp.idexp,
+                "active": active,
+                "allowed": allowed,
+                "url": (
+                    f"/admin/join_experiment/{exp.idexp}"
+                    if active and allowed
+                    else None
+                ),
+            }
+        )
     return rows

@@ -654,7 +654,13 @@ def sc_site(s):
 def sc_federation(s):
     """A coordinator hub with the five platform runtimes around it, exchanging messages on a shared clock."""
     cx, cy = 1830, 300
-    plats = [("#2f8fa3", -150), ("#7c6ff0", -80), ("#f08a3c", -10), ("#5b4fd1", 60), ("#e0566f", 130)]
+    plats = [
+        ("#2f8fa3", -150),
+        ("#7c6ff0", -80),
+        ("#f08a3c", -10),
+        ("#5b4fd1", 60),
+        ("#e0566f", 130),
+    ]
     s.add(
         f'<circle cx="{cx}" cy="{cy}" r="228" fill="none" stroke="{s.m}" stroke-opacity=".35" stroke-width="4" stroke-dasharray="3 14" stroke-linecap="round"/>'
     )
@@ -662,7 +668,12 @@ def sc_federation(s):
         a = math.radians(k * 15)
         r1, r2 = (210, 228) if k % 6 == 0 else (218, 228)
         s.line(
-            cx + r1 * math.cos(a), cy + r1 * math.sin(a), cx + r2 * math.cos(a), cy + r2 * math.sin(a), w=4, op=0.5
+            cx + r1 * math.cos(a),
+            cy + r1 * math.sin(a),
+            cx + r2 * math.cos(a),
+            cy + r2 * math.sin(a),
+            w=4,
+            op=0.5,
         )
     pts = []
     for c, deg in plats:
@@ -670,7 +681,13 @@ def sc_federation(s):
         px, py = cx + 330 * math.cos(a) * 1.05, cy + 215 * math.sin(a) * 1.15
         pts.append((px, py, c))
     for px, py, c in pts:
-        s.arrow(cx + (px - cx) * 0.3, cy + (py - cy) * 0.3, cx + (px - cx) * 0.8, cy + (py - cy) * 0.8, col=c)
+        s.arrow(
+            cx + (px - cx) * 0.3,
+            cy + (py - cy) * 0.3,
+            cx + (px - cx) * 0.8,
+            cy + (py - cy) * 0.8,
+            col=c,
+        )
     for px, py, c in pts:
         s.node(px, py, 62, main=c)
     s.node(cx, cy, 92, main=s.d, bot=True)
@@ -694,7 +711,11 @@ PLUGINS = {
     "TrainingModules": ("#2e9e6a", "Training courses on YSocial", sc_training),
     "YSocialTwin.github.io": ("#1e7fa8", "The project website", sc_site),
     "plugin-registry": ("#0f8b8d", "Where plugins are listed", sc_registry),
-    "YFederation": ("#1f9d8b", "Federation SDK · multi-platform simulations", sc_federation),
+    "YFederation": (
+        "#1f9d8b",
+        "Federation SDK · multi-platform simulations",
+        sc_federation,
+    ),
 }
 
 if __name__ == "__main__":

@@ -59,7 +59,8 @@ def _is_scenario_design_request(exp_id) -> bool:
     """Whether this request is a Scenario Design one for an instant messaging experiment.
 
     The runtime owns an instant messaging database, so the drafts of Scenario Design live in a sidecar database of
-    the experiment folder: for these requests (and only these) ``db_exp`` points at it."""
+    the experiment folder: for these requests (and only these) ``db_exp`` points at it.
+    """
     try:
         blueprint = request.blueprint
     except RuntimeError:
@@ -80,7 +81,9 @@ def register_scenario_sidecar(app, exp_id, db_name):
     from y_web.src.system.path_utils import get_writable_path
 
     folder = os.path.dirname(os.path.join("y_web", db_name))
-    if not os.path.isfile(get_writable_path(os.path.join(folder, "database_server.db"))):
+    if not os.path.isfile(
+        get_writable_path(os.path.join(folder, "database_server.db"))
+    ):
         return None
     bind_key = get_scenario_bind_key_for_exp(exp_id)
     app.config["SQLALCHEMY_BINDS"][bind_key] = "sqlite:///" + get_writable_path(
@@ -161,7 +164,11 @@ def _activate_db_exp_bind(exp_id):
     from y_web.src.models import Exps
 
     sidecar = _is_scenario_design_request(exp_id)
-    bind_key = get_scenario_bind_key_for_exp(exp_id) if sidecar else get_db_bind_key_for_exp(exp_id)
+    bind_key = (
+        get_scenario_bind_key_for_exp(exp_id)
+        if sidecar
+        else get_db_bind_key_for_exp(exp_id)
+    )
     if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
         exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp is not None:

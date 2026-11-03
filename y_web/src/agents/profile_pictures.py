@@ -88,7 +88,9 @@ def picture_of_username(username: Any) -> str:
         from y_web import db
         from y_web.src.models import Agent
 
-        pic = db.session.scalar(select(Agent.profile_pic).where(Agent.name == name).limit(1))
+        pic = db.session.scalar(
+            select(Agent.profile_pic).where(Agent.name == name).limit(1)
+        )
         if is_media_url(pic) and os.path.isfile(picture_file(pic) or ""):
             url = pic
     except Exception:
@@ -102,7 +104,11 @@ def picture_of_username(username: Any) -> str:
 def local_picture(url: Any) -> Optional[str]:
     """File of the profile picture of an agent when it is on this machine (media folder or avatar library)."""
     path = picture_file(url) if isinstance(url, str) else None
-    if path is None and isinstance(url, str) and url.startswith("/static/assets/img/users/"):
+    if (
+        path is None
+        and isinstance(url, str)
+        and url.startswith("/static/assets/img/users/")
+    ):
         from y_web.src.system.avatars_store import get_avatars_dir
 
         name = url.rsplit("/", 1)[-1]
@@ -282,10 +288,14 @@ def read_appearance(agent_ids: Iterable[int]) -> Dict[int, Dict[str, str]]:
                 Agent_Custom_Feature.value,
             ).where(
                 Agent_Custom_Feature.agent_id.in_(chunk),
-                or_(*[Agent_Custom_Feature.key.like(p + "%") for p in FEATURE_PREFIXES]),
+                or_(
+                    *[Agent_Custom_Feature.key.like(p + "%") for p in FEATURE_PREFIXES]
+                ),
             )
         ).all()
-        for agent_id, key, value in sorted(rows, key=lambda r: r[1].startswith("dating.")):
+        for agent_id, key, value in sorted(
+            rows, key=lambda r: r[1].startswith("dating.")
+        ):
             traits = out.setdefault(agent_id, {})
             name = key.split("appearance.", 1)[1]
             traits.setdefault(name, value)
@@ -426,7 +436,8 @@ def make_generator(cfg: Dict[str, Any]):
         return StubGenerator()
     if kind == "diffusion":
         return DiffusionGenerator(
-            cfg.get("model") or DEFAULT_MODEL, int(cfg.get("inference_steps") or DEFAULT_STEPS)
+            cfg.get("model") or DEFAULT_MODEL,
+            int(cfg.get("inference_steps") or DEFAULT_STEPS),
         )
     raise ValueError(f"unknown image generator: {kind}")
 
@@ -535,7 +546,8 @@ def run_generation(
                         agent.age, agent.gender, traits.get(agent_id, {}), style
                     )
                     seed = int(
-                        hashlib.sha256(f"{agent_id}|{prompt}".encode()).hexdigest()[:8], 16
+                        hashlib.sha256(f"{agent_id}|{prompt}".encode()).hexdigest()[:8],
+                        16,
                     )
                     data = generator.generate(prompt, seed=seed)
                     db.session.expire_all()

@@ -23,11 +23,26 @@ def test_fields_are_grouped_and_described():
     }
     ext = {"creator_tier": {1: "gold", 2: "gold"}, "bio": {1: "hi", 2: ""}}
     groups = {g["id"]: g for g in cf.build(custom, ext, total=4)}
-    assert list(groups) == ["appearance", "dating_profile", "dating_latent", "dating_other", "photo_sharing", "other"]
+    assert list(groups) == [
+        "appearance",
+        "dating_profile",
+        "dating_latent",
+        "dating_other",
+        "photo_sharing",
+        "other",
+    ]
     hair = next(b for b in groups["appearance"]["blocks"] if b["key"] == "hair_color")
-    assert hair["labels"] == ["red", "black"] and hair["data"] == [2, 1] and hair["coverage"] == 75
+    assert (
+        hair["labels"] == ["red", "black"]
+        and hair["data"] == [2, 1]
+        and hair["coverage"] == 75
+    )
     latent = groups["dating_latent"]["blocks"][0]
-    assert latent["kind"] == "numeric" and latent["summary"]["mean"] == 0.5 and sum(latent["data"]) == 3
+    assert (
+        latent["kind"] == "numeric"
+        and latent["summary"]["mean"] == 0.5
+        and sum(latent["data"]) == 3
+    )
     assert groups["dating_profile"]["blocks"][0]["kind"] == "flag"
     assert groups["dating_other"]["blocks"][0]["summary"]["max"] == 2.0
     assert groups["photo_sharing"]["badge"] == "photo"
@@ -77,12 +92,27 @@ def test_a_generated_picture_wins_unless_placeholders_are_forced(app, monkeypatc
         id = 1
 
     with app.app_context():
-        monkeypatch.setattr("y_web.src.agents.profile_pictures.picture_of_username", lambda name: "/media/agents/9.png")
-        monkeypatch.setattr(avatars, "_forum_settings", lambda exp_id=None: {"mode": "placeholder", "force_placeholder": False})
+        monkeypatch.setattr(
+            "y_web.src.agents.profile_pictures.picture_of_username",
+            lambda name: "/media/agents/9.png",
+        )
+        monkeypatch.setattr(
+            avatars,
+            "_forum_settings",
+            lambda exp_id=None: {"mode": "placeholder", "force_placeholder": False},
+        )
         assert avatars.resolve_forum_profile_pic(U()) == "/media/agents/9.png"
-        monkeypatch.setattr(avatars, "_forum_settings", lambda exp_id=None: {"mode": "placeholder", "force_placeholder": True})
-        assert avatars.resolve_forum_profile_pic(U()) == avatars.deterministic_forum_avatar_url("zed")
-    assert avatars.normalize_force_placeholder("on") and not avatars.normalize_force_placeholder(None)
+        monkeypatch.setattr(
+            avatars,
+            "_forum_settings",
+            lambda exp_id=None: {"mode": "placeholder", "force_placeholder": True},
+        )
+        assert avatars.resolve_forum_profile_pic(
+            U()
+        ) == avatars.deterministic_forum_avatar_url("zed")
+    assert avatars.normalize_force_placeholder(
+        "on"
+    ) and not avatars.normalize_force_placeholder(None)
     assert Agent  # model import keeps the metadata loaded
 
 
@@ -91,21 +121,37 @@ def _details_context(app, routes, monkeypatch, with_fields):  # noqa: F811
     from y_web.src.agents import profile_pictures as pp
 
     seen = {}
-    monkeypatch.setattr(routes.mod, "render_template", lambda name, **kw: seen.update(name=name, **kw) or "ok")
+    monkeypatch.setattr(
+        routes.mod,
+        "render_template",
+        lambda name, **kw: seen.update(name=name, **kw) or "ok",
+    )
     with app.app_context():
         pop, agents = _standard_population(db, n=4)
         if with_fields:
-            pp.assign_appearance([a.id for a in agents], {"hair_color": {"red": 60, "black": 40}, "height_cm": [160, 190], "glasses": 0.5}, seed=3)
+            pp.assign_appearance(
+                [a.id for a in agents],
+                {
+                    "hair_color": {"red": 60, "black": 40},
+                    "height_cm": [160, 190],
+                    "glasses": 0.5,
+                },
+                seed=3,
+            )
         with app.test_request_context(f"/admin/population_details/{pop.id}"):
             routes.mod.population_details.__wrapped__(pop.id)
     return seen
 
 
-def test_details_route_passes_the_custom_fields_when_present(app, routes, monkeypatch):  # noqa: F811
+def test_details_route_passes_the_custom_fields_when_present(
+    app, routes, monkeypatch
+):  # noqa: F811
     seen = _details_context(app, routes, monkeypatch, True)
     assert seen["name"] == "admin/population_details.html"
     assert [g["id"] for g in seen["custom_fields"]] == ["appearance"]
-    assert seen["kpis"]["agents"] == 4 and seen["kpis"]["fields"] == len(seen["custom_fields"][0]["blocks"])
+    assert seen["kpis"]["agents"] == 4 and seen["kpis"]["fields"] == len(
+        seen["custom_fields"][0]["blocks"]
+    )
 
 
 def test_details_route_without_custom_fields(app, routes, monkeypatch):  # noqa: F811
@@ -126,12 +172,33 @@ def test_agent_attributes_are_grouped_for_the_details_page():
         "dating.profile.empty": "",
         "extra.note": "hello",
     }
-    groups = {g["id"]: g for g in cf.agent_groups(custom, {"creator_tier": "gold", "other_ext": "z"})}
-    assert list(groups) == ["appearance", "dating_profile", "dating_latent", "dating_other", "photo_sharing", "other"]
-    hair = groups["appearance"]["fields"][[f["name"] for f in groups["appearance"]["fields"]].index("hair_color")]
+    groups = {
+        g["id"]: g
+        for g in cf.agent_groups(custom, {"creator_tier": "gold", "other_ext": "z"})
+    }
+    assert list(groups) == [
+        "appearance",
+        "dating_profile",
+        "dating_latent",
+        "dating_other",
+        "photo_sharing",
+        "other",
+    ]
+    hair = groups["appearance"]["fields"][
+        [f["name"] for f in groups["appearance"]["fields"]].index("hair_color")
+    ]
     assert hair["value"] == "red" and hair["label"] == "Hair colour"
-    assert any(f["kind"] == "flag" and f["value"] is True for f in groups["appearance"]["fields"])
-    assert groups["dating_latent"]["fields"][0] == {"name": "selectivity", "label": "Selectivity", "kind": "bar", "value": "0.25", "pct": 25}
+    assert any(
+        f["kind"] == "flag" and f["value"] is True
+        for f in groups["appearance"]["fields"]
+    )
+    assert groups["dating_latent"]["fields"][0] == {
+        "name": "selectivity",
+        "label": "Selectivity",
+        "kind": "bar",
+        "value": "0.25",
+        "pct": 25,
+    }
     assert groups["dating_other"]["fields"][0]["value"] == "2"
     assert [f["kind"] for f in groups["dating_profile"]["fields"]] == ["long"]
     assert groups["photo_sharing"]["fields"][0]["value"] == "gold"
@@ -141,5 +208,14 @@ def test_agent_attributes_are_grouped_for_the_details_page():
 def test_agent_details_page_shows_the_picture_and_the_groups():
     from pathlib import Path
 
-    page = (Path(__file__).resolve().parents[1] / "templates" / "admin" / "agent_details.html").read_text()
-    assert "{% if agent.profile_pic %}" in page and 'id="ad-custom"' in page and "agent_custom_groups" in page
+    page = (
+        Path(__file__).resolve().parents[1]
+        / "templates"
+        / "admin"
+        / "agent_details.html"
+    ).read_text()
+    assert (
+        "{% if agent.profile_pic %}" in page
+        and 'id="ad-custom"' in page
+        and "agent_custom_groups" in page
+    )

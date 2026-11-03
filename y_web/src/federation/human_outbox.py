@@ -23,7 +23,13 @@ from y_web.src.federation import service
 from y_web.src.federation.humans import members_state
 
 # Longest text each destination accepts (characters); keep in step with YClient/y_client/federation.py
-LIMITS = {"microblogging": 280, "forum": 2000, "photo_sharing": 300, "instant_messaging": 400, "dating": 200}
+LIMITS = {
+    "microblogging": 280,
+    "forum": 2000,
+    "photo_sharing": 300,
+    "instant_messaging": 400,
+    "dating": 200,
+}
 MAX_TARGETS = 8
 
 
@@ -37,7 +43,11 @@ def _cut(text: str, limit: int) -> str:
 
 def rule_text(dest_platform: str, text) -> str:
     """The person's words for the destination: the same words, shaped and cut for the platform (a forum gets a title)."""
-    text = " ".join(str(text or "").split()) if dest_platform != "forum" else str(text or "").strip()
+    text = (
+        " ".join(str(text or "").split())
+        if dest_platform != "forum"
+        else str(text or "").strip()
+    )
     if dest_platform == "forum" and "\n" not in text:
         title = _cut(re.split(r"(?<=[.!?])\s", text, maxsplit=1)[0], 80)
         return f"{title}\n{text}"[: LIMITS["forum"]]
@@ -54,13 +64,18 @@ class HumanContext:
     human_id: str
     user_id: int
     account_id: str
-    accounts: Dict[str, str] = field(default_factory=dict)  # every enrolled member -> local account id
-    destinations: Dict[str, str] = field(default_factory=dict)  # the OTHER enrolled members -> platform type
+    accounts: Dict[str, str] = field(
+        default_factory=dict
+    )  # every enrolled member -> local account id
+    destinations: Dict[str, str] = field(
+        default_factory=dict
+    )  # the OTHER enrolled members -> platform type
 
 
 def context_for(exp_id, user_id) -> Optional[HumanContext]:
     """The enrolment of ``user_id`` (``Admin_users.id``) seen from experiment ``exp_id``; ``None`` when the experiment is
-    not a member of a World Simulation, the person is not enrolled on it, or the account does not exist yet."""
+    not a member of a World Simulation, the person is not enrolled on it, or the account does not exist yet.
+    """
     from y_web.src.models.admin import Federation, FederationHuman, FederationMember
 
     if user_id is None:
@@ -70,7 +85,11 @@ def context_for(exp_id, user_id) -> Optional[HumanContext]:
         return None
     fed = db.session.get(Federation, row.federation_pk)
     human = (
-        db.session.query(FederationHuman).filter_by(federation_pk=row.federation_pk, user_id=int(user_id), status="active").first()
+        db.session.query(FederationHuman)
+        .filter_by(
+            federation_pk=row.federation_pk, user_id=int(user_id), status="active"
+        )
+        .first()
         if fed is not None
         else None
     )
@@ -80,10 +99,27 @@ def context_for(exp_id, user_id) -> Optional[HumanContext]:
     own = state.get(row.member)
     if not own or not own.get("created", True):
         return None
-    platforms = {m.member: m.platform_type for m in db.session.query(FederationMember).filter_by(federation_pk=row.federation_pk)}
-    destinations = {m: platforms[m] for m, info in sorted(state.items()) if m != row.member and m in platforms and info.get("created", True)}
-    return HumanContext(fed, row.member, row.platform_type, human.human_id, int(user_id), str(own["account_id"]),
-                        {m: str(i["account_id"]) for m, i in state.items()}, destinations)
+    platforms = {
+        m.member: m.platform_type
+        for m in db.session.query(FederationMember).filter_by(
+            federation_pk=row.federation_pk
+        )
+    }
+    destinations = {
+        m: platforms[m]
+        for m, info in sorted(state.items())
+        if m != row.member and m in platforms and info.get("created", True)
+    }
+    return HumanContext(
+        fed,
+        row.member,
+        row.platform_type,
+        human.human_id,
+        int(user_id),
+        str(own["account_id"]),
+        {m: str(i["account_id"]) for m, i in state.items()},
+        destinations,
+    )
 
 
 def destinations_for(exp_id, user_id) -> List[dict]:
@@ -93,13 +129,17 @@ def destinations_for(exp_id, user_id) -> List[dict]:
 
     ctx = context_for(exp_id, user_id)
     names = names_of(ctx.federation.id) if ctx else {}
-    return [{"member": m, "platform_type": p, "label": label_of(names, m)} for m, p in (ctx.destinations.items() if ctx else [])]
+    return [
+        {"member": m, "platform_type": p, "label": label_of(names, m)}
+        for m, p in (ctx.destinations.items() if ctx else [])
+    ]
 
 
 def request_overrides() -> Dict[str, str]:
     """The texts the person edited per destination (``crosspost_texts``: ``{member: text}``, a JSON object or its string), read
     from the current request (query, form or JSON body); ``{}`` outside a request or when the field is absent or malformed.
-    Only text is taken from here: which members receive the post is always decided by ``crosspost_to`` below."""
+    Only text is taken from here: which members receive the post is always decided by ``crosspost_to`` below.
+    """
     try:
         from flask import has_request_context, request
 
@@ -111,8 +151,14 @@ def request_overrides() -> Dict[str, str]:
             raw = body.get("crosspost_texts") if isinstance(body, dict) else None
         if isinstance(raw, (str, bytes)):
             raw = json.loads(raw)
-        return {str(k): v for k, v in raw.items() if isinstance(v, str)} if isinstance(raw, dict) else {}
-    except Exception:  # noqa: BLE001 - a malformed field means "no edits": the rule text
+        return (
+            {str(k): v for k, v in raw.items() if isinstance(v, str)}
+            if isinstance(raw, dict)
+            else {}
+        )
+    except (
+        Exception
+    ):  # noqa: BLE001 - a malformed field means "no edits": the rule text
         return {}
 
 
@@ -122,13 +168,19 @@ def edited_text(dest_platform: str, text) -> str:
     if not text:
         return ""
     if dest_platform == "forum":
-        return rule_text("forum", text)  # a title line is added when the person wrote a single line
+        return rule_text(
+            "forum", text
+        )  # a title line is added when the person wrote a single line
     return _cut(" ".join(text.split()), LIMITS.get(dest_platform, 280))
 
 
 def suggested_texts(ctx: HumanContext, text, members=None) -> Dict[str, str]:
     """``{member: rule_text}`` for the enrolled destinations (all, or the ``members`` given): what the composer prefills."""
-    wanted = [m for m in (members if members is not None else ctx.destinations) if m in ctx.destinations]
+    wanted = [
+        m
+        for m in (members if members is not None else ctx.destinations)
+        if m in ctx.destinations
+    ]
     return {m: rule_text(ctx.destinations[m], text) for m in sorted(set(wanted))}
 
 
@@ -138,21 +190,35 @@ def suggestions_for(exp_id, user_id, text, members=None) -> dict:
     ctx = context_for(exp_id, user_id)
     if ctx is None:
         return {}
-    return {m: {"text": t, "limit": LIMITS.get(ctx.destinations[m], 280)} for m, t in suggested_texts(ctx, text, members).items()}
+    return {
+        m: {"text": t, "limit": LIMITS.get(ctx.destinations[m], 280)}
+        for m, t in suggested_texts(ctx, text, members).items()
+    }
 
 
-def crosspost_to(ctx: HumanContext, requested, text, overrides: Optional[Dict[str, str]] = None) -> List[dict]:
+def crosspost_to(
+    ctx: HumanContext, requested, text, overrides: Optional[Dict[str, str]] = None
+) -> List[dict]:
     """``[{member, text}]``: the requested members that are enrolled destinations, in a stable order, each with its text.
 
     The text is the rule text unless the person edited it for that destination (``overrides``, by default the
     ``crosspost_texts`` of the request): an edited text is cut to the limit of the destination platform, an empty one falls
-    back to the rule text, and an edit for a member that is not an enrolled, requested destination is ignored."""
-    wanted = sorted({str(m) for m in requested or [] if str(m) in ctx.destinations})[:MAX_TARGETS]
+    back to the rule text, and an edit for a member that is not an enrolled, requested destination is ignored.
+    """
+    wanted = sorted({str(m) for m in requested or [] if str(m) in ctx.destinations})[
+        :MAX_TARGETS
+    ]
     edits = request_overrides() if overrides is None else overrides
     out = []
     for m in wanted:
         platform = ctx.destinations[m]
-        out.append({"member": m, "text": edited_text(platform, edits.get(m)) or rule_text(platform, text)})
+        out.append(
+            {
+                "member": m,
+                "text": edited_text(platform, edits.get(m))
+                or rule_text(platform, text),
+            }
+        )
     return out
 
 
@@ -166,22 +232,31 @@ def requested_members(values) -> List[str]:
 
 # -- delivery -------------------------------------------------------------------------------------------
 def _runtime_gateway(exp, platform_type, session=None, offline=None):
-    from y_web.src.federation.human_gateways import RuntimeGateway
-
-    from y_web.src.federation.human_gateways import is_hpc
+    from y_web.src.federation.human_gateways import RuntimeGateway, is_hpc
 
     folder = service.experiment_dir(exp)
-    return RuntimeGateway(platform_type, folder, server_config=service.server_config_path(exp), database=folder / "database_server.db",
-                          session=session, offline=offline, hpc=is_hpc(exp) and platform_type == "microblogging")
+    return RuntimeGateway(
+        platform_type,
+        folder,
+        server_config=service.server_config_path(exp),
+        database=folder / "database_server.db",
+        session=session,
+        offline=offline,
+        hpc=is_hpc(exp) and platform_type == "microblogging",
+    )
 
 
 def _ok(status, payload) -> bool:
     return status in (200, 201) and (payload or {}).get("ok", True) is not False
 
 
-def publish_micro_like(exp, ctx: HumanContext, action: dict, *, username: str, session=None, offline=None):
+def publish_micro_like(
+    exp, ctx: HumanContext, action: dict, *, username: str, session=None, offline=None
+):
     """One action of the person on microblogging, forum or photo sharing through the runtime gateway."""
-    key = str(ctx.user_id) if ctx.platform_type == "photo_sharing" else f"u{ctx.user_id}"
+    key = (
+        str(ctx.user_id) if ctx.platform_type == "photo_sharing" else f"u{ctx.user_id}"
+    )
     gateway = _runtime_gateway(exp, ctx.platform_type, session, offline)
     status, payload = gateway.actions(ctx.account_id, username, key, [action])
     return _ok(status, payload), status, payload
@@ -198,7 +273,9 @@ def micro_share(post_id, text: str, targets: list) -> dict:
 def forum_post(text: str, targets: list, community: Optional[str] = None) -> dict:
     action = {"action": "post", "text": text, "crosspost_to": targets}
     if community:
-        action["community"] = community  # a topic name as the forum server lists it (GET /get_topics)
+        action["community"] = (
+            community  # a topic name as the forum server lists it (GET /get_topics)
+        )
     return action
 
 
@@ -218,18 +295,25 @@ def forum_topics(exp, session=None) -> list:
     """``[{id, name}]`` the forum server lists at ``GET /get_topics`` (read-only, no token); ``[]`` when it cannot be reached
     (a stopped server: the thread then goes to the default board, as before)."""
     try:
-        cfg = json.loads(Path(service.server_config_path(exp)).read_text(encoding="utf-8"))
+        cfg = json.loads(
+            Path(service.server_config_path(exp)).read_text(encoding="utf-8")
+        )
         host, port = cfg.get("host") or "127.0.0.1", int(cfg["port"])
         resp = (session or requests).get(f"http://{host}:{port}/get_topics", timeout=5)
         data = resp.json()
-        return [t for t in data if isinstance(t, dict) and t.get("name")] if resp.status_code == 200 and isinstance(data, list) else []
+        return (
+            [t for t in data if isinstance(t, dict) and t.get("name")]
+            if resp.status_code == 200 and isinstance(data, list)
+            else []
+        )
     except Exception:  # noqa: BLE001 - no community known: the default one
         return []
 
 
 def forum_community(exp, slug, session=None) -> Optional[str]:
     """The forum topic name behind the community the person chose in the composer (its slug), or ``None`` (default board:
-    a community that is not a topic, an empty choice, or a server that cannot be reached)."""
+    a community that is not a topic, an empty choice, or a server that cannot be reached).
+    """
     wanted = _community_slug(slug)
     if not wanted:
         return None
@@ -239,7 +323,14 @@ def forum_community(exp, slug, session=None) -> Optional[str]:
     return None
 
 
-def photo_post(caption: str, targets: list, *, image_base64: str = "", extension: str = "", image_url: str = "") -> dict:
+def photo_post(
+    caption: str,
+    targets: list,
+    *,
+    image_base64: str = "",
+    extension: str = "",
+    image_url: str = "",
+) -> dict:
     action = {"type": "post_photo", "caption": caption, "crosspost_to": targets}
     if image_url:
         action["image_url"] = image_url
@@ -249,7 +340,12 @@ def photo_post(caption: str, targets: list, *, image_base64: str = "", extension
 
 
 def photo_share(photo_id, caption: str, targets: list) -> dict:
-    return {"type": "share", "photo_id": photo_id, "caption": caption, "crosspost_to": targets}
+    return {
+        "type": "share",
+        "photo_id": photo_id,
+        "caption": caption,
+        "crosspost_to": targets,
+    }
 
 
 def im_action(kind: str, targets: list, **fields) -> dict:
@@ -260,7 +356,9 @@ def im_action(kind: str, targets: list, **fields) -> dict:
     return action
 
 
-def try_deliver(exp_id, user, requested, text, build, *, only=None, session=None, offline=None):
+def try_deliver(
+    exp_id, user, requested, text, build, *, only=None, session=None, offline=None
+):
     """Publish through the gateway when the person is enrolled and picked at least one enrolled destination.
 
     ``build(targets)`` makes the action of the platform. Returns ``None`` when the normal path applies (not enrolled, or
@@ -276,15 +374,25 @@ def try_deliver(exp_id, user, requested, text, build, *, only=None, session=None
 
     exp = db.session.get(Exps, int(exp_id))
     try:
-        ok, _status, _payload = publish_micro_like(exp, ctx, build(targets), username=str(user.username), session=session, offline=offline)
-    except Exception:  # noqa: BLE001 - a gateway that cannot be reached is a refusal, never a second write
+        ok, _status, _payload = publish_micro_like(
+            exp,
+            ctx,
+            build(targets),
+            username=str(user.username),
+            session=session,
+            offline=offline,
+        )
+    except (
+        Exception
+    ):  # noqa: BLE001 - a gateway that cannot be reached is a refusal, never a second write
         return False
     return ok
 
 
 def targets_for_request(exp_id, user, requested, text) -> list:
     """``crosspost_to`` of an action sent through an existing gateway client (instant messaging, dating); ``[]`` when the
-    person is not enrolled or picked nothing. A client-sent ``crosspost_to`` is never trusted: only this is."""
+    person is not enrolled or picked nothing. A client-sent ``crosspost_to`` is never trusted: only this is.
+    """
     ctx = context_for(exp_id, getattr(user, "id", None))
     return crosspost_to(ctx, requested, text) if ctx is not None and requested else []
 
@@ -299,7 +407,13 @@ def enrolment_of(exp_id, user_id):
     row = db.session.query(FederationMember).filter_by(exp_id=int(exp_id)).first()
     if row is None:
         return None
-    human = db.session.query(FederationHuman).filter_by(federation_pk=row.federation_pk, user_id=int(user_id), status="active").first()
+    human = (
+        db.session.query(FederationHuman)
+        .filter_by(
+            federation_pk=row.federation_pk, user_id=int(user_id), status="active"
+        )
+        .first()
+    )
     if human is None or row.member not in members_state(human):
         return None
     return db.session.get(Federation, row.federation_pk), row.member, human

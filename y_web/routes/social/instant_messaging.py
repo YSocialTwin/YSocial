@@ -819,11 +819,30 @@ def im_act(exp_id):
 
     _requested = body.get("crosspost")
     _text = body.get("crosspost_text") or body.get("text") or ""
-    fields = {k: v for k, v in body.items() if k not in ("type", "client_action_id", "crosspost", "crosspost_text", "crosspost_texts", "crosspost_to")}
+    fields = {
+        k: v
+        for k, v in body.items()
+        if k
+        not in (
+            "type",
+            "client_action_id",
+            "crosspost",
+            "crosspost_text",
+            "crosspost_texts",
+            "crosspost_to",
+        )
+    }
     action = {"type": action_type, "client_action_id": action_id, **fields}
     if action_type in ("post", "forward"):
         _targets = _ho.targets_for_request(
-            exp_id, current_user, _ho.requested_members(_requested if isinstance(_requested, list) else [_requested] if _requested else []), _text
+            exp_id,
+            current_user,
+            _ho.requested_members(
+                _requested
+                if isinstance(_requested, list)
+                else [_requested] if _requested else []
+            ),
+            _text,
         )
         if _targets:
             action["crosspost_to"] = _targets

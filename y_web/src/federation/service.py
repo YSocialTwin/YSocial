@@ -34,7 +34,17 @@ MIN_MEMBERS, MAX_MEMBERS = 2, 8
 PROTOCOL = "1.0"
 SLOTS_PER_DAY = 24
 GRANULARITIES = ("slot", "day")
-OPTION_BLOCKS = ("attention", "crosspost", "discovery", "leave", "membership", "topics", "pseudonyms", "provisioning", "frontends")
+OPTION_BLOCKS = (
+    "attention",
+    "crosspost",
+    "discovery",
+    "leave",
+    "membership",
+    "topics",
+    "pseudonyms",
+    "provisioning",
+    "frontends",
+)
 # Blocks read by YWeb only (not part of federation.json): ``provisioning = {"members": ["microblogging"]}`` lets the agents
 # of the other members discover those platforms and get an account there on the fly (INV-19);
 # ``frontends = {"activate_on_start": false}`` switches off the activation of the web interface of the members at start
@@ -43,7 +53,9 @@ LOCAL_BLOCKS = ("provisioning", "frontends")
 # crosspost.content (P13): which content of the agents may be cross-posted; absent or ["all"] = everything (the default).
 # Selected restrictions apply together (AND). The coordinator enforces it (ysocial_federation.content_policy).
 CROSSPOST_CONTENT = ("own_content", "news", "images")
-CROSSPOST_CONTENT_ALIASES = {"own_posts": "own_content"}  # legacy name, accepted and normalised
+CROSSPOST_CONTENT_ALIASES = {
+    "own_posts": "own_content"
+}  # legacy name, accepted and normalised
 # Platforms whose runtime can create an account on request and whose client adopts it (reference path: YServer + YClient).
 PROVISIONABLE = (("microblogging", "Standard"),)
 # platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
@@ -91,7 +103,10 @@ def supports_federation(platform_type: str, simulator_type: str) -> bool:
     spec = find_hpc_platform(platform_type)
     if simulator_type == "HPC":
         return bool(spec and spec.supports_federation)
-    return platform_type in ("microblogging", "forum")  # Standard path: YServer and YServerReddit
+    return platform_type in (
+        "microblogging",
+        "forum",
+    )  # Standard path: YServer and YServerReddit
 
 
 def validate_members(infos) -> list:
@@ -103,7 +118,10 @@ def validate_members(infos) -> list:
         errors.append({"code": code, "message": message})
 
     if not MIN_MEMBERS <= len(infos) <= MAX_MEMBERS:
-        err("member_count", f"A World Simulation needs {MIN_MEMBERS} to {MAX_MEMBERS} experiments, got {len(infos)}.")
+        err(
+            "member_count",
+            f"A World Simulation needs {MIN_MEMBERS} to {MAX_MEMBERS} experiments, got {len(infos)}.",
+        )
     # P15: several experiments of the same platform type are allowed: each one is its own member (member_names). The same
     # experiment cannot be chosen twice: create_federation keeps each id once, so it counts once towards member_count.
     for i in infos:
@@ -113,15 +131,30 @@ def validate_members(infos) -> list:
             err("remote", f"'{i.exp_name}' is a remote experiment.")
         allowed = ALLOWED_SIMULATORS.get(i.platform_type)
         if allowed is None:
-            err("platform", f"The {i.platform_type} platform of '{i.exp_name}' cannot take part in a World Simulation.")
+            err(
+                "platform",
+                f"The {i.platform_type} platform of '{i.exp_name}' cannot take part in a World Simulation.",
+            )
         elif i.simulator_type not in allowed:
-            err("simulator_type", f"'{i.exp_name}': {i.platform_type} runs on {' or '.join(allowed)}, not {i.simulator_type}.")
+            err(
+                "simulator_type",
+                f"'{i.exp_name}': {i.platform_type} runs on {' or '.join(allowed)}, not {i.simulator_type}.",
+            )
         elif not supports_federation(i.platform_type, i.simulator_type):
-            err("platform", f"The {i.platform_type} platform of '{i.exp_name}' cannot take part in a World Simulation.")
+            err(
+                "platform",
+                f"The {i.platform_type} platform of '{i.exp_name}' cannot take part in a World Simulation.",
+            )
         if str(i.clock_mode) != "simulated" or str(i.feed_refresh) != "hourly":
-            err("clock", f"'{i.exp_name}' must use the simulated clock with hourly slots ({SLOTS_PER_DAY} a day).")
+            err(
+                "clock",
+                f"'{i.exp_name}' must use the simulated clock with hourly slots ({SLOTS_PER_DAY} a day).",
+            )
         if i.other_federation:
-            err("already_member", f"'{i.exp_name}' already belongs to the World Simulation '{i.other_federation}'.")
+            err(
+                "already_member",
+                f"'{i.exp_name}' already belongs to the World Simulation '{i.other_federation}'.",
+            )
     # Populations may be disjoint or partly overlapping (INV-17): an agent takes part on the members whose populations
     # contain it. A member may even start without agents (clients can be added later), but not all of them.
     if not any(i.population_ids for i in infos):
@@ -137,12 +170,20 @@ def member_names(exps) -> dict:
     type as the member name (``microblogging``, ``forum``): a world with one member per type is named exactly as before. A type
     that appears more than once names every member of that type ``<platform_type>-<experiment id>`` (``microblogging-3``): unique,
     stable (the experiment id never changes, unlike its name), made of letters, digits, ``_`` and ``-`` only (safe in a file name,
-    a form field and a URL) and free of ``:``, ``/`` and ``__`` (used as separators by the coordinator and the forms)."""
+    a form field and a URL) and free of ``:``, ``/`` and ``__`` (used as separators by the coordinator and the forms).
+    """
     exps = list(exps)
     count = {}
     for e in exps:
         count[e.platform_type] = count.get(e.platform_type, 0) + 1
-    return {e.idexp: (e.platform_type if count[e.platform_type] == 1 else f"{e.platform_type}-{e.idexp}") for e in exps}
+    return {
+        e.idexp: (
+            e.platform_type
+            if count[e.platform_type] == 1
+            else f"{e.platform_type}-{e.idexp}"
+        )
+        for e in exps
+    }
 
 
 def has_repeated_platform(rows) -> bool:
@@ -188,7 +229,11 @@ def client_config_paths(exp) -> list:
     folder = experiment_dir(exp)
     if not folder.is_dir():
         return []
-    return sorted(p for p in folder.glob("client*.json") if not p.name.startswith("client_summary"))
+    return sorted(
+        p
+        for p in folder.glob("client*.json")
+        if not p.name.startswith("client_summary")
+    )
 
 
 def _clock_of(exp) -> tuple:
@@ -203,9 +248,16 @@ def _clock_of(exp) -> tuple:
 
 
 def collect_member_info(exp) -> MemberInfo:
-    from y_web.src.models.admin import Federation, FederationMember, Population_Experiment
+    from y_web.src.models.admin import (
+        Federation,
+        FederationMember,
+        Population_Experiment,
+    )
 
-    pops = frozenset(r.id_population for r in Population_Experiment.query.filter_by(id_exp=exp.idexp).all())
+    pops = frozenset(
+        r.id_population
+        for r in Population_Experiment.query.filter_by(id_exp=exp.idexp).all()
+    )
     link = (
         db.session.query(Federation)
         .join(FederationMember, FederationMember.federation_pk == Federation.id)
@@ -246,8 +298,13 @@ def _check_usernames(exp, agents) -> None:
         name = username_of(agent)
         if name in seen and seen[name] != agent.id:
             raise WorldSimulationError(
-                [{"code": "username", "message": f"'{exp.exp_name}': the agents {seen[name]} and {agent.id} have the same name '{name}': "
-                  "a World Simulation identifies the accounts of a platform by name."}]
+                [
+                    {
+                        "code": "username",
+                        "message": f"'{exp.exp_name}': the agents {seen[name]} and {agent.id} have the same name '{name}': "
+                        "a World Simulation identifies the accounts of a platform by name.",
+                    }
+                ]
             )
         seen[name] = agent.id
 
@@ -256,30 +313,57 @@ def _clean_options(options) -> dict:
     options = dict(options or {})
     unknown = set(options) - set(OPTION_BLOCKS)
     if unknown:
-        raise WorldSimulationError({"code": "options", "message": f"Unknown parameter blocks: {sorted(unknown)}."})
+        raise WorldSimulationError(
+            {
+                "code": "options",
+                "message": f"Unknown parameter blocks: {sorted(unknown)}.",
+            }
+        )
     for key, value in options.items():
         if not isinstance(value, dict):
-            raise WorldSimulationError({"code": "options", "message": f"'{key}' must be an object."})
+            raise WorldSimulationError(
+                {"code": "options", "message": f"'{key}' must be an object."}
+            )
     from y_web.src.federation import options_schema
 
-    problems = options_schema.validate(options)  # the limits the coordinator checks at start
+    problems = options_schema.validate(
+        options
+    )  # the limits the coordinator checks at start
     if problems:
-        raise WorldSimulationError([{"code": "options", "message": message} for message in problems])
+        raise WorldSimulationError(
+            [{"code": "options", "message": message} for message in problems]
+        )
     content = (options.get("crosspost") or {}).get("content")
     if isinstance(content, list):
         content = [CROSSPOST_CONTENT_ALIASES.get(c, c) for c in content]
     if content is not None:
-        if not isinstance(content, list) or not content or any(c not in ("all",) + CROSSPOST_CONTENT for c in content) or (
-                "all" in content and len(set(content)) > 1):
-            raise WorldSimulationError({"code": "options", "message": "crosspost.content must be [\"all\"] or a non-empty list of "
-                                        f"{list(CROSSPOST_CONTENT)}."})
-        if "all" in content:  # the default: not stored, so that the file stays as it was without the option
-            crosspost = {k: v for k, v in options["crosspost"].items() if k != "content"}
+        if (
+            not isinstance(content, list)
+            or not content
+            or any(c not in ("all",) + CROSSPOST_CONTENT for c in content)
+            or ("all" in content and len(set(content)) > 1)
+        ):
+            raise WorldSimulationError(
+                {
+                    "code": "options",
+                    "message": 'crosspost.content must be ["all"] or a non-empty list of '
+                    f"{list(CROSSPOST_CONTENT)}.",
+                }
+            )
+        if (
+            "all" in content
+        ):  # the default: not stored, so that the file stays as it was without the option
+            crosspost = {
+                k: v for k, v in options["crosspost"].items() if k != "content"
+            }
             options = {k: v for k, v in options.items() if k != "crosspost"}
             if crosspost:
                 options["crosspost"] = crosspost
         else:
-            options["crosspost"] = {**options["crosspost"], "content": [c for c in CROSSPOST_CONTENT if c in content]}
+            options["crosspost"] = {
+                **options["crosspost"],
+                "content": [c for c in CROSSPOST_CONTENT if c in content],
+            }
     return options
 
 
@@ -290,22 +374,45 @@ def crosspost_content_of(options) -> list:
     return [] if "all" in names else [c for c in CROSSPOST_CONTENT if c in names]
 
 
-def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", options=None, exposures=False):
+def create_federation(
+    name,
+    exp_ids,
+    owner="",
+    seed=None,
+    granularity="slot",
+    options=None,
+    exposures=False,
+):
     """Validate and create a World Simulation; writes its folder, token and federation.json. Returns the model row.
 
-    The member configurations are not touched until the World Simulation starts (see write_member_configs)."""
-    from y_web.src.models.admin import Exps, Federation, FederationIdentityLink, FederationMember
+    The member configurations are not touched until the World Simulation starts (see write_member_configs).
+    """
+    from y_web.src.models.admin import (
+        Exps,
+        Federation,
+        FederationIdentityLink,
+        FederationMember,
+    )
 
     name = (name or "").strip()
     if not name:
-        raise WorldSimulationError({"code": "name", "message": "The World Simulation needs a name."})
+        raise WorldSimulationError(
+            {"code": "name", "message": "The World Simulation needs a name."}
+        )
     if granularity not in GRANULARITIES:
-        raise WorldSimulationError({"code": "granularity", "message": f"Granularity must be one of {GRANULARITIES}."})
+        raise WorldSimulationError(
+            {
+                "code": "granularity",
+                "message": f"Granularity must be one of {GRANULARITIES}.",
+            }
+        )
     options = _clean_options(options)
     exp_ids = list(dict.fromkeys(int(i) for i in exp_ids))
     exps = [db.session.get(Exps, i) for i in exp_ids]
     if any(e is None for e in exps):
-        raise WorldSimulationError({"code": "experiment", "message": "Unknown experiment."})
+        raise WorldSimulationError(
+            {"code": "experiment", "message": "Unknown experiment."}
+        )
     infos = [collect_member_info(e) for e in exps]
     errors = validate_members(infos)
     if errors:
@@ -323,18 +430,28 @@ def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", op
     )
     db.session.add(fed)
     db.session.flush()
-    fed.federation_id = str(fed.id)  # numeric: the runtimes put it into source_ref and read it as an integer
+    fed.federation_id = str(
+        fed.id
+    )  # numeric: the runtimes put it into source_ref and read it as an integer
     folder = federations_root() / f"federation_{fed.id}_{uuid.uuid4().hex[:8]}"
     fed.folder = str(folder)
     names = member_names(exps)
-    for position, exp in enumerate(sorted(exps, key=lambda e: (e.platform_type, e.idexp))):  # the same order whatever the selection
+    for position, exp in enumerate(
+        sorted(exps, key=lambda e: (e.platform_type, e.idexp))
+    ):  # the same order whatever the selection
         db.session.add(
             FederationMember(
-                federation_pk=fed.id, exp_id=exp.idexp, member=names[exp.idexp], platform_type=exp.platform_type, position=position
+                federation_pk=fed.id,
+                exp_id=exp.idexp,
+                member=names[exp.idexp],
+                platform_type=exp.platform_type,
+                position=position,
             )
         )
     member_agents = {}
-    for exp, info in sorted(zip(exps, infos), key=lambda pair: (pair[0].platform_type, pair[0].idexp)):
+    for exp, info in sorted(
+        zip(exps, infos), key=lambda pair: (pair[0].platform_type, pair[0].idexp)
+    ):
         agents = _population_agents(info.population_ids) if info.population_ids else []
         _check_usernames(exp, agents)
         member_agents[names[exp.idexp]] = agents
@@ -361,7 +478,12 @@ def create_federation(name, exp_ids, owner="", seed=None, granularity="slot", op
 def members_of(fed) -> list:
     from y_web.src.models.admin import Exps, FederationMember
 
-    rows = db.session.query(FederationMember).filter_by(federation_pk=fed.id).order_by(FederationMember.position).all()
+    rows = (
+        db.session.query(FederationMember)
+        .filter_by(federation_pk=fed.id)
+        .order_by(FederationMember.position)
+        .all()
+    )
     return [(row, db.session.get(Exps, row.exp_id)) for row in rows]
 
 
@@ -371,7 +493,9 @@ def member_databases(fed) -> dict:
     for row, exp in members_of(fed):
         try:
             out[row.member] = str(experiment_dir(exp) / "database_server.db")
-        except Exception:  # noqa: BLE001 - an experiment without a folder simply has no database to read
+        except (
+            Exception
+        ):  # noqa: BLE001 - an experiment without a folder simply has no database to read
             continue
     return out
 
@@ -380,10 +504,17 @@ def _legacy_names(links) -> dict:
     """{global_agent_id: name} for the agents of links written by older releases (no username stored)."""
     from y_web.src.models.admin import Agent
 
-    ids = {int(l.global_agent_id) for l in links if l.username is None and l.global_agent_id.isdigit()}
+    ids = {
+        int(l.global_agent_id)
+        for l in links
+        if l.username is None and l.global_agent_id.isdigit()
+    }
     if not ids:
         return {}
-    return {str(a.id): username_of(a) for a in db.session.query(Agent).filter(Agent.id.in_(ids)).all()}
+    return {
+        str(a.id): username_of(a)
+        for a in db.session.query(Agent).filter(Agent.id.in_(ids)).all()
+    }
 
 
 def build_federation_config(fed) -> dict:
@@ -392,27 +523,57 @@ def build_federation_config(fed) -> dict:
 
     options = json.loads(fed.config_json or "{}")
     members = [
-        {"member": row.member, "exp_id": row.exp_id, "platform": row.platform_type, "db_uri": experiment_db_uri(exp)}
+        {
+            "member": row.member,
+            "exp_id": row.exp_id,
+            "platform": row.platform_type,
+            "db_uri": experiment_db_uri(exp),
+        }
         for row, exp in members_of(fed)
     ]
     pairs = members_of(fed)
     repeated = has_repeated_platform(pairs)
     for entry, (row, exp) in zip(members, pairs):
         if repeated:
-            entry["name"] = exp.exp_name  # P15: the label of the member; a world with one member per type is written as before
+            entry["name"] = (
+                exp.exp_name
+            )  # P15: the label of the member; a world with one member per type is written as before
         if provisions(fed, row, exp):
             entry["provision"] = True
-    links = db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).order_by(FederationIdentityLink.id).all()
+    links = (
+        db.session.query(FederationIdentityLink)
+        .filter_by(federation_pk=fed.id)
+        .order_by(FederationIdentityLink.id)
+        .all()
+    )
     names = _legacy_names(links)
     identity = []
     for l in links:
-        username = None if l.global_agent_id.startswith("human:") else (l.username or names.get(l.global_agent_id))
+        username = (
+            None
+            if l.global_agent_id.startswith("human:")
+            else (l.username or names.get(l.global_agent_id))
+        )
         if username:
             # an agent: the coordinator learns the account from the runtime (INV-17); links of older releases carried a local
             # id equal to the agent id, which no runtime ever guaranteed
-            identity.append({"global_agent_id": l.global_agent_id, "member": l.member, "username": username, "eligible": True})
+            identity.append(
+                {
+                    "global_agent_id": l.global_agent_id,
+                    "member": l.member,
+                    "username": username,
+                    "eligible": True,
+                }
+            )
         else:
-            identity.append({"global_agent_id": l.global_agent_id, "member": l.member, "local_account_id": l.local_account_id, "eligible": True})
+            identity.append(
+                {
+                    "global_agent_id": l.global_agent_id,
+                    "member": l.member,
+                    "local_account_id": l.local_account_id,
+                    "eligible": True,
+                }
+            )
     config = {
         "federation_id": int(fed.federation_id),
         "seed": fed.seed,
@@ -429,7 +590,11 @@ def build_federation_config(fed) -> dict:
     from y_web.src.federation.options_schema import effective_crosspost
 
     eff = effective_crosspost(options, [m["member"] for m in members])
-    config["crosspost"] = {**(options.get("crosspost") or {}), "propensity": eff["propensity"], "probability": eff["probability"]}
+    config["crosspost"] = {
+        **(options.get("crosspost") or {}),
+        "propensity": eff["propensity"],
+        "probability": eff["probability"],
+    }
     if options.get("exposures") and "quoted" not in config:
         # members send exposures: a quoted cross-post is kept only if its author saw the content (P3, INV-16)
         config["quoted"] = {"require_exposure": True}
@@ -438,16 +603,23 @@ def build_federation_config(fed) -> dict:
 
 def provisions(fed, row, exp) -> bool:
     """True when this member creates accounts for agents that discover it (``provisioning.members`` and a runtime that can)."""
-    wanted = (json.loads(fed.config_json or "{}").get("provisioning") or {}).get("members") or []
+    wanted = (json.loads(fed.config_json or "{}").get("provisioning") or {}).get(
+        "members"
+    ) or []
     # an entry is a member name or (P15) a platform type: every member of that type provisions
-    return (row.member in wanted or row.platform_type in wanted) and (row.platform_type, getattr(exp, "simulator_type", None) or "Standard") in PROVISIONABLE
+    return (row.member in wanted or row.platform_type in wanted) and (
+        row.platform_type,
+        getattr(exp, "simulator_type", None) or "Standard",
+    ) in PROVISIONABLE
 
 
 def write_federation_files(fed) -> None:
     """federation.json and the token file (mode 0600) in the folder of the World Simulation."""
     folder = Path(fed.folder)
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / "federation.json").write_text(json.dumps(build_federation_config(fed), indent=1))
+    (folder / "federation.json").write_text(
+        json.dumps(build_federation_config(fed), indent=1)
+    )
     token_path = folder / "federation.token"
     if not token_path.exists():
         fd = os.open(token_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -479,14 +651,21 @@ def member_section(fed, row, exp, enabled=True) -> dict:
     migrate = bool((options.get("topics") or {}).get("migration", True))
     if row.platform_type == "forum":
         section["topic_migration"] = migrate
-    elif row.platform_type == "microblogging" and (getattr(exp, "simulator_type", None) or "Standard") == "HPC":
+    elif (
+        row.platform_type == "microblogging"
+        and (getattr(exp, "simulator_type", None) or "Standard") == "HPC"
+    ):
         section["create_topics"] = migrate
     elif row.platform_type == "microblogging" and not migrate:
-        section["topic_migration"] = False  # YServer reads it; absent means on (its default)
+        section["topic_migration"] = (
+            False  # YServer reads it; absent means on (its default)
+        )
     # INV-17: the runtime keeps who is who in a file of its own (accounts are reported by username, the coordinator answers)
     section["bindings_file"] = str(folder / f"bindings_{row.member}.db")
     if provisions(fed, row, exp):
-        section["provision"] = True  # the server creates the accounts the coordinator asks for ...
+        section["provision"] = (
+            True  # the server creates the accounts the coordinator asks for ...
+        )
         section["adopt"] = True  # ... and the client gives each an agent
     # F8: the people enrolled in this member (``human:<id>`` -> local account); the runtimes keep them out of the agent rules
     from y_web.src.federation.humans import accounts_by_member
@@ -495,7 +674,9 @@ def member_section(fed, row, exp, enabled=True) -> dict:
     if humans:
         section["accounts"] = humans
     if crosspost_content_of(options):
-        section["crosspost_content"] = crosspost_content_of(options)  # P13: runtimes add the news link; the clients skip shares
+        section["crosspost_content"] = crosspost_content_of(
+            options
+        )  # P13: runtimes add the news link; the clients skip shares
     from y_web.src.federation.options_schema import effective_crosspost
 
     section["crosspost_propensity"] = float(effective_crosspost(options)["propensity"])
@@ -504,14 +685,21 @@ def member_section(fed, row, exp, enabled=True) -> dict:
     from y_web.src.federation.options_schema import llm_decision_support
 
     if str(crosspost.get("decision") or "random") == "llm" and llm_decision_support(
-            row.platform_type, getattr(exp, "simulator_type", None)):
+        row.platform_type, getattr(exp, "simulator_type", None)
+    ):
         section["crosspost_decision"] = "llm"
         if isinstance(crosspost.get("decision_triggers"), list):
-            section["crosspost_decision_triggers"] = list(crosspost["decision_triggers"])
+            section["crosspost_decision_triggers"] = list(
+                crosspost["decision_triggers"]
+            )
         if "decision_max_per_day" in crosspost:
-            section["crosspost_decision_max_per_day"] = int(crosspost["decision_max_per_day"])
+            section["crosspost_decision_max_per_day"] = int(
+                crosspost["decision_max_per_day"]
+            )
     if has_repeated_platform(members_of(fed)):
-        section["name"] = exp.exp_name  # P15: how the clients call this member in the prompts (the member name is `<type>-<id>`)
+        section["name"] = (
+            exp.exp_name
+        )  # P15: how the clients call this member in the prompts (the member name is `<type>-<id>`)
     section["seed"] = int(fed.seed)
     return section
 
@@ -533,7 +721,9 @@ def write_member_configs(fed) -> list:
     written = []
     for row, exp in members_of(fed):
         section = member_section(fed, row, exp)
-        paths = ([server_config_path(exp)] if server_config_path(exp) else []) + client_config_paths(exp)
+        paths = (
+            [server_config_path(exp)] if server_config_path(exp) else []
+        ) + client_config_paths(exp)
         for path in paths:
             _update_json(path, section)
             written.append(str(path))
@@ -544,7 +734,9 @@ def remove_member_configs(fed) -> list:
     """Take the federation section out of the configuration files of every member (the experiments run alone again)."""
     removed = []
     for row, exp in members_of(fed):
-        paths = ([server_config_path(exp)] if server_config_path(exp) else []) + client_config_paths(exp)
+        paths = (
+            [server_config_path(exp)] if server_config_path(exp) else []
+        ) + client_config_paths(exp)
         for path in paths:
             try:
                 data = json.loads(path.read_text())
@@ -561,12 +753,19 @@ def delete_federation(fed) -> None:
     from y_web.src.models.admin import FederationIdentityLink, FederationMember
 
     if fed.status not in ("stopped", "completed", "failed"):
-        raise WorldSimulationError({"code": "running", "message": "Stop the World Simulation before deleting it."})
+        raise WorldSimulationError(
+            {
+                "code": "running",
+                "message": "Stop the World Simulation before deleting it.",
+            }
+        )
     remove_member_configs(fed)
     from y_web.src.models.admin import FederationHuman
 
     db.session.query(FederationIdentityLink).filter_by(federation_pk=fed.id).delete()
-    db.session.query(FederationHuman).filter_by(federation_pk=fed.id).delete()  # F8: the enrolments go with the World Simulation
+    db.session.query(FederationHuman).filter_by(
+        federation_pk=fed.id
+    ).delete()  # F8: the enrolments go with the World Simulation
     db.session.query(FederationMember).filter_by(federation_pk=fed.id).delete()
     folder = fed.folder
     db.session.delete(fed)
@@ -579,14 +778,19 @@ def world_simulation_map(exp_ids=None) -> dict:
     """{experiment id: {"id", "name", "status"}} of the experiments that belong to a World Simulation (one query)."""
     from y_web.src.models.admin import Federation, FederationMember
 
-    query = db.session.query(FederationMember.exp_id, Federation.id, Federation.name, Federation.status).join(
-        Federation, FederationMember.federation_pk == Federation.id
-    )
+    query = db.session.query(
+        FederationMember.exp_id, Federation.id, Federation.name, Federation.status
+    ).join(Federation, FederationMember.federation_pk == Federation.id)
     if exp_ids is not None:
         query = query.filter(FederationMember.exp_id.in_(list(exp_ids)))
     # "locked": the World Simulation is starting, running, paused or stopping, so the member cannot be started or stopped alone
     return {
-        e: {"id": i, "name": n, "status": s, "locked": s in ("starting", "running", "paused", "stopping")}
+        e: {
+            "id": i,
+            "name": n,
+            "status": s,
+            "locked": s in ("starting", "running", "paused", "stopping"),
+        }
         for e, i, n, s in query.all()
     }
 
@@ -595,5 +799,7 @@ def world_simulation_of(exp_id):
     """The World Simulation ({"id", "name", "status"}) an experiment belongs to, or None."""
     try:
         return world_simulation_map([exp_id]).get(exp_id)
-    except Exception:  # noqa: BLE001 - a page or a command must work even where the federation tables cannot be read
+    except (
+        Exception
+    ):  # noqa: BLE001 - a page or a command must work even where the federation tables cannot be read
         return None

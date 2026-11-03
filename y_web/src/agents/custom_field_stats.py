@@ -18,7 +18,9 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from y_web.i18n import N_
 
-MAX_CATEGORIES = 12  # more distinct values than this: the most frequent ones and "other"
+MAX_CATEGORIES = (
+    12  # more distinct values than this: the most frequent ones and "other"
+)
 BINS = 10
 MAX_LABEL = 40
 
@@ -150,7 +152,9 @@ def _categorical_block(values: List[Any], flag: bool = False) -> Dict[str, Any]:
     }
 
 
-def describe(name: str, values: List[Any], total: int, title: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def describe(
+    name: str, values: List[Any], total: int, title: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     """The block of one field: ``values`` are the parsed values of the agents that have it (``None`` skipped)."""
     values = [v for v in values if v is not None]
     if not values:
@@ -160,7 +164,9 @@ def describe(name: str, values: List[Any], total: int, title: Optional[str] = No
     elif all(isinstance(v, float) for v in values):
         block = _numeric_block(values)
     else:
-        block = _categorical_block([("yes" if v else "no") if isinstance(v, bool) else v for v in values])
+        block = _categorical_block(
+            [("yes" if v else "no") if isinstance(v, bool) else v for v in values]
+        )
     block.update(
         {
             "key": name,
@@ -193,7 +199,9 @@ def build(
     seen_appearance: Dict[str, Dict[int, Any]] = {}
     for key in sorted(custom):
         gid, name = classify(key)
-        if gid == "appearance":  # the generic traits win over the Dating ones of the same agent
+        if (
+            gid == "appearance"
+        ):  # the generic traits win over the Dating ones of the same agent
             merged = seen_appearance.setdefault(name, {})
             for agent_id, raw in custom[key].items():
                 if key.startswith("appearance.") or agent_id not in merged:
@@ -204,25 +212,39 @@ def build(
             for raw in custom[key].values():
                 try:
                     loaded = json.loads(raw)
-                    counts.append(float(len(loaded)) if isinstance(loaded, list) else None)
+                    counts.append(
+                        float(len(loaded)) if isinstance(loaded, list) else None
+                    )
                 except (TypeError, ValueError):
                     counts.append(None)
             block = describe(name, counts, total, title=_BLOBS[name])
         else:
             lists = [_list_values(r) for r in custom[key].values()]
             if lists and all(i is not None for i in lists):
-                block = describe(name, [item for items in lists for item in items], total)
+                block = describe(
+                    name, [item for items in lists for item in items], total
+                )
                 if block:
                     block["n"] = len(lists)
                     block["coverage"] = round(100 * len(lists) / total) if total else 0
             else:
-                block = describe(name, [_parse(r) for r in custom[key].values()], total, title=NAME_LABELS.get(name) if gid in _LABELLED else None)
+                block = describe(
+                    name,
+                    [_parse(r) for r in custom[key].values()],
+                    total,
+                    title=NAME_LABELS.get(name) if gid in _LABELLED else None,
+                )
         if block:
             if gid == "other" and "." in key:
                 block["title"] = key.replace("_", " ").replace(".", " · ")
             grouped[gid].append(block)
     for name in sorted(seen_appearance):
-        block = describe(name, [_parse(r) for r in seen_appearance[name].values()], total, title=NAME_LABELS.get(name))
+        block = describe(
+            name,
+            [_parse(r) for r in seen_appearance[name].values()],
+            total,
+            title=NAME_LABELS.get(name),
+        )
         if block:
             grouped["appearance"].append(block)
     for name in PHOTO_FIELDS:
@@ -230,22 +252,47 @@ def build(
             continue
         raws = ext[name]
         if name == "bio":
-            block = describe(name, [bool(str(r or "").strip()) for r in raws.values()], total, title=FIELD_LABELS[name])
+            block = describe(
+                name,
+                [bool(str(r or "").strip()) for r in raws.values()],
+                total,
+                title=FIELD_LABELS[name],
+            )
         else:
             lists = [_list_values(r) for r in raws.values()]
             if lists and all(i is not None for i in lists):
-                block = describe(name, [i for items in lists for i in items], total, title=FIELD_LABELS[name])
+                block = describe(
+                    name,
+                    [i for items in lists for i in items],
+                    total,
+                    title=FIELD_LABELS[name],
+                )
                 if block:
-                    block["n"], block["coverage"] = len(lists), (round(100 * len(lists) / total) if total else 0)
+                    block["n"], block["coverage"] = len(lists), (
+                        round(100 * len(lists) / total) if total else 0
+                    )
             else:
-                block = describe(name, [_parse(r) for r in raws.values()], total, title=FIELD_LABELS[name])
+                block = describe(
+                    name,
+                    [_parse(r) for r in raws.values()],
+                    total,
+                    title=FIELD_LABELS[name],
+                )
         if block:
             grouped["photo_sharing"].append(block)
     out = []
     for gid, title, badge in GROUPS:
         blocks = grouped[gid]
         if blocks:
-            out.append({"id": gid, "title": title, "badge": badge, "blocks": blocks, "count": len(blocks)})
+            out.append(
+                {
+                    "id": gid,
+                    "title": title,
+                    "badge": badge,
+                    "blocks": blocks,
+                    "count": len(blocks),
+                }
+            )
     return out
 
 
@@ -264,13 +311,20 @@ def collect(agent_ids: Iterable[int]) -> List[Dict[str, Any]]:
     for start in range(0, len(ids), 500):
         chunk = ids[start : start + 500]
         for agent_id, key, value in db.session.execute(
-            select(Agent_Custom_Feature.agent_id, Agent_Custom_Feature.key, Agent_Custom_Feature.value).where(
-                Agent_Custom_Feature.agent_id.in_(chunk), Agent_Custom_Feature.feature_type == "custom"
+            select(
+                Agent_Custom_Feature.agent_id,
+                Agent_Custom_Feature.key,
+                Agent_Custom_Feature.value,
+            ).where(
+                Agent_Custom_Feature.agent_id.in_(chunk),
+                Agent_Custom_Feature.feature_type == "custom",
             )
         ):
             custom.setdefault(key, {})[agent_id] = value
         for agent_id, name, value in db.session.execute(
-            select(Agent_Ext.agent_id, Agent_Ext.feature_name, Agent_Ext.feature_value).where(
+            select(
+                Agent_Ext.agent_id, Agent_Ext.feature_name, Agent_Ext.feature_value
+            ).where(
                 Agent_Ext.agent_id.in_(chunk), Agent_Ext.feature_name.in_(PHOTO_FIELDS)
             )
         ):
@@ -279,14 +333,19 @@ def collect(agent_ids: Iterable[int]) -> List[Dict[str, Any]]:
 
 
 _LONG = 140  # longer texts are shown as a paragraph
-_UNIT_FIELDS = ("dating_latent", "dating_affective")  # values in 0..1 are drawn as a bar
+_UNIT_FIELDS = (
+    "dating_latent",
+    "dating_affective",
+)  # values in 0..1 are drawn as a bar
 
 
 def _pretty(name: str) -> str:
     return name.replace("_", " ").replace(".", " · ").capitalize()
 
 
-def _field(name: str, raw: Any, label: Optional[str] = None, unit: bool = False) -> Optional[Dict[str, Any]]:
+def _field(
+    name: str, raw: Any, label: Optional[str] = None, unit: bool = False
+) -> Optional[Dict[str, Any]]:
     """One field of one agent: ``kind`` is text, flag, number, bar (0..1), chips or long."""
     if raw is None or str(raw).strip() == "":
         return None
@@ -332,9 +391,18 @@ def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, 
                 count = len(loaded) if isinstance(loaded, list) else None
             except (TypeError, ValueError):
                 count = None
-            entry = _field(name, count, _BLOBS[name]) if count is not None else _field(name, custom[key])
+            entry = (
+                _field(name, count, _BLOBS[name])
+                if count is not None
+                else _field(name, custom[key])
+            )
         else:
-            entry = _field(name, custom[key], NAME_LABELS.get(name) if gid in _LABELLED else None, unit=gid in _UNIT_FIELDS)
+            entry = _field(
+                name,
+                custom[key],
+                NAME_LABELS.get(name) if gid in _LABELLED else None,
+                unit=gid in _UNIT_FIELDS,
+            )
         if entry:
             grouped[gid].append(entry)
     for name in sorted(appearance):

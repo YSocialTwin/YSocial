@@ -20,7 +20,10 @@ from y_web.src.federation import lifecycle, service  # noqa: E402
 from y_web.src.federation.service import WorldSimulationError  # noqa: E402
 from y_web.tests.test_federation_service import world  # noqa: E402,F401  (fixture)
 from y_web.tests.test_world_simulation_lifecycle import copy_of, fake_zip  # noqa: E402
-from y_web.tests.test_world_simulation_ui import login, site  # noqa: E402,F401  (fixtures and helper)
+from y_web.tests.test_world_simulation_ui import (  # noqa: E402,F401  (fixtures and helper)
+    login,
+    site,
+)
 
 BASE = "/admin/world_simulation"
 
@@ -36,15 +39,40 @@ def stub_import(archive_path, name):
 
 def run_data(fed):
     """A coordinator database as a finished run leaves it: members, identity map and a few events and messages."""
-    db = sqlite3.connect(os.path.join(fed.folder, "federation.db"), isolation_level=None)
+    db = sqlite3.connect(
+        os.path.join(fed.folder, "federation.db"), isolation_level=None
+    )
     db.executescript(SCHEMA)
-    db.execute("INSERT INTO federation_meta VALUES (?,?,?,?,?,0)", (int(fed.federation_id), "1.0", fed.seed, fed.granularity, "completed"))
+    db.execute(
+        "INSERT INTO federation_meta VALUES (?,?,?,?,?,0)",
+        (int(fed.federation_id), "1.0", fed.seed, fed.granularity, "completed"),
+    )
     for row, exp in service.members_of(fed):
-        db.execute("INSERT INTO federation_member VALUES (?,?,?,?,5)", (row.member, str(exp.idexp), row.platform_type, "finished"))
-    for l in __import__("y_web").db.session.query(__import__("y_web.src.models.admin", fromlist=["x"]).FederationIdentityLink).filter_by(federation_pk=fed.id):
-        db.execute("INSERT INTO federation_identity VALUES (?,?,?,'active',0,NULL)", (l.global_agent_id, l.member, l.local_account_id or f"{l.member}-{l.global_agent_id}"))  # the runtime's binding
-    db.execute("INSERT INTO federation_event (tick, kind, detail_json, at) VALUES (3,'ready','{}',1.5)")
-    db.execute("INSERT INTO federation_message VALUES ('x:0','coordinator','forum',3,4,'crosspost.v1','{}')")
+        db.execute(
+            "INSERT INTO federation_member VALUES (?,?,?,?,5)",
+            (row.member, str(exp.idexp), row.platform_type, "finished"),
+        )
+    for l in (
+        __import__("y_web")
+        .db.session.query(
+            __import__("y_web.src.models.admin", fromlist=["x"]).FederationIdentityLink
+        )
+        .filter_by(federation_pk=fed.id)
+    ):
+        db.execute(
+            "INSERT INTO federation_identity VALUES (?,?,?,'active',0,NULL)",
+            (
+                l.global_agent_id,
+                l.member,
+                l.local_account_id or f"{l.member}-{l.global_agent_id}",
+            ),
+        )  # the runtime's binding
+    db.execute(
+        "INSERT INTO federation_event (tick, kind, detail_json, at) VALUES (3,'ready','{}',1.5)"
+    )
+    db.execute(
+        "INSERT INTO federation_message VALUES ('x:0','coordinator','forum',3,4,'crosspost.v1','{}')"
+    )
     db.close()
 
 
@@ -52,10 +80,19 @@ def logical(path, skip_exp_id=True):
     """The content of a coordinator database without wall-clock values and the experiment ids of the members."""
     conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     out = {}
-    for (table,) in conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"):
+    for (table,) in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+    ):
         cols = [c[1] for c in conn.execute(f"PRAGMA table_info({table})")]
-        keep = [c for c in cols if c not in ("at", "created_at", "id") and not (skip_exp_id and (table, c) == ("federation_member", "exp_id"))]
-        out[table] = sorted(map(repr, conn.execute(f"SELECT {', '.join(keep)} FROM {table}").fetchall()))
+        keep = [
+            c
+            for c in cols
+            if c not in ("at", "created_at", "id")
+            and not (skip_exp_id and (table, c) == ("federation_member", "exp_id"))
+        ]
+        out[table] = sorted(
+            map(repr, conn.execute(f"SELECT {', '.join(keep)} FROM {table}").fetchall())
+        )
     conn.close()
     return out
 
@@ -66,25 +103,54 @@ def export(fed, tmp_path, name="b.zip"):
     return out
 
 
-def test_round_trip_restores_the_run_and_a_second_export_has_the_same_content(world, tmp_path):
+def test_round_trip_restores_the_run_and_a_second_export_has_the_same_content(
+    world, tmp_path
+):
     from y_web import db
 
     app, exps, tmp = world
-    fed = service.create_federation("my world", list(exps.values()), owner="admin", seed=9, granularity="day",
-                                    options={"crosspost": {"mode": "agent_action", "propensity": 0.25}}, exposures=True)
+    fed = service.create_federation(
+        "my world",
+        list(exps.values()),
+        owner="admin",
+        seed=9,
+        granularity="day",
+        options={"crosspost": {"mode": "agent_action", "propensity": 0.25}},
+        exposures=True,
+    )
     run_data(fed)
-    bundle, original_id, original_db = export(fed, tmp_path), fed.federation_id, logical(os.path.join(fed.folder, "federation.db"))
+    bundle, original_id, original_db = (
+        export(fed, tmp_path),
+        fed.federation_id,
+        logical(os.path.join(fed.folder, "federation.db")),
+    )
     service.delete_federation(fed)
-    new, report = lifecycle.import_bundle(bundle, owner="admin", member_import=stub_import)
-    assert report == {"restored_database": True, "federation_id_kept": True, "notes": []}
-    assert new.federation_id == original_id and new.name == "my world" and new.status == "stopped"
-    assert new.seed == 9 and new.granularity == "day" and json.loads(new.config_json)["exposures"] is True
+    new, report = lifecycle.import_bundle(
+        bundle, owner="admin", member_import=stub_import
+    )
+    assert report == {
+        "restored_database": True,
+        "federation_id_kept": True,
+        "notes": [],
+    }
+    assert (
+        new.federation_id == original_id
+        and new.name == "my world"
+        and new.status == "stopped"
+    )
+    assert (
+        new.seed == 9
+        and new.granularity == "day"
+        and json.loads(new.config_json)["exposures"] is True
+    )
     assert logical(os.path.join(new.folder, "federation.db")) == original_db
     exp_ids = {row.member: str(exp.idexp) for row, exp in service.members_of(new)}
     conn = sqlite3.connect(os.path.join(new.folder, "federation.db"))
     assert dict(conn.execute("SELECT member, exp_id FROM federation_member")) == exp_ids
     conn.close()
-    again = json.loads(zipfile.ZipFile(export(new, tmp_path, "c.zip")).read("world_simulation.json"))
+    again = json.loads(
+        zipfile.ZipFile(export(new, tmp_path, "c.zip")).read("world_simulation.json")
+    )
     first = json.loads(zipfile.ZipFile(bundle).read("world_simulation.json"))
     for data in (again, first):
         for member in data["members"]:
@@ -93,7 +159,10 @@ def test_round_trip_restores_the_run_and_a_second_export_has_the_same_content(wo
     assert again == first
     config = json.loads(open(os.path.join(new.folder, "federation.json")).read())
     assert config["federation_id"] == int(original_id) and config["seed"] == 9
-    assert oct(os.stat(os.path.join(new.folder, "federation.token")).st_mode & 0o777) == "0o600"
+    assert (
+        oct(os.stat(os.path.join(new.folder, "federation.token")).st_mode & 0o777)
+        == "0o600"
+    )
 
 
 def test_the_id_in_use_means_a_fresh_start_with_a_note(world, tmp_path):
@@ -108,9 +177,18 @@ def test_the_id_in_use_means_a_fresh_start_with_a_note(world, tmp_path):
     from y_web import db
 
     db.session.commit()
-    new, report = lifecycle.import_bundle(bundle, owner="admin", name="again", member_import=stub_import)
-    assert report["federation_id_kept"] is False and report["restored_database"] is False and report["notes"]
-    assert not os.path.exists(os.path.join(new.folder, "federation.db")) and new.name == "again"
+    new, report = lifecycle.import_bundle(
+        bundle, owner="admin", name="again", member_import=stub_import
+    )
+    assert (
+        report["federation_id_kept"] is False
+        and report["restored_database"] is False
+        and report["notes"]
+    )
+    assert (
+        not os.path.exists(os.path.join(new.folder, "federation.db"))
+        and new.name == "again"
+    )
 
 
 def test_a_different_set_of_agents_means_a_fresh_start(world, tmp_path):
@@ -129,24 +207,36 @@ def test_a_different_set_of_agents_means_a_fresh_start(world, tmp_path):
     stored = tmp_path / "x.db"
     stored.write_bytes(files["federation.db"])
     c = sqlite3.connect(stored)
-    c.execute("UPDATE federation_identity SET global_agent_id='9999' WHERE rowid=1")  # an agent the experiments do not have
+    c.execute(
+        "UPDATE federation_identity SET global_agent_id='9999' WHERE rowid=1"
+    )  # an agent the experiments do not have
     c.commit()
     c.close()
     import hashlib
 
     files["federation.db"] = stored.read_bytes()
     manifest = json.loads(files["world_simulation.json"])
-    manifest["files"]["federation.db"] = hashlib.sha256(files["federation.db"]).hexdigest()
+    manifest["files"]["federation.db"] = hashlib.sha256(
+        files["federation.db"]
+    ).hexdigest()
     files["world_simulation.json"] = json.dumps(manifest).encode()
     changed = tmp_path / "changed.zip"
     with zipfile.ZipFile(changed, "w") as z:
         for n, b in files.items():
             z.writestr(n, b)
-    new, report = lifecycle.import_bundle(str(changed), owner="admin", member_import=stub_import)
-    assert report["federation_id_kept"] is True and report["restored_database"] is False and report["notes"]
+    new, report = lifecycle.import_bundle(
+        str(changed), owner="admin", member_import=stub_import
+    )
+    assert (
+        report["federation_id_kept"] is True
+        and report["restored_database"] is False
+        and report["notes"]
+    )
 
 
-def test_damaged_or_foreign_bundles_are_refused_before_anything_is_created(world, tmp_path):
+def test_damaged_or_foreign_bundles_are_refused_before_anything_is_created(
+    world, tmp_path
+):
     from y_web.src.models.admin import Exps, Federation
 
     app, exps, tmp = world
@@ -195,7 +285,9 @@ def test_a_member_of_another_platform_is_refused(world, tmp_path):
     assert caught.value.codes == ["platform"]
 
 
-def test_the_default_import_posts_the_archive_to_the_upload_route_as_the_same_user(site):
+def test_the_default_import_posts_the_archive_to_the_upload_route_as_the_same_user(
+    site,
+):
     from flask import Blueprint, request, session
 
     from y_web import db
@@ -209,9 +301,23 @@ def test_the_default_import_posts_the_archive_to_the_upload_route_as_the_same_us
     def upload():
         seen["user"] = session.get("_user_id")
         seen["name"] = request.form["exp_name"]
-        seen["entries"] = zipfile.ZipFile(io.BytesIO(request.files["experiment"].read())).namelist()
-        db.session.add(Exps(platform_type="forum", exp_name=request.form["exp_name"], db_name="x", owner="admin", exp_descr="",
-                            status=0, running=0, port=5000, simulator_type="Standard", exp_status="stopped"))
+        seen["entries"] = zipfile.ZipFile(
+            io.BytesIO(request.files["experiment"].read())
+        ).namelist()
+        db.session.add(
+            Exps(
+                platform_type="forum",
+                exp_name=request.form["exp_name"],
+                db_name="x",
+                owner="admin",
+                exp_descr="",
+                status=0,
+                running=0,
+                port=5000,
+                simulator_type="Standard",
+                exp_status="stopped",
+            )
+        )
         db.session.commit()
         return "ok"
 
@@ -225,7 +331,11 @@ def test_the_default_import_posts_the_archive_to_the_upload_route_as_the_same_us
 
     client = login(app, "admin")
     assert client.get("/probe").status_code == 200
-    assert seen["name"] == "imported one" and seen["entries"] == ["experiment.txt"] and seen["user"]
+    assert (
+        seen["name"] == "imported one"
+        and seen["entries"] == ["experiment.txt"]
+        and seen["user"]
+    )
 
 
 def test_the_import_route_and_its_form(site, monkeypatch):
@@ -239,12 +349,22 @@ def test_the_import_route_and_its_form(site, monkeypatch):
     service.delete_federation(fed)
     client = login(app, "admin")
     assert f"{BASE}/import" in client.get(BASE).get_data(as_text=True)
-    res = client.post(f"{BASE}/import", data={"bundle": (open(bundle, "rb"), "b.zip"), "name": "Back"}, content_type="multipart/form-data")
+    res = client.post(
+        f"{BASE}/import",
+        data={"bundle": (open(bundle, "rb"), "b.zip"), "name": "Back"},
+        content_type="multipart/form-data",
+    )
     assert res.status_code == 302
     new = Federation.query.filter_by(name="Back").one()
     assert res.headers["Location"].endswith(f"{BASE}/{new.id}") and new.seed == 3
-    assert client.post(f"{BASE}/import", data={}).status_code == 302  # no file: back to the list
-    junk = client.post(f"{BASE}/import", data={"bundle": (io.BytesIO(b"junk"), "j.zip")}, content_type="multipart/form-data")
+    assert (
+        client.post(f"{BASE}/import", data={}).status_code == 302
+    )  # no file: back to the list
+    junk = client.post(
+        f"{BASE}/import",
+        data={"bundle": (io.BytesIO(b"junk"), "j.zip")},
+        content_type="multipart/form-data",
+    )
     assert junk.status_code == 302 and Federation.query.count() == 1
     assert login(app, "teacher").post(f"{BASE}/import").status_code == 302
 
@@ -253,8 +373,10 @@ def arrival_independent(content):
     """Which member finishes last is the arrival order of two processes, not an outcome of the simulation: the 'finished'
     events keep their ticks (one before the end, one at the end) and lose the member."""
     out = dict(content)
-    out["federation_event"] = sorted(re.sub(r'\{"member": "[^"]*"\}', "{}", row) if "'finished'" in row else row
-                                     for row in content["federation_event"])
+    out["federation_event"] = sorted(
+        re.sub(r'\{"member": "[^"]*"\}', "{}", row) if "'finished'" in row else row
+        for row in content["federation_event"]
+    )
     return out
 
 
@@ -269,38 +391,78 @@ def run_coordinator(fed, workdir, ticks=30):
     workdir.mkdir()
     config = json.loads(open(os.path.join(fed.folder, "federation.json")).read())
     for member in config["members"]:
-        member["launch"] = {"client": [sys.executable, str(sdk / "tests" / "fake_member.py"), "--ticks", str(ticks)]}
+        member["launch"] = {
+            "client": [
+                sys.executable,
+                str(sdk / "tests" / "fake_member.py"),
+                "--ticks",
+                str(ticks),
+            ]
+        }
     (workdir / "federation.json").write_text(json.dumps(config))
-    shutil.copyfile(os.path.join(fed.folder, "federation.token"), workdir / "federation.token")
+    shutil.copyfile(
+        os.path.join(fed.folder, "federation.token"), workdir / "federation.token"
+    )
     assert launch(workdir / "federation.json", workdir / "logs", timeout=120) == 0
     return str(workdir / "federation.db")
 
 
-def test_the_imported_world_simulation_runs_to_the_same_coordinator_database(world, tmp_path):
+def test_the_imported_world_simulation_runs_to_the_same_coordinator_database(
+    world, tmp_path
+):
     """Export -> import -> run: the original and the imported World Simulation, run with the same stand-in members, end with the
-    same coordinator database (events, messages, identity, attention, ... without clock values and experiment ids)."""
+    same coordinator database (events, messages, identity, attention, ... without clock values and experiment ids).
+    """
     app, exps, tmp = world
-    options = {"attention": {"enabled": True}, "crosspost": {"mode": "coordinator_rule", "probability": {"microblogging->forum": 1.0}}}
-    fed = service.create_federation("rt", list(exps.values()), owner="admin", seed=21, options=options)
+    options = {
+        "attention": {"enabled": True},
+        "crosspost": {
+            "mode": "coordinator_rule",
+            "probability": {"microblogging->forum": 1.0},
+        },
+    }
+    fed = service.create_federation(
+        "rt", list(exps.values()), owner="admin", seed=21, options=options
+    )
     bundle = export(fed, tmp_path)
     first = arrival_independent(logical(run_coordinator(fed, tmp_path / "run_a")))
     service.delete_federation(fed)
-    new, report = lifecycle.import_bundle(bundle, owner="admin", member_import=stub_import)
+    new, report = lifecycle.import_bundle(
+        bundle, owner="admin", member_import=stub_import
+    )
     assert report["federation_id_kept"] is True
     second = arrival_independent(logical(run_coordinator(new, tmp_path / "run_b")))
     assert first == second
-    assert first["federation_event"] and first["federation_identity"] and len(first["federation_member"]) == 2
+    assert (
+        first["federation_event"]
+        and first["federation_identity"]
+        and len(first["federation_member"]) == 2
+    )
 
 
 def test_the_comparison_of_runs_can_tell_two_configurations_apart(world, tmp_path):
     """Control of the test above: another seed or other options do give another coordinator database."""
     app, exps, tmp = world
-    a = service.create_federation("a", list(exps.values()), owner="admin", seed=21, options={"attention": {"enabled": True}})
+    a = service.create_federation(
+        "a",
+        list(exps.values()),
+        owner="admin",
+        seed=21,
+        options={"attention": {"enabled": True}},
+    )
     base = logical(run_coordinator(a, tmp_path / "a"))
     service.delete_federation(a)
-    b = service.create_federation("b", list(exps.values()), owner="admin", seed=22, options={"attention": {"enabled": True}})
+    b = service.create_federation(
+        "b",
+        list(exps.values()),
+        owner="admin",
+        seed=22,
+        options={"attention": {"enabled": True}},
+    )
     other_seed = logical(run_coordinator(b, tmp_path / "b"))
     service.delete_federation(b)
-    c = service.create_federation("c", list(exps.values()), owner="admin", seed=21, granularity="day")
+    c = service.create_federation(
+        "c", list(exps.values()), owner="admin", seed=21, granularity="day"
+    )
     other_granularity = logical(run_coordinator(c, tmp_path / "c"))
     assert base != other_seed or base != other_granularity

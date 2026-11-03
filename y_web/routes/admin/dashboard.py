@@ -204,7 +204,8 @@ def _dashboard_news(limit=4):
 
 def _world_simulation_member_ids():
     """Ids of the experiments that belong to a World Simulation, whatever its state: they are shown in the World Simulation box
-    and never in the standard experiment boxes. Empty (nothing is hidden) when the YFederation plugin is not available."""
+    and never in the standard experiment boxes. Empty (nothing is hidden) when the YFederation plugin is not available.
+    """
     try:
         from y_web.src.federation import availability
 
@@ -213,7 +214,9 @@ def _world_simulation_member_ids():
         from y_web.src.federation.service import world_simulation_map
 
         return set(world_simulation_map())
-    except Exception:  # noqa: BLE001 - the page must work where the federation tables cannot be read
+    except (
+        Exception
+    ):  # noqa: BLE001 - the page must work where the federation tables cannot be read
         return set()
 
 

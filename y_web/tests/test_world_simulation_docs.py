@@ -18,9 +18,15 @@ def test_the_guides_are_in_the_navigation_and_their_links_exist():
     nav = (ROOT / "mkdocs.yml").read_text()
     for page in ("world-simulation.md", "reference/world-simulation-configuration.md"):
         assert page in nav and (ROOT / "docs" / page).is_file()
-    for page in ("world-simulation.md", "reference/world-simulation-configuration.md", "multi-platform-simulations.md"):
+    for page in (
+        "world-simulation.md",
+        "reference/world-simulation-configuration.md",
+        "multi-platform-simulations.md",
+    ):
         base = (ROOT / "docs" / page).parent
-        for target in re.findall(r"\]\(([^)#]+\.md)", (ROOT / "docs" / page).read_text()):
+        for target in re.findall(
+            r"\]\(([^)#]+\.md)", (ROOT / "docs" / page).read_text()
+        ):
             assert (base / target).resolve().is_file(), (page, target)
 
 
@@ -29,7 +35,9 @@ def test_the_configuration_reference_lists_every_default_of_the_coordinator():
 
     from ysocial_federation.coordinator import allocator, discovery, leave
 
-    text = (ROOT / "docs" / "reference" / "world-simulation-configuration.md").read_text()
+    text = (
+        ROOT / "docs" / "reference" / "world-simulation-configuration.md"
+    ).read_text()
     for module in (allocator, discovery, leave):
         for key in module.DEFAULTS:
             assert f"`{key}`" in text, (module.__name__, key)

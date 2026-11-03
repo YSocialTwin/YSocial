@@ -1041,7 +1041,9 @@ class FederationMember(db.Model):
     __bind_key__ = "db_admin"
     __tablename__ = "federation_member"
     __table_args__ = (
-        db.UniqueConstraint("federation_pk", "member", name="uq_federation_member_name"),
+        db.UniqueConstraint(
+            "federation_pk", "member", name="uq_federation_member_name"
+        ),
         db.UniqueConstraint("federation_pk", "exp_id", name="uq_federation_member_exp"),
     )
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -1071,7 +1073,9 @@ class FederationIdentityLink(db.Model):
     global_agent_id = db.Column(db.String(64), nullable=False)
     member = db.Column(db.String(50), nullable=False)
     # "" until the runtime reports the account: agents are bound by username (INV-17), people carry their account
-    local_account_id = db.Column(db.String(64), nullable=False, default="", server_default="")
+    local_account_id = db.Column(
+        db.String(64), nullable=False, default="", server_default=""
+    )
     # the username the agent has on this member (the agent name); NULL for people and for links of older releases
     username = db.Column(db.String(120))
 

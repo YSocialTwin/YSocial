@@ -14,7 +14,8 @@ experiment is active (``Exps.status == 1``); otherwise the icon is shown inactiv
 
 Bounds: the page size is 25, 50 or 100, the offset is capped, the total is counted up to ``COUNT_CAP`` and the export stops at
 ``EXPORT_MAX`` rows. The coordinator owns ``federation.db`` (no index is created by YWeb: it is opened read-only); the queries
-filter on ``payload_type`` and order by ``tick_emitted``. A missing file or table gives an empty result, never an error."""
+filter on ``payload_type`` and order by ``tick_emitted``. A missing file or table gives an empty result, never an error.
+"""
 
 from __future__ import annotations
 
@@ -70,7 +71,9 @@ def _open(path):
 
 
 def _like(text: str) -> str:
-    return "%" + text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    return (
+        "%" + text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    )
 
 
 def _tick(value) -> Optional[int]:
@@ -81,7 +84,11 @@ def _tick(value) -> Optional[int]:
 def parse_filters(args, members) -> dict:
     """The filters of a request (``args``: query string), cleaned: unknown members, states and sorts are dropped, the page size
     is one of ``PAGE_SIZES``. ``members``: the member names of the World Simulation."""
-    get = (lambda k: str(args.get(k, "") or "").strip()) if args is not None else (lambda k: "")
+    get = (
+        (lambda k: str(args.get(k, "") or "").strip())
+        if args is not None
+        else (lambda k: "")
+    )
     members = set(members)
     try:
         size = int(get("size"))
@@ -92,11 +99,17 @@ def parse_filters(args, members) -> dict:
     except ValueError:
         page = 1
     return {
-        "q": get("q")[:200], "source": get("source") if get("source") in members else "",
-        "destination": get("destination") if get("destination") in members else "", "agent": get("agent")[:80],
-        "status": get("status") if get("status") in STATUSES else "", "mode": get("mode") if get("mode") in MODES else "",
-        "tick_from": _tick(get("tick_from")), "tick_to": _tick(get("tick_to")), "ref": get("ref")[:200],
-        "sort": get("sort") if get("sort") in SORTS else "tick_desc", "size": size if size in PAGE_SIZES else DEFAULT_SIZE,
+        "q": get("q")[:200],
+        "source": get("source") if get("source") in members else "",
+        "destination": get("destination") if get("destination") in members else "",
+        "agent": get("agent")[:80],
+        "status": get("status") if get("status") in STATUSES else "",
+        "mode": get("mode") if get("mode") in MODES else "",
+        "tick_from": _tick(get("tick_from")),
+        "tick_to": _tick(get("tick_to")),
+        "ref": get("ref")[:200],
+        "sort": get("sort") if get("sort") in SORTS else "tick_desc",
+        "size": size if size in PAGE_SIZES else DEFAULT_SIZE,
         "page": page,
     }
 
@@ -117,21 +130,37 @@ def _gids_matching(conn, text: str, members: Dict[str, dict]) -> List[str]:
     like, found = _like(text), []
     found.append(text)  # the identity itself
     try:
-        found += [r[0] for r in conn.execute("SELECT global_agent_id FROM federation_agent_name WHERE name LIKE ? ESCAPE '\\' LIMIT ?",
-                                             (like, MAX_GIDS))]
+        found += [
+            r[0]
+            for r in conn.execute(
+                "SELECT global_agent_id FROM federation_agent_name WHERE name LIKE ? ESCAPE '\\' LIMIT ?",
+                (like, MAX_GIDS),
+            )
+        ]
     except sqlite3.Error:
         pass
     for name, member in members.items():
         if len(found) >= MAX_GIDS:
             break
-        ids = [str(r[0]) for r in backlinks._query(backlinks._db_path(member["exp"]),
-                                                   USER_SQL.get(member["platform_type"], DEFAULT_USER_SQL), (like, 200))]
+        ids = [
+            str(r[0])
+            for r in backlinks._query(
+                backlinks._db_path(member["exp"]),
+                USER_SQL.get(member["platform_type"], DEFAULT_USER_SQL),
+                (like, 200),
+            )
+        ]
         for start in range(0, len(ids), 300):
-            chunk = ids[start:start + 300]
+            chunk = ids[start : start + 300]
             try:
-                found += [r[0] for r in conn.execute(
-                    "SELECT global_agent_id FROM federation_identity WHERE member = ? AND local_account_id IN (%s) LIMIT ?" %
-                    ",".join("?" * len(chunk)), [name] + chunk + [MAX_GIDS])]
+                found += [
+                    r[0]
+                    for r in conn.execute(
+                        "SELECT global_agent_id FROM federation_identity WHERE member = ? AND local_account_id IN (%s) LIMIT ?"
+                        % ",".join("?" * len(chunk)),
+                        [name] + chunk + [MAX_GIDS],
+                    )
+                ]
             except sqlite3.Error:
                 pass
     return list(dict.fromkeys(found))[:MAX_GIDS]
@@ -172,7 +201,10 @@ def _where(conn, f: dict, members: Dict[str, dict]):
         sql += " AND (json_extract(m.payload_json, '$.text_excerpt') LIKE ? ESCAPE '\\'"
         args.append(_like(f["q"]))
         if gids:
-            sql += " OR json_extract(m.payload_json, '$.global_agent_id') IN (%s)" % ",".join("?" * len(gids))
+            sql += (
+                " OR json_extract(m.payload_json, '$.global_agent_id') IN (%s)"
+                % ",".join("?" * len(gids))
+            )
             args += gids
         sql += ")"
     return sql, args
@@ -185,37 +217,64 @@ def _members(fed) -> Dict[str, dict]:
     out = {}
     for row, exp in service.members_of(fed):
         if exp is not None:
-            out[row.member] = {"member": row.member, "platform_type": row.platform_type, "exp_id": row.exp_id,
-                               "exp_name": exp.exp_name, "active": exp.status == 1, "exp": exp}
+            out[row.member] = {
+                "member": row.member,
+                "platform_type": row.platform_type,
+                "exp_id": row.exp_id,
+                "exp_name": exp.exp_name,
+                "active": exp.status == 1,
+                "exp": exp,
+            }
     return out
 
 
 def _icon(member: Optional[dict], name: str) -> dict:
     """The part of a row that draws one platform: icon (type), tooltip name (experiment) and activity of its frontend."""
     if member is None:
-        return {"member": name, "platform_type": "", "icon": "link", "exp_name": name.replace("_", " ").capitalize(),
-                "exp_id": None, "active": False}
-    return {"member": name, "platform_type": member["platform_type"], "icon": backlinks.ICONS.get(member["platform_type"], "link"),
-            "exp_name": member["exp_name"] or name, "exp_id": member["exp_id"], "active": member["active"]}
+        return {
+            "member": name,
+            "platform_type": "",
+            "icon": "link",
+            "exp_name": name.replace("_", " ").capitalize(),
+            "exp_id": None,
+            "active": False,
+        }
+    return {
+        "member": name,
+        "platform_type": member["platform_type"],
+        "icon": backlinks.ICONS.get(member["platform_type"], "link"),
+        "exp_name": member["exp_name"] or name,
+        "exp_id": member["exp_id"],
+        "active": member["active"],
+    }
 
 
 def _copies(member: dict, rows) -> Dict[str, tuple]:
     """``{fed_msg_id: (local kind, local id)}`` of the copies on the destination, by ``fed_msg_id`` and, for those not found,
-    by ``source_ref`` (one chunked query each; ``rows``: ``[(fed_msg_id, source_ref)]``)."""
+    by ``source_ref`` (one chunked query each; ``rows``: ``[(fed_msg_id, source_ref)]``).
+    """
     path, out = backlinks._db_path(member["exp"]), {}
     ids = sorted({r[0] for r in rows})
     for start in range(0, len(ids), backlinks.SQL_CHUNK):
-        chunk = ids[start:start + backlinks.SQL_CHUNK]
+        chunk = ids[start : start + backlinks.SQL_CHUNK]
         for fid, kind, lid in backlinks._query(
-                path, "SELECT fed_msg_id, local_kind, local_id FROM federation_ref WHERE fed_msg_id IN (%s)" % ",".join("?" * len(chunk)), chunk):
+            path,
+            "SELECT fed_msg_id, local_kind, local_id FROM federation_ref WHERE fed_msg_id IN (%s)"
+            % ",".join("?" * len(chunk)),
+            chunk,
+        ):
             out[fid] = (kind, lid)
     missing = {fid: ref for fid, ref in rows if fid not in out}
     refs = sorted(set(missing.values()))
     by_ref: Dict[str, tuple] = {}
     for start in range(0, len(refs), backlinks.SQL_CHUNK):
-        chunk = refs[start:start + backlinks.SQL_CHUNK]
+        chunk = refs[start : start + backlinks.SQL_CHUNK]
         for ref, kind, lid in backlinks._query(
-                path, "SELECT source_ref, local_kind, local_id FROM federation_ref WHERE source_ref IN (%s)" % ",".join("?" * len(chunk)), chunk):
+            path,
+            "SELECT source_ref, local_kind, local_id FROM federation_ref WHERE source_ref IN (%s)"
+            % ",".join("?" * len(chunk)),
+            chunk,
+        ):
             by_ref.setdefault(ref, (kind, lid))
     for fid, ref in missing.items():
         if ref in by_ref:
@@ -229,9 +288,18 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
     # origin contents, per member: one query for the authors of the contents of the page
     wanted: Dict[str, set] = {}
     for p in parsed:
-        if p and p[0] in members and backlinks.LOCAL_KIND.get(members[p[0]]["platform_type"]) == p[1]:
+        if (
+            p
+            and p[0] in members
+            and backlinks.LOCAL_KIND.get(members[p[0]]["platform_type"]) == p[1]
+        ):
             wanted.setdefault(p[0], set()).add(p[2])
-    found = {m: backlinks._contents(backlinks._db_path(members[m]["exp"]), members[m]["platform_type"], ids) for m, ids in wanted.items()}
+    found = {
+        m: backlinks._contents(
+            backlinks._db_path(members[m]["exp"]), members[m]["platform_type"], ids
+        )
+        for m, ids in wanted.items()
+    }
     # copies on the destinations, per destination member
     asked: Dict[str, list] = {}
     for r in raw:
@@ -242,27 +310,63 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
     for m, by in copies.items():
         known = backlinks.LOCAL_KIND.get(members[m]["platform_type"])
         ids = [lid for kind, lid in by.values() if kind == known]
-        copy_authors[m] = backlinks._contents(backlinks._db_path(members[m]["exp"]), members[m]["platform_type"], ids) if known else {}
+        copy_authors[m] = (
+            backlinks._contents(
+                backlinks._db_path(members[m]["exp"]), members[m]["platform_type"], ids
+            )
+            if known
+            else {}
+        )
     gids = sorted({r[4] for r in raw if r[4]})
     names, accounts = {}, {}
     if gids:
         try:
             for start in range(0, len(gids), 400):
-                chunk = gids[start:start + 400]
+                chunk = gids[start : start + 400]
                 marks = ",".join("?" * len(chunk))
-                names.update(conn.execute("SELECT global_agent_id, name FROM federation_agent_name WHERE global_agent_id IN (%s)" % marks, chunk))
-                accounts.update({(g, m): a for g, m, a in conn.execute(
-                    "SELECT global_agent_id, member, local_account_id FROM federation_identity WHERE global_agent_id IN (%s)" % marks, chunk)})
+                names.update(
+                    conn.execute(
+                        "SELECT global_agent_id, name FROM federation_agent_name WHERE global_agent_id IN (%s)"
+                        % marks,
+                        chunk,
+                    )
+                )
+                accounts.update(
+                    {
+                        (g, m): a
+                        for g, m, a in conn.execute(
+                            "SELECT global_agent_id, member, local_account_id FROM federation_identity WHERE global_agent_id IN (%s)"
+                            % marks,
+                            chunk,
+                        )
+                    }
+                )
         except sqlite3.Error:
             pass
     out = []
     for r, p in zip(raw, parsed):
-        fid, source_member, target, tick, gid, ref, text, kind, quoted_author, quoted_type, acked = r
-        origin_member = p[0] if p else (source_member if source_member != COORDINATOR else "")
+        (
+            fid,
+            source_member,
+            target,
+            tick,
+            gid,
+            ref,
+            text,
+            kind,
+            quoted_author,
+            quoted_type,
+            acked,
+        ) = r
+        origin_member = (
+            p[0] if p else (source_member if source_member != COORDINATOR else "")
+        )
         origin_info = members.get(origin_member)
         origin = _icon(origin_info, origin_member)
         author, author_id, href = "", "", None
-        origin_known = origin_info is not None and backlinks.LOCAL_KIND.get(origin_info["platform_type"]) == (p[1] if p else None)
+        origin_known = origin_info is not None and backlinks.LOCAL_KIND.get(
+            origin_info["platform_type"]
+        ) == (p[1] if p else None)
         hit = found.get(origin_member, {}).get(p[2]) if p and origin_known else None
         if hit:
             author, author_id = hit
@@ -270,10 +374,18 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
         author_id = author_id or accounts.get((gid, origin_member)) or ""
         origin["id"] = p[2] if p else ""
         origin["available"] = bool(hit)
-        origin["href"] = (backlinks.content_href(origin_info["platform_type"], origin_info["exp_id"], p[2], author_id)
-                          if hit and origin_info["active"] else None)
-        author_href = (profile_href(origin_info["platform_type"], origin_info["exp_id"], author_id)
-                       if origin_info and origin_info["active"] and author_id else None)
+        origin["href"] = (
+            backlinks.content_href(
+                origin_info["platform_type"], origin_info["exp_id"], p[2], author_id
+            )
+            if hit and origin_info["active"]
+            else None
+        )
+        author_href = (
+            profile_href(origin_info["platform_type"], origin_info["exp_id"], author_id)
+            if origin_info and origin_info["active"] and author_id
+            else None
+        )
         dest_info = members.get(target)
         dest = _icon(dest_info, target)
         copy = copies.get(target, {}).get(fid)
@@ -283,18 +395,44 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
         dest["href"] = None
         if copy and dest_info is not None and dest_info["active"]:
             who = copy_authors.get(target, {}).get(str(copy[1]))
-            dest["href"] = backlinks.content_href(dest_info["platform_type"], dest_info["exp_id"], copy[1], who[1] if who else None)
-        out.append({
-            "fed_msg_id": fid, "tick": tick, "day": tick // SLOTS_PER_DAY, "slot": tick % SLOTS_PER_DAY, "global_agent_id": gid or "",
-            "author": author, "author_id": author_id, "author_href": author_href, "text": text or "", "kind": kind or "",
-            "shared": quoted_type is not None, "shared_from": quoted_author or "", "origin": origin, "destination": dest,
-            "mode": "coordinator_rule" if source_member == COORDINATOR else "agent_action", "delivered": acked is not None,
-            "delivered_tick": acked, "source_ref": ref or "",
-        })
+            dest["href"] = backlinks.content_href(
+                dest_info["platform_type"],
+                dest_info["exp_id"],
+                copy[1],
+                who[1] if who else None,
+            )
+        out.append(
+            {
+                "fed_msg_id": fid,
+                "tick": tick,
+                "day": tick // SLOTS_PER_DAY,
+                "slot": tick % SLOTS_PER_DAY,
+                "global_agent_id": gid or "",
+                "author": author,
+                "author_id": author_id,
+                "author_href": author_href,
+                "text": text or "",
+                "kind": kind or "",
+                "shared": quoted_type is not None,
+                "shared_from": quoted_author or "",
+                "origin": origin,
+                "destination": dest,
+                "mode": (
+                    "coordinator_rule"
+                    if source_member == COORDINATOR
+                    else "agent_action"
+                ),
+                "delivered": acked is not None,
+                "delivered_tick": acked,
+                "source_ref": ref or "",
+            }
+        )
     return out
 
 
-def search(fed, f: dict, *, limit: Optional[int] = None, offset: Optional[int] = None) -> dict:
+def search(
+    fed, f: dict, *, limit: Optional[int] = None, offset: Optional[int] = None
+) -> dict:
     """``{"rows", "total", "capped", "available"}`` of the filters ``f`` (see :func:`parse_filters`). ``total`` stops at
     ``COUNT_CAP`` (``capped``). Without ``limit`` the page of ``f`` is returned."""
     result = {"rows": [], "total": 0, "capped": False, "available": False}
@@ -306,14 +444,23 @@ def search(fed, f: dict, *, limit: Optional[int] = None, offset: Optional[int] =
         result["available"] = True
         where, args = _where(conn, f, members)
         base = SELECT + where
-        total = conn.execute("SELECT COUNT(*) FROM (SELECT 1 FROM federation_message m LEFT JOIN federation_delivery d ON "
-                             "d.fed_msg_id = m.fed_msg_id AND d.target_member = m.target_member WHERE m.payload_type = 'crosspost.v1'"
-                             + where + " LIMIT ?)", args + [COUNT_CAP]).fetchone()[0]
+        total = conn.execute(
+            "SELECT COUNT(*) FROM (SELECT 1 FROM federation_message m LEFT JOIN federation_delivery d ON "
+            "d.fed_msg_id = m.fed_msg_id AND d.target_member = m.target_member WHERE m.payload_type = 'crosspost.v1'"
+            + where
+            + " LIMIT ?)",
+            args + [COUNT_CAP],
+        ).fetchone()[0]
         result["total"], result["capped"] = total, total >= COUNT_CAP
         limit = f["size"] if limit is None else limit
-        offset = min(MAX_OFFSET, (f["page"] - 1) * f["size"]) if offset is None else offset
+        offset = (
+            min(MAX_OFFSET, (f["page"] - 1) * f["size"]) if offset is None else offset
+        )
         order = "ASC" if f["sort"] == "tick_asc" else "DESC"
-        raw = conn.execute(f"{base} ORDER BY m.tick_emitted {order}, m.fed_msg_id LIMIT ? OFFSET ?", args + [limit, offset]).fetchall()
+        raw = conn.execute(
+            f"{base} ORDER BY m.tick_emitted {order}, m.fed_msg_id LIMIT ? OFFSET ?",
+            args + [limit, offset],
+        ).fetchall()
         result["rows"] = _resolve(conn, raw, members)
     except sqlite3.Error:
         result["rows"], result["total"] = [], 0  # no table yet: an empty list
@@ -326,20 +473,58 @@ def export_rows(fed, f: dict) -> List[dict]:
     """Every row of the filters (at most ``EXPORT_MAX``), resolved in chunks of 100."""
     out: List[dict] = []
     for offset in range(0, EXPORT_MAX, 100):
-        page = search(fed, f, limit=min(100, EXPORT_MAX - offset), offset=offset)["rows"]
+        page = search(fed, f, limit=min(100, EXPORT_MAX - offset), offset=offset)[
+            "rows"
+        ]
         out += page
         if len(page) < 100:
             break
     return out
 
 
-CSV_COLUMNS = ["tick", "day", "slot", "author", "global_agent_id", "origin_experiment", "origin_platform", "origin_content_id",
-               "origin_url", "destination_experiment", "destination_platform", "destination_content_id", "destination_url", "text",
-               "mode", "delivered", "delivered_tick", "shared_content_of", "fed_msg_id"]
+CSV_COLUMNS = [
+    "tick",
+    "day",
+    "slot",
+    "author",
+    "global_agent_id",
+    "origin_experiment",
+    "origin_platform",
+    "origin_content_id",
+    "origin_url",
+    "destination_experiment",
+    "destination_platform",
+    "destination_content_id",
+    "destination_url",
+    "text",
+    "mode",
+    "delivered",
+    "delivered_tick",
+    "shared_content_of",
+    "fed_msg_id",
+]
 
 
 def csv_row(r: dict) -> list:
     o, d = r["origin"], r["destination"]
-    return [r["tick"], r["day"], r["slot"], r["author"], r["global_agent_id"], o["exp_name"], o["platform_type"], o["id"], o["href"] or "",
-            d["exp_name"], d["platform_type"], d["id"], d["href"] or "", r["text"], r["mode"], "yes" if r["delivered"] else "no",
-            "" if r["delivered_tick"] is None else r["delivered_tick"], r["shared_from"], r["fed_msg_id"]]
+    return [
+        r["tick"],
+        r["day"],
+        r["slot"],
+        r["author"],
+        r["global_agent_id"],
+        o["exp_name"],
+        o["platform_type"],
+        o["id"],
+        o["href"] or "",
+        d["exp_name"],
+        d["platform_type"],
+        d["id"],
+        d["href"] or "",
+        r["text"],
+        r["mode"],
+        "yes" if r["delivered"] else "no",
+        "" if r["delivered_tick"] is None else r["delivered_tick"],
+        r["shared_from"],
+        r["fed_msg_id"],
+    ]
