@@ -90,6 +90,16 @@ def _validator_allowed_actions():
     }
 
 
+def find_activity_profile(session, key):
+    """The ``ActivityProfile`` an agent names, whether the agent holds its id or its name (None when there is none)."""
+    query = session.query(ActivityProfile)
+    try:
+        found = query.filter(ActivityProfile.id == int(key)).first()
+    except (TypeError, ValueError):
+        found = None
+    return found or query.filter(ActivityProfile.name == str(key)).first()
+
+
 def get_users_per_hour(population, agents, session):
     # get population activity profiles
     activity_profiles = defaultdict(list)
@@ -126,20 +136,13 @@ def get_users_per_hour(population, agents, session):
         # Use get with default to handle missing profiles gracefully
         profile = activity_profiles.get(ag.activity_profile)
         if profile is None:
-            # If profile not found, try to fetch it directly from database
+            # Not among the profiles of the population (a merged population has none of its own): look the profile
+            # up directly, as the agent names it - by id or by name
             try:
-                profile_obj = (
-                    session.query(ActivityProfile)
-                    .filter(ActivityProfile.id == ag.activity_profile)
-                    .first()
-                )
+                profile_obj = find_activity_profile(session, ag.activity_profile)
                 if profile_obj:
                     profile = [int(x) for x in profile_obj.hours.split(",")]
                     activity_profiles[ag.activity_profile] = profile
-                    print(
-                        f"Info: Loaded activity profile {ag.activity_profile} for agent {ag.name} (is_page={getattr(ag, 'is_page', 'unknown')})",
-                        file=sys.stderr,
-                    )
                 else:
                     # Profile doesn't exist, skip this agent
                     print(

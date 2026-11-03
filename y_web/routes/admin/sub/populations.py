@@ -1759,6 +1759,26 @@ def merge_populations():
     db.session.add(merged_population)
     db.session.flush()  # Flush to get the ID without committing
 
+    # The merged population follows the activity profiles of its agents (the share of agents on each): without them
+    # no agent would be sampled in any hour and the simulation would stay silent
+    from y_web.src.simulation.agent_sampler import find_activity_profile
+
+    counts = {}
+    for a in agents:
+        if a.activity_profile in (None, ""):
+            continue
+        found = find_activity_profile(db.session, a.activity_profile)
+        if found is not None:
+            counts[found.id] = counts.get(found.id, 0) + 1
+    for profile_id, n in counts.items():
+        db.session.add(
+            PopulationActivityProfile(
+                population=merged_population.id,
+                activity_profile=profile_id,
+                percentage=round(100.0 * n / max(sum(counts.values()), 1), 2),
+            )
+        )
+
     # Add unique agents to the new population
     for agent_id in unique_agent_ids:
         agent_population = Agent_Population(
