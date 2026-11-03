@@ -371,6 +371,7 @@ class StubGenerator:
 # would take its memory again: the jobs share one pipeline per model and take turns, a picture at a time.
 _GENERATION_LOCK = threading.Lock()
 _PIPES: Dict[str, Any] = {}
+_RUNNING: set = set()  # notification ids of the jobs with a live thread in this process
 
 # distilled models: the steps and guidance they were trained for
 _PRESETS = {"stabilityai/sd-turbo": {"max_steps": 4, "guidance_scale": 0.0}}
@@ -531,6 +532,7 @@ def run_generation(
     from y_web.src.models import Agent
 
     made = 0
+    _RUNNING.add(notification_id)
     with app.app_context():
         try:
             generator = make_generator(cfg)
@@ -582,6 +584,8 @@ def run_generation(
                 error_message=str(exc)[:500],
             )
             _remove_job(notification_id)
+        finally:
+            _RUNNING.discard(notification_id)
     return made
 
 
@@ -601,7 +605,7 @@ def resume_interrupted(app) -> List[int]:
     try:
         names = sorted(n for n in os.listdir(folder) if n.endswith(".json"))
     except OSError:
-        return []
+        names = []  # no job folder: the notifications left processing are still closed below
     resumed: List[int] = []
     with app.app_context():
         for name in names:
@@ -612,10 +616,12 @@ def resume_interrupted(app) -> List[int]:
                 ids = [int(i) for i in job["agent_ids"]]
                 cfg = dict(job["cfg"])
             except (ValueError, KeyError, TypeError, OSError):
-                try:
-                    os.remove(os.path.join(folder, name))
+                try:  # unreadable: kept aside for a look, never deleted
+                    os.replace(os.path.join(folder, name), os.path.join(folder, name + ".bad"))
                 except OSError:
                     pass
+                continue
+            if nid in _RUNNING:  # already drawing in this process
                 continue
             row = db.session.get(DownloadNotification, nid)
             if row is None or row.status != "processing":
@@ -651,7 +657,31 @@ def resume_interrupted(app) -> List[int]:
                 daemon=True,
             ).start()
             resumed.append(nid)
+        _close_orphans(resumed)
     return resumed
+
+
+def _close_orphans(resumed: List[int]) -> None:
+    """A notification still *processing* that has no job (file lost) and no live thread would stay so for ever:
+    it is closed as failed with the reason, so the person knows the pictures must be generated again."""
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import DownloadNotification
+
+    rows = db.session.scalars(
+        select(DownloadNotification).where(
+            DownloadNotification.title == NOTIFICATION_TITLE,
+            DownloadNotification.status == "processing",
+        )
+    ).all()
+    for row in rows:
+        if row.id in resumed or row.id in _RUNNING or os.path.isfile(_job_file(row.id)):
+            continue
+        row.status = "failed"
+        row.message = "Profile picture generation was interrupted."
+        row.error_message = "The job data was lost: generate the missing pictures again."
+    db.session.commit()
 
 
 def resume_later(app, delay: float = 15.0) -> None:

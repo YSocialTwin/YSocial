@@ -337,6 +337,21 @@ def test_a_generation_interrupted_by_a_restart_resumes_with_the_missing_pictures
         assert not os.path.exists(pp._job_file(nid))  # nothing left to resume
 
 
+def test_a_processing_notification_whose_job_file_is_lost_is_closed_as_failed(app, media):
+    from y_web import db
+    from y_web.src.agents import profile_pictures as pp
+    from y_web.src.models import DownloadNotification
+
+    with app.app_context():
+        nid = _notification(db)  # processing, no job file, no thread
+        db.session.get(DownloadNotification, nid).title = pp.NOTIFICATION_TITLE
+        db.session.commit()
+        assert pp.resume_interrupted(app) == []
+        db.session.expire_all()
+        row = db.session.get(DownloadNotification, nid)
+        assert row.status == "failed" and "generate the missing pictures again" in row.error_message
+
+
 def test_finished_or_unknown_jobs_are_only_cleaned_up(app, media):
     from y_web import db
     from y_web.src.agents import profile_pictures as pp
@@ -352,7 +367,7 @@ def test_finished_or_unknown_jobs_are_only_cleaned_up(app, media):
         os.makedirs(pp.jobs_dir(), exist_ok=True)
         open(os.path.join(pp.jobs_dir(), "7.json"), "w").write("not json")
         assert pp.resume_interrupted(app) == []
-        assert os.listdir(pp.jobs_dir()) == []
+        assert os.listdir(pp.jobs_dir()) == ["7.json.bad"]  # an unreadable file is kept aside, never deleted
         assert not media.exists() or os.listdir(media) == []
 
 
