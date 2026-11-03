@@ -1755,6 +1755,12 @@ def merge_populations():
         frecsys=frecsys,
         llm_url=llm_url,
         username_type=merged_population_type,
+        # the kind of the sources (custom-agent populations) is kept when they all share it
+        pop_type=(
+            source_populations[0].pop_type
+            if len({pop.pop_type for pop in source_populations}) == 1
+            else None
+        ),
     )
     db.session.add(merged_population)
     db.session.flush()  # Flush to get the ID without committing
