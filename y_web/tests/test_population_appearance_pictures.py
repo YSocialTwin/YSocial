@@ -80,6 +80,47 @@ def test_the_pictures_are_written_in_the_media_folder_and_linked_to_the_agents(a
         assert row.status == "ready" and "3 profile pictures generated." == row.message
 
 
+def test_jobs_of_several_populations_share_the_model_and_both_complete(app, media, monkeypatch):
+    """Two jobs run together: the model draws one picture at a time (a diffusion pipeline is not thread safe), and
+    neither job stalls or is cut short."""
+    import threading
+    import time
+
+    from y_web import db
+    from y_web.src.agents import profile_pictures as pp
+
+    state = {"now": 0, "max": 0}
+    guard = threading.Lock()
+
+    class Probe:
+        def generate(self, prompt, seed=0):
+            with guard:
+                state["now"] += 1
+                state["max"] = max(state["max"], state["now"])
+            time.sleep(0.02)
+            with guard:
+                state["now"] -= 1
+            return pp.StubGenerator().generate(prompt, seed)
+
+    monkeypatch.setattr(pp, "make_generator", lambda cfg: Probe())
+    with app.app_context():
+        _, first = _standard_population(db, n=4)
+        _, second = _standard_population(db, n=4)
+        jobs = [([a.id for a in first], _notification(db)), ([a.id for a in second], _notification(db))]
+    results = {}
+
+    def go(ids, nid):
+        results[nid] = pp.run_generation(app, nid, ids, {"generator": "stub"})
+
+    threads = [threading.Thread(target=go, args=(ids, nid)) for ids, nid in jobs]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(60)
+    assert state["max"] == 1
+    assert sorted(results.values()) == [4, 4]
+
+
 def test_the_progress_is_reported_in_the_notification(app, media, monkeypatch):
     from y_web import db
     from y_web.src.agents import profile_pictures as pp

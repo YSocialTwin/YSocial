@@ -366,6 +366,12 @@ class StubGenerator:
         return _png(64, 64, hashlib.sha256(f"{seed}|{prompt}".encode()).digest()[:3])
 
 
+# One model drawing at a time in the whole process. Several population jobs may run together (one thread each), but a
+# diffusion pipeline is not safe to call from several threads (MPS/CUDA stall or fail) and each private copy of the model
+# would take its memory again: the jobs share one pipeline per model and take turns, a picture at a time.
+_GENERATION_LOCK = threading.Lock()
+_PIPES: Dict[str, Any] = {}
+
 # distilled models: the steps and guidance they were trained for
 _PRESETS = {"stabilityai/sd-turbo": {"max_steps": 4, "guidance_scale": 0.0}}
 
@@ -377,6 +383,9 @@ class DiffusionGenerator:  # pragma: no cover - needs a model
         self.model, self.steps, self._pipe = model, steps, None
 
     def _load(self):
+        if self.model in _PIPES:  # loaded by another job: shared (the caller holds _GENERATION_LOCK)
+            self._pipe = _PIPES[self.model]
+            return
         try:
             import torch
             from diffusers import AutoPipelineForText2Image
@@ -399,6 +408,7 @@ class DiffusionGenerator:  # pragma: no cover - needs a model
             self.model, torch_dtype=dtype
         ).to(device)
         self._pipe.set_progress_bar_config(disable=True)
+        _PIPES[self.model] = self._pipe
 
     def generate(self, prompt: str, seed: int = 0) -> bytes:
         import io
@@ -537,7 +547,8 @@ def run_generation(
                     seed = int(
                         hashlib.sha256(f"{agent_id}|{prompt}".encode()).hexdigest()[:8], 16
                     )
-                    data = generator.generate(prompt, seed=seed)
+                    with _GENERATION_LOCK:  # the jobs of other populations take turns on the one model
+                        data = generator.generate(prompt, seed=seed)
                     db.session.expire_all()
                     if db.session.get(Agent, agent_id) is None:
                         continue  # deleted while the model was drawing
