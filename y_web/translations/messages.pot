@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 17:35+0000\n"
+"POT-Creation-Date: 2026-11-03 10:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -196,6 +196,10 @@ msgid "%(n)s messages"
 msgstr ""
 
 #, python-format
+msgid "%(n)s more members"
+msgstr ""
+
+#, python-format
 msgid "%(n)s plugin types"
 msgstr ""
 
@@ -276,6 +280,10 @@ msgstr ""
 
 #, python-format
 msgid "%(platform)s Memory Embeddings"
+msgstr ""
+
+#, python-format
+msgid "%(platform)s is not running: its profile cannot be opened now"
 msgstr ""
 
 #, python-format
@@ -489,15 +497,15 @@ msgid "A World Simulation needs 2 to 8 experiments."
 msgstr ""
 
 msgid ""
-"A World Simulation runs several experiments on one shared clock; several "
-"can be of the same platform. The same agents can be active on more than "
-"one experiment."
-msgstr ""
-
-msgid ""
 "A World Simulation runs several experiments on one shared clock. Work "
 "through the steps below: every parameter has a default, so you only "
 "change what you need."
+msgstr ""
+
+msgid ""
+"A World Simulation runs several experiments on one shared clock; several "
+"can be of the same platform. The same agents can be active on more than "
+"one experiment."
 msgstr ""
 
 msgid ""
@@ -2421,9 +2429,6 @@ msgstr ""
 msgid "Choose at least one of the available activities."
 msgstr ""
 
-msgid "Choose at most one experiment for each platform."
-msgstr ""
-
 msgid "Choose edge list file (CSV)..."
 msgstr ""
 
@@ -3508,6 +3513,10 @@ msgstr ""
 msgid "Cross-posts between platforms, per day"
 msgstr ""
 
+#, python-format
+msgid "Cross-posts delivered there: %(n)s"
+msgstr ""
+
 msgid "Cross-posts of people"
 msgstr ""
 
@@ -4365,6 +4374,12 @@ msgid "Distribution:"
 msgstr ""
 
 msgid "Don't share"
+msgstr ""
+
+msgid "Dormant"
+msgstr ""
+
+msgid "Dormant there: the agent takes a break on this platform"
 msgstr ""
 
 msgid "Download"
@@ -5235,6 +5250,11 @@ msgid "Experiments grouped by project. Click to expand/collapse."
 msgstr ""
 
 msgid "Experiments per group"
+msgstr ""
+
+msgid ""
+"Experiments that run together on one shared clock. They are listed here "
+"and not among the experiments below."
 msgstr ""
 
 msgid "Experiments this user owns or participates in."
@@ -6589,6 +6609,9 @@ msgstr ""
 msgid "Inactive modules"
 msgstr ""
 
+msgid "Inactive profile"
+msgstr ""
+
 msgid "Inactivity threshold (rounds)"
 msgstr ""
 
@@ -7343,6 +7366,9 @@ msgid "Left the platform"
 msgstr ""
 
 msgid "Left the platform together"
+msgstr ""
+
+msgid "Left this platform"
 msgstr ""
 
 msgid "Left together"
@@ -8865,6 +8891,9 @@ msgid "Not about the topics of the chat"
 msgstr ""
 
 msgid "Not active"
+msgstr ""
+
+msgid "Not active there"
 msgstr ""
 
 msgid "Not answering"
@@ -11642,6 +11671,9 @@ msgstr ""
 msgid "See the coordinator log below."
 msgstr ""
 
+msgid "See the details"
+msgstr ""
+
 msgid "Seed"
 msgstr ""
 
@@ -12635,6 +12667,9 @@ msgid "Stopped"
 msgstr ""
 
 msgid "Stopped / Scheduled"
+msgstr ""
+
+msgid "Stopping"
 msgstr ""
 
 msgid "Stories"
@@ -13885,6 +13920,11 @@ msgid ""
 "no effect until you switch it on there."
 msgstr ""
 
+msgid ""
+"This person has left the platform: the profile is kept for the record and"
+" no longer appears in decks, search or the showcase."
+msgstr ""
+
 msgid "This person has not rated the account yet"
 msgstr ""
 
@@ -14885,6 +14925,10 @@ msgstr ""
 msgid ""
 "Username of a page of the population that owns the chat. Empty: the agent"
 " most interested in the topics of the chat is chosen."
+msgstr ""
+
+#, python-format
+msgid "Username there: %(name)s"
 msgstr ""
 
 msgid "Users"
@@ -16494,39 +16538,3 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
-#, python-format
-msgid "%(platform)s is not running: its profile cannot be opened now"
-msgstr ""
-
-msgid "Dormant there: the agent takes a break on this platform"
-msgstr ""
-
-msgid "Left this platform"
-msgstr ""
-
-msgid "Not active there"
-msgstr ""
-
-#, python-format
-msgid "Username there: %(name)s"
-msgstr ""
-
-#, python-format
-msgid "Cross-posts delivered there: %(n)s"
-msgstr ""
-
-msgid "Dormant"
-msgstr ""
-
-msgid "Stopping"
-msgstr ""
-
-msgid "Experiments that run together on one shared clock. They are listed here and not among the experiments below."
-msgstr ""
-
-msgid "See the details"
-msgstr ""
-
-#, python-format
-msgid "%(n)s more members"
-msgstr ""

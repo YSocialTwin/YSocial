@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 17:35+0000\n"
+"POT-Creation-Date: 2026-11-03 10:05+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -220,6 +220,10 @@ msgid "%(n)s messages"
 msgstr "%(n)s messaggi"
 
 #, python-format
+msgid "%(n)s more members"
+msgstr "altri %(n)s membri"
+
+#, python-format
 msgid "%(n)s plugin types"
 msgstr "%(n)s tipi di plugin"
 
@@ -304,6 +308,10 @@ msgstr ""
 #, python-format
 msgid "%(platform)s Memory Embeddings"
 msgstr "Embedding della memoria di %(platform)s"
+
+#, python-format
+msgid "%(platform)s is not running: its profile cannot be opened now"
+msgstr "%(platform)s non è in esecuzione: il profilo non può essere aperto ora"
 
 #, python-format
 msgid "%(title)s not available"
@@ -518,6 +526,15 @@ msgid "A World Simulation needs 2 to 8 experiments."
 msgstr "Una World Simulation richiede da 2 a 8 esperimenti."
 
 msgid ""
+"A World Simulation runs several experiments on one shared clock. Work "
+"through the steps below: every parameter has a default, so you only "
+"change what you need."
+msgstr ""
+"Una World Simulation esegue più esperimenti su un unico orologio "
+"condiviso. Segui i passi qui sotto: ogni parametro ha un valore "
+"predefinito, quindi cambi solo ciò che ti serve."
+
+msgid ""
 "A World Simulation runs several experiments on one shared clock; several "
 "can be of the same platform. The same agents can be active on more than "
 "one experiment."
@@ -525,15 +542,6 @@ msgstr ""
 "Una World Simulation esegue più esperimenti su un unico orologio "
 "condiviso; più esperimenti possono essere della stessa piattaforma. Gli "
 "stessi agenti possono essere attivi su più esperimenti."
-
-msgid ""
-"A World Simulation runs several experiments on one shared clock. Work "
-"through the steps below: every parameter has a default, so you only "
-"change what you need."
-msgstr ""
-"Una World Simulation esegue più esperimenti su un unico orologio "
-"condiviso. Segui i passi qui sotto: ogni parametro ha un "
-"valore predefinito, quindi cambi solo ciò che ti serve."
 
 msgid ""
 "A base model proposes the candidates and a language model re-orders the "
@@ -1823,9 +1831,6 @@ msgstr "Embedding asincrono"
 msgid "At least 1."
 msgstr "Almeno 1."
 
-msgid "At least 1; there are at most five platforms."
-msgstr "Almeno 1; le piattaforme sono al massimo cinque."
-
 msgid "At least one number"
 msgstr "Almeno un numero"
 
@@ -2664,9 +2669,6 @@ msgstr ""
 
 msgid "Choose at least one of the available activities."
 msgstr "Scegli almeno una delle attività disponibili."
-
-msgid "Choose at most one experiment for each platform."
-msgstr "Scegli al massimo un esperimento per piattaforma."
 
 msgid "Choose edge list file (CSV)..."
 msgstr "Scegli il file con l'elenco degli archi (CSV)..."
@@ -3942,6 +3944,10 @@ msgstr "Cross-post"
 msgid "Cross-posts between platforms, per day"
 msgstr "Cross-post tra piattaforme, per giorno"
 
+#, python-format
+msgid "Cross-posts delivered there: %(n)s"
+msgstr "Cross-post consegnati: %(n)s"
+
 msgid "Cross-posts of people"
 msgstr "Cross-post delle persone"
 
@@ -4880,6 +4886,12 @@ msgstr "Distribuzione:"
 
 msgid "Don't share"
 msgstr "Non condividere"
+
+msgid "Dormant"
+msgstr "In pausa"
+
+msgid "Dormant there: the agent takes a break on this platform"
+msgstr "In pausa: l'agente si ferma su questa piattaforma"
 
 msgid "Download"
 msgstr "Scarica"
@@ -5849,6 +5861,13 @@ msgstr "Esperimenti raggruppati per progetto. Clicca per espandere o comprimere.
 
 msgid "Experiments per group"
 msgstr "Esperimenti per gruppo"
+
+msgid ""
+"Experiments that run together on one shared clock. They are listed here "
+"and not among the experiments below."
+msgstr ""
+"Esperimenti che girano insieme su un unico orologio condiviso. Sono "
+"elencati qui e non tra gli esperimenti qui sotto."
 
 msgid "Experiments this user owns or participates in."
 msgstr "Esperimenti di cui questo utente è proprietario o a cui partecipa."
@@ -7349,6 +7368,9 @@ msgstr "Alter inattivo"
 msgid "Inactive modules"
 msgstr "Moduli inattivi"
 
+msgid "Inactive profile"
+msgstr "Profilo inattivo"
+
 msgid "Inactivity threshold (rounds)"
 msgstr "Soglia di inattività (round)"
 
@@ -8175,6 +8197,9 @@ msgstr "Ha lasciato la piattaforma"
 
 msgid "Left the platform together"
 msgstr "Usciti insieme dalla piattaforma"
+
+msgid "Left this platform"
+msgstr "Ha lasciato questa piattaforma"
 
 msgid "Left together"
 msgstr "Usciti insieme"
@@ -9781,6 +9806,9 @@ msgstr "Non riguarda i topic della chat"
 
 msgid "Not active"
 msgstr "Non attivo"
+
+msgid "Not active there"
+msgstr "Non attivo su questa piattaforma"
 
 msgid "Not answering"
 msgstr "Non risponde"
@@ -12793,6 +12821,9 @@ msgstr "Vedi come ti vedono gli altri"
 msgid "See the coordinator log below."
 msgstr "Vedi il log del coordinatore qui sotto."
 
+msgid "See the details"
+msgstr "Vedi i dettagli"
+
 msgid "Seed"
 msgstr "Seed"
 
@@ -13895,6 +13926,9 @@ msgstr "Fermato"
 
 msgid "Stopped / Scheduled"
 msgstr "Fermati / Pianificati"
+
+msgid "Stopping"
+msgstr "In arresto"
 
 msgid "Stories"
 msgstr "Storie"
@@ -15402,6 +15436,13 @@ msgstr ""
 "Questa parte è disattivata nella Configurazione dell'esperimento, quindi "
 "queste impostazioni non hanno effetto finché non la attivi lì."
 
+msgid ""
+"This person has left the platform: the profile is kept for the record and"
+" no longer appears in decks, search or the showcase."
+msgstr ""
+"Questa persona ha lasciato la piattaforma: il profilo è conservato per "
+"registro e non compare più nei deck, nella ricerca e nella vetrina."
+
 msgid "This person has not rated the account yet"
 msgstr "Questa persona non ha ancora valutato l'account"
 
@@ -16524,6 +16565,10 @@ msgid ""
 msgstr ""
 "Username di una pagina della popolazione che possiede la chat. Vuoto: "
 "viene scelto l'agente più interessato agli argomenti della chat."
+
+#, python-format
+msgid "Username there: %(name)s"
+msgstr "Nome utente: %(name)s"
 
 msgid "Users"
 msgstr "Utenti"
@@ -18309,43 +18354,6 @@ msgstr "✔️ Gioca con"
 
 msgid "✔️ Use"
 msgstr "✔️ Usa"
-
-#, python-format
-msgid "%(platform)s is not running: its profile cannot be opened now"
-msgstr "%(platform)s non è in esecuzione: il profilo non può essere aperto ora"
-
-msgid "Dormant there: the agent takes a break on this platform"
-msgstr "In pausa: l'agente si ferma su questa piattaforma"
-
-msgid "Left this platform"
-msgstr "Ha lasciato questa piattaforma"
-
-msgid "Not active there"
-msgstr "Non attivo su questa piattaforma"
-
-#, python-format
-msgid "Username there: %(name)s"
-msgstr "Nome utente: %(name)s"
-
-#, python-format
-msgid "Cross-posts delivered there: %(n)s"
-msgstr "Cross-post consegnati: %(n)s"
-
-msgid "Dormant"
-msgstr "In pausa"
-
-msgid "Stopping"
-msgstr "In arresto"
-
-msgid "Experiments that run together on one shared clock. They are listed here and not among the experiments below."
-msgstr "Esperimenti che girano insieme su un unico orologio condiviso. Sono elencati qui e non tra gli esperimenti qui sotto."
-
-msgid "See the details"
-msgstr "Vedi i dettagli"
-
-#, python-format
-msgid "%(n)s more members"
-msgstr "altri %(n)s membri"
 
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
@@ -20651,4 +20659,10 @@ msgstr "altri %(n)s membri"
 #~ "0: tra quelle due piattaforme non "
 #~ "viene fatto alcun cross-post. Tra "
 #~ "0 e 1."
+
+#~ msgid "At least 1; there are at most five platforms."
+#~ msgstr "Almeno 1; le piattaforme sono al massimo cinque."
+
+#~ msgid "Choose at most one experiment for each platform."
+#~ msgstr "Scegli al massimo un esperimento per piattaforma."
 
