@@ -54,7 +54,8 @@ def adopt_provisioned(cl):
 
 def filter_pool(agents):
     """The agents that may act in this slot: the same list object unless the federation hides accounts
-    (not active or inactive members). Also reads the attention multipliers of the day."""
+    (not active or inactive members). Also reads the attention multipliers of the day.
+    """
     fed = federation_module()
     if fed is None:
         return agents

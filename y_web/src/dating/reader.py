@@ -173,7 +173,8 @@ class DatingReader:
         self, cut: int, include_left: bool = False
     ) -> Dict[str, sqlite3.Row]:
         """Accounts present at the cut. With ``include_left`` the ones that had already left by then are kept too (the
-        column ``gone`` tells them apart): their data is never deleted, only the discovery surfaces hide them."""
+        column ``gone`` tells them apart): their data is never deleted, only the discovery surfaces hide them.
+        """
         rows = self.c.execute(
             "SELECT u.id, u.username, u.age, u.gender, u.status, u.joined_on, u.left_on, u.left_reason, "
             "CASE WHEN l.id IS NOT NULL AND l.day * 10000 + l.hour <= :cut THEN 1 ELSE 0 END AS gone, "

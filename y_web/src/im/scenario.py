@@ -16,7 +16,9 @@ import tempfile
 from typing import Any, Dict, List, Optional
 
 TIMEOUT = 120
-SCENARIO_DB_FILE = "scenario_design_im.db"  # the drafts of Scenario Design, beside the run's database
+SCENARIO_DB_FILE = (
+    "scenario_design_im.db"  # the drafts of Scenario Design, beside the run's database
+)
 
 
 class ScenarioApplyError(Exception):
@@ -48,19 +50,25 @@ def apply_plan(
     if not exp_folder or not os.path.isdir(exp_folder):
         raise ScenarioApplyUnavailable("the experiment has no folder yet")
     if server_up(exp_folder):
-        raise ScenarioApplyUnavailable("stop the experiment before applying a scenario to it")
+        raise ScenarioApplyUnavailable(
+            "stop the experiment before applying a scenario to it"
+        )
     if repo_dir is None:
         from y_web.src.hpc.platforms import get_hpc_platform
         from y_web.src.system.path_utils import get_external_repo_dir
 
-        repo_dir = get_external_repo_dir(get_hpc_platform("instant_messaging").runtime_repo)
+        repo_dir = get_external_repo_dir(
+            get_hpc_platform("instant_messaging").runtime_repo
+        )
     if python_cmd is None:
         from y_web.src.simulation.server import detect_env_handler
 
         python_cmd = detect_env_handler()
     script = os.path.join(repo_dir, "run_apply_scenario.py")
     if not os.path.exists(script):
-        raise ScenarioApplyUnavailable("the instant messaging runtime cannot apply scenarios: update it")
+        raise ScenarioApplyUnavailable(
+            "the instant messaging runtime cannot apply scenarios: update it"
+        )
 
     handle, plan_path = tempfile.mkstemp(prefix="im_scenario_", suffix=".json")
     try:
@@ -70,9 +78,13 @@ def apply_plan(
         if dry_run:
             command.append("--dry-run")
         try:
-            done = subprocess.run(command, cwd=repo_dir, capture_output=True, text=True, timeout=TIMEOUT)
+            done = subprocess.run(
+                command, cwd=repo_dir, capture_output=True, text=True, timeout=TIMEOUT
+            )
         except (OSError, subprocess.SubprocessError) as exc:
-            raise ScenarioApplyUnavailable(f"the scenario could not be applied: {exc}") from exc
+            raise ScenarioApplyUnavailable(
+                f"the scenario could not be applied: {exc}"
+            ) from exc
     finally:
         try:
             os.unlink(plan_path)
@@ -85,5 +97,9 @@ def apply_plan(
     try:
         return json.loads((done.stdout or "").strip().splitlines()[-1])
     except (ValueError, IndexError) as exc:
-        detail = (done.stderr or "").strip().splitlines()[-1:] or [f"exit code {done.returncode}"]
-        raise ScenarioApplyUnavailable(f"the scenario could not be applied: {detail[0]}") from exc
+        detail = (done.stderr or "").strip().splitlines()[-1:] or [
+            f"exit code {done.returncode}"
+        ]
+        raise ScenarioApplyUnavailable(
+            f"the scenario could not be applied: {detail[0]}"
+        ) from exc

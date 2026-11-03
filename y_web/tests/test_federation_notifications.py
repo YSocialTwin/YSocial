@@ -11,7 +11,10 @@ from y_web.src.federation import coordinator_process as cp
 from y_web.src.federation import health, service
 from y_web.src.federation.notifications import notify_failure
 from y_web.src.simulation import execution_backend as eb
-from y_web.tests.test_federation_lifecycle import needs_sdk, running_world  # noqa: F401  (fixtures)
+from y_web.tests.test_federation_lifecycle import (  # noqa: F401  (fixtures)
+    needs_sdk,
+    running_world,
+)
 from y_web.tests.test_federation_service import world  # noqa: F401  (fixture)
 
 
@@ -28,7 +31,15 @@ def owner(running_world):  # noqa: F811
     from y_web.src.models import Admin_users
 
     fed, fake, tmp = running_world
-    db.session.add(Admin_users(username="owner", email="o@t.com", password=generate_password_hash("x"), role="researcher", last_seen="2026-01-01"))
+    db.session.add(
+        Admin_users(
+            username="owner",
+            email="o@t.com",
+            password=generate_password_hash("x"),
+            role="researcher",
+            last_seen="2026-01-01",
+        )
+    )
     fed.owner = "owner"
     db.session.commit()
     return fed, fake, tmp
@@ -38,7 +49,11 @@ def test_a_notification_names_the_world_simulation_and_reaches_the_owner(owner):
     fed, fake, tmp = owner
     rows = notify_failure(fed, "coordinator", "boom")
     assert len(rows) == 1 and rows[0].status == "failed" and not rows[0].is_read
-    assert "World Simulation" in rows[0].title and fed.name in rows[0].message and "boom" in rows[0].message
+    assert (
+        "World Simulation" in rows[0].title
+        and fed.name in rows[0].message
+        and "boom" in rows[0].message
+    )
     assert "federation" not in (rows[0].title + rows[0].message).lower()
     from y_web.src.models import Admin_users
 
@@ -59,7 +74,11 @@ def test_a_failed_start_is_notified(owner):
     with pytest.raises(RuntimeError):
         eb.start_federation(fed)
     rows = notifications()
-    assert len(rows) == 1 and rows[0].title == "World Simulation: start failed" and "boom" in rows[0].message
+    assert (
+        len(rows) == 1
+        and rows[0].title == "World Simulation: start failed"
+        and "boom" in rows[0].message
+    )
 
 
 @needs_sdk
@@ -75,29 +94,52 @@ def test_a_dead_coordinator_ends_the_run_and_is_notified(owner):
     assert health.check_federation(fed) == "idle"
 
 
-@pytest.mark.parametrize("states,expected,notified", [
-    (("finished", "finished"), "completed", 0),
-    (("finished", "failed"), "failed", 1),
-])
+@pytest.mark.parametrize(
+    "states,expected,notified",
+    [
+        (("finished", "finished"), "completed", 0),
+        (("finished", "failed"), "failed", 1),
+    ],
+)
 def test_end_of_run(owner, monkeypatch, states, expected, notified):
     fed, fake, tmp = owner
     fed.status = "running"
     fed.coordinator_pid = os.getpid()  # alive
-    monkeypatch.setattr(cp, "coordinator_status", lambda f, timeout=2.0: {"members": {"a": {"status": states[0]}, "b": {"status": states[1]}}})
-    monkeypatch.setattr(cp, "stop_coordinator", lambda f: setattr(f, "coordinator_pid", None) or True)
+    monkeypatch.setattr(
+        cp,
+        "coordinator_status",
+        lambda f, timeout=2.0: {
+            "members": {"a": {"status": states[0]}, "b": {"status": states[1]}}
+        },
+    )
+    monkeypatch.setattr(
+        cp, "stop_coordinator", lambda f: setattr(f, "coordinator_pid", None) or True
+    )
     try:
         assert health.check_federation(fed) == expected
         assert fed.status == expected and len(notifications()) == notified
     finally:
-        fed.coordinator_pid = None  # the fixture teardown must not signal this very process
+        fed.coordinator_pid = (
+            None  # the fixture teardown must not signal this very process
+        )
 
 
 def test_a_running_simulation_in_progress_is_left_alone(owner, monkeypatch):
     fed, fake, tmp = owner
     fed.status = "running"
     fed.coordinator_pid = os.getpid()
-    monkeypatch.setattr(cp, "coordinator_status", lambda f, timeout=2.0: {"members": {"a": {"status": "running"}, "b": {"status": "finished"}}})
+    monkeypatch.setattr(
+        cp,
+        "coordinator_status",
+        lambda f, timeout=2.0: {
+            "members": {"a": {"status": "running"}, "b": {"status": "finished"}}
+        },
+    )
     try:
-        assert health.check_federation(fed) == "ok" and fed.status == "running" and notifications() == []
+        assert (
+            health.check_federation(fed) == "ok"
+            and fed.status == "running"
+            and notifications() == []
+        )
     finally:
         fed.coordinator_pid = None

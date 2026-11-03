@@ -527,5 +527,7 @@ def test_yweb_defaults_for_likes_and_revisit_are_shown_and_written_in_new_experi
     text = ss.recsys_form_text(str(REPO), {})
     assert text["matching.common.revisit_after_days"] == "7"
     assert text["matching.common.pass_cooldown_days"] == "7"
-    stored = ss.recsys_form_text(str(REPO), {"matching": {"common": {"revisit_after_days": 3}}})
+    stored = ss.recsys_form_text(
+        str(REPO), {"matching": {"common": {"revisit_after_days": 3}}}
+    )
     assert stored["matching.common.revisit_after_days"] == "3"  # a stored value wins

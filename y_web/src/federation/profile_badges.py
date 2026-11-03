@@ -9,7 +9,8 @@ muted; before the first run every account is shown as active. A chip carries the
 from this one and, when the coordinator knows it, how many of the agent's contents were cross-posted there. The link exists
 only while the web interface of that experiment is active. Everything is read in one batch per page (one query on the
 coordinator, one small query per platform, one grouped statistics query), the number of chips is bounded, and nothing here
-writes. For an account outside a World Simulation the answer is an empty list (the pages render exactly as before)."""
+writes. For an account outside a World Simulation the answer is an empty list (the pages render exactly as before).
+"""
 
 from __future__ import annotations
 
@@ -18,7 +19,9 @@ import sqlite3
 from typing import Dict, List, Optional
 
 from y_web import db
-from y_web.src.federation.backlinks import ICONS  # icon of each platform type (``shared/world_simulation_icon.html``)
+from y_web.src.federation.backlinks import (
+    ICONS,  # icon of each platform type (``shared/world_simulation_icon.html``)
+)
 from y_web.src.federation.names import label_of, names_of
 
 # the profile page of an account on each platform (see the routes of ``y_web/routes/social``)
@@ -48,8 +51,12 @@ def _rows(folder) -> Optional[List[tuple]]:
         return None
     try:
         conn.execute("PRAGMA query_only = ON")
-        return [(str(g), m, str(a), s) for g, m, a, s in conn.execute(
-            "SELECT global_agent_id, member, local_account_id, state FROM federation_identity WHERE local_account_id IS NOT NULL")]
+        return [
+            (str(g), m, str(a), s)
+            for g, m, a, s in conn.execute(
+                "SELECT global_agent_id, member, local_account_id, state FROM federation_identity WHERE local_account_id IS NOT NULL"
+            )
+        ]
     except sqlite3.Error:
         return None
     finally:
@@ -103,9 +110,16 @@ def badges_for(exp_id, account_id) -> List[dict]:
     name, ``state`` the membership state, ``active`` whether the agent is active there, ``href`` the profile (``None`` when
     the interface of that experiment is not active), ``handle`` the username there when it differs from this one (else
     ``None``) and ``crossposts`` the contents cross-posted there (``None`` when unknown). Active platforms come first.
-    ``[]`` when the experiment is not a member of a World Simulation or the account has no identity."""
+    ``[]`` when the experiment is not a member of a World Simulation or the account has no identity.
+    """
     from y_web.src.federation.humans import members_state
-    from y_web.src.models.admin import Exps, Federation, FederationHuman, FederationIdentityLink, FederationMember
+    from y_web.src.models.admin import (
+        Exps,
+        Federation,
+        FederationHuman,
+        FederationIdentityLink,
+        FederationMember,
+    )
 
     if exp_id is None or account_id in (None, ""):
         return []
@@ -121,24 +135,50 @@ def badges_for(exp_id, account_id) -> List[dict]:
             break
     link = None
     if gid is None:  # people (accounts known to YWeb) and links of older releases
-        link = db.session.query(FederationIdentityLink).filter_by(
-            federation_pk=own.federation_pk, member=own.member, local_account_id=str(account_id)).first()
+        link = (
+            db.session.query(FederationIdentityLink)
+            .filter_by(
+                federation_pk=own.federation_pk,
+                member=own.member,
+                local_account_id=str(account_id),
+            )
+            .first()
+        )
         if link is None:
             return []
         gid = link.global_agent_id
-    members = {m.member: m for m in db.session.query(FederationMember).filter_by(federation_pk=own.federation_pk)}
+    members = {
+        m.member: m
+        for m in db.session.query(FederationMember).filter_by(
+            federation_pk=own.federation_pk
+        )
+    }
     names = names_of(own.federation_pk)
     pending = set()
-    if str(gid).startswith("human:"):  # an account that does not exist yet has no profile to open
-        human = db.session.query(FederationHuman).filter_by(federation_pk=own.federation_pk, human_id=gid,
-                                                            status="active").first()
+    if str(gid).startswith(
+        "human:"
+    ):  # an account that does not exist yet has no profile to open
+        human = (
+            db.session.query(FederationHuman)
+            .filter_by(federation_pk=own.federation_pk, human_id=gid, status="active")
+            .first()
+        )
         if human is None:
             return []
-        pending = {m for m, info in members_state(human).items() if not info.get("created", True)}
+        pending = {
+            m
+            for m, info in members_state(human).items()
+            if not info.get("created", True)
+        }
     out = []
-    accounts = {}  # {member: (account, state)}: what the coordinator reports first, then what YWeb knows (people)
-    for other in db.session.query(FederationIdentityLink).filter_by(
-            federation_pk=own.federation_pk, global_agent_id=gid).order_by(FederationIdentityLink.member):
+    accounts = (
+        {}
+    )  # {member: (account, state)}: what the coordinator reports first, then what YWeb knows (people)
+    for other in (
+        db.session.query(FederationIdentityLink)
+        .filter_by(federation_pk=own.federation_pk, global_agent_id=gid)
+        .order_by(FederationIdentityLink.member)
+    ):
         if other.local_account_id:
             accounts[other.member] = (other.local_account_id, "active")
     for g, m, a, state in rows or ():
@@ -158,13 +198,30 @@ def badges_for(exp_id, account_id) -> List[dict]:
         if not path:
             continue
         if stats is None:
-            stats = _crossposts(getattr(fed, "folder", None), gid) if rows is not None else {}
+            stats = (
+                _crossposts(getattr(fed, "folder", None), gid)
+                if rows is not None
+                else {}
+            )
         handle = _handle(exp, member.platform_type, account)
         # the label is the name of the experiment (several experiments can have the same platform type); the type is the icon
-        out.append({"member": name, "platform_type": member.platform_type, "exp_id": member.exp_id,
-                    "label": label_of(names, name), "icon": ICONS.get(member.platform_type, "link"),
-                    "href": path if exp is not None and exp.status == 1 else None, "state": state, "active": state == "active",
-                    "handle": handle if handle and (not here or handle.lower() != here.lower()) else None,
-                    "crossposts": stats.get(name)})
+        out.append(
+            {
+                "member": name,
+                "platform_type": member.platform_type,
+                "exp_id": member.exp_id,
+                "label": label_of(names, name),
+                "icon": ICONS.get(member.platform_type, "link"),
+                "href": path if exp is not None and exp.status == 1 else None,
+                "state": state,
+                "active": state == "active",
+                "handle": (
+                    handle
+                    if handle and (not here or handle.lower() != here.lower())
+                    else None
+                ),
+                "crossposts": stats.get(name),
+            }
+        )
     out.sort(key=lambda b: (not b["active"], b["label"].lower(), b["member"]))
     return out

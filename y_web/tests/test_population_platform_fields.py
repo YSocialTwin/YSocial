@@ -68,7 +68,13 @@ def test_a_standard_population_gets_dating_fields_and_keeps_its_own_demographics
             assert "dating.profile.city" in keys and "dating.id" not in keys
         # the document the runtime reads is valid, and the population is deployable anywhere
         assert dp.validate_population(dp.load_document(row.id)) == []
-        for platform in ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating"):
+        for platform in (
+            "microblogging",
+            "forum",
+            "photo_sharing",
+            "instant_messaging",
+            "dating",
+        ):
             assert population_matches_platform(row, platform)
 
 
@@ -113,7 +119,9 @@ def test_optional_sections_create_a_standard_population_with_the_fields_asked_fo
 
     monkeypatch.setattr(routes.mod, "generate_population", fake_generate)
     monkeypatch.setattr(routes.mod, "_photo_sharing_available", lambda: True)
-    monkeypatch.setattr("y_web.src.dating.population.runtime_available", lambda user=None: True)
+    monkeypatch.setattr(
+        "y_web.src.dating.population.runtime_available", lambda user=None: True
+    )
     monkeypatch.setattr(routes.mod, "_dating_generator_config", lambda: {})
     monkeypatch.setattr(routes.mod, "populations", lambda: "listed")
     one = json.dumps({"1": 100})
@@ -126,18 +134,26 @@ def test_optional_sections_create_a_standard_population_with_the_fields_asked_fo
         "include_photo_sharing": "1", "include_dating": "1", "seed": "4",
     }  # fmt: skip
     with app.app_context():
-        with app.test_request_context("/admin/create_population", method="POST", data=form):
+        with app.test_request_context(
+            "/admin/create_population", method="POST", data=form
+        ):
             routes.mod.create_population.__wrapped__()
-        assert db.session.query(Population).filter_by(name="Both").count() == 1, routes.flashes
+        assert (
+            db.session.query(Population).filter_by(name="Both").count() == 1
+        ), routes.flashes
         pop = db.session.query(Population).filter_by(name="Both").one()
         assert pop.username_type == "microblogging"  # not tied to a platform
         assert seen["photo"] is not None  # the Photo Sharing section was on
-        assert set(population_platform_fields(pop)) == {"dating"}  # the stub wrote no photo fields
+        assert set(population_platform_fields(pop)) == {
+            "dating"
+        }  # the stub wrote no photo fields
         assert routes.mod._flag is not None
 
 
 @needs_runtime
-def test_a_section_of_a_platform_that_is_not_installed_is_refused(app, routes, monkeypatch):  # noqa: F811
+def test_a_section_of_a_platform_that_is_not_installed_is_refused(
+    app, routes, monkeypatch
+):  # noqa: F811
     from y_web import db
     from y_web.src.models import Population
 
@@ -165,7 +181,9 @@ def test_agents_under_18_are_skipped_not_refused_on_dating(app):
         db.session.commit()
         dp.complete_population(row.id, seed=2)
         doc = dp.load_document(row.id)
-        assert dp.validate_population(doc)  # as stored, the minors make it invalid for the runtime
+        assert dp.validate_population(
+            doc
+        )  # as stored, the minors make it invalid for the runtime
         adults, skipped = dp.adults_only(doc)
         assert skipped == 2 and len(adults["agents"]) == 4
         assert dp.validate_population(adults) == []
@@ -173,7 +191,9 @@ def test_agents_under_18_are_skipped_not_refused_on_dating(app):
 
 
 @needs_runtime
-def test_an_uploaded_dating_document_is_recognised_without_choosing_a_platform(app, routes):  # noqa: F811
+def test_an_uploaded_dating_document_is_recognised_without_choosing_a_platform(
+    app, routes
+):  # noqa: F811
     import io
 
     from y_web import db
@@ -184,7 +204,10 @@ def test_an_uploaded_dating_document_is_recognised_without_choosing_a_platform(a
         with app.test_request_context(
             "/admin/upload_population",
             method="POST",
-            data={"population_file": (io.BytesIO(EXAMPLE.read_bytes()), "p.json"), "pop_name": "Up"},
+            data={
+                "population_file": (io.BytesIO(EXAMPLE.read_bytes()), "p.json"),
+                "pop_name": "Up",
+            },
             content_type="multipart/form-data",
         ):
             routes.mod.upload_population.__wrapped__()
@@ -198,10 +221,16 @@ def test_every_name_the_populations_page_exports_to_window_is_defined():
     from pathlib import Path
 
     js = (
-        Path(__file__).resolve().parents[1] / "static" / "assets" / "js" / "admin-populations.js"
+        Path(__file__).resolve().parents[1]
+        / "static"
+        / "assets"
+        / "js"
+        / "admin-populations.js"
     ).read_text(encoding="utf-8")
     block = re.search(r"Object\.assign\(window, \{(.*?)\}\);", js, re.S).group(1)
     names = [n.strip().split(":")[0] for n in block.split(",") if n.strip()]
     assert names
     for name in names:
-        assert re.search(rf"(function\s+{name}\b|(?:const|let|var)\s+{name}\b)", js), name
+        assert re.search(
+            rf"(function\s+{name}\b|(?:const|let|var)\s+{name}\b)", js
+        ), name

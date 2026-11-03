@@ -19,8 +19,18 @@ def more_experiments(tmp, tag):
     pop = Population.query.first()
     ids = []
     for platform in ("microblogging", "forum"):
-        exp = Exps(platform_type=platform, exp_name=f"{platform}-{tag}", db_name=f"experiments/{platform}{tag}/db.db", owner="admin",
-                   exp_descr="", status=0, running=0, port=5000, simulator_type="Standard", exp_status="stopped")
+        exp = Exps(
+            platform_type=platform,
+            exp_name=f"{platform}-{tag}",
+            db_name=f"experiments/{platform}{tag}/db.db",
+            owner="admin",
+            exp_descr="",
+            status=0,
+            running=0,
+            port=5000,
+            simulator_type="Standard",
+            exp_status="stopped",
+        )
         db.session.add(exp)
         db.session.flush()
         db.session.add(Population_Experiment(id_population=pop.id, id_exp=exp.idexp))
@@ -36,7 +46,9 @@ def more_experiments(tmp, tag):
 def two(world, monkeypatch):  # noqa: F811
     app, exps, tmp = world
     first = service.create_federation("first", list(exps.values()), owner="admin")
-    second = service.create_federation("second", more_experiments(tmp, "2"), owner="admin")
+    second = service.create_federation(
+        "second", more_experiments(tmp, "2"), owner="admin"
+    )
     log = []
 
     def fake_start(fed, **kw):
@@ -50,7 +62,12 @@ def two(world, monkeypatch):  # noqa: F811
 
 
 def statuses():
-    return [i.status for i in FederationScheduleQueue.query.order_by(FederationScheduleQueue.position).all()]
+    return [
+        i.status
+        for i in FederationScheduleQueue.query.order_by(
+            FederationScheduleQueue.position
+        ).all()
+    ]
 
 
 def test_positions_follow_the_order_of_insertion(two):
@@ -92,7 +109,9 @@ def test_the_queue_resumes_after_a_restart_of_the_monitor(two, world):  # noqa: 
     schedule_queue.enqueue(second)
     schedule_monitor.FederationScheduleMonitor(app).poll()
     assert statuses() == ["running", "queued"]
-    restarted = schedule_monitor.FederationScheduleMonitor(app)  # a new process: only the database remains
+    restarted = schedule_monitor.FederationScheduleMonitor(
+        app
+    )  # a new process: only the database remains
     restarted.poll()
     assert statuses() == ["running", "queued"] and log == [("start", "first")]
     first.status = "completed"
@@ -106,7 +125,10 @@ def test_insertion_is_refused_when_a_member_runs(two):
     exp.running = 1
     with pytest.raises(service.WorldSimulationError) as caught:
         schedule_queue.enqueue(first)
-    assert caught.value.codes == ["member_busy"] and FederationScheduleQueue.query.count() == 0
+    assert (
+        caught.value.codes == ["member_busy"]
+        and FederationScheduleQueue.query.count() == 0
+    )
 
 
 def test_insertion_is_refused_when_a_member_is_in_the_experiment_scheduler(two):
@@ -117,7 +139,11 @@ def test_insertion_is_refused_when_a_member_is_in_the_experiment_scheduler(two):
     group = ExperimentScheduleGroup(name="g", order_index=0, is_completed=0)
     db.session.add(group)
     db.session.flush()
-    db.session.add(ExperimentScheduleItem(group_id=group.id, experiment_id=exp.idexp, order_index=0))
+    db.session.add(
+        ExperimentScheduleItem(
+            group_id=group.id, experiment_id=exp.idexp, order_index=0
+        )
+    )
     db.session.commit()
     with pytest.raises(service.WorldSimulationError) as caught:
         schedule_queue.enqueue(first)
@@ -137,7 +163,9 @@ def test_start_fails_with_a_notification_when_a_member_became_busy(two):
     schedule_queue.advance()
     assert statuses() == ["failed"] and log == []
     rows = DownloadNotification.query.all()
-    assert rows and "World Simulation" in rows[0].title and exp.exp_name in rows[0].message
+    assert (
+        rows and "World Simulation" in rows[0].title and exp.exp_name in rows[0].message
+    )
 
 
 def test_a_start_that_raises_marks_the_entry_failed_and_goes_on(two, monkeypatch):
@@ -178,11 +206,33 @@ def test_schedule_page_enqueue_and_cancel(site):  # noqa: F811
     client = login(app, "admin")
     page = client.get("/admin/world_simulation/schedule").get_data(as_text=True)
     assert "page" in page and "The queue is empty." in page
-    assert client.post("/admin/world_simulation/schedule/enqueue", data={"simulation_id": fed.id}).status_code == 302
+    assert (
+        client.post(
+            "/admin/world_simulation/schedule/enqueue", data={"simulation_id": fed.id}
+        ).status_code
+        == 302
+    )
     item = FederationScheduleQueue.query.one()
-    assert f'data-queue-item="{item.id}"' in client.get("/admin/world_simulation/schedule").get_data(as_text=True)
-    assert client.post(f"/admin/world_simulation/schedule/{item.id}/cancel").status_code == 302
+    assert f'data-queue-item="{item.id}"' in client.get(
+        "/admin/world_simulation/schedule"
+    ).get_data(as_text=True)
+    assert (
+        client.post(f"/admin/world_simulation/schedule/{item.id}/cancel").status_code
+        == 302
+    )
     assert item.status == "cancelled"
-    assert client.post("/admin/world_simulation/schedule/enqueue", data={"simulation_id": 999}).status_code == 404
-    assert login(app, "teacher").post("/admin/world_simulation/schedule/enqueue", data={"simulation_id": fed.id}).status_code == 302
+    assert (
+        client.post(
+            "/admin/world_simulation/schedule/enqueue", data={"simulation_id": 999}
+        ).status_code
+        == 404
+    )
+    assert (
+        login(app, "teacher")
+        .post(
+            "/admin/world_simulation/schedule/enqueue", data={"simulation_id": fed.id}
+        )
+        .status_code
+        == 302
+    )
     assert FederationScheduleQueue.query.count() == 1

@@ -284,19 +284,27 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     from y_web.src.agents.profile_pictures import picture_of_username
 
-    app.jinja_env.globals["agent_picture"] = picture_of_username  # the IM avatars show the agent's picture
+    app.jinja_env.globals["agent_picture"] = (
+        picture_of_username  # the IM avatars show the agent's picture
+    )
 
     from y_web.src.federation.availability import sdk_available
 
-    app.jinja_env.globals["ws_sdk_available"] = sdk_available  # the World Simulation menu hides without the YFederation plugin
+    app.jinja_env.globals["ws_sdk_available"] = (
+        sdk_available  # the World Simulation menu hides without the YFederation plugin
+    )
 
     from y_web.src.federation.service import world_simulation_of
 
-    app.jinja_env.globals["world_simulation_of"] = world_simulation_of  # badge and disabled commands of the members
+    app.jinja_env.globals["world_simulation_of"] = (
+        world_simulation_of  # badge and disabled commands of the members
+    )
 
     from y_web.src.federation.quotes import federation_quote
 
-    app.jinja_env.globals["federation_quote"] = federation_quote  # attribution of shared content (P4)
+    app.jinja_env.globals["federation_quote"] = (
+        federation_quote  # attribution of shared content (P4)
+    )
 
     def _ws_destinations(exp_id):
         """Where the logged-in person can also post (F8): empty unless enrolled in the World Simulation of the experiment."""
@@ -309,8 +317,14 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             if not sdk_available():
                 return []
 
-            return destinations_for(exp_id, getattr(current_user, "id", None)) if current_user.is_authenticated else []
-        except Exception:  # noqa: BLE001 - a composer never fails because of the federation
+            return (
+                destinations_for(exp_id, getattr(current_user, "id", None))
+                if current_user.is_authenticated
+                else []
+            )
+        except (
+            Exception
+        ):  # noqa: BLE001 - a composer never fails because of the federation
             return []
 
     app.jinja_env.globals["ws_destinations"] = _ws_destinations
@@ -326,7 +340,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             if not sdk_available():
                 return []
 
-            return pending_for(exp_id, getattr(current_user, "id", None)) if current_user.is_authenticated else []
+            return (
+                pending_for(exp_id, getattr(current_user, "id", None))
+                if current_user.is_authenticated
+                else []
+            )
         except Exception:  # noqa: BLE001 - a page never fails because of the federation
             return []
 
@@ -341,7 +359,9 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             if not sdk_available():
                 return []
             return badges_for(exp_id, account_id)
-        except Exception:  # noqa: BLE001 - a profile page never fails because of the federation
+        except (
+            Exception
+        ):  # noqa: BLE001 - a profile page never fails because of the federation
             return []
 
     app.jinja_env.globals["ws_profile_badges"] = _ws_profile_badges

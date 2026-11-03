@@ -381,8 +381,12 @@ def experiments_data():
                 "simulator_type": getattr(exp, "simulator_type", "Standard"),
                 "is_remote": getattr(exp, "is_remote", 0),
                 "can_manage": user_can_manage_experiment(user, exp),
-                "world_simulation": (world_simulations.get(exp.idexp) or {}).get("name"),
-                "world_simulation_locked": bool((world_simulations.get(exp.idexp) or {}).get("locked")),
+                "world_simulation": (world_simulations.get(exp.idexp) or {}).get(
+                    "name"
+                ),
+                "world_simulation_locked": bool(
+                    (world_simulations.get(exp.idexp) or {}).get("locked")
+                ),
             }
             for exp in res
         ],

@@ -14,7 +14,8 @@ answers, for a content of an experiment:
 A page asks for one content at a time but the answer is computed once per request and experiment, for all the cross-posted
 contents of that experiment (one read of ``federation_ref`` and one lookup per platform involved, never one per post);
 the number of rows read is bounded. Outside a World Simulation (or without the optional YFederation plugin) the answer is
-``None`` / ``[]`` without touching any experiment database, and nothing here may break a page: every error is swallowed."""
+``None`` / ``[]`` without touching any experiment database, and nothing here may break a page: every error is swallowed.
+"""
 
 from __future__ import annotations
 
@@ -44,7 +45,12 @@ ICONS = {
     "dating": "heart",
 }
 # kind of content of each platform in ``federation_ref`` / in the ``source_ref`` (dating has no post card)
-LOCAL_KIND = {"microblogging": "post", "forum": "post", "photo_sharing": "photo", "instant_messaging": "message"}
+LOCAL_KIND = {
+    "microblogging": "post",
+    "forum": "post",
+    "photo_sharing": "photo",
+    "instant_messaging": "message",
+}
 # where to read the author of a content: (id, author name, author id) of the contents asked
 AUTHOR_SQL = {
     "microblogging": "SELECT p.id, u.username, p.user_id FROM post p LEFT JOIN user_mgmt u ON u.id = p.user_id WHERE p.id IN ({q})",
@@ -105,8 +111,10 @@ def _contents(path, platform_type, ids) -> Dict[str, tuple]:
     if not sql:
         return out
     for start in range(0, len(ids), SQL_CHUNK):
-        chunk = ids[start:start + SQL_CHUNK]
-        for cid, name, author_id in _query(path, sql.format(q=",".join("?" * len(chunk))), chunk):
+        chunk = ids[start : start + SQL_CHUNK]
+        for cid, name, author_id in _query(
+            path, sql.format(q=",".join("?" * len(chunk))), chunk
+        ):
             out[str(cid)] = (name or "", "" if author_id is None else str(author_id))
     return out
 
@@ -119,12 +127,20 @@ def _world(exp_id) -> Optional[dict]:
     if own is None:
         return None
     members = {}
-    for m in db.session.query(FederationMember).filter_by(federation_pk=own.federation_pk):
+    for m in db.session.query(FederationMember).filter_by(
+        federation_pk=own.federation_pk
+    ):
         exp = db.session.get(Exps, m.exp_id)
         if exp is None:
             continue
-        members[m.member] = {"member": m.member, "platform_type": m.platform_type, "exp_id": m.exp_id,
-                             "exp_name": exp.exp_name, "active": exp.status == 1, "exp": exp}
+        members[m.member] = {
+            "member": m.member,
+            "platform_type": m.platform_type,
+            "exp_id": m.exp_id,
+            "exp_name": exp.exp_name,
+            "active": exp.status == 1,
+            "exp": exp,
+        }
     if own.member not in members:
         return None
     return {"own": own.member, "members": members}
@@ -134,14 +150,29 @@ def _info(member, kind, found, local_id) -> dict:
     """What the partial shows for the content ``local_id`` of ``member``; ``found`` is ``(author, author id)`` or None."""
     ptype = member["platform_type"]
     author, author_id = found if found else ("", "")
-    href = content_href(ptype, member["exp_id"], local_id, author_id) if found and member["active"] else None
+    href = (
+        content_href(ptype, member["exp_id"], local_id, author_id)
+        if found and member["active"]
+        else None
+    )
     # ``label`` is the name of the experiment (never the platform type: a World Simulation can hold several experiments of the
     # same type); ``type_label`` and ``icon`` describe the type
-    return {"member": member["member"], "platform_type": ptype,
-            "label": member["exp_name"] or member["member"].replace("_", " ").capitalize(),
-            "type_label": PLATFORM_LABELS.get(ptype, member["member"].replace("_", " ").capitalize()),
-            "icon": ICONS.get(ptype, "link"), "exp_id": member["exp_id"], "exp_name": member["exp_name"],
-            "kind": kind, "id": str(local_id), "author": author or None, "available": bool(found), "href": href}
+    return {
+        "member": member["member"],
+        "platform_type": ptype,
+        "label": member["exp_name"] or member["member"].replace("_", " ").capitalize(),
+        "type_label": PLATFORM_LABELS.get(
+            ptype, member["member"].replace("_", " ").capitalize()
+        ),
+        "icon": ICONS.get(ptype, "link"),
+        "exp_id": member["exp_id"],
+        "exp_name": member["exp_name"],
+        "kind": kind,
+        "id": str(local_id),
+        "author": author or None,
+        "available": bool(found),
+        "href": href,
+    }
 
 
 def _origins(world) -> Dict[str, dict]:
@@ -150,21 +181,33 @@ def _origins(world) -> Dict[str, dict]:
     kind = LOCAL_KIND.get(me["platform_type"])
     if kind is None:
         return {}
-    rows = _query(_db_path(me["exp"]),
-                  "SELECT local_id, source_ref FROM federation_ref WHERE local_kind = ? ORDER BY rowid DESC LIMIT ?",
-                  (kind, MAX_ROWS))
-    wanted: Dict[str, List[tuple]] = {}  # origin member -> [(local id, origin kind, origin id)]
+    rows = _query(
+        _db_path(me["exp"]),
+        "SELECT local_id, source_ref FROM federation_ref WHERE local_kind = ? ORDER BY rowid DESC LIMIT ?",
+        (kind, MAX_ROWS),
+    )
+    wanted: Dict[str, List[tuple]] = (
+        {}
+    )  # origin member -> [(local id, origin kind, origin id)]
     for local_id, ref in rows:
         parsed = parse_ref(ref)
         if parsed and parsed[0] in world["members"] and parsed[0] != world["own"]:
-            wanted.setdefault(parsed[0], []).append((str(local_id), parsed[1], parsed[2]))
+            wanted.setdefault(parsed[0], []).append(
+                (str(local_id), parsed[1], parsed[2])
+            )
     out: Dict[str, dict] = {}
     for name, items in wanted.items():
         member = world["members"][name]
         known = LOCAL_KIND.get(member["platform_type"])
-        found = _contents(_db_path(member["exp"]), member["platform_type"], [i for _l, k, i in items if k == known])
+        found = _contents(
+            _db_path(member["exp"]),
+            member["platform_type"],
+            [i for _l, k, i in items if k == known],
+        )
         for local_id, okind, oid in items:
-            out[local_id] = _info(member, okind, found.get(oid) if okind == known else None, oid)
+            out[local_id] = _info(
+                member, okind, found.get(oid) if okind == known else None, oid
+            )
     return out
 
 
@@ -181,16 +224,28 @@ def _copies(world) -> Dict[str, List[dict]]:
             continue
         member = world["members"][name]
         path = _db_path(member["exp"])
-        rows = _query(path, "SELECT local_kind, local_id, source_ref FROM federation_ref WHERE source_ref LIKE ? "
-                            "ORDER BY rowid LIMIT ?", (pattern, MAX_ROWS))
+        rows = _query(
+            path,
+            "SELECT local_kind, local_id, source_ref FROM federation_ref WHERE source_ref LIKE ? "
+            "ORDER BY rowid LIMIT ?",
+            (pattern, MAX_ROWS),
+        )
         mine = [(str(lid), parse_ref(ref)) for _k, lid, ref in rows]
-        mine = [(lid, p) for lid, p in mine if p and p[0] == world["own"] and p[1] == kind]
+        mine = [
+            (lid, p) for lid, p in mine if p and p[0] == world["own"] and p[1] == kind
+        ]
         known = LOCAL_KIND.get(member["platform_type"])
-        found = _contents(path, member["platform_type"], [lid for lid, _p in mine]) if known else {}
+        found = (
+            _contents(path, member["platform_type"], [lid for lid, _p in mine])
+            if known
+            else {}
+        )
         for lid, parsed in mine:
             copies = out.setdefault(parsed[2], [])
             if len(copies) < MAX_COPIES:
-                copies.append(_info(member, known or "", found.get(lid) if known else None, lid))
+                copies.append(
+                    _info(member, known or "", found.get(lid) if known else None, lid)
+                )
     return out
 
 
@@ -208,7 +263,9 @@ def _cached(exp_id) -> dict:
         return cache[exp_id]
     try:
         world = _world(exp_id)
-        value = {"origins": _origins(world), "copies": _copies(world)} if world else empty
+        value = (
+            {"origins": _origins(world), "copies": _copies(world)} if world else empty
+        )
     except Exception:  # noqa: BLE001 - a page never fails because of the federation
         value = empty
     if cache is not None:

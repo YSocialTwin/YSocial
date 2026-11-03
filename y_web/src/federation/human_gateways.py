@@ -43,21 +43,34 @@ class Spec:
     repo: str
     token_header: str
     ensure_path: str  # HTTP route
-    script: str = "run_offline_gateway.py"  # the runtime's entry for a request without a gateway process
+    script: str = (
+        "run_offline_gateway.py"  # the runtime's entry for a request without a gateway process
+    )
 
 
 SPECS = {
-    "microblogging": Spec("microblogging", "YServer", "X-YServer-Gateway-Token", "/gateway/v1/humans/ensure"),
+    "microblogging": Spec(
+        "microblogging",
+        "YServer",
+        "X-YServer-Gateway-Token",
+        "/gateway/v1/humans/ensure",
+    ),
     "forum": Spec("forum", "YServerReddit", "X-YGateway-Token", "/register"),
-    "photo_sharing": Spec("photo_sharing", "YPhotoSharing", "X-YPS-Gateway-Token", "/v1/humans/ensure"),
+    "photo_sharing": Spec(
+        "photo_sharing", "YPhotoSharing", "X-YPS-Gateway-Token", "/v1/humans/ensure"
+    ),
 }
 # Microblogging on the HPC backend (YSimulator): the server is a Ray actor with no HTTP surface, so every request goes
 # through the runtime's script (``run_human_gateway.py``), which works with the server running or stopped.
-HPC_MICROBLOGGING = Spec("microblogging", "YSimulator", "", "", script="run_human_gateway.py")
+HPC_MICROBLOGGING = Spec(
+    "microblogging", "YSimulator", "", "", script="run_human_gateway.py"
+)
 
 
 def is_hpc(exp) -> bool:
-    return str(getattr(exp, "simulator_type", None) or "Standard").strip().upper() == "HPC"
+    return (
+        str(getattr(exp, "simulator_type", None) or "Standard").strip().upper() == "HPC"
+    )
 
 
 def read_state(folder) -> Optional[dict]:
@@ -104,8 +117,16 @@ class RuntimeGateway:
     (the forum offline script wants both), ``offline`` an injectable runner ``(spec, request) -> (status, payload)``
     for tests."""
 
-    def __init__(self, platform_type: str, folder, server_config=None, database=None, session=None,
-                 offline: Optional[Callable] = None, hpc: bool = False):
+    def __init__(
+        self,
+        platform_type: str,
+        folder,
+        server_config=None,
+        database=None,
+        session=None,
+        offline: Optional[Callable] = None,
+        hpc: bool = False,
+    ):
         if platform_type not in SPECS or (hpc and platform_type != "microblogging"):
             raise GatewayUnavailable(f"no human gateway for {platform_type}")
         self.hpc = bool(hpc)
@@ -132,18 +153,28 @@ class RuntimeGateway:
             raise GatewayUnavailable("gateway address is not a loopback address")
         return f"http://{host}:{int(state['port'])}", token
 
-    def _body(self, key: str, username: str, human_id: str, language: Optional[str]) -> dict:
+    def _body(
+        self, key: str, username: str, human_id: str, language: Optional[str]
+    ) -> dict:
         t = self.spec.platform_type
         if t == "forum":
-            return {"key": key, "account": {"username": username[:15],
-                                            "email": f"{key.replace(':', '_')}@human.invalid"[:50],
-                                            "language": language or "en", "human_id": human_id}}
+            return {
+                "key": key,
+                "account": {
+                    "username": username[:15],
+                    "email": f"{key.replace(':', '_')}@human.invalid"[:50],
+                    "language": language or "en",
+                    "human_id": human_id,
+                },
+            }
         body = {"human_key": key, "username": username, "language": language}
         if t == "microblogging":
             body["human_id"] = human_id
         return body
 
-    def ensure(self, key: str, username: str, human_id: str, language: Optional[str] = None):
+    def ensure(
+        self, key: str, username: str, human_id: str, language: Optional[str] = None
+    ):
         body = self._body(key, username, human_id, language)
         if self.hpc:
             return self._run_offline([str(self.folder)], {"op": "ensure", "body": body})
@@ -159,16 +190,27 @@ class RuntimeGateway:
         """Send ``actions`` of the person on this runtime through its gateway (offline when no server runs).
 
         The shape differs per runtime (see the ``docs/human-gateway.md`` of each): microblogging and photo sharing take an
-        ``account_id``, the forum the username and e-mail the account was created with. Returns ``(status, payload)``."""
+        ``account_id``, the forum the username and e-mail the account was created with. Returns ``(status, payload)``.
+        """
         t = self.spec.platform_type
         if self.hpc:
-            return self._run_offline([str(self.folder)], {"op": "actions", "body": {"account_id": str(account_id), "actions": actions}})
+            return self._run_offline(
+                [str(self.folder)],
+                {
+                    "op": "actions",
+                    "body": {"account_id": str(account_id), "actions": actions},
+                },
+            )
         if t == "forum":
             email = f"{key.replace(':', '_')}@human.invalid"[:50]
             body = {"username": str(username)[:15], "email": email, "actions": actions}
             path = "/act"
         else:
-            acct = int(account_id) if t == "microblogging" and str(account_id).isdigit() else account_id
+            acct = (
+                int(account_id)
+                if t == "microblogging" and str(account_id).isdigit()
+                else account_id
+            )
             body = {"account_id": acct, "actions": actions}
             path = "/gateway/v1/actions" if t == "microblogging" else "/v1/actions"
         try:
@@ -179,9 +221,16 @@ class RuntimeGateway:
         if t == "microblogging":
             argv, request = [str(self.server_config)], {"op": "actions", "body": body}
         elif t == "forum":
-            argv, request = [str(self.server_config), str(self.database)], {"op": "act", "body": body}
+            argv, request = [str(self.server_config), str(self.database)], {
+                "op": "act",
+                "body": body,
+            }
         else:
-            argv, request = [str(self.folder)], {"method": "POST", "path": path, "body": body}
+            argv, request = [str(self.folder)], {
+                "method": "POST",
+                "path": path,
+                "body": body,
+            }
         return self._run_offline(argv, request)
 
     def _http(self, body: dict):
@@ -190,8 +239,12 @@ class RuntimeGateway:
     def _http_path(self, path: str, body: dict):
         base, token = self._base()
         try:
-            resp = self.session.post(base + path, json=body,
-                                     headers={self.spec.token_header: token}, timeout=TIMEOUT)
+            resp = self.session.post(
+                base + path,
+                json=body,
+                headers={self.spec.token_header: token},
+                timeout=TIMEOUT,
+            )
         except requests.RequestException as exc:
             raise GatewayUnavailable(str(exc)) from exc
         try:
@@ -205,8 +258,15 @@ class RuntimeGateway:
         if t == "microblogging":
             return [str(self.server_config)], {"op": "ensure", "body": body}
         if t == "forum":
-            return [str(self.server_config), str(self.database)], {"op": "register", "body": body}
-        return [str(self.folder)], {"method": "POST", "path": self.spec.ensure_path, "body": body}
+            return [str(self.server_config), str(self.database)], {
+                "op": "register",
+                "body": body,
+            }
+        return [str(self.folder)], {
+            "method": "POST",
+            "path": self.spec.ensure_path,
+            "body": body,
+        }
 
     def _offline(self, body: dict):
         argv, request = self._request_of(body)
@@ -221,14 +281,28 @@ class RuntimeGateway:
         repo = get_external_repo_dir(self.spec.repo)
         script = os.path.join(repo, self.spec.script)
         if not os.path.exists(script):
-            raise GatewayUnavailable(f"{self.spec.repo} has no human gateway script: update the runtime")
+            raise GatewayUnavailable(
+                f"{self.spec.repo} has no human gateway script: update the runtime"
+            )
         try:
-            done = subprocess.run([detect_env_handler() or sys.executable, script] + argv, cwd=repo,
-                                  input=json.dumps(request), capture_output=True, text=True, timeout=60)
+            done = subprocess.run(
+                [detect_env_handler() or sys.executable, script] + argv,
+                cwd=repo,
+                input=json.dumps(request),
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
             answer = json.loads((done.stdout or "").strip().splitlines()[-1])
             status = int(answer.pop("status"))
             return status, answer.get("payload", answer)
-        except (OSError, ValueError, IndexError, KeyError, subprocess.SubprocessError) as exc:
+        except (
+            OSError,
+            ValueError,
+            IndexError,
+            KeyError,
+            subprocess.SubprocessError,
+        ) as exc:
             raise GatewayUnavailable(f"offline gateway failed: {exc}") from exc
 
 
@@ -247,7 +321,9 @@ def set_microblogging_token(server_config) -> str:
     """The token of the microblogging gateway lives in the server configuration (``human_gateway.token``)."""
     path = Path(server_config)
     cfg = _load_json(path)
-    section = cfg.get("human_gateway") if isinstance(cfg.get("human_gateway"), dict) else {}
+    section = (
+        cfg.get("human_gateway") if isinstance(cfg.get("human_gateway"), dict) else {}
+    )
     if not section.get("token"):
         section = dict(section, token=secrets.token_urlsafe(32))
         cfg["human_gateway"] = section
@@ -274,8 +350,13 @@ def _clear(folder: Path) -> None:
             pass
 
 
-def start_gateway(platform_type: str, folder, repo_dir: str, python_cmd: Optional[str] = None,
-                  server_url: Optional[str] = None) -> Optional[int]:
+def start_gateway(
+    platform_type: str,
+    folder,
+    repo_dir: str,
+    python_cmd: Optional[str] = None,
+    server_url: Optional[str] = None,
+) -> Optional[int]:
     """Start the gateway process of the forum or of photo sharing; its pid, or ``None`` with a warning in the log."""
     folder = Path(folder)
     if is_running(folder):
@@ -284,25 +365,50 @@ def start_gateway(platform_type: str, folder, repo_dir: str, python_cmd: Optiona
     token = write_token(folder)
     py = python_cmd or sys.executable
     try:
-        kwargs = {"start_new_session": True} if not sys.platform.startswith("win") else {}
+        kwargs = (
+            {"start_new_session": True} if not sys.platform.startswith("win") else {}
+        )
         if platform_type == "forum":
             port = _free_port()
-            proc = subprocess.Popen([py, "-m", "y_server.gateway", "--server", server_url or "",
-                                     "--token-file", str(folder / TOKEN_FILE), "--port", str(port)],
-                                    cwd=repo_dir, stdin=subprocess.DEVNULL, **kwargs)
-            (folder / STATE_FILE).write_text(json.dumps({"host": "127.0.0.1", "port": port, "pid": proc.pid}),
-                                             encoding="utf-8")
+            proc = subprocess.Popen(
+                [
+                    py,
+                    "-m",
+                    "y_server.gateway",
+                    "--server",
+                    server_url or "",
+                    "--token-file",
+                    str(folder / TOKEN_FILE),
+                    "--port",
+                    str(port),
+                ],
+                cwd=repo_dir,
+                stdin=subprocess.DEVNULL,
+                **kwargs,
+            )
+            (folder / STATE_FILE).write_text(
+                json.dumps({"host": "127.0.0.1", "port": port, "pid": proc.pid}),
+                encoding="utf-8",
+            )
         elif platform_type == "photo_sharing":
             script = os.path.join(repo_dir, "run_gateway.py")
             if not os.path.exists(script):
-                raise FileNotFoundError(f"{script} not found: update the photo sharing runtime")
-            proc = subprocess.Popen([py, script, str(folder)], cwd=repo_dir,
-                                    env=dict(os.environ, YPHOTOSHARING_GATEWAY_TOKEN=token),
-                                    stdin=subprocess.DEVNULL, **kwargs)
+                raise FileNotFoundError(
+                    f"{script} not found: update the photo sharing runtime"
+                )
+            proc = subprocess.Popen(
+                [py, script, str(folder)],
+                cwd=repo_dir,
+                env=dict(os.environ, YPHOTOSHARING_GATEWAY_TOKEN=token),
+                stdin=subprocess.DEVNULL,
+                **kwargs,
+            )
         else:
             return None
     except Exception as exc:  # noqa: BLE001 - a gateway problem never fails a run
-        logger.warning("Human gateway of %s could not be started: %s", platform_type, exc)
+        logger.warning(
+            "Human gateway of %s could not be started: %s", platform_type, exc
+        )
         _clear(folder)
         return None
     deadline = time.monotonic() + START_TIMEOUT
@@ -312,7 +418,10 @@ def start_gateway(platform_type: str, folder, repo_dir: str, python_cmd: Optiona
         if proc.poll() is not None:
             break
         time.sleep(0.5)
-    logger.warning("Human gateway of %s did not become ready; the simulation continues without it", platform_type)
+    logger.warning(
+        "Human gateway of %s did not become ready; the simulation continues without it",
+        platform_type,
+    )
     stop_gateway(folder, pid=proc.pid)
     return None
 

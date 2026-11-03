@@ -37,7 +37,8 @@ def read_quotes(path, names=None) -> dict:
     """``{local id (str): {author_name, member, platform, excerpt, source_ref}}`` of one server database, read only.
 
     ``platform`` is the name of the experiment the content was seen on (``names``: ``{member: experiment name}``), the platform
-    type is never shown. Empty when the file or the table does not exist or cannot be read."""
+    type is never shown. Empty when the file or the table does not exist or cannot be read.
+    """
     out: dict = {}
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=2)
@@ -66,9 +67,9 @@ def read_quotes(path, names=None) -> dict:
 
 
 def _database_path(exp_id):
+    from y_web import db
     from y_web.src.federation.service import experiment_dir
     from y_web.src.models.admin import Exps
-    from y_web import db
 
     exp = db.session.get(Exps, exp_id)
     return str(experiment_dir(exp) / "database_server.db") if exp is not None else None
@@ -77,7 +78,8 @@ def _database_path(exp_id):
 def quotes_for(exp_id, ids=None) -> dict:
     """The attributions of an experiment, for the local ids asked (all of them when ``ids`` is None).
 
-    ``{}`` when the experiment is not a member of a World Simulation, without touching its database."""
+    ``{}`` when the experiment is not a member of a World Simulation, without touching its database.
+    """
     try:
         from y_web.src.federation.service import world_simulation_of
 

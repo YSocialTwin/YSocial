@@ -99,11 +99,17 @@ def pytest_collection_modifyitems(config, items):
                 text = ""
             _im_module_cache[path] = any(
                 token in text
-                for token in ("build_random_db", "im_modules(", "import yinstantmessaging")
+                for token in (
+                    "build_random_db",
+                    "im_modules(",
+                    "import yinstantmessaging",
+                )
             )
         return _im_module_cache[path]
 
-    im_repo_missing = im_runtime_missing or not (external_dir / "YInstantMessaging").exists()
+    im_repo_missing = (
+        im_runtime_missing or not (external_dir / "YInstantMessaging").exists()
+    )
     dating_repo_missing = not (external_dir / "YDating").exists()
     skip_dating_repo = pytest.mark.skip(
         reason="the YDating runtime (external repository) is not installed"
@@ -116,12 +122,13 @@ def pytest_collection_modifyitems(config, items):
 
     for item in items:
         base = Path(str(getattr(item, "fspath", "") or "")).name
-        if (im_repo_missing and (base.startswith("test_im_") or _needs_im_runtime(item))) or (
-            im_runtime_missing and _needs_im_runtime(item)
-        ):
+        if (
+            im_repo_missing and (base.startswith("test_im_") or _needs_im_runtime(item))
+        ) or (im_runtime_missing and _needs_im_runtime(item)):
             item.add_marker(skip_im_runtime)
         if dating_repo_missing and (
-            base.startswith("test_dating_") or any(d in item.nodeid for d in dating_dependent)
+            base.startswith("test_dating_")
+            or any(d in item.nodeid for d in dating_dependent)
         ):
             item.add_marker(skip_dating_repo)
         for plugin, prefixes in plugin_tests:
@@ -354,12 +361,17 @@ def _clear_external_runtime_remote_cache():
 def _world_simulation_start_leaves_experiment_databases_alone(request, monkeypatch):
     """Starting a World Simulation activates the web interface of its members (registers their database, creates the
     participant). The start tests only look at the processes: without this the activation would write into the real
-    ``y_web/experiments`` folder. The tests of the activation itself request the ``toggle`` fixture, which stubs those steps."""
+    ``y_web/experiments`` folder. The tests of the activation itself request the ``toggle`` fixture, which stubs those steps.
+    """
     node = request.node.nodeid
-    if "toggle" in request.fixturenames or not any(k in node for k in ("federation", "world_simulation")):
+    if "toggle" in request.fixturenames or not any(
+        k in node for k in ("federation", "world_simulation")
+    ):
         yield
         return
     from y_web.src.simulation import execution_backend as eb
 
-    monkeypatch.setattr(eb, "_activate_member_frontends", lambda fed, admin_user=None: None)
+    monkeypatch.setattr(
+        eb, "_activate_member_frontends", lambda fed, admin_user=None: None
+    )
     yield

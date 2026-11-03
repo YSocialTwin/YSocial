@@ -382,7 +382,9 @@ def _photo_media_url(exp: Exps, raw_url: Optional[str]) -> str:
         return ""
     if value.startswith("http://") or value.startswith("https://"):
         return value
-    if value.startswith("/media/agents/"):  # generated profile picture of an agent (served by the admin app)
+    if value.startswith(
+        "/media/agents/"
+    ):  # generated profile picture of an agent (served by the admin app)
         return value
     if value.startswith("/static/") or value.startswith("/assets/"):
         return value
@@ -432,7 +434,9 @@ def _photo_profile_pic_url(
     raw_profile_pic: Optional[str] = "",
     is_page: int = 0,
 ) -> str:
-    if not int(is_page or 0):  # the picture generated for the agent comes first; without one, the usual logic
+    if not int(
+        is_page or 0
+    ):  # the picture generated for the agent comes first; without one, the usual logic
         from y_web.src.agents.profile_pictures import picture_of_username
 
         generated = picture_of_username(username)
@@ -2714,10 +2718,20 @@ def api_photo_share_post(exp_id, photo_id):
     _requested = _ho.requested_members(request.values.getlist("crosspost"))
     if _requested and photo_key:
         _caption = str(request.values.get("caption") or "").strip()
-        _sent = _ho.try_deliver(exp_id, current_user, _requested, _caption,
-                                lambda t: _ho.photo_share(photo_key, _caption, t), only="photo_sharing")
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _requested,
+            _caption,
+            lambda t: _ho.photo_share(photo_key, _caption, t),
+            only="photo_sharing",
+        )
         if _sent is not None:
-            return ({"ok": True, "crossposted": True}, 200) if _sent else ({"ok": False, "error": "gateway_refused"}, 502)
+            return (
+                ({"ok": True, "crossposted": True}, 200)
+                if _sent
+                else ({"ok": False, "error": "gateway_refused"}, 502)
+            )
 
     round_id = _photo_latest_round_id(exp)
     new_photo_id = str(uuid.uuid4())
@@ -3133,14 +3147,28 @@ def api_photo_share(exp_id):
 
         _raw = upload_file.read()
         upload_file.seek(0)
-        _ext = _os.path.splitext(str(upload_file.filename))[1].lstrip(".").lower() or "jpg"
+        _ext = (
+            _os.path.splitext(str(upload_file.filename))[1].lstrip(".").lower() or "jpg"
+        )
         _sent = _ho.try_deliver(
-            exp_id, current_user, _requested, caption or alt_text,
-            lambda t: _ho.photo_post(caption or alt_text, t, image_base64=_b64.b64encode(_raw).decode("ascii"), extension=_ext),
+            exp_id,
+            current_user,
+            _requested,
+            caption or alt_text,
+            lambda t: _ho.photo_post(
+                caption or alt_text,
+                t,
+                image_base64=_b64.b64encode(_raw).decode("ascii"),
+                extension=_ext,
+            ),
             only="photo_sharing",
         )
         if _sent is not None:
-            return ({"ok": True, "crossposted": True}, 200) if _sent else ({"ok": False, "error": "gateway_refused"}, 502)
+            return (
+                ({"ok": True, "crossposted": True}, 200)
+                if _sent
+                else ({"ok": False, "error": "gateway_refused"}, 502)
+            )
 
     viewer_user = _photo_active_user(exp)
     user_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()

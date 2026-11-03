@@ -36,7 +36,13 @@ def external_repo_dir(name: str) -> str:
 
 
 def coordinator_argv(folder, python: Optional[str] = None) -> list:
-    return [python or sys.executable, "-m", "ysocial_federation.coordinator", "--folder", str(folder)]
+    return [
+        python or sys.executable,
+        "-m",
+        "ysocial_federation.coordinator",
+        "--folder",
+        str(folder),
+    ]
 
 
 def _pid_alive(pid) -> bool:
@@ -73,7 +79,14 @@ def start_coordinator(fed, timeout: float = START_TIMEOUT) -> int:
     env["PYTHONPATH"] = os.pathsep.join(filter(None, [sdk, env.get("PYTHONPATH", "")]))
     env["NO_PROXY"] = "127.0.0.1,localhost"
     log = open(folder / "coordinator.log", "ab")
-    proc = subprocess.Popen(coordinator_argv(folder), cwd=str(folder), env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+    proc = subprocess.Popen(
+        coordinator_argv(folder),
+        cwd=str(folder),
+        env=env,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+        start_new_session=True,
+    )
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         info = coordinator_info(fed)
@@ -82,7 +95,9 @@ def start_coordinator(fed, timeout: float = START_TIMEOUT) -> int:
             fed.port = int(info["port"])
             return proc.pid
         if proc.poll() is not None:
-            raise CoordinatorError(f"the coordinator exited with code {proc.returncode}; see {folder / 'coordinator.log'}")
+            raise CoordinatorError(
+                f"the coordinator exited with code {proc.returncode}; see {folder / 'coordinator.log'}"
+            )
         time.sleep(0.1)
     stop_pid(proc.pid)
     raise CoordinatorError("the coordinator did not start in time")
@@ -121,7 +136,9 @@ def _get(fed, path: str, timeout: float):
     info = coordinator_info(fed)
     if not info:
         return None
-    request = urllib.request.Request(f"http://{info['host']}:{info['port']}{path}", headers={TOKEN_HEADER: fed.token})
+    request = urllib.request.Request(
+        f"http://{info['host']}:{info['port']}{path}", headers={TOKEN_HEADER: fed.token}
+    )
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     try:
         with opener.open(request, timeout=timeout) as resp:
@@ -143,7 +160,9 @@ def waiting_members(status: Optional[dict]) -> dict:
     if not status:
         return {}
     members = status.get("members") or {}
-    live = {m: v for m, v in members.items() if v.get("status") in ("registered", "running")}
+    live = {
+        m: v for m, v in members.items() if v.get("status") in ("registered", "running")
+    }
     if not live:
         return {}
     slowest = min(v.get("last_ready_tick", -1) for v in live.values())

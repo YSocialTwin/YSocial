@@ -18,7 +18,12 @@ _THREAD_STOP_TIMEOUT_SECONDS = 10
 
 
 class FederationScheduleMonitor:
-    def __init__(self, app, poll_interval: float = POLL_INTERVAL_SECONDS, first_delay: float = 5.0):
+    def __init__(
+        self,
+        app,
+        poll_interval: float = POLL_INTERVAL_SECONDS,
+        first_delay: float = 5.0,
+    ):
         self.app = app
         self.poll_interval = poll_interval
         self.first_delay = first_delay
@@ -30,7 +35,9 @@ class FederationScheduleMonitor:
         if self._started:
             return
         self._stop_event.clear()
-        self._thread = threading.Thread(target=self._run, daemon=True, name="world-simulation-monitor")
+        self._thread = threading.Thread(
+            target=self._run, daemon=True, name="world-simulation-monitor"
+        )
         self._thread.start()
         self._started = True
         logger.info("World Simulation schedule monitor started")
@@ -50,7 +57,11 @@ class FederationScheduleMonitor:
                 with self.app.app_context():
                     self.poll()
             except Exception as exc:
-                logger.error("Error in the World Simulation schedule monitor: %s", exc, exc_info=True)
+                logger.error(
+                    "Error in the World Simulation schedule monitor: %s",
+                    exc,
+                    exc_info=True,
+                )
             self._stop_event.wait(self.poll_interval)
 
     def poll(self):
@@ -58,8 +69,13 @@ class FederationScheduleMonitor:
         from y_web.src.federation import health, schedule_queue
         from y_web.src.models.admin import Federation, FederationScheduleQueue
 
-        queued = {i.federation_id for i in FederationScheduleQueue.query.filter_by(status="running").all()}
-        for fed in Federation.query.filter(Federation.status.in_(("running", "paused"))).all():
+        queued = {
+            i.federation_id
+            for i in FederationScheduleQueue.query.filter_by(status="running").all()
+        }
+        for fed in Federation.query.filter(
+            Federation.status.in_(("running", "paused"))
+        ).all():
             if fed.id not in queued:
                 health.check_federation(fed)
         return schedule_queue.advance()

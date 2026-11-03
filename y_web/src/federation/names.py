@@ -3,7 +3,8 @@
 A person looking at a platform page sees *which experiment* a cross-post comes from or goes to (``Exps.exp_name``, e.g. "XW",
 "FW"), never the platform type ("microblogging", "forum"): the type stays only as the icon. Several experiments of the same
 type can belong to one World Simulation, so everything is keyed by the member (its name in the World Simulation), and the
-name of its experiment is the label. Read-only; every error means "no names" and the caller falls back to the member name."""
+name of its experiment is the label. Read-only; every error means "no names" and the caller falls back to the member name.
+"""
 
 from __future__ import annotations
 
@@ -16,8 +17,12 @@ def names_of(federation_pk) -> Dict[str, str]:
     """``{member: experiment name}`` of the members of one World Simulation (one query)."""
     from y_web.src.models.admin import Exps, FederationMember
 
-    rows = (db.session.query(FederationMember.member, Exps.exp_name)
-            .join(Exps, Exps.idexp == FederationMember.exp_id).filter(FederationMember.federation_pk == federation_pk).all())
+    rows = (
+        db.session.query(FederationMember.member, Exps.exp_name)
+        .join(Exps, Exps.idexp == FederationMember.exp_id)
+        .filter(FederationMember.federation_pk == federation_pk)
+        .all()
+    )
     return {m: n for m, n in rows if n}
 
 

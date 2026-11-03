@@ -2951,7 +2951,13 @@ def start_experiment(uid):
 
     ws = world_simulation_of(uid)
     if ws and ws["locked"]:
-        flash(_("This experiment is managed by the World Simulation '%(name)s'.", name=ws["name"]), "warning")
+        flash(
+            _(
+                "This experiment is managed by the World Simulation '%(name)s'.",
+                name=ws["name"],
+            ),
+            "warning",
+        )
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     # get experiment
@@ -3038,7 +3044,13 @@ def stop_experiment(uid):
 
     ws = world_simulation_of(uid)
     if ws and ws["locked"]:
-        flash(_("This experiment is managed by the World Simulation '%(name)s'.", name=ws["name"]), "warning")
+        flash(
+            _(
+                "This experiment is managed by the World Simulation '%(name)s'.",
+                name=ws["name"],
+            ),
+            "warning",
+        )
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     # get experiment

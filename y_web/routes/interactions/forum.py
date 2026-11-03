@@ -56,8 +56,14 @@ def publish_post_reddit(exp_id):
     from y_web.src.federation import human_outbox as _ho
 
     if not url:
-        _sent = _ho.try_deliver(exp_id, current_user, _ho.requested_members(request.args.getlist("crosspost")), text,
-                                lambda t: _ho.forum_post(text, t), only="forum")
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _ho.requested_members(request.args.getlist("crosspost")),
+            text,
+            lambda t: _ho.forum_post(text, t),
+            only="forum",
+        )
         if _sent is not None:
             if not _sent:
                 flash(_("The post could not be sent to the other platforms."), "error")

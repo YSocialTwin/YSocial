@@ -23,7 +23,14 @@ def _db(path, column, rows, table=True):
     conn.close()
 
 
-ROW = ("7", "ann", "g2", "microblogging", "ysocial://1/microblogging/post/3", "original words")
+ROW = (
+    "7",
+    "ann",
+    "g2",
+    "microblogging",
+    "ysocial://1/microblogging/post/3",
+    "original words",
+)
 
 
 @pytest.mark.parametrize("column", ["post_id", "photo_id", "message_id", "local_id"])
@@ -31,8 +38,15 @@ def test_every_runtime_key_column_is_read(tmp_path, column):
     path = str(tmp_path / "db.sqlite")
     _db(path, column, [ROW])
     got = quotes.read_quotes(path)
-    assert got == {"7": {"author_name": "ann", "member": "microblogging", "platform": "Microblogging",
-                         "excerpt": "original words", "source_ref": "ysocial://1/microblogging/post/3"}}
+    assert got == {
+        "7": {
+            "author_name": "ann",
+            "member": "microblogging",
+            "platform": "Microblogging",
+            "excerpt": "original words",
+            "source_ref": "ysocial://1/microblogging/post/3",
+        }
+    }
 
 
 def test_a_missing_file_table_or_column_gives_nothing(tmp_path):
@@ -58,7 +72,10 @@ def test_the_database_is_never_written(tmp_path):
 
 
 def test_an_unknown_platform_keeps_the_member_name():
-    assert quotes.platform_label("forum") == "Forum" and quotes.platform_label("my-member") == "my-member"
+    assert (
+        quotes.platform_label("forum") == "Forum"
+        and quotes.platform_label("my-member") == "my-member"
+    )
 
 
 def test_outside_a_world_simulation_nothing_is_read(world, monkeypatch):  # noqa: F811
@@ -73,12 +90,23 @@ def test_outside_a_world_simulation_nothing_is_read(world, monkeypatch):  # noqa
         assert quotes.federation_quote(exps["microblogging"], 7) is None
 
 
-def test_inside_a_world_simulation_the_rows_are_filtered_and_cached_per_request(world, monkeypatch):  # noqa: F811
+def test_inside_a_world_simulation_the_rows_are_filtered_and_cached_per_request(
+    world, monkeypatch
+):  # noqa: F811
     app, exps, tmp = world
     calls = []
-    monkeypatch.setattr(service, "world_simulation_of", lambda exp_id: {"id": 1, "name": "w", "status": "stopped"})
+    monkeypatch.setattr(
+        service,
+        "world_simulation_of",
+        lambda exp_id: {"id": 1, "name": "w", "status": "stopped"},
+    )
     monkeypatch.setattr(quotes, "_database_path", lambda exp_id: "fake")
-    monkeypatch.setattr(quotes, "read_quotes", lambda path, names=None: calls.append(path) or {"7": {"author_name": "ann"}, "8": {"author_name": "bob"}})
+    monkeypatch.setattr(
+        quotes,
+        "read_quotes",
+        lambda path, names=None: calls.append(path)
+        or {"7": {"author_name": "ann"}, "8": {"author_name": "bob"}},
+    )
     with app.test_request_context():
         assert quotes.quotes_for(1, [7]) == {"7": {"author_name": "ann"}}
         calls.clear()
@@ -104,15 +132,37 @@ def test_the_block_is_escaped_and_empty_without_a_quote():
 
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATES), autoescape=True)
     env.globals["_"] = lambda text, **kw: text % kw
-    tpl = env.from_string('{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(q) }}')
+    tpl = env.from_string(
+        '{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(q) }}'
+    )
     assert tpl.render(q=None).strip() == ""
-    html = tpl.render(q={"author_name": "<script>x</script>", "platform": "Forum", "excerpt": "a <b>b</b>"})
-    assert "Shared from" in html and "Forum" in html and "<script>" not in html and "&lt;script&gt;" in html and "<b>" not in html
+    html = tpl.render(
+        q={
+            "author_name": "<script>x</script>",
+            "platform": "Forum",
+            "excerpt": "a <b>b</b>",
+        }
+    )
+    assert (
+        "Shared from" in html
+        and "Forum" in html
+        and "<script>" not in html
+        and "&lt;script&gt;" in html
+        and "<b>" not in html
+    )
 
 
-@pytest.mark.parametrize("path", [
-    "microblogging/components/posts.html", "microblogging/components/thread-post.html",
-    "forum/components/posts.html", "forum/components/thread-post.html", "photo/components/posts.html", "im/_message.html"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "microblogging/components/posts.html",
+        "microblogging/components/thread-post.html",
+        "forum/components/posts.html",
+        "forum/components/thread-post.html",
+        "photo/components/posts.html",
+        "im/_message.html",
+    ],
+)
 def test_the_views_call_the_helper(path):
     with open(os.path.join(TEMPLATES, path)) as fh:
         text = fh.read()

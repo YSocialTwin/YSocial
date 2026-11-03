@@ -36,7 +36,9 @@ def test_migration_creates_the_tables_once(tmp_path):
 def test_migration_leaves_existing_tables_and_rows_untouched(tmp_path):
     engine = _engine(tmp_path)
     with engine.begin() as conn:
-        conn.exec_driver_sql("CREATE TABLE exps (idexp INTEGER PRIMARY KEY, exp_name TEXT)")
+        conn.exec_driver_sql(
+            "CREATE TABLE exps (idexp INTEGER PRIMARY KEY, exp_name TEXT)"
+        )
         conn.exec_driver_sql("INSERT INTO exps (exp_name) VALUES ('legacy')")
     before = [c["name"] for c in sa.inspect(engine).get_columns("exps")]
     ensure_federation_tables(engine)
@@ -61,7 +63,10 @@ def test_uniqueness_constraints(tmp_path):
         conn.exec_driver_sql(
             "INSERT INTO federation_member (federation_pk, exp_id, member, platform_type, position) VALUES (1, 10, 'a', 'microblogging', 0)"
         )
-    for member, exp in (("a", 11), ("b", 10)):  # duplicate member name, duplicate experiment
+    for member, exp in (
+        ("a", 11),
+        ("b", 10),
+    ):  # duplicate member name, duplicate experiment
         try:
             with engine.begin() as conn:
                 conn.exec_driver_sql(

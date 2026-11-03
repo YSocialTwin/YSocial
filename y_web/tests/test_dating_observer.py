@@ -144,7 +144,10 @@ def test_time_travel_rebuilds_the_profile_and_hides_the_future(observer):
     showcase = client.get(f"/{exp_id}/dating?vp=public&round=10").data.decode()
     assert f"/profile/{gone}" not in showcase
     # an account that never existed is still a 404
-    assert client.get(f"/{exp_id}/dating/profile/nobody?vp=public&round=10").status_code == 404
+    assert (
+        client.get(f"/{exp_id}/dating/profile/nobody?vp=public&round=10").status_code
+        == 404
+    )
     assert (
         "Time travel" in client.get(f"/{exp_id}/dating?vp=public&round=2").data.decode()
     )

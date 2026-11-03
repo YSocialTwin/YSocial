@@ -33,7 +33,9 @@ def _probe() -> Tuple[bool, str]:
     try:
         importlib.import_module(SDK_MODULE)
         return True, ""
-    except Exception as exc:  # noqa: BLE001 - ImportError, but also a broken install must never raise here
+    except (
+        Exception
+    ) as exc:  # noqa: BLE001 - ImportError, but also a broken install must never raise here
         first = exc
     try:
         from y_web.src.simulation.subprocess_env import federation_sdk_dir
@@ -57,7 +59,11 @@ def sdk_available(refresh: bool = False) -> bool:
     """True when ``ysocial_federation`` can be imported by the web process (cached)."""
     now = time.monotonic()
     with _lock:
-        if not refresh and _cache["ok"] is not None and (_cache["ok"] or now - _cache["at"] < NEGATIVE_TTL):
+        if (
+            not refresh
+            and _cache["ok"] is not None
+            and (_cache["ok"] or now - _cache["at"] < NEGATIVE_TTL)
+        ):
             return bool(_cache["ok"])
         ok, reason = _probe()
         _cache.update(ok=ok, reason=reason, at=now)
@@ -80,10 +86,14 @@ def require_sdk() -> None:
     if not sdk_available():
         from y_web.src.federation.service import WorldSimulationError
 
-        raise WorldSimulationError({"code": "sdk_missing", "message": sdk_reason() or MISSING_MESSAGE})
+        raise WorldSimulationError(
+            {"code": "sdk_missing", "message": sdk_reason() or MISSING_MESSAGE}
+        )
 
 
-def child_import_check(timeout: float = 20.0, env: Optional[dict] = None) -> Tuple[bool, str]:
+def child_import_check(
+    timeout: float = 20.0, env: Optional[dict] = None
+) -> Tuple[bool, str]:
     """Can a server or client of a member import the SDK? Runs ``python -c 'import ysocial_federation'``.
 
     It uses the environment the member processes get (``build_subprocess_env``: the PYTHONPATH carries the plugin
@@ -96,8 +106,13 @@ def child_import_check(timeout: float = 20.0, env: Optional[dict] = None) -> Tup
 
         env = build_subprocess_env()
     try:
-        done = subprocess.run([sys.executable, "-c", f"import {SDK_MODULE}"], env=env, capture_output=True, text=True,
-                              timeout=timeout)
+        done = subprocess.run(
+            [sys.executable, "-c", f"import {SDK_MODULE}"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
     except subprocess.TimeoutExpired:
         return False, f"importing {SDK_MODULE} took more than {int(timeout)} s"
     except OSError as exc:
