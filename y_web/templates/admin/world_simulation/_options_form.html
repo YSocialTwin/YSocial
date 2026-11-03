@@ -153,7 +153,7 @@
     {{ ws.param(schema.BY_PATH[('pseudonyms', 'enabled')], values) }}
     <div class="box-line ws-param" id="ws-provisioning">
         <span class="left"><span class="ws-label">{{ _('Platforms that open accounts for agents that discover them') }}</span>
-            <span class="ws-help">{{ _('When an agent discovers one of these platforms the platform creates its account on the fly. Available for Microblogging on the Standard backend, and only useful with Discovery on. Platforms not chosen need the account to exist already.') }}</span>
+            <span class="ws-help">{{ _('When an agent discovers one of these platforms the platform creates its account on the fly. Any platform can be chosen; it is only useful with Discovery on. Platforms not chosen need the account to exist already.') }}</span>
             <span class="ws-default">{{ _('Default') }}: {{ _('None') }}</span></span>
         <span class="right ws-checks">
             <input type="hidden" name="provisioning_present" value="1">

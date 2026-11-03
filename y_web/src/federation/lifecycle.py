@@ -210,7 +210,14 @@ def reset(fed) -> list:
             }
         )
     removed = []
-    for name in RUN_FILES:
+    # the runtimes' own books of who is who (``bindings_<member>.db``) belong to the run too: a stale one would point at
+    # accounts of the old run; they are rebuilt by username at the next start (INV-17)
+    bindings = sorted(
+        p.name
+        for p in Path(fed.folder).glob("bindings_*.db*")
+        if p.name.split(".db")[1] in ("", "-wal", "-shm")
+    )
+    for name in (*RUN_FILES, *bindings):
         path = os.path.join(fed.folder, name)
         if os.path.exists(path):
             os.remove(path)

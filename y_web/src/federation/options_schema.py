@@ -37,8 +37,8 @@ DEFAULT_PAIR_PROBABILITY = (
     0.3  # YWeb default of every ordered pair of member platforms (the SDK default is 0)
 )
 PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating")
-# Platforms whose runtime creates an account on request (service.PROVISIONABLE, repeated here to stay import free).
-PROVISIONABLE = ("microblogging",)
+# Platforms whose runtime creates an account on request: all of them (service.PROVISIONABLE, repeated here to stay import free).
+PROVISIONABLE = PLATFORMS
 MEMBERSHIP_CHOICES = ("all", "one_random", "custom")
 # P14: crosspost.decision_triggers (the events decided by the agent's LLM) and the clients that support them. A platform that is
 # not listed (or a trigger not listed for it) keeps the random draw: the option is documented as supported by these clients only.

@@ -56,8 +56,6 @@ CROSSPOST_CONTENT = ("own_content", "news", "images")
 CROSSPOST_CONTENT_ALIASES = {
     "own_posts": "own_content"
 }  # legacy name, accepted and normalised
-# Platforms whose runtime can create an account on request and whose client adopts it (reference path: YServer + YClient).
-PROVISIONABLE = (("microblogging", "Standard"),)
 # platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
 ALLOWED_SIMULATORS = {
     "microblogging": ("Standard", "HPC"),
@@ -66,6 +64,13 @@ ALLOWED_SIMULATORS = {
     "instant_messaging": ("HPC",),
     "dating": ("HPC",),
 }
+# Every runtime can create an account on request (``provision_accounts``, contract-tested in each repository) and every client
+# adopts it (``adopt_federated_account``): any platform can be discovered by the agents that meet its cross-posted content.
+PROVISIONABLE = tuple(
+    (platform, simulator)
+    for platform, simulators in ALLOWED_SIMULATORS.items()
+    for simulator in simulators
+)
 SERVER_CONFIG_NAMES = ("config_server.json", "server_config.json")
 FEDERATION_FOLDER_NAME = "federations"
 
