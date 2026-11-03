@@ -176,3 +176,55 @@ def test_cards_and_field_map(folder):
         etl.table_rows(folder, "sqlite_master")
     for table, (_d, _s, cols) in etl.FIELD_MAP.items():
         assert f"### `{table}`" in etl.render_field_map() and cols
+
+
+def discovery(db, tick, gid, member, old, new):
+    db.execute(
+        "INSERT INTO federation_event (tick, kind, detail_json, at) VALUES (?,?,?,0)",
+        (
+            tick,
+            "discovery_state",
+            json.dumps({"global_agent_id": gid, "member": member, "from": old, "to": new}),
+        ),
+    )
+
+
+def test_discoveries_and_membership_of_the_agents(tmp_path):
+    db = sqlite3.connect(tmp_path / "federation.db", isolation_level=None)
+    db.executescript(SCHEMA)
+    db.execute("INSERT INTO federation_agent_name VALUES ('a1','Ann')")
+    discovery(db, 23, "a1", "forum", "unaware", "aware")  # day 0
+    discovery(db, 23, "a2", "forum", "unaware", "aware")
+    discovery(db, 23, "a3", "forum", "unaware", "aware")
+    membership(db, 24, "a1", "forum", "aware", "active")  # day 1: joins
+    discovery(db, 47, "a2", "forum", "aware", "unaware")  # day 1: interest fades
+    membership(db, 72, "a1", "forum", "active", "left", "churn")  # day 3
+    discovery(db, 95, "a1", "forum", "left", "aware")  # day 3: finds it again
+    membership(db, 96, "a1", "forum", "aware", "active", "rejoin")  # day 4
+    db.close()
+    folder = str(tmp_path)
+    assert etl.build(folder)["ok"]
+    events = rows(folder, "membership_events")
+    assert [(e[1], e[2], e[6], e[7]) for e in events] == [
+        (0, "a1", "aware", "awareness"),
+        (0, "a2", "aware", "awareness"),
+        (0, "a3", "aware", "awareness"),
+        (1, "a1", "active", "join"),
+        (1, "a2", "unaware", "awareness_lost"),
+        (3, "a1", "left", "churn"),
+        (3, "a1", "aware", "awareness"),
+        (4, "a1", "active", "rejoin"),
+    ]
+    assert events[0][3] == "Ann"
+    assert rows(folder, "discoveries") == [
+        ("a1", "Ann", "forum", 0, "joined", 1, 1),
+        ("a2", "", "forum", 0, "lapsed", 1, 1),
+        ("a3", "", "forum", 0, "pending", None, None),
+        ("a1", "Ann", "forum", 3, "joined", 4, 1),
+    ]
+    assert rows(folder, "membership_daily") == [
+        (0, "forum", 3, 0, 0, 0, 0, 3),
+        (1, "forum", 0, 1, 1, 0, 0, 1),
+        (3, "forum", 1, 0, 0, 0, 1, 2),
+        (4, "forum", 0, 0, 0, 1, 0, 1),
+    ]

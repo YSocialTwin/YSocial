@@ -176,6 +176,24 @@
             fill('#ws-an-diffusion', t.topic_diffusion || [], ['topic', 'platforms', 'carried', 'created_on', 'first_day', 'last_day'], 30);
             fill('#ws-an-created', t.topics_created || [], ['topic', 'member', 'day', 'source', 'original'], 30);
             fill('#ws-an-topics', (t.topics_carried || []).slice().sort(function (a, b) { return b.n - a.n; }), ['topic', 'source', 'target', 'n', 'first_day'], 30);
+            var md = t.membership_daily || [], mDays = uniq(md, 'day').map(Number).sort(function (a, b) { return a - b; });
+            function mSum(key, d) { return md.filter(function (r) { return r.day === d; }).reduce(function (n, r) { return n + r[key]; }, 0); }
+            draw('ws-chart-membership', 'bar', mDays, [
+                {label: box.dataset.lDiscovered || 'discovered', key: 'discovered', backgroundColor: COLORS[0]},
+                {label: box.dataset.lJoined || 'joined', key: 'joined', backgroundColor: COLORS[2]},
+                {label: box.dataset.lRejoined || 'rejoined', key: 'rejoined', backgroundColor: COLORS[3]},
+                {label: box.dataset.lLeft || 'left', key: 'left', backgroundColor: COLORS[1]},
+                {label: box.dataset.lLapsed || 'lapsed', key: 'lapsed', backgroundColor: COLORS[4]}
+            ].map(function (ds) { ds.data = mDays.map(function (d) { return mSum(ds.key, d); }); return ds; })
+                .concat([{type: 'line', label: box.dataset.lPending || 'aware, not enrolled', borderColor: '#607d8b', backgroundColor: '#607d8b', fill: false,
+                          data: mDays.map(function (d) { return md.filter(function (r) { return r.day === d; }).reduce(function (n, r) { return n + r.aware_pending; }, 0); })}]));
+            function who(r) { return r.agent_name ? r.agent_name + ' (' + r.agent + ')' : r.agent; }
+            fill('#ws-an-discoveries', (t.discoveries || []).map(function (r) {
+                return {who: who(r), member: r.member, aware_day: r.aware_day, outcome: r.outcome, outcome_day: text(r.outcome_day), days: text(r.days_to_decide)};
+            }), ['who', 'member', 'aware_day', 'outcome', 'outcome_day', 'days'], 100);
+            fill('#ws-an-membership', (t.membership_events || []).slice().reverse().map(function (r) {
+                return {day: r.day, who: who(r), member: r.member, from_state: r.from_state, to_state: r.to_state, reason: r.reason};
+            }), ['day', 'who', 'member', 'from_state', 'to_state', 'reason'], 100);
             var sDays = uniq(sur, 'day').map(Number).sort(function (a, b) { return a - b; });
             draw('ws-chart-survival', 'line', sDays, perMember(sur, 'survival', sDays, uniq(sur, 'member')), {scales: {y: {min: 0}}});
         }

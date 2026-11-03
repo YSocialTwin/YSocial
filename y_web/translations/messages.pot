@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 14:25+0000\n"
+"POT-Creation-Date: 2026-11-03 14:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1235,6 +1235,12 @@ msgid "Agents rewrite their bio"
 msgstr ""
 
 msgid "Agents talk to their matches"
+msgstr ""
+
+msgid ""
+"Agents that became aware of a platform they are not enrolled on, those "
+"who joined it, left it or lost interest, and how many are aware and not "
+"enrolled yet."
 msgstr ""
 
 msgid "Agents that have this field"
@@ -3955,6 +3961,9 @@ msgstr ""
 msgid "Days to add"
 msgstr ""
 
+msgid "Days to decide"
+msgstr ""
+
 msgid "Days without a match before pausing"
 msgstr ""
 
@@ -4323,6 +4332,15 @@ msgid "Disconnect"
 msgstr ""
 
 msgid "Discover"
+msgstr ""
+
+msgid "Discovered on day"
+msgstr ""
+
+msgid "Discoveries"
+msgstr ""
+
+msgid "Discoveries, joins and leaves per day"
 msgstr ""
 
 msgid "Discovery"
@@ -7087,6 +7105,9 @@ msgstr ""
 msgid "Joined Experiments"
 msgstr ""
 
+msgid "Joins and leaves"
+msgstr ""
+
 msgid "Jupyter Lab"
 msgstr ""
 
@@ -7301,6 +7322,9 @@ msgid "Latest aggregate stress state binned across tracked agents."
 msgstr ""
 
 msgid "Latest articles from this page's RSS feed."
+msgstr ""
+
+msgid "Latest membership changes (the full list is in the CSV download)."
 msgstr ""
 
 msgid "Latest messages"
@@ -7845,6 +7869,12 @@ msgid "Members"
 msgstr ""
 
 msgid "Members table"
+msgstr ""
+
+msgid "Membership events"
+msgstr ""
+
+msgid "Memberships per day"
 msgstr ""
 
 msgid "Memories retrieved"
@@ -9433,6 +9463,12 @@ msgstr ""
 msgid "Out-Degree CCDF"
 msgstr ""
 
+msgid "Outcome"
+msgstr ""
+
+msgid "Outcome day"
+msgstr ""
+
 msgid "Outcome of a date"
 msgstr ""
 
@@ -9828,6 +9864,9 @@ msgid "Platform"
 msgstr ""
 
 msgid "Platform Type"
+msgstr ""
+
+msgid "Platform discoveries"
 msgstr ""
 
 msgid "Platform releases and anonymous usage data."
@@ -15537,6 +15576,11 @@ msgid "Who decides whether to cross-post"
 msgstr ""
 
 msgid ""
+"Who discovered which platform, when, and what came of it: joined, still "
+"pending or lapsed (the awareness faded)."
+msgstr ""
+
+msgid ""
 "Who starts where, whether names are hidden and whether a platform can "
 "open accounts for agents that discover it."
 msgstr ""
@@ -16014,6 +16058,9 @@ msgstr ""
 msgid "auto-detect from logs"
 msgstr ""
 
+msgid "aware, not enrolled"
+msgstr ""
+
 msgid "away"
 msgstr ""
 
@@ -16075,6 +16122,9 @@ msgstr ""
 
 #, python-format
 msgid "dependencies %(deps)s, validation %(validation)s"
+msgstr ""
+
+msgid "discovered"
 msgstr ""
 
 msgid "draft"
@@ -16185,6 +16235,9 @@ msgstr ""
 msgid "km"
 msgstr ""
 
+msgid "left"
+msgstr ""
+
 msgid "left at tick"
 msgstr ""
 
@@ -16201,6 +16254,9 @@ msgid "llm_url parameter is required"
 msgstr ""
 
 msgid "local changes"
+msgstr ""
+
+msgid "lost interest"
 msgstr ""
 
 msgid "main navigation"
@@ -16329,6 +16385,9 @@ msgid "ready"
 msgstr ""
 
 msgid "recommendation"
+msgstr ""
+
+msgid "rejoined"
 msgstr ""
 
 msgid "release archive"

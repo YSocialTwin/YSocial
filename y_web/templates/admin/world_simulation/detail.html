@@ -182,7 +182,7 @@
                 </div>
             </div>
 
-            <div class="ws-pane" data-ws-pane="analytics" hidden id="ws-analytics" data-url="{{ url_for('world_simulation.analytics_data', fed_id=fed.id) }}">
+            <div class="ws-pane" data-ws-pane="analytics" hidden id="ws-analytics" data-url="{{ url_for('world_simulation.analytics_data', fed_id=fed.id) }}" data-l-discovered="{{ _('discovered') }}" data-l-joined="{{ _('joined') }}" data-l-rejoined="{{ _('rejoined') }}" data-l-left="{{ _('left') }}" data-l-lapsed="{{ _('lost interest') }}" data-l-pending="{{ _('aware, not enrolled') }}">
                 <div class="columns">
                     <div class="column is-12">
                         <div class="dashboard-box">
@@ -193,7 +193,7 @@
                             <div class="box-content">
                                 <p class="ws-intro">{{ _('Computed from the database of the coordinator; days are numbered from 0.') }}</p>
                                 <div class="ws-actions">
-                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival')), ('shares', _('Shares')), ('share_depth', _('Share chains')), ('bridge_agents', _('Bridge agents')), ('topics_carried', _('Topics carried')), ('topic_diffusion', _('Topic diffusion')), ('topics_created', _('Topics created')), ('topic_first_seen', _('Topic first seen')), ('human_activity', _('People')), ('human_crossposts', _('Cross-posts of people'))) %}
+                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival')), ('shares', _('Shares')), ('share_depth', _('Share chains')), ('bridge_agents', _('Bridge agents')), ('topics_carried', _('Topics carried')), ('topic_diffusion', _('Topic diffusion')), ('topics_created', _('Topics created')), ('topic_first_seen', _('Topic first seen')), ('discoveries', _('Discoveries')), ('membership_daily', _('Memberships per day')), ('membership_events', _('Membership events')), ('human_activity', _('People')), ('human_crossposts', _('Cross-posts of people'))) %}
                                     <a class="button is-small is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}"><i class="mdi mdi-download"></i> <span>{{ _('Download %(what)s (CSV)', what=label) }}</span></a>
                                     {% endfor %}
                                 </div>
@@ -233,6 +233,21 @@
                 <div class="columns">
                     <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Topics created on arrival') }}</h3><div class="box-content table-container">
                         <table class="table is-fullwidth ws-table" id="ws-an-created"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Day') }}</th><th>{{ _('Brought by') }}</th><th>{{ _('Original name') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Discoveries, joins and leaves per day') }}</h3><div class="box-content">
+                        <p class="ws-sub">{{ _('Agents that became aware of a platform they are not enrolled on, those who joined it, left it or lost interest, and how many are aware and not enrolled yet.') }}</p>
+                        <div class="ws-chart"><canvas id="ws-chart-membership"></canvas></div></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Platform discoveries') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('Who discovered which platform, when, and what came of it: joined, still pending or lapsed (the awareness faded).') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-discoveries"><thead><tr><th>{{ _('Agent') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Discovered on day') }}</th><th>{{ _('Outcome') }}</th><th>{{ _('Outcome day') }}</th><th>{{ _('Days to decide') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Joins and leaves') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('Latest membership changes (the full list is in the CSV download).') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-membership"><thead><tr><th>{{ _('Day') }}</th><th>{{ _('Agent') }}</th><th>{{ _('Platform') }}</th><th>{{ _('From') }}</th><th>{{ _('To') }}</th><th>{{ _('Reason') }}</th></tr></thead><tbody></tbody></table></div></div></div>
                 </div>
                 <div class="columns">
                     <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('People') }}</h3><div class="box-content table-container">

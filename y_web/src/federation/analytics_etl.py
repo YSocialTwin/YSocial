@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 ANALYTICS_FILE = "analytics_federation.db"
 STATUS_FILE = "analytics_federation.status.json"
 SOURCE_FILE = "federation.db"
-SCHEMA_VERSION = 4  # 2: share chains, bridge agents and topics carried (X3.2); 3: people (human:) tables (H8); 4: topic diffusion (P1)
+SCHEMA_VERSION = 5  # 5: discoveries and membership (who found, joined, left a platform); 2: share chains, bridge agents and topics carried (X3.2); 3: people (human:) tables (H8); 4: topic diffusion (P1)
 SLOTS_PER_DAY = 24
 SOURCE_REF_PREFIX = "ysocial://"
 NEW = "(new)"  # origin of a join that follows no leave
@@ -263,6 +263,57 @@ FIELD_MAP["topic_diffusion"] = (
         ("last_day", "INTEGER", "day of the last cross-post carrying it"),
     ],
 )
+
+FIELD_MAP["membership_events"] = (
+    "Every change of an agent's relation with a platform: it became aware of it, joined, rejoined, left, or lost interest. "
+    "One row per change, oldest first.",
+    "federation_event (membership_change, discovery_state), federation_agent_name",
+    [
+        ("tick", "INTEGER", "canonical tick of the change"),
+        ("day", "INTEGER", "canonical day of the change"),
+        ("agent", "TEXT", "global_agent_id"),
+        ("agent_name", "TEXT", "name of the agent ('' when not known)"),
+        ("member", "TEXT", "platform member"),
+        ("from_state", "TEXT", "unaware, aware, active or left"),
+        ("to_state", "TEXT", "unaware, aware, active or left"),
+        (
+            "reason",
+            "TEXT",
+            "join, rejoin, leave_rule, churn, awareness (became aware) or awareness_lost (the awareness faded)",
+        ),
+    ],
+)
+FIELD_MAP["discoveries"] = (
+    "Agents that discovered a platform they were not enrolled on, and what came of it: one row per discovery.",
+    "federation_event (membership_change, discovery_state), federation_agent_name",
+    [
+        ("agent", "TEXT", "global_agent_id"),
+        ("agent_name", "TEXT", "name of the agent ('' when not known)"),
+        ("member", "TEXT", "platform discovered"),
+        ("aware_day", "INTEGER", "day the agent became aware of the platform"),
+        (
+            "outcome",
+            "TEXT",
+            "joined (enrolled), pending (aware and not enrolled yet) or lapsed (the awareness faded)",
+        ),
+        ("outcome_day", "INTEGER", "day of the join or of the loss, NULL while pending"),
+        ("days_to_decide", "INTEGER", "outcome_day - aware_day, NULL while pending"),
+    ],
+)
+FIELD_MAP["membership_daily"] = (
+    "Discoveries, joins and leaves of each platform, one row per day and member (days without changes have no row).",
+    "federation_event (membership_change, discovery_state)",
+    [
+        ("day", "INTEGER", "canonical day"),
+        ("member", "TEXT", "platform member"),
+        ("discovered", "INTEGER", "agents that became aware of the platform"),
+        ("lapsed", "INTEGER", "agents whose awareness faded without joining"),
+        ("joined", "INTEGER", "agents that joined for the first time"),
+        ("rejoined", "INTEGER", "agents that came back after leaving"),
+        ("left", "INTEGER", "agents that left"),
+        ("aware_pending", "INTEGER", "agents aware of the platform and not enrolled, at the end of the day"),
+    ],
+)
 HUMAN_PREFIX = "human:"
 EXPORT_TABLES = tuple(FIELD_MAP)
 _guard = threading.Lock()
@@ -421,6 +472,66 @@ def compute(
             last_left[gid] = member
             left_per_day[(day, member)] += 1
     migration_flows = [(day, a, b, n) for (day, a, b), n in sorted(flows.items())]
+
+
+    names = {str(g): n for g, n in q("SELECT global_agent_id, name FROM federation_agent_name")}
+    membership_events: List[tuple] = []
+    opened: Dict[Tuple[str, str], int] = {}
+    discoveries: List[list] = []
+    daily: Dict[Tuple[int, str], Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    pending_now: Dict[str, int] = defaultdict(int)
+    stock: Dict[Tuple[int, str], int] = {}
+
+    def _close(gid: str, member: str, day: int, outcome: str) -> None:
+        start = opened.pop((gid, member), None)
+        if start is None:
+            return
+        discoveries.append([gid, names.get(gid, ""), member, start, outcome, day, day - start])
+        pending_now[member] -= 1
+
+    for _id, tick, kind, detail in q(
+        "SELECT id, tick, kind, detail_json FROM federation_event "
+        "WHERE kind IN ('membership_change','discovery_state') ORDER BY id"
+    ):
+        d = json.loads(detail)
+        gid, member = str(d["global_agent_id"]), d["member"]
+        day, old, new = int(tick) // SLOTS_PER_DAY, d.get("from", ""), d.get("to", "")
+        if kind == "discovery_state":
+            reason = "awareness" if new == "aware" else "awareness_lost"
+            if new == "aware":
+                if (gid, member) not in opened:
+                    opened[(gid, member)] = day
+                    pending_now[member] += 1
+                    daily[(day, member)]["discovered"] += 1
+            elif old == "aware":
+                _close(gid, member, day, "lapsed")
+                daily[(day, member)]["lapsed"] += 1
+        else:
+            reason = d.get("reason", "")
+            cell = daily[(day, member)]
+            if new == "active":
+                _close(gid, member, day, "joined")
+                cell["rejoined" if old == "left" or reason == "rejoin" else "joined"] += 1
+            elif new == "left":
+                cell["left"] += 1
+        membership_events.append((int(tick), day, gid, names.get(gid, ""), member, old, new, reason))
+        stock[(day, member)] = pending_now[member]
+    for (gid, member), start in sorted(opened.items()):
+        discoveries.append([gid, names.get(gid, ""), member, start, "pending", None, None])
+    discoveries.sort(key=lambda r: (r[3], r[2], r[0]))
+    membership_daily = [
+        (
+            day,
+            member,
+            c["discovered"],
+            c["lapsed"],
+            c["joined"],
+            c["rejoined"],
+            c["left"],
+            stock.get((day, member), 0),
+        )
+        for (day, member), c in sorted(daily.items())
+    ]
 
     crossflows: Dict[Tuple[int, str, str], int] = defaultdict(int)
     cascade: Dict[str, List[Any]] = {}
@@ -634,6 +745,9 @@ def compute(
             "topics_created": topics_created,
             "topic_first_seen": topic_first_seen,
             "topic_diffusion": topic_diffusion,
+            "membership_events": membership_events,
+            "discoveries": [tuple(r) for r in discoveries],
+            "membership_daily": membership_daily,
         },
         "last_day": last_day,
         "messages": len(messages),

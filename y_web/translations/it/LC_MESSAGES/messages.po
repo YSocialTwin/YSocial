@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 14:25+0000\n"
+"POT-Creation-Date: 2026-11-03 14:59+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1360,6 +1360,12 @@ msgstr "Gli agenti riscrivono la bio"
 
 msgid "Agents talk to their matches"
 msgstr "Gli agenti parlano con i loro match"
+
+msgid ""
+"Agents that became aware of a platform they are not enrolled on, those "
+"who joined it, left it or lost interest, and how many are aware and not "
+"enrolled yet."
+msgstr ""
 
 msgid "Agents that have this field"
 msgstr "Agenti che hanno questo campo"
@@ -4435,6 +4441,9 @@ msgstr "Giorni osservati"
 msgid "Days to add"
 msgstr "Giorni da aggiungere"
 
+msgid "Days to decide"
+msgstr "Giorni per decidere"
+
 msgid "Days without a match before pausing"
 msgstr "Giorni senza match prima della pausa"
 
@@ -4833,6 +4842,15 @@ msgstr "Disconnetti"
 
 msgid "Discover"
 msgstr "Scopri"
+
+msgid "Discovered on day"
+msgstr "Scoperta nel giorno"
+
+msgid "Discoveries"
+msgstr "Scoperte"
+
+msgid "Discoveries, joins and leaves per day"
+msgstr "Scoperte, iscrizioni e abbandoni per giorno"
 
 msgid "Discovery"
 msgstr "Scoperta"
@@ -7887,6 +7905,9 @@ msgstr "Iscritto (round)"
 msgid "Joined Experiments"
 msgstr "Esperimenti a cui partecipa"
 
+msgid "Joins and leaves"
+msgstr "Iscrizioni e abbandoni"
+
 msgid "Jupyter Lab"
 msgstr "Jupyter Lab"
 
@@ -8128,6 +8149,9 @@ msgstr ""
 
 msgid "Latest articles from this page's RSS feed."
 msgstr "Ultimi articoli del feed RSS di questa pagina."
+
+msgid "Latest membership changes (the full list is in the CSV download)."
+msgstr "Ultime variazioni di iscrizione (l'elenco completo è nel CSV scaricabile)."
 
 msgid "Latest messages"
 msgstr "Ultimi messaggi"
@@ -8720,6 +8744,12 @@ msgstr "Membri"
 
 msgid "Members table"
 msgstr "Tabella dei membri"
+
+msgid "Membership events"
+msgstr "Eventi di iscrizione"
+
+msgid "Memberships per day"
+msgstr "Iscrizioni per giorno"
 
 msgid "Memories retrieved"
 msgstr "Ricordi recuperati"
@@ -10428,6 +10458,12 @@ msgstr "Altre impostazioni"
 msgid "Out-Degree CCDF"
 msgstr "CCDF del grado uscente"
 
+msgid "Outcome"
+msgstr "Esito"
+
+msgid "Outcome day"
+msgstr "Giorno dell'esito"
+
 msgid "Outcome of a date"
 msgstr "Esito di un appuntamento"
 
@@ -10872,6 +10908,9 @@ msgstr "Piattaforma"
 
 msgid "Platform Type"
 msgstr "Tipo di piattaforma"
+
+msgid "Platform discoveries"
+msgstr "Scoperte di piattaforme"
 
 msgid "Platform releases and anonymous usage data."
 msgstr "Versioni della piattaforma e dati di utilizzo anonimi."
@@ -12300,8 +12339,8 @@ msgid ""
 "Reset this World Simulation and all its experiments? Everything produced "
 "by the run is removed. This cannot be undone."
 msgstr ""
-"Reimpostare questa World Simulation e tutti i suoi esperimenti? Tutto ciò "
-"che la run ha prodotto viene rimosso. L'operazione non si può annullare."
+"Reimpostare questa World Simulation e tutti i suoi esperimenti? Tutto ciò"
+" che la run ha prodotto viene rimosso. L'operazione non si può annullare."
 
 msgid "Reset to default values"
 msgstr "Ripristina i valori predefiniti"
@@ -14722,8 +14761,8 @@ msgid ""
 " (settings, populations and clients stay)."
 msgstr ""
 "L'esportazione contiene le impostazioni, il database della run e "
-"l'archivio di ogni esperimento. Una copia parte da zero. Il reset riporta "
-"l'intera World Simulation allo stato iniziale, come se non fosse mai "
+"l'archivio di ogni esperimento. Una copia parte da zero. Il reset riporta"
+" l'intera World Simulation allo stato iniziale, come se non fosse mai "
 "partita: i dati della run e quelli di ogni esperimento vengono rimossi "
 "(impostazioni, popolazioni e client restano)."
 
@@ -17293,6 +17332,11 @@ msgid "Who decides whether to cross-post"
 msgstr "Chi decide se fare il cross-post"
 
 msgid ""
+"Who discovered which platform, when, and what came of it: joined, still "
+"pending or lapsed (the awareness faded)."
+msgstr ""
+
+msgid ""
 "Who starts where, whether names are hidden and whether a platform can "
 "open accounts for agents that discover it."
 msgstr ""
@@ -17825,6 +17869,9 @@ msgstr "autenticata"
 msgid "auto-detect from logs"
 msgstr "rilevamento automatico dai log"
 
+msgid "aware, not enrolled"
+msgstr "a conoscenza, non iscritti"
+
 msgid "away"
 msgstr "di distanza"
 
@@ -17887,6 +17934,9 @@ msgstr "eliminato"
 #, python-format
 msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr "dipendenze %(deps)s, convalida %(validation)s"
+
+msgid "discovered"
+msgstr "scoperta"
 
 msgid "draft"
 msgstr "bozza"
@@ -18000,6 +18050,9 @@ msgstr "entrato al tick"
 msgid "km"
 msgstr "km"
 
+msgid "left"
+msgstr "abbandonata"
+
 msgid "left at tick"
 msgstr "uscito al tick"
 
@@ -18017,6 +18070,9 @@ msgstr "Il parametro llm_url è obbligatorio"
 
 msgid "local changes"
 msgstr "modifiche locali"
+
+msgid "lost interest"
+msgstr "interesse perso"
 
 msgid "main navigation"
 msgstr "navigazione principale"
@@ -18145,6 +18201,9 @@ msgstr "pronta"
 
 msgid "recommendation"
 msgstr "raccomandazione"
+
+msgid "rejoined"
+msgstr "tornati"
 
 msgid "release archive"
 msgstr "archivio di release"

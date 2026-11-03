@@ -173,3 +173,47 @@ How far each topic travelled, most carried first. Source: federation_message (cr
 | `first_day` | INTEGER | day of the first appearance |
 | `last_day` | INTEGER | day of the last cross-post carrying it |
 
+### `membership_events`
+
+Every change of an agent's relation with a platform: it became aware of it, joined, rejoined, left, or lost interest. One row per change, oldest first. Source: federation_event (membership_change, discovery_state), federation_agent_name.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `tick` | INTEGER | canonical tick of the change |
+| `day` | INTEGER | canonical day of the change |
+| `agent` | TEXT | global_agent_id |
+| `agent_name` | TEXT | name of the agent ('' when not known) |
+| `member` | TEXT | platform member |
+| `from_state` | TEXT | unaware, aware, active or left |
+| `to_state` | TEXT | unaware, aware, active or left |
+| `reason` | TEXT | join, rejoin, leave_rule, churn, awareness (became aware) or awareness_lost (the awareness faded) |
+
+### `discoveries`
+
+Agents that discovered a platform they were not enrolled on, and what came of it: one row per discovery. Source: federation_event (membership_change, discovery_state), federation_agent_name.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `agent` | TEXT | global_agent_id |
+| `agent_name` | TEXT | name of the agent ('' when not known) |
+| `member` | TEXT | platform discovered |
+| `aware_day` | INTEGER | day the agent became aware of the platform |
+| `outcome` | TEXT | joined (enrolled), pending (aware and not enrolled yet) or lapsed (the awareness faded) |
+| `outcome_day` | INTEGER | day of the join or of the loss, NULL while pending |
+| `days_to_decide` | INTEGER | outcome_day - aware_day, NULL while pending |
+
+### `membership_daily`
+
+Discoveries, joins and leaves of each platform, one row per day and member (days without changes have no row). Source: federation_event (membership_change, discovery_state).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | canonical day |
+| `member` | TEXT | platform member |
+| `discovered` | INTEGER | agents that became aware of the platform |
+| `lapsed` | INTEGER | agents whose awareness faded without joining |
+| `joined` | INTEGER | agents that joined for the first time |
+| `rejoined` | INTEGER | agents that came back after leaving |
+| `left` | INTEGER | agents that left |
+| `aware_pending` | INTEGER | agents aware of the platform and not enrolled, at the end of the day |
+
