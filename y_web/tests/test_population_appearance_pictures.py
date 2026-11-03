@@ -111,7 +111,9 @@ def test_the_pictures_are_written_in_the_media_folder_and_linked_to_the_agents(
         assert row.status == "ready" and "3 profile pictures generated." == row.message
 
 
-def test_jobs_of_several_populations_share_the_model_and_both_complete(app, media, monkeypatch):
+def test_jobs_of_several_populations_share_the_model_and_both_complete(
+    app, media, monkeypatch
+):
     """Two jobs run together: the model draws one picture at a time (a diffusion pipeline is not thread safe), and
     neither job stalls or is cut short."""
     import threading
@@ -137,7 +139,10 @@ def test_jobs_of_several_populations_share_the_model_and_both_complete(app, medi
     with app.app_context():
         _, first = _standard_population(db, n=4)
         _, second = _standard_population(db, n=4)
-        jobs = [([a.id for a in first], _notification(db)), ([a.id for a in second], _notification(db))]
+        jobs = [
+            ([a.id for a in first], _notification(db)),
+            ([a.id for a in second], _notification(db)),
+        ]
     results = {}
 
     def go(ids, nid):
@@ -437,7 +442,9 @@ def test_a_generation_interrupted_by_a_restart_resumes_with_the_missing_pictures
         assert not os.path.exists(pp._job_file(nid))  # nothing left to resume
 
 
-def test_a_processing_notification_whose_job_file_is_lost_is_closed_as_failed(app, media):
+def test_a_processing_notification_whose_job_file_is_lost_is_closed_as_failed(
+    app, media
+):
     from y_web import db
     from y_web.src.agents import profile_pictures as pp
     from y_web.src.models import DownloadNotification
@@ -449,7 +456,10 @@ def test_a_processing_notification_whose_job_file_is_lost_is_closed_as_failed(ap
         assert pp.resume_interrupted(app) == []
         db.session.expire_all()
         row = db.session.get(DownloadNotification, nid)
-        assert row.status == "failed" and "generate the missing pictures again" in row.error_message
+        assert (
+            row.status == "failed"
+            and "generate the missing pictures again" in row.error_message
+        )
 
 
 def test_finished_or_unknown_jobs_are_only_cleaned_up(app, media):
@@ -469,7 +479,9 @@ def test_finished_or_unknown_jobs_are_only_cleaned_up(app, media):
         os.makedirs(pp.jobs_dir(), exist_ok=True)
         open(os.path.join(pp.jobs_dir(), "7.json"), "w").write("not json")
         assert pp.resume_interrupted(app) == []
-        assert os.listdir(pp.jobs_dir()) == ["7.json.bad"]  # an unreadable file is kept aside, never deleted
+        assert os.listdir(pp.jobs_dir()) == [
+            "7.json.bad"
+        ]  # an unreadable file is kept aside, never deleted
         assert not media.exists() or os.listdir(media) == []
 
 

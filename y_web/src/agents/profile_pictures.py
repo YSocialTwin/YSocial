@@ -394,7 +394,9 @@ class DiffusionGenerator:  # pragma: no cover - needs a model
         self.model, self.steps, self._pipe = model, steps, None
 
     def _load(self):
-        if self.model in _PIPES:  # loaded by another job: shared (the caller holds _GENERATION_LOCK)
+        if (
+            self.model in _PIPES
+        ):  # loaded by another job: shared (the caller holds _GENERATION_LOCK)
             self._pipe = _PIPES[self.model]
             return
         try:
@@ -561,7 +563,9 @@ def run_generation(
                         hashlib.sha256(f"{agent_id}|{prompt}".encode()).hexdigest()[:8],
                         16,
                     )
-                    with _GENERATION_LOCK:  # the jobs of other populations take turns on the one model
+                    with (
+                        _GENERATION_LOCK
+                    ):  # the jobs of other populations take turns on the one model
                         data = generator.generate(prompt, seed=seed)
                     db.session.expire_all()
                     if db.session.get(Agent, agent_id) is None:
@@ -617,7 +621,9 @@ def resume_interrupted(app) -> List[int]:
     try:
         names = sorted(n for n in os.listdir(folder) if n.endswith(".json"))
     except OSError:
-        names = []  # no job folder: the notifications left processing are still closed below
+        names = (
+            []
+        )  # no job folder: the notifications left processing are still closed below
     resumed: List[int] = []
     with app.app_context():
         for name in names:
@@ -629,7 +635,9 @@ def resume_interrupted(app) -> List[int]:
                 cfg = dict(job["cfg"])
             except (ValueError, KeyError, TypeError, OSError):
                 try:  # unreadable: kept aside for a look, never deleted
-                    os.replace(os.path.join(folder, name), os.path.join(folder, name + ".bad"))
+                    os.replace(
+                        os.path.join(folder, name), os.path.join(folder, name + ".bad")
+                    )
                 except OSError:
                     pass
                 continue
@@ -675,7 +683,8 @@ def resume_interrupted(app) -> List[int]:
 
 def _close_orphans(resumed: List[int]) -> None:
     """A notification still *processing* that has no job (file lost) and no live thread would stay so for ever:
-    it is closed as failed with the reason, so the person knows the pictures must be generated again."""
+    it is closed as failed with the reason, so the person knows the pictures must be generated again.
+    """
     from sqlalchemy import select
 
     from y_web import db
@@ -692,7 +701,9 @@ def _close_orphans(resumed: List[int]) -> None:
             continue
         row.status = "failed"
         row.message = "Profile picture generation was interrupted."
-        row.error_message = "The job data was lost: generate the missing pictures again."
+        row.error_message = (
+            "The job data was lost: generate the missing pictures again."
+        )
     db.session.commit()
 
 
