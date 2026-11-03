@@ -1030,11 +1030,24 @@ def reset(user, fed_id):
     from y_web.src.federation import lifecycle
 
     fed = _get_or_404(fed_id, user)
+    report = []
     try:
-        lifecycle.reset(fed)
-        flash(_("World Simulation reset."), "success")
-    except service.WorldSimulationError:
-        flash(_("Stop the World Simulation before resetting it."), "error")
+        lifecycle.reset(fed, report=report)
+        flash(
+            _(
+                "World Simulation reset: the coordinator and %(n)s experiments are back to their initial state.",
+                n=len(report),
+            ),
+            "success",
+        )
+    except service.WorldSimulationError as exc:
+        flash(
+            _(
+                "The World Simulation could not be reset: %(why)s",
+                why="; ".join(e["message"] for e in exc.errors),
+            ),
+            "error",
+        )
     return redirect(url_for("world_simulation.detail", fed_id=fed.id))
 
 

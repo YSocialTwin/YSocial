@@ -200,13 +200,41 @@ def clone(fed, new_name, owner="", copy=None):
     )
 
 
-def reset(fed) -> list:
-    """Back to *stopped* with no run data; returns the files removed."""
+def _default_reset_member(exp):
+    """Bring one member experiment back to its initial state (see ``y_web.src.experiment.reset``)."""
+    from flask import current_app
+
+    from y_web.src.experiment.reset import ResetError, reset_experiment
+
+    try:
+        return reset_experiment(exp, logger=current_app.logger)
+    except ResetError as exc:
+        raise WorldSimulationError({"code": "member_reset", "message": str(exc)}) from exc
+
+
+def reset(fed, report=None, reset_member=None) -> list:
+    """Back to the initial state, as if the World Simulation had never been started; returns the run files removed.
+
+    The data of the run (the coordinator's database, its analytics and logs, the runtimes' books of who is who) are
+    removed and **every member experiment is reset too** (its database, logs and run state, its clients, its counters),
+    so the whole World Simulation can be started again from the beginning. Settings, populations and identities stay.
+    ``report`` (a list) receives ``(member, result)`` for each member reset. Refused while the World Simulation or any
+    of its members is running, before anything is touched.
+    """
     if fed.status not in IDLE:
         raise WorldSimulationError(
             {
                 "code": "running",
                 "message": "Stop the World Simulation before resetting it.",
+            }
+        )
+    members = service.members_of(fed)
+    busy = [row.member for row, exp in members if getattr(exp, "running", 0) == 1]
+    if busy:
+        raise WorldSimulationError(
+            {
+                "code": "running",
+                "message": "Stop the experiments before resetting: " + ", ".join(busy),
             }
         )
     removed = []
@@ -222,6 +250,11 @@ def reset(fed) -> list:
         if os.path.exists(path):
             os.remove(path)
             removed.append(name)
+    reset_member = reset_member or _default_reset_member
+    for row, exp in members:
+        result = reset_member(exp)
+        if report is not None:
+            report.append((row.member, result))
     fed.status = "stopped"
     db.session.commit()
     return removed

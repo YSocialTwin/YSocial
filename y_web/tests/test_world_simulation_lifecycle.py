@@ -24,6 +24,14 @@ from y_web.tests.test_world_simulation_ui import (  # noqa: E402,F401  (fixtures
 BASE = "/admin/world_simulation"
 
 
+
+@pytest.fixture(autouse=True)
+def _members_reset_is_recorded(monkeypatch):
+    """The reset of a member experiment has its own tests (test_experiment_reset.py): here it is only recorded."""
+    done = []
+    monkeypatch.setattr(lifecycle, "_default_reset_member", lambda exp: done.append(exp.idexp) or {"restored": 0})
+    return done
+
 def fake_zip(exp_id, path):
     with zipfile.ZipFile(path, "w") as z:
         z.writestr("experiment.txt", f"experiment {exp_id}")
@@ -187,6 +195,23 @@ def test_reset_removes_the_run_and_refuses_while_active(world):
     assert os.path.exists(
         os.path.join(fed.folder, "federation.json")
     )  # the configuration stays
+
+
+def test_reset_brings_every_member_back_and_refuses_while_one_runs(world, _members_reset_is_recorded):
+    app, exps, tmp = world
+    fed = service.create_federation("every", list(exps.values()), owner="admin")
+    with_run(fed)
+    members = service.members_of(fed)
+    members[0][1].running = 1  # one member still runs: nothing is touched
+    with pytest.raises(WorldSimulationError) as err:
+        lifecycle.reset(fed)
+    assert "running" in err.value.codes and _members_reset_is_recorded == []
+    assert os.path.exists(os.path.join(fed.folder, "federation.db"))
+    members[0][1].running = 0
+    report = []
+    lifecycle.reset(fed, report=report)
+    assert sorted(_members_reset_is_recorded) == sorted(exp.idexp for _, exp in members)
+    assert {m for m, _ in report} == {row.member for row, _ in members}
 
 
 def test_reset_also_removes_the_bindings_of_the_members(world):

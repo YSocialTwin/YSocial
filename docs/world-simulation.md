@@ -415,8 +415,14 @@ From the detail page:
   experiment" produces it. The token is not exported.
 - **Copy** copies the experiments and creates a new stopped World Simulation with the same seed and options; it starts
   from nothing.
-- **Reset** (only when stopped) removes the coordinator database, the analytics and the log. Each experiment keeps its
-  own reset.
+- **Reset** (only when the World Simulation and all its experiments are stopped) brings everything back to the initial
+  state, as if it had never been started. The coordinator database, the analytics, the log and the runtimes' books of
+  who is who are removed, and **every member experiment is reset too**: a Standard experiment (microblogging, forum)
+  gets the clean database a new experiment starts from and loses its logs, run state and the client's content cache;
+  an HPC experiment (microblogging, photo sharing, instant messaging, dating) has its population files restored from
+  their backups and its run artifacts and database removed. Clients go back to *stopped* with no elapsed time, the
+  counters and metrics are cleared and the web interfaces are off. Settings, populations, clients and identities stay.
+  Nothing is touched if any member is still running. A Standard experiment on PostgreSQL is not covered.
 
 **Import** (on the list page) takes such a bundle back: it checks the SHA-256 of every file, imports each experiment
 (as *Upload experiment* does, named `<name>_<platform>`) and creates the World Simulation with the same seed,

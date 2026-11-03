@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 13:46+0000\n"
+"POT-Creation-Date: 2026-11-03 14:25+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11169,7 +11169,9 @@ msgstr ""
 msgid "Reset is available only for HPC experiments."
 msgstr ""
 
-msgid "Reset this World Simulation? The data of the run are removed."
+msgid ""
+"Reset this World Simulation and all its experiments? Everything produced "
+"by the run is removed. This cannot be undone."
 msgstr ""
 
 msgid "Reset to default values"
@@ -12630,9 +12632,6 @@ msgstr ""
 msgid "Stop the World Simulation before deleting it."
 msgstr ""
 
-msgid "Stop the World Simulation before resetting it."
-msgstr ""
-
 #, python-format
 msgid ""
 "Stop the active experiments that use this plugin before changing it: "
@@ -13109,6 +13108,10 @@ msgid "The World Simulation could not be copied: %(why)s"
 msgstr ""
 
 #, python-format
+msgid "The World Simulation could not be reset: %(why)s"
+msgstr ""
+
+#, python-format
 msgid "The World Simulation could not complete the operation: %(error)s"
 msgstr ""
 
@@ -13364,8 +13367,10 @@ msgstr ""
 
 msgid ""
 "The export holds the settings, the database of the run and the archive of"
-" each experiment. A copy starts from nothing. Resetting removes the data "
-"of the run; the experiments keep their own reset."
+" each experiment. A copy starts from nothing. Resetting brings the whole "
+"World Simulation back to its initial state, as if it had never been "
+"started: the data of the run and the data of every experiment are removed"
+" (settings, populations and clients stay)."
 msgstr ""
 
 msgid ""
@@ -15621,7 +15626,10 @@ msgstr ""
 msgid "World Simulation paused."
 msgstr ""
 
-msgid "World Simulation reset."
+#, python-format
+msgid ""
+"World Simulation reset: the coordinator and %(n)s experiments are back to"
+" their initial state."
 msgstr ""
 
 msgid "World Simulation resumed."

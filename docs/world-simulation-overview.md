@@ -95,7 +95,7 @@ People are outside the rules that act on agents: attention, discovery, leaving a
   icons that open it on each experiment (while it is active), a search, filters and a CSV download.
 - **Analytics.** Attention, migration, cross-posts, cascades, share chains, bridge agents, topics and what each person did,
   with CSV download.
-- **Keep and reuse.** Export to a zip, import elsewhere, copy (without people) or reset when stopped.
+- **Keep and reuse.** Export to a zip, import elsewhere, copy (without people) or reset, which brings the whole World Simulation back to its initial state (every experiment included) when it is stopped.
 
 The interface is available in English and Italian.
 

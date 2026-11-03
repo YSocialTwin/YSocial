@@ -90,11 +90,11 @@
                         <div class="dashboard-box" id="ws-management-box">
                             <h3 class="title is-5 is-thin">{{ _('Export, copy and reset') }}</h3>
                             <div class="box-content">
-                                <p class="ws-sub">{{ _('The export holds the settings, the database of the run and the archive of each experiment. A copy starts from nothing. Resetting removes the data of the run; the experiments keep their own reset.') }}</p>
+                                <p class="ws-sub">{{ _('The export holds the settings, the database of the run and the archive of each experiment. A copy starts from nothing. Resetting brings the whole World Simulation back to its initial state, as if it had never been started: the data of the run and the data of every experiment are removed (settings, populations and clients stay).') }}</p>
                                 <div class="ws-actions">
                                     <a class="button is-light" id="ws-export" href="{{ url_for('world_simulation.export', fed_id=fed.id) }}"><i class="mdi mdi-export-variant"></i> <span>{{ _('Export') }}</span></a>
                                     {% if editable %}
-                                    <form method="post" action="{{ url_for('world_simulation.reset', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Reset this World Simulation? The data of the run are removed.') }}');">
+                                    <form method="post" action="{{ url_for('world_simulation.reset', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Reset this World Simulation and all its experiments? Everything produced by the run is removed. This cannot be undone.') }}');">
                                         <button class="button is-light" type="submit"><i class="mdi mdi-restore"></i> <span>{{ _('Reset') }}</span></button>
                                     </form>
                                     {% endif %}
