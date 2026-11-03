@@ -169,17 +169,23 @@ class DatingReader:
         return self._UPTO.format(a=alias)
 
     # ------------------------------------------------------------------ accounts
-    def _active_ids(self, cut: int) -> Dict[str, sqlite3.Row]:
+    def _active_ids(
+        self, cut: int, include_left: bool = False
+    ) -> Dict[str, sqlite3.Row]:
+        """Accounts present at the cut. With ``include_left`` the ones that had already left by then are kept too (the
+        column ``gone`` tells them apart): their data is never deleted, only the discovery surfaces hide them."""
         rows = self.c.execute(
-            "SELECT u.id, u.username, u.age, u.gender, u.status, u.joined_on, u.left_on, "
+            "SELECT u.id, u.username, u.age, u.gender, u.status, u.joined_on, u.left_on, u.left_reason, "
+            "CASE WHEN l.id IS NOT NULL AND l.day * 10000 + l.hour <= :cut THEN 1 ELSE 0 END AS gone, "
+            "l.day AS left_day, l.hour AS left_hour, "
             "dp.city, dp.intent, dp.bio, dp.prompt_answers, dp.photo_count "
             "FROM user_mgmt u JOIN dating_profile dp ON dp.user_id = u.id "
             "LEFT JOIN rounds j ON j.id = u.joined_on "
             "LEFT JOIN rounds l ON l.id = u.left_on "
             "WHERE (j.id IS NULL OR j.day * 10000 + j.hour <= :cut) "
-            "AND (l.id IS NULL OR l.day * 10000 + l.hour > :cut) "
+            "AND (:incl = 1 OR l.id IS NULL OR l.day * 10000 + l.hour > :cut) "
             "AND u.is_page = 0 ORDER BY u.username",
-            {"cut": cut},
+            {"cut": cut, "incl": 1 if include_left else 0},
         ).fetchall()
         return {r["id"]: r for r in rows}
 
@@ -342,10 +348,14 @@ class DatingReader:
 
     def profile(self, user_id: str, vp: Viewpoint) -> Optional[Dict[str, Any]]:
         cut = self._cut(vp.round)
-        base = self._active_ids(cut).get(user_id)
+        # a profile stays reachable after the person leaves the platform (nothing is deleted): it is flagged inactive
+        base = self._active_ids(cut, include_left=True).get(user_id)
         if base is None:
             return None
         data = self._public_profile(user_id, cut, base)
+        data["inactive"] = bool(base["gone"])
+        data["left_reason"] = base["left_reason"] if base["gone"] else None
+        data["left_day"] = base["left_day"] if base["gone"] else None
         if vp.kind == OVERVIEW:
             data["overview"] = self._overview_extra(user_id, cut)
         return data

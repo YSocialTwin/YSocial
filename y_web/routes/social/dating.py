@@ -333,7 +333,11 @@ def dating_profile(exp_id, account_id):
         profile = reader.profile(account_id, ctx.vp)
         if profile is None:
             abort(404)
-        if ctx.participant is not None and account_id != ctx.participant.account_id:
+        if (
+            ctx.participant is not None
+            and account_id != ctx.participant.account_id
+            and not profile.get("inactive")
+        ):
             _record_view(ctx, account_id)
         return _render("dating/profile.html", ctx, reader, profile=profile)
 

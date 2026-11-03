@@ -27,6 +27,9 @@
     </div>
     <div class="dt-pf-idcard">
       <h2 class="dt-pf-title">{{ profile.username }}{% if profile.age %}<span class="dt-pf-age">, {{ profile.age }}</span>{% endif %}</h2>
+      {% if profile.inactive %}
+      <p class="dt-pf-inactive" role="status" data-pf-inactive><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2zm0-4h-2V7h2z" fill="currentColor"/></svg><span><strong>{{ _('Inactive profile') }}</strong> · {{ _('This person has left the platform: the profile is kept for the record and no longer appears in decks, search or the showcase.') }}</span></p>
+      {% endif %}
       <ul class="dt-pf-facts">
         {% if profile.city %}<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9.5A2.5 2.5 0 1 1 12 7.5a2.5 2.5 0 0 1 0 5z" fill="currentColor"/></svg>{{ profile.city }}</li>{% endif %}
         {% if profile.intent %}<li class="dt-pf-intent">{{ profile.intent }}</li>{% endif %}

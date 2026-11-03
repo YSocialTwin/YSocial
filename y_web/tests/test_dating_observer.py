@@ -134,16 +134,17 @@ def test_time_travel_rebuilds_the_profile_and_hides_the_future(observer):
     # the match is created at round 4: before that there is none
     before = client.get(f"/{exp_id}/dating/matches?vp=overview&round=3").data.decode()
     assert "No matches" in before
-    # a user who left at round 9 is gone afterwards, present before
+    # a user who left at round 9 is active before and flagged inactive afterwards: the profile is never lost
     gone = info["users"][-1]
-    assert (
-        client.get(f"/{exp_id}/dating/profile/{gone}?vp=public&round=8").status_code
-        == 200
-    )
-    assert (
-        client.get(f"/{exp_id}/dating/profile/{gone}?vp=public&round=10").status_code
-        == 404
-    )
+    before = client.get(f"/{exp_id}/dating/profile/{gone}?vp=public&round=8")
+    assert before.status_code == 200 and b"data-pf-inactive" not in before.data
+    after = client.get(f"/{exp_id}/dating/profile/{gone}?vp=public&round=10")
+    assert after.status_code == 200 and b"data-pf-inactive" in after.data
+    # ... but it no longer shows up where people are discovered
+    showcase = client.get(f"/{exp_id}/dating?vp=public&round=10").data.decode()
+    assert f"/profile/{gone}" not in showcase
+    # an account that never existed is still a 404
+    assert client.get(f"/{exp_id}/dating/profile/nobody?vp=public&round=10").status_code == 404
     assert (
         "Time travel" in client.get(f"/{exp_id}/dating?vp=public&round=2").data.decode()
     )

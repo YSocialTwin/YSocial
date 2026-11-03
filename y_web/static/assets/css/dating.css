@@ -591,3 +591,8 @@ a.dt-ico:hover { border-color: var(--dt-accent); } .dt-ico.is-off { opacity: .35
 .ws-also--dating .ws-also-item.is-quiet { border-style: dashed; background: transparent; }
 .ws-also--dating .ws-also-item.is-quiet .ws-also-chip { color: var(--dt-muted); font-weight: 500; }
 .ws-also--dating .ws-also-chip.is-nolink { cursor: default; }
+
+/* A person who left the platform: the profile stays reachable (nothing is deleted) and says so. */
+.dt-pf-inactive { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0 4px; padding: 8px 12px; border-radius: 12px; border: 1px dashed var(--dt-muted); background: transparent; color: var(--dt-muted); font-size: 13px; line-height: 1.4; }
+.dt-pf-inactive svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+.dt-pf-inactive strong { color: var(--dt-text); }
