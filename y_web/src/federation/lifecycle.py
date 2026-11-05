@@ -209,7 +209,9 @@ def _default_reset_member(exp):
     try:
         return reset_experiment(exp, logger=current_app.logger)
     except ResetError as exc:
-        raise WorldSimulationError({"code": "member_reset", "message": str(exc)}) from exc
+        raise WorldSimulationError(
+            {"code": "member_reset", "message": str(exc)}
+        ) from exc
 
 
 def reset(fed, report=None, reset_member=None) -> list:

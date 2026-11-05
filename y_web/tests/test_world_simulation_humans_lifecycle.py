@@ -20,13 +20,17 @@ from y_web.tests.test_world_simulation_import import (  # noqa: E402
 from y_web.tests.test_world_simulation_lifecycle import copy_of  # noqa: E402
 
 
-
 @pytest.fixture(autouse=True)
 def _members_reset_is_recorded(monkeypatch):
     """The reset of a member experiment has its own tests (test_experiment_reset.py): here it is only recorded."""
     done = []
-    monkeypatch.setattr(lifecycle, "_default_reset_member", lambda exp: done.append(exp.idexp) or {"restored": 0})
+    monkeypatch.setattr(
+        lifecycle,
+        "_default_reset_member",
+        lambda exp: done.append(exp.idexp) or {"restored": 0},
+    )
     return done
+
 
 def enrolled(world_fixture):
     app, exps, tmp = world_fixture

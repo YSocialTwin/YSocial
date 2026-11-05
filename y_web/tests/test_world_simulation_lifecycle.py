@@ -24,13 +24,17 @@ from y_web.tests.test_world_simulation_ui import (  # noqa: E402,F401  (fixtures
 BASE = "/admin/world_simulation"
 
 
-
 @pytest.fixture(autouse=True)
 def _members_reset_is_recorded(monkeypatch):
     """The reset of a member experiment has its own tests (test_experiment_reset.py): here it is only recorded."""
     done = []
-    monkeypatch.setattr(lifecycle, "_default_reset_member", lambda exp: done.append(exp.idexp) or {"restored": 0})
+    monkeypatch.setattr(
+        lifecycle,
+        "_default_reset_member",
+        lambda exp: done.append(exp.idexp) or {"restored": 0},
+    )
     return done
+
 
 def fake_zip(exp_id, path):
     with zipfile.ZipFile(path, "w") as z:
@@ -197,7 +201,9 @@ def test_reset_removes_the_run_and_refuses_while_active(world):
     )  # the configuration stays
 
 
-def test_reset_brings_every_member_back_and_refuses_while_one_runs(world, _members_reset_is_recorded):
+def test_reset_brings_every_member_back_and_refuses_while_one_runs(
+    world, _members_reset_is_recorded
+):
     app, exps, tmp = world
     fed = service.create_federation("every", list(exps.values()), owner="admin")
     with_run(fed)
@@ -218,13 +224,23 @@ def test_reset_also_removes_the_bindings_of_the_members(world):
     app, exps, tmp = world
     fed = service.create_federation("bind", list(exps.values()), owner="admin")
     with_run(fed)
-    for name in ("bindings_forum.db", "bindings_forum.db-wal", "bindings_microblogging.db"):
+    for name in (
+        "bindings_forum.db",
+        "bindings_forum.db-wal",
+        "bindings_microblogging.db",
+    ):
         open(os.path.join(fed.folder, name), "w").write("x")
     open(os.path.join(fed.folder, "bindings_notes.txt"), "w").write("keep")
     fed.status = "stopped"
     removed = lifecycle.reset(fed)
-    assert {"bindings_forum.db", "bindings_forum.db-wal", "bindings_microblogging.db"} <= set(removed)
-    assert os.path.exists(os.path.join(fed.folder, "bindings_notes.txt"))  # only the databases of the runtimes
+    assert {
+        "bindings_forum.db",
+        "bindings_forum.db-wal",
+        "bindings_microblogging.db",
+    } <= set(removed)
+    assert os.path.exists(
+        os.path.join(fed.folder, "bindings_notes.txt")
+    )  # only the databases of the runtimes
 
 
 def test_routes_export_reset_and_permissions(site, monkeypatch):

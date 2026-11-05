@@ -296,7 +296,11 @@ FIELD_MAP["discoveries"] = (
             "TEXT",
             "joined (enrolled), pending (aware and not enrolled yet) or lapsed (the awareness faded)",
         ),
-        ("outcome_day", "INTEGER", "day of the join or of the loss, NULL while pending"),
+        (
+            "outcome_day",
+            "INTEGER",
+            "day of the join or of the loss, NULL while pending",
+        ),
         ("days_to_decide", "INTEGER", "outcome_day - aware_day, NULL while pending"),
     ],
 )
@@ -311,7 +315,11 @@ FIELD_MAP["membership_daily"] = (
         ("joined", "INTEGER", "agents that joined for the first time"),
         ("rejoined", "INTEGER", "agents that came back after leaving"),
         ("left", "INTEGER", "agents that left"),
-        ("aware_pending", "INTEGER", "agents aware of the platform and not enrolled, at the end of the day"),
+        (
+            "aware_pending",
+            "INTEGER",
+            "agents aware of the platform and not enrolled, at the end of the day",
+        ),
     ],
 )
 HUMAN_PREFIX = "human:"
@@ -473,8 +481,10 @@ def compute(
             left_per_day[(day, member)] += 1
     migration_flows = [(day, a, b, n) for (day, a, b), n in sorted(flows.items())]
 
-
-    names = {str(g): n for g, n in q("SELECT global_agent_id, name FROM federation_agent_name")}
+    names = {
+        str(g): n
+        for g, n in q("SELECT global_agent_id, name FROM federation_agent_name")
+    }
     membership_events: List[tuple] = []
     opened: Dict[Tuple[str, str], int] = {}
     discoveries: List[list] = []
@@ -486,7 +496,9 @@ def compute(
         start = opened.pop((gid, member), None)
         if start is None:
             return
-        discoveries.append([gid, names.get(gid, ""), member, start, outcome, day, day - start])
+        discoveries.append(
+            [gid, names.get(gid, ""), member, start, outcome, day, day - start]
+        )
         pending_now[member] -= 1
 
     for _id, tick, kind, detail in q(
@@ -511,13 +523,19 @@ def compute(
             cell = daily[(day, member)]
             if new == "active":
                 _close(gid, member, day, "joined")
-                cell["rejoined" if old == "left" or reason == "rejoin" else "joined"] += 1
+                cell[
+                    "rejoined" if old == "left" or reason == "rejoin" else "joined"
+                ] += 1
             elif new == "left":
                 cell["left"] += 1
-        membership_events.append((int(tick), day, gid, names.get(gid, ""), member, old, new, reason))
+        membership_events.append(
+            (int(tick), day, gid, names.get(gid, ""), member, old, new, reason)
+        )
         stock[(day, member)] = pending_now[member]
     for (gid, member), start in sorted(opened.items()):
-        discoveries.append([gid, names.get(gid, ""), member, start, "pending", None, None])
+        discoveries.append(
+            [gid, names.get(gid, ""), member, start, "pending", None, None]
+        )
     discoveries.sort(key=lambda r: (r[3], r[2], r[0]))
     membership_daily = [
         (

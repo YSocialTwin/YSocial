@@ -650,4 +650,3 @@ def test_the_im_avatar_shows_the_picture_when_there_is_one(app):
     with app.test_request_context("/"):
         assert 'src="/media/agents/5.png"' in str(macro("Ann", 10, "sm"))
         assert ">BL<" in str(macro("Bo Li", 10, "sm"))
-

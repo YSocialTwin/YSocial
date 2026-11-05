@@ -60,7 +60,9 @@ def _clean_database(exp_folder: str, failed: List[str]) -> str:
         return "clean schema"
     import sqlite3
 
-    sqlite3.connect(target).close()  # as "Copy experiment" does when the clean schema is missing
+    sqlite3.connect(
+        target
+    ).close()  # as "Copy experiment" does when the clean schema is missing
     return "empty database"
 
 
@@ -107,7 +109,11 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
                 stop_client_for_experiment(exp, client, pause=False)
             except Exception:
                 if logger:
-                    logger.warning("could not stop client %s during reset", client.id, exc_info=True)
+                    logger.warning(
+                        "could not stop client %s during reset",
+                        client.id,
+                        exc_info=True,
+                    )
         client.status = 0
         client.pid = None
 
@@ -183,10 +189,25 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
     exp.exp_status = "stopped"
     stats = db.session.scalars(select(Exp_stats).filter_by(exp_id=exp.idexp)).first()
     if stats is None:
-        db.session.add(Exp_stats(exp_id=exp.idexp, rounds=0, agents=0, posts=0, reactions=0, mentions=0))
+        db.session.add(
+            Exp_stats(
+                exp_id=exp.idexp, rounds=0, agents=0, posts=0, reactions=0, mentions=0
+            )
+        )
     else:
         stats.rounds = stats.agents = stats.posts = stats.reactions = stats.mentions = 0
-    for model in (LogFileOffset, ServerLogMetrics, ClientLogMetrics, OpinionEvolutionCache, OpinionEvolutionSampledAgents):
+    for model in (
+        LogFileOffset,
+        ServerLogMetrics,
+        ClientLogMetrics,
+        OpinionEvolutionCache,
+        OpinionEvolutionSampledAgents,
+    ):
         db.session.query(model).filter_by(exp_id=exp.idexp).delete()
     db.session.commit()
-    return {"restored": restored, "removed": removed, "database": database, "failed": failed}
+    return {
+        "restored": restored,
+        "removed": removed,
+        "database": database,
+        "failed": failed,
+    }

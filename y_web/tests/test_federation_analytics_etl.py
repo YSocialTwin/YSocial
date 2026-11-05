@@ -184,7 +184,9 @@ def discovery(db, tick, gid, member, old, new):
         (
             tick,
             "discovery_state",
-            json.dumps({"global_agent_id": gid, "member": member, "from": old, "to": new}),
+            json.dumps(
+                {"global_agent_id": gid, "member": member, "from": old, "to": new}
+            ),
         ),
     )
 

@@ -599,7 +599,11 @@ def test_provisioning_is_local_to_yweb_and_honoured_by_every_platform_asked(
     sections = _sections(fed)
     assert sections["microblogging"]["provision"] and sections["microblogging"]["adopt"]
     assert sections["forum"]["provision"] and sections["forum"]["adopt"]
-    assert all("provision" not in sections[m] for m in sections if m not in ("microblogging", "forum"))
+    assert all(
+        "provision" not in sections[m]
+        for m in sections
+        if m not in ("microblogging", "forum")
+    )
     config = json.load(open(os.path.join(fed.folder, "federation.json")))
     assert "provisioning" not in config and config["discovery"] == {"enabled": True}
     assert sorted(m["member"] for m in config["members"] if m.get("provision")) == [
