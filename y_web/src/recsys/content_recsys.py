@@ -14,6 +14,7 @@ from sqlalchemy import select as sa_select
 from sqlalchemy import text
 from sqlalchemy.sql.expression import func
 
+from y_web.src.forum.ordering import seq_or_id
 from y_web import db
 from y_web.src.models import (
     Follow,
@@ -122,7 +123,7 @@ def _order_query_by_simulation_time(query):
     return query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
         desc(func.coalesce(Rounds.day, -1)),
         desc(func.coalesce(Rounds.hour, -1)),
-        desc(Post.id),
+        desc(seq_or_id(Post)),
     )
 
 
@@ -756,7 +757,7 @@ def get_suggested_posts(
                 desc(Post.reaction_count),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(Post.id),
+                desc(seq_or_id(Post)),
             )
             .paginate(page=page, per_page=per_page, error_out=False)
         )
@@ -787,7 +788,7 @@ def get_suggested_posts(
                 desc(Post.reaction_count),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(Post.id),
+                desc(seq_or_id(Post)),
             )
             .paginate(
                 page=page, per_page=int(per_page * follower_ratio), error_out=False
@@ -818,7 +819,7 @@ def get_suggested_posts(
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
                 desc(func.coalesce(comment_counts.c.n_comments, 0)),
-                desc(Post.id),
+                desc(seq_or_id(Post)),
             )
         )
         posts = posts_query.paginate(page=page, per_page=per_page, error_out=False)
@@ -1022,7 +1023,7 @@ def get_suggested_posts(
                     desc(func.coalesce(Rounds.day, -1)),
                     desc(func.coalesce(Rounds.hour, -1)),
                     desc(Post.reaction_count),
-                    desc(Post.id),
+                    desc(seq_or_id(Post)),
                 )
             )
             posts = posts_query.paginate(page=page, per_page=per_page, error_out=False)

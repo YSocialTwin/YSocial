@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import case, desc, func, or_, select
 
+from y_web.src.forum.ordering import seq_or_id
 from y_web import db, prompt_store
 from y_web.src.models import (
     AdminInterviewMessage,
@@ -654,7 +655,7 @@ def _build_facts_snapshot(
             reply_posts = (
                 Post.query.filter(Post.comment_to.in_(parent_ids))
                 .filter(Post.user_id != normalized_agent_user_id)
-                .order_by(desc(Post.id))
+                .order_by(desc(seq_or_id(Post)))
                 .limit(120)
                 .all()
             )
@@ -795,7 +796,7 @@ def _build_facts_snapshot(
         q_top = (
             Post.query.filter(Post.user_id == normalized_agent_user_id)
             .filter(Post.comment_to == -1)
-            .order_by(desc(Post.reaction_count), desc(Post.id))
+            .order_by(desc(Post.reaction_count), desc(seq_or_id(Post)))
             .limit(int(top_posts_limit))
         )
         top_posts = q_top.all()
@@ -807,7 +808,7 @@ def _build_facts_snapshot(
         q_recent_roots = (
             Post.query.filter(Post.user_id == normalized_agent_user_id)
             .filter(Post.comment_to == -1)
-            .order_by(desc(Post.id))
+            .order_by(desc(seq_or_id(Post)))
             .limit(max(int(top_posts_limit), 5))
         )
         recent_root_posts = q_recent_roots.all()
@@ -819,7 +820,7 @@ def _build_facts_snapshot(
         q_recent = (
             Post.query.filter(Post.user_id == normalized_agent_user_id)
             .filter(Post.comment_to != -1)
-            .order_by(desc(Post.id))
+            .order_by(desc(seq_or_id(Post)))
             .limit(int(recent_comments_limit))
         )
         recent_comments = q_recent.all()
@@ -854,7 +855,7 @@ def _build_facts_snapshot(
                 q_hits = (
                     Post.query.filter(Post.user_id == normalized_agent_user_id)
                     .filter(or_(*conds))
-                    .order_by(desc(Post.id))
+                    .order_by(desc(seq_or_id(Post)))
                     .limit(int(query_hits_limit))
                 )
                 query_hits = q_hits.all()
@@ -885,7 +886,7 @@ def _build_facts_snapshot(
                 q_id_hits = (
                     Post.query.filter(Post.user_id == normalized_agent_user_id)
                     .filter(or_(*id_conds))
-                    .order_by(desc(Post.id))
+                    .order_by(desc(seq_or_id(Post)))
                     .limit(max(int(query_hits_limit), 8))
                 )
                 id_hits = q_id_hits.all()

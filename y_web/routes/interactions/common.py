@@ -11,6 +11,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
+from y_web.src.forum.ordering import seq_or_id
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
@@ -85,7 +86,7 @@ def _resolve_follow_round_id(exp_id):
                     round_row = (
                         session.query(Rounds)
                         .order_by(
-                            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+                            Rounds.day.desc(), Rounds.hour.desc(), seq_or_id(Rounds).desc()
                         )
                         .first()
                     )
@@ -108,7 +109,7 @@ def _resolve_follow_round_id(exp_id):
     try:
         current_round = db.session.scalars(
             select(Rounds).order_by(
-                Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+                Rounds.day.desc(), Rounds.hour.desc(), seq_or_id(Rounds).desc()
             )
         ).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
@@ -213,7 +214,7 @@ def follow(exp_id, user_id, follower_id):
         )
         latest_follow = (
             query.filter_by(user_id=source_user_id, follower_id=user_id)
-            .order_by(Follow.id.desc())
+            .order_by(seq_or_id(Follow).desc())
             .first()
         )
         new_action = (

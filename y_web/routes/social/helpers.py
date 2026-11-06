@@ -17,6 +17,7 @@ from flask import request
 from flask_login import current_user
 from sqlalchemy import or_, select
 
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.forum.ids import opaque_id
 from y_web import db
 from y_web.src.content.avatars import (
@@ -653,20 +654,20 @@ def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
                 desc("score"),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(Post.id),
+                desc(seq_or_id(Post)),
             )
         )
     elif normalized_feed == "most_commented":
         query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
             desc(func.coalesce(Rounds.day, -1)),
             desc(func.coalesce(Rounds.hour, -1)),
-            desc(Post.id),
+            desc(seq_or_id(Post)),
         )
     else:
         query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
             desc(func.coalesce(Rounds.day, -1)),
             desc(func.coalesce(Rounds.hour, -1)),
-            desc(Post.id),
+            desc(seq_or_id(Post)),
         )
 
     return normalized_feed, query.paginate(
