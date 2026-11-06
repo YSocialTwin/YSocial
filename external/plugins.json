@@ -51,6 +51,16 @@
       "repository_url": "https://github.com/YSocialTwin/YDating"
     },
     {
+      "plugin_name": "YForum",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YForum"
+    },
+    {
       "plugin_name": "YInstantMessaging",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
