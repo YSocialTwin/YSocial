@@ -15,6 +15,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
 from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web import db, prompt_store
 from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.system import prompt_packs
@@ -151,7 +152,7 @@ def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
         .order_by(
             Rounds.day.desc(),
             Rounds.hour.desc(),
-            Follow.id.desc(),
+            seq_or_id(Follow).desc(),
         )
         .all()
     )
@@ -907,7 +908,7 @@ def api_enrich_pending(exp_id: int):
 
     if summarizer and max_articles:
         candidates = db.session.scalars(
-            select(Articles).order_by(Articles.id.desc()).limit(200)
+            select(Articles).order_by(seq_or_id(Articles).desc()).limit(200)
         ).all()
         for art in candidates:
             if enriched_articles >= max_articles:
@@ -925,7 +926,7 @@ def api_enrich_pending(exp_id: int):
 
     if annotator and max_images:
         candidates = db.session.scalars(
-            select(Images).order_by(Images.id.desc()).limit(200)
+            select(Images).order_by(seq_or_id(Images).desc()).limit(200)
         ).all()
         for img in candidates:
             if enriched_images >= max_images:
