@@ -161,6 +161,13 @@ def _external_repo_availability():
     )
     hpc = _installed("hpc_simulator")
     forum = _installed("forum_server") and _installed("forum_client")
+    # YForum, the Ray runtime of the forum (HPC): a local check, like the launcher's own
+    try:
+        from y_web.src.forum import forum_hpc_installed
+
+        forum_hpc = forum_hpc_installed()
+    except Exception:
+        forum_hpc = False
     photo_sharing = _installed("photo_sharing")
     instant_messaging = _installed("instant_messaging")
     dating = _installed("dating")
@@ -169,6 +176,7 @@ def _external_repo_availability():
         "microblogging": microblogging,
         "hpc": hpc,
         "forum": forum,
+        "forum_hpc": forum_hpc,
         "photo_sharing": photo_sharing,
         "instant_messaging": instant_messaging,
         "dating": dating,
@@ -2167,7 +2175,16 @@ def create_experiment():
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
     repo_availability = _external_repo_availability()
 
-    if platform_type == "forum" and not repo_availability["forum"]:
+    if platform_type == "forum" and simulator_type == "HPC":
+        if not repo_availability.get("forum_hpc"):
+            flash(
+                _(
+                    "Forum HPC experiments are unavailable because YForum is not present."
+                ),
+                "error",
+            )
+            return redirect(url_for("admin.dashboard"))
+    elif platform_type == "forum" and not repo_availability["forum"]:
         flash(
             _(
                 "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
@@ -2232,9 +2249,11 @@ def create_experiment():
         simulator_type = "HPC"
 
     if platform_type == "forum":
-        simulator_type = "Standard"
+        # the forum runs on YForum (HPC) only when the form asks for it; otherwise on the Flask pair
+        simulator_type = "HPC" if simulator_type == "HPC" else "Standard"
     elif simulator_type != "HPC":
         simulator_type = "Standard"
+    forum_hpc = platform_type == "forum" and simulator_type == "HPC"
 
     # Remote experiment configuration
     is_remote = 1 if request.form.get("is_remote") == "true" else 0
@@ -2319,10 +2338,20 @@ def create_experiment():
     sentiment_annotation = request.form.get("sentiment_annotation") == "true"
     emotion_annotation = request.form.get("emotion_annotation") == "true"
 
-    if platform_type == "forum":
+    if platform_type == "forum" and not forum_hpc:
         opinion_dynamics_enabled = False
         sentiment_annotation = False
         emotion_annotation = False
+
+    if forum_hpc:
+        redis_enabled = False  # the forum runtime has no use for the YSimulator cache in this version
+        if is_remote:
+            flash(_("Remote forum HPC experiments are not supported."), "error")
+            return redirect(url_for("admin.dashboard"))
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            current_app.logger.info(
+                "Forum HPC experiments use SQLite even if the platform uses PostgreSQL"
+            )
 
     if platform_type == "instant_messaging":
         # IM has its own annotation and analytics model; the YSocial toggles do not apply (plan, 5.2)
@@ -2359,9 +2388,9 @@ def create_experiment():
 
     # identify db type
     db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith(
-        "postgresql"
-    ) and platform_type not in {"instant_messaging", "dating"}:
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql") and (
+        platform_type not in {"instant_messaging", "dating"} and not forum_hpc
+    ):
         db_type = "postgresql"
 
     from y_web.src.system.path_utils import get_writable_path
@@ -2376,7 +2405,7 @@ def create_experiment():
     db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
-    if platform_type in {"instant_messaging", "dating"}:
+    if platform_type in {"instant_messaging", "dating"} or forum_hpc:
         pass  # the runtime creates its own database on first server start: nothing to copy or ensure
     elif platform_type in {"microblogging", "forum", "photo_sharing"}:
         if db_type == "sqlite":
@@ -2556,6 +2585,33 @@ def create_experiment():
                 shutil.rmtree(data_path, ignore_errors=True)
                 flash(
                     _("Invalid dating settings: %(why)s", why=str(exc)),
+                    "error",
+                )
+                return redirect(url_for("admin.dashboard"))
+        elif forum_hpc:
+            from y_web.src.forum.experiment_config import (
+                ForumConfigError,
+                generate_forum_server_config,
+            )
+
+            try:
+                config = generate_forum_server_config(
+                    exp_name=exp_name,
+                    db_uri=db_uri,
+                    data_path=data_path,
+                    is_remote=is_remote,
+                    seed=request.form.get("seed"),
+                    topics=topics,
+                    toxicity_annotation=toxicity_annotation,
+                    sentiment_annotation=sentiment_annotation,
+                    emotion_annotation=emotion_annotation,
+                    opinion_dynamics_enabled=opinion_dynamics_enabled,
+                    perspective_api=perspective_api,
+                )
+            except ForumConfigError as exc:
+                shutil.rmtree(data_path, ignore_errors=True)
+                flash(
+                    _("Invalid forum settings: %(why)s", why=str(exc)),
                     "error",
                 )
                 return redirect(url_for("admin.dashboard"))

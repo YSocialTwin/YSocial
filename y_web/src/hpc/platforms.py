@@ -112,8 +112,10 @@ HPC_PLATFORMS = {
         client_actor_prefix="",
         # the offline validator (python -m YForum.cli.validate) is wired in with the config translation
         validates_config=False,
-        syncs_client_config=True,
-        requires_prompts_file=True,
+        # YForum has its own client schema (stress/reward, network, duration come from the translation of the
+        # client form) and ships its prompt packs: no YSimulator-style sync and no prompts file in the folder
+        syncs_client_config=False,
+        requires_prompts_file=False,
         supports_federation=True,
     ),
 }

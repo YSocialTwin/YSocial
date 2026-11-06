@@ -1531,6 +1531,7 @@ var AdminSettings = (function() {
       const microbloggingAvailable = !!repoAvailability.microblogging;
       const hpcAvailable = !!repoAvailability.hpc;
       const forumAvailable = !!repoAvailability.forum;
+      const forumHpcAvailable = !!repoAvailability.forum_hpc;
       const photoSharingAvailable = !!repoAvailability.photo_sharing;
       const instantMessagingAvailable = !!repoAvailability.instant_messaging;
       const datingAvailable = !!repoAvailability.dating;
@@ -1574,7 +1575,7 @@ var AdminSettings = (function() {
           }
           updateButtonState();
           const isPhotoSharing = platformTypeSelect.value === 'photo_sharing' || isInstantMessaging || isDating;
-          if (!forumAvailable && platformTypeSelect.value === 'forum') {
+          if (!(forumAvailable || forumHpcAvailable) && platformTypeSelect.value === 'forum') {
               platformTypeSelect.value = 'microblogging';
           }
           const isForum = platformTypeSelect.value === 'forum';
@@ -1592,11 +1593,27 @@ var AdminSettings = (function() {
                   hpcToggleContainer.style.opacity = '0.8';
               }
           } else if (isForum) {
-              hpcToggle.checked = false;
-              hpcToggle.disabled = true;
-              hpcToggleLabel.textContent = YI18n.t('Unavailable for Forum');
-              if (hpcToggleContainer) {
-                  hpcToggleContainer.style.opacity = '0.55';
+              // the forum runs on the Flask pair (Standard) or on YForum (HPC)
+              if (!forumHpcAvailable) {
+                  hpcToggle.checked = false;
+                  hpcToggle.disabled = true;
+                  hpcToggleLabel.textContent = YI18n.t('Unavailable for Forum');
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '0.55';
+                  }
+              } else if (!forumAvailable) {
+                  hpcToggle.checked = true;
+                  hpcToggle.disabled = true;
+                  hpcToggleLabel.textContent = YI18n.t('Required');
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '0.8';
+                  }
+              } else {
+                  hpcToggle.disabled = false;
+                  hpcToggleLabel.textContent = hpcToggle.checked ? YI18n.t('Enabled') : YI18n.t('Disabled');
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '1';
+                  }
               }
           } else {
               if (!hpcAvailable) {
@@ -1622,7 +1639,7 @@ var AdminSettings = (function() {
               }
           }
 
-          isHPC = !isForum && hpcToggle.checked;
+          isHPC = (!isForum || forumHpcAvailable) && hpcToggle.checked;
           simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
 
           if (!isForum && microbloggingAvailable && !hpcAvailable) {
@@ -1636,7 +1653,7 @@ var AdminSettings = (function() {
           if (platformTypeSelect) {
               const forumOption = platformTypeSelect.querySelector('option[value="forum"]');
               if (forumOption) {
-                  forumOption.disabled = !forumAvailable;
+                  forumOption.disabled = !(forumAvailable || forumHpcAvailable);
               }
               const microbloggingOption = platformTypeSelect.querySelector('option[value="microblogging"]');
               if (microbloggingOption) {
@@ -1671,7 +1688,7 @@ var AdminSettings = (function() {
 
           if (isHPC) {
               hpcInfoInline.style.display = 'block';
-              redisConfigBox.style.display = (isInstantMessaging || isDating) ? 'none' : 'flex';
+              redisConfigBox.style.display = (isInstantMessaging || isDating || isForum) ? 'none' : 'flex';
 
               // Disable remote experiment toggle for HPC
               if (remoteExperimentToggle) {

@@ -12,3 +12,16 @@ def is_forum_hpc_experiment(experiment) -> bool:
         getattr(experiment, "platform_type", None) == "forum"
         and getattr(experiment, "simulator_type", None) == "HPC"
     )
+
+
+def forum_hpc_installed() -> bool:
+    """YForum is present (writable or bundled copy) with the two entry points the HPC launcher runs."""
+    import os
+
+    from y_web.src.system.path_utils import get_external_repo_dir
+
+    root = get_external_repo_dir("YForum")
+    return all(
+        os.path.isfile(os.path.join(root, name))
+        for name in ("run_server.py", "run_client.py")
+    )
