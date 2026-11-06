@@ -28,7 +28,11 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
 )
 from y_web.src.llm.ollama_manager import get_ollama_models
-from y_web.src.llm.vllm_manager import get_llm_models, get_vllm_models
+from y_web.src.llm.vllm_manager import (
+    LLMAuthenticationError,
+    get_llm_models,
+    get_vllm_models,
+)
 from y_web.src.models import (
     Admin_users,
     Client,
@@ -91,6 +95,56 @@ def _is_embedding_model_name(model_name: str) -> bool:
     return any(marker in lowered for marker in embedding_markers)
 
 
+LLM_API_KEY_HEADER = "X-LLM-API-Key"
+
+
+def _llm_api_key_from_request():
+    """The API key for the request.
+
+    The key typed in the form is sent in a header (never in the URL, which is
+    logged). When the form is empty and names an admin user (``user_id``) the key
+    stored for that user is used, so "Fetch Models" works on a saved
+    configuration; a user may only use their own, except administrators and
+    researchers.
+    """
+    typed = (request.headers.get(LLM_API_KEY_HEADER) or "").strip()
+    if typed:
+        return typed
+    try:
+        user_id = int(request.args.get("user_id", ""))
+    except ValueError:
+        return ""
+    current = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if current is None or (
+        current.id != user_id and current.role not in ("admin", "researcher")
+    ):
+        return ""
+    target = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
+    return (getattr(target, "llm_api_key", "") or "").strip()
+
+
+def _llm_failure(message, status, **extra):
+    """A failed model-list request. ``error`` is what the forms display; ``message`` is kept for older callers."""
+    return (
+        jsonify({"success": False, "error": message, "message": message, **extra}),
+        status,
+    )
+
+
+def _llm_auth_error_response(llm_url, error):
+    return _llm_failure(
+        _(
+            "%(llm_url)s refused the request (HTTP %(status)s). Check the API key.",
+            llm_url=llm_url,
+            status=error.status_code,
+        ),
+        401,
+        auth_error=True,
+    )
+
+
 @admin.route("/admin/api/fetch_models")
 @login_required
 def fetch_models():
@@ -110,30 +164,25 @@ def fetch_models():
         return jsonify({"error": _("llm_url parameter is required")}), 400
 
     try:
-        models = get_llm_models(llm_url)
+        models = get_llm_models(
+            llm_url,
+            api_key=_llm_api_key_from_request(),
+            raise_on_auth_error=True,
+        )
         if models:
             return jsonify({"success": True, "models": models, "url": llm_url})
         else:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": _("No models found at %(llm_url)s", llm_url=llm_url),
-                    }
-                ),
-                404,
+            return _llm_failure(
+                _("No models found at %(llm_url)s", llm_url=llm_url), 404
             )
+    except LLMAuthenticationError as e:
+        return _llm_auth_error_response(llm_url, e)
     except Exception as e:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": _(
-                        "Failed to connect to %(llm_url)s: %(error)s",
-                        llm_url=llm_url,
-                        error=str(e),
-                    ),
-                }
+        return _llm_failure(
+            _(
+                "Failed to connect to %(llm_url)s: %(error)s",
+                llm_url=llm_url,
+                error=str(e),
             ),
             500,
         )
@@ -150,21 +199,22 @@ def fetch_embedding_models():
     try:
         models = [
             model
-            for model in get_llm_models(llm_url)
+            for model in get_llm_models(
+                llm_url,
+                api_key=_llm_api_key_from_request(),
+                raise_on_auth_error=True,
+            )
             if _is_embedding_model_name(model)
         ]
         return jsonify({"success": True, "models": models, "url": llm_url})
+    except LLMAuthenticationError as e:
+        return _llm_auth_error_response(llm_url, e)
     except Exception as e:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": _(
-                        "Failed to connect to %(llm_url)s: %(error)s",
-                        llm_url=llm_url,
-                        error=str(e),
-                    ),
-                }
+        return _llm_failure(
+            _(
+                "Failed to connect to %(llm_url)s: %(error)s",
+                llm_url=llm_url,
+                error=str(e),
             ),
             500,
         )

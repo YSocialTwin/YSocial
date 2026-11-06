@@ -131,6 +131,21 @@
                                     <div id="fetch-status-user" style="min-height: 20px; margin-top: 5px; font-size: 0.9rem;"></div>
 
                                     <div class="box-line">
+                                        <label class="label">{{ _('API Key (optional)') }}</label>
+                                        <input type="password" id="custom_llm_api_key" name="llm_api_key" class="input"
+                                               autocomplete="off"
+                                               placeholder="{{ _('Stored key kept') if user.llm_api_key else _('Needed by providers such as OpenAI or DeepSeek') }}">
+                                    </div>
+                                    {% if user.llm_api_key %}
+                                    <div class="box-line">
+                                        <label class="checkbox ys-text-small">
+                                            <input type="checkbox" name="clear_llm_api_key" value="1">
+                                            {{ _('Remove the stored API key') }}
+                                        </label>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="box-line">
                                         <label class="label">{{ _('LLM Model') }}</label>
                                         <div class="select">
                                             <select name="llm" id="llm_model_select">
