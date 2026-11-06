@@ -165,7 +165,9 @@ def _collect_ranked_communities_from_post_rows(
     ordered_root_ids: List[int] = []
     seen_roots: set[int] = set()
     for row in post_rows:
-        root_id = opaque_id(getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0)
+        root_id = opaque_id(
+            getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0
+        )
         if not root_id or root_id in seen_roots:
             continue
         seen_roots.add(root_id)

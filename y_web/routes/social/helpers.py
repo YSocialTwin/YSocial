@@ -17,8 +17,6 @@ from flask import request
 from flask_login import current_user
 from sqlalchemy import or_, select
 
-from y_web.src.forum.ordering import seq_or_id
-from y_web.src.forum.ids import opaque_id
 from y_web import db
 from y_web.src.content.avatars import (
     resolve_forum_profile_pic,
@@ -33,6 +31,8 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.context import get_current_experiment_id
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
+from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,

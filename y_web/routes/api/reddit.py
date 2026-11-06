@@ -14,10 +14,10 @@ from PIL import Image
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
-from y_web.src.forum.ids import opaque_id
-from y_web.src.forum.ordering import seq_or_id
 from y_web import db, prompt_store
 from y_web.src.data_access import get_elicited_emotions, get_topics
+from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.system import prompt_packs
 
 try:
@@ -1403,7 +1403,9 @@ def api_forum_chat_bootstrap(exp_id: int):
         .all()
     )
     sessions = [
-        sess for sess in sessions if opaque_id(sess.target_user_id) in followed_agent_ids
+        sess
+        for sess in sessions
+        if opaque_id(sess.target_user_id) in followed_agent_ids
     ]
 
     session_map = {opaque_id(sess.target_user_id): sess for sess in sessions}

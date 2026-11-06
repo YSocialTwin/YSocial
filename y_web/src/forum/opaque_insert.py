@@ -17,9 +17,9 @@ import uuid
 
 from sqlalchemy import Column, Integer, event, func, select
 from sqlalchemy.engine import Engine
-from sqlalchemy.sql.dml import Insert
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import CreateColumn
+from sqlalchemy.sql.dml import Insert
 
 from y_web import db
 from y_web.src.forum.ordering import table_layout
@@ -89,7 +89,11 @@ def number_inserts(conn, clauseelement, multiparams, params, execution_options):
     ):
         return clauseelement, multiparams, params
     if not table_layout(conn.engine, table.name)[1]:
-        return clauseelement, multiparams, params  # this database has no seq (every other platform)
+        return (
+            clauseelement,
+            multiparams,
+            params,
+        )  # this database has no seq (every other platform)
     next_number = (
         select(func.coalesce(func.max(table.c.seq), 0) + 1)
         .select_from(table)

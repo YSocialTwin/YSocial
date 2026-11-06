@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional
 from flask import current_app
 from sqlalchemy import desc, func, select, text
 
-from y_web.src.forum.ordering import seq_or_id
 from y_web import db, prompt_store
 from y_web.src.content.avatars import resolve_forum_profile_pic
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -903,7 +903,9 @@ def _build_memory_snapshot_local_db(
 
     def _columns_of(execute: Any, table: str) -> set:
         try:
-            return {str(r[1]) for r in execute(f"PRAGMA table_info({table})").fetchall()}
+            return {
+                str(r[1]) for r in execute(f"PRAGMA table_info({table})").fetchall()
+            }
         except Exception:
             return set()
 
@@ -919,12 +921,18 @@ def _build_memory_snapshot_local_db(
                     str(row["id"]): str(row["username"] or "") for row in user_rows
                 }
                 try:
-                    _load_rounds(conn.execute("SELECT id, day, hour FROM rounds").fetchall())
+                    _load_rounds(
+                        conn.execute("SELECT id, day, hour FROM rounds").fetchall()
+                    )
                 except Exception:
                     pass
                 ord_post = _order_of("post", "", _columns_of(conn.execute, "post"))
-                ord_mention = _order_of("mentions", "m", _columns_of(conn.execute, "mentions"))
-                ord_reaction = _order_of("reactions", "r", _columns_of(conn.execute, "reactions"))
+                ord_mention = _order_of(
+                    "mentions", "m", _columns_of(conn.execute, "mentions")
+                )
+                ord_reaction = _order_of(
+                    "reactions", "r", _columns_of(conn.execute, "reactions")
+                )
 
                 def _username(uid: Any) -> str:
                     return str(usernames_by_id.get(str(uid), "") or "")
@@ -934,7 +942,9 @@ def _build_memory_snapshot_local_db(
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = ?
-                    ORDER BY """ + ord_post + """ DESC
+                    ORDER BY """
+                    + ord_post
+                    + """ DESC
                     LIMIT 20
                     """,
                     (normalized_agent_user_id_text,),
@@ -985,7 +995,9 @@ def _build_memory_snapshot_local_db(
                     FROM mentions m
                     JOIN post p ON p.id = m.post_id
                     WHERE CAST(m.user_id AS TEXT) = ?
-                    ORDER BY """ + ord_mention + """ DESC
+                    ORDER BY """
+                    + ord_mention
+                    + """ DESC
                     LIMIT 20
                     """,
                     (normalized_agent_user_id_text,),
@@ -1021,7 +1033,9 @@ def _build_memory_snapshot_local_db(
                     FROM reactions r
                     LEFT JOIN post p ON p.id = r.post_id
                     WHERE CAST(r.user_id AS TEXT) = ?
-                    ORDER BY """ + ord_reaction + """ DESC
+                    ORDER BY """
+                    + ord_reaction
+                    + """ DESC
                     LIMIT 20
                     """,
                     (normalized_agent_user_id_text,),
@@ -1055,25 +1069,41 @@ def _build_memory_snapshot_local_db(
             usernames_by_id = {str(row[0]): str(row[1] or "") for row in user_rows}
             try:
                 _load_rounds(
-                    db.session.execute(text("SELECT id, day, hour FROM rounds")).fetchall()
+                    db.session.execute(
+                        text("SELECT id, day, hour FROM rounds")
+                    ).fetchall()
                 )
             except Exception:
                 pass
-            ord_post = _order_of("post", "", _columns_of(lambda q: db.session.execute(text(q)), "post"))
-            ord_mention = _order_of("mentions", "m", _columns_of(lambda q: db.session.execute(text(q)), "mentions"))
-            ord_reaction = _order_of("reactions", "r", _columns_of(lambda q: db.session.execute(text(q)), "reactions"))
+            ord_post = _order_of(
+                "post", "", _columns_of(lambda q: db.session.execute(text(q)), "post")
+            )
+            ord_mention = _order_of(
+                "mentions",
+                "m",
+                _columns_of(lambda q: db.session.execute(text(q)), "mentions"),
+            )
+            ord_reaction = _order_of(
+                "reactions",
+                "r",
+                _columns_of(lambda q: db.session.execute(text(q)), "reactions"),
+            )
 
             def _username(uid: Any) -> str:
                 return str(usernames_by_id.get(str(uid), "") or "")
 
             post_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = :uid
-                    ORDER BY """ + ord_post + """ DESC
+                    ORDER BY """
+                    + ord_post
+                    + """ DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(post_rows):
@@ -1109,7 +1139,8 @@ def _build_memory_snapshot_local_db(
                     )
 
             mention_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                       m.post_id,
                       p.id AS source_post_id,
@@ -1120,9 +1151,12 @@ def _build_memory_snapshot_local_db(
                     FROM mentions m
                     JOIN post p ON p.id = m.post_id
                     WHERE CAST(m.user_id AS TEXT) = :uid
-                    ORDER BY """ + ord_mention + """ DESC
+                    ORDER BY """
+                    + ord_mention
+                    + """ DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(mention_rows):
@@ -1146,7 +1180,8 @@ def _build_memory_snapshot_local_db(
                 )
 
             reaction_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                       r.post_id,
                       r.round AS round_id,
@@ -1156,9 +1191,12 @@ def _build_memory_snapshot_local_db(
                     FROM reactions r
                     LEFT JOIN post p ON p.id = r.post_id
                     WHERE CAST(r.user_id AS TEXT) = :uid
-                    ORDER BY """ + ord_reaction + """ DESC
+                    ORDER BY """
+                    + ord_reaction
+                    + """ DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(reaction_rows):
@@ -1198,7 +1236,9 @@ def _build_memory_snapshot_local_db(
                     "event_type": "post",
                     "relation_label": "",
                     "tone_label": "",
-                    "thread_root_id": thread_root_id if _valid_id(thread_root_id) else None,
+                    "thread_root_id": (
+                        thread_root_id if _valid_id(thread_root_id) else None
+                    ),
                     "target_post_id": _oid(getattr(p, "id", None)),
                     "salient_claim": _truncate_middle(
                         str(getattr(p, "tweet", "") or "").strip(), 180
@@ -1251,7 +1291,9 @@ def _build_memory_snapshot_local_db(
                         "event_type": "mention",
                         "relation_label": "",
                         "tone_label": "",
-                        "thread_root_id": _oid(getattr(post_obj, "thread_id", None), -1),
+                        "thread_root_id": _oid(
+                            getattr(post_obj, "thread_id", None), -1
+                        ),
                         "target_post_id": _oid(getattr(post_obj, "id", None)),
                         "actor_user_id": actor_id,
                         "actor_username": actor_username,

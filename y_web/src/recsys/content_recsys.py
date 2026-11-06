@@ -14,8 +14,8 @@ from sqlalchemy import select as sa_select
 from sqlalchemy import text
 from sqlalchemy.sql.expression import func
 
-from y_web.src.forum.ordering import seq_or_id
 from y_web import db
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Follow,
     Post,

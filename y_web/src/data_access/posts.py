@@ -10,8 +10,8 @@ from typing import Optional
 
 from sqlalchemy import desc, func, or_, select
 
-from y_web.src.forum.ordering import seq_or_id
 from y_web import db
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,

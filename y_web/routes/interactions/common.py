@@ -11,11 +11,11 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
-from y_web.src.forum.ordering import seq_or_id
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Follow,
     Mentions,
@@ -86,7 +86,9 @@ def _resolve_follow_round_id(exp_id):
                     round_row = (
                         session.query(Rounds)
                         .order_by(
-                            Rounds.day.desc(), Rounds.hour.desc(), seq_or_id(Rounds).desc()
+                            Rounds.day.desc(),
+                            Rounds.hour.desc(),
+                            seq_or_id(Rounds).desc(),
                         )
                         .first()
                     )

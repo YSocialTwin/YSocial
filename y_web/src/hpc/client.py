@@ -754,7 +754,9 @@ def start_hpc_client(exp, cli, population):
             if reset_unstarted_roster(client_config, cli.name, _exec) == REMOVED:
                 print(f"Removed the stale roster of forum client {cli.name}")
         except Exception as exc:
-            print(f"Warning: could not check the roster of forum client {cli.name}: {exc}")
+            print(
+                f"Warning: could not check the roster of forum client {cli.name}: {exc}"
+            )
 
     _syncs_config = _launch_spec is None or _launch_spec.syncs_client_config
     try:

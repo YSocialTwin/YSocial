@@ -60,6 +60,7 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.external_runtime.plugin_loader import active_modules_context
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -82,7 +83,6 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
 )
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.recsys import get_suggested_users
 from y_web.src.recsys.content_recsys import (
     _normalize_content_recsys_mode,
