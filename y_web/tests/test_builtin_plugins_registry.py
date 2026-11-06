@@ -113,8 +113,8 @@ def test_every_entry_has_the_fields_the_loader_needs():
 
 def test_yforum_is_a_seeded_hpc_runtime_next_to_ysimulator():
     spec = SUPPORTED_EXTERNAL_REPOS["forum_hpc"]
-    assert (spec.label, spec.directory, spec.group) == ("YForum", "YForum", "hpc")
-    assert spec.repo == "YSocialTwin/YForum"
+    assert (spec.label, spec.path.name, spec.group) == ("YForum", "YForum", "hpc")
+    assert spec.github_repo == "YSocialTwin/YForum"
     # the bundle needs neither PostgreSQL nor a model: only the requirements of the runtime
     assert [list(c)[-2:] for c in spec.install_commands] == [["-r", "requirements.txt"]]
-    assert "YSimulator" in {s.directory for s in SUPPORTED_EXTERNAL_REPOS.values()}
+    assert "YSimulator" in {s.path.name for s in SUPPORTED_EXTERNAL_REPOS.values()}
