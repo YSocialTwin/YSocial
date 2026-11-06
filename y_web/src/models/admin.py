@@ -566,7 +566,7 @@ class Jupyter_instances(db.Model):
     exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
     port = db.Column(db.Integer, nullable=False)
     notebook_dir = db.Column(db.String(300), nullable=False)
-    process = db.Column(db.Integer, nullable=False)
+    process = db.Column(db.Integer, nullable=True)
     status = db.Column(db.String(10), nullable=False, default="stopped")
 
 
