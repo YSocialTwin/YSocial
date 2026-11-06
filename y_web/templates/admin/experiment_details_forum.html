@@ -593,7 +593,7 @@
                                 </div>
  <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
  <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
-                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}" data-client-status="{{ client.status }}">
  <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
@@ -636,7 +636,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+                                {% if client_failures and client_failures.get(client.id) %}
+                                {% set failure = client_failures.get(client.id) %}
+ <div class="ys-cell-pad" style="font-size: 0.85em; color: #b42318;">
+                                    <i class="mdi mdi-alert-circle-outline"></i>
+                                    {{ failure.message }}
+                                    {% if failure.detail %}<br><span style="color: #777;">{{ failure.error_type }}: {{ failure.detail }}</span>{% endif %}
+                                </div>
+                                {% endif %}
 
                             </div>
                             {% endfor %}

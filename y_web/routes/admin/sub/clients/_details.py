@@ -478,8 +478,16 @@ def get_progress(client_id):
         except Exception:
             pass
 
+    # what the page needs to notice that the client stopped (finished, paused, died) without a reload
+    raw_status = getattr(client, "status", None) if client else None
+    raw_terminal = getattr(client_execution, "terminal_state", None)
+    state = {
+        "status": raw_status if isinstance(raw_status, int) else None,
+        "terminal_state": raw_terminal if isinstance(raw_terminal, str) else None,
+    }
+
     if client_execution is None:
-        return json.dumps({"progress": 0, "infinite": False})
+        return json.dumps({"progress": 0, "infinite": False, **state})
 
     # Check if this is an infinite client (expected_duration_rounds = -1)
     if client_execution.expected_duration_rounds == -1:
@@ -496,6 +504,7 @@ def get_progress(client_id):
                 "elapsed_hours": remaining_hours,
                 "last_active_day": client_execution.last_active_day,
                 "last_active_hour": client_execution.last_active_hour,
+                **state,
             }
         )
 
@@ -511,7 +520,7 @@ def get_progress(client_id):
     else:
         progress = 0
 
-    return json.dumps({"progress": progress, "infinite": False})
+    return json.dumps({"progress": progress, "infinite": False, **state})
 
 
 @clientsr.route("/admin/progress_adhoc/<int:idexp>/<path:client_key>")

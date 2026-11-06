@@ -588,9 +588,10 @@ def experiment_details(uid):
     else:
         client_executions = {}
 
-    # why an IM client stopped, from the last ERROR record of its execution log (plan, 5.4)
+    # why an HPC client stopped when nobody asked for it, from the last ERROR record of its execution log (plan, 5.4);
+    # without a record the page still says that it died
     client_failures = {}
-    if is_im_experiment(experiment) and client_ids:
+    if getattr(experiment, "simulator_type", None) == "HPC" and client_ids:
         try:
             from y_web.src.hpc.client import resolve_hpc_client_execution_log_path
             from y_web.src.im.failures import describe_client_failure
@@ -602,9 +603,16 @@ def experiment_details(uid):
                 log_path = resolve_hpc_client_execution_log_path(
                     experiment, owner.name if owner else None
                 )
-                info = describe_client_failure(log_path)
-                if info:
-                    client_failures[row.client_id] = info
+                info = describe_client_failure(log_path) or {
+                    "exit_code": None,
+                    "error_type": None,
+                    "detail": "",
+                    "message": _(
+                        "The client stopped unexpectedly (it was not stopped from the interface). "
+                        "Check its execution log, then start it again."
+                    ),
+                }
+                client_failures[row.client_id] = info
         except Exception:
             current_app.logger.warning(
                 "Could not read IM client failures", exc_info=True
