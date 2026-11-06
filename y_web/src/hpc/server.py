@@ -233,6 +233,10 @@ def start_hpc_server(exp):
             from y_web.src.dating.validation import validate_dating_folder
 
             validate_dating_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+        elif spec.key == "forum":
+            from y_web.src.forum.validation import validate_forum_folder
+
+            validate_forum_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
         else:
             from y_web.src.im.validation import validate_im_folder
 

@@ -110,8 +110,8 @@ HPC_PLATFORMS = {
         # YForum clients are plain processes registered through the orchestrator, not named Ray actors,
         # so the client lookup on stop finds nothing and falls back to the process kill
         client_actor_prefix="",
-        # the offline validator (python -m YForum.cli.validate) is wired in with the config translation
-        validates_config=False,
+        # the offline validator is python -m YForum.cli.validate (y_web/src/forum/validation.py)
+        validates_config=True,
         # YForum has its own client schema (stress/reward, network, duration come from the translation of the
         # client form) and ships its prompt packs: no YSimulator-style sync and no prompts file in the folder
         syncs_client_config=False,

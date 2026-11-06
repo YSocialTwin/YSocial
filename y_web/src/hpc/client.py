@@ -246,7 +246,31 @@ def _normalize_dating_client_config(
         )
 
 
+def _normalize_forum_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Check that a forum client file still matches its client and its population file.
+
+    Nothing is rewritten (the file is the one the form wrote); a mismatch stops the start with a clear message.
+    """
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+    if client_config.get("client_name") != client_name:
+        raise ValueError(
+            f"{os.path.basename(client_config_path)} is for client "
+            f"{client_config.get('client_name')!r}, not {client_name!r}"
+        )
+    population_file = (client_config.get("population") or {}).get("file") or ""
+    if not population_file or not os.path.isfile(
+        os.path.join(exp_folder, population_file)
+    ):
+        raise FileNotFoundError(
+            f"population file {population_file!r} of client {client_name!r} not found"
+        )
+
+
 _CLIENT_NORMALIZERS = {
+    "forum": _normalize_forum_client_config,
     "photo_sharing": _normalize_photo_sharing_client_config,
     "instant_messaging": _normalize_im_client_config,
     "dating": _normalize_dating_client_config,
@@ -827,12 +851,14 @@ def start_hpc_client(exp, cli, population):
                 exp_folder, cli.name, population.name, client_config
             )
         except Exception:
-            if spec.key in ("instant_messaging", "dating"):
+            if spec.key in ("instant_messaging", "dating", "forum"):
                 raise  # these must not start with a client config that could not be aligned
 
     if spec.validates_config:
         if spec.key == "dating":
             from y_web.src.dating.validation import validate_dating_folder as _validate
+        elif spec.key == "forum":
+            from y_web.src.forum.validation import validate_forum_folder as _validate
         else:
             from y_web.src.im.validation import validate_im_folder as _validate
 
