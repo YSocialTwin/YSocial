@@ -96,6 +96,26 @@ HPC_PLATFORMS = {
         requires_prompts_file=False,
         supports_federation=True,
     ),
+    "forum": HpcPlatform(
+        key="forum",
+        runtime_repo="YForum",
+        supports_gunicorn=False,
+        frozen_server_runs_script=True,
+        client_config_only=True,
+        normalizes_client_config=True,
+        # the experiment folder is --config and the per-client JSON is --client-config (as YDating)
+        client_config_file_arg=True,
+        prompts_filename="prompts.json",
+        orchestrator_actor="Orchestrator",
+        # YForum clients are plain processes registered through the orchestrator, not named Ray actors,
+        # so the client lookup on stop finds nothing and falls back to the process kill
+        client_actor_prefix="",
+        # the offline validator (python -m YForum.cli.validate) is wired in with the config translation
+        validates_config=False,
+        syncs_client_config=True,
+        requires_prompts_file=True,
+        supports_federation=True,
+    ),
 }
 
 

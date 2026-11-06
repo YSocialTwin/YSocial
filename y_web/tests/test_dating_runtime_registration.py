@@ -56,6 +56,7 @@ def test_the_other_platform_rows_are_unchanged():
         "photo_sharing",
         "instant_messaging",
         "dating",
+        "forum",
     }
     assert HPC_PLATFORMS["instant_messaging"].validates_config is True
     assert HPC_PLATFORMS["photo_sharing"].prompts_filename == "prompts_ygram.json"
