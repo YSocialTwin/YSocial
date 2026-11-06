@@ -23,6 +23,7 @@ from y_web.i18n import gettext as _
 from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     AgeClass,
+    Client_Execution,
     Client,
     Exp_Topic,
     Exps,
@@ -1023,6 +1024,40 @@ def _set_forum_opinion_distributions_internal():
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 
 
+def _refresh_forum_roster_after_opinion_change(context):
+    """A forum client on YForum resumes from its roster file: drop it when the client never ran.
+
+    The initial opinions are read from the population file only when the client registers its agents; once it has
+    progress the roster stays (a resume keeps its agents) and the user is told the new values need a fresh start.
+    """
+    from y_web.src.forum import is_forum_hpc_experiment
+
+    exp = context.get("exp")
+    client = context.get("client")
+    if exp is None or client is None or not is_forum_hpc_experiment(exp):
+        return
+    from y_web.src.forum.roster import KEPT_STARTED, REMOVED, reset_unstarted_roster
+
+    execution = db.session.scalars(
+        select(Client_Execution).filter_by(client_id=client.id)
+    ).first()
+    outcome = reset_unstarted_roster(
+        context["client_config_file"], client.name, execution
+    )
+    if outcome == REMOVED:
+        flash(
+            _("The saved agents of this client were discarded: the new opinions apply at its first start."),
+            "info",
+        )
+    elif outcome == KEPT_STARTED:
+        flash(
+            _(
+                "This client has already run: the new initial opinions apply only to a fresh start (new client or reset of the experiment)."
+            ),
+            "warning",
+        )
+
+
 def _set_hpc_opinion_distributions_internal():
     """Persist opinion distributions for HPC experiments."""
     context, error_response = _resolve_opinion_submission_context("hpc")
@@ -1032,6 +1067,7 @@ def _set_hpc_opinion_distributions_internal():
     if save_error is not None:
         return save_error
     _persist_hpc_opinion_dynamics(context)
+    _refresh_forum_roster_after_opinion_change(context)
     _invalidate_opinion_evolution_cache_for_experiment(int(context["idexp"]))
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 

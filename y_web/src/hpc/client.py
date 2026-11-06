@@ -742,6 +742,20 @@ def start_hpc_client(exp, cli, population):
                 f"Please ensure the HPC experiment is properly configured."
             )
 
+    if exp.platform_type == "forum":
+        # YForum resumes from the roster it saved: a client that never ran must read its population (and the
+        # initial opinions in it) again, not an old roster left by an aborted start
+        try:
+            from y_web.src.forum.roster import REMOVED, reset_unstarted_roster
+
+            _exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=cli.id)
+            ).first()
+            if reset_unstarted_roster(client_config, cli.name, _exec) == REMOVED:
+                print(f"Removed the stale roster of forum client {cli.name}")
+        except Exception as exc:
+            print(f"Warning: could not check the roster of forum client {cli.name}: {exc}")
+
     _syncs_config = _launch_spec is None or _launch_spec.syncs_client_config
     try:
         if _syncs_config:
