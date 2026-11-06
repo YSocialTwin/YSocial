@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 18:19+0000\n"
+"POT-Creation-Date: 2026-11-06 18:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,6 +135,10 @@ msgstr ""
 
 #, python-format
 msgid "%(label)s must be greater than %(low)s."
+msgstr ""
+
+#, python-format
+msgid "%(llm_url)s refused the request (HTTP %(status)s). Check the API key."
 msgstr ""
 
 #, python-format
@@ -639,6 +643,9 @@ msgid "API Configuration"
 msgstr ""
 
 msgid "API Key"
+msgstr ""
+
+msgid "API Key (optional)"
 msgstr ""
 
 msgid "API Key Environment Variable"
@@ -8247,6 +8254,9 @@ msgstr ""
 msgid "Need for visibility"
 msgstr ""
 
+msgid "Needed by providers such as OpenAI or DeepSeek"
+msgstr ""
+
 msgid "Needs the simulated clock with hourly slots (24 a day)."
 msgstr ""
 
@@ -11074,6 +11084,9 @@ msgstr ""
 msgid "Remove alternative value"
 msgstr ""
 
+msgid "Remove the stored API key"
+msgstr ""
+
 msgid "Remove this World Simulation from the queue?"
 msgstr ""
 
@@ -12737,6 +12750,9 @@ msgid "Stopped / Scheduled"
 msgstr ""
 
 msgid "Stopping"
+msgstr ""
+
+msgid "Stored key kept"
 msgstr ""
 
 msgid "Stories"

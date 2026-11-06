@@ -193,7 +193,7 @@ def _resolve_llm_backend(
     if mode == "admin":
         model = (getattr(admin_user, "llm", "") or "").strip() or "llama3.2:latest"
         base_url = _normalize_llm_base_url(getattr(admin_user, "llm_url", "") or "")
-        api_key = "NULL"
+        api_key = (getattr(admin_user, "llm_api_key", "") or "").strip() or "NULL"
         temperature = 0.7
         max_tokens = 450
         return mode, model, base_url, api_key, temperature, max_tokens

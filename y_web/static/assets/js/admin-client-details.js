@@ -13,7 +13,7 @@ var AdminClientDetails = (function() {
 
         status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
 
-        fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
+        fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl), {headers: YLLM.apiKeyHeaders(urlInput)})
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.error) {

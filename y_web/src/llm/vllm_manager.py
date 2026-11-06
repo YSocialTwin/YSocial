@@ -17,6 +17,30 @@ import requests
 _MODELS_DOWN_CACHE = {}
 _MODELS_DOWN_TTL = 10.0  # seconds
 
+# Values the forms and the client configs use for "no key".
+_NO_API_KEY = {"", "NULL", "NONE", "EMPTY"}
+
+
+class LLMAuthenticationError(Exception):
+    """The LLM server rejected the request because of a missing or wrong API key."""
+
+    def __init__(self, url, status_code):
+        self.url = url
+        self.status_code = status_code
+        super().__init__(f"HTTP {status_code} from {url}")
+
+
+def llm_auth_headers(api_key=None):
+    """HTTP headers for an OpenAI-compatible server: a Bearer token, or none.
+
+    The key is never put in a URL: it would end up in server logs and in the
+    browser history.
+    """
+    key = str(api_key or "").strip()
+    if key.upper() in _NO_API_KEY:
+        return {}
+    return {"Authorization": f"Bearer {key}"}
+
 
 def is_vllm_installed():
     """Check if a supported embedded vLLM runtime is installed in the current environment."""
@@ -118,13 +142,17 @@ def get_vllm_models():
         return []
 
 
-def get_llm_models(llm_url=None):
+def get_llm_models(llm_url=None, api_key=None, raise_on_auth_error=False):
     """
     Get list of models from any OpenAI-compatible LLM server.
 
     Args:
         llm_url: Base URL of the LLM server (e.g., 'http://localhost:8000/v1').
                  If None, uses LLM_URL from environment or falls back to ollama.
+        api_key: API key sent as ``Authorization: Bearer <key>``; None or "NULL"
+                 sends no header (local Ollama and vLLM need none).
+        raise_on_auth_error: when the server answers 401 or 403, raise
+                 LLMAuthenticationError instead of returning an empty list.
 
     Returns:
         List of model names available on the LLM server
@@ -212,10 +240,20 @@ def get_llm_models(llm_url=None):
     if cached and now - cached < _MODELS_DOWN_TTL:
         return []
 
+    headers = llm_auth_headers(api_key)
     last_error = None
     for models_url in _candidate_model_endpoints(llm_url):
         try:
-            response = requests.get(models_url, timeout=15)
+            response = requests.get(models_url, headers=headers, timeout=15)
+            if response.status_code in (401, 403):
+                # Another path on the same host will not accept the same key.
+                print(
+                    f"LLM server at {models_url} refused the request "
+                    f"(HTTP {response.status_code}): check the API key."
+                )
+                if raise_on_auth_error:
+                    raise LLMAuthenticationError(models_url, response.status_code)
+                return []
             response.raise_for_status()
             data = response.json()
             models = _models_from_payload(data)

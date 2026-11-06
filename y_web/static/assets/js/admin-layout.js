@@ -133,3 +133,36 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+
+// ---------------------------------------------------------------------------
+// LLM server helpers: the API key of an LLM endpoint travels in a header
+// ---------------------------------------------------------------------------
+// "Fetch Models" asks the server to list the models of an OpenAI-compatible
+// endpoint. Providers such as OpenAI and DeepSeek answer 401 without a key, so
+// the key typed in the form is sent as the X-LLM-API-Key header. It is never put
+// in the URL, which would end up in logs and in the browser history.
+window.YLLM = (function() {
+    var NO_KEY = ['', 'NULL', 'NONE', 'EMPTY'];
+
+    // The key that goes with an LLM URL input: the input named llm_api_key (llm_v_api_key
+    // for the vision model, whose URL input has "_v_" in its id) in the same form, or the
+    // read-only display of a saved client (#client_llm_api_key_value).
+    function keyValue(urlInput) {
+        var vision = /_v_/.test((urlInput && urlInput.id) || '');
+        var keyName = vision ? 'llm_v_api_key' : 'llm_api_key';
+        var scope = (urlInput && urlInput.closest('form')) || document;
+        var field = scope.querySelector('[name="' + keyName + '"]') ||
+            document.getElementById('client_' + keyName + '_value');
+        if (!field) return '';
+        var value = (('value' in field ? field.value : field.textContent) || '').trim();
+        return NO_KEY.indexOf(value.toUpperCase()) >= 0 ? '' : value;
+    }
+
+    function apiKeyHeaders(urlInput) {
+        var key = keyValue(urlInput);
+        return key ? {'X-LLM-API-Key': key} : {};
+    }
+
+    return {keyValue: keyValue, apiKeyHeaders: apiKeyHeaders};
+})();

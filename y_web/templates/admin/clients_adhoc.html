@@ -810,7 +810,7 @@ const YS_ADHOC_CLIENTS = {
             return;
         }
         status.textContent = YI18n.t('Fetching models...');
-        fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+        fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`, {headers: YLLM.apiKeyHeaders(urlInput)})
             .then(response => response.json())
             .then(data => {
                 select.innerHTML = '<option value=""></option>';
@@ -822,7 +822,7 @@ const YS_ADHOC_CLIENTS = {
                 });
                 llmModelsFetched = true;
                 llmModelSelected = false;
-                status.textContent = (data.models || []).length ? YI18n.t('Models loaded.') : YI18n.t('No models returned.');
+                status.textContent = (data.models || []).length ? YI18n.t('Models loaded.') : (data.message || YI18n.t('No models returned.'));
                 updateCreateButton();
             })
             .catch(() => {

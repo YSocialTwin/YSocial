@@ -307,6 +307,8 @@ def add_user():
     password = request.form.get("password")
     role = request.form.get("role")
     llm = request.form.get("llm")
+    llm_url = request.form.get("custom_llm_url", "").strip()
+    llm_api_key = request.form.get("llm_api_key", "").strip()
     profile_pic = request.form.get("profile_pic")
 
     # Enforce role restrictions: researchers can only create 'user' role
@@ -337,6 +339,8 @@ def add_user():
         last_seen="",
         role=role,
         llm=llm,
+        llm_url=llm_url,
+        llm_api_key=llm_api_key,
         profile_pic=profile_pic,
     )
 
@@ -499,6 +503,12 @@ def update_user_llm():
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id_int)).first()
     user.llm = llm
     user.llm_url = llm_url
+    # The key is never sent back to the page: an empty field keeps the stored
+    # key, and the "remove" box clears it.
+    if request.form.get("clear_llm_api_key"):
+        user.llm_api_key = ""
+    elif request.form.get("llm_api_key", "").strip():
+        user.llm_api_key = request.form.get("llm_api_key").strip()
     db.session.commit()
 
     return user_details(user_id_int)

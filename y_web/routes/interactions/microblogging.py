@@ -79,12 +79,16 @@ def publish_post(exp_id):
     ).first()
     llm = user.llm if user.llm != "" else "llama3.2:latest"
     llm_url = user.llm_url if user.llm_url != "" else None
+    llm_api_key = user.llm_api_key or None
 
     img_id = None
     if url is not None and url != "":
         llm_v = "minicpm-v"
         image_annotator = Annotator(
-            llm_v, llm_url=llm_url, language=prompt_packs.experiment_language(exp_id)
+            llm_v,
+            llm_url=llm_url,
+            llm_api_key=llm_api_key,
+            language=prompt_packs.experiment_language(exp_id),
         )
         annotation = image_annotator.annotate(url)
 
@@ -143,7 +147,10 @@ def publish_post(exp_id):
     sentiment = vader_sentiment(text)
 
     annotator = ContentAnnotator(
-        llm=llm, llm_url=llm_url, language=prompt_packs.experiment_language(exp_id)
+        llm=llm,
+        llm_url=llm_url,
+        llm_api_key=llm_api_key,
+        language=prompt_packs.experiment_language(exp_id),
     )
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
