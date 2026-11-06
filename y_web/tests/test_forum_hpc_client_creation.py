@@ -3,6 +3,7 @@
 import importlib
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -36,6 +37,7 @@ def _seed(app, http, **form):
     from y_web import db
     from y_web.src.models import (
         Agent,
+        Agent_Custom_Feature,
         Agent_Population,
         Exp_Topic,
         Exps,
@@ -78,6 +80,16 @@ def _seed(app, http, **form):
             db.session.add(ag)
             db.session.flush()
             db.session.add(Agent_Population(agent_id=ag.id, population_id=pop.id))
+            if i == 1:  # structured interests, opinions and free features of an agent
+                for kind, key, value in (
+                    ("interest", "politics", None),
+                    ("custom", "hobby", "chess"),
+                ):
+                    db.session.add(
+                        Agent_Custom_Feature(
+                            agent_id=ag.id, feature_type=kind, key=key, value=value
+                        )
+                    )
         db.session.commit()
         return exp.idexp, pop.id, exp.db_name.split("/")[1]
 
@@ -87,6 +99,35 @@ def _confirm(tmp_path, folder):
     config = json.loads(path.read_text())
     config["experiment_configuration_confirmed"] = True
     path.write_text(json.dumps(config))
+
+
+@pytest.mark.integration
+def test_the_standard_forum_page_has_no_archetypes_either():
+    html = (
+        Path(__file__).resolve().parents[1]
+        / "templates"
+        / "admin"
+        / "clients_forum.html"
+    ).read_text()
+    assert "archetype" not in html.lower()  # YClientReddit does not implement them
+
+
+def test_the_page_offers_every_field_of_the_standard_forum_page():
+    """Every field of clients_forum.html is on the forum-HPC page, except the three YForum does not implement."""
+    import re
+
+    templates = Path(__file__).resolve().parents[1] / "templates" / "admin"
+    names = lambda f: set(
+        re.findall(r'name="([a-z_0-9]+)"', (templates / f).read_text())
+    )
+    standard, hpc = names("clients_forum.html"), names("clients_forum_hpc.html")
+    not_implemented = {
+        "clock_mode",
+        "clock_timezone",
+        "clock_feed_refresh",
+    }
+    assert standard - hpc - not_implemented == set()
+    assert hpc - standard == set()
 
 
 @pytest.mark.integration
@@ -127,8 +168,11 @@ def test_a_forum_client_is_created_with_a_valid_configuration(monkeypatch, tmp_p
     page = http.get(f"/admin/clients_forum_hpc/{idexp}")
     assert page.status_code == 200
     html = page.get_data(as_text=True)
-    assert "create_forum_hpc_client" in html and 'name="likelihood_post"' in html
-    assert 'name="llm_model"' not in html  # rule-based agents: no model fields
+    assert "create_forum_hpc_client" in html and 'name="post"' in html
+    assert 'name="user_type"' not in html  # rule-based agents: no model field
+    assert 'name="hourly_8"' in html and 'name="memory_pair_limit"' not in html
+    assert 'name="clock_mode"' not in html and 'name="infinite_duration"' in html
+    assert "archetype" not in html.lower()
 
     response = http.post(
         "/admin/create_forum_hpc_client",
@@ -138,7 +182,10 @@ def test_a_forum_client_is_created_with_a_valid_configuration(monkeypatch, tmp_p
             "descr": "d",
             "population_id": pop_id,
             "days": "2",
-            "likelihood_post": "0.3",
+            "post": "4",
+            # the first option of each list of the form
+            "recsys_type": "ContentRecSys",
+            "frecsys_type": "FollowRecSys",
         },
     )
     assert response.status_code == 302
@@ -153,10 +200,19 @@ def test_a_forum_client_is_created_with_a_valid_configuration(monkeypatch, tmp_p
         json.loads((exp_dir / "client_c1-pop.json").read_text()), "config/client_config"
     )
     assert config["mode"] == "rule_based" and config["num_days"] == 2
-    assert config["simulation"]["actions_likelihood"]["post"] == 0.3
+    assert config["simulation"]["actions_likelihood"]["post"] == 0.4
     profiles, _generation = load_population(exp_dir / "pop.json", "auto", "admin")
     assert sorted(p.name for p in profiles) == ["u1", "u2", "u3"]
+    agents = json.loads((exp_dir / "pop.json").read_text())["agents"]
+    first = next(a for a in agents if a["username"] == "u1")
+    assert first["custom_features"] == {
+        "hobby": "chess"
+    }  # plain values, not database rows
 
+    assert [
+        a["recsys_type"]
+        for a in json.loads((exp_dir / "pop.json").read_text())["agents"]
+    ] == ["random"] * 3
     with app.app_context():
         client = db.session.query(Client).filter_by(id_exp=idexp).one()
         assert client.name == "c1" and client.days == 2 and client.status == 0
@@ -166,6 +222,118 @@ def test_a_forum_client_is_created_with_a_valid_configuration(monkeypatch, tmp_p
         assert execution.expected_duration_rounds == 2 * config["num_slots_per_day"]
         assert (
             db.session.query(Population_Experiment).filter_by(id_exp=idexp).count() == 1
+        )
+
+
+@pytest.mark.integration
+def test_llm_agents_choose_the_model_in_the_form_and_get_it_in_the_configuration(
+    monkeypatch, tmp_path
+):
+    validate, _load = _yforum()
+    _availability(monkeypatch, forum_hpc=True)
+    app, http = _app_and_client(monkeypatch, tmp_path)
+    _pin_paths(monkeypatch, tmp_path)
+    idexp, pop_id, folder = _seed(
+        app, http
+    )  # the experiment uses language-model agents
+    _confirm(tmp_path, folder)
+    html = http.get(f"/admin/clients_forum_hpc/{idexp}").get_data(as_text=True)
+    assert 'name="user_type"' in html and 'name="llm_v_agent"' in html
+    base = {"id_exp": idexp, "name": "l1", "population_id": pop_id}
+    http.post("/admin/create_forum_hpc_client", data=base)  # no model: refused
+    exp_dir = tmp_path / "y_web" / "experiments" / folder
+    assert not list(exp_dir.glob("client_*.json"))
+    # the form posts the standard defaults: -1 tokens (no limit) must not be refused
+    http.post(
+        "/admin/create_forum_hpc_client",
+        data={
+            **base,
+            "user_type": "llama3.2",
+            "llm": "http://127.0.0.1:11434/v1",
+            "llm_api_key": "NULL",
+            "llm_max_tokens": "-1",
+            "llm_temperature": "1.5",
+            "llm_v_max_tokens": "300",
+        },
+    )
+    config = validate(
+        json.loads((exp_dir / "client_l1-pop.json").read_text()), "config/client_config"
+    )
+    assert config["mode"] == "llm" and config["agents"]["llm_agents"] == ["llama3.2"]
+    assert config["servers"]["llm_max_tokens"] == 800  # no limit keeps YForum's default
+
+
+@pytest.mark.integration
+def test_a_client_can_run_until_stopped(monkeypatch, tmp_path):
+    validate, _load = _yforum()
+    from y_web import db
+    from y_web.src.models import Client, Client_Execution
+
+    _availability(monkeypatch, forum_hpc=True)
+    app, http = _app_and_client(monkeypatch, tmp_path)
+    _pin_paths(monkeypatch, tmp_path)
+    idexp, pop_id, folder = _seed(app, http, llm_agents_enabled="")
+    _confirm(tmp_path, folder)
+    response = http.post(
+        "/admin/create_forum_hpc_client",
+        data={
+            "id_exp": idexp,
+            "name": "endless",
+            "population_id": pop_id,
+            "days": "-1",
+            "infinite_duration": "on",
+        },
+    )
+    assert response.status_code == 302
+    exp_dir = tmp_path / "y_web" / "experiments" / folder
+    config = validate(
+        json.loads((exp_dir / "client_endless-pop.json").read_text()),
+        "config/client_config",
+    )
+    assert config["num_days"] == 0  # YForum: until stopped
+    with app.app_context():
+        client = db.session.query(Client).filter_by(id_exp=idexp).one()
+        assert client.days == -1
+        execution = (
+            db.session.query(Client_Execution).filter_by(client_id=client.id).one()
+        )
+        assert execution.expected_duration_rounds == -1
+
+
+@pytest.mark.integration
+def test_a_network_model_writes_the_initial_follow_network(monkeypatch, tmp_path):
+    validate, _load = _yforum()
+    from y_web import db
+    from y_web.src.models import Client
+
+    _availability(monkeypatch, forum_hpc=True)
+    app, http = _app_and_client(monkeypatch, tmp_path)
+    _pin_paths(monkeypatch, tmp_path)
+    idexp, pop_id, folder = _seed(app, http, llm_agents_enabled="")
+    _confirm(tmp_path, folder)
+    http.post(
+        "/admin/create_forum_hpc_client",
+        data={
+            "id_exp": idexp,
+            "name": "net",
+            "population_id": pop_id,
+            "network_model": "ER",
+            "network_p": "1",
+        },
+    )
+    exp_dir = tmp_path / "y_web" / "experiments" / folder
+    config = validate(
+        json.loads((exp_dir / "client_net-pop.json").read_text()),
+        "config/client_config",
+    )
+    assert config["population"]["network_file"] == "net_network.csv"
+    pairs = {
+        tuple(l.split(",")) for l in (exp_dir / "net_network.csv").read_text().split()
+    }
+    assert ("u1", "u2") in pairs and ("u2", "u1") in pairs
+    with app.app_context():
+        assert (
+            db.session.query(Client).filter_by(id_exp=idexp).one().network_type == "ER"
         )
 
 
