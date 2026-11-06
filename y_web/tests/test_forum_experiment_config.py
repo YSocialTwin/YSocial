@@ -47,7 +47,10 @@ def client_config():
 
 def _server(**kw):
     return generate_forum_server_config(
-        exp_name="demo", db_uri="experiments/x/database_server.db", data_path="experiments/x/", **kw
+        exp_name="demo",
+        db_uri="experiments/x/database_server.db",
+        data_path="experiments/x/",
+        **kw,
     )
 
 
@@ -95,17 +98,30 @@ def test_every_switch_is_written_where_the_runtime_reads_it(schemas, client_conf
 
 
 def test_switching_off_turns_the_runtime_keys_off_too(schemas, client_config):
-    on = _server(toxicity_annotation=True, stress_reward_enabled=True, memory_enabled=True)
+    on = _server(
+        toxicity_annotation=True, stress_reward_enabled=True, memory_enabled=True
+    )
     apply_experiment_switches(
-        on, toxicity=False, sentiment=False, emotion=False, opinion=False,
-        stress_reward=False, memory=False,
+        on,
+        toxicity=False,
+        sentiment=False,
+        emotion=False,
+        opinion=False,
+        stress_reward=False,
+        memory=False,
     )
     out = schemas(on, "config/server_config")
-    assert out["toxicity_annotation"] is False and out["stress_reward"] == {"enabled": False}
+    assert out["toxicity_annotation"] is False and out["stress_reward"] == {
+        "enabled": False
+    }
     assert out["perspective_api"] is None and out["memory"] == {"enabled": False}
 
     client = apply_switches_to_client(
-        copy.deepcopy(client_config), emotion=False, opinion=False, stress_reward=False, memory=False
+        copy.deepcopy(client_config),
+        emotion=False,
+        opinion=False,
+        stress_reward=False,
+        memory=False,
     )
     checked = schemas(client, "config/client_config")
     assert checked["simulation"]["opinion_dynamics"]["enabled"] is False
@@ -128,7 +144,10 @@ def test_none_leaves_a_switch_as_it_is():
     apply_experiment_switches(config, toxicity=True)
     assert config["opinion_dynamics_enabled"] is True
     assert config["memory"] == {"enabled": True}
-    client = {"agents": {"memory_enabled": True}, "simulation": {"opinion_dynamics": {"enabled": True}}}
+    client = {
+        "agents": {"memory_enabled": True},
+        "simulation": {"opinion_dynamics": {"enabled": True}},
+    }
     apply_switches_to_client(client, emotion=False)
     assert client["agents"]["memory_enabled"] is True
     assert client["simulation"]["opinion_dynamics"]["enabled"] is True
@@ -136,7 +155,9 @@ def test_none_leaves_a_switch_as_it_is():
 
 def test_the_page_reads_back_what_was_written():
     config = _server(
-        toxicity_annotation=True, opinion_dynamics_enabled=True, stress_reward_enabled=True
+        toxicity_annotation=True,
+        opinion_dynamics_enabled=True,
+        stress_reward_enabled=True,
     )
     assert read_switches(config) == {
         "toxicity": True,

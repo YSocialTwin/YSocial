@@ -159,7 +159,9 @@ def apply_experiment_switches(
     # the scoring key is the runtime's: only when toxicity is on and a key is given
     if toxicity is not None or perspective_api is not None:
         on = bool(config.get("toxicity_annotation"))
-        config["perspective_api"] = perspective_api if (on and perspective_api) else None
+        config["perspective_api"] = (
+            perspective_api if (on and perspective_api) else None
+        )
     return config
 
 

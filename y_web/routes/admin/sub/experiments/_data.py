@@ -43,6 +43,7 @@ from y_web.src.content.avatars import (
     normalize_forum_avatar_mode,
 )
 from y_web.src.dating import is_dating_experiment
+from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -662,7 +663,9 @@ def experiment_details(uid):
     adhoc_clients = []
     memory_module_enabled = False
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
-        agent_memory_plugin_installed() or is_im_experiment(experiment)
+        agent_memory_plugin_installed()
+        or is_im_experiment(experiment)
+        or is_forum_hpc_experiment(experiment)
     )
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
@@ -1076,7 +1079,9 @@ def update_experiment_config(uid):
         )
 
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
-        agent_memory_plugin_installed() or is_im_experiment(exp)
+        agent_memory_plugin_installed()
+        or is_im_experiment(exp)
+        or is_forum_hpc_experiment(exp)
     )
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")
@@ -1190,6 +1195,23 @@ def update_experiment_config(uid):
                 memory=memory_config["enabled"],
             )
 
+        if is_forum_hpc_experiment(exp):
+            # YForum's schemas are strict: write the keys it reads next to the mirrors this page reads
+            from y_web.src.forum.experiment_config import (
+                apply_experiment_switches as apply_forum_switches,
+            )
+
+            apply_forum_switches(
+                config,
+                toxicity=toxicity_enabled,
+                sentiment=sentiment_enabled,
+                emotion=emotion_enabled,
+                opinion=opinion_dynamics_enabled,
+                stress_reward=stress_reward_enabled,
+                memory=memory_config["enabled"],
+                perspective_api=perspective_api,
+            )
+
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
 
@@ -1234,6 +1256,19 @@ def update_experiment_config(uid):
                         opinion=opinion_dynamics_enabled,
                         stress_reward=stress_reward_enabled,
                         memory=memory_config["enabled"],
+                    )
+                elif is_forum_hpc_experiment(exp):
+                    from y_web.src.forum.experiment_config import (
+                        apply_switches_to_client as apply_forum_client_switches,
+                    )
+
+                    apply_forum_client_switches(
+                        client_config,
+                        emotion=emotion_enabled,
+                        opinion=opinion_dynamics_enabled,
+                        stress_reward=stress_reward_enabled,
+                        memory=memory_config["enabled"],
+                        stress_reward_config=stress_reward_config,
                     )
                 elif exp.simulator_type == "HPC":
                     if not isinstance(client_config.get("simulation"), dict):
