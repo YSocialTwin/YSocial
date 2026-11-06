@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 09:14+0000\n"
+"POT-Creation-Date: 2026-11-06 17:43+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -130,6 +130,12 @@ msgid ""
 msgstr ""
 "%(label)s è un checkout di sviluppo collegato tramite symlink: aggiornalo"
 " dal suo repository."
+
+#, python-format
+msgid "%(llm_url)s refused the request (HTTP %(status)s). Check the API key."
+msgstr ""
+"%(llm_url)s ha rifiutato la richiesta (HTTP %(status)s). Controlla la "
+"chiave API."
 
 #, python-format
 msgid "%(n)s active runs"
@@ -450,6 +456,9 @@ msgstr "Configurazione API"
 
 msgid "API Key"
 msgstr "Chiave API"
+
+msgid "API Key (optional)"
+msgstr "Chiave API (facoltativa)"
 
 msgid "About"
 msgstr "Informazioni"
@@ -6255,6 +6264,9 @@ msgstr "Nazionalità non trovata."
 msgid "Nearest neighbors (k)"
 msgstr "Vicini più prossimi (k)"
 
+msgid "Needed by providers such as OpenAI or DeepSeek"
+msgstr "Necessaria per provider come OpenAI o DeepSeek"
+
 msgid "Negative"
 msgstr "Negativo"
 
@@ -8257,6 +8269,9 @@ msgstr "Rimuovi"
 msgid "Remove alternative value"
 msgstr "Rimuovi il valore alternativo"
 
+msgid "Remove the stored API key"
+msgstr "Rimuovi la chiave API salvata"
+
 msgid "Remove this comment"
 msgstr "Rimuovi questo commento"
 
@@ -9554,6 +9569,9 @@ msgstr "Ferma l'esperimento prima di rinominarlo."
 
 msgid "Stopped / Scheduled"
 msgstr "Fermati / Pianificati"
+
+msgid "Stored key kept"
+msgstr "Chiave salvata mantenuta"
 
 msgid "Stories"
 msgstr "Storie"

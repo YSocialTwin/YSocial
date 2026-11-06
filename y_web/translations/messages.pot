@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 09:14+0000\n"
+"POT-Creation-Date: 2026-11-06 17:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,6 +111,10 @@ msgstr ""
 msgid ""
 "%(label)s is a symlinked development checkout: update it from its own "
 "repository."
+msgstr ""
+
+#, python-format
+msgid "%(llm_url)s refused the request (HTTP %(status)s). Check the API key."
 msgstr ""
 
 #, python-format
@@ -418,6 +422,9 @@ msgid "API Configuration"
 msgstr ""
 
 msgid "API Key"
+msgstr ""
+
+msgid "API Key (optional)"
 msgstr ""
 
 msgid "About"
@@ -5650,6 +5657,9 @@ msgstr ""
 msgid "Nearest neighbors (k)"
 msgstr ""
 
+msgid "Needed by providers such as OpenAI or DeepSeek"
+msgstr ""
+
 msgid "Negative"
 msgstr ""
 
@@ -7521,6 +7531,9 @@ msgstr ""
 msgid "Remove alternative value"
 msgstr ""
 
+msgid "Remove the stored API key"
+msgstr ""
+
 msgid "Remove this comment"
 msgstr ""
 
@@ -8714,6 +8727,9 @@ msgid "Stop the experiment before renaming it."
 msgstr ""
 
 msgid "Stopped / Scheduled"
+msgstr ""
+
+msgid "Stored key kept"
 msgstr ""
 
 msgid "Stories"

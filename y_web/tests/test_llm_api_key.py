@@ -221,3 +221,52 @@ def test_migration_adds_the_column_once(tmp_path):
     assert columns.count("llm_api_key") == 1
     assert connection.execute("SELECT llm_api_key FROM admin_users").fetchone() == ("",)
     connection.close()
+
+
+@pytest.fixture
+def local_server():
+    """A real HTTP server on localhost that answers like Ollama/vLLM: no authentication, no key expected."""
+    import json
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    received = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def do_GET(self):
+            received.append((self.path, self.headers.get("Authorization")))
+            bodies = {
+                "/api/tags": {"models": [{"name": "llama3.2:latest"}]},
+                "/v1/models": {"data": [{"id": "llama3.2:latest"}]},
+            }
+            if self.path not in bodies:
+                self.send_response(404)
+                self.end_headers()
+                return
+            body = json.dumps(bodies[self.path]).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(body)
+
+    httpd = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    vllm_manager._MODELS_DOWN_CACHE.clear()
+    yield f"http://127.0.0.1:{httpd.server_port}", received
+    httpd.shutdown()
+
+
+@pytest.mark.parametrize("key", [None, "", "NULL", "EMPTY"])
+@pytest.mark.parametrize("suffix", ["", "/v1"])
+def test_local_models_still_work_without_a_key(local_server, key, suffix):
+    """Ollama and vLLM need no key: the forms send "NULL" or nothing, and no Authorization header goes out."""
+    url, received = local_server
+    vllm_manager._MODELS_DOWN_CACHE.clear()
+    assert get_llm_models(url + suffix, api_key=key, raise_on_auth_error=True) == [
+        "llama3.2:latest"
+    ]
+    assert received and all(header is None for _, header in received)
