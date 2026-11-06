@@ -37,6 +37,7 @@ from y_web.src.data_access import (
     get_trending_hashtags,
     get_unanswered_mentions,
 )
+from y_web.src.forum.ids import opaque_id
 from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
@@ -968,7 +969,7 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         viewer_id=_forum_viewer_id(),
         page=page,
         per_page=max_post_per_page,
-        feed_user_id=None if user_id == "all" else int(user_id),
+        feed_user_id=None if user_id == "all" else opaque_id(user_id),
         feed_type=feed_type,
         search_query="",
         community_slug=community_slug,

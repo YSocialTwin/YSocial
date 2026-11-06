@@ -18,6 +18,7 @@ from y_web.src.content.text_utils import (
 from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.experiment.context import get_current_experiment_id
 from y_web.src.forum.hot_rank import rank_posts_longtail
+from y_web.src.forum.ids import opaque_id
 from y_web.src.forum.service.data_classes import (
     ArticlePreview,
     FeedPage,
@@ -101,7 +102,7 @@ def _community_entry(slug: str, kind: str) -> Dict[str, str]:
 def _build_root_post_community_map(
     root_ids: List[int],
 ) -> Dict[int, List[Dict[str, str]]]:
-    normalized_root_ids = [int(root_id) for root_id in root_ids if root_id]
+    normalized_root_ids = [opaque_id(root_id) for root_id in root_ids if root_id]
     if not normalized_root_ids:
         return {}
 
@@ -134,13 +135,13 @@ def _build_root_post_community_map(
         slug = _normalize_sidebar_slug(row.topic_slug or "")
         if not slug:
             continue
-        topic_map.setdefault(int(row.post_id), [])
-        if slug not in topic_map[int(row.post_id)]:
-            topic_map[int(row.post_id)].append(slug)
+        topic_map.setdefault(opaque_id(row.post_id), [])
+        if slug not in topic_map[opaque_id(row.post_id)]:
+            topic_map[opaque_id(row.post_id)].append(slug)
 
     root_map: Dict[int, List[Dict[str, str]]] = {}
     for row in root_rows:
-        post_id = int(row.post_id)
+        post_id = opaque_id(row.post_id)
         subreddit_slug = _subreddit_slug_from_sources(
             row.website_rss or "",
             row.article_link or "",
@@ -163,7 +164,7 @@ def _collect_ranked_communities_from_post_rows(
     ordered_root_ids: List[int] = []
     seen_roots: set[int] = set()
     for row in post_rows:
-        root_id = int(getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0)
+        root_id = opaque_id(getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0)
         if not root_id or root_id in seen_roots:
             continue
         seen_roots.add(root_id)
@@ -251,7 +252,7 @@ def _apply_community_filter(base_query, community_slug: Optional[str]):
 def _fetch_viewer_report_map(
     viewer_id: Optional[int], post_ids: List[int]
 ) -> Dict[int, bool]:
-    normalized_ids = [int(pid) for pid in post_ids if pid]
+    normalized_ids = [opaque_id(pid) for pid in post_ids if pid]
     if not viewer_id or not normalized_ids:
         return {}
     rows = (
@@ -260,11 +261,11 @@ def _fetch_viewer_report_map(
         .distinct()
         .all()
     )
-    return {int(row[0]): True for row in rows if row and row[0] is not None}
+    return {opaque_id(row[0]): True for row in rows if row and row[0] is not None}
 
 
 def _fetch_report_count_map(post_ids: List[int]) -> Dict[int, int]:
-    normalized_ids = [int(pid) for pid in post_ids if pid]
+    normalized_ids = [opaque_id(pid) for pid in post_ids if pid]
     if not normalized_ids:
         return {}
     rows = (
@@ -274,7 +275,7 @@ def _fetch_report_count_map(post_ids: List[int]) -> Dict[int, int]:
         .all()
     )
     return {
-        int(row[0]): int(row[1])
+        opaque_id(row[0]): int(row[1])
         for row in rows
         if row and row[0] is not None and row[1] is not None
     }
@@ -360,7 +361,7 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
         return []
     user_posts = (
         db.session.query(Post.id, Post.thread_id)
-        .filter(Post.user_id == int(user_id))
+        .filter(Post.user_id == opaque_id(user_id))
         .outerjoin(Rounds, Post.round == Rounds.id)
         .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
         .limit(max(limit * 12, 96))
@@ -802,7 +803,7 @@ def build_user_feed_posts(
         else []
     )
     post_time_idx = {
-        int(pid): (int(day) if day is not None else -1) * 24
+        opaque_id(pid): (int(day) if day is not None else -1) * 24
         + (int(hour) if hour is not None else -1)
         for pid, day, hour in time_map_rows
     }
@@ -972,7 +973,7 @@ def fetch_feed_page(
                 .all()
             )
             post_time_map = {
-                int(pid): (int(day) if day is not None else -1) * 24
+                opaque_id(pid): (int(day) if day is not None else -1) * 24
                 + (int(hour) if hour is not None else -1)
                 for pid, day, hour in post_time_rows
             }

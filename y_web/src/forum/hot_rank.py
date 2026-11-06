@@ -5,6 +5,8 @@ import math
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Tuple, TypeVar
 
+from y_web.src.forum.ids import opaque_id
+
 TPost = TypeVar("TPost")
 
 
@@ -92,7 +94,7 @@ def rank_posts_longtail(
 
     ranked: List[Tuple[float, int, TPost]] = []
     for p in posts:
-        post_id = int(getattr(p, "id"))
+        post_id = opaque_id(getattr(p, "id"))
         if post_time_index_map and post_id in post_time_index_map:
             post_time_index = int(post_time_index_map[post_id])
         else:
@@ -103,7 +105,8 @@ def rank_posts_longtail(
             else:
                 # Fallback for callers that pass bare Post rows without day/hour.
                 # Kept for compatibility; preferred path is day/hour map.
-                post_time_index = int(getattr(p, "round", 0))
+                round_value = opaque_id(getattr(p, "round", 0))
+                post_time_index = round_value if isinstance(round_value, int) else 0
         likes, dislikes = reaction_map.get(post_id, (0, 0))
         net = int(likes) - int(dislikes)
         base = base_hot_score(net, post_time_index, round_decay=round_decay)
