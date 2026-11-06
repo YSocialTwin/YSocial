@@ -28,7 +28,9 @@ def roster_path(client_config_path: str, client_name: str) -> str:
     name = None
     try:
         with open(client_config_path, "r", encoding="utf-8") as handle:
-            name = ((json.load(handle).get("population") or {}).get("agents_file")) or None
+            name = (
+                (json.load(handle).get("population") or {}).get("agents_file")
+            ) or None
     except (OSError, ValueError):
         name = None
     return os.path.join(folder, name or f"agents_{client_name}.json")

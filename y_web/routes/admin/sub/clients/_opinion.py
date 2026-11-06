@@ -23,8 +23,8 @@ from y_web.i18n import gettext as _
 from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     AgeClass,
-    Client_Execution,
     Client,
+    Client_Execution,
     Exp_Topic,
     Exps,
     OpinionDistribution,
@@ -1046,7 +1046,9 @@ def _refresh_forum_roster_after_opinion_change(context):
     )
     if outcome == REMOVED:
         flash(
-            _("The saved agents of this client were discarded: the new opinions apply at its first start."),
+            _(
+                "The saved agents of this client were discarded: the new opinions apply at its first start."
+            ),
             "info",
         )
     elif outcome == KEPT_STARTED:

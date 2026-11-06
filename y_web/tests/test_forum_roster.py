@@ -30,7 +30,9 @@ def test_roster_path_default_and_configured(tmp_path):
 
 def test_client_has_started():
     assert not client_has_started(None)
-    assert not client_has_started(SimpleNamespace(last_active_day=-1, last_active_hour=-1))
+    assert not client_has_started(
+        SimpleNamespace(last_active_day=-1, last_active_hour=-1)
+    )
     assert client_has_started(SimpleNamespace(last_active_day=0, last_active_hour=-1))
     assert client_has_started(SimpleNamespace(last_active_day=-1, last_active_hour=3))
 
@@ -54,7 +56,9 @@ def test_started_client_keeps_its_roster(tmp_path):
     assert roster.exists()
 
 
-def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(tmp_path, monkeypatch):
+def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(
+    tmp_path, monkeypatch
+):
     from y_web.routes.admin.sub.clients import _opinion as op
 
     cfg = _config(tmp_path)
@@ -66,7 +70,9 @@ def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(tmp_path, m
     monkeypatch.setattr("y_web.src.forum.is_forum_hpc_experiment", lambda e: True)
     execution = SimpleNamespace(last_active_day=-1, last_active_hour=-1)
     monkeypatch.setattr(
-        op.db.session, "scalars", lambda *a, **k: SimpleNamespace(first=lambda: execution)
+        op.db.session,
+        "scalars",
+        lambda *a, **k: SimpleNamespace(first=lambda: execution),
     )
     ctx = {
         "exp": object(),

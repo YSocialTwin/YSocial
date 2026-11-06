@@ -58,9 +58,7 @@ def test_feed_pages_with_uuid_ids(app):
     rid = str(uuid.uuid4())
     db.session.add(Rounds(id=rid, day=0, hour=1))
     db.session.add(
-        User_mgmt(
-            id=uid, username="u", password="x", joined_on=0, user_type="agent"
-        )
+        User_mgmt(id=uid, username="u", password="x", joined_on=0, user_type="agent")
     )
     pids = [str(uuid.uuid4()) for _ in range(3)]
     for pid in pids:
@@ -102,10 +100,14 @@ def test_reply_inbox_rebuilt_with_text_key_for_uuid_users(app):
     uid = str(uuid.uuid4())
     with engine.begin() as conn:
         conn.execute(
-            text("INSERT INTO reply_inbox_state (user_id, last_seen_reply_id) VALUES (:u, 3)"),
+            text(
+                "INSERT INTO reply_inbox_state (user_id, last_seen_reply_id) VALUES (:u, 3)"
+            ),
             {"u": uid},
         )
-        row = conn.execute(text("SELECT user_id, last_seen_reply_id FROM reply_inbox_state")).one()
+        row = conn.execute(
+            text("SELECT user_id, last_seen_reply_id FROM reply_inbox_state")
+        ).one()
     assert tuple(row) == (uid, 3)
     assert ensure_text_key_reply_inbox(engine) is False  # already text: untouched
 
@@ -142,7 +144,9 @@ def test_notifications_and_thread_order_follow_seq(app):
     uid, rid = str(uuid.uuid4()), str(uuid.uuid4())
     db.session.add(Rounds(id=rid, day=0, hour=1))
     db.session.add(User_mgmt(id=uid, username="u", password="x", joined_on=0))
-    root = Post(id=str(uuid.uuid4()), tweet="root", round=rid, user_id=uid, comment_to=-1)
+    root = Post(
+        id=str(uuid.uuid4()), tweet="root", round=rid, user_id=uid, comment_to=-1
+    )
     root.thread_id = root.id
     db.session.add(root)
     db.session.commit()
@@ -150,12 +154,21 @@ def test_notifications_and_thread_order_follow_seq(app):
     # insertion order is the REVERSE of the (random) id order
     for seq, cid in enumerate(reversed(ids), start=1):
         db.session.add(
-            Post(id=cid, tweet=f"c{seq}", round=rid, user_id=uid, comment_to=root.id, thread_id=root.id)
+            Post(
+                id=cid,
+                tweet=f"c{seq}",
+                round=rid,
+                user_id=uid,
+                comment_to=root.id,
+                thread_id=root.id,
+            )
         )
     db.session.commit()
     with engine.begin() as conn:
         for seq, cid in enumerate(reversed(ids), start=1):
-            conn.execute(text("UPDATE post SET seq=:s WHERE id=:i"), {"s": seq, "i": cid})
+            conn.execute(
+                text("UPDATE post SET seq=:s WHERE id=:i"), {"s": seq, "i": cid}
+            )
 
     # the aliased tables of the feed (viewer vote) must resolve ``seq`` too
     page = q.fetch_feed_page(viewer_id=uid, page=1, per_page=10, feed_type="new")
@@ -187,7 +200,9 @@ def test_human_actions_get_uuid_ids_and_seq_in_a_yforum_database(app):
     post = Post(tweet="hello", round=rid, user_id=u1.id, comment_to=-1)
     db.session.add(post)
     db.session.commit()
-    comment = Post(tweet="reply", round=rid, user_id=u2.id, comment_to=post.id, thread_id=post.id)
+    comment = Post(
+        tweet="reply", round=rid, user_id=u2.id, comment_to=post.id, thread_id=post.id
+    )
     like = Reactions(round=rid, user_id=u2.id, post_id=post.id, type="like")
     follow = Follow(user_id=u1.id, follower_id=u2.id, round=rid, action="follow")
     db.session.add_all([comment, like, follow])
@@ -197,7 +212,9 @@ def test_human_actions_get_uuid_ids_and_seq_in_a_yforum_database(app):
         assert isinstance(row.id, str) and uuid.UUID(row.id)
     with engine.connect() as conn:
         seqs = [r[0] for r in conn.execute(text("SELECT seq FROM post ORDER BY seq"))]
-        user_seqs = [r[0] for r in conn.execute(text("SELECT seq FROM user_mgmt ORDER BY seq"))]
+        user_seqs = [
+            r[0] for r in conn.execute(text("SELECT seq FROM user_mgmt ORDER BY seq"))
+        ]
     assert seqs == [1, 2] and user_seqs == [1, 2]
     ordering.forget_cached_schema()
 
@@ -211,7 +228,10 @@ def test_standard_databases_are_left_alone(tmp_path):
     app = Flask(__name__)
     exp = f"sqlite:///{tmp_path / 'std.db'}"
     app.config["SQLALCHEMY_DATABASE_URI"] = exp
-    app.config["SQLALCHEMY_BINDS"] = {"db_exp": exp, "db_admin": f"sqlite:///{tmp_path / 'a.db'}"}
+    app.config["SQLALCHEMY_BINDS"] = {
+        "db_exp": exp,
+        "db_admin": f"sqlite:///{tmp_path / 'a.db'}",
+    }
     db.init_app(app)
     with app.app_context():
         db.create_all(bind_key=["db_exp", "db_admin"])

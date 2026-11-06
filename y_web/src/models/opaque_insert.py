@@ -17,9 +17,9 @@ import uuid
 
 from sqlalchemy import Column, Integer, event, func, select
 from sqlalchemy.engine import Engine
-from sqlalchemy.sql.dml import Insert
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import CreateColumn
+from sqlalchemy.sql.dml import Insert
 
 from y_web import db
 

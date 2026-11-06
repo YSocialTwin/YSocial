@@ -7,8 +7,8 @@ still find them in ``app.template_context_processors``.
 from flask import Flask
 from sqlalchemy import select
 
-from y_web.src.forum.ids import opaque_id
 from y_web import db
+from y_web.src.forum.ids import opaque_id
 
 
 def register_template_context(app: Flask) -> None:

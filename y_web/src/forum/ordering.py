@@ -8,8 +8,8 @@ the ``id`` column otherwise, so the same query serves both.
 
 from typing import Dict, Tuple
 
-from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import Integer, column
+from sqlalchemy import inspect as sa_inspect
 
 from y_web import db
 
@@ -57,7 +57,9 @@ def seq_or_id(entity):
     """SQL expression ordering ``entity`` (a model or an ``aliased`` model) in insertion order."""
     selectable = sa_inspect(entity).selectable
     base = getattr(sa_inspect(entity), "mapper", None)
-    table = base.local_table.name if base is not None else getattr(selectable, "name", "")
+    table = (
+        base.local_table.name if base is not None else getattr(selectable, "name", "")
+    )
     if _table_has_seq(table):
         # a column of the very selectable the query uses (the table itself, or the alias of it)
         return column("seq", Integer, _selectable=selectable)
