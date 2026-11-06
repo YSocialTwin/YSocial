@@ -334,6 +334,7 @@ def add_user():
         username=username,
         email=email,
         password=generate_password_hash(password),
+        last_seen="",
         role=role,
         llm=llm,
         profile_pic=profile_pic,
