@@ -32,8 +32,8 @@ from y_web.src.agents.platform import (
     ensure_population_username_type_column,
 )
 from y_web.src.content.cover_images import random_cover_image_url
-from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
+from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,

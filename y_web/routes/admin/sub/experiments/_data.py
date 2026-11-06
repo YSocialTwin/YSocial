@@ -43,13 +43,13 @@ from y_web.src.content.avatars import (
     normalize_forum_avatar_mode,
 )
 from y_web.src.dating import is_dating_experiment
-from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
     user_can_view_experiment,
 )
 from y_web.src.external_runtime import load_plugins_index
+from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.im import is_im_experiment
