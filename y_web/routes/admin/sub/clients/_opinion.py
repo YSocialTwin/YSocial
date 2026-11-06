@@ -717,8 +717,60 @@ def _persist_non_hpc_opinion_dynamics(context):
         )
 
 
+def _persist_forum_hpc_opinion_dynamics(context):
+    """Persist the opinion dynamics of a forum HPC client in YForum's own shape (``simulation.opinion_dynamics``).
+
+    YForum's strict client schema has no top-level ``opinion_dynamics`` and no opinion groups: the initial opinions
+    travel in the population file, the model and its parameters here.
+    """
+    update_rule = request.form.get("update_rule", "bounded_confidence")
+    if update_rule not in ("bounded_confidence", "llm_evaluation"):
+        update_rule = "bounded_confidence"
+    if update_rule == "bounded_confidence":
+        parameters = {
+            "epsilon": float(request.form.get("bc_epsilon", "0.25")),
+            "mu": float(request.form.get("bc_mu", "0.5")),
+            "theta": float(request.form.get("bc_theta", "0.0")),
+            "cold_start": request.form.get("bc_cold_start", "neutral"),
+        }
+    else:
+        parameters = {"cold_start": request.form.get("llm_cold_start", "neutral")}
+    path = context["client_config_file"]
+    if not os.path.exists(path):
+        flash(
+            _(
+                "Client configuration file not found: %(client_config_file)s",
+                client_config_file=path,
+            ),
+            "warning",
+        )
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+        simulation = client_config.setdefault("simulation", {})
+        simulation["opinion_dynamics"] = {
+            "enabled": True,
+            "model_name": update_rule,
+            "parameters": parameters,
+        }
+        client_config.pop("opinion_dynamics", None)
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(client_config, handle, indent=4)
+        flash(_("Opinion dynamics configuration saved successfully."), "success")
+    except (OSError, ValueError) as e:
+        flash(
+            _("Error updating client configuration: %(error)s", error=str(e)),
+            "warning",
+        )
+
+
 def _persist_hpc_opinion_dynamics(context):
     """Persist HPC opinion dynamics configuration to client config."""
+    from y_web.src.forum import is_forum_hpc_experiment
+
+    if is_forum_hpc_experiment(context["exp"]):
+        return _persist_forum_hpc_opinion_dynamics(context)
     if context["opinion_dynamics_enabled"]:
         update_rule = request.form.get("update_rule", "bounded_confidence")
         opinion_dynamics = {

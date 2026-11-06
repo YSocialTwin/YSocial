@@ -423,6 +423,15 @@ def create_forum_hpc_client(exp, name, descr, population_id, form):
     )
     db.session.commit()
     flash(_("Forum client '%(name)s' created successfully", name=name))
+    if switches.get("opinion"):
+        # as every other platform: the opinions of the agents are set on the dedicated page (YForum reads them from the population)
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_hpc",
+                idexp=exp.idexp,
+                client_id=client.id,
+            )
+        )
     return redirect(f"/admin/experiment_details/{exp.idexp}")
 
 

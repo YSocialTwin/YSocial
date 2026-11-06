@@ -191,8 +191,9 @@ def test_a_forum_client_is_created_with_a_valid_configuration(monkeypatch, tmp_p
     assert response.status_code == 302
     with http.session_transaction() as sess:
         flashed = sess.get("_flashes")
-    assert response.headers["Location"].endswith(
-        f"/admin/experiment_details/{idexp}"
+    # the experiment has opinion dynamics on: the opinions are set on the dedicated page, as on every platform
+    assert response.headers["Location"].startswith(
+        f"/admin/opinion_configuration_hpc/{idexp}?client_id="
     ), flashed
 
     exp_dir = tmp_path / "y_web" / "experiments" / folder
@@ -376,3 +377,79 @@ def test_a_non_forum_hpc_experiment_is_refused(monkeypatch, tmp_path):
     )
     assert response.status_code == 302
     assert "clients_forum_hpc" not in response.headers["Location"]
+
+
+@pytest.mark.integration
+def test_the_opinions_are_set_on_the_dedicated_page_and_reach_yforum(
+    monkeypatch, tmp_path
+):
+    """Opinion dynamics on: creation leads to the opinion page; saving it writes the population and YForum's own keys."""
+    validate, load_population = _yforum()
+    from y_web import db
+    from y_web.src.models import Topic_List
+
+    _availability(monkeypatch, forum_hpc=True)
+    app, http = _app_and_client(monkeypatch, tmp_path)
+    _pin_paths(monkeypatch, tmp_path)
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path)
+    )
+    idexp, pop_id, folder = _seed(
+        app, http, llm_agents_enabled="", opinion_dynamics_enabled="on"
+    )
+    _confirm(tmp_path, folder)
+
+    response = http.post(
+        "/admin/create_forum_hpc_client",
+        data={
+            "id_exp": idexp,
+            "name": "c1",
+            "descr": "d",
+            "population_id": pop_id,
+            "days": "1",
+            "recsys_type": "ContentRecSys",
+            "frecsys_type": "FollowRecSys",
+        },
+    )
+    assert response.status_code == 302
+    location = response.headers["Location"]
+    assert f"/admin/opinion_configuration_hpc/{idexp}" in location, location
+    page = http.get(location)
+    assert page.status_code == 200 and b"Traceback" not in page.data
+
+    client_id = location.split("client_id=")[1]
+    with app.app_context():
+        politics = db.session.query(Topic_List).filter_by(name="politics").one().id
+    saved = http.post(
+        "/admin/set_hpc_opinion_distributions",
+        data={
+            "idexp": idexp,
+            "client_id": client_id,
+            "segmentation": "",
+            "update_rule": "bounded_confidence",
+            "bc_epsilon": "0.3",
+            "bc_mu": "0.4",
+            "bc_theta": "0",
+            "bc_cold_start": "neutral",
+            f"dist_topic_{politics}_segment_0": "none-such",
+        },
+    )
+    assert saved.status_code == 302
+
+    exp_dir = tmp_path / "y_web" / "experiments" / folder
+    raw = json.loads((exp_dir / "client_c1-pop.json").read_text())
+    assert "opinion_dynamics" not in raw  # not YForum's shape
+    config = validate(raw, "config/client_config")  # the strict schema accepts it
+    assert config["simulation"]["opinion_dynamics"] == {
+        "enabled": True,
+        "model_name": "bounded_confidence",
+        "parameters": {
+            "epsilon": 0.3,
+            "mu": 0.4,
+            "theta": 0.0,
+            "cold_start": "neutral",
+        },
+    }
+    profiles, _generation = load_population(exp_dir / "pop.json", "auto", "admin")
+    first = next(p for p in profiles if p.name == "u1")
+    assert set(first.opinions) == {"politics"} and 0 <= first.opinions["politics"] <= 1
