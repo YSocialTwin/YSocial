@@ -255,7 +255,7 @@ def test_the_update_action_writes_server_and_client_files(monkeypatch, tmp_path)
     assert (
         "Memory Embeddings" in page
     ), "IM memory uses the same embeddings page as the other platforms"
-    assert "Edit LLM Prompts" not in page
+    assert "/admin/prompts_im/" in page, "IM experiments have their own prompts page"
     assert 'id="im-advanced-settings"' in page and 'name="min_round_seconds"' in page
     save = client_http.post(
         f"/admin/update_im_advanced_settings/{exp_id}",

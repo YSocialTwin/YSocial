@@ -138,9 +138,16 @@ def test_saving_writes_distributions_and_im_opinion_keys(im_app, monkeypatch, tm
     )
     exp_id, client_id, folder = _setup(app, tmp_path, opinion=True)
     from y_web import db
-    from y_web.src.models import Exp_Topic, OpinionDistribution, Topic_List
+    from y_web.src.models import (
+        Exp_Topic,
+        OpinionDistribution,
+        OpinionGroup,
+        Topic_List,
+    )
 
     with app.app_context():
+        if db.session.query(OpinionGroup).first() is None:  # a database without the seeded groups
+            db.session.add(OpinionGroup(name="neutral", lower_bound=0.0, upper_bound=1.0))
         topic = Topic_List(name="politics")
         db.session.add(topic)
         db.session.flush()
