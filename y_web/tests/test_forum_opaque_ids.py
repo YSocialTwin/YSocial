@@ -45,7 +45,7 @@ def app(tmp_path):
     db.init_app(app)
     with app.app_context():
         db.create_all(bind_key=["db_exp", "db_admin"])
-        _use_string_primary_keys(("rounds", "user_mgmt", "post"))
+        _use_string_primary_keys(("rounds", "user_mgmt", "post", "reactions", "follow"))
         yield app
         db.session.remove()
 
@@ -163,3 +163,87 @@ def test_notifications_and_thread_order_follow_seq(app):
     comments, _total = q._build_comment_payload(root, uid)
     assert [c["post_id"] for c in comments][:4] == list(reversed(ids))
     ordering.forget_cached_schema()
+
+
+def test_human_actions_get_uuid_ids_and_seq_in_a_yforum_database(app):
+    """Inserts written like the forum actions do (no id, no seq) work on a database that numbers rows itself."""
+    from sqlalchemy import text
+
+    from y_web.src.forum import ordering
+    from y_web.src.models import Follow, Post, Reactions, Rounds, User_mgmt
+
+    engine = db.engines["db_exp"]
+    with engine.begin() as conn:
+        for table in ("user_mgmt", "rounds", "post", "follow", "reactions"):
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN seq INTEGER"))
+    ordering.forget_cached_schema()
+
+    rid = str(uuid.uuid4())
+    db.session.add(Rounds(id=rid, day=0, hour=0))
+    u1 = User_mgmt(username="a", password="x", joined_on=0)
+    u2 = User_mgmt(username="b", password="x", joined_on=0)
+    db.session.add_all([u1, u2])
+    db.session.commit()
+    post = Post(tweet="hello", round=rid, user_id=u1.id, comment_to=-1)
+    db.session.add(post)
+    db.session.commit()
+    comment = Post(tweet="reply", round=rid, user_id=u2.id, comment_to=post.id, thread_id=post.id)
+    like = Reactions(round=rid, user_id=u2.id, post_id=post.id, type="like")
+    follow = Follow(user_id=u1.id, follower_id=u2.id, round=rid, action="follow")
+    db.session.add_all([comment, like, follow])
+    db.session.commit()
+
+    for row in (u1, u2, post, comment, like, follow):
+        assert isinstance(row.id, str) and uuid.UUID(row.id)
+    with engine.connect() as conn:
+        seqs = [r[0] for r in conn.execute(text("SELECT seq FROM post ORDER BY seq"))]
+        user_seqs = [r[0] for r in conn.execute(text("SELECT seq FROM user_mgmt ORDER BY seq"))]
+    assert seqs == [1, 2] and user_seqs == [1, 2]
+    ordering.forget_cached_schema()
+
+
+def test_standard_databases_are_left_alone(tmp_path):
+    """Integer ids and no seq column: the hook changes nothing (the id stays the autoincrement one)."""
+    from flask import Flask
+
+    from y_web.src.models import Post, Rounds, User_mgmt
+
+    app = Flask(__name__)
+    exp = f"sqlite:///{tmp_path / 'std.db'}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = exp
+    app.config["SQLALCHEMY_BINDS"] = {"db_exp": exp, "db_admin": f"sqlite:///{tmp_path / 'a.db'}"}
+    db.init_app(app)
+    with app.app_context():
+        db.create_all(bind_key=["db_exp", "db_admin"])
+        db.session.add(Rounds(day=0, hour=0))
+        db.session.add(User_mgmt(username="a", password="x", joined_on=0))
+        db.session.commit()
+        user = db.session.query(User_mgmt).first()
+        db.session.add(Post(tweet="t", round=1, user_id=user.id, comment_to=-1))
+        db.session.commit()
+        assert user.id == 1 and db.session.query(Post).first().id == 1
+        db.session.remove()
+
+
+def test_forum_templates_never_write_ids_unquoted_into_javascript():
+    """``loggedUserId: {{ logged_id }}`` breaks the whole config object when the id is a UUID."""
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "templates" / "forum"
+    bad = []
+    for path in root.glob("*.html"):
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if re.search(r"(?i)\b\w*userid\s*:\s*\{\{\s*\w+\s*\}\}", line):
+                bad.append(f"{path.name}:{number}: {line.strip()}")
+    assert not bad, bad
+
+
+def test_api_routes_accept_uuid_ids():
+    from y_web.routes.api.reddit import _opaque_payload_id
+
+    u = str(uuid.uuid4())
+    assert _opaque_payload_id(u) == u
+    assert _opaque_payload_id(7) == 7 and _opaque_payload_id("7") == 7
+    assert _opaque_payload_id(None) is None and _opaque_payload_id("") is None
+    assert _opaque_payload_id(True) is None and _opaque_payload_id([1]) is None

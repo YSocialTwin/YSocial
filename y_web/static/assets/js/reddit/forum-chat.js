@@ -148,13 +148,13 @@
 
   function renderList () {
     const query = String(searchInput.value || '').trim().toLowerCase()
-    const sessionsByTarget = new Map(state.sessions.map(session => [Number(session.target_user_id), session]))
+    const sessionsByTarget = new Map(state.sessions.map(session => [String(session.target_user_id), session]))
 
     const items = state.agents
       .filter(agent => !query || String(agent.username || '').toLowerCase().includes(query))
       .sort((a, b) => {
-        const aTime = sessionsByTarget.get(Number(a.user_id))?.last_message_at || ''
-        const bTime = sessionsByTarget.get(Number(b.user_id))?.last_message_at || ''
+        const aTime = sessionsByTarget.get(String(a.user_id))?.last_message_at || ''
+        const bTime = sessionsByTarget.get(String(b.user_id))?.last_message_at || ''
         return String(bTime).localeCompare(String(aTime))
       })
 
@@ -165,7 +165,7 @@
     }
 
     listEl.innerHTML = items.map(agent => {
-      const session = sessionsByTarget.get(Number(agent.user_id))
+      const session = sessionsByTarget.get(String(agent.user_id))
       const preview = session?.last_message_preview || agent.preview || agent.profession || 'Start a conversation'
       const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString(document.documentElement.lang || undefined) : ''
       return `
@@ -183,7 +183,7 @@
     }).join('')
 
     listEl.querySelectorAll('.forum-chat-list-item').forEach(btn => {
-      btn.addEventListener('click', () => openSession(Number(btn.dataset.agentId)))
+      btn.addEventListener('click', () => openSession(btn.dataset.agentId))
     })
 
     if (window.feather && typeof window.feather.replace === 'function') {

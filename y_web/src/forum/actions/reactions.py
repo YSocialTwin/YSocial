@@ -10,6 +10,7 @@ from y_web.src.forum.actions.posts import (
     _get_current_round,
     _resolve_experiment_actor,
 )
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import Post, Post_Sentiment, Post_topics, Reactions
 
 
@@ -62,7 +63,7 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
     try:
         existing_reaction = (
             Reactions.query.filter_by(post_id=post_id, user_id=actor_user.id)
-            .order_by(Reactions.id.desc())
+            .order_by(seq_or_id(Reactions).desc())
             .first()
         )
 

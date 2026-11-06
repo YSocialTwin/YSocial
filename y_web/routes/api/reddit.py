@@ -123,6 +123,16 @@ def _forum_chat_owner_user() -> User_mgmt | None:
     ).first()
 
 
+def _opaque_payload_id(value):
+    """An id sent by the page: integer for standard experiments, UUID string for HPC ones (``None`` if unusable)."""
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, str)):
+        value = opaque_id(value)
+        return value if value not in ("", None) else None
+    return None
+
+
 def _forum_viewer_id() -> int:
     viewer = db.session.scalars(
         select(User_mgmt).filter_by(
@@ -692,9 +702,10 @@ def _article_summary_needs_enrichment(summary: str) -> bool:
     return len(s) < 60
 
 
-@api_reddit.post("/<int:exp_id>/enrich/article/<int:article_id>")
+@api_reddit.post("/<int:exp_id>/enrich/article/<article_id>")
 @login_required
 def api_enrich_article(exp_id: int, article_id: int):
+    article_id = opaque_id(article_id)
     payload = request.get_json(silent=True) or {}
     force = bool(payload.get("force"))
 
@@ -782,9 +793,10 @@ def api_enrich_article(exp_id: int, article_id: int):
     )
 
 
-@api_reddit.post("/<int:exp_id>/enrich/image/<int:image_id>")
+@api_reddit.post("/<int:exp_id>/enrich/image/<image_id>")
 @login_required
 def api_enrich_image(exp_id: int, image_id: int):
+    image_id = opaque_id(image_id)
     payload = request.get_json(silent=True) or {}
     force = bool(payload.get("force"))
 
@@ -1129,9 +1141,10 @@ def api_search(exp_id: int):
     )
 
 
-@api_reddit.get("/<int:exp_id>/thread/<int:post_id>")
+@api_reddit.get("/<int:exp_id>/thread/<post_id>")
 @login_required
 def api_thread(exp_id: int, post_id: int):
+    post_id = opaque_id(post_id)
     try:
         thread = fetch_thread(post_id, viewer_id=_forum_viewer_id())
     except ValueError:
@@ -1146,7 +1159,8 @@ def api_vote(exp_id: int):
     post_id = payload.get("post_id")
     action = payload.get("action")
 
-    if not isinstance(post_id, int) or action not in {"like", "dislike", "neutral"}:
+    post_id = _opaque_payload_id(post_id)
+    if post_id is None or action not in {"like", "dislike", "neutral"}:
         return _json_error("Invalid payload.", 400)
 
     try:
@@ -1175,7 +1189,8 @@ def api_comment(exp_id: int):
     content = (payload.get("content") or "").strip()
     client_action_id = (payload.get("client_action_id") or "").strip() or None
 
-    if not isinstance(parent_id, int) or not content:
+    parent_id = _opaque_payload_id(parent_id)
+    if parent_id is None or not content:
         return _json_error("parent_id and content are required.", 400)
 
     try:
@@ -1259,9 +1274,10 @@ def api_post(exp_id: int):
     return _json_success({"post_id": post.id})
 
 
-@api_reddit.post("/<int:exp_id>/post/<int:post_id>/delete")
+@api_reddit.post("/<int:exp_id>/post/<post_id>/delete")
 @login_required
 def api_delete_post(exp_id: int, post_id: int):
+    post_id = opaque_id(post_id)
     post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is None:
         return _json_error("Post not found.", 404)

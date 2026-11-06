@@ -14,6 +14,7 @@ from sqlalchemy import Integer, column
 from y_web import db
 
 _HAS_SEQ: Dict[Tuple[str, str], bool] = {}
+_LAYOUT: Dict[Tuple[str, str], Tuple[bool, bool]] = {}
 
 
 def _table_has_seq(table_name: str) -> bool:
@@ -28,9 +29,28 @@ def _table_has_seq(table_name: str) -> bool:
         return False
 
 
+def table_layout(engine, table_name: str) -> Tuple[bool, bool]:
+    """``(id_is_text, has_seq)`` of ``table_name`` in the database behind ``engine`` (cached)."""
+    key = (str(engine.url), "layout:" + table_name)
+    if key not in _LAYOUT:
+        try:
+            columns = {
+                c["name"]: c["type"] for c in sa_inspect(engine).get_columns(table_name)
+            }
+            id_type = columns.get("id")
+            _LAYOUT[key] = (
+                id_type is not None and not isinstance(id_type, Integer),
+                "seq" in columns,
+            )
+        except Exception:
+            return (False, False)  # not cached: the table may appear later
+    return _LAYOUT[key]
+
+
 def forget_cached_schema() -> None:
     """Drop what was learnt about the tables (after a schema change or an experiment switch)."""
     _HAS_SEQ.clear()
+    _LAYOUT.clear()
 
 
 def seq_or_id(entity):

@@ -176,7 +176,7 @@
 
 <script>
 window.redditContext = Object.freeze({
-    loggedUserId: {{ logged_id }},
+    loggedUserId: {{ logged_id|tojson }},
     isAdmin: {{ 'true' if is_admin else 'false' }}
 });
 window.redditFeedConfig = Object.freeze({

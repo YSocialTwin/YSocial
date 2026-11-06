@@ -593,7 +593,7 @@
 
 <script>
 window.redditContext = Object.freeze({
-    loggedUserId: {{ logged_id }},
+    loggedUserId: {{ logged_id|tojson }},
     isAdmin: {{ 'true' if is_admin else 'false' }},
     loggedUsername: {{ logged_username|tojson }},
     profilePic: {{ profile_pic|tojson }},
@@ -652,12 +652,12 @@ window.redditFeedConfig = Object.freeze({
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
 <script>
 window.redditContext = Object.freeze({
-    loggedUserId: {{ logged_id }},
+    loggedUserId: {{ logged_id|tojson }},
     isAdmin: {{ 'true' if is_admin else 'false' }}
 });
 window.redditFeedConfig = Object.freeze({
     expId: {{ exp_id }},
-    loggedUserId: {{ logged_id }},
+    loggedUserId: {{ logged_id|tojson }},
     viewMode: '{{ 'subforum' if active_community else 'feed' }}'
 });
 </script>

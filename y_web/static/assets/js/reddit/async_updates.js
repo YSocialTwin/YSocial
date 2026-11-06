@@ -5,6 +5,18 @@
         return;
     }
 
+    // Ids are integers in standard experiments and UUID strings in HPC ones: never parse them as numbers.
+    function opaqueId(value) {
+        if (value === null || value === undefined) {
+            return null;
+        }
+        var text = String(value).trim();
+        if (!text) {
+            return null;
+        }
+        return /^-?\d+$/.test(text) ? Number(text) : text;
+    }
+
     var Api = window.RedditApi || null;
     if (!Api) {
         console.warn(
@@ -459,8 +471,7 @@
         if (!$first.length) {
             return null;
         }
-        var value = parseInt($first.attr("data-post-id"), 10);
-        return Number.isFinite(value) ? value : null;
+        return opaqueId($first.attr("data-post-id"));
     }
 
     function showNewPostsNotice() {
@@ -482,8 +493,8 @@
                     return;
                 }
                 var currentTop = getTopRenderedPostId();
-                var nextTop = parseInt(posts[0].post_id, 10);
-                if (!Number.isFinite(nextTop)) {
+                var nextTop = opaqueId(posts[0].post_id);
+                if (nextTop === null) {
                     return;
                 }
                 if (currentTop === null) {
@@ -542,7 +553,7 @@
 
     function currentViewerCanDelete(authorId, loggedUserId) {
         var isAdmin = !!(window.redditContext && window.redditContext.isAdmin);
-        return isAdmin || (loggedUserId && Number(authorId) === Number(loggedUserId));
+        return isAdmin || (loggedUserId && String(authorId) === String(loggedUserId));
     }
 
     function parseVoteState($post) {
@@ -551,7 +562,7 @@
         var score = parseInt($post.attr("data-score"), 10) || likes - dislikes;
         var vote = $post.attr("data-vote") || "neutral";
         return {
-            postId: parseInt($post.attr("data-post-id"), 10),
+            postId: opaqueId($post.attr("data-post-id")),
             likes: likes,
             dislikes: dislikes,
             score: score,
@@ -1025,7 +1036,7 @@
         var postById = {};
         (posts || []).forEach(function (p) {
             if (p && p.post_id != null) {
-                postById[Number(p.post_id)] = p;
+                postById[String(p.post_id)] = p;
             }
         });
 
@@ -1068,7 +1079,7 @@
             enhanceRedditMedia($post);
 
             // Lazy enrichment for link summaries and image descriptions.
-            var postId = Number($post.attr("data-post-id"));
+            var postId = String($post.attr("data-post-id"));
             var postData = postById[postId] || null;
             if (postData) {
                 maybeEnrichPost($post, postData);
@@ -1749,7 +1760,7 @@
         }
 
         var parentAttr = button.getAttribute("data-parent-id");
-        var parentId = parentAttr ? parseInt(parentAttr, 10) : NaN;
+        var parentId = parentAttr ? opaqueId(parentAttr) : NaN;
         if (!parentId) {
             return;
         }
@@ -1967,7 +1978,7 @@
         }
 
         var articleNeeds = $threadRoot.attr("data-article-needs-enrichment") === "1";
-        var articleId = Number($threadRoot.attr("data-article-id") || 0) || 0;
+        var articleId = opaqueId($threadRoot.attr("data-article-id")) || 0;
         if (articleNeeds && articleId && !articleEnrichInFlight.has(articleId)) {
             articleEnrichInFlight.add(articleId);
             Api.enrichArticle(articleId, false)
@@ -1984,7 +1995,7 @@
         }
 
         var imageNeeds = $threadRoot.attr("data-image-needs-enrichment") === "1";
-        var imageId = Number($threadRoot.attr("data-image-id") || 0) || 0;
+        var imageId = opaqueId($threadRoot.attr("data-image-id")) || 0;
         if (imageNeeds && imageId && !imageEnrichInFlight.has(imageId)) {
             imageEnrichInFlight.add(imageId);
             Api.enrichImage(imageId, false)

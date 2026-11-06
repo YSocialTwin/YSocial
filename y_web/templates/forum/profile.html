@@ -132,7 +132,7 @@
     window.EXP_ID = {{ exp_id if exp_id else 'null' }};
     window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
     window.redditContext = Object.freeze({
-        loggedUserId: {{ logged_id }},
+        loggedUserId: {{ logged_id|tojson }},
         isAdmin: {{ 'true' if is_admin else 'false' }},
         loggedUsername: {{ logged_username|tojson }},
         profilePic: {{ profile_pic|tojson }},
@@ -144,7 +144,7 @@
         perPage: 10,
         feedType: 'new',
         searchQuery: '',
-        userId: {{ user_id }},
+        userId: {{ user_id|tojson }},
         hasMore: false,
         viewMode: 'profile'
     });
