@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 14:59+0000\n"
+"POT-Creation-Date: 2026-11-06 18:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -185,6 +185,12 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s feeds selected"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(n)s lines of the network file were ignored (names not in the "
+"population)."
 msgstr ""
 
 #, python-format
@@ -3030,11 +3036,6 @@ msgid ""
 "the notification menu."
 msgstr ""
 
-msgid ""
-"Configure the behavioral archetypes and transition probabilities for "
-"agents."
-msgstr ""
-
 #, python-format
 msgid ""
 "Configure the behavioral archetypes and transition probabilities for "
@@ -5459,6 +5460,9 @@ msgstr ""
 msgid "Feature-rich Modeling"
 msgstr ""
 
+msgid "Federation"
+msgstr ""
+
 msgid "Feed"
 msgstr ""
 
@@ -5704,6 +5708,9 @@ msgstr ""
 msgid "Forum (i.e., Reddit)"
 msgstr ""
 
+msgid "Forum HPC experiments are unavailable because YForum is not present."
+msgstr ""
+
 msgid "Forum Image Feed Assignment"
 msgstr ""
 
@@ -5720,6 +5727,10 @@ msgid "Forum RSS Resources"
 msgstr ""
 
 msgid "Forum avatar mode updated successfully."
+msgstr ""
+
+#, python-format
+msgid "Forum client '%(name)s' created successfully"
 msgstr ""
 
 msgid ""
@@ -6341,6 +6352,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"How an agent decides to take part in a World Simulation and adapts "
+"content from the other platforms."
+msgstr ""
+
+msgid ""
 "How an aware agent decides to join: a probability that grows with "
 "awareness, ties, interest and frustration (logistic), or a fixed "
 "probability once awareness passes the threshold."
@@ -6959,6 +6975,10 @@ msgstr ""
 msgid "Invalid experiments_per_group value"
 msgstr ""
 
+#, python-format
+msgid "Invalid forum settings: %(why)s"
+msgstr ""
+
 msgid "Invalid host format"
 msgstr ""
 
@@ -7097,6 +7117,9 @@ msgid "Join Y Social and choose what you want to take part in."
 msgstr ""
 
 msgid "Join a chat"
+msgstr ""
+
+msgid "Join a federation"
 msgstr ""
 
 msgid "Joined (round)"
@@ -8237,9 +8260,6 @@ msgid "Network Analysis"
 msgstr ""
 
 msgid "Network Configuration"
-msgstr ""
-
-msgid "Network Growth (focused on connections)."
 msgstr ""
 
 msgid ""
@@ -10837,6 +10857,9 @@ msgstr ""
 msgid "Recent SA Interactions"
 msgstr ""
 
+msgid "Recent messages compared with a reply"
+msgstr ""
+
 msgid "Recent messages returned per chat"
 msgstr ""
 
@@ -11031,6 +11054,9 @@ msgid "Remote dating experiments are not supported."
 msgstr ""
 
 msgid "Remote experiments cannot take part in a World Simulation."
+msgstr ""
+
+msgid "Remote forum HPC experiments are not supported."
 msgstr ""
 
 msgid "Remote host address is required for remote experiments."
@@ -12311,6 +12337,9 @@ msgstr ""
 msgid "Silent Majorities"
 msgstr ""
 
+msgid "Similarity that counts as a repeated reply"
+msgstr ""
+
 msgid ""
 "Simplified details for a custom population type that does not expose the "
 "full synthetic-population analytics model."
@@ -13273,6 +13302,11 @@ msgstr ""
 msgid "The client is running: stop it to change its settings."
 msgstr ""
 
+msgid ""
+"The client stopped unexpectedly (it was not stopped from the interface). "
+"Check its execution log, then start it again."
+msgstr ""
+
 msgid "The client was interrupted."
 msgstr ""
 
@@ -13652,6 +13686,11 @@ msgstr ""
 msgid "The same subreddit definition can be reused safely"
 msgstr ""
 
+msgid ""
+"The saved agents of this client were discarded: the new opinions apply at"
+" its first start."
+msgstr ""
+
 msgid "The seed must be an integer."
 msgstr ""
 
@@ -13890,6 +13929,11 @@ msgstr ""
 msgid "This backend cannot take part in a World Simulation."
 msgstr ""
 
+msgid ""
+"This client has already run: the new initial opinions apply only to a "
+"fresh start (new client or reset of the experiment)."
+msgstr ""
+
 msgid "This conversation is closed or not reachable right now."
 msgstr ""
 
@@ -13909,6 +13953,9 @@ msgstr ""
 
 #, python-format
 msgid "This experiment is managed by the World Simulation '%(name)s'."
+msgstr ""
+
+msgid "This experiment is not a forum experiment on YForum."
 msgstr ""
 
 msgid "This experiment is not an instant messaging experiment."
@@ -15447,6 +15494,11 @@ msgid "What the model reads to decide on a card and to order candidates."
 msgstr ""
 
 msgid ""
+"What the model reads when it decides after a date and how a date is "
+"remembered."
+msgstr ""
+
+msgid ""
 "What the model receives at the start of a session of an agent or a news "
 "page, and how the date is written."
 msgstr ""
@@ -15546,6 +15598,11 @@ msgstr ""
 msgid ""
 "Whether dates exist, how a date is proposed and answered, how its outcome"
 " is drawn and what happens to the people afterwards."
+msgstr ""
+
+msgid ""
+"Whether this experiment joins a federation. YSocial sets it when the "
+"experiment is a member of a World Simulation."
 msgstr ""
 
 msgid "Which chats an agent looks at in a session and how they are ranked."

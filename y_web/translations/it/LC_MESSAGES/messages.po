@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-03 14:59+0000\n"
+"POT-Creation-Date: 2026-11-06 18:19+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -210,6 +210,12 @@ msgstr "%(n)s valori distinti"
 #, python-format
 msgid "%(n)s feeds selected"
 msgstr "%(n)s feed selezionati"
+
+#, python-format
+msgid ""
+"%(n)s lines of the network file were ignored (names not in the "
+"population)."
+msgstr "%(n)s righe del file di rete sono state ignorate (nomi non presenti nella popolazione)."
 
 #, python-format
 msgid "%(n)s members"
@@ -1366,6 +1372,10 @@ msgid ""
 "who joined it, left it or lost interest, and how many are aware and not "
 "enrolled yet."
 msgstr ""
+"Gli agenti che sono venuti a conoscenza di una piattaforma a cui non sono"
+" iscritti, quelli che vi si sono iscritti, che l'hanno lasciata o hanno "
+"perso interesse, e quanti ne sono al corrente senza essere ancora "
+"iscritti."
 
 msgid "Agents that have this field"
 msgstr "Agenti che hanno questo campo"
@@ -3398,13 +3408,6 @@ msgstr ""
 "Configura l'interfaccia mostrata ai partecipanti per ogni esperimento. "
 "Seleziona tipo, gruppo e nome dell'esperimento per regolare interazioni, "
 "annotazioni e menu delle notifiche."
-
-msgid ""
-"Configure the behavioral archetypes and transition probabilities for "
-"agents."
-msgstr ""
-"Configura gli archetipi comportamentali e le probabilità di transizione "
-"degli agenti."
 
 #, python-format
 msgid ""
@@ -6081,6 +6084,9 @@ msgstr "Filtri preferiti"
 msgid "Feature-rich Modeling"
 msgstr "Modellazione ricca di funzionalità"
 
+msgid "Federation"
+msgstr "Federazione"
+
 msgid "Feed"
 msgstr "Feed"
 
@@ -6351,6 +6357,9 @@ msgstr "Forum"
 msgid "Forum (i.e., Reddit)"
 msgstr "Forum (cioè Reddit)"
 
+msgid "Forum HPC experiments are unavailable because YForum is not present."
+msgstr "Gli esperimenti Forum HPC non sono disponibili perché YForum non è presente."
+
 msgid "Forum Image Feed Assignment"
 msgstr "Assegnazione dei feed di immagini del forum"
 
@@ -6368,6 +6377,10 @@ msgstr "Risorse RSS del forum"
 
 msgid "Forum avatar mode updated successfully."
 msgstr "Modalità avatar del forum aggiornata con successo."
+
+#, python-format
+msgid "Forum client '%(name)s' created successfully"
+msgstr "Client forum '%(name)s' creato con successo"
 
 msgid ""
 "Forum experiments are unavailable because YServerReddit and YClientReddit"
@@ -7037,6 +7050,11 @@ msgid ""
 msgstr ""
 "Come un agente decide su una carta: un'utilità costruita con i pesi qui "
 "sotto, confrontata con una soglia. I pesi sono relativi tra loro."
+
+msgid ""
+"How an agent decides to take part in a World Simulation and adapts "
+"content from the other platforms."
+msgstr "Come un agente decide di partecipare a una World Simulation e adatta i contenuti delle altre piattaforme."
 
 msgid ""
 "How an aware agent decides to join: a probability that grows with "
@@ -7757,6 +7775,10 @@ msgstr "Formato del percorso dell'esperimento non valido"
 msgid "Invalid experiments_per_group value"
 msgstr "Valore di experiments_per_group non valido"
 
+#, python-format
+msgid "Invalid forum settings: %(why)s"
+msgstr "Impostazioni del forum non valide: %(why)s"
+
 msgid "Invalid host format"
 msgstr "Formato dell'host non valido"
 
@@ -7898,6 +7920,9 @@ msgstr "Unisciti a Y Social e scegli a cosa partecipare."
 
 msgid "Join a chat"
 msgstr "Entra in una chat"
+
+msgid "Join a federation"
+msgstr "Unisciti a una federazione"
 
 msgid "Joined (round)"
 msgstr "Iscritto (round)"
@@ -9128,9 +9153,6 @@ msgstr "Analisi della rete"
 
 msgid "Network Configuration"
 msgstr "Configurazione della rete"
-
-msgid "Network Growth (focused on connections)."
-msgstr "Crescita della rete (incentrata sulle connessioni)."
 
 msgid ""
 "Network Growth (focused on connections, enabled only when follow "
@@ -11947,6 +11969,9 @@ msgstr "Interazioni di propaganda recenti"
 msgid "Recent SA Interactions"
 msgstr "Interazioni SA recenti"
 
+msgid "Recent messages compared with a reply"
+msgstr "Messaggi recenti confrontati con una risposta"
+
 msgid "Recent messages returned per chat"
 msgstr "Messaggi recenti restituiti per chat"
 
@@ -12149,6 +12174,9 @@ msgstr "Gli esperimenti dating remoti non sono supportati."
 
 msgid "Remote experiments cannot take part in a World Simulation."
 msgstr "Gli esperimenti remoti non possono far parte di una World Simulation."
+
+msgid "Remote forum HPC experiments are not supported."
+msgstr "Gli esperimenti Forum HPC remoti non sono supportati."
 
 msgid "Remote host address is required for remote experiments."
 msgstr "L'indirizzo dell'host remoto è obbligatorio per gli esperimenti remoti."
@@ -13542,6 +13570,9 @@ msgstr "Pagina di registrazione"
 msgid "Silent Majorities"
 msgstr "Maggioranze silenziose"
 
+msgid "Similarity that counts as a repeated reply"
+msgstr "Somiglianza che conta come risposta ripetuta"
+
 msgid ""
 "Simplified details for a custom population type that does not expose the "
 "full synthetic-population analytics model."
@@ -14592,6 +14623,11 @@ msgstr ""
 msgid "The client is running: stop it to change its settings."
 msgstr "Il client è in esecuzione: fermalo per cambiarne le impostazioni."
 
+msgid ""
+"The client stopped unexpectedly (it was not stopped from the interface). "
+"Check its execution log, then start it again."
+msgstr "Il client si è fermato in modo imprevisto (non è stato fermato dall'interfaccia). Controlla il log di esecuzione, poi riavvialo."
+
 msgid "The client was interrupted."
 msgstr "Il client è stato interrotto."
 
@@ -15075,6 +15111,11 @@ msgstr ""
 msgid "The same subreddit definition can be reused safely"
 msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
 
+msgid ""
+"The saved agents of this client were discarded: the new opinions apply at"
+" its first start."
+msgstr "Gli agenti salvati di questo client sono stati scartati: le nuove opinioni si applicano al primo avvio."
+
 msgid "The seed must be an integer."
 msgstr "Il seed deve essere un numero intero."
 
@@ -15387,6 +15428,11 @@ msgstr ""
 msgid "This backend cannot take part in a World Simulation."
 msgstr "Questo backend non può partecipare a una World Simulation."
 
+msgid ""
+"This client has already run: the new initial opinions apply only to a "
+"fresh start (new client or reset of the experiment)."
+msgstr "Questo client è già stato eseguito: le nuove opinioni iniziali valgono solo per un avvio da zero (nuovo client o reset dell'esperimento)."
+
 msgid "This conversation is closed or not reachable right now."
 msgstr "Questa conversazione è chiusa o non raggiungibile in questo momento."
 
@@ -15415,6 +15461,9 @@ msgstr ""
 #, python-format
 msgid "This experiment is managed by the World Simulation '%(name)s'."
 msgstr "Questo esperimento è gestito dalla World Simulation '%(name)s'."
+
+msgid "This experiment is not a forum experiment on YForum."
+msgstr "Questo esperimento non è un esperimento forum su YForum."
 
 msgid "This experiment is not an instant messaging experiment."
 msgstr "Questo esperimento non è un esperimento di messaggistica istantanea."
@@ -17172,6 +17221,11 @@ msgstr ""
 "candidati."
 
 msgid ""
+"What the model reads when it decides after a date and how a date is "
+"remembered."
+msgstr "Cosa legge il modello quando decide dopo un appuntamento e come viene ricordato un appuntamento."
+
+msgid ""
 "What the model receives at the start of a session of an agent or a news "
 "page, and how the date is written."
 msgstr ""
@@ -17300,6 +17354,11 @@ msgstr ""
 "Se gli appuntamenti esistono, come si propongono e si risponde, come si "
 "estrae l'esito e cosa succede alle persone dopo."
 
+msgid ""
+"Whether this experiment joins a federation. YSocial sets it when the "
+"experiment is a member of a World Simulation."
+msgstr "Indica se questo esperimento si unisce a una federazione. YSocial la imposta quando l'esperimento è membro di una World Simulation."
+
 msgid "Which chats an agent looks at in a session and how they are ranked."
 msgstr "Quali chat un agente guarda in una sessione e come vengono ordinate."
 
@@ -17335,6 +17394,8 @@ msgid ""
 "Who discovered which platform, when, and what came of it: joined, still "
 "pending or lapsed (the awareness faded)."
 msgstr ""
+"Chi ha scoperto quale piattaforma, quando e come è andata: iscritto, "
+"ancora in sospeso o decaduto (la conoscenza si è affievolita)."
 
 msgid ""
 "Who starts where, whether names are hidden and whether a platform can "
@@ -20778,4 +20839,15 @@ msgstr "✔️ Usa"
 
 #~ msgid "World Simulation reset."
 #~ msgstr "World Simulation reimpostata."
+
+#~ msgid ""
+#~ "Configure the behavioral archetypes and "
+#~ "transition probabilities for agents."
+#~ msgstr ""
+#~ "Configura gli archetipi comportamentali e "
+#~ "le probabilità di transizione degli "
+#~ "agenti."
+
+#~ msgid "Network Growth (focused on connections)."
+#~ msgstr "Crescita della rete (incentrata sulle connessioni)."
 
