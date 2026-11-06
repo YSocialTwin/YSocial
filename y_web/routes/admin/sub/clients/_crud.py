@@ -32,6 +32,7 @@ from y_web.src.agents.platform import (
     ensure_population_username_type_column,
 )
 from y_web.src.content.cover_images import random_cover_image_url
+from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
@@ -1734,6 +1735,8 @@ def clients(idexp):
             return redirect(url_for("clientsr.clients_dating", idexp=idexp))
         if getattr(exp, "platform_type", None) == "photo_sharing":
             return redirect(url_for("clientsr.clients_photo", idexp=idexp))
+        if is_forum_hpc_experiment(exp):
+            return redirect(url_for("clientsr.clients_forum_hpc", idexp=idexp))
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if experiment_mode == "forum":
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -1811,6 +1814,8 @@ def clients_hpc(idexp):
         return redirect(url_for("clientsr.clients_dating", idexp=idexp))
     if exp.platform_type == "photo_sharing":
         return redirect(url_for("clientsr.clients_photo", idexp=idexp))
+    if is_forum_hpc_experiment(exp):
+        return redirect(url_for("clientsr.clients_forum_hpc", idexp=idexp))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -6434,6 +6439,8 @@ def create_hpc_client_route():
         return redirect(url_for("clientsr.clients_im", idexp=exp_id))
     if exp.platform_type == "dating":
         return redirect(url_for("clientsr.clients_dating", idexp=exp_id))
+    if is_forum_hpc_experiment(exp):
+        return redirect(url_for("clientsr.clients_forum_hpc", idexp=exp_id))
     if exp.platform_type == "photo_sharing" and not population_id:
         flash(_("Select a valid population."), "error")
         return redirect(url_for("clientsr.clients_photo", idexp=exp_id))

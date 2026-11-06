@@ -1,0 +1,203 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }}
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a>
+                        &gt; {{ _('Create New Forum Client') }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box" id="box-new-client">
+                        <h3 class="title is-5 is-thin">{{ _('New Forum Client') }}</h3>
+                        <div class="box-content">
+                            <form action="/admin/create_forum_hpc_client" method="POST" onsubmit="showLoading('Creating forum client...');">
+                                <div class="box-lines">
+                                    <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
+
+                                    <div class="ys-note-box">
+                                        {{ _('Annotations, opinion dynamics, stress/reward and memory are set in the Experiment Configuration of this experiment and apply to every client.') }}
+                                        {{ _('Active now:') }}
+                                        {% for k, v in switches.items() %}{{ k }}: {{ _('on') if v else _('off') }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Name') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="name" class="input" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Description') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="descr" class="input"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Population') }}</span>
+                                        <div class="select">
+                                            <select name="population_id" required>
+                                                <option value=""></option>
+                                                {% for pop in populations %}
+                                                <option value="{{ pop.id }}">{{ pop.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Days') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="days" class="input" min="1" max="3650" step="1" value="3"></span>
+                                    </div>
+
+                                    <h4>{{ _('Action weights') }}</h4>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Post') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_post" class="input" min="0" max="1" step="any" value="0.2"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Comment') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_comment" class="input" min="0" max="1" step="any" value="0.5"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Read') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_read" class="input" min="0" max="1" step="any" value="0.2"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Search') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_search" class="input" min="0" max="1" step="any" value="0.1"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Share') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_share" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Share link') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_share_link" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Image') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="likelihood_image" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+
+                                    <h4>{{ _('Behaviour') }}</h4>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('New agents per day (fraction)') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="percentage_new_agents_iteration" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Removed agents per day (fraction)') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="percentage_removed_agents_iteration" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Comments read per thread') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="max_length_thread_reading" class="input" min="1" max="100" step="1" value="4"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Share of reading from followed users') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="reading_from_follower_ratio" class="input" min="0" max="1" step="any" value="0.6"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Daily follow probability') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="probability_of_daily_follow" class="input" min="0" max="1" step="any" value="0.1"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Secondary follow probability') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="probability_of_secondary_follow" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Follow-back probability') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="probability_of_follow_back" class="input" min="0" max="1" step="any" value="0"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Attention window (hours)') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="attention_window" class="input" min="1" max="100000" step="1" value="336"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Threads shown per read') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="n_posts" class="input" min="1" max="1000" step="1" value="10"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Neighbours for the follow recommender') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="n_neighbors" class="input" min="1" max="1000" step="1" value="10"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Leaning bias') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="leaning_bias" class="input" min="0" max="100" step="any" value="1.5"></span>
+                                    </div>
+
+                                    <h4>{{ _('Recommenders') }}</h4>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Content recommender') }}</span>
+                                        <span class="right ys-w-70"><div class="select"><select name="content_recsys"><option value="">{{ _("Default") }}</option>{% for r in crecsys %}<option value="{{ r.name }}">{{ r.name }}</option>{% endfor %}</select></div></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Follow recommender') }}</span>
+                                        <span class="right ys-w-70"><div class="select"><select name="follow_recsys"><option value="">{{ _("Default") }}</option>{% for r in frecsys %}<option value="{{ r.name }}">{{ r.name }}</option>{% endfor %}</select></div></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Subreddit vibe') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="subreddit_vibe" class="input"></span>
+                                    </div>
+
+                                    {% if llm_agents_enabled %}
+                                    <h4>{{ _('Language model') }}</h4>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Model') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="llm_model" class="input" value="" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Server URL') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="llm_url" class="input" value="{{ exp_llm_defaults.llm }}"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('API key') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="llm_api_key" class="input" value="{{ exp_llm_defaults.llm_api_key }}"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Max tokens') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="llm_max_tokens" class="input" min="1" max="100000" step="1" value="800"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Temperature') }}</span>
+                                        <span class="right ys-w-70"><input type="number" name="llm_temperature" class="input" min="0" max="2" step="any" value="0.6"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">{{ _('Language') }}</span>
+                                        <span class="right ys-w-70"><input type="text" name="language" class="input" value="en"></span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if topics %}
+                                    <h4>{{ _('Topic interest') }}</h4>
+                                    <div class="topic-interest-boxes">
+                                        {% for topic in topics %}
+                                        <div class="topic-interest-box">
+                                            <h4>{{ topic.name }}</h4>
+                                            <input type="number" name="topic_interest_{{ topic.id }}" value="100" step="0.1" min="0" max="100"> %
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="ys-form-actions">
+                                    <button type="submit" id="create_client_button" class="button is-solid accent-button">{{ _('Create Client') }}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="ys-data-clients">{{ {"llmAgentsEnabled": llm_agents_enabled, "experimentMemoryEnabled": experiment_memory_enabled, "memoryConfigurationSupported": memory_configuration_supported} | tojson }}</script>
+{% include "admin/tutorials/clients_tutorial.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-clients.js') }}"></script>
+{% include "admin/footer.html" %}
