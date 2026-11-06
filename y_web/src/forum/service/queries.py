@@ -19,6 +19,7 @@ from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.experiment.context import get_current_experiment_id
 from y_web.src.forum.hot_rank import rank_posts_longtail
 from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.forum.service.data_classes import (
     ArticlePreview,
     FeedPage,
@@ -69,7 +70,7 @@ def _order_by_simulation_time_desc(query):
     """Order posts by simulation day/hour descending with stable fallback."""
     return query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
         _simulation_time_index_expr().desc(),
-        Post.id.desc(),
+        seq_or_id(Post).desc(),
     )
 
 
@@ -349,7 +350,7 @@ def fetch_recent_active_communities(limit: int = 8) -> List[Dict[str, str]]:
     recent_posts = (
         db.session.query(Post.id, Post.thread_id)
         .outerjoin(Rounds, Post.round == Rounds.id)
-        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
+        .order_by(_simulation_time_index_expr().desc(), seq_or_id(Post).desc())
         .limit(max(limit * 12, 96))
         .all()
     )
@@ -363,7 +364,7 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
         db.session.query(Post.id, Post.thread_id)
         .filter(Post.user_id == opaque_id(user_id))
         .outerjoin(Rounds, Post.round == Rounds.id)
-        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
+        .order_by(_simulation_time_index_expr().desc(), seq_or_id(Post).desc())
         .limit(max(limit * 12, 96))
         .all()
     )
@@ -412,7 +413,7 @@ def _viewer_vote_subquery(viewer_id: int):
     # get latest reaction per post for viewer
     latest_ids = (
         db.session.query(
-            func.max(Reactions.id).label("latest_id"),
+            func.max(seq_or_id(Reactions)).label("latest_id"),
             Reactions.post_id.label("post_id"),
         )
         .filter(Reactions.user_id == viewer_id)
@@ -423,7 +424,7 @@ def _viewer_vote_subquery(viewer_id: int):
     rv = aliased(Reactions)
     return (
         db.session.query(rv.post_id.label("post_id"), rv.type.label("vote_type"))
-        .join(latest_ids, latest_ids.c.latest_id == rv.id)
+        .join(latest_ids, latest_ids.c.latest_id == seq_or_id(rv))
         .subquery()
     )
 
@@ -520,7 +521,7 @@ def _build_comment_payload(
     comments_list = (
         db.session.query(Post)
         .filter(Post.thread_id == post.id, Post.id != post.id)
-        .order_by(Post.id.asc())
+        .order_by(seq_or_id(Post).asc())
         .all()
     )
 
@@ -785,7 +786,7 @@ def build_user_feed_posts(
             _root_post_filter(Post.comment_to),
         )
         .outerjoin(Rounds, Post.round == Rounds.id)
-        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
+        .order_by(_simulation_time_index_expr().desc(), seq_or_id(Post).desc())
         .limit(per_page)
         .all()
     )
@@ -903,7 +904,7 @@ def fetch_feed_page(
             .order_by(
                 score_expr.desc(),
                 _simulation_time_index_expr().desc(),
-                Post.id.desc(),
+                seq_or_id(Post).desc(),
             )
         )
     elif feed_type == "hot":
@@ -953,7 +954,7 @@ def fetch_feed_page(
             candidates = (
                 base_query.outerjoin(reaction_sub, reaction_sub.c.post_id == Post.id)
                 .outerjoin(Rounds, Post.round == Rounds.id)
-                .order_by(hot_score.desc(), sim_time_idx.desc(), Post.id.desc())
+                .order_by(hot_score.desc(), sim_time_idx.desc(), seq_or_id(Post).desc())
                 .limit(limit)
                 .all()
             )
@@ -1009,7 +1010,7 @@ def fetch_feed_page(
             .order_by(
                 hot_score.desc(),
                 sim_time_idx.desc(),
-                Post.id.desc(),
+                seq_or_id(Post).desc(),
             )
         )
     elif feed_type == "most_commented":
@@ -1021,7 +1022,7 @@ def fetch_feed_page(
             .order_by(
                 comment_expr.desc(),
                 _simulation_time_index_expr().desc(),
-                Post.id.desc(),
+                seq_or_id(Post).desc(),
             )
         )
     else:
@@ -1152,7 +1153,7 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
 
     thread_posts = (
         Post.query.filter_by(thread_id=post.thread_id or post.id)
-        .order_by(Post.id.asc())
+        .order_by(seq_or_id(Post).asc())
         .all()
     )
 

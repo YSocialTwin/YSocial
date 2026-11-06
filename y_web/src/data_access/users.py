@@ -8,6 +8,7 @@ mutual friends with another user, and the user's most recent interests.
 from sqlalchemy import desc, func, select
 from sqlalchemy.sql.expression import func
 
+from y_web.src.forum.ordering import seq_or_id
 from y_web import db
 from y_web.src.data_access.trends import _compute_last_round
 from y_web.src.models import (
@@ -70,7 +71,7 @@ def _active_follow_pairs():
     events = (
         db.session.query(Follow)
         .outerjoin(Rounds, Follow.round == Rounds.id)
-        .order_by(Rounds.day.asc(), Rounds.hour.asc(), Follow.id.asc())
+        .order_by(Rounds.day.asc(), Rounds.hour.asc(), seq_or_id(Follow).asc())
         .all()
     )
     latest = _reduce_latest_follow_map(

@@ -165,6 +165,9 @@ def _ensure_experiment_orm_tables(engine) -> None:
         seen.add(table.name)
         tables.append(table)
 
+    from y_web.src.experiment.schema import ensure_text_key_reply_inbox
+
+    ensure_text_key_reply_inbox(engine)  # string user ids (YForum): before create_all makes it with INTEGER
     if tables:
         db.metadata.create_all(bind=engine, tables=tables)
 

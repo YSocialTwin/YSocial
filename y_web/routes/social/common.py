@@ -82,6 +82,7 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
 )
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.recsys import get_suggested_users
 from y_web.src.recsys.content_recsys import (
     _normalize_content_recsys_mode,
@@ -96,7 +97,7 @@ def _latest_follow_action(*, follower_id, user_id):
         db.session.query(Follow)
         .outerjoin(Rounds, Follow.round == Rounds.id)
         .filter(Follow.user_id == follower_id, Follow.follower_id == user_id)
-        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Follow.id.desc())
+        .order_by(Rounds.day.desc(), Rounds.hour.desc(), seq_or_id(Follow).desc())
         .first()
     )
     return str(getattr(follow_event, "action", "") or "").strip().lower()
@@ -541,7 +542,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             sfollow=suggested_users,
             spages=suggested_pages,
             forum_memory_enabled=_forum_memory_enabled(exp_id),
-            can_follow_profile=int(user.id) != int(logged_id),
+            can_follow_profile=str(user.id) != str(logged_id),
             feed_type="new",
             **forum_context,
         )

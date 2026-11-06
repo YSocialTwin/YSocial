@@ -38,6 +38,7 @@ from y_web.src.data_access import (
     get_unanswered_mentions,
 )
 from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
@@ -283,7 +284,7 @@ def get_thread_reddit(exp_id, post_id):
 
     posts = (
         Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
-        .order_by(Post.created_at.asc(), Post.id.asc())
+        .order_by(Post.created_at.asc(), seq_or_id(Post).asc())
         .all()
     )
     if hidden_ids:
@@ -610,6 +611,8 @@ def rnotifications(exp_id):
     Reply = aliased(Post)
     Parent = aliased(Post)
     Author = aliased(User_mgmt)
+    # the order of the replies: their id for integer ids, the server sequence for UUID ids
+    reply_order = seq_or_id(Reply)
 
     from y_web.src.data_access.posts import _hidden_author_ids_for_viewer
 
@@ -626,17 +629,17 @@ def rnotifications(exp_id):
     unread_before_open = (
         db.session.query(func.count(Reply.id))
         .join(Parent, Reply.comment_to == Parent.id)
-        .filter(*base_filters, Reply.id > cutoff)
+        .filter(*base_filters, reply_order > cutoff)
         .scalar()
     )
     unread_before_open = int(unread_before_open or 0)
 
     rows = (
-        db.session.query(Reply, Parent, Author)
+        db.session.query(Reply, Parent, Author, reply_order.label("reply_seq"))
         .join(Parent, Reply.comment_to == Parent.id)
         .join(Author, Author.id == Reply.user_id)
         .filter(*base_filters)
-        .order_by(Reply.id.desc())
+        .order_by(reply_order.desc())
         .limit(per_page + 1)
         .offset(offset)
         .all()
@@ -660,13 +663,13 @@ def rnotifications(exp_id):
             "reply_excerpt": _excerpt(getattr(reply_post, "tweet", "")),
             "parent_excerpt": _excerpt(getattr(parent_post, "tweet", "")),
             "parent_is_root": bool(getattr(parent_post, "comment_to", -1) == -1),
-            "was_unread": bool(reply_post.id > cutoff),
+            "was_unread": bool(int(reply_seq or 0) > cutoff),
         }
-        for reply_post, parent_post, author in rows
+        for reply_post, parent_post, author, reply_seq in rows
     ]
 
     max_reply_id = (
-        db.session.query(func.max(Reply.id))
+        db.session.query(func.max(reply_order))
         .join(Parent, Reply.comment_to == Parent.id)
         .filter(*base_filters)
         .scalar()

@@ -2,7 +2,7 @@ import os
 import sqlite3
 import threading
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import Integer, create_engine, inspect, text
 
 from y_web.src.dating import DATING_MARKER_TABLE
 from y_web.src.im import IM_MARKER_TABLE
@@ -538,3 +538,53 @@ def _normalize_hashtags_once(db_uri):
     if merge_duplicate_hashtags_for_uri(db_uri) is not None:
         with _SCHEMA_LOCK:
             _HASHTAGS_DONE.add(db_uri)
+
+
+def ensure_text_key_reply_inbox(engine) -> bool:
+    """Make ``reply_inbox_state`` hold string user ids when the participants have them (YForum databases).
+
+    The forum notifications keep, per user, the last reply seen. The table is created with an INTEGER user key,
+    which cannot hold the UUID ids of an HPC forum database. It only holds derived state (what was already read),
+    so when the key type does not fit it is rebuilt with text columns, keeping the rows that convert.
+    Returns True when the table was (re)created. Databases with integer ids are left untouched.
+    """
+    try:
+        insp = inspect(engine)
+        if "user_mgmt" not in insp.get_table_names():
+            return False
+        user_cols = {c["name"]: c for c in insp.get_columns("user_mgmt")}
+        if "id" not in user_cols or isinstance(user_cols["id"]["type"], Integer):
+            return False
+        # the key must be able to hold the user ids, and a foreign key to a text id must be text too
+        ddl = """
+            CREATE TABLE reply_inbox_state (
+                user_id VARCHAR(64) PRIMARY KEY,
+                last_seen_reply_id INTEGER NOT NULL DEFAULT 0
+            )
+        """
+        if "reply_inbox_state" in insp.get_table_names():
+            key = {c["name"]: c for c in insp.get_columns("reply_inbox_state")}.get(
+                "user_id"
+            )
+            if key is None or not isinstance(key["type"], Integer):
+                return False
+            with engine.begin() as conn:
+                rows = conn.execute(
+                    text("SELECT user_id, last_seen_reply_id FROM reply_inbox_state")
+                ).fetchall()
+                conn.execute(text("DROP TABLE reply_inbox_state"))
+                conn.execute(text(ddl))
+                for user_id, last_seen in rows:
+                    conn.execute(
+                        text(
+                            "INSERT INTO reply_inbox_state (user_id, last_seen_reply_id) "
+                            "VALUES (:u, :l)"
+                        ),
+                        {"u": str(user_id), "l": int(last_seen or 0)},
+                    )
+            return True
+        with engine.begin() as conn:
+            conn.execute(text(ddl))
+        return True
+    except Exception:
+        return False

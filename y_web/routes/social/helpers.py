@@ -17,6 +17,7 @@ from flask import request
 from flask_login import current_user
 from sqlalchemy import or_, select
 
+from y_web.src.forum.ids import opaque_id
 from y_web import db
 from y_web.src.content.avatars import (
     resolve_forum_profile_pic,
@@ -510,7 +511,7 @@ def _forum_logged_user():
     ).first()
     if user is None and str(getattr(current_user, "id", "")).isdigit():
         user = db.session.scalars(
-            select(User_mgmt).filter_by(id=int(current_user.id))
+            select(User_mgmt).filter_by(id=opaque_id(current_user.id))
         ).first()
     return user
 

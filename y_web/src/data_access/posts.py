@@ -10,6 +10,7 @@ from typing import Optional
 
 from sqlalchemy import desc, func, or_, select
 
+from y_web.src.forum.ordering import seq_or_id
 from y_web import db
 from y_web.src.models import (
     Admin_users,
@@ -456,33 +457,33 @@ def get_user_recent_posts(
             Post.query.filter(
                 Post.user_id == user_id,
                 _is_root_reference(Post.comment_to),
-            ).order_by(desc(Post.id))
+            ).order_by(desc(seq_or_id(Post)))
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "comments":
         posts = (
             Post.query.filter(
                 Post.user_id == user_id,
                 _is_non_root_reference(Post.comment_to),
-            ).order_by(desc(Post.id))
+            ).order_by(desc(seq_or_id(Post)))
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "liked":
         posts = (
             Post.query.join(Reactions, Reactions.post_id == Post.id)
             .filter(Reactions.type == "like", Reactions.user_id == user_id)
-            .order_by(desc(Post.id))
+            .order_by(desc(seq_or_id(Post)))
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "disliked":
         posts = (
             Post.query.join(Reactions, Reactions.post_id == Post.id)
             .filter(Reactions.type == "dislike", Reactions.user_id == user_id)
-            .order_by(desc(Post.id))
+            .order_by(desc(seq_or_id(Post)))
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "shares":
         posts = (
             Post.query.filter(
                 Post.user_id == user_id,
                 _is_non_root_reference(Post.shared_from),
-            ).order_by(desc(Post.id))
+            ).order_by(desc(seq_or_id(Post)))
         ).paginate(page=page, per_page=per_page, error_out=False)
     else:
         posts = (
@@ -766,7 +767,7 @@ def get_posts_associated_to_hashtags(
     posts = (
         Post.query.join(Post_hashtags, Post.id == Post_hashtags.post_id)
         .filter(Post_hashtags.hashtag_id == hashtag_id)
-        .order_by(desc(Post.id))
+        .order_by(desc(seq_or_id(Post)))
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 
@@ -967,7 +968,7 @@ def get_posts_associated_to_interest(
     posts = (
         Post.query.join(Post_topics, Post.id == Post_topics.post_id)
         .filter(Post_topics.topic_id == interest_id)
-        .order_by(desc(Post.id))
+        .order_by(desc(seq_or_id(Post)))
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 
@@ -1170,7 +1171,7 @@ def get_posts_associated_to_emotion(
     posts = (
         Post.query.join(Post_emotions, Post.id == Post_emotions.post_id)
         .filter(Post_emotions.emotion_id == emotion_id)
-        .order_by(desc(Post.id))
+        .order_by(desc(seq_or_id(Post)))
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 

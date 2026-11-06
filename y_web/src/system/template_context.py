@@ -7,6 +7,7 @@ still find them in ``app.template_context_processors``.
 from flask import Flask
 from sqlalchemy import select
 
+from y_web.src.forum.ids import opaque_id
 from y_web import db
 
 
@@ -64,7 +65,7 @@ def register_template_context(app: Flask) -> None:
                     )
                 ).first()
                 if exp_user is not None:
-                    feed_user_id = int(exp_user.id)
+                    feed_user_id = opaque_id(exp_user.id)
 
             if feed_user_id is None:
                 return dict(feed_home_url=f"/{exp.idexp}/feed/all/feed/rf/1")

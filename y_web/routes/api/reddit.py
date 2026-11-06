@@ -14,6 +14,7 @@ from PIL import Image
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
+from y_web.src.forum.ids import opaque_id
 from y_web import db, prompt_store
 from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.system import prompt_packs
@@ -128,14 +129,14 @@ def _forum_viewer_id() -> int:
             username=getattr(current_user, "username", "") or ""
         )
     ).first()
-    return int(viewer.id) if viewer is not None else int(current_user.id)
+    return opaque_id(viewer.id) if viewer is not None else opaque_id(current_user.id)
 
 
 def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
     followed_ids: set[int] = set()
     latest_actions: dict[int, str] = {}
     follow_events = (
-        Follow.query.filter(Follow.user_id == int(owner_user_id))
+        Follow.query.filter(Follow.user_id == opaque_id(owner_user_id))
         .outerjoin(Rounds, Follow.round == Rounds.id)
         .order_by(
             Rounds.day.desc(),
@@ -145,7 +146,7 @@ def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
         .all()
     )
     for event in follow_events:
-        target_id = int(getattr(event, "follower_id", 0) or 0)
+        target_id = opaque_id(getattr(event, "follower_id", 0) or 0)
         if not target_id or target_id in latest_actions:
             continue
         latest_actions[target_id] = (
@@ -194,7 +195,7 @@ def _forum_chat_session_payload(
 ) -> dict:
     payload = {
         "id": int(session.id),
-        "target_user_id": int(session.target_user_id),
+        "target_user_id": opaque_id(session.target_user_id),
         "target_username": str(session.target_username or ""),
         "target_profile_pic": str(session.target_profile_pic or ""),
         "last_message_preview": str(session.last_message_preview or ""),
@@ -276,8 +277,8 @@ def _forum_chat_upsert_session(
 ) -> ForumChatSession:
     session = (
         ForumChatSession.query.filter_by(
-            owner_user_id=int(owner_user.id),
-            target_user_id=int(target_user.id),
+            owner_user_id=opaque_id(owner_user.id),
+            target_user_id=opaque_id(target_user.id),
         )
         .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .first()
@@ -289,11 +290,11 @@ def _forum_chat_upsert_session(
             )
         return session
 
-    interests = _get_top_interests_for_user(int(target_user.id))
+    interests = _get_top_interests_for_user(opaque_id(target_user.id))
     session = ForumChatSession(
-        owner_user_id=int(owner_user.id),
+        owner_user_id=opaque_id(owner_user.id),
         owner_username=str(owner_user.username or ""),
-        target_user_id=int(target_user.id),
+        target_user_id=opaque_id(target_user.id),
         target_username=str(target_user.username or ""),
         target_profile_pic=_resolve_interview_profile_pic(target_user, exp),
         persona_snapshot=_build_persona_snapshot(target_user, interests, exp),
@@ -307,13 +308,13 @@ def _forum_chat_refresh_runtime_context(
     *, exp: Exps, target_user: User_mgmt, session: ForumChatSession, query_text: str
 ) -> dict:
     if not session.persona_snapshot:
-        interests = _get_top_interests_for_user(int(target_user.id))
+        interests = _get_top_interests_for_user(opaque_id(target_user.id))
         session.persona_snapshot = _build_persona_snapshot(target_user, interests, exp)
 
     run_id = str(session.run_id or "").strip() or None
     if not run_id:
         run_pick = _detect_run_id_from_server_log(
-            exp, agent_user_id=int(target_user.id), probe_memory_coverage=True
+            exp, agent_user_id=opaque_id(target_user.id), probe_memory_coverage=True
         )
         run_id = str(run_pick.get("run_id") or "").strip() or None
         session.run_id = run_id
@@ -325,7 +326,7 @@ def _forum_chat_refresh_runtime_context(
             snapshot = _build_memory_snapshot(
                 exp,
                 run_id=run_id,
-                agent_user_id=int(target_user.id),
+                agent_user_id=opaque_id(target_user.id),
                 memory_mode="semantic",
                 query_text=query_text,
             )
@@ -356,7 +357,7 @@ def _forum_chat_generate_reply(
     )
     memory_pack = _forum_chat_render_memory_pack(memory_snapshot)
     facts_snapshot = _build_facts_snapshot(
-        agent_user_id=int(target_user.id),
+        agent_user_id=opaque_id(target_user.id),
         admin_text=memory_query,
     )
     facts_pack = _format_facts_pack(facts_snapshot)
@@ -1274,38 +1275,38 @@ def api_delete_post(exp_id: int, post_id: int):
         ).first()
         is not None
     )
-    actor_ids = {int(current_user.id)}
+    actor_ids = {opaque_id(current_user.id)}
     if exp_user is not None:
-        actor_ids.add(int(exp_user.id))
+        actor_ids.add(opaque_id(exp_user.id))
 
-    if not is_admin_user and int(post.user_id) not in actor_ids:
+    if not is_admin_user and opaque_id(post.user_id) not in actor_ids:
         return _json_error("Not authorized to delete this post.", 403)
 
     target_post_ids = set()
-    if int(getattr(post, "comment_to", -1)) == -1:
+    if opaque_id(getattr(post, "comment_to", -1)) in (-1, None):
         rows = (
             db.session.query(Post.id)
             .filter((Post.id == post.id) | (Post.thread_id == post.id))
             .all()
         )
-        target_post_ids = {int(row[0]) for row in rows}
+        target_post_ids = {opaque_id(row[0]) for row in rows}
     else:
-        target_post_ids = {int(post.id)}
-        frontier = [int(post.id)]
+        target_post_ids = {opaque_id(post.id)}
+        frontier = [opaque_id(post.id)]
         while frontier:
             parent_id = frontier.pop()
             child_rows = (
                 db.session.query(Post.id).filter(Post.comment_to == parent_id).all()
             )
             for row in child_rows:
-                child_id = int(row[0])
+                child_id = opaque_id(row[0])
                 if child_id in target_post_ids:
                     continue
                 target_post_ids.add(child_id)
                 frontier.append(child_id)
 
     if not target_post_ids:
-        target_post_ids = {int(post.id)}
+        target_post_ids = {opaque_id(post.id)}
 
     try:
         Reactions.query.filter(Reactions.post_id.in_(target_post_ids)).delete(
@@ -1365,18 +1366,18 @@ def api_forum_chat_bootstrap(exp_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     agents = (
         User_mgmt.query.filter(User_mgmt.is_page == 0)
         .filter(User_mgmt.user_type != "user")
-        .filter(User_mgmt.id != int(owner_user.id))
+        .filter(User_mgmt.id != opaque_id(owner_user.id))
         .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
         .order_by(User_mgmt.username.asc())
         .all()
     )
     sessions = (
-        ForumChatSession.query.filter_by(owner_user_id=int(owner_user.id))
+        ForumChatSession.query.filter_by(owner_user_id=opaque_id(owner_user.id))
         .order_by(
             ForumChatSession.last_message_at.desc(),
             ForumChatSession.updated_at.desc(),
@@ -1385,16 +1386,16 @@ def api_forum_chat_bootstrap(exp_id: int):
         .all()
     )
     sessions = [
-        sess for sess in sessions if int(sess.target_user_id) in followed_agent_ids
+        sess for sess in sessions if opaque_id(sess.target_user_id) in followed_agent_ids
     ]
 
-    session_map = {int(sess.target_user_id): sess for sess in sessions}
+    session_map = {opaque_id(sess.target_user_id): sess for sess in sessions}
     agent_payload = []
     for agent in agents:
-        sess = session_map.get(int(agent.id))
+        sess = session_map.get(opaque_id(agent.id))
         agent_payload.append(
             {
-                "user_id": int(agent.id),
+                "user_id": opaque_id(agent.id),
                 "username": str(agent.username or ""),
                 "profile_pic": _resolve_interview_profile_pic(agent, exp),
                 "profession": str(getattr(agent, "profession", "") or ""),
@@ -1411,7 +1412,7 @@ def api_forum_chat_bootstrap(exp_id: int):
     return _json_success(
         {
             "owner": {
-                "user_id": int(owner_user.id),
+                "user_id": opaque_id(owner_user.id),
                 "username": str(owner_user.username or ""),
             },
             "agents": agent_payload,
@@ -1433,24 +1434,24 @@ def api_forum_chat_open_session(exp_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     payload = request.get_json(silent=True) or {}
     agent_user_id = payload.get("agent_user_id")
     try:
-        agent_user_id = int(agent_user_id)
+        agent_user_id = opaque_id(agent_user_id)
     except Exception:
         return _json_error("agent_user_id must be an integer.", 400)
 
     target_user = (
         User_mgmt.query.filter(User_mgmt.is_page == 0)
         .filter(User_mgmt.user_type != "user")
-        .filter(User_mgmt.id == int(agent_user_id))
+        .filter(User_mgmt.id == opaque_id(agent_user_id))
         .first()
     )
     if target_user is None:
         return _json_error("Target agent not found.", 404)
-    if int(target_user.id) not in followed_agent_ids:
+    if opaque_id(target_user.id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     session = _forum_chat_upsert_session(
@@ -1473,16 +1474,16 @@ def api_forum_chat_get_session(exp_id: int, session_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     session = db.session.scalars(
         select(ForumChatSession).filter_by(
-            id=int(session_id), owner_user_id=int(owner_user.id)
+            id=int(session_id), owner_user_id=opaque_id(owner_user.id)
         )
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if int(session.target_user_id) not in followed_agent_ids:
+    if opaque_id(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     return _json_success(_forum_chat_session_payload(session, include_messages=True))
@@ -1501,20 +1502,20 @@ def api_forum_chat_send_message(exp_id: int, session_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     session = db.session.scalars(
         select(ForumChatSession).filter_by(
-            id=int(session_id), owner_user_id=int(owner_user.id)
+            id=int(session_id), owner_user_id=opaque_id(owner_user.id)
         )
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if int(session.target_user_id) not in followed_agent_ids:
+    if opaque_id(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     target_user = db.session.scalars(
-        select(User_mgmt).filter_by(id=int(session.target_user_id))
+        select(User_mgmt).filter_by(id=opaque_id(session.target_user_id))
     ).first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
