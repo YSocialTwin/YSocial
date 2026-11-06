@@ -35,7 +35,7 @@ def _normalise(spec: ExternalRuntimeSpec) -> dict:
 
 
 def test_built_in_specs_are_identical_to_the_previous_hard_coded_ones():
-    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging and dating)."""
+    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging, dating and forum_hpc)."""
     assert [g["key"] for g in GOLDEN] == list(SUPPORTED_EXTERNAL_REPOS)
     for expected in GOLDEN:
         assert _normalise(SUPPORTED_EXTERNAL_REPOS[expected["key"]]) == expected
@@ -64,6 +64,7 @@ def test_seeded_directories_are_the_simulation_runtimes():
         "YPhotoSharing",
         "YInstantMessaging",
         "YDating",
+        "YForum",
     ]
 
 
@@ -108,3 +109,12 @@ def test_every_entry_has_the_fields_the_loader_needs():
             "repo",
         ):
             assert entry.get(field), (entry.get("key"), field)
+
+
+def test_yforum_is_a_seeded_hpc_runtime_next_to_ysimulator():
+    spec = SUPPORTED_EXTERNAL_REPOS["forum_hpc"]
+    assert (spec.label, spec.directory, spec.group) == ("YForum", "YForum", "hpc")
+    assert spec.repo == "YSocialTwin/YForum"
+    # the bundle needs neither PostgreSQL nor a model: only the requirements of the runtime
+    assert [list(c)[-2:] for c in spec.install_commands] == [["-r", "requirements.txt"]]
+    assert "YSimulator" in {s.directory for s in SUPPORTED_EXTERNAL_REPOS.values()}

@@ -275,6 +275,41 @@
     "min_ysocial_version": null
   },
   {
+    "key": "forum_hpc",
+    "group": "hpc",
+    "group_label": "HPC",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YForum",
+    "path": "YForum",
+    "github_repo": "YSocialTwin/YForum",
+    "repo_url": "https://github.com/YSocialTwin/YForum.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "YForum",
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
     "key": "agent_plugins",
     "group": "agent_plugins",
     "group_label": "Agent Plugins",
