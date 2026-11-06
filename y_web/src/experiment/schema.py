@@ -195,6 +195,8 @@ _SQLITE_COLUMNS = {
     "user_mgmt": {
         "cover_image": "VARCHAR(400) DEFAULT ''",
         "last_active_day": "INTEGER",
+        "activity_profile": "VARCHAR(50) DEFAULT 'Always On'",
+        "archetype": "VARCHAR(50)",
     },
     "post": {
         "image_post_id": "INTEGER",
@@ -317,6 +319,8 @@ _POSTGRES_COLUMNS = {
     "user_mgmt": {
         "cover_image": "VARCHAR(400) DEFAULT ''",
         "last_active_day": "INTEGER",
+        "activity_profile": "VARCHAR(50) DEFAULT 'Always On'",
+        "archetype": "VARCHAR(50)",
     },
     "post": {
         "image_post_id": "INTEGER",
