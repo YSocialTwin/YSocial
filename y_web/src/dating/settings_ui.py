@@ -98,6 +98,9 @@ LABELS: Dict[str, str] = {
     "conversation.max_message_chars": N_("Length asked of a message (characters)"),
     "conversation.date_proposal_probability": N_("Probability of proposing a date"),
     "conversation.date_accept_base": N_("Base probability of accepting a date"),
+    "conversation.repetition_threshold": N_("Similarity that counts as a repeated reply"),
+    "conversation.repetition_window": N_("Recent messages compared with a reply"),
+    "federation.enabled": N_("Join a federation"),
     # client: profile generation
     "profile_generation.enabled": N_("Write the missing profile texts"),
     "profile_generation.bio_max_chars": N_("Bio length (characters)"),
@@ -352,6 +355,8 @@ CLIENT_SECTIONS: List[Section] = [
                     "conversation.interest_floor",
                     "conversation.stress_effect",
                     "conversation.react_probability",
+                    "conversation.repetition_threshold",
+                    "conversation.repetition_window",
                 ],
             ),
             (
@@ -541,6 +546,15 @@ SERVER_SECTIONS: List[Section] = [
         N_("Logs"),
         N_("What the server writes in its log files."),
         [(None, ["logging."])],
+        None,
+    ),
+    (
+        "federation",
+        N_("Federation"),
+        N_(
+            "Whether this experiment joins a federation. YSocial sets it when the experiment is a member of a World Simulation."
+        ),
+        [(None, ["federation.enabled"])],
         None,
     ),
 ]

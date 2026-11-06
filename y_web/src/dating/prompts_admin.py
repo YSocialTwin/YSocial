@@ -102,6 +102,42 @@ GROUPS: List[Tuple[str, str, str, List[str]]] = [
         ),
         ["extract_emotions", "message_tone"],
     ),
+    (
+        "dates",
+        N_("After a date"),
+        N_("What the model reads when it decides after a date and how a date is remembered."),
+        [
+            "after_date_decision",
+            "closing_message",
+            "template_closing",
+            "date_note_positive",
+            "date_note_neutral",
+            "date_note_negative",
+            "history_date_note",
+            "match_story",
+        ],
+    ),
+    (
+        "crosspost",
+        N_("Cross-posting"),
+        N_(
+            "How an agent decides to take part in a World Simulation and adapts content from the other platforms."
+        ),
+        [
+            "crosspost_decide",
+            "crosspost_decide_publish",
+            "crosspost_decide_interaction",
+            "crosspost_decide_action_comment",
+            "crosspost_decide_action_reaction",
+            "crosspost_decide_action_reply",
+            "crosspost_decide_action_share",
+            "crosspost_adapt_dating",
+            "crosspost_adapt_forum",
+            "crosspost_adapt_instant_messaging",
+            "crosspost_adapt_microblogging",
+            "crosspost_adapt_photo_sharing",
+        ],
+    ),
 ]
 
 # the field syntax of the runtime's prompt store (kept in step by a test)

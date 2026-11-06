@@ -185,7 +185,7 @@
                 {label: box.dataset.lLeft || 'left', key: 'left', backgroundColor: COLORS[1]},
                 {label: box.dataset.lLapsed || 'lapsed', key: 'lapsed', backgroundColor: COLORS[4]}
             ].map(function (ds) { ds.data = mDays.map(function (d) { return mSum(ds.key, d); }); return ds; })
-                .concat([{type: 'line', label: box.dataset.lPending || 'aware, not enrolled', borderColor: '#607d8b', backgroundColor: '#607d8b', fill: false,
+                .concat([{type: 'line', label: box.dataset.lPending || 'pending', borderColor: '#607d8b', backgroundColor: '#607d8b', fill: false,
                           data: mDays.map(function (d) { return md.filter(function (r) { return r.day === d; }).reduce(function (n, r) { return n + r.aware_pending; }, 0); })}]));
             function who(r) { return r.agent_name ? r.agent_name + ' (' + r.agent + ')' : r.agent; }
             fill('#ws-an-discoveries', (t.discoveries || []).map(function (r) {
