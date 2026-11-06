@@ -22,7 +22,6 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import CreateColumn
 
 from y_web import db
-from y_web.src.forum.ordering import table_layout
 
 # the tables of a YForum database that carry ``seq`` (YForum ``models.SEQ_TABLES``)
 SEQ_TABLES = (
@@ -88,8 +87,16 @@ def number_inserts(conn, clauseelement, multiparams, params, execution_options):
         or not table.c.seq.info.get("yweb_forum_seq")
     ):
         return clauseelement, multiparams, params
+    from y_web.src.forum.ordering import (
+        table_layout,
+    )  # lazy: the forum package imports the models
+
     if not table_layout(conn.engine, table.name)[1]:
-        return clauseelement, multiparams, params  # this database has no seq (every other platform)
+        return (
+            clauseelement,
+            multiparams,
+            params,
+        )  # this database has no seq (every other platform)
     next_number = (
         select(func.coalesce(func.max(table.c.seq), 0) + 1)
         .select_from(table)
@@ -103,6 +110,10 @@ def fill_insert(mapper, connection, target) -> None:
     if getattr(cls, "__bind_key__", None) != "db_exp":
         return
     table = mapper.local_table.name
+    from y_web.src.forum.ordering import (
+        table_layout,
+    )  # lazy: the forum package imports the models
+
     id_is_text, _has_seq = table_layout(connection.engine, table)
     if id_is_text and hasattr(target, "id") and getattr(target, "id", None) is None:
         target.id = str(uuid.uuid4())
