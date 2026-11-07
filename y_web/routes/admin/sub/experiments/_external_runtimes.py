@@ -75,6 +75,35 @@ _PAIRED_ENTRIES = {
         ),
     },
 }
+# The sections of the plugin list (presentation only: the groups of the specs keep driving the active-experiment checks).
+# Each section lists the entry keys it shows, in this order; a plugin that is in none (a community plugin, say) goes to
+# "Other plugins", which is shown only when it has something in it.
+_LIST_SECTIONS = (
+    (
+        "platforms",
+        N_("Platforms"),
+        (
+            "hpc_simulator",
+            "forum_hpc",
+            "photo_sharing",
+            "instant_messaging",
+            "dating",
+            "federation",
+        ),
+    ),
+    ("platforms_legacy", N_("Platforms (Legacy)"), ("microblogging", "forum")),
+    (
+        "agent_plugins",
+        N_("Agent Plugins"),
+        ("agent_plugins", "agent_memory", "reactive_agents"),
+    ),
+    (
+        "system_plugins",
+        N_("System Plugins"),
+        ("frontend_adds_on", "scenario_design", "training_modules"),
+    ),
+)
+_OTHER_SECTION = ("other", N_("Other plugins"))
 _PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
 # actions that fetch or run a community plugin's code (need ``confirm_community=1``)
 _COMMUNITY_CONFIRM_ACTIONS = frozenset(
@@ -360,6 +389,24 @@ def _plugin_entries(grouped_status) -> list[dict]:
     return entries
 
 
+def _plugin_sections(entries: list[dict]) -> list[dict]:
+    """The list entries grouped in the sections of ``_LIST_SECTIONS``; empty sections are left out."""
+    by_key = {e["key"]: e for e in entries}
+    placed: set[str] = set()
+    sections = []
+    for key, label, members in _LIST_SECTIONS:
+        rows = [by_key[m] for m in members if m in by_key]
+        placed.update(e["key"] for e in rows)
+        if rows:
+            sections.append({"key": key, "label": _(label), "entries": rows})
+    rest = [e for e in entries if e["key"] not in placed]
+    if rest:
+        sections.append(
+            {"key": _OTHER_SECTION[0], "label": _(_OTHER_SECTION[1]), "entries": rest}
+        )
+    return sections
+
+
 @experiments.route("/admin/external_runtimes")
 @login_required
 def external_runtimes():
@@ -370,9 +417,11 @@ def external_runtimes():
     grouped_status = _visible_runtime_groups(
         admin_user, _session_github_token(), include_remote_metadata=False
     )
+    entries = _plugin_entries(grouped_status)
     return render_template(
         "admin/external_runtimes.html",
-        plugin_entries=_plugin_entries(grouped_status),
+        plugin_entries=entries,
+        plugin_sections=_plugin_sections(entries),
     )
 
 

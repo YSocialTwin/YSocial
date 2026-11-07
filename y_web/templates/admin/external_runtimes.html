@@ -6,6 +6,7 @@
     .ext-plugin-table { width:100%; border-collapse:collapse; }
     .ext-plugin-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; padding:8px 10px; border-bottom:1px solid var(--ext-border); }
     .ext-plugin-table td { padding:12px 10px; border-bottom:1px solid var(--ext-border); vertical-align:middle; font-size:.84rem; }
+    .ext-plugin-table tr.ext-section th { background:var(--ext-bg-subtle); color:var(--ext-text-dark); font-size:.78rem; padding:10px; border-top:1px solid var(--ext-border); }
     .ext-plugin-name { font-weight:700; color:var(--ext-text-dark); }
     .ext-plugin-sub { font-size:.72rem; color:#6b7280; }
     .ext-plugin-desc { color:#4b5563; max-width:520px; }
@@ -32,7 +33,9 @@
                             <table class="ext-plugin-table" id="external-runtimes-list">
                                 <thead><tr><th>{{ _('Plugin') }}</th><th>{{ _('Description') }}</th><th>{{ _('Status') }}</th><th></th></tr></thead>
                                 <tbody>
-                                {% for entry in plugin_entries %}
+                                {% for section in plugin_sections %}
+                                <tr class="ext-section" data-section="{{ section.key }}"><th colspan="4">{{ section.label }}</th></tr>
+                                {% for entry in section.entries %}
                                 <tr data-runtime-repo data-entry-key="{{ entry.key }}">
                                     <td>
                                         <div class="ext-plugin-name">{{ entry.label }}</div>
@@ -58,6 +61,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                {% endfor %}
                                 {% else %}
                                 <tr><td colspan="4" class="ext-plugin-sub">{{ _('No plugin is available.') }}</td></tr>
                                 {% endfor %}

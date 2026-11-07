@@ -309,3 +309,49 @@ def test_opening_a_plugin_shows_a_loading_message_right_away():
             / f"{lang}.json"
         ).read_text(encoding="utf-8")
         assert "Opening {label}... checking GitHub" in catalog
+
+
+def test_the_plugin_list_is_split_in_the_four_sections():
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    keys = [
+        "microblogging",
+        "forum",
+        "hpc_simulator",
+        "forum_hpc",
+        "photo_sharing",
+        "instant_messaging",
+        "dating",
+        "federation",
+        "agent_plugins",
+        "agent_memory",
+        "reactive_agents",
+        "frontend_adds_on",
+        "scenario_design",
+        "training_modules",
+        "some_community_plugin",
+    ]
+    sections = route_mod._plugin_sections([{"key": k} for k in keys])
+    assert [(s["key"], [e["key"] for e in s["entries"]]) for s in sections] == [
+        (
+            "platforms",
+            [
+                "hpc_simulator",
+                "forum_hpc",
+                "photo_sharing",
+                "instant_messaging",
+                "dating",
+                "federation",
+            ],
+        ),
+        ("platforms_legacy", ["microblogging", "forum"]),
+        ("agent_plugins", ["agent_plugins", "agent_memory", "reactive_agents"]),
+        (
+            "system_plugins",
+            ["frontend_adds_on", "scenario_design", "training_modules"],
+        ),
+        ("other", ["some_community_plugin"]),
+    ]
+    assert [s["key"] for s in route_mod._plugin_sections([{"key": "dating"}])] == [
+        "platforms"
+    ]

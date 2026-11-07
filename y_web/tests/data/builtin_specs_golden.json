@@ -141,7 +141,7 @@
     "group_label": "HPC",
     "category": "simulation_runtimes",
     "category_label": "Simulation Runtime Stack",
-    "label": "YSimulator",
+    "label": "YMicroblogging",
     "path": "YSimulator",
     "github_repo": "YSocialTwin/YSimulator",
     "repo_url": "https://github.com/YSocialTwin/YSimulator.git",

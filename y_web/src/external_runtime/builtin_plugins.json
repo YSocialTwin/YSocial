@@ -125,7 +125,7 @@
     },
     {
       "key": "hpc_simulator",
-      "label": "YSimulator",
+      "label": "YMicroblogging",
       "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
       "group": "hpc",
       "group_label": "HPC",
