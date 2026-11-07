@@ -60,6 +60,7 @@ LABELS: Dict[str, str] = {
     "llm.url": N_("LLM Server URL"),
     "llm.model": N_("LLM Model"),
     "llm.vision_model": N_("Vision model"),
+    "llm.api_key": N_("API Key"),
     "llm.api_key_env": N_("API key environment variable"),
     "llm.temperature": N_("Temperature"),
     "llm.max_tokens": N_("Maximum tokens of an answer"),

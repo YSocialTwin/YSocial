@@ -21,6 +21,9 @@ msgstr ""
 msgid "Agent Plugins"
 msgstr "Plugin per agenti"
 
+msgid "Optional, instead of the API Key: name of an environment variable holding the key; the variable wins when it is set."
+msgstr "Facoltativa, in alternativa alla chiave API: nome di una variabile d'ambiente che contiene la chiave; se la variabile è impostata ha la precedenza."
+
 msgid "Other plugins"
 msgstr "Altri plugin"
 
@@ -9104,13 +9107,6 @@ msgstr "Nome del canale o del gruppo, mostrato agli agenti."
 
 msgid "Name of the copy"
 msgstr "Nome della copia"
-
-msgid ""
-"Name of the environment variable holding the key; the key itself is never"
-" written to the configuration."
-msgstr ""
-"Nome della variabile d'ambiente che contiene la chiave; la chiave non "
-"viene mai scritta nella configurazione."
 
 msgid "Name or id"
 msgstr "Nome o id"

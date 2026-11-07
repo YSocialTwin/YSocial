@@ -20,6 +20,9 @@ msgstr ""
 msgid "Agent Plugins"
 msgstr ""
 
+msgid "Optional, instead of the API Key: name of an environment variable holding the key; the variable wins when it is set."
+msgstr ""
+
 msgid "Other plugins"
 msgstr ""
 
@@ -8217,11 +8220,6 @@ msgid "Name of the channel or group, shown to the agents."
 msgstr ""
 
 msgid "Name of the copy"
-msgstr ""
-
-msgid ""
-"Name of the environment variable holding the key; the key itself is never"
-" written to the configuration."
 msgstr ""
 
 msgid "Name or id"

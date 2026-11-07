@@ -402,6 +402,7 @@ def create_im_client(exp, name, descr, population_id, form_data):
         population_id=population.id,
         days=settings["days"],
         llm=settings["model"],
+        llm_api_key=settings.get("api_key") or "NULL",
         status=0,
     )
     db.session.add(client)

@@ -97,6 +97,40 @@ def test_config_never_carries_runtime_keys_or_secrets():
     )
 
 
+def test_the_api_key_of_the_form_is_written_like_in_the_other_platforms():
+    from y_web.src.im.client_config import build_client_config, parse_client_form
+
+    def config(**form):
+        return build_client_config(
+            client_name="c",
+            settings=parse_client_form({"llm": "https://api.deepseek.com", **form}),
+            topics=[],
+            activity_profiles={},
+        )
+
+    assert config(llm_api_key=" sk-secret ")["llm"]["llm_api_key"] == "sk-secret"
+    for placeholder in ("", "NULL", "EMPTY"):
+        assert "llm_api_key" not in config(llm_api_key=placeholder)["llm"]
+    assert config(llm_api_key_env="MY_KEY")["llm"]["llm_api_key_env"] == "MY_KEY"
+
+
+def test_the_advanced_overlay_never_replaces_the_key_of_the_form():
+    from y_web.src.im.client_config import build_client_config
+
+    settings = {
+        "backend": "openai",
+        "days": 1,
+        "seed": 1,
+        "api_key": "sk-form",
+        "advanced": {"llm": {"llm_api_key": "sk-advanced", "timeout_seconds": 30}},
+    }
+    cfg = build_client_config(
+        client_name="c", settings=settings, topics=[], activity_profiles={}
+    )
+    assert cfg["llm"]["llm_api_key"] == "sk-form"
+    assert cfg["llm"]["timeout_seconds"] == 30
+
+
 def test_llm_url_maps_to_the_address_im_expects():
     from y_web.src.im.client_config import split_llm_url
 

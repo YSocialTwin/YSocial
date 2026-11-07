@@ -195,7 +195,11 @@
       return;
     }
     setStatus(targetId, '<i class="mdi mdi-loading mdi-spin"></i> ' + tr("Fetching..."));
-    fetch("/admin/api/fetch_models?llm_url=" + encodeURIComponent(url))
+    // hosted providers (OpenAI, DeepSeek, ...) need the key: it travels in a header, never in the URL
+    var keyInput = document.querySelector('input[name="adv__llm__api_key"]');
+    var key = keyInput ? keyInput.value.trim() : "";
+    var headers = key && ["NULL", "NONE", "EMPTY"].indexOf(key.toUpperCase()) < 0 ? { "X-LLM-API-Key": key } : {};
+    fetch("/admin/api/fetch_models?llm_url=" + encodeURIComponent(url), { headers: headers })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.error || !data.models) {

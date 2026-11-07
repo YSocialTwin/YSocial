@@ -139,10 +139,14 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('API Key') }}</span>
+                                            <span class="right ys-w-70"><input type="text" name="llm_api_key" class="input" value="{{ exp_llm_defaults.llm_api_key }}"></span>
+                                        </div>
                                         <div class="box-line ys-hint-text">
                                             <span class="left">{{ _('API Key Environment Variable') }}</span>
                                             <span class="right ys-w-70"><input type="text" name="llm_api_key_env" class="input" placeholder="OPENAI_API_KEY">
-                                            <small>{{ _('Name of the environment variable holding the key; the key itself is never written to the configuration.') }}</small></span>
+                                            <small>{{ _('Optional, instead of the API Key: name of an environment variable holding the key; the variable wins when it is set.') }}</small></span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">{{ _('Max tokens') }}</span>

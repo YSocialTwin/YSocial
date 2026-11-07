@@ -289,6 +289,7 @@ def create_dating_client():
         population_id=population.id,
         days=days,
         llm=(config.get("llm") or {}).get("model"),
+        llm_api_key=(config.get("llm") or {}).get("api_key") or "NULL",
         status=0,
     )
     db.session.add(client)

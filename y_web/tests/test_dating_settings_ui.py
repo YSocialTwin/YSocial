@@ -420,3 +420,11 @@ def test_the_distance_filter_is_an_off_switch_of_the_experiment():
     item = ui.item_for(f)
     assert item["widget"] == "toggle" and not item["advanced"]
     assert ui.label_of(f.path) == "Only show profiles within the distance"
+
+
+def test_the_api_key_is_a_visible_client_setting_like_in_the_other_platforms():
+    paths = {f.path for f in dcc.form_fields(REPO)}
+    assert "llm.api_key" in paths
+    assert ui.LABELS["llm.api_key"] == "API Key"
+    assert "llm.api_key" not in ui.ADVANCED
+    assert "llm.api_key_env" in ui.ADVANCED

@@ -198,6 +198,9 @@ def parse_client_form(form, label_of=lambda text: text) -> Dict[str, Any]:
     backend = (form.get("llm_backend") or "echo").strip().lower()
     if backend not in LLM_BACKENDS:
         raise ImClientFormError(f"llm_backend must be one of {', '.join(LLM_BACKENDS)}")
+    api_key = (form.get("llm_api_key") or "").strip()
+    if api_key.upper() in ("", "NULL", "NONE", "EMPTY"):
+        api_key = None
     api_key_env = (form.get("llm_api_key_env") or "").strip() or None
     if api_key_env and not _ENV_NAME.match(api_key_env):
         raise ImClientFormError(
@@ -245,6 +248,7 @@ def parse_client_form(form, label_of=lambda text: text) -> Dict[str, Any]:
         "timeout_seconds": _num(
             form.get("llm_timeout_seconds"), "llm_timeout_seconds", 1, 3600, None
         ),
+        "api_key": api_key,
         "api_key_env": api_key_env,
         "memory_enabled": memory_enabled,
         "stress_reward": _flag(
@@ -280,6 +284,7 @@ def build_client_config(
         ("llm_max_tokens", "max_tokens"),
         ("max_concurrency", "max_concurrency"),
         ("timeout_seconds", "timeout_seconds"),
+        ("llm_api_key", "api_key"),
         ("llm_api_key_env", "api_key_env"),
     ):
         if settings.get(source) is not None:
@@ -316,11 +321,18 @@ def build_client_config(
             "model_name": settings.get("opinion_model") or "bounded_confidence",
         }
     if settings.get("advanced"):
-        config = deep_merge(config, settings["advanced"])
-        # the runtime keys are YWeb's to write; the secret must stay out of the file
+        # the key of the model is the form's: the advanced overlay never carries or replaces it
+        advanced = {k: v for k, v in settings["advanced"].items() if k != "llm"}
+        if isinstance(settings["advanced"].get("llm"), dict):
+            advanced["llm"] = {
+                k: v
+                for k, v in settings["advanced"]["llm"].items()
+                if k not in ("llm_api_key", "llm_api_key_env")
+            }
+        config = deep_merge(config, advanced)
+        # the runtime keys are YWeb's to write
         for key in ("client_id", "namespace", "server_name", "address", "agents_file"):
             config.pop(key, None)
-        config.get("llm", {}).pop("llm_api_key", None)
     return config
 
 
