@@ -233,6 +233,7 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         "instant_messaging",
         "dating",
         "hpc",
+        "federation",
         "agent_plugins",
         "frontend_plugins",
         "backend_settings",

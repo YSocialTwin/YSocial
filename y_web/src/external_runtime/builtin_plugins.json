@@ -273,6 +273,23 @@
       "seed": true
     },
     {
+      "key": "federation",
+      "label": "YFederation",
+      "description": "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them.",
+      "group": "federation",
+      "group_label": "World Simulation",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YFederation",
+      "repo": "YSocialTwin/YFederation",
+      "branch": "main",
+      "validate_entrypoints": [
+        "pyproject.toml",
+        "ysocial_federation"
+      ],
+      "private": true
+    },
+    {
       "key": "agent_plugins",
       "label": "y_agents_plugins",
       "description": "Ready-made special-purpose agents (moderator, propaganda, comic relief, stress testing and more) to add to an experiment.",

@@ -118,3 +118,13 @@ def test_yforum_is_a_seeded_hpc_runtime_next_to_ysimulator():
     # the bundle needs neither PostgreSQL nor a model: only the requirements of the runtime
     assert [list(c)[-2:] for c in spec.install_commands] == [["-r", "requirements.txt"]]
     assert "YSimulator" in {s.path.name for s in SUPPORTED_EXTERNAL_REPOS.values()}
+
+
+def test_yfederation_is_listed_in_the_install_menu_but_not_seeded():
+    spec = SUPPORTED_EXTERNAL_REPOS["federation"]
+    assert (spec.label, spec.path.name) == ("YFederation", "YFederation")
+    assert spec.github_repo == "YSocialTwin/YFederation"
+    assert "federation" in [g for g, _label, _specs in registry.grouped_runtime_specs()]
+    assert "YFederation" not in [
+        e["directory"] for e in registry._BUILTIN_PAYLOAD if e.get("seed")
+    ]
