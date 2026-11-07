@@ -311,6 +311,20 @@ def test_an_extended_forum_client_runs_the_days_it_lacks(app, tmp_path):
         assert json.loads(path.read_text())["num_days"] == 0
 
 
+def test_extending_a_completed_client_reopens_it():
+    from types import SimpleNamespace
+
+    from y_web.routes.admin.sub.clients._execution import _reopen_completed_execution
+
+    ex = SimpleNamespace(terminal_state="completed", elapsed_time=24)
+    assert not _reopen_completed_execution(ex, 1)  # nothing added
+    assert ex.terminal_state == "completed"
+    assert _reopen_completed_execution(ex, 4)
+    assert ex.terminal_state == "paused"
+    ex.terminal_state = "completed"
+    assert _reopen_completed_execution(ex, -1)
+
+
 def test_advanced_parameters_sit_in_a_closed_panel():
     import jinja2
 

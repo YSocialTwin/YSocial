@@ -52,6 +52,23 @@ def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
     return updated
 
 
+def _reopen_completed_execution(
+    client_execution, new_total_days: int, slots: int = 24
+) -> bool:
+    """Leave the ``completed`` state when an extension gives the client rounds it has not run yet.
+
+    The HPC monitor counts a stopped client whose ``terminal_state`` is ``completed`` as finished, so an extended
+    client would never be started again. ``paused`` means "stopped, can be resumed".
+    """
+    if getattr(client_execution, "terminal_state", None) != "completed":
+        return False
+    done = int(getattr(client_execution, "elapsed_time", 0) or 0)
+    if new_total_days != -1 and new_total_days * slots <= done:
+        return False
+    client_execution.terminal_state = "paused"
+    return True
+
+
 def _hpc_client_process_still_running(exp, client) -> bool:
     """Return whether the tracked HPC client PID is still active for this client."""
     try:
@@ -173,6 +190,7 @@ def extend_simulation(id_client):
     client_execution.expected_duration_rounds = (
         -1 if new_total_days == -1 else new_total_days * 24
     )
+    _reopen_completed_execution(client_execution, new_total_days)
     db.session.commit()
 
     # Check if the experiment was completed, and reset to stopped if so
