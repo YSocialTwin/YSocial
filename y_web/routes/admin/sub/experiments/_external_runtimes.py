@@ -491,7 +491,8 @@ def external_runtime_detail(entry_key: str):
 
     banners = []
     for repo in repos:
-        found = find_banner(repo["path"]) if repo.get("installed") else None
+        # an installed plugin gives its own file; one that is not installed is asked to GitHub when the image is opened
+        found = True if not Path(repo["path"]).exists() else find_banner(repo["path"])
         banners.append(
             {
                 "label": repo["label"],
@@ -534,7 +535,7 @@ def external_runtime_detail(entry_key: str):
 @login_required
 def external_runtime_banner(repo_key: str):
     """The header image of the README of an installed plugin (nothing in the address chooses the file)."""
-    from flask import abort, send_file
+    from flask import abort, current_app, send_file
 
     from y_web.src.external_runtime.readme_banner import find_banner
 
@@ -547,10 +548,20 @@ def external_runtime_banner(repo_key: str):
         abort(404)
     if not runtime_visible_to_user(spec, admin_user):
         abort(403)
-    found = find_banner(spec.path)
-    if found is None:
-        abort(404)
-    response = send_file(found[0], max_age=300)
+    if spec.path.exists():
+        # installed: the image of the local README, never GitHub
+        found = find_banner(spec.path)
+        if found is None:
+            abort(404)
+        response = send_file(found[0], max_age=300)
+    else:
+        from y_web.src.external_runtime.readme_banner import fetch_remote_banner
+
+        remote = fetch_remote_banner(spec, _session_github_token())
+        if remote is None:
+            abort(404)
+        response = current_app.response_class(remote[0], mimetype=remote[1])
+        response.headers["Cache-Control"] = "private, max-age=300"
     # an SVG of a plugin must not run anything, even if it is opened on its own
     response.headers["Content-Security-Policy"] = "sandbox; default-src 'none'; style-src 'unsafe-inline'"
     response.headers["X-Content-Type-Options"] = "nosniff"

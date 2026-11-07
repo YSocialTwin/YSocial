@@ -66,7 +66,7 @@
                             {% if banners|selectattr('image_url')|list %}
                             <div class="ext-banners">
                                 {% for b in banners if b.image_url %}
-                                <figure><img src="{{ b.image_url }}" alt="{{ b.alt }}" loading="lazy">{% if entry.paired %}<figcaption>{{ b.label }}</figcaption>{% endif %}</figure>
+                                <figure><img src="{{ b.image_url }}" alt="{{ b.alt }}" loading="lazy" onerror="this.closest('figure').hidden=true">{% if entry.paired %}<figcaption>{{ b.label }}</figcaption>{% endif %}</figure>
                                 {% endfor %}
                             </div>
                             {% endif %}

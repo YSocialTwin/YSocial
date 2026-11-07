@@ -1,8 +1,8 @@
 """The header image of a plugin's README, shown on the plugin page.
 
-Only an image that lives inside the plugin folder is used (``docs/banner.png`` and the like): absolute addresses,
-badges and anything that leaves the folder are ignored, so the page never reaches out to another site and the file
-that is served is always inside the plugin.
+Only an image that lives inside the plugin is used (``docs/banner.png`` and the like): absolute addresses, badges and
+anything that leaves the plugin are ignored. An installed plugin always gives its image from its own folder; only a
+plugin that is not installed is asked to GitHub (by the server, never by the browser, with the session's token).
 """
 
 from __future__ import annotations
@@ -36,6 +36,28 @@ def _readme(folder: Path) -> Optional[Path]:
     return None
 
 
+def _local_sources(text: str):
+    """``(relative path, alt)`` of the images of a README that point inside the plugin, in document order."""
+    for _pos, src, alt in sorted(_candidates(text), key=lambda c: c[0]):
+        src = html.unescape(src).strip().split("#", 1)[0].split("?", 1)[0]
+        if not src or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:|^//|^/", src):
+            continue  # absolute address, data: URI ...: never fetched
+        parts = []
+        for part in src.split("/"):
+            if part in ("", "."):
+                continue
+            if part == "..":
+                if not parts:
+                    parts = None
+                    break
+                parts.pop()
+                continue
+            parts.append(part)
+        if not parts or Path(parts[-1]).suffix.lower() not in IMAGE_EXTENSIONS:
+            continue
+        yield "/".join(parts), html.unescape(alt).strip()
+
+
 def find_banner(folder) -> Optional[Tuple[Path, str]]:
     """``(file, alt)`` of the first local image of the README of *folder*, or None."""
     try:
@@ -44,19 +66,60 @@ def find_banner(folder) -> Optional[Tuple[Path, str]]:
         if readme is None:
             return None
         text = readme.read_text(encoding="utf-8", errors="replace")
-        for _pos, src, alt in sorted(_candidates(text), key=lambda c: c[0]):
-            src = html.unescape(src).strip().split("#", 1)[0].split("?", 1)[0]
-            if not src or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:|^//", src):
-                continue  # absolute address, data: URI ...: never fetched
-            path = (base / src).resolve()
+        for rel, alt in _local_sources(text):
+            path = (base / rel).resolve()
             if (
-                base not in path.parents
-                or path.suffix.lower() not in IMAGE_EXTENSIONS
-                or not path.is_file()
-                or path.stat().st_size > _SIZE_LIMIT
+                base in path.parents
+                and path.is_file()
+                and path.stat().st_size <= _SIZE_LIMIT
             ):
-                continue
-            return path, html.unescape(alt).strip()
+                return path, alt
     except (OSError, ValueError):
         return None
     return None
+
+
+MIME = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+}
+
+
+def fetch_remote_banner(spec, github_token=None) -> Optional[Tuple[bytes, str, str]]:
+    """``(bytes, mimetype, alt)`` of the header image of the README on GitHub, for a plugin that is not installed.
+
+    Two small API requests (the README, then the image); any failure gives None and the page shows no image.
+    The answer is cached for a few minutes with the other remote lookups.
+    """
+    import requests
+
+    from y_web.src.external_runtime import manager
+
+    def _get(url):
+        headers = manager._github_api_headers(github_token)
+        headers["Accept"] = "application/vnd.github.raw+json"
+        response = requests.get(url, headers=headers, timeout=manager._GITHUB_TIMEOUT)
+        response.raise_for_status()
+        return response
+
+    def _lookup():
+        try:
+            readme = _get(f"https://api.github.com/repos/{spec.github_repo}/readme")
+            for rel, alt in _local_sources(readme.text):
+                image = _get(
+                    f"https://api.github.com/repos/{spec.github_repo}/contents/{rel}"
+                )
+                data = image.content
+                if len(data) <= _SIZE_LIMIT:
+                    return (data, MIME[Path(rel).suffix.lower()], alt), None
+        except (requests.RequestException, ValueError, KeyError) as exc:
+            return None, str(exc)
+        return None, "no image in the README"
+
+    return manager._remote_cached(
+        "banner", spec, "", github_token, _lookup, ttl_ok=600.0
+    )[0]

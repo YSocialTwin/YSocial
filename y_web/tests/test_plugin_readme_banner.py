@@ -56,3 +56,54 @@ def test_no_readme_or_no_image_gives_none(tmp_path):
     assert find_banner(tmp_path / "missing") is None
     (tmp_path / "README.md").write_text("# only text\n", encoding="utf-8")
     assert find_banner(tmp_path) is None
+
+
+class _Resp:
+    def __init__(self, text="", content=b""):
+        self.text, self.content = text, content
+
+    def raise_for_status(self):
+        return None
+
+
+def test_a_plugin_that_is_not_installed_gets_its_image_from_github(monkeypatch):
+    from types import SimpleNamespace
+
+    import requests
+
+    from y_web.src.external_runtime import manager, readme_banner
+
+    manager.clear_remote_cache()
+    calls = []
+
+    def fake_get(url, headers=None, timeout=None):
+        calls.append(url)
+        if url.endswith("/readme"):
+            return _Resp(text='<img src="https://x/y.png"><img src="docs/banner.png" alt="Banner">')
+        return _Resp(content=b"\x89PNG")
+
+    monkeypatch.setattr(requests, "get", fake_get)
+    spec = SimpleNamespace(github_repo="Org/Plugin")
+    data, mime, alt = readme_banner.fetch_remote_banner(spec, "token")
+    assert (data, mime, alt) == (b"\x89PNG", "image/png", "Banner")
+    assert calls[-1].endswith("/repos/Org/Plugin/contents/docs/banner.png")
+    readme_banner.fetch_remote_banner(spec, "token")  # cached
+    assert len(calls) == 2
+    manager.clear_remote_cache()
+
+
+def test_a_failed_github_request_gives_no_image(monkeypatch):
+    from types import SimpleNamespace
+
+    import requests
+
+    from y_web.src.external_runtime import manager, readme_banner
+
+    manager.clear_remote_cache()
+
+    def boom(*args, **kwargs):
+        raise requests.ConnectionError("offline")
+
+    monkeypatch.setattr(requests, "get", boom)
+    assert readme_banner.fetch_remote_banner(SimpleNamespace(github_repo="O/P")) is None
+    manager.clear_remote_cache()
