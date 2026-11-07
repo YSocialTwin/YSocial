@@ -6,6 +6,8 @@
 #   scripts/dev/run_all_tests.sh --full          # also the tests CI leaves out (ray, differential, ...)
 #   scripts/dev/run_all_tests.sh -r YForum,YDating
 #   scripts/dev/run_all_tests.sh --venv --install   # one virtualenv per repository, requirements installed
+#   scripts/dev/run_all_tests.sh --failed        # run again only what failed in the latest run (and its failed checks)
+#   scripts/dev/run_all_tests.sh --failed test-reports/20261107-134309   # ... in a given run
 #   scripts/dev/run_all_tests.sh -- -k llm       # arguments after -- go to every pytest run
 #
 # Report (test-reports/<date-time>/, test-reports/latest points to it):
@@ -32,8 +34,10 @@ TIMEOUT=300
 PYTHON_BIN="${PYTHON:-python3}"
 VENV_ROOT="${YSOCIAL_TEST_VENVS:-$HOME/.cache/ysocial-test-venvs}"
 EXTRA_ARGS=()
+RERUN=0
+PREV=""
 
-usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -46,6 +50,9 @@ while [ $# -gt 0 ]; do
     --batches) BATCHES="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
     --python) PYTHON_BIN="$2"; shift 2 ;;
+    --failed)
+      RERUN=1; shift
+      if [ $# -gt 0 ] && [ -d "$1" ]; then PREV="$1"; shift; fi ;;
     --list) LIST=1; shift ;;
     -h|--help) usage 0 ;;
     --) shift; EXTRA_ARGS=("$@"); break ;;
@@ -94,6 +101,11 @@ if [ "${LIST:-0}" = 1 ]; then
   exit 0
 fi
 
+if [ "$RERUN" = 1 ]; then
+  [ -n "$PREV" ] || PREV="$OUT_BASE/latest"
+  PREV="$(cd "$PREV" 2>/dev/null && pwd -P)" || { echo "no previous run to repeat" >&2; exit 2; }
+  [ -d "$PREV/logs" ] || { echo "$PREV is not a test run" >&2; exit 2; }
+fi
 [ -n "$OUT" ] || OUT="$OUT_BASE/$STAMP"
 mkdir -p "$OUT/logs" "$OUT/junit" "$OUT/checks"
 ln -sfn "$OUT" "$OUT_BASE/latest" 2>/dev/null || true
@@ -138,6 +150,18 @@ split_batches() {  # print the test files under $1 split in $2 batches, one batc
     END { for (i = 0; i < n; i++) if (b[i] != "") print b[i] }'
 }
 
+collect_failed() {  # node ids of the failed tests found in the logs of run $1, written to $2 (repository<TAB>node id)
+  : >"$2"
+  local lg b
+  for lg in "$1"/logs/*.log; do
+    [ -f "$lg" ] || continue
+    b="$(basename "$lg" .log)"
+    case "$b" in _*) continue ;; esac
+    grep -E '^(FAILED|ERROR) [^ :]' "$lg" | sed -E 's/^(FAILED|ERROR) //; s/ - .*$//' | sort -u \
+      | awk -v r="${b%%__*}" '{ print r "\t" $0 }' >>"$2"
+  done
+}
+
 run_pytest() {  # label dir py markers paths...
   local label="$1" dir="$2" py="$3" markers="$4"; shift 4
   local args=(-q -ra --tb=short -p no:cacheprovider -o junit_family=xunit2 "--junitxml=$OUT/junit/$label.xml")
@@ -155,8 +179,13 @@ run_pytest() {  # label dir py markers paths...
 : >"$OUT/runs.tsv"
 : >"$OUT/notrun.tsv"
 echo "Report: $OUT"
-echo "Python: $PYTHON_BIN ($($PYTHON_BIN --version 2>&1))   mode: $([ "$FULL" = 1 ] && echo full || echo 'CI selection')"
+echo "Python: $PYTHON_BIN ($($PYTHON_BIN --version 2>&1))   mode: $([ "$RERUN" = 1 ] && echo "failed only" || { [ "$FULL" = 1 ] && echo full || echo "CI selection"; })"
 echo
+
+if [ "$RERUN" = 1 ]; then  # the failures are read from the logs, so runs of older script versions work too
+  PREV_FAILED="$OUT/previous_failed.tsv"
+  collect_failed "$PREV" "$PREV_FAILED"
+fi
 
 for spec in "${SPECS[@]}"; do
   IFS='|' read -r name dir paths ci_markers full_markers reqs <<<"$spec"
@@ -173,6 +202,15 @@ for spec in "${SPECS[@]}"; do
   fi
   install_for "$name" "$dir" "$reqs" "$py"
   markers="$ci_markers"; [ "$FULL" = 1 ] && markers="$full_markers"
+  if [ "$RERUN" = 1 ]; then
+    IDS=()
+    while IFS= read -r l; do IDS+=("$l"); done < <(awk -F'\t' -v r="$name" '$1 == r { print substr($0, length($1) + 2) }' "$PREV_FAILED")
+    if [ ${#IDS[@]} -eq 0 ]; then echo "-- $name: nothing failed, skipped"; continue; fi
+    echo "== $name  (${#IDS[@]} failed test(s) of the previous run)"
+    run_pytest "$name" "$dir" "$py" "" "${IDS[@]}"
+    printf '   exit %s\n' "$?"
+    continue
+  fi
   echo "== $name  ($dir/$paths${markers:+  -m \"$markers\"})"
   if [ "$name" = "YSocial" ]; then
     i=0
@@ -189,6 +227,9 @@ for spec in "${SPECS[@]}"; do
   fi
 done
 
+# node ids of the failed tests, for --failed
+collect_failed "$OUT" "$OUT/failed.tsv"
+
 if [ "$CHECKS" = 1 ]; then
   : >"$OUT/checks.tsv"
   echo; echo "== static checks"
@@ -199,6 +240,9 @@ if [ "$CHECKS" = 1 ]; then
       YForum*) wanted YForum || continue ;;
     esac
     [ -d "$ROOT/$dir" ] || continue
+    if [ "$RERUN" = 1 ]; then  # only the checks that failed
+      awk -F'\t' -v l="$label" '$1 == l && $2 != 0 { f = 1 } END { exit !f }' "$PREV/checks.tsv" 2>/dev/null || continue
+    fi
     log="$OUT/checks/$(echo "$label" | tr ' /' '__').log"
     ( cd "$ROOT/$dir" && eval "$cmd" ) >"$log" 2>&1
     rc=$?
@@ -222,7 +266,7 @@ done
   echo "python	$($PYTHON_BIN --version 2>&1)"
   echo "pytest	$($PYTHON_BIN -m pytest --version 2>&1 | head -1)"
   echo "platform	$(uname -srm)"
-  echo "mode	$([ "$FULL" = 1 ] && echo full || echo 'CI selection')"
+  echo "mode	$([ "$RERUN" = 1 ] && echo "only the failures of $PREV" || { [ "$FULL" = 1 ] && echo full || echo 'CI selection'; })"
   echo "venvs	$([ "$USE_VENV" = 1 ] && echo "$VENV_ROOT" || echo 'no (current interpreter)')"
   echo "date	$(date '+%Y-%m-%d %H:%M:%S')"
 } >"$OUT/env.tsv"
