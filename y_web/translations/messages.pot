@@ -16494,9 +16494,6 @@ msgstr ""
 msgid "sending…"
 msgstr ""
 
-msgid "server + client"
-msgstr ""
-
 msgid "settings"
 msgstr ""
 

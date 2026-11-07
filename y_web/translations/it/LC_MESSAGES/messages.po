@@ -18321,9 +18321,6 @@ msgstr "s"
 msgid "sending…"
 msgstr "invio in corso…"
 
-msgid "server + client"
-msgstr "server + client"
-
 msgid "settings"
 msgstr "impostazioni"
 
