@@ -18,6 +18,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "Agent Plugins"
+msgstr "Plugin per agenti"
+
+msgid "Other plugins"
+msgstr "Altri plugin"
+
+msgid "Platforms (Legacy)"
+msgstr "Piattaforme (legacy)"
+
+msgid "System Plugins"
+msgstr "Plugin di sistema"
+
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
 "Algoritmo «Chi seguire» mostrato per impostazione predefinita agli utenti"
@@ -300,8 +312,8 @@ msgstr[1] "%(num)d file"
 #, python-format
 msgid "%(num)d member needs attention"
 msgid_plural "%(num)d members need attention"
-msgstr[0] "%(n)d membro richiede attenzione"
-msgstr[1] "%(n)d membri richiedono attenzione"
+msgstr[0] "%(num)d membro richiede attenzione"
+msgstr[1] "%(num)d membri richiedono attenzione"
 
 #, python-format
 msgid "%(num)s photo"

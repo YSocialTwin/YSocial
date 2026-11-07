@@ -17,6 +17,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "Agent Plugins"
+msgstr ""
+
+msgid "Other plugins"
+msgstr ""
+
+msgid "Platforms (Legacy)"
+msgstr ""
+
+msgid "System Plugins"
+msgstr ""
+
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
 
