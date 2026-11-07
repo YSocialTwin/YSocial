@@ -310,6 +310,31 @@
     "min_ysocial_version": null
   },
   {
+    "key": "federation",
+    "group": "federation",
+    "group_label": "World Simulation",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YFederation",
+    "path": "YFederation",
+    "github_repo": "YSocialTwin/YFederation",
+    "repo_url": "https://github.com/YSocialTwin/YFederation.git",
+    "default_branch": "main",
+    "install_commands": [],
+    "validate_entrypoints": [
+      "pyproject.toml",
+      "ysocial_federation"
+    ],
+    "validate_import": null,
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
     "key": "agent_plugins",
     "group": "agent_plugins",
     "group_label": "Agent Plugins",

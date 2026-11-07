@@ -35,7 +35,7 @@ def _normalise(spec: ExternalRuntimeSpec) -> dict:
 
 
 def test_built_in_specs_are_identical_to_the_previous_hard_coded_ones():
-    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging, dating and forum_hpc)."""
+    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging, dating, forum_hpc and federation)."""
     assert [g["key"] for g in GOLDEN] == list(SUPPORTED_EXTERNAL_REPOS)
     for expected in GOLDEN:
         assert _normalise(SUPPORTED_EXTERNAL_REPOS[expected["key"]]) == expected
