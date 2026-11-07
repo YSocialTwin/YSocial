@@ -54,17 +54,6 @@ def _llm_config(**primary):
     return {"config_list": [{"model": "m", **primary}]}
 
 
-def test_a_hosted_https_endpoint_with_a_colon_model_and_no_key_is_not_ollama():
-    from y_web.src.llm import autogen_compat as compat
-
-    cfg = compat._normalize_llm_config(
-        _llm_config(
-            base_url="https://openrouter.ai/api/v1",
-            model="vendor/model:free",
-            api_key="NULL",
-        )
-    )
-    assert not compat._looks_like_ollama(cfg)
 
 
 def test_an_authenticated_ollama_endpoint_gets_the_bearer_token(monkeypatch):

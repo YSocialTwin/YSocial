@@ -95,8 +95,6 @@ def _looks_like_ollama(cfg: _NormalizedLLMConfig) -> bool:
             (cfg.api_key or "").upper() in {"", "NULL", "EMPTY"}
             and bool(cfg.model)
             and ":" in str(cfg.model)
-            # "provider/model:free" style names on a hosted https endpoint are not Ollama tags
-            and parsed.scheme != "https"
         )
     )
 
