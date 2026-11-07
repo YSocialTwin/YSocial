@@ -298,8 +298,12 @@ def test_photo_media_url_preserves_static_profile_assets():
 @pytest.mark.integration
 def test_photo_text_linkification_targets_profiles_and_hashtag_search():
     with _photo_experiment() as exp:
-        if not _photo_user_href_by_name(exp, "KatherineJones"):  # it reads the developer's own database
-            pytest.skip("the photo-sharing experiment of this database has no user KatherineJones")
+        if not _photo_user_href_by_name(
+            exp, "KatherineJones"
+        ):  # it reads the developer's own database
+            pytest.skip(
+                "the photo-sharing experiment of this database has no user KatherineJones"
+            )
         linked = _photo_linkify_text(exp, "Hello @KatherineJones #pizza")
         assert f"/{exp.idexp}/photo/search?q=%23pizza&amp;kind=hashtags" in linked
         assert f"/{exp.idexp}/photo/profile/" in linked

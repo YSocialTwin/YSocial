@@ -54,8 +54,6 @@ def _llm_config(**primary):
     return {"config_list": [{"model": "m", **primary}]}
 
 
-
-
 def test_an_authenticated_ollama_endpoint_gets_the_bearer_token(monkeypatch):
     import sys
     import types
