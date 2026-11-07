@@ -284,6 +284,33 @@ def test_a_restarted_client_runs_what_is_left(app, tmp_path):
             _set_dating_run_length(str(path), cli)
 
 
+def test_an_extended_forum_client_runs_the_days_it_lacks(app, tmp_path):
+    import json
+
+    from y_web import db
+    from y_web.src.hpc.client import _set_dating_run_length
+    from y_web.src.models import Client, Client_Execution
+
+    path = tmp_path / "client_dsd.json"
+    path.write_text(json.dumps({"num_days": 1, "num_slots_per_day": 24}))
+    with app.app_context():
+        cli = Client(name="dsd", id_exp=1, population_id=1, days=4, status=0)
+        db.session.add(cli)
+        db.session.commit()
+        db.session.add(
+            Client_Execution(client_id=cli.id, last_active_day=1, last_active_hour=24)
+        )
+        db.session.commit()
+
+        _set_dating_run_length(str(path), cli, unlimited_value=0)
+        assert json.loads(path.read_text())["num_days"] == 3  # one of four already run
+
+        cli.days = -1  # until stopped: YForum reads 0 so
+        db.session.commit()
+        _set_dating_run_length(str(path), cli, unlimited_value=0)
+        assert json.loads(path.read_text())["num_days"] == 0
+
+
 def test_advanced_parameters_sit_in_a_closed_panel():
     import jinja2
 

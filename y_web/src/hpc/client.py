@@ -438,8 +438,10 @@ def _resolve_hpc_client_days_from_config(client_config_path: str) -> Optional[in
     return None
 
 
-def _set_dating_run_length(client_config_path: str, cli) -> None:
-    """Write in the client file how many days the dating runtime runs from this start.
+def _set_dating_run_length(
+    client_config_path: str, cli, unlimited_value: int = -1
+) -> None:
+    """Write in the client file how many days the dating or forum runtime runs from this start.
 
     The database holds the total length of the client (``Client.days``); the runtime counts the days from the
     moment it registers, so a restarted client gets what is left of the total.
@@ -460,6 +462,8 @@ def _set_dating_run_length(client_config_path: str, cli) -> None:
         raise RuntimeError(
             f"Client '{cli.name}' has already run all its days: extend the simulation to run it further."
         )
+    if days == -1:
+        days = unlimited_value  # YForum reads 0 as "until stopped"
     if config.get("num_days") != days:
         with open(client_config_path, "w", encoding="utf-8") as handle:
             json.dump(dcc.set_duration(config, days), handle, indent=2)
@@ -768,6 +772,10 @@ def start_hpc_client(exp, cli, population):
     try:
         if exp.platform_type == "dating":
             _set_dating_run_length(client_config, cli)
+        elif exp.platform_type == "forum":
+            # the YForum client counts num_days from the day it registers, like the dating one: a restarted or
+            # extended client gets what is left of Client.days, not the whole total again
+            _set_dating_run_length(client_config, cli, unlimited_value=0)
         else:
             synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
     except RuntimeError:
