@@ -10,8 +10,9 @@ def test_yforum_is_listed_next_to_the_other_runtimes():
     entries = {p["plugin_name"]: p for p in json.loads(PLUGINS.read_text())["plugins"]}
     # the file is regenerated from the plugins found in external/ (sync_plugins_index): the two runtimes of the
     # HPC group must both be there, or the Plugins page does not list them
-    for name in ("YSimulator", "YForum"):
-        assert name in entries, name
+    # (the microblogging runtime is presented as YMicroblogging by its manifest, YSimulator is its repository name)
+    assert "YForum" in entries
+    assert {"YSimulator", "YMicroblogging"} & set(entries), sorted(entries)
     forum = entries["YForum"]
     assert forum["group"] == "HPC" and forum["category"] == "Simulation Runtime Stack"
     assert forum["repository_url"] == "https://github.com/YSocialTwin/YForum"

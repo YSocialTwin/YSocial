@@ -12,6 +12,15 @@ from y_web.tests.test_federation_service import world  # noqa: F401  (fixture)
 from y_web.tests.test_world_simulation_ui import login, site  # noqa: F401  (fixtures)
 
 
+@pytest.fixture(autouse=True)
+def _no_monitor_left_by_another_module():
+    """The monitor is a process-wide singleton: one started by an application of another test module (without
+    TESTING) must not leak into these tests."""
+    schedule_monitor.stop_federation_schedule_monitor()
+    yield
+    schedule_monitor.stop_federation_schedule_monitor()
+
+
 def more_experiments(tmp, tag):
     """Two more stopped experiments (microblogging + forum) on the population of the fixture."""
     from y_web.src.models.admin import Exps, Population, Population_Experiment

@@ -107,7 +107,10 @@ def test_snapshot_copy_is_consistent_cached_and_refreshed(
         sqlite3.connect(second).execute("SELECT COUNT(*) FROM messages").fetchone()[0]
         == 219
     )
-    assert len(os.listdir(os.path.dirname(second))) == 1  # the old signature is gone
+    # the old signature is gone (-wal / -shm files belong to the readers still open on the snapshot)
+    assert [f for f in os.listdir(os.path.dirname(second)) if f.endswith(".db")] == [
+        os.path.basename(second)
+    ]
 
 
 def test_reader_falls_back_to_a_snapshot_when_the_live_file_cannot_be_opened(

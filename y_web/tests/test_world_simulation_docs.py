@@ -15,9 +15,14 @@ def test_the_analytics_mapping_is_the_generated_one():
 
 
 def test_the_guides_are_in_the_navigation_and_their_links_exist():
+    import fnmatch
+
     nav = (ROOT / "mkdocs.yml").read_text()
+    hidden = nav.split("exclude_docs:", 1)[1].split("\n\n", 1)[0].split() if "exclude_docs:" in nav else []
     for page in ("world-simulation.md", "reference/world-simulation-configuration.md"):
-        assert page in nav and (ROOT / "docs" / page).is_file()
+        assert (ROOT / "docs" / page).is_file()
+        # a page held back from the published site (exclude_docs) is not in the navigation on purpose
+        assert page in nav or any(fnmatch.fnmatch(page, pattern) for pattern in hidden), page
     for page in (
         "world-simulation.md",
         "reference/world-simulation-configuration.md",

@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -9,6 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 STATIC_JS_DIR = REPO_ROOT / "y_web" / "static" / "assets" / "js"
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
 def test_all_admin_js_files_parse_with_node():
     failures = []
     for path in sorted(STATIC_JS_DIR.glob("admin-*.js")):
