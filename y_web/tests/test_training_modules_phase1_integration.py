@@ -142,7 +142,9 @@ def test_absent_plugin_leaves_startup_and_routes_untouched(tmp_path, monkeypatch
 
         seed = Path(__file__).resolve().parents[1] / "db" / "dashboard.db"
         seeded = set()
-        if seed.exists():  # the seed dashboard.db is git-ignored: absent in a clean checkout
+        if (
+            seed.exists()
+        ):  # the seed dashboard.db is git-ignored: absent in a clean checkout
             with sqlite3.connect(f"file:{seed}?mode=ro", uri=True) as seed_conn:
                 seeded = {
                     r[0]

@@ -46,7 +46,9 @@ def test_the_guides_are_in_the_navigation_and_their_links_exist():
 def test_the_configuration_reference_lists_every_default_of_the_coordinator():
     import json
 
-    pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
+    pytest.importorskip(
+        "ysocial_federation", reason="the federation SDK is not installed"
+    )
     from ysocial_federation.coordinator import allocator, discovery, leave
 
     text = (
