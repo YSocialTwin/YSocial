@@ -355,3 +355,29 @@ def test_the_plugin_list_is_split_in_the_four_sections():
     assert [s["key"] for s in route_mod._plugin_sections([{"key": "dating"}])] == [
         "platforms"
     ]
+
+
+def test_the_plugin_list_has_search_and_filters_and_names_the_legacy_ones_flask():
+    page = (
+        Path(__file__).resolve().parents[1] / "templates" / "admin" / "external_runtimes.html"
+    ).read_text(encoding="utf-8")
+    for hook in (
+        'id="ext-q"',
+        'id="ext-f-state"',
+        'id="ext-f-section"',
+        'data-state="{{ entry.state }}"',
+        "is:update",
+    ):
+        assert hook in page, hook
+    assert "server + client" not in page
+    assert '<span class="ext-plugin-meta">Flask</span>' in page
+    # the guided tour keeps finding its anchors
+    assert "external-runtimes-list" in page and "ext-row-actions" in page
+
+
+def test_the_hpc_simulator_is_called_ymicroblogging():
+    from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+
+    spec = SUPPORTED_EXTERNAL_REPOS["hpc_simulator"]
+    assert spec.label == "YMicroblogging" and spec.path.name == "YSimulator"
+    assert "microblogging" in spec.description.lower()

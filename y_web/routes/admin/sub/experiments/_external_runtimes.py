@@ -64,14 +64,14 @@ _PAIRED_ENTRIES = {
         "label": N_("Microblogging"),
         "members": ("microblogging_server", "microblogging_client"),
         "description": N_(
-            "Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page."
+            "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
         ),
     },
     "forum": {
         "label": N_("Forum"),
         "members": ("forum_server", "forum_client"),
         "description": N_(
-            "Forum simulator (threads and replies). Server and client are installed and updated independently from its page."
+            "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
         ),
     },
 }

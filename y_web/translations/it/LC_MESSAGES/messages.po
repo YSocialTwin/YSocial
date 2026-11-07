@@ -2003,16 +2003,8 @@ msgstr "Profili disponibili (trascina per assegnare)"
 msgid "Available Variables"
 msgstr "Variabili disponibili"
 
-msgid ""
-"Available and installed plugins. Open a plugin to install or update it "
-"and to follow the output of the operation. Microblogging and Forum each "
-"include a server and a client, which you install and update independently"
-" from the plugin page."
-msgstr ""
-"Plugin disponibili e installati. Apri un plugin per installarlo o "
-"aggiornarlo e per seguire l'output dell'operazione. Microblogging e Forum"
-" comprendono ciascuno un server e un client, che si installano e si "
-"aggiornano separatamente dalla pagina del plugin."
+msgid "Install, update and remove the components of YSocial: platforms, agent plugins and system plugins. Search by name or description, filter by status, and open a plugin to choose its source and follow the output of the operation."
+msgstr "Installa, aggiorna e rimuovi i componenti di YSocial: piattaforme, plugin per agenti e plugin di sistema. Cerca per nome o descrizione, filtra per stato e apri un plugin per scegliere la sorgente e seguire l'output dell'operazione."
 
 msgid "Available emotions"
 msgstr "Emozioni disponibili"
@@ -6420,12 +6412,8 @@ msgstr "Assegnazioni dei feed del forum aggiornate con successo."
 msgid "Forum participant"
 msgstr "Partecipante al forum"
 
-msgid ""
-"Forum simulator (threads and replies). Server and client are installed "
-"and updated independently from its page."
-msgstr ""
-"Simulatore di forum (thread e risposte). Server e client si installano e "
-"si aggiornano separatamente dalla sua pagina."
+msgid "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
+msgstr "Simulatore di forum legacy su Flask (thread e risposte). Server e client si installano e si aggiornano separatamente dalla sua pagina."
 
 msgid "Forum topic creation likelihood"
 msgstr "Probabilità di creare un topic nel forum"
@@ -6848,12 +6836,8 @@ msgstr ""
 "Reimpostazione dell'esperimento HPC completata. Ripristinati "
 "%(restored_count)s file di backup della popolazione."
 
-msgid ""
-"HPC microblogging experiments are unavailable because YSimulator is not "
-"present."
-msgstr ""
-"Gli esperimenti HPC di microblogging non sono disponibili perché "
-"YSimulator non è presente."
+msgid "HPC microblogging experiments are unavailable because YMicroblogging is not present."
+msgstr "Gli esperimenti HPC di microblogging non sono disponibili perché YMicroblogging non è presente."
 
 msgid "HPC prompts updated successfully!"
 msgstr "Prompt HPC aggiornati con successo!"
@@ -8872,19 +8856,11 @@ msgstr "Microblogging"
 msgid "Microblogging (i.e., X/BlueSky)"
 msgstr "Microblogging (cioè X/BlueSky)"
 
-msgid ""
-"Microblogging experiments are unavailable because neither YServer/YClient"
-" nor YSimulator is present."
-msgstr ""
-"Gli esperimenti di microblogging non sono disponibili perché non sono "
-"presenti né YServer/YClient né YSimulator."
+msgid "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
+msgstr "Gli esperimenti di microblogging non sono disponibili perché non sono presenti né YServer/YClient né YMicroblogging."
 
-msgid ""
-"Microblogging simulator (timeline, posts, follows). Server and client are"
-" installed and updated independently from its page."
-msgstr ""
-"Simulatore di microblogging (timeline, post, follow). Server e client si "
-"installano e si aggiornano separatamente dalla sua pagina."
+msgid "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
+msgstr "Simulatore di microblogging legacy su Flask (timeline, post, follow). Server e client si installano e si aggiornano separatamente dalla sua pagina."
 
 msgid "Migration"
 msgstr "Migrazione"
@@ -12616,8 +12592,8 @@ msgstr "In esecuzione"
 msgid "Running: stop it first."
 msgstr "In esecuzione: fermalo prima."
 
-msgid "Runs large-scale simulations in a distributed way on HPC clusters."
-msgstr "Esegue simulazioni su larga scala in modo distribuito su cluster HPC."
+msgid "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters."
+msgstr "Runtime basato su Ray per esperimenti di microblogging (post, timeline, follow), pensato per simulazioni su larga scala, su una singola macchina o su cluster HPC."
 
 msgid "Runs the agents of a forum simulation (client side)."
 msgstr "Esegue gli agenti di una simulazione forum (lato client)."
@@ -18531,6 +18507,39 @@ msgstr "✔️ Gioca con"
 
 msgid "✔️ Use"
 msgstr "✔️ Usa"
+
+msgid "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters."
+msgstr "Runtime Ray per esperimenti di forum in stile Reddit: thread, commenti, voti, follow e raccomandatori di contenuti intercambiabili su cluster HPC."
+
+msgid "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them."
+msgstr "SDK e coordinatore della World Simulation: sincronizza più esperimenti di piattaforme su un unico orologio e sposta agenti, attenzione e cross-post tra di loro."
+
+msgid "Words must all match. Use \"quotes\" for an exact phrase, -word to exclude a word, and is:installed, is:missing, is:partial, is:update, is:enabled or is:disabled to filter by status. Press / to search."
+msgstr "Tutte le parole devono corrispondere. Usa \"virgolette\" per una frase esatta, -parola per escludere una parola e is:installed, is:missing, is:partial, is:update, is:enabled o is:disabled per filtrare per stato. Premi / per cercare."
+
+msgid "%(shown)s of %(total)s plugins"
+msgstr "%(shown)s di %(total)s plugin"
+
+msgid "Search plugins..."
+msgstr "Cerca plugin..."
+
+msgid "Search plugins"
+msgstr "Cerca plugin"
+
+msgid "All statuses"
+msgstr "Tutti gli stati"
+
+msgid "Update available"
+msgstr "Aggiornamento disponibile"
+
+msgid "All sections"
+msgstr "Tutte le sezioni"
+
+msgid "No plugin matches your search."
+msgstr "Nessun plugin corrisponde alla ricerca."
+
+msgid "Section"
+msgstr "Sezione"
 
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"

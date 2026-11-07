@@ -1808,11 +1808,7 @@ msgstr ""
 msgid "Available Variables"
 msgstr ""
 
-msgid ""
-"Available and installed plugins. Open a plugin to install or update it "
-"and to follow the output of the operation. Microblogging and Forum each "
-"include a server and a client, which you install and update independently"
-" from the plugin page."
+msgid "Install, update and remove the components of YSocial: platforms, agent plugins and system plugins. Search by name or description, filter by status, and open a plugin to choose its source and follow the output of the operation."
 msgstr ""
 
 msgid "Available emotions"
@@ -5763,9 +5759,7 @@ msgstr ""
 msgid "Forum participant"
 msgstr ""
 
-msgid ""
-"Forum simulator (threads and replies). Server and client are installed "
-"and updated independently from its page."
+msgid "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
 msgstr ""
 
 msgid "Forum topic creation likelihood"
@@ -6157,9 +6151,7 @@ msgid ""
 "backup file(s)."
 msgstr ""
 
-msgid ""
-"HPC microblogging experiments are unavailable because YSimulator is not "
-"present."
+msgid "HPC microblogging experiments are unavailable because YMicroblogging is not present."
 msgstr ""
 
 msgid "HPC prompts updated successfully!"
@@ -7988,14 +7980,10 @@ msgstr ""
 msgid "Microblogging (i.e., X/BlueSky)"
 msgstr ""
 
-msgid ""
-"Microblogging experiments are unavailable because neither YServer/YClient"
-" nor YSimulator is present."
+msgid "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
 msgstr ""
 
-msgid ""
-"Microblogging simulator (timeline, posts, follows). Server and client are"
-" installed and updated independently from its page."
+msgid "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
 msgstr ""
 
 msgid "Migration"
@@ -11467,7 +11455,7 @@ msgstr ""
 msgid "Running: stop it first."
 msgstr ""
 
-msgid "Runs large-scale simulations in a distributed way on HPC clusters."
+msgid "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters."
 msgstr ""
 
 msgid "Runs the agents of a forum simulation (client side)."
@@ -16689,3 +16677,37 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
+
+
+msgid "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters."
+msgstr ""
+
+msgid "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them."
+msgstr ""
+
+msgid "Words must all match. Use \"quotes\" for an exact phrase, -word to exclude a word, and is:installed, is:missing, is:partial, is:update, is:enabled or is:disabled to filter by status. Press / to search."
+msgstr ""
+
+msgid "%(shown)s of %(total)s plugins"
+msgstr ""
+
+msgid "Search plugins..."
+msgstr ""
+
+msgid "Search plugins"
+msgstr ""
+
+msgid "All statuses"
+msgstr ""
+
+msgid "Update available"
+msgstr ""
+
+msgid "All sections"
+msgstr ""
+
+msgid "No plugin matches your search."
+msgstr ""
+
+msgid "Section"
+msgstr ""

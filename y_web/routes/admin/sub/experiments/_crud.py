@@ -2228,7 +2228,7 @@ def create_experiment():
                 else:
                     flash(
                         _(
-                            "HPC microblogging experiments are unavailable because YSimulator is not present."
+                            "HPC microblogging experiments are unavailable because YMicroblogging is not present."
                         ),
                         "error",
                     )
@@ -2240,7 +2240,7 @@ def create_experiment():
                 else:
                     flash(
                         _(
-                            "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."
+                            "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
                         ),
                         "error",
                     )

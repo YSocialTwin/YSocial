@@ -165,7 +165,7 @@
     "visible_to_usernames": [],
     "trust": "official",
     "source": "builtin",
-    "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
+    "description": "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters.",
     "authors": [],
     "min_ysocial_version": null
   },
