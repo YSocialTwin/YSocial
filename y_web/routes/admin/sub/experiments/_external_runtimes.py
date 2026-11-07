@@ -487,6 +487,24 @@ def external_runtime_detail(entry_key: str):
         releases = repos[0]["available_releases"]
     else:
         releases = []
+    from y_web.src.external_runtime.readme_banner import find_banner
+
+    banners = []
+    for repo in repos:
+        found = find_banner(repo["path"]) if repo.get("installed") else None
+        banners.append(
+            {
+                "label": repo["label"],
+                "repo_url": (repo.get("repo_url") or "").removesuffix(".git"),
+                "github_repo": repo.get("github_repo") or "",
+                "image_url": (
+                    url_for("experiments.external_runtime_banner", repo_key=repo["key"])
+                    if found
+                    else ""
+                ),
+                "alt": repo["label"],
+            }
+        )
     logs = []
     for key in member_keys:
         logs.extend(read_external_runtime_logs(limit=30, repo_key=key))
@@ -495,6 +513,7 @@ def external_runtime_detail(entry_key: str):
     return render_template(
         "admin/external_runtime_detail.html",
         entry=entry,
+        banners=banners,
         common_branches=common_branches,
         default_branch=default_branch,
         releases=releases,
@@ -509,6 +528,33 @@ def external_runtime_detail(entry_key: str):
         current_python_executable=resolve_python_executable(),
         host_git_available=host_git_available(),
     )
+
+
+@experiments.route("/admin/external_runtimes/<repo_key>/banner")
+@login_required
+def external_runtime_banner(repo_key: str):
+    """The header image of the README of an installed plugin (nothing in the address chooses the file)."""
+    from flask import abort, send_file
+
+    from y_web.src.external_runtime.readme_banner import find_banner
+
+    admin_user = _require_admin_user()
+    if admin_user is None:
+        abort(403)
+    try:
+        spec = runtime_spec(repo_key)
+    except KeyError:
+        abort(404)
+    if not runtime_visible_to_user(spec, admin_user):
+        abort(403)
+    found = find_banner(spec.path)
+    if found is None:
+        abort(404)
+    response = send_file(found[0], max_age=300)
+    # an SVG of a plugin must not run anything, even if it is opened on its own
+    response.headers["Content-Security-Policy"] = "sandbox; default-src 'none'; style-src 'unsafe-inline'"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @experiments.route("/admin/external_runtimes/github_session", methods=["POST"])
