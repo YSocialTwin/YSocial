@@ -234,9 +234,20 @@ def _slugify(value: str) -> str:
     return slug or "group"
 
 
+# Built-in plugins that YSocial names itself: the name and the description of the spec are shown even when the
+# installed repository still carries the old ones in its meta/info.json (YSimulator is presented as YMicroblogging).
+_NAMED_BY_YSOCIAL = frozenset({"hpc_simulator"})
+
+
 def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
     repo = dict(repo)
     plugin_metadata = plugin_metadata_for_runtime(spec, plugins_index)
+    if plugin_metadata and spec.key in _NAMED_BY_YSOCIAL:
+        plugin_metadata = {
+            **plugin_metadata,
+            "plugin_name": spec.label,
+            "description": spec.description or plugin_metadata.get("description"),
+        }
     if plugin_metadata:
         repo["label"] = plugin_metadata.get("plugin_name") or repo["label"]
         repo["plugin_metadata"] = plugin_metadata

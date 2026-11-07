@@ -381,3 +381,30 @@ def test_the_hpc_simulator_is_called_ymicroblogging():
     spec = SUPPORTED_EXTERNAL_REPOS["hpc_simulator"]
     assert spec.label == "YMicroblogging" and spec.path.name == "YSimulator"
     assert "microblogging" in spec.description.lower()
+
+
+def test_the_name_chosen_by_ysocial_wins_over_the_installed_plugin_info():
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+    from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+
+    spec = SUPPORTED_EXTERNAL_REPOS["hpc_simulator"]
+    index = [
+        {
+            "plugin_name": "YSimulator",
+            "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
+            "category": "Simulation Runtime Stack",
+            "group": "HPC",
+            "authors": [],
+            "repository_url": "https://github.com/YSocialTwin/YSimulator",
+        }
+    ]
+    repo = {
+        "key": spec.key,
+        "label": spec.label,
+        "category_label": "",
+        "group_label": "",
+        "repo_url": spec.repo_url,
+    }
+    out = route_mod._decorate_repo(repo, spec, index)
+    assert out["label"] == "YMicroblogging" and out["plugin_name"] == "YMicroblogging"
+    assert out["plugin_description"] == spec.description
