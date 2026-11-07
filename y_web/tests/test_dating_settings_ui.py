@@ -292,7 +292,15 @@ def test_an_extended_forum_client_runs_the_days_it_lacks(app, tmp_path):
     from y_web.src.models import Client, Client_Execution
 
     path = tmp_path / "client_dsd.json"
-    path.write_text(json.dumps({"num_days": 1, "num_slots_per_day": 24}))
+    path.write_text(
+        json.dumps(
+            {
+                "num_days": 1,
+                "num_slots_per_day": 24,
+                "simulation": {"name": "x", "days": 4, "num_days": 4},
+            }
+        )
+    )
     with app.app_context():
         cli = Client(name="dsd", id_exp=1, population_id=1, days=4, status=0)
         db.session.add(cli)
@@ -303,7 +311,9 @@ def test_an_extended_forum_client_runs_the_days_it_lacks(app, tmp_path):
         db.session.commit()
 
         _set_dating_run_length(str(path), cli, unlimited_value=0)
-        assert json.loads(path.read_text())["num_days"] == 3  # one of four already run
+        written = json.loads(path.read_text())
+        assert written["num_days"] == 3  # one of four already run
+        assert written["simulation"] == {"name": "x"}  # keys the forum schema rejects
 
         cli.days = -1  # until stopped: YForum reads 0 so
         db.session.commit()
@@ -323,6 +333,16 @@ def test_extending_a_completed_client_reopens_it():
     assert ex.terminal_state == "paused"
     ex.terminal_state = "completed"
     assert _reopen_completed_execution(ex, -1)
+
+
+def test_extension_adds_no_duration_keys_to_a_forum_client_file():
+    from y_web.routes.admin.sub.clients._execution import (
+        _sync_duration_fields_in_client_config,
+    )
+
+    cfg = {"num_days": 1, "simulation": {"name": "x"}}
+    out = _sync_duration_fields_in_client_config(cfg, 4, "forum")
+    assert out["simulation"] == {"name": "x"}
 
 
 def test_advanced_parameters_sit_in_a_closed_panel():

@@ -464,7 +464,12 @@ def _set_dating_run_length(
         )
     if days == -1:
         days = unlimited_value  # YForum reads 0 as "until stopped"
-    if config.get("num_days") != days:
+    stale = False
+    if unlimited_value == 0 and isinstance(config.get("simulation"), dict):
+        # forum schema is strict: drop the duration keys an older extension wrote under "simulation"
+        for key in ("days", "num_days"):
+            stale = config["simulation"].pop(key, None) is not None or stale
+    if stale or config.get("num_days") != days:
         with open(client_config_path, "w", encoding="utf-8") as handle:
             json.dump(dcc.set_duration(config, days), handle, indent=2)
 

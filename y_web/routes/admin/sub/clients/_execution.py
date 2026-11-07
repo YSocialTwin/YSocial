@@ -32,13 +32,19 @@ from y_web.src.system.path_utils import get_resource_path
 from ._blueprint import clientsr
 
 
-def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
-    """Keep all duration fields in a client config aligned with the new total."""
+def _sync_duration_fields_in_client_config(
+    config: dict, days: int, platform_type: str = ""
+) -> dict:
+    """Keep all duration fields in a client config aligned with the new total.
+
+    A forum client file is validated against a strict schema: it has no ``simulation.days`` / ``num_days`` (its
+    run length is the top-level ``num_days``, written at every start), so they are never added there.
+    """
     updated = dict(config)
     duration_value = int(days)
     max_ticks_value = None if duration_value == -1 else duration_value * 24
     simulation = updated.get("simulation")
-    if isinstance(simulation, dict):
+    if isinstance(simulation, dict) and platform_type != "forum":
         simulation["days"] = duration_value
         simulation["num_days"] = duration_value
 
@@ -271,7 +277,9 @@ def extend_simulation(id_client):
                         config = json.load(f)
 
                     # Keep every duration field aligned with the new total value.
-                    config = _sync_duration_fields_in_client_config(config, client.days)
+                    config = _sync_duration_fields_in_client_config(
+                        config, client.days, exp.platform_type
+                    )
 
                     if "simulation" in config:
 
