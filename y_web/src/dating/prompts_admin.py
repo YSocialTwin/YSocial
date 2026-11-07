@@ -105,7 +105,9 @@ GROUPS: List[Tuple[str, str, str, List[str]]] = [
     (
         "dates",
         N_("After a date"),
-        N_("What the model reads when it decides after a date and how a date is remembered."),
+        N_(
+            "What the model reads when it decides after a date and how a date is remembered."
+        ),
         [
             "after_date_decision",
             "closing_message",

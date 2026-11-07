@@ -98,7 +98,9 @@ LABELS: Dict[str, str] = {
     "conversation.max_message_chars": N_("Length asked of a message (characters)"),
     "conversation.date_proposal_probability": N_("Probability of proposing a date"),
     "conversation.date_accept_base": N_("Base probability of accepting a date"),
-    "conversation.repetition_threshold": N_("Similarity that counts as a repeated reply"),
+    "conversation.repetition_threshold": N_(
+        "Similarity that counts as a repeated reply"
+    ),
     "conversation.repetition_window": N_("Recent messages compared with a reply"),
     "federation.enabled": N_("Join a federation"),
     # client: profile generation

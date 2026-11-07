@@ -146,8 +146,12 @@ def test_saving_writes_distributions_and_im_opinion_keys(im_app, monkeypatch, tm
     )
 
     with app.app_context():
-        if db.session.query(OpinionGroup).first() is None:  # a database without the seeded groups
-            db.session.add(OpinionGroup(name="neutral", lower_bound=0.0, upper_bound=1.0))
+        if (
+            db.session.query(OpinionGroup).first() is None
+        ):  # a database without the seeded groups
+            db.session.add(
+                OpinionGroup(name="neutral", lower_bound=0.0, upper_bound=1.0)
+            )
         topic = Topic_List(name="politics")
         db.session.add(topic)
         db.session.flush()
