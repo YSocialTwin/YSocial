@@ -2620,6 +2620,8 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     )  # Changed default from vllm to ollama for HPC
 
     llm = request.form.get("llm")
+    # key of the main model (hosted providers such as OpenAI or DeepSeek need one); "NULL" means none
+    llm_api_key = (form_data.get("llm_api_key") or "").strip() or "NULL"
     llm_v = form_data.get("llm_v", "http://127.0.0.1:11434/v1")
     llm_v_agent = form_data.get("llm_v_agent", "minicpm-v:latest")
     llm_v_temperature = form_data.get("llm_v_temperature", "0.5")
@@ -2700,7 +2702,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "port": 11434,
             "model": form_data.get("user_type", "llama3.2"),
             "temperature": float(form_data.get("llm_temperature", "0.7")),
-            "llm_api_key": "NULL",
+            "llm_api_key": llm_api_key,
             "llm_max_tokens": -1,
             "api_format": "auto",
             "batching_policy": "auto",

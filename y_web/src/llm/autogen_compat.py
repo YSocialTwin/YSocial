@@ -95,6 +95,8 @@ def _looks_like_ollama(cfg: _NormalizedLLMConfig) -> bool:
             (cfg.api_key or "").upper() in {"", "NULL", "EMPTY"}
             and bool(cfg.model)
             and ":" in str(cfg.model)
+            # "provider/model:free" style names on a hosted https endpoint are not Ollama tags
+            and parsed.scheme != "https"
         )
     )
 
@@ -118,6 +120,11 @@ def _build_chat_model(llm_config: dict | None):
             kwargs["temperature"] = cfg.temperature
         if cfg.max_tokens is not None:
             kwargs["num_predict"] = cfg.max_tokens
+        if (cfg.api_key or "").upper() not in {"", "NULL", "EMPTY"}:
+            # authenticated Ollama endpoints (e.g. hosted ones) expect the key as a bearer token
+            kwargs["client_kwargs"] = {
+                "headers": {"Authorization": f"Bearer {cfg.api_key}"}
+            }
         return ChatOllama(**kwargs)
 
     try:

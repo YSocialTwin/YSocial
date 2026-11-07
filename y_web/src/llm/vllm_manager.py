@@ -42,6 +42,53 @@ def llm_auth_headers(api_key=None):
     return {"Authorization": f"Bearer {key}"}
 
 
+def _same_endpoint(a, b):
+    return (
+        str(a or "").strip().rstrip("/").lower()
+        == str(b or "").strip().rstrip("/").lower()
+    )
+
+
+def _ambient_api_key(llm_url):
+    """The key to use for *llm_url* when the caller did not pass one (``None``), or ``None``.
+
+    Admin pages list the models of the default server without knowing which key it needs. The key comes from the
+    ``LLM_API_KEY`` environment variable (the companion of ``LLM_URL``) or, inside a request, from the logged-in
+    administrator's own LLM configuration when that configuration points at the same server. A key is never
+    guessed for another server.
+    """
+    import os
+
+    env_key = (os.getenv("LLM_API_KEY") or "").strip()
+    if env_key and env_key.upper() not in _NO_API_KEY:
+        return env_key
+    try:
+        from flask import has_request_context
+        from flask_login import current_user
+        from sqlalchemy import select
+
+        if not has_request_context() or not getattr(
+            current_user, "is_authenticated", False
+        ):
+            return None
+        from y_web import db
+        from y_web.src.models import Admin_users
+
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username=current_user.username)
+        ).first()
+        key = str(getattr(user, "llm_api_key", "") or "").strip()
+        if (
+            key
+            and key.upper() not in _NO_API_KEY
+            and _same_endpoint(getattr(user, "llm_url", ""), llm_url)
+        ):
+            return key
+    except Exception:  # noqa: BLE001 - a listing must never fail because of this lookup
+        return None
+    return None
+
+
 def is_vllm_installed():
     """Check if a supported embedded vLLM runtime is installed in the current environment."""
     for module_name in ("vllm", "vllm_mlx", "vllm_metal"):
@@ -149,8 +196,10 @@ def get_llm_models(llm_url=None, api_key=None, raise_on_auth_error=False):
     Args:
         llm_url: Base URL of the LLM server (e.g., 'http://localhost:8000/v1').
                  If None, uses LLM_URL from environment or falls back to ollama.
-        api_key: API key sent as ``Authorization: Bearer <key>``; None or "NULL"
-                 sends no header (local Ollama and vLLM need none).
+        api_key: API key sent as ``Authorization: Bearer <key>``; "NULL" or "" sends
+                 no header (local Ollama and vLLM need none). None means "the key
+                 configured for this server, if any" (``LLM_API_KEY`` or the logged-in
+                 administrator's own configuration for the same URL).
         raise_on_auth_error: when the server answers 401 or 403, raise
                  LLMAuthenticationError instead of returning an empty list.
 
@@ -168,6 +217,9 @@ def get_llm_models(llm_url=None, api_key=None, raise_on_auth_error=False):
                 llm_url = "http://127.0.0.1:8000/v1"
             else:
                 llm_url = "http://127.0.0.1:11434/v1"
+
+    if api_key is None:
+        api_key = _ambient_api_key(llm_url)
 
     def _candidate_model_endpoints(raw_url):
         base_url = str(raw_url or "").rstrip("/")

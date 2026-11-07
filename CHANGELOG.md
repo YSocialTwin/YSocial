@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- HPC (YMicroblogging) clients: the *API Key* of the main model typed in the creation form was dropped (`"NULL"` was always written); it is now written to the client configuration, so hosted providers (OpenAI, DeepSeek, ...) work.
+- Model lists of the admin pages (users, populations, client details, agents, pages): they were requested without credentials and came back empty for a default server that needs a key. `get_llm_models()` now uses `LLM_API_KEY` or, for the same server, the logged-in administrator's own key; an explicit key (or an explicit empty one) is still taken as given.
+- Hosted https endpoints with a model name that contains a colon (`vendor/model:free`) and no key are no longer taken for Ollama, and an Ollama endpoint that needs a key (hosted ones) receives it as a bearer token.
 - Documentation of the backend plugin hooks lists all five (`staff_experiment_access` and `experiment_page_widget`
   were missing).
 - Italian: "turno passato" now follows the glossary ("round passato").

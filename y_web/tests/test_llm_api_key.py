@@ -270,3 +270,39 @@ def test_local_models_still_work_without_a_key(local_server, key, suffix):
         "llama3.2:latest"
     ]
     assert received and all(header is None for _, header in received)
+
+
+def test_the_default_server_key_comes_from_the_environment(server, monkeypatch):
+    """Admin pages list the models of the default server without passing a key."""
+    monkeypatch.setenv("LLM_API_KEY", "sk-test")
+    assert get_llm_models("https://api.example.com/v1") == ["deepseek-chat", "m2"]
+    assert server.calls[0][1] == {"Authorization": "Bearer sk-test"}
+
+
+def test_an_explicit_empty_key_never_falls_back_to_the_ambient_one(server, monkeypatch):
+    monkeypatch.setenv("LLM_API_KEY", "sk-test")
+    assert get_llm_models("https://api.example.com/v1", api_key="") == []
+    assert server.calls[0][1] == {}
+
+
+def test_the_key_of_the_logged_in_admin_is_used_only_for_the_same_server(
+    app, monkeypatch
+):
+    import flask_login
+
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    admin_user_id(app, key="sk-test")
+    with app.app_context():
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username="admin")
+        ).first()
+        user.llm_url = "https://api.example.com/v1/"
+        db.session.commit()
+    monkeypatch.setattr(
+        flask_login,
+        "current_user",
+        SimpleNamespace(is_authenticated=True, username="admin"),
+    )
+    with app.test_request_context():
+        assert vllm_manager._ambient_api_key("https://api.example.com/v1") == "sk-test"
+        assert vllm_manager._ambient_api_key("https://other.example.org/v1") is None
