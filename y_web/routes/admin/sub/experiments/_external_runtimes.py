@@ -563,7 +563,9 @@ def external_runtime_banner(repo_key: str):
         response = current_app.response_class(remote[0], mimetype=remote[1])
         response.headers["Cache-Control"] = "private, max-age=300"
     # an SVG of a plugin must not run anything, even if it is opened on its own
-    response.headers["Content-Security-Policy"] = "sandbox; default-src 'none'; style-src 'unsafe-inline'"
+    response.headers["Content-Security-Policy"] = (
+        "sandbox; default-src 'none'; style-src 'unsafe-inline'"
+    )
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 

@@ -359,7 +359,10 @@ def test_the_plugin_list_is_split_in_the_four_sections():
 
 def test_the_plugin_list_has_search_and_filters_and_names_the_legacy_ones_flask():
     page = (
-        Path(__file__).resolve().parents[1] / "templates" / "admin" / "external_runtimes.html"
+        Path(__file__).resolve().parents[1]
+        / "templates"
+        / "admin"
+        / "external_runtimes.html"
     ).read_text(encoding="utf-8")
     for hook in (
         'id="ext-q"',
