@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
+
 from y_web import db
 from y_web.src.federation import health, schedule_monitor, schedule_queue, service
 from y_web.src.models.admin import Federation, FederationScheduleQueue

@@ -141,12 +141,14 @@ def test_absent_plugin_leaves_startup_and_routes_untouched(tmp_path, monkeypatch
         from pathlib import Path
 
         seed = Path(__file__).resolve().parents[1] / "db" / "dashboard.db"
-        with sqlite3.connect(f"file:{seed}?mode=ro", uri=True) as seed_conn:
-            seeded = {
-                r[0]
-                for r in seed_conn.execute(
-                    "SELECT name FROM sqlite_master WHERE name LIKE 'tm\\_%' ESCAPE '\\'"
-                )
-            }
+        seeded = set()
+        if seed.exists():  # the seed dashboard.db is git-ignored: absent in a clean checkout
+            with sqlite3.connect(f"file:{seed}?mode=ro", uri=True) as seed_conn:
+                seeded = {
+                    r[0]
+                    for r in seed_conn.execute(
+                        "SELECT name FROM sqlite_master WHERE name LIKE 'tm\\_%' ESCAPE '\\'"
+                    )
+                }
         assert {n for n in names if n.startswith("tm_")} == seeded
     assert app.test_client().get("/admin/training/health").status_code in (302, 404)

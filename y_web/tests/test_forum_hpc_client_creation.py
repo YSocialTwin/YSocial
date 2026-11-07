@@ -28,6 +28,14 @@ def _yforum():
     return validate, load_population
 
 
+def _needs_flask_forum_pair():
+    """The standard forum is served by the YServerReddit / YClientReddit pair: without them (a clean checkout)
+    its experiment database cannot be created."""
+    root = Path(__file__).resolve().parents[2] / "external"
+    if not (root / "YServerReddit").is_dir() or not (root / "YClientReddit").is_dir():
+        pytest.skip("YServerReddit / YClientReddit are not installed")
+
+
 def _pin_paths(monkeypatch, tmp_path):
     module = importlib.import_module("y_web.routes.admin.sub.clients._forum_hpc")
     monkeypatch.setattr(module, "get_writable_path", lambda *a: str(tmp_path))
@@ -367,6 +375,7 @@ def test_bad_settings_and_duplicates_leave_nothing_behind(monkeypatch, tmp_path)
 
 @pytest.mark.integration
 def test_a_non_forum_hpc_experiment_is_refused(monkeypatch, tmp_path):
+    _needs_flask_forum_pair()
     _availability(monkeypatch, forum_hpc=True, forum=True)
     app, http = _app_and_client(monkeypatch, tmp_path)
     _pin_paths(monkeypatch, tmp_path)

@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
+
 from y_web.src.federation import options_schema as schema
 from y_web.src.federation import service
 from y_web.tests.test_federation_service import world  # noqa: F401  (fixture)

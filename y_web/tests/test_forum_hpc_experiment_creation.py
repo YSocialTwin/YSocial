@@ -70,6 +70,14 @@ def _app_and_client(monkeypatch, tmp_path):
     return app, app.test_client()
 
 
+def _needs_flask_forum_pair():
+    """The standard forum is served by the YServerReddit / YClientReddit pair: without them (a clean checkout)
+    its experiment database cannot be created."""
+    root = Path(__file__).resolve().parents[2] / "external"
+    if not (root / "YServerReddit").is_dir() or not (root / "YClientReddit").is_dir():
+        pytest.skip("YServerReddit / YClientReddit are not installed")
+
+
 FORM = {
     "exp_name": "forum on yforum",
     "exp_descr": "d",
@@ -150,6 +158,7 @@ def test_a_forum_hpc_experiment_needs_yforum(monkeypatch, tmp_path):
 
 @pytest.mark.integration
 def test_the_standard_forum_is_not_changed(monkeypatch, tmp_path):
+    _needs_flask_forum_pair()
     """Without the HPC switch the forum still goes to the Flask pair (and keeps its forced-off switches)."""
     from y_web import db
     from y_web.src.models import Exps

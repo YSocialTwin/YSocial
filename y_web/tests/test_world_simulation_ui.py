@@ -8,6 +8,8 @@ import pytest
 from babel.messages.pofile import read_po
 from jinja2 import FileSystemLoader
 
+pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
+
 from y_web.tests.test_federation_service import world  # noqa: F401  (fixture)
 
 Y_WEB = Path(__file__).resolve().parents[1]

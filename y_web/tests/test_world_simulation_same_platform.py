@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
+
 from y_web.src.federation import service
 from y_web.src.federation.service import (
     MemberInfo,
