@@ -492,7 +492,8 @@ def external_runtime_detail(entry_key: str):
     banners = []
     for repo in repos:
         # an installed plugin gives its own file; one that is not installed is asked to GitHub when the image is opened
-        found = True if not Path(repo["path"]).exists() else find_banner(repo["path"])
+        path = repo.get("path")
+        found = True if not path or not Path(path).exists() else find_banner(path)
         banners.append(
             {
                 "label": repo["label"],
