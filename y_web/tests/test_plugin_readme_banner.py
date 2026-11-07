@@ -79,7 +79,9 @@ def test_a_plugin_that_is_not_installed_gets_its_image_from_github(monkeypatch):
     def fake_get(url, headers=None, timeout=None):
         calls.append(url)
         if url.endswith("/readme"):
-            return _Resp(text='<img src="https://x/y.png"><img src="docs/banner.png" alt="Banner">')
+            return _Resp(
+                text='<img src="https://x/y.png"><img src="docs/banner.png" alt="Banner">'
+            )
         return _Resp(content=b"\x89PNG")
 
     monkeypatch.setattr(requests, "get", fake_get)
