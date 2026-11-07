@@ -685,6 +685,14 @@ def _get_admin_llm_settings(username: str) -> tuple[str, str]:
     return model, llm_url
 
 
+def _get_admin_llm_api_key(username: str) -> str:
+    """API key stored for the current dashboard user ("" when none)."""
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=username)
+    ).first()
+    return (getattr(admin_user, "llm_api_key", "") or "").strip()
+
+
 def _llm_backend_configured(llm_url: str) -> bool:
     if llm_url:
         return True
@@ -729,7 +737,11 @@ def api_enrich_article(exp_id: int, article_id: int):
 
     model, llm_url = _get_admin_llm_settings(getattr(current_user, "username", ""))
     cfg = (
-        UrlSummarizer.build_config(model=model, base_url=llm_url or None)
+        UrlSummarizer.build_config(
+            model=model,
+            base_url=llm_url or None,
+            api_key=_get_admin_llm_api_key(getattr(current_user, "username", "")),
+        )
         if UrlSummarizer is not None
         else None
     )
@@ -835,7 +847,11 @@ def api_enrich_image(exp_id: int, image_id: int):
     try:
         # Vision model is fixed in the current UI stack.
         llm_v = "minicpm-v"
-        annotator = Annotator(llm_v, llm_url=llm_url or None)
+        annotator = Annotator(
+            llm_v,
+            llm_url=llm_url or None,
+            llm_api_key=_get_admin_llm_api_key(getattr(current_user, "username", "")),
+        )
         descr = annotator.annotate(ref)
     except Exception as exc:
         return _json_success(
@@ -885,7 +901,11 @@ def api_enrich_pending(exp_id: int):
 
     model, llm_url = _get_admin_llm_settings(getattr(current_user, "username", ""))
     cfg = (
-        UrlSummarizer.build_config(model=model, base_url=llm_url or None)
+        UrlSummarizer.build_config(
+            model=model,
+            base_url=llm_url or None,
+            api_key=_get_admin_llm_api_key(getattr(current_user, "username", "")),
+        )
         if UrlSummarizer is not None
         else None
     )
@@ -899,7 +919,13 @@ def api_enrich_pending(exp_id: int):
     annotator = None
     if vision_enabled and Annotator is not None:
         try:
-            annotator = Annotator("minicpm-v", llm_url=llm_url or None)
+            annotator = Annotator(
+                "minicpm-v",
+                llm_url=llm_url or None,
+                llm_api_key=_get_admin_llm_api_key(
+                    getattr(current_user, "username", "")
+                ),
+            )
         except Exception:
             annotator = None
 

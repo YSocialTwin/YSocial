@@ -29,6 +29,7 @@ class Admin_users(UserMixin, db.Model):
     role = db.Column(db.String(10), nullable=False)
     llm = db.Column(db.String(50), default="")
     llm_url = db.Column(db.String(200), default="")
+    llm_api_key = db.Column(db.String(300), default="")
     profile_pic = db.Column(db.String(400), default="")
     perspective_api = db.Column(db.String(300), default=None)
     telemetry_enabled = db.Column(db.Boolean, default=True)

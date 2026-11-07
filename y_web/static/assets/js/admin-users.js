@@ -129,9 +129,9 @@ var AdminUsers = (function() {
         }
         statusDiv.innerHTML = '<span style="color: #4a90e2;">' + YI18n.t('Fetching models...') + '</span>';
 
-        fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
+        fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl), {headers: YLLM.apiKeyHeaders(urlInput)})
             .then(function(response) {
-                if (!response.ok) throw new Error(YI18n.t('Network response was not ok'));
+                // an HTTP error still carries a JSON body with the reason (401: wrong API key)
                 return response.json();
             })
             .then(function(data) {
@@ -172,9 +172,13 @@ var AdminUsers = (function() {
         }
         statusDiv.innerHTML = '<span style="color: #4a90e2;">' + YI18n.t('Fetching models...') + '</span>';
 
-        fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
+        // with the key field empty the server uses the key stored for this user
+        var userIdInput = urlInput.closest('form').querySelector('[name="user_id"]');
+        var userQuery = userIdInput ? '&user_id=' + encodeURIComponent(userIdInput.value) : '';
+
+        fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl) + userQuery, {headers: YLLM.apiKeyHeaders(urlInput)})
             .then(function(response) {
-                if (!response.ok) throw new Error(YI18n.t('Network response was not ok'));
+                // an HTTP error still carries a JSON body with the reason (401: wrong API key)
                 return response.json();
             })
             .then(function(data) {

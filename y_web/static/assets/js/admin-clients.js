@@ -321,7 +321,7 @@ var AdminClients = (function() {
     
       status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
-      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`, {headers: YLLM.apiKeyHeaders(urlInput)})
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -368,7 +368,7 @@ var AdminClients = (function() {
     
       status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Validating...');
     
-      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
+      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`, {headers: YLLM.apiKeyHeaders(llmVUrlInput)})
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -843,7 +843,7 @@ var AdminClients = (function() {
     
       status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
-      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`, {headers: YLLM.apiKeyHeaders(urlInput)})
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -890,7 +890,7 @@ var AdminClients = (function() {
     
       status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Validating...');
     
-      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
+      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`, {headers: YLLM.apiKeyHeaders(llmVUrlInput)})
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -1467,7 +1467,7 @@ var AdminClients = (function() {
     
       status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
-      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`, {headers: YLLM.apiKeyHeaders(urlInput)})
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -1548,7 +1548,7 @@ var AdminClients = (function() {
     
       status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
-      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
+      fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`, {headers: YLLM.apiKeyHeaders(llmVUrlInput)})
           .then(response => response.json())
           .then(data => {
               if (data.error) {

@@ -77,6 +77,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forum client details: the content recommender selection is preselected also for uncategorized entries
   (the template compared it with the friendship recommender).
 
+### Fixed
+
+- **LLM servers that need an API key (OpenAI, DeepSeek, ...)**: "Fetch Models" sent the
+  request without credentials and failed with HTTP 401. The key typed in the form
+  (client forms, vision model, ad hoc clients, add/edit user) is now sent as an
+  `Authorization: Bearer` header by the server, and travels from the browser in a
+  header, never in the URL. A refused key is reported as such instead of "could not
+  connect", and a 401/403 no longer marks the server as unreachable.
+
+### Added
+
+- **API Key field in the user LLM configuration** (Update LLM Configuration and Add User; Add User now also saves the Custom LLM URL it already showed).
+  The key is stored in the new `admin_users.llm_api_key` column (added automatically at
+  start-up), is never written back into the page (an empty field keeps it, a checkbox removes
+  it) and is used by the annotations, image descriptions, link summaries and interviews that
+  run on the user's LLM. "Fetch Models" uses the stored key when the field is empty.
+
+
 ## [4.0.0] - 2026-10-23
 
 YSocial 4.0.0 turns the web application into an installable product: a Python

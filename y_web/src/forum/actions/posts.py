@@ -454,10 +454,12 @@ def create_post_reddit(
     ).first()
     llm = "llama3.2:latest"
     llm_url = None
+    llm_api_key = None
     if admin_user:
         if getattr(admin_user, "llm", None):
             llm = admin_user.llm
         llm_url = getattr(admin_user, "llm_url", None) or None
+        llm_api_key = getattr(admin_user, "llm_api_key", None) or None
 
     try:
         if normalized_url:
@@ -505,6 +507,7 @@ def create_post_reddit(
                             image_annotator = Annotator(
                                 llm_v,
                                 llm_url=llm_url,
+                                llm_api_key=llm_api_key,
                                 language=prompt_packs.experiment_language(
                                     getattr(g, "current_exp_id", None)
                                 ),
@@ -611,6 +614,7 @@ def create_post_reddit(
             annotator = ContentAnnotator(
                 llm=llm,
                 llm_url=llm_url,
+                llm_api_key=llm_api_key,
                 language=prompt_packs.experiment_language(
                     getattr(g, "current_exp_id", None)
                 ),
