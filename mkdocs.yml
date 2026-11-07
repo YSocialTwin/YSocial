@@ -9,11 +9,6 @@ use_directory_urls: true
 nav:
   - Overview: index.md
   - Features: features.md
-  - Instant Messaging: instant-messaging.md
-  - Dating: dating.md
-  - World Simulation explained: world-simulation-overview.md
-  - World Simulation: world-simulation.md
-  - World Simulation pilot: world-simulation-pilot.md
   - Getting Started:
       - Installation Modalities: installation.md
       - Desktop Installer and Launcher: launcher.md
@@ -21,7 +16,6 @@ nav:
   - Configuration:
       - Configuration Layers: configuration.md
       - Parameters Reference: reference/parameters.md
-      - World Simulation Parameters: reference/world-simulation-configuration.md
       - Runtime Layout: project-structure.md
   - Reference:
       - CLI Reference: reference/cli.md
@@ -49,3 +43,12 @@ markdown_extensions:
   - toc:
       permalink: true
       toc_depth: "2-2"
+
+# Pages of optional plugins that are not publicly released yet
+exclude_docs: |
+  instant-messaging.md
+  dating.md
+  dating-analytics-mapping.md
+  im-analytics-mapping.md
+  world-simulation*.md
+  reference/world-simulation-configuration.md

@@ -32,9 +32,7 @@ Typical tasks:
 
 ## Platforms
 
-Microblogging, forum, photo sharing and, with the YInstantMessaging runtime installed, instant messaging (see
-[Instant messaging experiments](instant-messaging.md), including how people can take part in a run) and, with the
-YDating runtime installed, dating (see [Dating experiments](dating.md)).
+Microblogging, forum and photo sharing. Further platform runtimes can be installed from the Plugins page when available.
 
 ## Core feature areas
 
