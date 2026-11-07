@@ -213,11 +213,17 @@ for spec in "${SPECS[@]}"; do
   fi
   echo "== $name  ($dir/$paths${markers:+  -m \"$markers\"})"
   if [ "$name" = "YSocial" ]; then
+    # the tests CI deselects because they depend on the order of the batch (they pass alone): same list here,
+    # unless --full asks for everything
+    DESELECT=()
+    if [ "$FULL" != 1 ] && [ -f "$ROOT/.github/workflows/ci-tests.yml" ]; then
+      while IFS= read -r d; do DESELECT+=(--deselect "$d"); done < <(sed -n 's/^ *--deselect \([^ ]*\).*/\1/p' "$ROOT/.github/workflows/ci-tests.yml")
+    fi
     i=0
     while IFS= read -r files; do
       i=$((i+1))
       # shellcheck disable=SC2086
-      run_pytest "YSocial__b$i" "$dir" "$py" "$markers" $files
+      run_pytest "YSocial__b$i" "$dir" "$py" "$markers" $files ${DESELECT[@]+"${DESELECT[@]}"}
       printf '   batch %s: exit %s\n' "$i" "$?"
     done < <(split_batches "$paths" "$BATCHES")
   else
