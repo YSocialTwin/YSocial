@@ -56,7 +56,7 @@ done
 # name | directory (relative to the root) | test paths | CI marker expression | extra marker expression with --full
 # | requirement files / pip arguments for --install (space separated; "-e ." installs the repository)
 SPECS=(
-  "YSocial|.|y_web/tests||not external_repo_never_selects_nothing|requirements.txt"
+  "YSocial|.|y_web/tests|||requirements.txt"
   "YSocial-plugin-registry|.|plugin-registry/tests|||requirements.txt"
   "YForum|external/YForum|tests|unit or integration||-r requirements-dev.txt"
   "YDating|external/YDating|YDating/tests|not integration and not llm|not llm|-r requirements-dev.txt"
@@ -70,7 +70,7 @@ SPECS=(
   "YFederation|external/YFederation|tests|||-e ."
   "y_agents_plugins|external/y_agents_plugins|tests|||-e . -r requirements.txt"
   "y_memory_subsystem|external/y_memory_subsystem|tests|||-e ."
-  "reactive_agents|external/reactive_agents|tests|||-r requirements.txt"
+  "reactive_agents|.|external/reactive_agents/tests|||requirements.txt"
   "frontend_adds-on|external/frontend_adds-on|tests|||-r requirements.txt"
   "ScenarioDesign|external/ScenarioDesign|tests|||-r requirements.txt"
   "TrainingModules|external/TrainingModules|tests|||-r requirements.txt"
@@ -211,7 +211,7 @@ fi
 : >"$OUT/git.tsv"
 for spec in "${SPECS[@]}"; do
   IFS='|' read -r name dir _ <<<"$spec"
-  case "$name" in YSocial-*) continue ;; esac
+  case "$name" in YSocial-*) continue ;; reactive_agents) dir="external/reactive_agents" ;; esac
   [ -d "$ROOT/$dir/.git" ] || [ "$dir" = "." ] || continue
   printf '%s\t%s\t%s\t%s\n' "$name" \
     "$(git -C "$ROOT/$dir" branch --show-current 2>/dev/null)" \
