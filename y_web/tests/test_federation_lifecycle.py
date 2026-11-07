@@ -150,6 +150,7 @@ def test_failed_start_rolls_back(running_world):
         )
 
 
+@needs_sdk
 def test_cannot_start_when_a_member_runs_or_state_is_wrong(running_world):
     fed, fake, tmp = running_world
     _, exp = service.members_of(fed)[0]
