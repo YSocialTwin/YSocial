@@ -1,22 +1,34 @@
 {% include "admin/head.html" %}
 <style>
-    .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-text-dark:#111827; }
+    .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-text-dark:#111827; --ext-muted:#6b7280; }
     .ext-runtimes .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
-    .ext-intro { font-size:.82rem; color:#6b7280; margin-bottom:14px; }
-    .ext-plugin-table { width:100%; border-collapse:collapse; }
-    .ext-plugin-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; padding:8px 10px; border-bottom:1px solid var(--ext-border); }
-    .ext-plugin-table td { padding:12px 10px; border-bottom:1px solid var(--ext-border); vertical-align:middle; font-size:.84rem; }
-    .ext-plugin-table tr.ext-section th { background:var(--ext-bg-subtle); color:var(--ext-text-dark); font-size:.78rem; padding:10px; border-top:1px solid var(--ext-border); }
-    .ext-plugin-name { font-weight:700; color:var(--ext-text-dark); }
-    .ext-plugin-sub { font-size:.72rem; color:#6b7280; }
-    .ext-plugin-desc { color:#4b5563; max-width:520px; }
-    .ext-row-actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
-    .ext-row-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
+    .ext-intro { font-size:.84rem; color:var(--ext-muted); margin:0 0 18px; max-width:760px; line-height:1.5; }
+    .ext-section { margin:0 0 22px; }
+    .ext-section:last-child { margin-bottom:0; }
+    .ext-section-head { display:flex; align-items:baseline; gap:8px; margin:0 0 8px; padding:0 2px; }
+    .ext-section-title { font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ext-text-dark); margin:0; }
+    .ext-section-count { font-size:.72rem; color:var(--ext-muted); }
+    .ext-section-list { border:1px solid var(--ext-border); border-radius:10px; background:#fff; overflow:hidden; }
+    .ext-row { display:grid; grid-template-columns:minmax(0,1fr) 190px 150px; align-items:center; gap:8px 20px; padding:14px 16px; border-top:1px solid var(--ext-border); }
+    .ext-row:first-child { border-top:0; }
+    .ext-row:hover { background:var(--ext-bg-subtle); }
+    .ext-plugin-name { font-weight:700; font-size:.92rem; color:var(--ext-text-dark); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ext-plugin-meta { font-size:.7rem; font-weight:500; color:var(--ext-muted); }
+    .ext-plugin-desc { margin-top:3px; font-size:.82rem; color:#4b5563; line-height:1.45; max-width:62ch; }
+    .ext-status { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+    .ext-status-badges { display:flex; flex-wrap:wrap; gap:4px; }
+    .ext-row-actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:nowrap; }
+    .ext-row-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; white-space:nowrap; }
     .ext-danger-text { color:#b91c1c; }
-    .ext-ver { margin-top:4px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+    .ext-ver { display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:.7rem; color:var(--ext-muted); }
     .ext-tag { display:inline-block; font-size:.7rem; font-weight:600; line-height:1.4; padding:1px 8px; border-radius:999px; background:#eef2f7; color:#374151; border:1px solid #dbe2ea; }
     .ext-tag.is-new { background:#fff1e0; color:#b45309; border-color:#f5b971; }
     .ext-ver-arrow { color:#9ca3af; font-size:.8rem; }
+    .ext-empty { padding:16px; font-size:.82rem; color:var(--ext-muted); }
+    @media (max-width: 860px) {
+        .ext-row { grid-template-columns:1fr; }
+                .ext-row-actions { justify-content:flex-start; }
+    }
 </style>
 
 <div class="view-wrapper is-dashboard ext-runtimes">
@@ -29,20 +41,25 @@
                         <h3 class="title is-5 is-thin">{{ _('Plugins') }}</h3>
                         <div class="box-content">
                             <p class="ext-intro">{{ _('Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which you install and update independently from the plugin page.') }}</p>
-                            <div class="table-responsive">
-                            <table class="ext-plugin-table" id="external-runtimes-list">
-                                <thead><tr><th>{{ _('Plugin') }}</th><th>{{ _('Description') }}</th><th>{{ _('Status') }}</th><th></th></tr></thead>
-                                <tbody>
-                                {% for section in plugin_sections %}
-                                <tr class="ext-section" data-section="{{ section.key }}"><th colspan="4">{{ section.label }}</th></tr>
+                            <div id="external-runtimes-list">
+                            {% for section in plugin_sections %}
+                            <section class="ext-section" data-section="{{ section.key }}">
+                                <div class="ext-section-head">
+                                    <h4 class="ext-section-title">{{ section.label }}</h4>
+                                    <span class="ext-section-count">{{ section.entries|length }}</span>
+                                </div>
+                                <div class="ext-section-list">
                                 {% for entry in section.entries %}
-                                <tr data-runtime-repo data-entry-key="{{ entry.key }}">
-                                    <td>
-                                        <div class="ext-plugin-name">{{ entry.label }}</div>
-                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; {{ _('server + client') }}{% endif %}{% if entry.community %} &middot; <span class="badge badge-warning">{{ _('Community') }}</span>{% endif %}</div>
-                                    </td>
-                                    <td class="ext-plugin-desc">{{ entry.description or _('No description available.') }}</td>
-                                    <td>
+                                <div class="ext-row" data-runtime-repo data-entry-key="{{ entry.key }}">
+                                    <div>
+                                        <div class="ext-plugin-name">{{ entry.label }}
+                                            {% if entry.paired %}<span class="ext-plugin-meta">{{ _('server + client') }}</span>{% endif %}
+                                            {% if entry.community %}<span class="badge badge-warning">{{ _('Community') }}</span>{% endif %}
+                                        </div>
+                                        <div class="ext-plugin-desc">{{ entry.description or _('No description available.') }}</div>
+                                    </div>
+                                    <div class="ext-status">
+                                        <div class="ext-status-badges">
                                         {% if entry.state == 'installed' %}<span class="badge badge-success">{{ _('Installed') }}</span>
                                         {% elif entry.state == 'partial' %}<span class="badge badge-warning">{{ _('Partially installed') }}</span>
                                         {% else %}<span class="badge badge-secondary">{{ _('Not installed') }}</span>{% endif %}
@@ -50,23 +67,22 @@
                                             {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                                         {% endif %}
                                         {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
-                                        {% for v in entry.versions %}<div class="ext-ver">{% if v.label %}<span class="ext-hint">{{ v.label }}</span> {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest and (v.latest|trim|lower|replace('v','')) != (v.installed|trim|lower|replace('v','')) %} <span class="ext-ver-arrow" aria-hidden="true">&rarr;</span> <span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</div>{% endfor %}
-                                    </td>
-                                    <td>
-                                        <div class="ext-row-actions">
-                                            <a class="button is-solid primary-button" data-ext-open data-label="{{ entry.label }}" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
-                                            {% if entry.any_exists %}
-                                            <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
-                                            {% endif %}
                                         </div>
-                                    </td>
-                                </tr>
+                                        {% for v in entry.versions %}<div class="ext-ver">{% if v.label %}<span class="ext-hint">{{ v.label }}</span> {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest and (v.latest|trim|lower|replace('v','')) != (v.installed|trim|lower|replace('v','')) %} <span class="ext-ver-arrow" aria-hidden="true">&rarr;</span> <span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</div>{% endfor %}
+                                    </div>
+                                    <div class="ext-row-actions">
+                                        <a class="button is-solid primary-button" data-ext-open data-label="{{ entry.label }}" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
+                                        {% if entry.any_exists %}
+                                        <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
+                                        {% endif %}
+                                    </div>
+                                </div>
                                 {% endfor %}
-                                {% else %}
-                                <tr><td colspan="4" class="ext-plugin-sub">{{ _('No plugin is available.') }}</td></tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
+                                </div>
+                            </section>
+                            {% else %}
+                            <div class="ext-empty">{{ _('No plugin is available.') }}</div>
+                            {% endfor %}
                             </div>
                         </div>
                     </div>
