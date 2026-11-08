@@ -10,7 +10,9 @@ PLUGINS = Path(__file__).resolve().parents[2] / "external" / "plugins.json"
 
 def test_yforum_is_listed_next_to_the_other_runtimes():
     entries = {p["plugin_name"]: p for p in json.loads(PLUGINS.read_text())["plugins"]}
-    if not entries:  # the file is rewritten from the plugins found in external/: a clean checkout has none
+    if (
+        not entries
+    ):  # the file is rewritten from the plugins found in external/: a clean checkout has none
         pytest.skip("no plugin is checked out under external/")
     # the file is regenerated from the plugins found in external/ (sync_plugins_index): the two runtimes of the
     # HPC group must both be there, or the Plugins page does not list them
