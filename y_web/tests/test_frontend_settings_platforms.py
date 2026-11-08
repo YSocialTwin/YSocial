@@ -394,11 +394,22 @@ def test_platform_only_controls_are_not_offered_to_microblogging(suites_app, log
     ).get_json()
     m, f, p = g(micro), g(forum), g(photo)
     assert m["capabilities"] is None
-    assert set(m["excluded_capabilities"]) == {
-        "default_forum_feed_type",
-        "default_photo_feed_tab",
-    }
+    excluded = set(m["excluded_capabilities"])
+    assert {"default_forum_feed_type", "default_photo_feed_tab"} <= excluded
+    # the "Instant messaging pages" and "Dating pages" boxes are not offered either
+    im_dating = {k for k in excluded if k.startswith(("im_", "dating_"))}
+    assert "im_default_view" in im_dating and "dating_poll_seconds" in im_dating
+    assert excluded == {"default_forum_feed_type", "default_photo_feed_tab"} | im_dating
     assert f["excluded_capabilities"] == [] and p["excluded_capabilities"] == []
+    # forum and photo sharing do not list those keys, so their boxes stay hidden too
+    assert not any(
+        k.startswith(("im_", "dating_")) for k in f["capabilities"] + p["capabilities"]
+    )
+    im = _exp(suites_app, "instant_messaging", "i_excl")
+    d = _exp(suites_app, "dating", "d_excl")
+    ic, dc = g(im)["capabilities"], g(d)["capabilities"]
+    assert "im_default_view" in ic and not any(k.startswith("dating_") for k in ic)
+    assert "dating_poll_seconds" in dc and not any(k.startswith("im_") for k in dc)
     assert (
         "default_forum_feed_type" in f["capabilities"]
         and "default_photo_feed_tab" in p["capabilities"]

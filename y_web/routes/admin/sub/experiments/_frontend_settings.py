@@ -158,7 +158,17 @@ def capabilities_for(platform_type: str):
 def excluded_capabilities_for(platform_type: str):
     """Setting keys to hide for a platform that otherwise offers everything."""
     if PLATFORM_CAPABILITIES.get(platform_type, 0) is None:
-        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES)
+        # the chat and dating page controls ("im_*", "dating_*") belong to those platforms only
+        own = {
+            key
+            for caps in (
+                PLATFORM_CAPABILITIES["instant_messaging"],
+                PLATFORM_CAPABILITIES["dating"],
+            )
+            for key in caps
+            if key.startswith(("im_", "dating_"))
+        }
+        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES | own)
     return []
 
 
