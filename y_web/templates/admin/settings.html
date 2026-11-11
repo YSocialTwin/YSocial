@@ -174,7 +174,7 @@
  <div class="tags-input w-100">
                                             <ul id="tags"></ul>
                                             <input type="hidden" id="tags-hidden" name="tags">
- <input type="text" id="input-tag" placeholder="{{ _('Enter topic name') }}" class="w-100"/>
+ <input type="text" id="input-tag" name="topic_input" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" placeholder="{{ _('Enter topic name') }}" class="w-100"/>
                                         </div>
                                         
                                         <!-- Numeric input for number of topics when LLM agents are disabled -->
