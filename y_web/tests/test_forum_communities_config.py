@@ -3,7 +3,11 @@
 import pytest
 
 from y_web.src.forum import communities
-from y_web.src.forum.client_config import ForumClientFormError, build_client_config, parse_client_form
+from y_web.src.forum.client_config import (
+    ForumClientFormError,
+    build_client_config,
+    parse_client_form,
+)
 from y_web.tests.test_forum_client_config import _build, schemas  # noqa: F401
 
 
@@ -45,9 +49,15 @@ def test_out_of_range_values_are_refused(form):
         parse_client_form(form)
 
 
-def test_the_hpc_client_config_carries_the_section_and_yforum_accepts_it(schemas):  # noqa: F811
-    values = parse_client_form({"communities_creation": "on", "communities_crosspost": "on"})
+def test_the_hpc_client_config_carries_the_section_and_yforum_accepts_it(
+    schemas,
+):  # noqa: F811
+    values = parse_client_form(
+        {"communities_creation": "on", "communities_crosspost": "on"}
+    )
     config = _build(values)
     assert config["communities"]["creation"]["enabled"] is True
-    out = schemas(config, "config/client_config")  # YForum's strict schema accepts the section
+    out = schemas(
+        config, "config/client_config"
+    )  # YForum's strict schema accepts the section
     assert out["communities"]["crosspost"]["enabled"] is True

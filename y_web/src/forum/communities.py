@@ -45,7 +45,12 @@ def parse_form(form: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
         "creation": {
             "enabled": flag("communities_creation"),
             "probability": _number(
-                form, "communities_creation_probability", float, 0.0, 1.0, creation["probability"]
+                form,
+                "communities_creation_probability",
+                float,
+                0.0,
+                1.0,
+                creation["probability"],
             ),
             "max_topics": _number(
                 form, "communities_max_topics", int, 0, 100000, creation["max_topics"]
@@ -54,7 +59,12 @@ def parse_form(form: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
         "crosspost": {
             "enabled": flag("communities_crosspost"),
             "probability": _number(
-                form, "communities_crosspost_probability", float, 0.0, 1.0, crosspost["probability"]
+                form,
+                "communities_crosspost_probability",
+                float,
+                0.0,
+                1.0,
+                crosspost["probability"],
             ),
             "max_per_post": _number(
                 form, "communities_max_per_post", int, 1, 20, crosspost["max_per_post"]
@@ -66,6 +76,8 @@ def parse_form(form: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
 def config_section(values: Optional[Mapping[str, Any]]) -> Optional[Dict[str, Any]]:
     """The ``communities`` key to write into the client configuration; ``None`` when both actions are off (the key is
     then left out and the clients behave as before)."""
-    if not values or not any((values.get(name) or {}).get("enabled") for name in DEFAULTS):
+    if not values or not any(
+        (values.get(name) or {}).get("enabled") for name in DEFAULTS
+    ):
         return None
     return {name: dict(values[name]) for name in DEFAULTS}
