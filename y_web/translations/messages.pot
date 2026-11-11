@@ -1028,6 +1028,11 @@ msgstr ""
 msgid "After a date"
 msgstr ""
 
+msgid ""
+"After a post an agent may show it in another community when the themes "
+"allow it (e.g. Linux to Windows, not Linux to winter)."
+msgstr ""
+
 msgid "After interacting with the content of others"
 msgstr ""
 
@@ -1231,6 +1236,12 @@ msgid ""
 "Agents become aware of a platform from what they see of it (cross-posts) "
 "and may open an account there. Switching it on also makes the platforms "
 "report what each agent was shown."
+msgstr ""
+
+msgid "Agents can cross-post"
+msgstr ""
+
+msgid "Agents can found communities"
 msgstr ""
 
 msgid "Agents discover and join new platforms"
@@ -1992,6 +2003,11 @@ msgid "Basic demographic attributes and language preferences."
 msgstr ""
 
 msgid "Basic user information and role."
+msgstr ""
+
+msgid ""
+"Before a post an agent may open a new community on a theme that no "
+"existing one covers; the post is its first."
 msgstr ""
 
 msgid ""
@@ -3533,6 +3549,9 @@ msgstr ""
 msgid "Cross-post cascades"
 msgstr ""
 
+msgid "Cross-post probability"
+msgstr ""
+
 msgid "Cross-posted"
 msgstr ""
 
@@ -3556,6 +3575,9 @@ msgid "Cross-posts delivered there: %(n)s"
 msgstr ""
 
 msgid "Cross-posts of people"
+msgstr ""
+
+msgid "Cross-posts per post"
 msgstr ""
 
 msgid "Cross-posts the agent made of its own content (one per destination)"
@@ -5805,6 +5827,9 @@ msgstr ""
 msgid "Forwarded-from line"
 msgstr ""
 
+msgid "Founding probability"
+msgstr ""
+
 msgid "French"
 msgstr ""
 
@@ -7485,6 +7510,12 @@ msgstr ""
 msgid "Let participants change the language"
 msgstr ""
 
+msgid ""
+"Let the agents found new thematic communities and cross-post a post to a "
+"related community. Both are off by default; the communities are chosen by"
+" the agents' language model."
+msgstr ""
+
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr ""
 
@@ -7844,6 +7875,9 @@ msgstr ""
 msgid "Maximum chats per session"
 msgstr ""
 
+msgid "Maximum communities"
+msgstr ""
+
 msgid "Maximum concurrent requests"
 msgstr ""
 
@@ -7857,6 +7891,9 @@ msgid "Maximum images to retrieve from each subreddit-based image feed."
 msgstr ""
 
 msgid "Maximum items"
+msgstr ""
+
+msgid "Maximum number of other communities a post is shown in"
 msgstr ""
 
 msgid "Maximum number of participants"
@@ -8793,6 +8830,9 @@ msgid "No models found at %(llm_url)s"
 msgstr ""
 
 msgid "No more profiles for now."
+msgstr ""
+
+msgid "No new community is founded once the forum has this many (0 = no limit)"
 msgstr ""
 
 msgid "No notifications yet."
@@ -10430,6 +10470,12 @@ msgstr ""
 msgid ""
 "Probability that, during a given simulation day, an active agent is asked"
 " if he wants to connect with a peer"
+msgstr ""
+
+msgid "Probability, for each post, that the agent considers a cross-post (0-1)"
+msgstr ""
+
+msgid "Probability, for each post, that the agent founds a new community (0-1)"
 msgstr ""
 
 #, python-format

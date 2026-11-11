@@ -1144,6 +1144,11 @@ msgstr "Tratti affettivi"
 msgid "After a date"
 msgstr "Dopo un appuntamento"
 
+msgid ""
+"After a post an agent may show it in another community when the themes "
+"allow it (e.g. Linux to Windows, not Linux to winter)."
+msgstr "Dopo un post un agente può mostrarlo in un'altra comunità quando i temi lo consentono (es. Linux verso Windows, non Linux verso inverno)."
+
 msgid "After interacting with the content of others"
 msgstr "Dopo aver interagito con i contenuti di altri"
 
@@ -1360,6 +1365,12 @@ msgstr ""
 "Gli agenti vengono a conoscenza di una piattaforma da ciò che ne vedono "
 "(cross-post) e possono aprirvi un account. Attivandola, le piattaforme "
 "riportano anche ciò che è stato mostrato a ogni agente."
+
+msgid "Agents can cross-post"
+msgstr "Gli agenti possono fare cross-post"
+
+msgid "Agents can found communities"
+msgstr "Gli agenti possono fondare comunità"
 
 msgid "Agents discover and join new platforms"
 msgstr "Gli agenti scoprono nuove piattaforme e vi si iscrivono"
@@ -2194,6 +2205,11 @@ msgstr "Attributi demografici di base e preferenze linguistiche."
 
 msgid "Basic user information and role."
 msgstr "Informazioni di base e ruolo dell'utente."
+
+msgid ""
+"Before a post an agent may open a new community on a theme that no "
+"existing one covers; the post is its first."
+msgstr "Prima di un post un agente può aprire una nuova comunità su un tema che nessuna di quelle esistenti copre; il post è il primo della comunità."
 
 msgid ""
 "Before entering your feed, personalise your profile and share your "
@@ -3966,6 +3982,9 @@ msgstr "Croata"
 msgid "Cross-post cascades"
 msgstr "Cascate di cross-post"
 
+msgid "Cross-post probability"
+msgstr "Probabilità di cross-post"
+
 msgid "Cross-posted"
 msgstr "Cross-postati"
 
@@ -3990,6 +4009,9 @@ msgstr "Cross-post consegnati: %(n)s"
 
 msgid "Cross-posts of people"
 msgstr "Cross-post delle persone"
+
+msgid "Cross-posts per post"
+msgstr "Cross-post per post"
 
 msgid "Cross-posts the agent made of its own content (one per destination)"
 msgstr ""
@@ -6460,6 +6482,9 @@ msgstr "Messaggio inoltrato"
 msgid "Forwarded-from line"
 msgstr "Riga «Inoltrato da»"
 
+msgid "Founding probability"
+msgstr "Probabilità di fondazione"
+
 msgid "French"
 msgstr "Francese"
 
@@ -8328,6 +8353,12 @@ msgstr "Permetti a chi non fa parte dello staff di guardare un round passato"
 msgid "Let participants change the language"
 msgstr "Permetti ai partecipanti di cambiare lingua"
 
+msgid ""
+"Let the agents found new thematic communities and cross-post a post to a "
+"related community. Both are off by default; the communities are chosen by"
+" the agents' language model."
+msgstr "Permette agli agenti di fondare nuove comunità tematiche e di fare cross-post di un post in una comunità affine. Entrambe le opzioni sono disattivate per impostazione predefinita; le comunità sono scelte dal modello linguistico degli agenti."
+
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr "Creiamo la tua prima simulazione in soli 4 semplici passi."
 
@@ -8725,6 +8756,9 @@ msgstr "Numero massimo di chat possedute da un agente"
 msgid "Maximum chats per session"
 msgstr "Numero massimo di chat per sessione"
 
+msgid "Maximum communities"
+msgstr "Numero massimo di comunità"
+
 msgid "Maximum concurrent requests"
 msgstr "Numero massimo di richieste concorrenti"
 
@@ -8743,6 +8777,9 @@ msgstr ""
 
 msgid "Maximum items"
 msgstr "Numero massimo di elementi"
+
+msgid "Maximum number of other communities a post is shown in"
+msgstr "Numero massimo di altre comunità in cui un post viene mostrato"
 
 msgid "Maximum number of participants"
 msgstr "Numero massimo di partecipanti"
@@ -9713,6 +9750,9 @@ msgstr "Nessun modello trovato su %(llm_url)s"
 
 msgid "No more profiles for now."
 msgstr "Per ora non ci sono altri profili."
+
+msgid "No new community is founded once the forum has this many (0 = no limit)"
+msgstr "Non vengono fondate nuove comunità quando il forum ne ha già questo numero (0 = nessun limite)"
 
 msgid "No notifications yet."
 msgstr "Ancora nessuna notifica."
@@ -11527,6 +11567,12 @@ msgid ""
 msgstr ""
 "Probabilità che, in un dato giorno di simulazione, a un agente attivo "
 "venga chiesto se vuole connettersi con un altro agente"
+
+msgid "Probability, for each post, that the agent considers a cross-post (0-1)"
+msgstr "Probabilità, per ogni post, che l'agente valuti un cross-post (0-1)"
+
+msgid "Probability, for each post, that the agent founds a new community (0-1)"
+msgstr "Probabilità, per ogni post, che l'agente fondi una nuova comunità (0-1)"
 
 #, python-format
 msgid "Probable cause: Python module '%(name)s' not found"
@@ -17060,6 +17106,8 @@ msgstr ""
 #, python-format
 msgid "Warning: Could not update the server run length: %(error)s"
 msgstr "Attenzione: impossibile aggiornare la durata della run del server: %(error)s"
+"Attenzione: impossibile aggiornare la durata della run del server: "
+"%(error)s"
 
 msgid "Warning: Error reading population file. Segment values may be limited."
 msgstr ""
