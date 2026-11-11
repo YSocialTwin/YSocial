@@ -133,10 +133,10 @@ DEFAULT_STRESS_REWARD_SYSTEM = {
     },
     "churn": {
         "enabled": False,
-        "stress_weight": 1.5,
+        "stress_weight": 2.0,
         "reward_weight": 1.0,
-        "bias": -2.2,
-        "temperature": 0.35,
+        "bias": -1.8,
+        "temperature": 0.3,
         "min_probability": 0.0,
         "max_probability": 0.95,
     },

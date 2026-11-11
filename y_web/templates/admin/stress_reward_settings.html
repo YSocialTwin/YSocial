@@ -34,6 +34,48 @@
                                 </div>
 
                                 <div class="box-line">
+                                    <span class="left">{{ _('Churn: stress weight') }}</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.01" min="0" name="sr_churn_stress_weight" value="{{ stress_reward_config['system']['churn']['stress_weight'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">{{ _('Churn: reward weight') }}</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.01" min="0" name="sr_churn_reward_weight" value="{{ stress_reward_config['system']['churn']['reward_weight'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">{{ _('Churn: bias') }}</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.01" name="sr_churn_bias" value="{{ stress_reward_config['system']['churn']['bias'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">{{ _('Churn: temperature') }}</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.01" min="0.01" name="sr_churn_temperature" value="{{ stress_reward_config['system']['churn']['temperature'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">{{ _('Churn: minimum probability') }}</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.01" min="0" max="1" name="sr_churn_min_probability" value="{{ stress_reward_config['system']['churn']['min_probability'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">{{ _('Churn: maximum probability') }}</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.01" min="0" max="1" name="sr_churn_max_probability" value="{{ stress_reward_config['system']['churn']['max_probability'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
                                     <span class="left">{{ _('Coupling: reward buffers stress') }}</span>
                                     <span class="right ys-w-50">
                                         <input class="input" type="number" step="0.001" name="sr_coupling_reward_buffers_stress_alpha" value="{{ stress_reward_config['system']['coupling']['reward_buffers_stress_alpha'] }}">
@@ -111,6 +153,7 @@
                             <p>
                                 <b>{{ _('Churn') }}</b><br>
                                 {{ _('When enabled, the client computes a churn probability from the latest aggregate stress and reward at activation time and may ask the server to mark the agent as left.') }}
+                                {{ _('The probability is the logistic of (bias + stress weight × stress − reward weight × reward) divided by the temperature, kept between the minimum and the maximum probability.') }}
                             </p>
                         </div>
                     </div>

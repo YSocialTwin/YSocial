@@ -1458,6 +1458,37 @@ def update_stress_reward_settings(uid):
         stress_reward_config["system"]["churn"]["enabled"] = _is_checked(
             "sr_churn_enabled"
         )
+        churn_cfg = stress_reward_config["system"]["churn"]
+        for key in ("stress_weight", "reward_weight"):
+            churn_cfg[key] = max(
+                0.0, _form_float(f"sr_churn_{key}", churn_cfg.get(key, 0.0))
+            )
+        churn_cfg["bias"] = _form_float("sr_churn_bias", churn_cfg.get("bias", 0.0))
+        churn_cfg["temperature"] = max(
+            0.01, _form_float("sr_churn_temperature", churn_cfg.get("temperature", 0.3))
+        )
+        churn_min = min(
+            1.0,
+            max(
+                0.0,
+                _form_float(
+                    "sr_churn_min_probability", churn_cfg.get("min_probability", 0.0)
+                ),
+            ),
+        )
+        churn_max = min(
+            1.0,
+            max(
+                0.0,
+                _form_float(
+                    "sr_churn_max_probability", churn_cfg.get("max_probability", 0.95)
+                ),
+            ),
+        )
+        churn_cfg["min_probability"], churn_cfg["max_probability"] = (
+            min(churn_min, churn_max),
+            max(churn_min, churn_max),
+        )
 
         for family, subtype, variable in [
             ("reaction", "like", "stress"),

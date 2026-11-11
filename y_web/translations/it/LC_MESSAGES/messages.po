@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 18:55+0000\n"
+"POT-Creation-Date: 2026-11-11 10:01+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -17,21 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
-
-msgid "Agent Plugins"
-msgstr "Plugin per agenti"
-
-msgid "Optional, instead of the API Key: name of an environment variable holding the key; the variable wins when it is set."
-msgstr "Facoltativa, in alternativa alla chiave API: nome di una variabile d'ambiente che contiene la chiave; se la variabile è impostata ha la precedenza."
-
-msgid "Other plugins"
-msgstr "Altri plugin"
-
-msgid "Platforms (Legacy)"
-msgstr "Piattaforme (legacy)"
-
-msgid "System Plugins"
-msgstr "Plugin di sistema"
 
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
@@ -341,6 +326,10 @@ msgstr "Embedding della memoria di %(platform)s"
 #, python-format
 msgid "%(platform)s is not running: its profile cannot be opened now"
 msgstr "%(platform)s non è in esecuzione: il profilo non può essere aperto ora"
+
+#, python-format
+msgid "%(shown)s of %(total)s plugins"
+msgstr "%(shown)s di %(total)s plugin"
 
 #, python-format
 msgid "%(title)s not available"
@@ -1252,6 +1241,9 @@ msgstr "Nome dell'agente"
 msgid "Agent Opinion Evolution"
 msgstr "Evoluzione delle opinioni degli agenti"
 
+msgid "Agent Plugins"
+msgstr "Plugin per agenti"
+
 msgid "Agent Populations"
 msgstr "Popolazioni di agenti"
 
@@ -1522,6 +1514,12 @@ msgid "All posts from other users, newest first. No personalisation."
 msgstr ""
 "Tutti i post degli altri utenti, dal più recente. Nessuna "
 "personalizzazione."
+
+msgid "All sections"
+msgstr "Tutte le sezioni"
+
+msgid "All statuses"
+msgstr "Tutti gli stati"
 
 #, python-format
 msgid ""
@@ -2005,9 +2003,6 @@ msgstr "Profili disponibili (trascina per assegnare)"
 
 msgid "Available Variables"
 msgstr "Variabili disponibili"
-
-msgid "Install, update and remove the components of YSocial: platforms, agent plugins and system plugins. Search by name or description, filter by status, and open a plugin to choose its source and follow the output of the operation."
-msgstr "Installa, aggiorna e rimuovi i componenti di YSocial: piattaforme, plugin per agenti e plugin di sistema. Cerca per nome o descrizione, filtra per stato e apri un plugin per scegliere la sorgente e seguire l'output dell'operazione."
 
 msgid "Available emotions"
 msgstr "Emozioni disponibili"
@@ -2790,6 +2785,24 @@ msgstr "Abbandoni e nuovi agenti"
 
 msgid "Churn probability"
 msgstr "Probabilità di abbandono"
+
+msgid "Churn: bias"
+msgstr "Ricambio: costante (bias)"
+
+msgid "Churn: maximum probability"
+msgstr "Ricambio: probabilità massima"
+
+msgid "Churn: minimum probability"
+msgstr "Ricambio: probabilità minima"
+
+msgid "Churn: reward weight"
+msgstr "Ricambio: peso della ricompensa"
+
+msgid "Churn: stress weight"
+msgstr "Ricambio: peso dello stress"
+
+msgid "Churn: temperature"
+msgstr "Ricambio: temperatura"
 
 msgid "Cities"
 msgstr "Città"
@@ -6415,9 +6428,6 @@ msgstr "Assegnazioni dei feed del forum aggiornate con successo."
 msgid "Forum participant"
 msgstr "Partecipante al forum"
 
-msgid "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
-msgstr "Simulatore di forum legacy su Flask (thread e risposte). Server e client si installano e si aggiornano separatamente dalla sua pagina."
-
 msgid "Forum topic creation likelihood"
 msgstr "Probabilità di creare un topic nel forum"
 
@@ -6839,8 +6849,12 @@ msgstr ""
 "Reimpostazione dell'esperimento HPC completata. Ripristinati "
 "%(restored_count)s file di backup della popolazione."
 
-msgid "HPC microblogging experiments are unavailable because YMicroblogging is not present."
-msgstr "Gli esperimenti HPC di microblogging non sono disponibili perché YMicroblogging non è presente."
+msgid ""
+"HPC microblogging experiments are unavailable because YMicroblogging is "
+"not present."
+msgstr ""
+"Gli esperimenti HPC di microblogging non sono disponibili perché "
+"YMicroblogging non è presente."
 
 msgid "HPC prompts updated successfully!"
 msgstr "Prompt HPC aggiornati con successo!"
@@ -7533,6 +7547,17 @@ msgstr ""
 
 msgid "Install the plugin and reload this page; nothing else has to be restarted."
 msgstr "Installa il plugin e ricarica questa pagina; non serve riavviare altro."
+
+msgid ""
+"Install, update and remove the components of YSocial: platforms, agent "
+"plugins and system plugins. Search by name or description, filter by "
+"status, and open a plugin to choose its source and follow the output of "
+"the operation."
+msgstr ""
+"Installa, aggiorna e rimuovi i componenti di YSocial: piattaforme, plugin"
+" per agenti e plugin di sistema. Cerca per nome o descrizione, filtra per"
+" stato e apri un plugin per scegliere la sorgente e seguire l'output "
+"dell'operazione."
 
 msgid "Installed"
 msgstr "Installato"
@@ -8270,6 +8295,21 @@ msgstr "Usciti insieme"
 msgid "Left unanswered by others (ghosted)"
 msgstr "Lasciato senza risposta dagli altri (ghosting subìto)"
 
+msgid ""
+"Legacy forum simulator on Flask (threads and replies). Server and client "
+"are installed and updated independently from its page."
+msgstr ""
+"Simulatore di forum legacy su Flask (thread e risposte). Server e client "
+"si installano e si aggiornano separatamente dalla sua pagina."
+
+msgid ""
+"Legacy microblogging simulator on Flask (timeline, posts, follows). "
+"Server and client are installed and updated independently from its page."
+msgstr ""
+"Simulatore di microblogging legacy su Flask (timeline, post, follow). "
+"Server e client si installano e si aggiornano separatamente dalla sua "
+"pagina."
+
 msgid "Length asked of a message (characters)"
 msgstr "Lunghezza richiesta a un messaggio (caratteri)"
 
@@ -8859,11 +8899,12 @@ msgstr "Microblogging"
 msgid "Microblogging (i.e., X/BlueSky)"
 msgstr "Microblogging (cioè X/BlueSky)"
 
-msgid "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
-msgstr "Gli esperimenti di microblogging non sono disponibili perché non sono presenti né YServer/YClient né YMicroblogging."
-
-msgid "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
-msgstr "Simulatore di microblogging legacy su Flask (timeline, post, follow). Server e client si installano e si aggiornano separatamente dalla sua pagina."
+msgid ""
+"Microblogging experiments are unavailable because neither YServer/YClient"
+" nor YMicroblogging is present."
+msgstr ""
+"Gli esperimenti di microblogging non sono disponibili perché non sono "
+"presenti né YServer/YClient né YMicroblogging."
 
 msgid "Migration"
 msgstr "Migrazione"
@@ -9721,6 +9762,9 @@ msgstr "Nessuna piattaforma."
 msgid "No plugin is available."
 msgstr "Nessun plugin disponibile."
 
+msgid "No plugin matches your search."
+msgstr "Nessun plugin corrisponde alla ricerca."
+
 msgid "No population is available."
 msgstr "Nessuna popolazione disponibile."
 
@@ -10428,6 +10472,14 @@ msgstr "Parametri facoltativi: %(names)s"
 msgid "Optional · Advanced"
 msgstr "Opzionale · Avanzato"
 
+msgid ""
+"Optional, instead of the API Key: name of an environment variable holding"
+" the key; the variable wins when it is set."
+msgstr ""
+"Facoltativa, in alternativa alla chiave API: nome di una variabile "
+"d'ambiente che contiene la chiave; se la variabile è impostata ha la "
+"precedenza."
+
 msgid "Optional."
 msgstr "Facoltativo."
 
@@ -10475,6 +10527,9 @@ msgstr "Altri campi personalizzati"
 
 msgid "Other experiment"
 msgstr "Altro esperimento"
+
+msgid "Other plugins"
+msgstr "Altri plugin"
 
 msgid "Other settings"
 msgstr "Altre impostazioni"
@@ -10948,6 +11003,9 @@ msgstr "Piattaforma: %(platform)s"
 
 msgid "Platforms"
 msgstr "Piattaforme"
+
+msgid "Platforms (Legacy)"
+msgstr "Piattaforme (legacy)"
 
 msgid "Platforms of origin"
 msgstr "Piattaforme di origine"
@@ -11874,6 +11932,23 @@ msgstr "Parametro di tasso"
 msgid "Ray Agents Batch Size"
 msgstr "Dimensione del lotto di agenti Ray"
 
+msgid ""
+"Ray runtime for Reddit-style forum experiments: threads, comments, votes,"
+" follows and interchangeable content recommenders on HPC clusters."
+msgstr ""
+"Runtime Ray per esperimenti di forum in stile Reddit: thread, commenti, "
+"voti, follow e raccomandatori di contenuti intercambiabili su cluster "
+"HPC."
+
+msgid ""
+"Ray-based runtime for microblogging experiments (posts, timelines, "
+"follows) built for large-scale simulations, on a single machine or on HPC"
+" clusters."
+msgstr ""
+"Runtime basato su Ray per esperimenti di microblogging (post, timeline, "
+"follow), pensato per simulazioni su larga scala, su una singola macchina "
+"o su cluster HPC."
+
 msgid "Reached"
 msgstr "Raggiunto"
 
@@ -12588,9 +12663,6 @@ msgstr "In esecuzione"
 msgid "Running: stop it first."
 msgstr "In esecuzione: fermalo prima."
 
-msgid "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters."
-msgstr "Runtime basato su Ray per esperimenti di microblogging (post, timeline, follow), pensato per simulazioni su larga scala, su una singola macchina o su cluster HPC."
-
 msgid "Runs the agents of a forum simulation (client side)."
 msgstr "Esegue gli agenti di una simulazione forum (lato client)."
 
@@ -12605,6 +12677,15 @@ msgstr "Russa"
 
 msgid "SA Interactions"
 msgstr "Interazioni SA"
+
+msgid ""
+"SDK and coordinator of the World Simulation: synchronises several "
+"platform experiments on one clock and moves agents, attention and cross-"
+"posts between them."
+msgstr ""
+"SDK e coordinatore della World Simulation: sincronizza più esperimenti di"
+" piattaforme su un unico orologio e sposta agenti, attenzione e cross-"
+"post tra di loro."
 
 msgid "SHOW"
 msgstr "MOSTRA"
@@ -12841,6 +12922,12 @@ msgstr "Probabilità di ricerca"
 msgid "Search photos, people, hashtags"
 msgstr "Cerca foto, persone, hashtag"
 
+msgid "Search plugins"
+msgstr "Cerca plugin"
+
+msgid "Search plugins..."
+msgstr "Cerca plugin..."
+
 msgid "Search posts, users, links..."
 msgstr "Cerca post, utenti, link..."
 
@@ -12870,6 +12957,9 @@ msgstr "Cerca argomenti e tag delle foto."
 
 msgid "Search..."
 msgstr "Cerca..."
+
+msgid "Section"
+msgstr "Sezione"
 
 msgid "Sections"
 msgstr "Sezioni"
@@ -14261,6 +14351,9 @@ msgstr "Rete sintetica:"
 msgid "Synthetic Populations"
 msgstr "Popolazioni sintetiche"
 
+msgid "System Plugins"
+msgstr "Plugin di sistema"
+
 msgid "System Settings"
 msgstr "Impostazioni di sistema"
 
@@ -15013,6 +15106,15 @@ msgstr "Il testo del post."
 #, python-format
 msgid "The probability %(pair)s must be between 0 and 1."
 msgstr "La probabilità %(pair)s deve essere compresa tra 0 e 1."
+
+msgid ""
+"The probability is the logistic of (bias + stress weight × stress − "
+"reward weight × reward) divided by the temperature, kept between the "
+"minimum and the maximum probability."
+msgstr ""
+"La probabilità è la logistica di (costante + peso dello stress × stress − "
+"peso della ricompensa × ricompensa) divisa per la temperatura, mantenuta tra "
+"la probabilità minima e quella massima."
 
 #, python-format
 msgid "The probability of starting on %(platform)s must be between 0 and 1."
@@ -16388,6 +16490,9 @@ msgstr "Aggiorna la configurazione LLM"
 msgid "Update Password"
 msgstr "Aggiorna la password"
 
+msgid "Update available"
+msgstr "Aggiornamento disponibile"
+
 #, python-format
 msgid "Update available: %(tag)s"
 msgstr "Aggiornamento disponibile: %(tag)s"
@@ -17509,6 +17614,16 @@ msgstr ""
 "scelte degli agenti sono estratte di nuovo allo stesso modo: usalo per "
 "ripetere una run."
 
+msgid ""
+"Words must all match. Use \"quotes\" for an exact phrase, -word to "
+"exclude a word, and is:installed, is:missing, is:partial, is:update, "
+"is:enabled or is:disabled to filter by status. Press / to search."
+msgstr ""
+"Tutte le parole devono corrispondere. Usa \"virgolette\" per una frase "
+"esatta, -parola per escludere una parola e is:installed, is:missing, "
+"is:partial, is:update, is:enabled o is:disabled per filtrare per stato. "
+"Premi / per cercare."
+
 msgid "World Simulation"
 msgstr "World Simulation"
 
@@ -18500,39 +18615,6 @@ msgstr "✔️ Gioca con"
 
 msgid "✔️ Use"
 msgstr "✔️ Usa"
-
-msgid "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters."
-msgstr "Runtime Ray per esperimenti di forum in stile Reddit: thread, commenti, voti, follow e raccomandatori di contenuti intercambiabili su cluster HPC."
-
-msgid "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them."
-msgstr "SDK e coordinatore della World Simulation: sincronizza più esperimenti di piattaforme su un unico orologio e sposta agenti, attenzione e cross-post tra di loro."
-
-msgid "Words must all match. Use \"quotes\" for an exact phrase, -word to exclude a word, and is:installed, is:missing, is:partial, is:update, is:enabled or is:disabled to filter by status. Press / to search."
-msgstr "Tutte le parole devono corrispondere. Usa \"virgolette\" per una frase esatta, -parola per escludere una parola e is:installed, is:missing, is:partial, is:update, is:enabled o is:disabled per filtrare per stato. Premi / per cercare."
-
-msgid "%(shown)s of %(total)s plugins"
-msgstr "%(shown)s di %(total)s plugin"
-
-msgid "Search plugins..."
-msgstr "Cerca plugin..."
-
-msgid "Search plugins"
-msgstr "Cerca plugin"
-
-msgid "All statuses"
-msgstr "Tutti gli stati"
-
-msgid "Update available"
-msgstr "Aggiornamento disponibile"
-
-msgid "All sections"
-msgstr "Tutte le sezioni"
-
-msgid "No plugin matches your search."
-msgstr "Nessun plugin corrisponde alla ricerca."
-
-msgid "Section"
-msgstr "Sezione"
 
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 18:55+0000\n"
+"POT-Creation-Date: 2026-11-11 10:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,21 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
-
-msgid "Agent Plugins"
-msgstr ""
-
-msgid "Optional, instead of the API Key: name of an environment variable holding the key; the variable wins when it is set."
-msgstr ""
-
-msgid "Other plugins"
-msgstr ""
-
-msgid "Platforms (Legacy)"
-msgstr ""
-
-msgid "System Plugins"
-msgstr ""
 
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
@@ -309,6 +294,10 @@ msgstr ""
 
 #, python-format
 msgid "%(platform)s is not running: its profile cannot be opened now"
+msgstr ""
+
+#, python-format
+msgid "%(shown)s of %(total)s plugins"
 msgstr ""
 
 #, python-format
@@ -1129,6 +1118,9 @@ msgstr ""
 msgid "Agent Opinion Evolution"
 msgstr ""
 
+msgid "Agent Plugins"
+msgstr ""
+
 msgid "Agent Populations"
 msgstr ""
 
@@ -1368,6 +1360,12 @@ msgid "All posts"
 msgstr ""
 
 msgid "All posts from other users, newest first. No personalisation."
+msgstr ""
+
+msgid "All sections"
+msgstr ""
+
+msgid "All statuses"
 msgstr ""
 
 #, python-format
@@ -1809,9 +1807,6 @@ msgid "Available Profiles (Drag to assign)"
 msgstr ""
 
 msgid "Available Variables"
-msgstr ""
-
-msgid "Install, update and remove the components of YSocial: platforms, agent plugins and system plugins. Search by name or description, filter by status, and open a plugin to choose its source and follow the output of the operation."
 msgstr ""
 
 msgid "Available emotions"
@@ -2526,6 +2521,24 @@ msgid "Churn and New Agents"
 msgstr ""
 
 msgid "Churn probability"
+msgstr ""
+
+msgid "Churn: bias"
+msgstr ""
+
+msgid "Churn: maximum probability"
+msgstr ""
+
+msgid "Churn: minimum probability"
+msgstr ""
+
+msgid "Churn: reward weight"
+msgstr ""
+
+msgid "Churn: stress weight"
+msgstr ""
+
+msgid "Churn: temperature"
 msgstr ""
 
 msgid "Cities"
@@ -5762,9 +5775,6 @@ msgstr ""
 msgid "Forum participant"
 msgstr ""
 
-msgid "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
-msgstr ""
-
 msgid "Forum topic creation likelihood"
 msgstr ""
 
@@ -6154,7 +6164,9 @@ msgid ""
 "backup file(s)."
 msgstr ""
 
-msgid "HPC microblogging experiments are unavailable because YMicroblogging is not present."
+msgid ""
+"HPC microblogging experiments are unavailable because YMicroblogging is "
+"not present."
 msgstr ""
 
 msgid "HPC prompts updated successfully!"
@@ -6751,6 +6763,13 @@ msgid "Install Detoxify from Miscellanea before enabling toxicity annotation."
 msgstr ""
 
 msgid "Install the plugin and reload this page; nothing else has to be restarted."
+msgstr ""
+
+msgid ""
+"Install, update and remove the components of YSocial: platforms, agent "
+"plugins and system plugins. Search by name or description, filter by "
+"status, and open a plugin to choose its source and follow the output of "
+"the operation."
 msgstr ""
 
 msgid "Installed"
@@ -7438,6 +7457,16 @@ msgstr ""
 msgid "Left unanswered by others (ghosted)"
 msgstr ""
 
+msgid ""
+"Legacy forum simulator on Flask (threads and replies). Server and client "
+"are installed and updated independently from its page."
+msgstr ""
+
+msgid ""
+"Legacy microblogging simulator on Flask (timeline, posts, follows). "
+"Server and client are installed and updated independently from its page."
+msgstr ""
+
 msgid "Length asked of a message (characters)"
 msgstr ""
 
@@ -7983,10 +8012,9 @@ msgstr ""
 msgid "Microblogging (i.e., X/BlueSky)"
 msgstr ""
 
-msgid "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
-msgstr ""
-
-msgid "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
+msgid ""
+"Microblogging experiments are unavailable because neither YServer/YClient"
+" nor YMicroblogging is present."
 msgstr ""
 
 msgid "Migration"
@@ -8815,6 +8843,9 @@ msgstr ""
 msgid "No plugin is available."
 msgstr ""
 
+msgid "No plugin matches your search."
+msgstr ""
+
 msgid "No population is available."
 msgstr ""
 
@@ -9442,6 +9473,11 @@ msgstr ""
 msgid "Optional · Advanced"
 msgstr ""
 
+msgid ""
+"Optional, instead of the API Key: name of an environment variable holding"
+" the key; the variable wins when it is set."
+msgstr ""
+
 msgid "Optional."
 msgstr ""
 
@@ -9483,6 +9519,9 @@ msgid "Other custom fields"
 msgstr ""
 
 msgid "Other experiment"
+msgstr ""
+
+msgid "Other plugins"
 msgstr ""
 
 msgid "Other settings"
@@ -9908,6 +9947,9 @@ msgid "Platform: %(platform)s"
 msgstr ""
 
 msgid "Platforms"
+msgstr ""
+
+msgid "Platforms (Legacy)"
 msgstr ""
 
 msgid "Platforms of origin"
@@ -10768,6 +10810,17 @@ msgstr ""
 msgid "Ray Agents Batch Size"
 msgstr ""
 
+msgid ""
+"Ray runtime for Reddit-style forum experiments: threads, comments, votes,"
+" follows and interchangeable content recommenders on HPC clusters."
+msgstr ""
+
+msgid ""
+"Ray-based runtime for microblogging experiments (posts, timelines, "
+"follows) built for large-scale simulations, on a single machine or on HPC"
+" clusters."
+msgstr ""
+
 msgid "Reached"
 msgstr ""
 
@@ -11453,9 +11506,6 @@ msgstr ""
 msgid "Running: stop it first."
 msgstr ""
 
-msgid "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters."
-msgstr ""
-
 msgid "Runs the agents of a forum simulation (client side)."
 msgstr ""
 
@@ -11469,6 +11519,12 @@ msgid "Russian"
 msgstr ""
 
 msgid "SA Interactions"
+msgstr ""
+
+msgid ""
+"SDK and coordinator of the World Simulation: synchronises several "
+"platform experiments on one clock and moves agents, attention and cross-"
+"posts between them."
 msgstr ""
 
 msgid "SHOW"
@@ -11695,6 +11751,12 @@ msgstr ""
 msgid "Search photos, people, hashtags"
 msgstr ""
 
+msgid "Search plugins"
+msgstr ""
+
+msgid "Search plugins..."
+msgstr ""
+
 msgid "Search posts, users, links..."
 msgstr ""
 
@@ -11723,6 +11785,9 @@ msgid "Search topics and photo tags."
 msgstr ""
 
 msgid "Search..."
+msgstr ""
+
+msgid "Section"
 msgstr ""
 
 msgid "Sections"
@@ -12989,6 +13054,9 @@ msgstr ""
 msgid "Synthetic Populations"
 msgstr ""
 
+msgid "System Plugins"
+msgstr ""
+
 msgid "System Settings"
 msgstr ""
 
@@ -13621,6 +13689,12 @@ msgstr ""
 
 #, python-format
 msgid "The probability %(pair)s must be between 0 and 1."
+msgstr ""
+
+msgid ""
+"The probability is the logistic of (bias + stress weight × stress − "
+"reward weight × reward) divided by the temperature, kept between the "
+"minimum and the maximum probability."
 msgstr ""
 
 #, python-format
@@ -14794,6 +14868,9 @@ msgstr ""
 msgid "Update Password"
 msgstr ""
 
+msgid "Update available"
+msgstr ""
+
 #, python-format
 msgid "Update available: %(tag)s"
 msgstr ""
@@ -15718,6 +15795,12 @@ msgstr ""
 msgid ""
 "With the same seed, population and settings the choices of the agents are"
 " drawn again in the same way: use it to repeat a run."
+msgstr ""
+
+msgid ""
+"Words must all match. Use \"quotes\" for an exact phrase, -word to "
+"exclude a word, and is:installed, is:missing, is:partial, is:update, "
+"is:enabled or is:disabled to filter by status. Press / to search."
 msgstr ""
 
 msgid "World Simulation"
@@ -16672,37 +16755,3 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
-
-
-msgid "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters."
-msgstr ""
-
-msgid "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them."
-msgstr ""
-
-msgid "Words must all match. Use \"quotes\" for an exact phrase, -word to exclude a word, and is:installed, is:missing, is:partial, is:update, is:enabled or is:disabled to filter by status. Press / to search."
-msgstr ""
-
-msgid "%(shown)s of %(total)s plugins"
-msgstr ""
-
-msgid "Search plugins..."
-msgstr ""
-
-msgid "Search plugins"
-msgstr ""
-
-msgid "All statuses"
-msgstr ""
-
-msgid "Update available"
-msgstr ""
-
-msgid "All sections"
-msgstr ""
-
-msgid "No plugin matches your search."
-msgstr ""
-
-msgid "Section"
-msgstr ""
