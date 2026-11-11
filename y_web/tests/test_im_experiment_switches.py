@@ -124,11 +124,13 @@ def test_time_parameters_come_from_the_client_form():
         xc.apply_time_parameters(cfg, start_date="2026-06-01", other_clients=1)
     with pytest.raises(xc.TimeParameterError):
         xc.apply_time_parameters(cfg, ticks_per_round=12, other_clients=1)
-    # once the run has started nothing may change the clock
-    with pytest.raises(xc.TimeParameterError):
-        xc.apply_time_parameters(cfg, days=11, run_started=True)
+    # once the run has started the run can grow, but the clock cannot change
+    xc.apply_time_parameters(cfg, days=11, run_started=True)
+    assert cfg["simulation"]["num_days"] == 11
     xc.apply_time_parameters(cfg, days=5, run_started=True)
-    assert cfg["simulation"]["num_days"] == 10
+    assert cfg["simulation"]["num_days"] == 11
+    with pytest.raises(xc.TimeParameterError):
+        xc.apply_time_parameters(cfg, start_date="2026-06-01", run_started=True)
 
 
 # -- the update action ---------------------------------------------------------------------------

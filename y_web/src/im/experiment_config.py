@@ -226,16 +226,16 @@ def apply_time_parameters(
     In IM the clock belongs to the server, but the researcher sets the run in the client form like on the other
     platforms. The server runs as long as its longest client, so ``days`` only grows the run. The start date and
     the round length are the experiment's: the first client sets them, a later client must agree (the form
-    pre-fills them), and once a run has started none of them can change without a reset, because the server
-    keeps a hash of its configuration.
+    pre-fills them), and once a run has started the start date and the round length cannot change (the rounds already played
+    would change meaning), while ``days`` can still grow.
     """
     simulation = config.setdefault("simulation", {})
     telegram_time = config.setdefault("telegram", {}).setdefault("time", {})
     if run_started:
+        # a longer run is allowed after the start: the server reads ``num_days`` at every start and
+        # the rounds already played keep their ids
         if days is not None and int(days) > int(simulation.get("num_days", 0)):
-            raise TimeParameterError(
-                "the run already started: reset the experiment to make it longer"
-            )
+            simulation["num_days"] = int(days)
         if start_date is not None and str(start_date) != str(
             simulation.get("start_date")
         ):

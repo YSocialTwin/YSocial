@@ -58,6 +58,27 @@ def _sync_duration_fields_in_client_config(
     return updated
 
 
+def _extend_im_server_run(exp, new_total_days: int) -> None:
+    """Grow the run length held by the YInstantMessaging server configuration.
+
+    The IM client plays ``min(client days, server days)`` rounds, and the server reads its
+    ``simulation.num_days`` at every start, so an extension must be written there too. The
+    server accepts a changed configuration on restart, so this can be done after the run began.
+    """
+    from y_web.src.im.experiment_config import load_server_config, save_server_config
+
+    from ._im import _experiment_folder
+
+    if new_total_days <= 0:
+        return
+    folder = _experiment_folder(exp)
+    config = load_server_config(folder)
+    simulation = config.setdefault("simulation", {})
+    if int(simulation.get("num_days", 0)) < new_total_days:
+        simulation["num_days"] = int(new_total_days)
+        save_server_config(folder, config)
+
+
 def _reopen_completed_execution(
     client_execution, new_total_days: int, slots: int = 24
 ) -> bool:
@@ -236,6 +257,26 @@ def extend_simulation(id_client):
         return redirect(
             request.referrer or url_for("clientsr.client_details_dating", uid=id_client)
         )
+
+    if exp and exp.platform_type != "dating":
+        try:
+            from y_web.src.im import is_im_experiment
+
+            if is_im_experiment(exp):
+                _extend_im_server_run(exp, new_total_days)
+                slots = 24
+                client_execution.expected_duration_rounds = (
+                    -1 if new_total_days == -1 else new_total_days * slots
+                )
+                db.session.commit()
+        except Exception as exc:  # the client file below is still updated
+            flash(
+                _(
+                    "Warning: Could not update the server run length: %(error)s",
+                    error=str(exc),
+                ),
+                "warning",
+            )
 
     # Update the client config JSON file for HPC experiments
     # This ensures the client uses the extended duration when restarted
