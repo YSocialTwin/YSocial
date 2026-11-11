@@ -37,6 +37,7 @@ from ._blueprint import clientsr
 from ._crud import (
     _build_client_creation_context,
     _build_hourly_activity_chart_series,
+    _normalize_hourly_activity,
     _client_config_path_for_platform,
     _extract_llm_names_from_population_payload,
     _get_client_population_pages,
@@ -390,6 +391,7 @@ def client_details_hpc(uid):
             activity = first_profile
             idx, data = _build_hourly_activity_chart_series(activity)
 
+    activity = _normalize_hourly_activity(activity)
     if not activity:
         activity = {str(x): 0 for x in range(24)}
         idx, data = _build_hourly_activity_chart_series(activity)

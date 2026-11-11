@@ -6668,8 +6668,31 @@ def _extract_llm_names_from_population_payload(agents_payload):
     return ",".join(list(set(llms)))
 
 
+def _normalize_hourly_activity(activity):
+    """Return ``{"0": value, ..., "23": value}`` from the shapes configs use.
+
+    A dict maps hour -> weight (YClient); a comma-separated string or a list names the active
+    hours (activity profiles of YInstantMessaging, e.g. ``"0,1,2"``), each counted as 1.
+    Anything else gives no activity.
+    """
+    if isinstance(activity, dict):
+        return activity
+    if isinstance(activity, str):
+        activity = activity.split(",")
+    if isinstance(activity, (list, tuple, set)):
+        hours = {}
+        for item in activity:
+            try:
+                hours[str(int(str(item).strip()))] = 1
+            except (TypeError, ValueError):
+                continue
+        return hours
+    return {}
+
+
 def _build_hourly_activity_chart_series(activity):
-    """Convert hourly activity dict to plotting arrays."""
+    """Convert hourly activity (dict, CSV string or list of hours) to plotting arrays."""
+    activity = _normalize_hourly_activity(activity)
     idx = []
     data = []
     for hour in range(24):
