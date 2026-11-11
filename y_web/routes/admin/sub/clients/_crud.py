@@ -20,6 +20,7 @@ from flask import current_app, flash, redirect, render_template, request, url_fo
 from flask_login import current_user, login_required
 from sqlalchemy import delete, select
 
+from y_web.src.forum import communities as forum_communities
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._helpers import (
@@ -5132,6 +5133,11 @@ def _create_forum_client_internal():
     max_thread_context_chars = request.form.get("max_thread_context_chars", "3200")
     max_replies_per_round = request.form.get("max_replies_per_round", "2")
     reply_cooldown_rounds = request.form.get("reply_cooldown_rounds", "2")
+    try:
+        communities_values = forum_communities.parse_form(request.form)
+    except forum_communities.CommunitiesFormError as exc:
+        flash(_("Invalid client settings: %(why)s", why=str(exc)), "error")
+        return redirect(request.referrer)
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_pair_limit = request.form.get("memory_pair_limit", "5")
     memory_prompt_max_chars = request.form.get("memory_prompt_max_chars", "1600")
@@ -5846,6 +5852,10 @@ def _create_forum_client_internal():
             "memory_cross_thread_callback_min_score": 0.8,
         },
     }
+
+    communities_section = forum_communities.config_section(communities_values)
+    if communities_section:
+        config["communities"] = communities_section
 
     if not _apply_population_attributes_to_client_config(config, population_id):
         flash(

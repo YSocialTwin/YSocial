@@ -9,6 +9,7 @@ opinions, stress/reward, memory) come from the server configuration through
 
 from typing import Any, Dict, Iterable, Mapping, Optional
 
+from y_web.src.forum import communities as forum_communities
 from y_web.src.forum.experiment_config import apply_switches_to_client
 
 # the recommenders of YForum's registry (content and follow); the form offers those the catalog also lists
@@ -117,6 +118,13 @@ def _number(form, key, kind, lo, hi, default):
 
 def _flag(form, key) -> bool:
     return str(form.get(key) or "").strip().lower() in _TRUE
+
+
+def _communities(form):
+    try:
+        return forum_communities.parse_form(form)
+    except forum_communities.CommunitiesFormError as exc:
+        raise ForumClientFormError(str(exc)) from None
 
 
 def parse_client_form(
@@ -228,6 +236,7 @@ def parse_client_form(
         ),
         "content_recsys": content,
         "follow_recsys": follow,
+        "communities": _communities(form),
         "memory": memory,
         "llm": llm,
         # the model is chosen with the client (the "LLM Model" field of the standard form, ``user_type``)
@@ -311,6 +320,9 @@ def build_client_config(
         "population": {"file": population_file, "format": "auto"},
         "recsys": {},
     }
+    communities_section = forum_communities.config_section(values.get("communities"))
+    if communities_section:
+        config["communities"] = communities_section
     if values.get("starting_agents"):
         config["simulation"]["starting_agents"] = values["starting_agents"]
     if values.get("content_recsys"):
