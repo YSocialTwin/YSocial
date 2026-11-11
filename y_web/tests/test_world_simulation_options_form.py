@@ -144,7 +144,7 @@ def test_every_option_round_trips_through_its_field(p):
 
 def test_stored_values_equal_to_the_default_are_left_as_they_are():
     base = {
-        "attention": {"enabled": True, "temperature": 1.0, "inertia": 0.3},
+        "attention": {"enabled": True, "temperature": 0.3, "inertia": 0.5},
         "discovery": {"decay": 0.1, "beta": {"A": 1.0}},
     }
     options, errors = schema.apply_form(form_of(schema.values_from_options(base)), base)
@@ -360,7 +360,7 @@ def test_the_defaults_are_prefilled_in_the_collapsed_groups(site):
     app, exps, tmp = site
     html = login(app, "admin").get("/admin/world_simulation/new").get_data(as_text=True)
     assert re.search(
-        r'name="opt__attention__temperature" value="1.0"', html
+        r'name="opt__attention__temperature" value="0.3"', html
     ) and re.search(r'name="opt__discovery__w_interact" value="3.0"', html)
     assert re.search(r'name="opt__discovery__beta__0" value="-3.0"', html)
     assert "open" not in re.search(r'<details class="ws-advanced"[^>]*>', html).group(

@@ -110,7 +110,7 @@ ATTENTION = (
         "attention",
         "temperature",
         "float",
-        1.0,
+        0.3,
         N_("Temperature"),
         N_(
             "How sharply the agent favours its best platform. Low values concentrate attention, high values spread it evenly. Greater than 0."
@@ -123,7 +123,7 @@ ATTENTION = (
         "attention",
         "inertia",
         "float",
-        0.3,
+        0.5,
         N_("Inertia"),
         N_(
             "Weight of the previous day: 0 follows only the latest day, 1 never changes the shares. Between 0 and 1."
@@ -188,7 +188,7 @@ LEAVE = (
         "leave",
         "weight_threshold",
         "float",
-        0.1,
+        0.15,
         N_("Attention share below which an agent is losing interest"),
         N_("Between 0 and 1."),
         minimum=0.0,
@@ -199,7 +199,7 @@ LEAVE = (
         "leave",
         "consecutive_days",
         "int",
-        3,
+        2,
         N_("Days in a row before leaving"),
         N_("At least 1."),
         minimum=1,

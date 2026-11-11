@@ -9,8 +9,8 @@ starts. Values shown are the defaults.
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `false` | share each agent's daily attention among its platforms |
-| `temperature` | `1.0` | softmax temperature (> 0): higher spreads the attention more evenly |
-| `inertia` | `0.3` | weight of the previous day (0 to 1) |
+| `temperature` | `0.3` | softmax temperature (> 0): higher spreads the attention more evenly |
+| `inertia` | `0.5` | weight of the previous day (0 to 1) |
 | `min_multiplier`, `max_multiplier` | `0.1`, `3.0` | bounds of the session multiplier each client applies |
 | `normalization` | `"raw"` | `raw`: stress and reward as each platform reports them; `zscore`: standardised per platform and day |
 
@@ -65,8 +65,8 @@ the member experiments when the simulation starts*). See *Open the member experi
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `false` | agents may leave a platform |
-| `weight_threshold` | `0.1` | attention weight below which a platform counts as unused |
-| `consecutive_days` | `3` | days in a row below the threshold before leaving; at least one platform always stays |
+| `weight_threshold` | `0.15` | attention weight below which a platform counts as unused |
+| `consecutive_days` | `2` | days in a row below the threshold before leaving; at least one platform always stays |
 
 ## `membership`
 
