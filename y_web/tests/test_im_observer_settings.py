@@ -325,8 +325,10 @@ def test_forwarded_from_links_to_the_original_message(observer):
         ).first()
         origin_id = origin.id
         msg = session.scalars(
-            select(models.Message)
-            .where(models.Message.chat_id == chat, models.Message.fwd_origin_chat_id.is_not(None))
+            select(models.Message).where(
+                models.Message.chat_id == chat,
+                models.Message.fwd_origin_chat_id.is_not(None),
+            )
         ).first()
         msg.fwd_origin_message_id = origin_id
         session.commit()

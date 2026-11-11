@@ -376,4 +376,6 @@ def test_mentions_in_the_text_link_to_the_profile():
     )
     assert html.count('href="/3/im/profile/agent-7?round=5"') == 2
     assert "&lt;b&gt;hi&lt;/b&gt;" in html and "&amp;" in html
-    assert "&lt;b&gt;hi&lt;/b&gt; @ghost &amp; <a" in html  # unknown username stays plain
+    assert (
+        "&lt;b&gt;hi&lt;/b&gt; @ghost &amp; <a" in html
+    )  # unknown username stays plain

@@ -181,7 +181,11 @@ class Reader:
         if not self._chat_visible(self._chat(chat_id)):
             return None
         origin = self.s.get(self.m.Message, message_id)
-        if origin is None or origin.chat_id != chat_id or origin.round_id > self.vp.round:
+        if (
+            origin is None
+            or origin.chat_id != chat_id
+            or origin.round_id > self.vp.round
+        ):
             return None
         return {"chat_id": chat_id, "message_id": message_id}
 

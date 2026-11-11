@@ -68,7 +68,11 @@ def test_the_churn_curve_is_saved_and_churn_stays_off_unless_switched_on(
         1.2,
         -1.5,
     )
-    assert (churn["temperature"], churn["min_probability"], churn["max_probability"]) == (
+    assert (
+        churn["temperature"],
+        churn["min_probability"],
+        churn["max_probability"],
+    ) == (
         0.25,
         0.01,
         0.8,

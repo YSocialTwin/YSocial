@@ -450,7 +450,10 @@ def _history(rd, ctx, chat_id, forum_topic_id=None):
     after = request.args.get("after") or None
     upto = request.args.get("around") or None
     from_start = (
-        before is None and after is None and upto is None and ctx.ui.get("im_default_view") == "start"
+        before is None
+        and after is None
+        and upto is None
+        and ctx.ui.get("im_default_view") == "start"
     )
     return rd.history(
         chat_id,
