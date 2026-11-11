@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 11:41+0000\n"
+"POT-Creation-Date: 2026-11-11 14:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9349,6 +9349,9 @@ msgid ""
 "observer."
 msgstr ""
 
+msgid "Open the original message"
+msgstr ""
+
 #, python-format
 msgid "Open the original on %(platform)s"
 msgstr ""
@@ -15341,6 +15344,10 @@ msgstr ""
 msgid ""
 "Warning: Could not update client config file: %(error)s. Extension "
 "applied to database only."
+msgstr ""
+
+#, python-format
+msgid "Warning: Could not update the server run length: %(error)s"
 msgstr ""
 
 msgid "Warning: Error reading population file. Segment values may be limited."
