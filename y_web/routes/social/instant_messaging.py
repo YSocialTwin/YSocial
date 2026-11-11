@@ -6,6 +6,7 @@ viewpoints: ``public`` (all roles), ``account`` and ``overview`` (admin and rese
 """
 
 import os
+import re
 import uuid
 from urllib.parse import urlencode
 
@@ -15,6 +16,7 @@ from flask import jsonify, redirect, render_template, request
 from flask import session as flask_session
 from flask import url_for
 from flask_login import current_user, login_required
+from markupsafe import Markup, escape
 from sqlalchemy import select
 
 from y_web import db
@@ -446,14 +448,16 @@ def _history(rd, ctx, chat_id, forum_topic_id=None):
     """One page of a chat, sized and opened where the experiment's settings say."""
     before = request.args.get("before") or None
     after = request.args.get("after") or None
+    upto = request.args.get("around") or None
     from_start = (
-        before is None and after is None and ctx.ui.get("im_default_view") == "start"
+        before is None and after is None and upto is None and ctx.ui.get("im_default_view") == "start"
     )
     return rd.history(
         chat_id,
         before=before,
         after=after,
         from_start=from_start,
+        upto=upto,
         limit=_page_size(ctx.ui),
         forum_topic_id=forum_topic_id,
     )
@@ -699,6 +703,34 @@ def im_link_preview(exp_id, url):
 @main.app_template_global("im_text_without_urls")
 def im_text_without_urls(text, urls):
     return previews.strip_urls(text, [u.get("url") for u in urls or []])
+
+
+_MENTION_RE = re.compile(r"(?<![\w@/])@([A-Za-z0-9_][A-Za-z0-9_.\-]{1,63})")
+
+
+@main.app_template_global("im_text_html")
+def im_text_html(text, urls, mention_ids, exp_id, params):
+    """Message text with every resolved ``@username`` turned into a link to that profile.
+
+    Everything else is escaped; a username that matches no account stays plain text.
+    """
+    text = im_text_without_urls(text, urls) if urls else (text or "")
+    ids = {str(k).lower(): v for k, v in (mention_ids or {}).items()}
+    query = ("?" + urlencode(params)) if params else ""
+    out, last = [], 0
+    for match in _MENTION_RE.finditer(text):
+        uid = ids.get(match.group(1).lower())
+        if not uid:
+            continue
+        out.append(escape(text[last : match.start()]))
+        out.append(
+            Markup('<a class="im-mention" href="/{}/im/profile/{}{}">@{}</a>').format(
+                exp_id, uid, query, match.group(1)
+            )
+        )
+        last = match.end()
+    out.append(escape(text[last:]))
+    return Markup("").join(out)
 
 
 @main.route("/<int:exp_id>/im/api/link-preview")

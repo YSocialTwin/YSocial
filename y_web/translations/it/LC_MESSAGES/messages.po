@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 10:01+0000\n"
+"POT-Creation-Date: 2026-11-11 11:41+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -10519,9 +10519,6 @@ msgstr "Altro (un id di modello Hugging Face)"
 msgid "Other Dating fields"
 msgstr "Altri campi Dating"
 
-msgid "Other attributes"
-msgstr "Altri attributi"
-
 msgid "Other custom fields"
 msgstr "Altri campi personalizzati"
 
@@ -15112,9 +15109,9 @@ msgid ""
 "reward weight × reward) divided by the temperature, kept between the "
 "minimum and the maximum probability."
 msgstr ""
-"La probabilità è la logistica di (costante + peso dello stress × stress − "
-"peso della ricompensa × ricompensa) divisa per la temperatura, mantenuta tra "
-"la probabilità minima e quella massima."
+"La probabilità è la logistica di (costante + peso dello stress × stress −"
+" peso della ricompensa × ricompensa) divisa per la temperatura, mantenuta"
+" tra la probabilità minima e quella massima."
 
 #, python-format
 msgid "The probability of starting on %(platform)s must be between 0 and 1."
@@ -20980,4 +20977,7 @@ msgstr "✔️ Usa"
 
 #~ msgid "Network Growth (focused on connections)."
 #~ msgstr "Crescita della rete (incentrata sulle connessioni)."
+
+#~ msgid "Other attributes"
+#~ msgstr "Altri attributi"
 

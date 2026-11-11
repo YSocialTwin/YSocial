@@ -172,6 +172,19 @@ class Reader:
                 return original
         return msg.text or ""
 
+    def _forward_source(self, msg) -> Optional[Dict[str, str]]:
+        """Where the original of a forwarded message lives, when the viewpoint can open it."""
+        chat_id = msg.fwd_origin_chat_id or msg.fwd_from_chat_id
+        message_id = msg.fwd_origin_message_id or msg.fwd_from_message_id
+        if not chat_id or not message_id:
+            return None
+        if not self._chat_visible(self._chat(chat_id)):
+            return None
+        origin = self.s.get(self.m.Message, message_id)
+        if origin is None or origin.chat_id != chat_id or origin.round_id > self.vp.round:
+            return None
+        return {"chat_id": chat_id, "message_id": message_id}
+
     def _item(
         self, msg, state, accounts, titles, reactions, urls, parents, extras=None
     ) -> Dict[str, Any]:
@@ -222,6 +235,7 @@ class Reader:
                 {
                     "chat": titles.get(msg.fwd_from_chat_id) or titles.get(origin),
                     "origin_chat": titles.get(origin),
+                    "source": self._forward_source(msg),
                     "chained": bool(
                         msg.fwd_from_message_id
                         and msg.fwd_from_message_id != msg.fwd_origin_message_id
@@ -561,13 +575,15 @@ class Reader:
         forum_topic_id: Optional[int] = None,
         after: Optional[str] = None,
         from_start: bool = False,
+        upto: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """A page of the chat, newest first (the page is shown oldest first by the template).
 
         ``None`` when the chat does not exist or the viewpoint cannot open it; ``before`` is the id of the
         oldest message of the previous page. ``from_start`` (or ``after``, the id of the newest message already
         shown) pages forward from the beginning of the conversation instead; ``items`` stay newest first and
-        ``next_after`` is set when newer messages remain.
+        ``next_after`` is set when newer messages remain. ``upto`` is the id of a message to show as the
+        newest of the page (a link to a message that is not on the latest page).
         """
         chat = self._chat(chat_id)
         if not self._chat_visible(chat):
@@ -589,7 +605,17 @@ class Reader:
                     and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id < pivot.id),
                 )
             )
-        if from_start or after is not None:
+        if upto is not None and before is None:
+            pivot = self.s.get(m.Message, upto)
+            if pivot is None or pivot.chat_id != chat_id:
+                return None
+            query = query.where(
+                or_(
+                    m.Message.sim_ts < pivot.sim_ts,
+                    and_(m.Message.sim_ts == pivot.sim_ts, m.Message.id <= pivot.id),
+                )
+            )
+        elif from_start or after is not None:
             return self._history_forward(chat, query, limit, after)
         picked: List[Tuple[Any, str]] = []
         exhausted = True

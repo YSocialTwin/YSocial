@@ -285,9 +285,7 @@ def test_the_agent_profile_is_laid_out_in_cards_without_raw_json(observer):
     assert (
         "feed_url" not in html and "Feed url" not in html
     )  # empty attributes are not shown
-    assert (
-        "Other attributes" in html and "main: blue" in html
-    )  # unknown attributes are readable too
+    assert "Other attributes" not in html  # unhandled attributes are not listed
 
 
 def test_stress_and_reward_only_appear_when_the_run_computes_them(observer):
@@ -362,3 +360,20 @@ def test_time_section_shows_the_moment_and_steps_between_slots(observer):
     past = _page(client, f"/{exp_id}/im?day=1&slot=2")
     pmenu = past[past.index('id="im-menu"') : past.index("</details>")]
     assert "is-past" in pmenu and "Next" in pmenu and "im-latest" in pmenu
+
+
+def test_mentions_in_the_text_link_to_the_profile():
+    from y_web.routes.social.instant_messaging import im_text_html
+
+    html = str(
+        im_text_html(
+            "@Lisa <b>hi</b> @ghost & @lisa",
+            None,
+            {"Lisa": "agent-7"},
+            3,
+            {"round": "5"},
+        )
+    )
+    assert html.count('href="/3/im/profile/agent-7?round=5"') == 2
+    assert "&lt;b&gt;hi&lt;/b&gt;" in html and "&amp;" in html
+    assert "&lt;b&gt;hi&lt;/b&gt; @ghost &amp; <a" in html  # unknown username stays plain

@@ -12,14 +12,14 @@
       {% if ui.get('annotation_agent_type', True) %}<span class="im-kind" data-kind="{{ m.sender.kind }}">{{ m.sender.kind }}</span>{% endif %}{% else %}<span class="im-sender">{{ m.posted_as or '—' }}</span>{% endif %}
       {% if m.origin in ('event', 'campaign', 'rule') %}<span class="im-chip is-origin" title="{{ _('Where the message comes from') }}">{{ m.origin }}</span>{% endif %}
     </header>
-    {% if m.forwarded %}<div class="im-fwd">{% if ui.get('im_show_forward_origin', True) %}{{ _('Forwarded from %(chat)s', chat=m.forwarded.origin_chat or m.forwarded.chat or '?') }}{% if m.forwarded.chained %} · {{ _('forwarded again') }}{% endif %}{% else %}{{ _('Forwarded message') }}{% endif %}</div>{% endif %}
+    {% if m.forwarded %}<div class="im-fwd">{% if ui.get('im_show_forward_origin', True) %}{% set fsrc = m.forwarded.source %}{% if fsrc %}<a class="im-fwd-link" href="/{{ exp_id }}/im/chat/{{ fsrc.chat_id }}?around={{ fsrc.message_id }}{{ '&' ~ (params|urlencode) if params else '' }}#m-{{ fsrc.message_id }}" title="{{ _('Open the original message') }}">{% endif %}{{ _('Forwarded from %(chat)s', chat=m.forwarded.origin_chat or m.forwarded.chat or '?') }}{% if fsrc %}</a>{% endif %}{% if m.forwarded.chained %} · {{ _('forwarded again') }}{% endif %}{% else %}{{ _('Forwarded message') }}{% endif %}</div>{% endif %}
     {% if m.reply_to %}<a class="im-reply" href="#m-{{ m.reply_to.id }}"><strong>{{ m.reply_to.author or '?' }}</strong> <span>{{ m.reply_to.text }}</span></a>{% endif %}
 {{ federation_quote_block(federation_quote(exp_id, m.id)) }}
 {% set ws_exp = exp_id %}{% set ws_id = m.id %}{% include 'shared/world_simulation_origin.html' %}
     {% if m.deleted %}
     <p class="im-text im-tombstone">{{ _('This message was deleted.') }}</p>
     {% else %}
-    <p class="im-text">{{ im_text_without_urls(m.text, m.urls) if m.urls else m.text }}</p>
+    <p class="im-text">{{ im_text_html(m.text, m.urls, m.mention_ids, exp_id, params) }}</p>
     {% endif %}
     {% if m.media_type %}<div class="im-media">{{ _('[%(kind)s attachment]', kind=m.media_type) }}</div>{% endif %}
     {% set seen = [] %}

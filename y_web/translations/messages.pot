@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 10:01+0000\n"
+"POT-Creation-Date: 2026-11-11 11:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9510,9 +9510,6 @@ msgid "Other (a Hugging Face model id)"
 msgstr ""
 
 msgid "Other Dating fields"
-msgstr ""
-
-msgid "Other attributes"
 msgstr ""
 
 msgid "Other custom fields"

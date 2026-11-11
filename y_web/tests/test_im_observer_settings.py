@@ -303,3 +303,35 @@ def test_no_frontend_plugin_module_attaches_to_im_pages(observer):
         request.view_args = {"exp_id": exp_id}
         ctx = _platform_ui_context()
     assert ctx["frontend_adds_on_modules"] == [] and ctx["platform_ui"] == "im"
+
+
+def test_forwarded_from_links_to_the_original_message(observer):
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    from yinstantmessaging.server.db.database import make_engine_from_url
+
+    from y_web.src.im.engine import im_modules
+
+    app, client, exp_id, info, path = observer
+    chat = _forward_one(path)
+    models = im_modules()[0]
+    engine = make_engine_from_url(f"sqlite:///{path}")
+    with Session(engine) as session:
+        origin_chat = session.scalars(
+            select(models.Chat.id).order_by(models.Chat.id)
+        ).all()[1]
+        origin = session.scalars(
+            select(models.Message).where(models.Message.chat_id == origin_chat)
+        ).first()
+        origin_id = origin.id
+        msg = session.scalars(
+            select(models.Message)
+            .where(models.Message.chat_id == chat, models.Message.fwd_origin_chat_id.is_not(None))
+        ).first()
+        msg.fwd_origin_message_id = origin_id
+        session.commit()
+    engine.dispose()
+    html = _page(client, f"/{exp_id}/im/chat/{chat}")
+    assert f"/{exp_id}/im/chat/{origin_chat}?around={origin_id}" in html
+    page = _page(client, f"/{exp_id}/im/chat/{origin_chat}?around={origin_id}")
+    assert f'id="m-{origin_id}"' in page

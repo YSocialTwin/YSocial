@@ -86,15 +86,6 @@
     </section>
     {% endif %}
 
-    {% set extra = [] %}
-    {% for k, v in P.items() %}{% if k not in handled and v not in (None, '', {}, []) %}{% set _x = extra.append((k, v)) %}{% endif %}{% endfor %}
-    {% if extra %}
-    <section class="im-card">
-      <h3>{{ _('Other attributes') }}</h3>
-      <dl class="im-facts">{% for k, v in extra %}<div><dt>{{ k|replace('_', ' ')|capitalize }}</dt><dd>{% if v is mapping %}{% for kk, vv in v.items() %}<span class="im-chip">{{ kk|replace('_', ' ') }}: {{ vv }}</span> {% endfor %}{% elif v is iterable and v is not string %}{{ v|join(', ') }}{% else %}{{ v }}{% endif %}</dd></div>{% endfor %}</dl>
-    </section>
-    {% endif %}
-
     <section class="im-card">
       <h3>{{ _('Chats') }}</h3>
       <ul class="im-plain">
