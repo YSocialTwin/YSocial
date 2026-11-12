@@ -467,7 +467,28 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
         .limit(max(limit * 12, 96))
         .all()
     )
-    return _collect_ranked_communities_from_post_rows(user_posts, limit)
+    ranked = _collect_ranked_communities_from_post_rows(user_posts, limit)
+    try:
+        joined = (
+            db.session.query(func.lower(Interests.interest).label("slug"))
+            .join(User_interest, User_interest.interest_id == Interests.iid)
+            .filter(User_interest.user_id == opaque_id(user_id), Interests.interest != "")
+            .order_by(User_interest.id.desc())
+            .all()
+        )
+    except Exception:  # noqa: BLE001 - the list degrades to the communities with posts
+        return ranked
+    seen = {c.get("slug") for c in ranked}
+    member = []
+    for row in joined:
+        slug = str(row.slug or "").strip().lower()
+        if slug and slug not in seen:
+            seen.add(slug)
+            member.append(
+                {"slug": slug, "label": f"y/{slug}", "kind": "member"}
+            )
+    # communities the user created or joined come first: they may have no post yet
+    return (member + ranked)[: max(limit, len(member))]
 
 
 def _reaction_aggregates_subquery():

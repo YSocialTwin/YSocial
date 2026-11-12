@@ -26,7 +26,9 @@
                 <span class="forum-community-meta">
                     <strong>{{ community.label }}</strong>
                     <small>
-                        {% if community.kind == 'subreddit' %}
+                        {% if community.kind == 'member' %}
+                        {{ _('You joined this community') }}
+                        {% elif community.kind == 'subreddit' %}
                         {{ _('Active feed thread') }}
                         {% else %}
                         {{ _('Active generated topic') }}
