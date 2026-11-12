@@ -1002,3 +1002,6 @@ body.fr-modal-open { overflow: hidden; }
 .fr-modal-primary, .fr-modal-secondary { border: 0; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .fr-modal-primary { background: var(--fr-accent); color: #fff; }
 .fr-modal-secondary { background: #e5ebee; color: var(--fr-text); }
+
+/* inside a community the post goes to the current community: no picker */
+.forum-compose-community-field[hidden] { display: none !important; }

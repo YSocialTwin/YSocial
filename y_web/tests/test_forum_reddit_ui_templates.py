@@ -145,3 +145,10 @@ def test_available_communities_include_joined_ones():
 
     src = (Path(__file__).resolve().parents[1] / "src/forum/service/queries.py").read_text()
     assert "User_interest.interest_id == Interests.iid" in src
+
+
+def test_composer_hides_community_picker_inside_a_community():
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "templates/forum/feed.html").read_text()
+    assert "forum-compose-community-field\"{% if current_subforum_slug %} hidden{% endif %}" in src

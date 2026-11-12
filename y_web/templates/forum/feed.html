@@ -302,7 +302,7 @@
                                                 ></textarea>
                                             </div>
 
-                                            <div class="reddit-field forum-compose-community-field">
+                                            <div class="reddit-field forum-compose-community-field"{% if current_subforum_slug %} hidden{% endif %}>
                                                 <label class="forum-compose-community-label" for="post-community">
                                                     {{ _('Community') }}
                                                 </label>
@@ -316,6 +316,9 @@
                                                             {{ community.label }}
                                                         </option>
                                                         {% endfor %}
+                                                        {% if current_subforum_slug and current_subforum_slug not in (available_communities|map(attribute='slug')|list) %}
+                                                        <option value="{{ current_subforum_slug }}" selected>y/{{ current_subforum_slug }}</option>
+                                                        {% endif %}
                                                     </select>
                                                 </div>
                                             </div>
