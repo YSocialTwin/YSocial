@@ -636,7 +636,11 @@ def federation_repost_targets(exp_id):
 
     try:
         return jsonify(
-            {"platforms": _ho.destinations_for(exp_id, getattr(current_user, "id", None))}
+            {
+                "platforms": _ho.destinations_for(
+                    exp_id, getattr(current_user, "id", None)
+                )
+            }
         )
     except Exception:  # noqa: BLE001 - a menu never fails because of the federation
         return jsonify({"platforms": []})

@@ -1320,9 +1320,7 @@ def api_crosspost_targets(exp_id: int):
     mine = set()
     try:
         actor = _forum_chat_owner_user()
-        mine = {
-            c.get("slug") for c in fetch_user_communities(actor.id if actor else 0)
-        }
+        mine = {c.get("slug") for c in fetch_user_communities(actor.id if actor else 0)}
     except Exception:
         mine = set()
 

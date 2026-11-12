@@ -216,12 +216,13 @@ def _primary_community_payload(
 
 def _shared_from_with_community(post):
     """``_shared_from`` whose community is resolved like the community of any post (subreddit of the article or image,
-    else the first topic), so a cross-post always names the community it was copied from."""
+    else the first topic), so a cross-post always names the community it was copied from.
+    """
     origin = _shared_from(post)
     if not origin or origin == -1:
         return origin
     try:
-        mapped = (_build_root_post_community_map([origin[0]]).get(origin[0]) or [])
+        mapped = _build_root_post_community_map([origin[0]]).get(origin[0]) or []
         if mapped:
             return (origin[0], origin[1], mapped[0]["slug"])
         source = db.session.get(Post, origin[0])

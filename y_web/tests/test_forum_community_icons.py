@@ -9,11 +9,16 @@ from y_web.src.forum.community_icons import (
     icon_for,
 )
 
-MDI_CSS = Path(__file__).resolve().parents[1] / "static/assets/vendor/mdi/css/materialdesignicons.css"
+MDI_CSS = (
+    Path(__file__).resolve().parents[1]
+    / "static/assets/vendor/mdi/css/materialdesignicons.css"
+)
 
 
 def test_keyword_icons_and_uniqueness():
-    icons = assign_icons(["linux", "windows", "macos", "programming", "cats", "dogs", "linux"])
+    icons = assign_icons(
+        ["linux", "windows", "macos", "programming", "cats", "dogs", "linux"]
+    )
     assert icons["linux"] == "mdi-linux"
     assert icons["windows"] == "mdi-microsoft-windows"
     assert len(set(icons.values())) == len(icons)

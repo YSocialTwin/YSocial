@@ -18,7 +18,7 @@ def test_community_card_uses_real_stats_and_slug_label():
 
 
 def test_thread_keeps_legacy_hooks_and_adds_collapse():
-    assert 'id="child-{{ thread[\'post_id\'] }}"' in _read("components/list.html")
+    assert "id=\"child-{{ thread['post_id'] }}\"" in _read("components/list.html")
     assert "fr-collapse" in _read("components/list.html")
     assert "toggle-reply-button" in _read("components/thread-post.html")
     assert "forum-thread.js" in _read("thread.html")
@@ -33,7 +33,7 @@ def test_profile_css_moves_sidebar_to_right():
 def test_feed_toolbar_menus_drive_native_select_and_compact_view():
     feed = _read("feed.html")
     assert 'id="feed-type-select"' in feed  # legacy hook kept for async_updates.js
-    assert "data-fr-sort" in feed and "data-fr-view=\"compact\"" in feed
+    assert "data-fr-sort" in feed and 'data-fr-view="compact"' in feed
     assert "forum-feed-menus.js" in feed
     js = (ROOT / "static/assets/js/reddit/forum-feed-menus.js").read_text()
     assert "fr-view-compact" in js and "feed-type-select" in js
@@ -69,7 +69,11 @@ def test_compact_rows_can_be_expanded_individually():
 
 def test_post_header_has_single_meta_line_markup():
     posts = _read("components/posts.html")
-    assert posts.index("forum-post-community-link") < posts.index("post-author-link") < posts.index("forum-post-time")
+    assert (
+        posts.index("forum-post-community-link")
+        < posts.index("post-author-link")
+        < posts.index("forum-post-time")
+    )
     js = (ROOT / "static/assets/js/reddit/async_updates.js").read_text()
     assert "communityMeta," in js and "more-horizontal" in js
 
@@ -108,7 +112,14 @@ def test_federated_repost_wiring():
     forum_js = (root / "static/assets/js/reddit/forum-crosspost.js").read_text()
     assert "federation/repost_targets" in forum_js and "federation/repost" in forum_js
     routes = (root / "routes/interactions/common.py").read_text()
-    assert "def federation_repost(" in routes and "def federation_repost_targets(" in routes
-    for rel in ("microblogging/components/posts.html", "photo/components/posts.html", "im/_message.html"):
+    assert (
+        "def federation_repost(" in routes
+        and "def federation_repost_targets(" in routes
+    )
+    for rel in (
+        "microblogging/components/posts.html",
+        "photo/components/posts.html",
+        "im/_message.html",
+    ):
         assert "ws_repost_button" in (root / "templates" / rel).read_text(), rel
     assert (root / "static/assets/js/world-simulation-repost.js").exists()
