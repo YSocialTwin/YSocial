@@ -46,3 +46,9 @@ def test_feed_has_recent_posts_column_fed_by_thread_visits():
     assert 'id="fr-recent-entry"' in _read("thread.html")
     js = (ROOT / "static/assets/js/reddit/forum-recent-posts.js").read_text()
     assert "ysocial.forum.recent." in js and "textContent" in js
+
+
+def test_profile_tabs_load_in_place():
+    assert "forum-profile-tabs.js" in _read("profile.html")
+    js = (ROOT / "static/assets/js/forum-profile-tabs.js").read_text()
+    assert "pushState" in js and "posts-container" in js and "InfiniteScroll" in js

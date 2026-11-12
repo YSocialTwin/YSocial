@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     hydrateProfileImages(postsContainer);
+    window.redditProfileHydrate = function() { hydrateProfileImages(document.getElementById('posts-container')); };
 
     document.addEventListener('click', function(event) {
         var trigger = event.target.closest('.dropdown-trigger');
