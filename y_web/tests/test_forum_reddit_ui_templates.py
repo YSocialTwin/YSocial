@@ -39,3 +39,10 @@ def test_feed_toolbar_menus_drive_native_select_and_compact_view():
     assert "fr-view-compact" in js and "feed-type-select" in js
     css = (ROOT / "static/assets/css/reddit/forum-reddit.css").read_text()
     assert ".fr-view-compact .reddit-post" in css
+
+
+def test_feed_has_recent_posts_column_fed_by_thread_visits():
+    assert "components/recent_posts.html" in _read("feed.html")
+    assert 'id="fr-recent-entry"' in _read("thread.html")
+    js = (ROOT / "static/assets/js/reddit/forum-recent-posts.js").read_text()
+    assert "ysocial.forum.recent." in js and "textContent" in js

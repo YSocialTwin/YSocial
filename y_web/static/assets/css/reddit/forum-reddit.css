@@ -776,3 +776,19 @@ body {
     .fr-view-compact .reddit-post .content-wrap { grid-template-columns: 72px minmax(0, 1fr); column-gap: 10px; }
     .fr-view-compact .reddit-post .content-wrap::before { width: 72px; height: 60px; }
 }
+
+/* ===== Feed right column: Recent posts ===== */
+.fr-recent { padding: 16px 0 4px; }
+.fr-recent[hidden] { display: none; }
+.fr-recent-head { display: flex; align-items: center; justify-content: space-between; padding: 0 16px 8px; }
+.fr-recent-head h3 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fr-muted); }
+.fr-recent-clear { border: 0; background: none; color: #0079d3; font-size: 14px; cursor: pointer; padding: 0; }
+.fr-recent-clear:hover { text-decoration: underline; }
+.fr-recent-list { list-style: none; margin: 0; padding: 0; }
+.fr-recent-item { padding: 12px 16px; border-bottom: 1px solid var(--fr-line); }
+.fr-recent-item:last-child { border-bottom: 0; }
+.fr-recent-meta { display: flex; gap: 6px; font-size: 12px; color: var(--fr-muted); margin-bottom: 6px; }
+.fr-recent-meta strong { color: var(--fr-text); font-weight: 600; }
+.fr-recent-title { display: block; color: var(--fr-muted); font-size: 15px; line-height: 1.35; text-decoration: none; overflow-wrap: anywhere; }
+.fr-recent-title:hover { color: var(--fr-text); }
+.fr-recent-stats { margin-top: 6px; font-size: 12px; color: var(--fr-muted); }

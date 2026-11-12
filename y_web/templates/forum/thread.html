@@ -190,7 +190,15 @@ window.redditFeedConfig = Object.freeze({
 });
 </script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+<div hidden id="fr-recent-entry" data-exp-id="{{ exp_id }}" data-entry='{{ {
+    "id": thread["post_id"]|string,
+    "title": thread.get("title") or (thread.get("post") or "")[:120],
+    "community": current_subforum_label or "",
+    "time": thread.get("display_time") or "",
+    "score": (thread.get("likes", 0) or 0) - (thread.get("dislikes", 0) or 0)
+}|tojson }}'></div>
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-thread.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-recent-posts.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
