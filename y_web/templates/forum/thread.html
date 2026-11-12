@@ -116,13 +116,14 @@
         <div id="profile-main" class="view-wrap is-headless thread-view">
             <!-- <div id="activity-feed" class="view-wrap true-dom is-hidden"> -->
             <div class="columns forum-feed-layout">
-                <div class="column is-2 is-hidden-touch"></div>
+                <div class="column is-1 is-hidden-touch"></div>
 
                 <div class="column is-10-tablet is-7-desktop">
                     <!-- Reddit-style navigation -->
-                    <div class="reddit-thread-nav" style="margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #e1e8ed;">
-                        <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" style="color: #0079d3; text-decoration: none; font-size: 14px;">
-                            {{ _('← Back to feed') }}
+                    <div class="reddit-thread-nav">
+                        <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" aria-label="{{ _('Back to feed') }}">
+                            <i class="mdi mdi-arrow-left" aria-hidden="true"></i>
+                            {% if current_subforum_label %}<span class="fr-community-avatar">y/</span><span>{{ current_subforum_label }}</span>{% else %}<span>{{ _('Back to feed') }}</span>{% endif %}
                         </a>
                     </div>
 
@@ -145,10 +146,13 @@
 
                 </div>
 
-                {% if forum_memory_enabled %}
-                <div class="column is-3 is-hidden-touch">
+                {% if forum_memory_enabled or current_subforum_slug %}
+                <div class="column is-4-desktop is-hidden-touch">
+                    {% include "forum/components/community_card.html" %}
+                    {% if forum_memory_enabled %}
                     {% set forum_chat_page_kind = 'thread' %}
                     {% include "forum/components/chat_panel.html" %}
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
@@ -184,6 +188,7 @@ window.redditFeedConfig = Object.freeze({
 });
 </script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-thread.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>

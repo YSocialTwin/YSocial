@@ -43,6 +43,7 @@ from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     fetch_available_communities,
+    fetch_community_stats,
     fetch_feed_page,
     fetch_recent_active_communities,
     fetch_user_communities,
@@ -500,6 +501,11 @@ def get_thread_reddit(exp_id, post_id):
     mention_user_id = logged_user.id if logged_user is not None else None
     mentions = get_unanswered_mentions(mention_user_id) if mention_user_id else []
 
+    thread_communities = _build_forum_sidebar_communities(
+        [{"article": {}, "topics": discussion_tree.get("topics") or []}]
+    )
+    thread_community = thread_communities[0] if thread_communities else None
+
     return render_template(
         "forum/thread.html",
         thread=discussion_tree,
@@ -518,6 +524,14 @@ def get_thread_reddit(exp_id, post_id):
         exp_id=exp_id,
         back_url=_forum_resolve_back_url(exp_id),
         forum_memory_enabled=_forum_memory_enabled(exp_id),
+        current_subforum_slug=thread_community["slug"] if thread_community else None,
+        current_subforum_label=thread_community["label"] if thread_community else None,
+        community_stats=(
+            fetch_community_stats(thread_community["slug"])
+            if thread_community
+            else None
+        ),
+        feed_type=request.args.get("feed_type", _forum_default_feed_type(exp_id)),
     )
 
 
@@ -865,6 +879,10 @@ def subforum_reddit(exp_id, community_slug):
         my_communities=my_communities,
         current_subforum_slug=current_subforum["slug"] if current_subforum else None,
         current_subforum_label=current_subforum["label"] if current_subforum else None,
+        community_stats=fetch_community_stats(community_slug),
+        community_joined=any(
+            entry.get("slug") == community_slug for entry in my_communities
+        ),
     )
 
 

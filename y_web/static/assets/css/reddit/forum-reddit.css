@@ -551,3 +551,84 @@ body {
 .forum-post-community-link:hover {
     color: var(--fr-accent);
 }
+
+/* ===== Stage 2-4: community, thread, profile (Reddit-like) ===== */
+.fr-pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+    border-radius: var(--fr-radius-pill); border: 1px solid var(--fr-line);
+    background: var(--fr-bg); color: var(--fr-text); font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.fr-pill:hover { background: var(--fr-bg-hover); }
+.fr-pill-soft { background: var(--fr-bg-soft); }
+.fr-community-avatar {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    width: 24px; height: 24px; border-radius: 50%; background: var(--fr-accent); color: #fff;
+    font-size: 11px; font-weight: 700;
+}
+.fr-community-avatar.is-large { width: 72px; height: 72px; font-size: 26px; border: 4px solid var(--fr-bg); margin-top: -28px; }
+
+/* community header */
+.fr-community-header { margin-bottom: 12px; }
+.fr-community-cover { height: 96px; border-radius: 12px; background: linear-gradient(135deg, #ff8a5c, var(--fr-accent) 60%, #c23600); }
+.fr-community-bar { display: flex; align-items: flex-end; gap: 14px; padding: 0 12px 8px; flex-wrap: wrap; }
+.fr-community-bar h1 { font-size: 28px; font-weight: 700; color: var(--fr-text); margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.fr-community-actions { display: flex; gap: 8px; }
+
+/* right-hand community card */
+.fr-aside-card { background: var(--fr-bg-soft); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.fr-community-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.fr-community-name { font-weight: 700; color: var(--fr-text); flex: 1; overflow-wrap: anywhere; }
+.fr-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.fr-stat-grid dt { font-size: 12px; color: var(--fr-muted); }
+.fr-stat-grid dd { margin: 0; font-size: 16px; font-weight: 600; color: var(--fr-text); }
+
+/* thread */
+.reddit-thread-nav { margin-bottom: 12px !important; padding: 0 !important; border: 0 !important; }
+.reddit-back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--fr-text) !important; font-weight: 600; font-size: 14px !important; }
+.fr-thread-post { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 0 8px !important; }
+.fr-thread-post h1, .fr-thread-post h2, .fr-thread-post .title { font-size: 22px; font-weight: 600; color: var(--fr-text); line-height: 1.3; }
+.fr-flair-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.fr-join-conversation {
+    display: block; width: 100%; text-align: left; margin: 12px 0; padding: 10px 16px;
+    border: 1px solid var(--fr-line); border-radius: var(--fr-radius-pill); background: var(--fr-bg);
+    color: var(--fr-muted); font-size: 14px; cursor: pointer;
+}
+.fr-join-conversation:hover { background: var(--fr-bg-hover); }
+.fr-actions .vote-button, .fr-actions .toggle-reply-button { border-radius: var(--fr-radius-pill) !important; }
+
+.fr-branch { position: relative; }
+.fr-comment { background: transparent !important; border: 0 !important; box-shadow: none !important; padding-left: 0 !important; }
+.fr-child { border-left: 2px solid var(--fr-line) !important; padding-left: 16px !important; margin-left: 14px !important; }
+.fr-child:hover { border-left-color: var(--fr-muted) !important; }
+.fr-collapse { position: absolute; left: -2px; top: 0; background: none; border: 0; padding: 0; color: var(--fr-muted); cursor: pointer; font-size: 16px; line-height: 1; opacity: 0; transition: opacity .15s; }
+.fr-branch:hover > .fr-collapse { opacity: 1; }
+.fr-branch.is-collapsed > .fr-children, .fr-branch.is-collapsed .fr-actions { display: none; }
+.fr-branch.is-collapsed > .fr-comment { max-height: 28px; overflow: hidden; opacity: .6; }
+
+/* profile */
+.forum-profile-banner { display: none !important; }
+.forum-profile-hero { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.forum-profile-summary { display: flex !important; align-items: center; gap: 20px; padding: 8px 0 !important; margin: 0 !important; }
+.forum-profile-avatar { width: 88px !important; height: 88px !important; border-radius: 50% !important; overflow: hidden; margin: 0 !important; border: 0 !important; }
+.forum-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.forum-profile-name { font-size: 24px !important; font-weight: 700 !important; color: var(--fr-text); }
+.forum-profile-subline { color: var(--fr-muted); font-size: 13px; }
+.forum-profile-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; }
+.forum-profile-stat { display: inline-flex; gap: 4px; align-items: baseline; font-size: 13px; color: var(--fr-muted); }
+.forum-profile-stat strong { color: var(--fr-text); font-weight: 600; }
+.forum-profile-follow-btn { border-radius: var(--fr-radius-pill) !important; background: var(--fr-accent) !important; color: #fff !important; padding: 6px 16px !important; }
+.forum-profile-follow-btn.is-following { background: var(--fr-bg-soft) !important; color: var(--fr-text) !important; }
+.forum-profile-layout { display: grid !important; grid-template-columns: minmax(0, 1fr) 320px !important; grid-template-areas: "main side"; gap: 16px; align-items: start; }
+.forum-profile-layout.has-chat { grid-template-columns: minmax(0, 1fr) 320px 280px !important; grid-template-areas: "main side chat"; }
+.forum-profile-layout > section { grid-area: main; }
+.forum-profile-layout > .forum-profile-sidebar { grid-area: side; }
+.forum-profile-layout > .forum-profile-chat-column { grid-area: chat; }
+.forum-profile-card { background: var(--fr-bg-soft) !important; border: 0 !important; border-radius: 12px !important; box-shadow: none !important; }
+.forum-profile-tabs { display: flex; gap: 4px; flex-wrap: wrap; border: 0 !important; background: transparent !important; }
+.forum-profile-tab { padding: 8px 16px !important; border-radius: var(--fr-radius-pill) !important; font-weight: 600; color: var(--fr-muted) !important; border: 0 !important; background: transparent !important; }
+.forum-profile-tab:hover { background: var(--fr-bg-hover) !important; }
+.forum-profile-tab.is-active { background: var(--fr-bg-soft) !important; color: var(--fr-text) !important; }
+@media (max-width: 1023px) {
+    .forum-profile-layout, .forum-profile-layout.has-chat { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "side" "main" !important; }
+    .forum-profile-summary { flex-direction: column; align-items: flex-start; }
+}

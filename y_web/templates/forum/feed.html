@@ -188,16 +188,17 @@
                     {% endif %}
 
                     {% if view_mode == 'subforum' and current_subforum_label %}
-                    <div class="forum-subforum-banner ys-mb-16">
-                        <div>
-                            <span class="forum-subforum-kicker">{{ _('Subforum') }}</span>
-                            <h2>{{ current_subforum_label }}</h2>
-                            <p>{{ _('Posts associated with this community, sorted with the same feed modes as /rfeed.') }}</p>
+                    <header class="fr-community-header">
+                        <div class="fr-community-cover"></div>
+                        <div class="fr-community-bar">
+                            <span class="fr-community-avatar is-large">y/</span>
+                            <h1>{{ current_subforum_label }}</h1>
+                            <div class="fr-community-actions">
+                                {% if community_joined|default(false) %}<span class="fr-pill fr-pill-soft">{{ _('Joined') }}</span>{% endif %}
+                                <a class="fr-pill" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">{{ _('Back to Feed') }}</a>
+                            </div>
                         </div>
-                        <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
-                            {{ _('Back to Feed') }}
-                        </a>
-                    </div>
+                    </header>
                     {% endif %}
 
                     {% if view_mode != 'search' %}
@@ -577,10 +578,13 @@
                 </div>
                 <!-- /Middle column -->
 
-                {% if forum_memory_enabled %}
+                {% if forum_memory_enabled or (view_mode == 'subforum' and current_subforum_slug) %}
                 <div class="column is-3 is-hidden-touch">
+                    {% if view_mode == 'subforum' %}{% include "forum/components/community_card.html" %}{% endif %}
+                    {% if forum_memory_enabled %}
                     {% set forum_chat_page_kind = view_mode|default('feed', true) %}
                     {% include "forum/components/chat_panel.html" %}
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

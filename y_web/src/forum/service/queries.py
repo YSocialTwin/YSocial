@@ -348,6 +348,39 @@ def fetch_available_communities() -> List[Dict[str, str]]:
     return communities
 
 
+def fetch_community_stats(community_slug: Optional[str]) -> Dict[str, int]:
+    """Counts shown in the side card of a community: posts, comments, participants and the first emotions.
+
+    Posts are the thread roots the community filter selects; comments are the replies in those threads; participants
+    are the distinct authors of both. Empty when the community has no post."""
+    slug = str(community_slug or "").strip().lower()
+    empty = {"posts": 0, "comments": 0, "participants": 0}
+    if not slug:
+        return empty
+    roots = _apply_community_filter(
+        db.session.query(Post.id).filter(_root_post_filter(Post.comment_to)), slug
+    )
+    root_ids = [row[0] for row in roots.all()]
+    if not root_ids:
+        return empty
+    in_threads = or_(Post.thread_id.in_(root_ids), Post.id.in_(root_ids))
+    comment_count = (
+        db.session.query(func.count(Post.id))
+        .filter(Post.thread_id.in_(root_ids), Post.id.notin_(root_ids))
+        .scalar()
+    )
+    participants = (
+        db.session.query(func.count(func.distinct(Post.user_id)))
+        .filter(in_threads)
+        .scalar()
+    )
+    return {
+        "posts": len(root_ids),
+        "comments": int(comment_count or 0),
+        "participants": int(participants or 0),
+    }
+
+
 def fetch_recent_active_communities(limit: int = 8) -> List[Dict[str, str]]:
     recent_posts = (
         db.session.query(Post.id, Post.thread_id)

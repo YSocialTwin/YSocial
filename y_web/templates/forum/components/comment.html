@@ -5,7 +5,7 @@
 {% elif thread.get('is_disliked', False) %}
     {% set comment_vote = 'dislike' %}
 {% endif %}
-<div class="reddit-comment post-detail-card"
+<div class="reddit-comment post-detail-card fr-comment"
      data-reddit-post
      data-post-id="{{ thread['post_id'] }}"
      data-thread-id="{{ thread.get('thread_id', thread['post_id']) }}"
@@ -64,7 +64,7 @@
     {% endif %}
 
     <!-- Comment actions -->
-    <div style="display: flex; align-items: center; gap: 4px; color: #7c7c7c; font-size: 11px; font-weight: 700; margin-bottom: 8px;">
+    <div class="fr-actions" style="display: flex; align-items: center; gap: 4px; color: #7c7c7c; font-size: 11px; font-weight: 700; margin-bottom: 8px;">
  <button class="vote-button ys-action-btn" type="button" data-action="like">
  <i data-feather="arrow-up" class="ys-icon-xxs"></i>
             <span data-role="score">{{ thread.get("likes", 0) - thread.get("dislikes", 0) }}</span>

@@ -5,7 +5,7 @@
 {% elif thread.get('is_disliked', False) %}
     {% set thread_vote = 'dislike' %}
 {% endif %}
-<div class="reddit-thread-post"
+<div class="reddit-thread-post fr-thread-post"
      data-reddit-post
      data-post-id="{{ thread['post_id'] }}"
      data-thread-id="{{ thread.get('thread_id', thread['post_id']) }}"
@@ -95,9 +95,9 @@
     {% endif %}
 
     <!-- Post actions -->
-    <div style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 12px; font-weight: 700;">
+    <div class="fr-actions" style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 12px; font-weight: 700;">
         <!-- Reddit-style voting (consistent with feed) -->
-        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
+        <div class="fr-vote" style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
             <button class="vote-button ys-icon-btn" type="button" data-action="like">
  <i data-feather="arrow-up" class="ys-icon-xs"></i>
             </button>
@@ -123,6 +123,22 @@
         </a>
         {% endif %}
     </div>
+
+    {% if (thread.get('emotions') or thread.get('topics')) %}
+    <div class="fr-flair-row">
+        {% if forum_show_emotions is not defined or forum_show_emotions %}
+        {% for em in thread.get('emotions') or [] %}
+        <a class="forum-meta-chip forum-emotion-chip" href="/{{exp_id}}/emotion/{{ em[2] }}/1"><i class="mdi {{ em[1] }}"></i><span>{{ em[0] }}</span></a>
+        {% endfor %}
+        {% endif %}
+        {% if forum_show_topics is not defined or forum_show_topics %}
+        {% for tp in thread.get('topics') or [] %}
+        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip {% if tp[2] == 'positive' %}is-positive{% elif tp[2] == 'negative' %}is-negative{% else %}is-neutral{% endif %}">{{ tp[1] }}</a>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+    <button type="button" class="fr-join-conversation" data-reply-target="{{ thread['post_id'] }}">{{ _('Join the conversation') }}</button>
 
     <!-- Reply form (initially hidden) -->
  <div class="ys-mt-12">

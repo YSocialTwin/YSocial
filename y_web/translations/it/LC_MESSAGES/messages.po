@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:41+0000\n"
+"POT-Creation-Date: 2026-11-12 12:50+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -7992,6 +7992,12 @@ msgstr "Entra in una chat"
 msgid "Join a federation"
 msgstr "Unisciti a una federazione"
 
+msgid "Join the conversation"
+msgstr "Partecipa alla conversazione"
+
+msgid "Joined"
+msgstr "Iscritto"
+
 msgid "Joined (round)"
 msgstr "Iscritto (round)"
 
@@ -11374,13 +11380,6 @@ msgstr ""
 "adattano a ciò che apprezzi, condividi e commenti: col tempo il feed può "
 "restringersi a contenuti affini."
 
-msgid ""
-"Posts associated with this community, sorted with the same feed modes as "
-"/rfeed."
-msgstr ""
-"Post associati a questa community, ordinati con le stesse modalità di "
-"feed di /rfeed."
-
 msgid "Posts from other users in random order, regardless of you or the posts."
 msgstr ""
 "Post di altri utenti in ordine casuale, indipendentemente da te e dai "
@@ -14251,9 +14250,6 @@ msgstr "Ostinato"
 
 msgid "Student"
 msgstr "Studente"
-
-msgid "Subforum"
-msgstr "Sottoforum"
 
 msgid "Submit Logs"
 msgstr "Invia i log"
@@ -18658,9 +18654,6 @@ msgstr "ℹ️ Aggiorna il server LLM e il modello per questo utente."
 msgid "← All plugins"
 msgstr "← Tutti i plugin"
 
-msgid "← Back to feed"
-msgstr "← Torna al feed"
-
 msgid "∞ Infinite"
 msgstr "∞ Infinito"
 
@@ -21052,4 +21045,19 @@ msgstr "✔️ Usa"
 
 #~ msgid "Other attributes"
 #~ msgstr "Altri attributi"
+
+#~ msgid ""
+#~ "Posts associated with this community, "
+#~ "sorted with the same feed modes as"
+#~ " /rfeed."
+#~ msgstr ""
+#~ "Post associati a questa community, "
+#~ "ordinati con le stesse modalità di "
+#~ "feed di /rfeed."
+
+#~ msgid "Subforum"
+#~ msgstr "Sottoforum"
+
+#~ msgid "← Back to feed"
+#~ msgstr "← Torna al feed"
 

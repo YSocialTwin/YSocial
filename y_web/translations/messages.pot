@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:41+0000\n"
+"POT-Creation-Date: 2026-11-12 12:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -7180,6 +7180,12 @@ msgstr ""
 msgid "Join a federation"
 msgstr ""
 
+msgid "Join the conversation"
+msgstr ""
+
+msgid "Joined"
+msgstr ""
+
 msgid "Joined (round)"
 msgstr ""
 
@@ -10292,11 +10298,6 @@ msgid ""
 "comment, so over time the feed can narrow to like-minded content."
 msgstr ""
 
-msgid ""
-"Posts associated with this community, sorted with the same feed modes as "
-"/rfeed."
-msgstr ""
-
 msgid "Posts from other users in random order, regardless of you or the posts."
 msgstr ""
 
@@ -12953,9 +12954,6 @@ msgid "Stubborn"
 msgstr ""
 
 msgid "Student"
-msgstr ""
-
-msgid "Subforum"
 msgstr ""
 
 msgid "Submit Logs"
@@ -16782,9 +16780,6 @@ msgid "ℹ️ Update the LLM server and model for this user."
 msgstr ""
 
 msgid "← All plugins"
-msgstr ""
-
-msgid "← Back to feed"
 msgstr ""
 
 msgid "∞ Infinite"
