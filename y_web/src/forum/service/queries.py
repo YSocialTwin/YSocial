@@ -56,6 +56,7 @@ from y_web.src.models import (
     Reactions,
     Reported,
     Rounds,
+    User_interest,
     User_mgmt,
     Websites,
 )
@@ -378,6 +379,35 @@ def fetch_available_communities() -> List[Dict[str, str]]:
             continue
         seen.add(slug)
         communities.append({"slug": slug, "label": f"y/{slug}", "kind": "topic"})
+
+    # communities the logged-in person joined or created (a new community has no post yet, so it is not listed above)
+    try:
+        from flask_login import current_user
+
+        username = getattr(current_user, "username", "") if current_user else ""
+        member = (
+            db.session.query(User_mgmt.id).filter_by(username=username).scalar()
+            if username
+            else None
+        )
+        if member:
+            joined = (
+                db.session.query(func.lower(Interests.interest).label("slug"))
+                .join(User_interest, User_interest.interest_id == Interests.iid)
+                .filter(User_interest.user_id == member, Interests.interest != "")
+                .distinct()
+                .order_by(text("slug asc"))
+                .all()
+            )
+            for row in joined:
+                slug = str(row.slug or "").strip().lower()
+                if slug and slug not in seen:
+                    seen.add(slug)
+                    communities.append(
+                        {"slug": slug, "label": f"y/{slug}", "kind": "topic"}
+                    )
+    except Exception:  # noqa: BLE001 - the list degrades to the communities that have posts
+        pass
 
     return communities
 

@@ -138,3 +138,10 @@ def test_create_community_wiring():
 
     assert COMMUNITY_NAME_RE.fullmatch("linux_2") and not COMMUNITY_NAME_RE.fullmatch("a b")
     assert not COMMUNITY_NAME_RE.fullmatch("ab") and not COMMUNITY_NAME_RE.fullmatch("x" * 21)
+
+
+def test_available_communities_include_joined_ones():
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "src/forum/service/queries.py").read_text()
+    assert "User_interest.interest_id == Interests.iid" in src
