@@ -6,6 +6,7 @@ Routes: interview, get_thread_reddit, feeed_logged_reddit,
         feed_reddit, search_reddit, api_feed_reddit.
 """
 
+import difflib
 import re
 from urllib.parse import urlencode
 
@@ -888,6 +889,145 @@ def subforum_reddit(exp_id, community_slug):
             entry.get("slug") == community_slug for entry in my_communities
         ),
     )
+
+
+def _search_tokens(query):
+    return [tok for tok in re.split(r"\s+", query.lower().strip()) if tok]
+
+
+def _search_score(text, tokens, phrase):
+    """Relevance of ``text`` for the query: phrase > all tokens > some tokens, prefix hits first."""
+    haystack = (text or "").lower()
+    if not haystack or not tokens:
+        return 0.0
+    score = 0.0
+    if phrase and phrase in haystack:
+        score += 4.0
+        if haystack.startswith(phrase):
+            score += 2.0
+    hits = sum(1 for tok in tokens if tok in haystack)
+    score += 3.0 * hits / len(tokens)
+    if hits == len(tokens):
+        score += 2.0
+    score += 0.5 * sum(
+        1 for tok in tokens if re.search(r"\b" + re.escape(tok), haystack)
+    )
+    return score
+
+
+def _fuzzy_match(query, candidates, limit):
+    """Typo-tolerant fallback: closest candidates by edit similarity."""
+    lowered = {c.lower(): c for c in candidates if c}
+    close = difflib.get_close_matches(query.lower(), list(lowered), n=limit, cutoff=0.6)
+    return [lowered[c] for c in close]
+
+
+@main.get("/<int:exp_id>/api/forum_search")
+@login_required
+def api_forum_search(exp_id):
+    """Live search suggestions for the forum top bar: communities, people and posts, ranked and typo tolerant.
+
+    ``q`` supports prefixes: ``y/`` limits to communities, ``@`` to people. ``community`` scopes post results.
+    """
+    raw = (request.args.get("q") or "").strip()
+    scope = (request.args.get("community") or "").strip().lower() or None
+    only = None
+    query = raw
+    if query.lower().startswith("y/"):
+        only, query = "communities", query[2:].strip()
+    elif query.startswith("@"):
+        only, query = "users", query[1:].strip()
+    if len(query) < 1 or (only is None and len(query) < 2):
+        return jsonify({"communities": [], "users": [], "posts": []})
+
+    tokens = _search_tokens(query)
+    phrase = query.lower()
+    out = {"communities": [], "users": [], "posts": []}
+
+    if only in (None, "communities"):
+        communities = fetch_available_communities()
+        scored = []
+        for c in communities:
+            slug = str(c.get("slug") or "")
+            sc = _search_score(slug, tokens, phrase)
+            if slug.lower().startswith(phrase):
+                sc += 1.0
+            if sc > 0:
+                scored.append((sc, c))
+        scored.sort(key=lambda item: (-item[0], str(item[1].get("slug"))))
+        picked = [c for _, c in scored[:5]]
+        if not picked:
+            by_slug = {str(c.get("slug")): c for c in communities}
+            picked = [by_slug[m] for m in _fuzzy_match(query, by_slug, 3)]
+        out["communities"] = [
+            {
+                "label": c.get("label") or f"y/{c.get('slug')}",
+                "slug": c.get("slug"),
+                "url": f"/{exp_id}/subforum/{c.get('slug')}",
+            }
+            for c in picked
+        ]
+
+    if only in (None, "users"):
+        rows = (
+            User_mgmt.query.filter(User_mgmt.username.ilike(f"%{query}%"))
+            .limit(30)
+            .all()
+        )
+        if not rows:
+            everyone = User_mgmt.query.limit(2000).all()
+            wanted = set(_fuzzy_match(query, [u.username for u in everyone], 4))
+            rows = [u for u in everyone if u.username in wanted]
+        rows.sort(
+            key=lambda u: (
+                -_search_score(u.username, tokens, phrase),
+                u.username.lower(),
+            )
+        )
+        out["users"] = [
+            {
+                "username": u.username,
+                "is_page": bool(getattr(u, "is_page", 0) == 1),
+                "url": f"/{exp_id}/profile/{u.id}/recent/1",
+            }
+            for u in rows[:4]
+        ]
+
+    if only is None:
+        # fetch a wider window with the longest token, then rank all tokens in Python
+        longest = max(tokens, key=len)
+        page_obj = fetch_feed_page(
+            viewer_id=_forum_viewer_id(),
+            page=1,
+            per_page=40,
+            feed_type="top",
+            search_query=longest,
+            community_slug=scope,
+        )
+        ranked = []
+        for post in page_obj.posts:
+            d = post.to_dict()
+            title = d.get("title") or ""
+            body = strip_tags(d.get("post") or "")
+            sc = 2.0 * _search_score(title, tokens, phrase) + _search_score(
+                body, tokens, phrase
+            )
+            if sc > 0:
+                ranked.append((sc, d, title, body))
+        ranked.sort(key=lambda r: -r[0])
+        for _, d, title, body in ranked[:5]:
+            community = d.get("primary_community") or {}
+            out["posts"].append(
+                {
+                    "title": title or body[:90],
+                    "snippet": body[:140] if title else "",
+                    "author": d.get("author"),
+                    "community": community.get("label") if community else "",
+                    "score": (d.get("likes") or 0) - (d.get("dislikes") or 0),
+                    "url": f"/{exp_id}/rthread/{d.get('post_id')}",
+                }
+            )
+    return jsonify(out)
 
 
 @main.get("/<int:exp_id>/rsearch")

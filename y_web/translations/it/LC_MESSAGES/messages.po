@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:07+0000\n"
+"POT-Creation-Date: 2026-11-12 13:16+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -12116,6 +12116,9 @@ msgstr "Messaggi recenti restituiti per chat"
 msgid "Recent posts"
 msgstr "Post recenti"
 
+msgid "Recent searches"
+msgstr "Ricerche recenti"
+
 msgid "Recent trend"
 msgstr "Andamento recente"
 
@@ -12979,6 +12982,9 @@ msgstr "Filtri di ricerca"
 
 msgid "Search followed agents"
 msgstr "Cerca tra gli agenti seguiti"
+
+msgid "Search for"
+msgstr "Cerca"
 
 msgid "Search in"
 msgstr "Cerca in"
