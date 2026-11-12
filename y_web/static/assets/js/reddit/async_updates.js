@@ -745,15 +745,12 @@
         var hasDeletePrivilege = currentViewerCanDelete(post.author_id, loggedUserId);
         var communityMeta = "";
         if (post.primary_community && post.primary_community.slug) {
-            communityMeta = [
-                '<span class="forum-post-community-separator">·</span>',
+            communityMeta =
                 '<a class="forum-post-community-link" href="' +
-                    buildSubforumUrl(post.primary_community.slug) +
-                    '">',
-                '  <i data-feather="hash" class="forum-post-community-icon"></i>',
-                '  <span>' + escapeHtml(post.primary_community.label || "") + "</span>",
-                "</a>",
-            ].join("");
+                buildSubforumUrl(post.primary_community.slug) +
+                '">' +
+                escapeHtml(post.primary_community.label || "") +
+                "</a>";
         }
 
         var articleSection = "";
@@ -908,20 +905,20 @@
                 escapeHtml(post.author || "") +
                 '" style="border-radius: 50%; width: 40px; height: 40px;">',
             "        </div>",
-            '        <div class="user-info" style="display: flex; flex-direction: column;">',
+            '        <div class="user-info">',
+            communityMeta,
             '          <a class="post-author-link" href="' +
                 buildProfileUrl(post.author_id) +
                 '" style="color: inherit; text-decoration: none; font-weight: 500;">' +
                 escapeHtml(post.author || "") +
                 "</a>",
-            '          <span class="time">' +
+            '          <span class="time forum-post-time">' +
                 formatDisplayTime(post) +
-                communityMeta +
                 "</span>",
             "        </div>",
             "      </div>",
             '      <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">',
-            '        <div class="button"><i data-feather="more-vertical"></i></div>',
+            '        <div class="button"><i data-feather="more-horizontal"></i></div>',
             '        <div class="dropdown-menu" role="menu">',
             '          <div class="dropdown-content">',
             '            <a href="' +

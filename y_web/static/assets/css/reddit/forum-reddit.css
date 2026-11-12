@@ -883,7 +883,6 @@ body {
 .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .card-heading .user-info { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center !important; gap: 0 6px !important; margin: 0 !important; padding: 0 !important; }
 .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .card-heading .user-info > a { display: inline !important; margin: 0 !important; padding: 0 !important; font-size: 14px !important; font-weight: 600 !important; color: var(--fr-muted) !important; line-height: 1.3; }
 .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .card-heading .user-info .time { display: inline-flex !important; align-items: center; gap: 6px; margin: 0 !important; padding: 0 !important; font-size: 14px !important; color: var(--fr-muted) !important; line-height: 1.3; }
-.fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .card-heading .user-info .time::before { content: "\00B7"; }
 .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .forum-post-community-link { color: var(--fr-muted) !important; font-weight: 600; }
 .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .forum-post-community-link:hover { color: var(--fr-accent) !important; }
 .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .card-heading .dropdown .button { border: 0 !important; background: transparent !important; box-shadow: none !important; }
@@ -922,3 +921,34 @@ body {
     .fr-view-compact .reddit-post:not(.fr-expanded) .post-image,
     .fr-view-compact .reddit-post:not(.fr-expanded) .article-preview { width: 64px; height: 52px; }
 }
+
+/* ===== Card view, Reddit look: meta line, big title, clamped body, pill action bar ===== */
+.reddit-post .card-heading { padding: 12px 16px 0 !important; align-items: center; }
+.reddit-post .user-block .image, .reddit-post .user-block .image img { width: 32px !important; height: 32px !important; min-width: 32px; }
+.reddit-post .user-info { display: flex !important; flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 0 6px !important; font-size: 14px; line-height: 1.3; }
+.reddit-post .user-info > * + *::before { content: "\00B7"; margin-right: 6px; color: var(--fr-muted); font-weight: 400; display: inline-block; text-decoration: none; }
+.reddit-post .user-info .forum-post-community-link { font-size: 14px; font-weight: 700; color: var(--fr-text) !important; text-decoration: none; }
+.reddit-post .user-info .forum-post-community-link:hover { color: var(--fr-accent) !important; }
+.reddit-post .user-info .post-author-link, .reddit-post .user-info > a:not(.forum-post-community-link) { font-size: 14px !important; font-weight: 500; color: var(--fr-muted) !important; }
+.reddit-post .user-info .time, .reddit-post .user-info .forum-post-time { font-size: 14px !important; color: var(--fr-muted) !important; margin: 0 !important; padding: 0 !important; display: inline-flex; align-items: center; }
+.reddit-post .card-heading .dropdown .button { border: 0 !important; background: transparent !important; box-shadow: none !important; width: 32px; height: 32px; padding: 0; border-radius: 50%; }
+.reddit-post .card-heading .dropdown .button:hover { background: var(--fr-bg-hover) !important; }
+.reddit-post .card-body { padding: 8px 16px 8px !important; }
+.reddit-post .post-text h3 { font-size: 22px !important; line-height: 1.3 !important; font-weight: 600 !important; margin: 6px 0 8px !important; letter-spacing: 0; }
+.reddit-post .post-text h3 a { color: var(--fr-text) !important; }
+.reddit-post .post-text > div[style*="font-size: 16px"] { font-size: 15px !important; line-height: 1.6 !important; margin-bottom: 8px !important; }
+.reddit-post .feed-content { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; color: #3d4a4e; }
+
+/* action bar: grey pills with 8px gaps */
+.reddit-post .content-wrap > div[style*="border-top"] { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 16px 12px !important; border-top: 0 !important; }
+.reddit-post .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] { flex-direction: row !important; align-items: center !important; gap: 2px !important; height: 36px; min-width: 0 !important; padding: 0 8px !important; margin: 0 !important; background: #e5ebee !important; border-radius: 999px !important; }
+.reddit-post .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] [data-role="score"] { margin: 0 6px !important; font-size: 14px !important; line-height: 1; }
+.reddit-post .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button { width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.reddit-post .open-thread-button, .reddit-post .forum-report-button { height: 36px; padding: 0 16px !important; border-radius: 999px !important; background: #e5ebee !important; color: var(--fr-text) !important; font-size: 14px !important; font-weight: 600 !important; gap: 8px !important; text-decoration: none; }
+.reddit-post .open-thread-button:hover, .reddit-post .forum-report-button:hover { background: #d7dfe3 !important; }
+.reddit-post .open-thread-button > span { font-size: 0; }
+.reddit-post .open-thread-button [data-role="comment-count"] { font-size: 14px; }
+
+/* compact keeps the full "N comments" label */
+.fr-view-compact .reddit-post:not(.fr-expanded) .open-thread-button > span { font-size: 12px; }
+.fr-view-compact .reddit-post:not(.fr-expanded) .open-thread-button [data-role="comment-count"] { font-size: inherit; }

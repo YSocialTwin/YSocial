@@ -33,21 +33,15 @@
 
                 </div>
                 <div class="user-info">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
-                    <span class="time forum-post-time">
-                        {{ item.get("display_time", "") }}
-                        {% if item.get("primary_community") %}
-                        <span class="forum-post-community-separator">·</span>
-                        <a
-                            class="forum-post-community-link"
-                            href="/{{ exp_id }}/subforum/{{ item['primary_community']['slug'] }}?feed_type={{ feed_type }}"
-                            onclick="event.stopPropagation()"
-                        >
-                            <i data-feather="hash" class="forum-post-community-icon"></i>
-                            <span>{{ item['primary_community']['label'] }}</span>
-                        </a>
-                        {% endif %}
-                    </span>
+                    {% if item.get("primary_community") %}
+                    <a
+                        class="forum-post-community-link"
+                        href="/{{ exp_id }}/subforum/{{ item['primary_community']['slug'] }}?feed_type={{ feed_type }}"
+                        onclick="event.stopPropagation()"
+                    >{{ item['primary_community']['label'] }}</a>
+                    {% endif %}
+                    <a class="post-author-link" href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
+                    <span class="time forum-post-time">{{ item.get("display_time", "") }}</span>
                 </div>
             </div>
             <!-- Right side dropdown -->
@@ -56,7 +50,7 @@
                  onclick="{% if profile_delete_inline %}return window.redditProfileToggleDropdown ? window.redditProfileToggleDropdown(event, this) : false;{% else %}event.stopPropagation(){% endif %}">
                 <div>
                     <div class="button">
-                        <i data-feather="more-vertical"></i>
+                        <i data-feather="more-horizontal"></i>
                     </div>
                 </div>
                 <div class="dropdown-menu" role="menu">

@@ -65,3 +65,10 @@ def test_compact_rows_can_be_expanded_individually():
     assert ".reddit-post:not(.fr-expanded)" in css
     js = (ROOT / "static/assets/js/reddit/forum-feed-menus.js").read_text()
     assert "fr-expand-button" in js and "fr-expanded" in js
+
+
+def test_post_header_has_single_meta_line_markup():
+    posts = _read("components/posts.html")
+    assert posts.index("forum-post-community-link") < posts.index("post-author-link") < posts.index("forum-post-time")
+    js = (ROOT / "static/assets/js/reddit/async_updates.js").read_text()
+    assert "communityMeta," in js and "more-horizontal" in js
