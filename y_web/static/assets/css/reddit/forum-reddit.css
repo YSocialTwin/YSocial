@@ -19,7 +19,7 @@
     --fr-radius-pill: 999px;
     --fr-nav-h: 56px;
     --fr-rail-w: 270px;
-    --fr-aside-w: 320px;
+    --fr-aside-w: 340px;
 }
 
 body {
@@ -865,3 +865,13 @@ body {
 .fr-expand-button .mdi { font-size: 18px; }
 .fr-view-compact .fr-expand-button { display: inline-flex; }
 
+
+/* ===== Full-width layout: rail and right column keep a fixed width, the content takes the rest ===== */
+.view-wrapper #main-feed.container, .view-wrapper .forum-profile-shell { max-width: none !important; width: 100%; padding-left: 16px; padding-right: 16px; }
+.forum-feed-layout.columns { display: flex; width: 100%; max-width: none !important; margin: 0 !important; gap: 0; }
+.forum-feed-layout.columns > .column:first-child { flex: 0 0 var(--fr-rail-w) !important; width: var(--fr-rail-w) !important; max-width: var(--fr-rail-w); }
+.forum-feed-layout.columns > .column:nth-child(2) { flex: 1 1 0 !important; width: auto !important; max-width: none !important; min-width: 0; padding-left: 24px; padding-right: 24px; }
+.forum-feed-layout.columns > .column:nth-child(3) { flex: 0 0 var(--fr-aside-w) !important; width: var(--fr-aside-w) !important; max-width: var(--fr-aside-w); }
+@media (max-width: 1023px) {
+    .forum-feed-layout.columns > .column:nth-child(2) { flex-basis: 100% !important; padding-left: 8px; padding-right: 8px; }
+}
