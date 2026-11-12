@@ -38,6 +38,7 @@ from y_web.src.data_access import (
     get_trending_hashtags,
     get_unanswered_mentions,
 )
+from y_web.src.forum.community_icons import assign_icons, icon_for
 from y_web.src.forum.ids import opaque_id
 from y_web.src.forum.ordering import seq_or_id
 from y_web.src.forum.service import (
@@ -889,6 +890,24 @@ def subforum_reddit(exp_id, community_slug):
             entry.get("slug") == community_slug for entry in my_communities
         ),
     )
+
+
+@main.app_context_processor
+def _inject_forum_community_icon():
+    """``community_icon(slug)`` for templates: stable, mostly unique icon per community."""
+    from flask import g
+
+    def community_icon(slug):
+        icons = getattr(g, "_forum_community_icons", None)
+        if icons is None:
+            try:
+                slugs = [c.get("slug") for c in fetch_available_communities()]
+            except Exception:
+                slugs = []
+            icons = g._forum_community_icons = assign_icons(slugs)
+        return icon_for(slug, icons)
+
+    return {"community_icon": community_icon}
 
 
 def _search_tokens(query):

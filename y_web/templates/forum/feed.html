@@ -126,7 +126,7 @@
                     <header class="fr-community-header">
                         <div class="fr-community-cover"></div>
                         <div class="fr-community-bar">
-                            <span class="fr-community-avatar is-large">{{ (current_subforum_slug or current_subforum_label|replace("y/", ""))[:1]|upper }}</span>
+                            <span class="fr-community-avatar is-large"><i class="mdi {{ community_icon(current_subforum_slug) }}" aria-hidden="true"></i></span>
                             <h1>{{ current_subforum_label }}</h1>
                             <div class="fr-community-actions">
                                 {% if community_joined|default(false) %}<span class="fr-pill fr-pill-soft">{{ _('Joined') }}</span>{% endif %}

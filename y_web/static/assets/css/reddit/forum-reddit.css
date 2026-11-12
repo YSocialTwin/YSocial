@@ -831,3 +831,9 @@ body {
 .forum-search-body strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .forum-search-body small { color: var(--fr-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .forum-search-body mark { background: transparent; color: inherit; font-weight: 700; }
+
+/* community avatars carry an icon, not a letter */
+.forum-community-icon .mdi { font-size: 18px; line-height: 1; }
+.fr-community-avatar .mdi { font-size: 18px; line-height: 1; }
+.fr-community-avatar.is-large .mdi { font-size: 38px; }
+.fr-community-card .fr-community-avatar .mdi { font-size: 20px; }
