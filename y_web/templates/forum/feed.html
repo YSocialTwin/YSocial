@@ -122,7 +122,7 @@
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
                     <!-- Create Post Button -->
-                    <div class="forum-feed-toolbar ys-mb-20">
+                    <div class="forum-feed-toolbar ys-mb-20{% if view_mode == 'search' %} is-search-view{% endif %}">
                         <div class="forum-feed-toolbar-left">
                             <div class="select forum-feed-sort-select">
                                 <select id="feed-type-select">

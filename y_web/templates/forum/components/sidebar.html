@@ -1,4 +1,14 @@
 <aside class="forum-community-rail">
+    <nav class="forum-rail-nav" aria-label="{{ _('Feeds') }}">
+        <a class="forum-rail-link{% if view_mode|default('feed', true) == 'feed' and feed_type|default('new', true) in ['new', 'most_commented'] %} is-active{% endif %}"
+           href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type=new">
+            <i class="mdi mdi-home-outline"></i><span>{{ _('Home') }}</span>
+        </a>
+        <a class="forum-rail-link{% if view_mode|default('feed', true) == 'feed' and feed_type|default('new', true) in ['hot', 'top'] %} is-active{% endif %}"
+           href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type=top">
+            <i class="mdi mdi-trending-up"></i><span>{{ _('Popular') }}</span>
+        </a>
+    </nav>
     <div class="forum-community-card">
         <div class="forum-community-card-header">
             <span class="forum-community-eyebrow">{{ _('Now') }}</span>

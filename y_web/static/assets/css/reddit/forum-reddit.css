@@ -1,0 +1,553 @@
+/* forum-reddit.css — Reddit-like layout of the forum platforms (Standard and HPC), loaded after forum-components.css.
+ *
+ * Structure and interaction patterns only: flat feed, hairline dividers, pill action bars, a search pill in the top
+ * bar, a navigation rail on the left. The identity stays Y's (y/ communities, annotation chips, badges, the simulation
+ * clock). The post markup is also built by reddit/async_updates.js with inline styles, so the overrides here use
+ * !important where an inline style has to give way. */
+
+:root {
+    --fr-bg: #ffffff;
+    --fr-bg-soft: #f6f7f8;
+    --fr-bg-hover: #eaedef;
+    --fr-line: #e5e7eb;
+    --fr-text: #0f1a1c;
+    --fr-muted: #576f76;
+    --fr-accent: #ff4500; /* Y orange, as in the logo */
+    --fr-accent-soft: #fff1ea;
+    --fr-up: #d93a00;
+    --fr-down: #6a5cff;
+    --fr-radius-pill: 999px;
+    --fr-nav-h: 56px;
+    --fr-rail-w: 270px;
+    --fr-aside-w: 320px;
+}
+
+body {
+    font-family: "Reddit Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--fr-text);
+    background: var(--fr-bg);
+}
+
+/* ------------------------------------------------------------------ top bar */
+#main-navbar.navbar-v1 {
+    background: var(--fr-bg) !important;
+    border-bottom: 1px solid var(--fr-line);
+    box-shadow: none !important;
+    height: var(--fr-nav-h);
+    min-height: var(--fr-nav-h);
+}
+
+#main-navbar .container.is-fluid {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: var(--fr-nav-h);
+}
+
+#main-navbar .navbar-brand {
+    flex: 0 0 auto;
+}
+
+#main-navbar .navbar-brand .logo {
+    max-height: 30px;
+    width: auto;
+}
+
+#main-navbar .navbar-menu {
+    flex: 0 0 auto;
+    margin-left: auto;
+    background: transparent;
+    box-shadow: none;
+}
+
+.forum-nav-search {
+    flex: 1 1 auto;
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 14px;
+    background: var(--fr-bg-soft);
+    border: 1px solid transparent;
+    border-radius: var(--fr-radius-pill);
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.forum-nav-search:hover {
+    background: var(--fr-bg-hover);
+}
+
+.forum-nav-search:focus-within {
+    background: var(--fr-bg);
+    border-color: var(--fr-accent);
+}
+
+.forum-nav-search .mdi {
+    color: var(--fr-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.forum-nav-search input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--fr-text);
+}
+
+.forum-nav-scope {
+    flex: 0 0 auto;
+    padding: 2px 10px;
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-pill);
+    background: var(--fr-bg);
+    color: var(--fr-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.sim-clock-pill {
+    color: var(--fr-text);
+    background: var(--fr-bg-soft);
+    border-color: var(--fr-line);
+}
+
+.sim-clock-pill.is-success {
+    color: #137333;
+    border-color: rgba(19, 115, 51, 0.35);
+}
+
+.reply-notif-bell {
+    position: relative;
+    color: var(--fr-text);
+}
+
+.reply-notif-badge {
+    background: var(--fr-accent);
+    color: #fff;
+    border-radius: var(--fr-radius-pill);
+}
+
+/* the account menu keeps its dropdown; only the entry is flattened */
+#main-navbar .navbar-item.is-account {
+    border-radius: var(--fr-radius-pill);
+}
+
+/* ---------------------------------------------------------- navigation rail */
+.forum-community-rail {
+    top: calc(var(--fr-nav-h) + 12px);
+    max-height: calc(100vh - var(--fr-nav-h) - 24px);
+    overflow-y: auto;
+}
+
+.forum-rail-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--fr-line);
+}
+
+.forum-rail-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    color: var(--fr-text);
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+
+.forum-rail-link .mdi {
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.forum-rail-link:hover {
+    background: var(--fr-bg-hover);
+}
+
+.forum-rail-link.is-active {
+    background: var(--fr-bg-hover);
+    font-weight: 600;
+}
+
+.forum-community-card,
+.forum-community-card-secondary {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.forum-community-card + .forum-community-card {
+    margin-top: 0;
+    border-top: 1px solid var(--fr-line);
+    padding-top: 8px;
+}
+
+.forum-community-card-header {
+    padding: 8px 14px 4px;
+    border-bottom: 0;
+}
+
+.forum-community-card-header h3 {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fr-muted);
+}
+
+.forum-community-card-header p {
+    display: none; /* the explanation is in the section title and the tooltip of each entry */
+}
+
+.forum-community-eyebrow {
+    display: none;
+}
+
+.forum-community-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    padding: 4px 14px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--fr-text);
+    text-decoration: none;
+}
+
+.forum-community-link:hover,
+.forum-community-link.is-active {
+    background: var(--fr-bg-hover);
+}
+
+.forum-community-icon {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    background: var(--fr-accent-soft);
+    color: var(--fr-accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.forum-community-meta strong {
+    font-size: 0.92rem;
+    font-weight: 500;
+}
+
+.forum-community-meta small {
+    display: none;
+}
+
+.forum-community-empty {
+    padding: 6px 14px;
+    color: var(--fr-muted);
+    font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------- feed layout */
+.forum-feed-layout.columns {
+    max-width: 1320px;
+    margin: 0 auto;
+}
+
+.forum-feed-toolbar {
+    padding: 8px 0 4px;
+    gap: 12px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* search lives in the top bar; the toolbar one stays only in the search view (live results) */
+.forum-feed-toolbar:not(.is-search-view) .forum-feed-toolbar-main .forum-feed-search {
+    display: none;
+}
+
+.forum-feed-sort-select select {
+    border: 0;
+    background-color: transparent;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: none;
+}
+
+.forum-feed-create-trigger {
+    border: 1px solid var(--fr-line);
+    border-radius: var(--fr-radius-pill);
+    background: var(--fr-bg);
+    padding: 6px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.forum-feed-create-trigger:hover {
+    background: var(--fr-bg-hover);
+}
+
+.forum-subforum-banner {
+    border: 0;
+    border-radius: 16px;
+    background: var(--fr-bg-soft);
+    box-shadow: none;
+}
+
+.forum-subforum-banner h2::before {
+    content: "y/";
+    color: var(--fr-accent);
+}
+
+/* -------------------------------------------------------------------- posts */
+.reddit-post.card.is-post,
+.reddit-post.card {
+    margin-bottom: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--fr-line) !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transition: background 0.12s;
+}
+
+.reddit-post.card:hover {
+    background: var(--fr-bg-soft) !important;
+}
+
+.reddit-post .card-heading {
+    padding: 12px 16px 0 !important;
+}
+
+.reddit-post .user-block .image img {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50%;
+}
+
+.reddit-post .user-info a {
+    color: var(--fr-text);
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.reddit-post .forum-post-time {
+    color: var(--fr-muted);
+    font-size: 0.78rem;
+}
+
+.reddit-post .card-body {
+    padding: 6px 16px 4px !important;
+}
+
+.reddit-post .post-text h3,
+.reddit-post .reddit-post-title {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+    line-height: 1.3;
+}
+
+.reddit-post .post-text .feed-content,
+.reddit-post .post-text .post-body,
+.reddit-post .post-text > div {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    color: var(--fr-text) !important;
+}
+
+/* post footer: vote pill, comments pill, report, annotation chips */
+.reddit-post .content-wrap > div[style*="border-top"],
+.reddit-post .post-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap;
+    gap: 8px !important;
+    padding: 4px 16px 12px !important;
+    border-top: 0 !important;
+}
+
+.reddit-post .content-wrap > div[style*="border-top"] > div:first-child,
+.reddit-post .vote-stack {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 2px;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    min-width: 0 !important;
+    height: 32px;
+    background: var(--fr-bg-soft) !important;
+    border-radius: var(--fr-radius-pill) !important;
+}
+
+.reddit-post .vote-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0 !important;
+    border-radius: 50%;
+    color: var(--fr-text);
+}
+
+.reddit-post .vote-button:hover {
+    background: var(--fr-bg-hover) !important;
+}
+
+.reddit-post [data-role="score"] {
+    margin: 0 2px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: var(--fr-text) !important;
+}
+
+.reddit-post[data-vote="like"] .vote-button[data-action="like"],
+.reddit-post[data-vote="like"] [data-role="score"] {
+    color: var(--fr-up) !important;
+}
+
+.reddit-post[data-vote="dislike"] .vote-button[data-action="dislike"],
+.reddit-post[data-vote="dislike"] [data-role="score"] {
+    color: var(--fr-down) !important;
+}
+
+.reddit-post .open-thread-button,
+.reddit-post .forum-report-button {
+    height: 32px;
+    padding: 0 12px !important;
+    background: var(--fr-bg-soft) !important;
+    border-radius: var(--fr-radius-pill) !important;
+    color: var(--fr-text) !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+}
+
+.reddit-post .open-thread-button:hover,
+.reddit-post .forum-report-button:hover {
+    background: var(--fr-bg-hover) !important;
+}
+
+.reddit-post .forum-report-button.is-active {
+    color: var(--fr-accent) !important;
+}
+
+/* Y annotations: flair-like chips */
+.forum-meta-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.forum-meta-label {
+    display: none; /* the chip itself says what it is; the label only took room */
+}
+
+.forum-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: var(--fr-radius-pill);
+    border: 1px solid transparent;
+    background: var(--fr-accent-soft);
+    color: #b53100;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.forum-topic-chip.is-positive {
+    background: #e6f4ea;
+    color: #137333;
+}
+
+.forum-topic-chip.is-negative {
+    background: #fce8e6;
+    color: #b3261e;
+}
+
+.forum-topic-chip.is-neutral {
+    background: #eceff1;
+    color: #37474f;
+}
+
+/* ------------------------------------------------------------------ narrower */
+@media (max-width: 1215px) {
+    .forum-feed-layout > .column.is-3.is-hidden-touch:first-child {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .forum-nav-search {
+        display: none;
+    }
+    .reddit-post.card {
+        border-radius: 0 !important;
+    }
+}
+
+/* ---------------------------------------------------------------- refinements */
+.reddit-post .user-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reddit-post .user-info {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 6px;
+    margin: 0 !important;
+}
+
+.reddit-post .user-info .forum-post-time {
+    display: inline-flex;
+    align-items: center;
+}
+
+.forum-feed-create-trigger,
+.forum-community-icon,
+.forum-community-link,
+.forum-rail-link {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.forum-community-link.is-active {
+    border: 0 !important;
+}
+
+.forum-post-community-link {
+    color: var(--fr-text);
+    font-weight: 600;
+}
+
+.forum-post-community-link:hover {
+    color: var(--fr-accent);
+}
