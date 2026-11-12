@@ -406,7 +406,9 @@ def fetch_available_communities() -> List[Dict[str, str]]:
                     communities.append(
                         {"slug": slug, "label": f"y/{slug}", "kind": "topic"}
                     )
-    except Exception:  # noqa: BLE001 - the list degrades to the communities that have posts
+    except (
+        Exception
+    ):  # noqa: BLE001 - the list degrades to the communities that have posts
         pass
 
     return communities
@@ -472,7 +474,9 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
         joined = (
             db.session.query(func.lower(Interests.interest).label("slug"))
             .join(User_interest, User_interest.interest_id == Interests.iid)
-            .filter(User_interest.user_id == opaque_id(user_id), Interests.interest != "")
+            .filter(
+                User_interest.user_id == opaque_id(user_id), Interests.interest != ""
+            )
             .order_by(User_interest.id.desc())
             .all()
         )
@@ -484,9 +488,7 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
         slug = str(row.slug or "").strip().lower()
         if slug and slug not in seen:
             seen.add(slug)
-            member.append(
-                {"slug": slug, "label": f"y/{slug}", "kind": "member"}
-            )
+            member.append({"slug": slug, "label": f"y/{slug}", "kind": "member"})
     # communities the user created or joined come first: they may have no post yet
     return (member + ranked)[: max(limit, len(member))]
 
