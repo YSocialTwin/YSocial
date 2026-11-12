@@ -625,3 +625,76 @@ def cancel_notification(exp_id):
         db.session.commit()
 
     return {"message": "Notification cancelled", "status": 200}
+
+
+@user.route("/<int:exp_id>/federation/repost_targets")
+@login_required
+def federation_repost_targets(exp_id):
+    """Other platforms of the World Simulation where the logged-in person is enrolled (``[]`` for everybody else): the
+    "Other platforms" section of the Repost menus on every platform."""
+    from y_web.src.federation import human_outbox as _ho
+
+    try:
+        return jsonify(
+            {"platforms": _ho.destinations_for(exp_id, getattr(current_user, "id", None))}
+        )
+    except Exception:  # noqa: BLE001 - a menu never fails because of the federation
+        return jsonify({"platforms": []})
+
+
+@user.route("/<int:exp_id>/federation/repost", methods=["POST"])
+@login_required
+def federation_repost(exp_id):
+    """Repost something of this platform on other platforms of the World Simulation as the logged-in person.
+
+    JSON: ``members`` (the destinations), ``post_id`` (the item reposted), ``text`` (its words) and, for the forum,
+    ``community``. The gateway only creates an item on the origin platform with ``crosspost_to``, so the repost also shows
+    on the person's profile here. The destinations are recomputed server side (never trusted from the page).
+    """
+    from y_web.src.federation import human_outbox as _ho
+    from y_web.src.models import Exps
+
+    payload = request.get_json(silent=True) or {}
+    members = _ho.requested_members(payload.get("members") or [])
+    ctx = _ho.context_for(exp_id, getattr(current_user, "id", None))
+    if ctx is None or not members:
+        return jsonify({"ok": False, "error": "not_enrolled"}), 400
+
+    text = str(payload.get("text") or "").strip()
+    post_id = payload.get("post_id")
+    if post_id is not None and ctx.platform_type in ("forum", "microblogging"):
+        try:
+            source = db.session.get(Post, int(post_id))
+        except (TypeError, ValueError):
+            source = None
+        if source is not None and source.tweet:
+            text = str(source.tweet).strip()
+    if text[:6].upper() == "TITLE:":
+        text = text[6:].strip()
+    if not text:
+        return jsonify({"ok": False, "error": "empty"}), 400
+
+    platform = ctx.platform_type
+    exp = db.session.get(Exps, int(exp_id))
+    if platform == "forum":
+        community = _ho.forum_community(exp, payload.get("community"))
+        build = lambda t: _ho.forum_post(text, t, community)  # noqa: E731
+    elif platform == "microblogging":
+        build = (  # noqa: E731
+            (lambda t: _ho.micro_share(post_id, text, t))
+            if post_id
+            else (lambda t: _ho.micro_post(text, t))
+        )
+    elif platform == "photo_sharing" and post_id:
+        build = lambda t: _ho.photo_share(post_id, text, t)  # noqa: E731
+    elif platform == "instant_messaging":
+        build = lambda t: _ho.im_action("post", t, text=text)  # noqa: E731
+    else:
+        return jsonify({"ok": False, "error": "unsupported"}), 400
+
+    sent = _ho.try_deliver(exp_id, current_user, members, text, build)
+    if sent is None:
+        return jsonify({"ok": False, "error": "no_destination"}), 400
+    if not sent:
+        return jsonify({"ok": False, "error": "gateway"}), 502
+    return jsonify({"ok": True, "members": members})

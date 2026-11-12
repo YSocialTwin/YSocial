@@ -99,3 +99,16 @@ def test_crosspost_origin_is_shown_in_cards_and_thread():
     assert "fr-crosspost-origin" in js
     css = (root / "static/assets/css/reddit/forum-reddit.css").read_text()
     assert re.search(r"fr-view-compact[^{]*p\.fr-crosspost-origin", css)
+
+
+def test_federated_repost_wiring():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    forum_js = (root / "static/assets/js/reddit/forum-crosspost.js").read_text()
+    assert "federation/repost_targets" in forum_js and "federation/repost" in forum_js
+    routes = (root / "routes/interactions/common.py").read_text()
+    assert "def federation_repost(" in routes and "def federation_repost_targets(" in routes
+    for rel in ("microblogging/components/posts.html", "photo/components/posts.html", "im/_message.html"):
+        assert "ws_repost_button" in (root / "templates" / rel).read_text(), rel
+    assert (root / "static/assets/js/world-simulation-repost.js").exists()

@@ -69,6 +69,7 @@
                     <i data-feather="send"></i>
                     <span data-photo-post-share-count>{{ item.get('is_shared', 0) }}</span>
                 </button>
+                {% from "shared/world_simulation_repost_button.html" import ws_repost_button %}{{ ws_repost_button(exp_id, item['post_id'], (item.get('post') or '')|striptags|truncate(280), 'photo-feed-card__action') }}
             </div>
             <button type="button" class="photo-feed-card__action photo-feed-card__action--bookmark{% if item.get('is_bookmarked') %} photo-feed-card__action--active photo-feed-card__action--saved{% endif %}" data-photo-post-bookmark data-photo-post-id="{{ item['post_id'] }}" aria-pressed="{{ 'true' if item.get('is_bookmarked') else 'false' }}">
                 <i data-feather="bookmark"></i>

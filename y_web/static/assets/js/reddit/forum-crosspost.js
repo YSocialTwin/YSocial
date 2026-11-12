@@ -10,6 +10,8 @@
     var L = {};
     try { L = JSON.parse(modal.getAttribute("data-i18n") || "{}"); } catch (e) { L = {}; }
     var current = { postId: null, community: "" };
+    var platforms = null;  // other World Simulation platforms the person is enrolled on (null = not loaded yet)
+    var PLATFORM_ICONS = { microblogging: "mdi-message-text-outline", forum: "mdi-forum-outline", photo_sharing: "mdi-camera-outline", instant_messaging: "mdi-send-outline", dating: "mdi-heart-outline" };
     var timer = null, ctrl = null, toastTimer = null;
 
     function el(tag, cls, text) {
@@ -68,13 +70,41 @@
             .catch(function () { showToast(L.error || "Unable to repost right now."); });
     }
 
+    function pickPlatform(p) {
+        fetch("/" + expId + "/federation/repost", {
+            method: "POST", credentials: "same-origin", headers: csrfHeaders(),
+            body: JSON.stringify({ members: [p.member], post_id: current.postId, community: current.community })
+        }).then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+            .then(function () { close(); showToast((L.posted || "Reposted to") + " " + p.label); })
+            .catch(function () { showToast(L.error || "Unable to repost right now."); });
+    }
+
+    function renderPlatforms(q) {
+        var shown = (platforms || []).filter(function (p) { return !q || String(p.label).toLowerCase().indexOf(q) >= 0; });
+        if (!shown.length) { return; }
+        list.appendChild(el("li", "fr-modal-section", L.platforms || "Other platforms"));
+        shown.forEach(function (p) {
+            row(PLATFORM_ICONS[p.platform_type] || "mdi-link-variant", p.label, L.platformHint || "", function () { pickPlatform(p); });
+        });
+    }
+
+    function loadPlatforms() {
+        if (platforms !== null) { return Promise.resolve(); }
+        return fetch("/" + expId + "/federation/repost_targets", { credentials: "same-origin" })
+            .then(function (r) { return r.ok ? r.json() : { platforms: [] }; })
+            .then(function (d) { platforms = d.platforms || []; })
+            .catch(function () { platforms = []; });
+    }
+
     function load() {
         if (ctrl) { ctrl.abort(); }
         ctrl = new AbortController();
         var params = new URLSearchParams({ q: search.value.trim(), exclude: current.community || "" });
-        fetch("/api/reddit/" + expId + "/crosspost/targets?" + params.toString(), { credentials: "same-origin", signal: ctrl.signal })
-            .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-            .then(function (res) {
+        var signal = ctrl.signal;
+        Promise.all([loadPlatforms(), fetch("/api/reddit/" + expId + "/crosspost/targets?" + params.toString(), { credentials: "same-origin", signal: signal })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(); })])
+            .then(function (all) {
+                var res = all[1];
                 var data = res.data || res;
                 list.textContent = "";
                 if (data.profile) {
@@ -84,6 +114,7 @@
                     var sub = c.posts + " " + (L.posts || "posts") + " · " + c.participants + " " + (L.participants || "participants");
                     row(c.icon, c.label, sub, function () { pick(c.slug, c.label); });
                 });
+                renderPlatforms(search.value.trim().toLowerCase());
                 if (!list.children.length) {
                     list.appendChild(el("li", "fr-modal-empty", L.empty || "No communities found"));
                 }

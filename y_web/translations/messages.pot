@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:31+0000\n"
+"POT-Creation-Date: 2026-11-12 13:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3553,6 +3553,9 @@ msgid "Croatian"
 msgstr ""
 
 msgid "Cross-post cascades"
+msgstr ""
+
+msgid "Cross-post on another platform"
 msgstr ""
 
 msgid "Cross-post probability"
@@ -9579,6 +9582,9 @@ msgstr ""
 msgid "Other experiment"
 msgstr ""
 
+msgid "Other platforms"
+msgstr ""
+
 msgid "Other plugins"
 msgstr ""
 
@@ -11306,6 +11312,9 @@ msgid "Repost"
 msgstr ""
 
 msgid "Repost another user's content"
+msgstr ""
+
+msgid "Repost on another platform"
 msgstr ""
 
 msgid "Repost suggestions"

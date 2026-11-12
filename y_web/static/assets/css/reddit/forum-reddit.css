@@ -991,3 +991,4 @@ body.fr-modal-open { overflow: hidden; }
 .fr-crosspost-origin a { color: var(--fr-muted); font-weight: 700; text-decoration: none; }
 .fr-crosspost-origin a:hover { color: var(--fr-accent); text-decoration: underline; }
 .fr-view-compact .reddit-post:not(.fr-expanded) .post-text > p.fr-crosspost-origin { display: flex !important; margin: 0 0 2px !important; }
+.fr-modal-section { list-style: none; padding: 10px 16px 4px; font-size: 12px; font-weight: 700; color: var(--fr-muted); text-transform: uppercase; letter-spacing: .02em; }

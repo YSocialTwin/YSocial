@@ -189,6 +189,7 @@
                         <i data-feather="repeat"></i>
                         <span id="share-span-{{item['post_id']}}">{{ item['is_shared'] }}</span> </a>
                     </div>
+                    {% from "shared/world_simulation_repost_button.html" import ws_repost_button %}{{ ws_repost_button(exp_id, item['post_id']) }}
                 </div>
 
  <div class="likes-count ys-mr-3" id="likes-count-{{ item['post_id'] }}">
