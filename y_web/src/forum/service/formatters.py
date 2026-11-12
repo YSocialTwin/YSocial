@@ -375,7 +375,7 @@ def _shared_from(post: Post):
         return -1
     community = ""
     try:
-        from y_web.models import Interests, Post_topics
+        from y_web.src.models import Interests, Post_topics
 
         community = (
             db.session.query(Interests.interest)
