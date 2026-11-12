@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:33+0000\n"
+"POT-Creation-Date: 2026-11-12 13:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -441,6 +441,11 @@ msgid "2. Configure Opinion Distributions for Each Topic"
 msgstr ""
 
 msgid "2. Create an Experiment"
+msgstr ""
+
+msgid ""
+"3-20 characters: letters, digits and underscores. You will join it "
+"automatically."
 msgstr ""
 
 msgid "3. Configure one or more Clients"
@@ -2859,6 +2864,9 @@ msgstr ""
 msgid "Community Page"
 msgstr ""
 
+msgid "Community names have 3-20 characters: letters, digits and underscores."
+msgstr ""
+
 msgid "Community size exponent (tau2)"
 msgstr ""
 
@@ -3427,6 +3435,9 @@ msgstr ""
 msgid "Create a client"
 msgstr ""
 
+msgid "Create a community"
+msgstr ""
+
 msgid "Create a group for each topic"
 msgstr ""
 
@@ -3447,6 +3458,9 @@ msgid ""
 msgstr ""
 
 msgid "Create client"
+msgstr ""
+
+msgid "Create community"
 msgstr ""
 
 msgid ""
@@ -14750,6 +14764,9 @@ msgid ""
 "active."
 msgstr ""
 
+msgid "Unable to create the community right now."
+msgstr ""
+
 msgid "Unable to prepare the experiment user."
 msgstr ""
 
@@ -16346,6 +16363,9 @@ msgid "changed"
 msgstr ""
 
 msgid "click to cancel"
+msgstr ""
+
+msgid "community_name"
 msgstr ""
 
 msgid "count stopped at the limit"

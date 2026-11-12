@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:33+0000\n"
+"POT-Creation-Date: 2026-11-12 13:43+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -475,6 +475,11 @@ msgstr "2. Configura le distribuzioni di opinione per ogni argomento"
 
 msgid "2. Create an Experiment"
 msgstr "2. Crea un esperimento"
+
+msgid ""
+"3-20 characters: letters, digits and underscores. You will join it "
+"automatically."
+msgstr "3-20 caratteri: lettere, cifre e underscore. Ne diventerai membro automaticamente."
 
 msgid "3. Configure one or more Clients"
 msgstr "3. Configura uno o più client"
@@ -3157,6 +3162,9 @@ msgstr "Modelli a comunità"
 msgid "Community Page"
 msgstr "Pagina della community"
 
+msgid "Community names have 3-20 characters: letters, digits and underscores."
+msgstr "I nomi delle community hanno 3-20 caratteri: lettere, cifre e underscore."
+
 msgid "Community size exponent (tau2)"
 msgstr "Esponente della dimensione delle comunità (tau2)"
 
@@ -3842,6 +3850,9 @@ msgstr "Crea la tua popolazione"
 msgid "Create a client"
 msgstr "Crea un client"
 
+msgid "Create a community"
+msgstr "Crea una community"
+
 msgid "Create a group for each topic"
 msgstr "Crea un gruppo per ogni topic"
 
@@ -3867,6 +3878,9 @@ msgstr ""
 
 msgid "Create client"
 msgstr "Crea client"
+
+msgid "Create community"
+msgstr "Crea community"
 
 msgid ""
 "Create experiment groups for sequential batch execution. Experiments "
@@ -16359,6 +16373,9 @@ msgstr ""
 "Impossibile confermare l'arresto di uno o più client HPC. L'esperimento "
 "resta attivo."
 
+msgid "Unable to create the community right now."
+msgstr "Impossibile creare la community in questo momento."
+
 msgid "Unable to prepare the experiment user."
 msgstr "Impossibile preparare l'utente dell'esperimento."
 
@@ -18209,6 +18226,9 @@ msgstr "modificato"
 
 msgid "click to cancel"
 msgstr "clicca per annullare"
+
+msgid "community_name"
+msgstr "nome_community"
 
 msgid "count stopped at the limit"
 msgstr "conteggio fermato al limite"

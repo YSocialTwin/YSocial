@@ -816,3 +816,34 @@ def crosspost_reddit(
     except Exception as exc:
         db.session.rollback()
         raise ValueError(f"Failed to cross-post: {exc}")
+
+
+COMMUNITY_NAME_RE = re.compile(r"^[a-z0-9_]{3,20}$")
+
+
+def create_community(user, name: str) -> Tuple[Interests, bool]:
+    """Create a community (an ``Interests`` row) on behalf of the human user and make them a member.
+
+    ``name`` may carry the ``y/`` prefix; it is lower-cased and must be 3-20 letters, digits or underscores. Returns
+    ``(interest, created)``; ``created`` is False when the community already exists (nothing is changed then).
+    """
+    _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
+    slug = str(name or "").strip().lower().removeprefix("y/").removeprefix("r/")
+    if not COMMUNITY_NAME_RE.fullmatch(slug):
+        raise ValueError(
+            "Community names have 3-20 characters: letters, digits and underscores."
+        )
+    existing = db.session.scalars(select(Interests).filter_by(interest=slug)).first()
+    if existing is not None:
+        return existing, False
+    topic = Interests(interest=slug)
+    db.session.add(topic)
+    db.session.commit()
+    db.session.add(
+        User_interest(
+            user_id=actor_user.id, interest_id=topic.iid, round_id=_get_current_round()
+        )
+    )
+    db.session.commit()
+    return topic, True

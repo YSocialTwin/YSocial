@@ -123,3 +123,18 @@ def test_federated_repost_wiring():
     ):
         assert "ws_repost_button" in (root / "templates" / rel).read_text(), rel
     assert (root / "static/assets/js/world-simulation-repost.js").exists()
+
+
+def test_create_community_wiring():
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    sidebar = (root / "templates/forum/components/sidebar.html").read_text()
+    assert "data-fr-create-community" in sidebar and "forum-create-community.js" in sidebar
+    assert "/communities" in (root / "static/assets/js/reddit/forum-create-community.js").read_text()
+    assert "def api_create_community(" in (root / "routes/api/reddit.py").read_text()
+    from y_web.src.forum.actions.posts import COMMUNITY_NAME_RE
+
+    assert COMMUNITY_NAME_RE.fullmatch("linux_2") and not COMMUNITY_NAME_RE.fullmatch("a b")
+    assert not COMMUNITY_NAME_RE.fullmatch("ab") and not COMMUNITY_NAME_RE.fullmatch("x" * 21)

@@ -57,6 +57,7 @@ from y_web.src.forum.actions import (
     apply_vote,
     create_comment_reddit,
     create_post_reddit,
+    create_community,
     crosspost_reddit,
 )
 from y_web.src.forum.service import (
@@ -1380,6 +1381,26 @@ def api_crosspost(exp_id: int):
             "community_slug": community_slug,
             "url": f"/{exp_id}/rthread/{post.id}",
         }
+    )
+
+
+@api_reddit.post("/<int:exp_id>/communities")
+@login_required
+def api_create_community(exp_id: int):
+    """The human user creates a community (subreddit) and joins it."""
+    payload = request.get_json(silent=True) or {}
+    try:
+        topic, created = create_community(current_user, payload.get("name"))
+    except ValueError as exc:
+        return _json_error(str(exc), 400)
+    return _json_success(
+        {
+            "slug": topic.interest,
+            "label": f"y/{topic.interest}",
+            "created": bool(created),
+            "url": f"/{exp_id}/subforum/{topic.interest}",
+        },
+        status=201 if created else 200,
     )
 
 

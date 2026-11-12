@@ -14,6 +14,7 @@
             <span class="forum-community-eyebrow">{{ _('Now') }}</span>
             <h3>{{ _('Communities') }}</h3>
             <p>{{ _('Most recently active communities across posts and discussions.') }}</p>
+            <button type="button" class="fr-create-community-button" data-fr-create-community><i class="mdi mdi-plus" aria-hidden="true"></i> {{ _('Create community') }}</button>
         </div>
         <div class="forum-community-list">
             {% for community in recent_communities %}
@@ -75,3 +76,25 @@
         </div>
     </div>
 </aside>
+<div class="fr-modal" id="fr-create-community" hidden role="dialog" aria-modal="true" aria-labelledby="fr-create-community-title"
+     data-exp-id="{{ exp_id }}"
+     data-i18n='{{ {"invalid": _("Community names have 3-20 characters: letters, digits and underscores."), "error": _("Unable to create the community right now.")}|tojson }}'>
+    <div class="fr-modal-backdrop" data-fr-create-close></div>
+    <form class="fr-modal-card" id="fr-create-community-form" autocomplete="off">
+        <header class="fr-modal-head">
+            <h2 id="fr-create-community-title">{{ _('Create a community') }}</h2>
+            <button type="button" class="fr-modal-close" data-fr-create-close aria-label="{{ _('Close') }}"><i class="mdi mdi-close" aria-hidden="true"></i></button>
+        </header>
+        <label class="fr-modal-search">
+            <span aria-hidden="true">y/</span>
+            <input type="text" id="fr-create-community-name" maxlength="20" placeholder="{{ _('community_name') }}" required/>
+        </label>
+        <p class="fr-modal-hint">{{ _('3-20 characters: letters, digits and underscores. You will join it automatically.') }}</p>
+        <p class="fr-modal-error" id="fr-create-community-error" hidden></p>
+        <div class="fr-modal-actions">
+            <button type="button" class="fr-modal-secondary" data-fr-create-close>{{ _('Cancel') }}</button>
+            <button type="submit" class="fr-modal-primary">{{ _('Create community') }}</button>
+        </div>
+    </form>
+</div>
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-create-community.js') }}" defer></script>
