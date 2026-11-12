@@ -214,6 +214,36 @@ def _primary_community_payload(
     return None
 
 
+def _shared_from_with_community(post):
+    """``_shared_from`` whose community is resolved like the community of any post (subreddit of the article or image,
+    else the first topic), so a cross-post always names the community it was copied from."""
+    origin = _shared_from(post)
+    if not origin or origin == -1:
+        return origin
+    try:
+        source = db.session.get(Post, origin[0])
+        if source is None:
+            return origin
+        article_row = (
+            db.session.scalars(select(Articles).filter_by(id=source.news_id)).first()
+            if source.news_id
+            else None
+        )
+        article = _resolve_article(article_row)
+        image = _resolve_image_post(
+            getattr(source, "image_post_id", None)
+        ) or _resolve_image(source.image_id)
+        if not image and article and article.image:
+            image = article.image
+        entry = _primary_community_payload(
+            article, get_topics(source.id, source.user_id), image
+        )
+        slug = (entry or {}).get("slug") or ""
+    except Exception:  # noqa: BLE001 - keep the community found by _shared_from
+        slug = ""
+    return (origin[0], origin[1], slug or origin[2])
+
+
 def _apply_community_filter(base_query, community_slug: Optional[str]):
     slug = str(community_slug or "").strip().lower()
     if not slug:
@@ -705,7 +735,7 @@ def _create_feed_post(
     )
     if not image and article and article.image:
         image = article.image
-    shared_from = _shared_from(post)
+    shared_from = _shared_from_with_community(post)
 
     emotions = get_elicited_emotions(post.id)
     topics = get_topics(post.id, post.user_id)
@@ -1155,7 +1185,7 @@ def _post_with_aggregates(
         "post": processed_body,
         "profile_pic": profile_pic,
         "image": image_obj,
-        "shared_from": _shared_from(post),
+        "shared_from": _shared_from_with_community(post),
         "post_id": post.id,
         "author": author.username if author else "",
         "author_id": post.user_id,
