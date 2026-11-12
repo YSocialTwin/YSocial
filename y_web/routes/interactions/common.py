@@ -662,7 +662,7 @@ def federation_repost(exp_id):
     members = _ho.requested_members(payload.get("members") or [])
     ctx = _ho.context_for(exp_id, getattr(current_user, "id", None))
     if ctx is None or not members:
-        return jsonify({"ok": False, "error": "not_enrolled"}), 400
+        return jsonify({"ok": False, "code": "not_enrolled"}), 400
 
     text = str(payload.get("text") or "").strip()
     post_id = payload.get("post_id")
@@ -676,7 +676,7 @@ def federation_repost(exp_id):
     if text[:6].upper() == "TITLE:":
         text = text[6:].strip()
     if not text:
-        return jsonify({"ok": False, "error": "empty"}), 400
+        return jsonify({"ok": False, "code": "empty"}), 400
 
     platform = ctx.platform_type
     exp = db.session.get(Exps, int(exp_id))
@@ -694,11 +694,11 @@ def federation_repost(exp_id):
     elif platform == "instant_messaging":
         build = lambda t: _ho.im_action("post", t, text=text)  # noqa: E731
     else:
-        return jsonify({"ok": False, "error": "unsupported"}), 400
+        return jsonify({"ok": False, "code": "unsupported"}), 400
 
     sent = _ho.try_deliver(exp_id, current_user, members, text, build)
     if sent is None:
-        return jsonify({"ok": False, "error": "no_destination"}), 400
+        return jsonify({"ok": False, "code": "no_destination"}), 400
     if not sent:
-        return jsonify({"ok": False, "error": "gateway"}), 502
+        return jsonify({"ok": False, "code": "gateway"}), 502
     return jsonify({"ok": True, "members": members})

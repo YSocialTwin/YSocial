@@ -35,7 +35,7 @@
             .then(function (html) {
                 var doc = new DOMParser().parseFromString(html, "text/html");
                 var fresh = doc.getElementById("posts-container");
-                if (!fresh) { throw new Error("no posts container"); }
+                if (!fresh) { throw new Error("missing-container"); }
                 if (window.InfiniteScroll) { window.InfiniteScroll.destroy(); }
                 container.innerHTML = fresh.innerHTML;
                 container.classList.remove("is-loading");

@@ -65,7 +65,7 @@
                 if (!res.ok) { throw new Error(); }
                 var data = res.body.data || res.body;
                 close();
-                showToast(data.created === false ? (L.already || "Already reposted there") : ((L.posted || "Reposted to") + " " + label), data.url);
+                showToast(data.created === false ? (L.already || "") : ((L.posted || "") + " " + label), data.url);
             })
             .catch(function () { showToast(L.error || "Unable to repost right now."); });
     }
@@ -75,14 +75,14 @@
             method: "POST", credentials: "same-origin", headers: csrfHeaders(),
             body: JSON.stringify({ members: [p.member], post_id: current.postId, community: current.community })
         }).then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-            .then(function () { close(); showToast((L.posted || "Reposted to") + " " + p.label); })
+            .then(function () { close(); showToast((L.posted || "") + " " + p.label); })
             .catch(function () { showToast(L.error || "Unable to repost right now."); });
     }
 
     function renderPlatforms(q) {
         var shown = (platforms || []).filter(function (p) { return !q || String(p.label).toLowerCase().indexOf(q) >= 0; });
         if (!shown.length) { return; }
-        list.appendChild(el("li", "fr-modal-section", L.platforms || "Other platforms"));
+        list.appendChild(el("li", "fr-modal-section", L.platforms || ""));
         shown.forEach(function (p) {
             row(PLATFORM_ICONS[p.platform_type] || "mdi-link-variant", p.label, L.platformHint || "", function () { pickPlatform(p); });
         });
@@ -116,7 +116,7 @@
                 });
                 renderPlatforms(search.value.trim().toLowerCase());
                 if (!list.children.length) {
-                    list.appendChild(el("li", "fr-modal-empty", L.empty || "No communities found"));
+                    list.appendChild(el("li", "fr-modal-empty", L.empty || ""));
                 }
             })
             .catch(function () { /* aborted or offline */ });
