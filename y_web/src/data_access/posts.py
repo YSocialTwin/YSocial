@@ -90,7 +90,21 @@ def _render_shared_from(post):
         .first()
     )
     username = author.username if author else "Unknown"
-    return shared_from, username
+    return shared_from, username, _origin_community(shared_from)
+
+
+def _origin_community(source_id) -> str:
+    """Slug of the community a cross-posted thread was copied from ('' when unknown): resolved like the community of a
+    feed post (subreddit of the article or image, else the topics of the post)."""
+    try:
+        from y_web.src.forum.service.queries import _build_root_post_community_map
+
+        entries = _build_root_post_community_map([source_id]).get(source_id) or []
+        if entries:
+            return str(entries[0].get("slug") or "")
+    except Exception:  # noqa: BLE001 - the origin line degrades to the author only
+        pass
+    return ""
 
 
 def _get_text_utils():

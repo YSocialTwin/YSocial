@@ -221,6 +221,9 @@ def _shared_from_with_community(post):
     if not origin or origin == -1:
         return origin
     try:
+        mapped = (_build_root_post_community_map([origin[0]]).get(origin[0]) or [])
+        if mapped:
+            return (origin[0], origin[1], mapped[0]["slug"])
         source = db.session.get(Post, origin[0])
         if source is None:
             return origin
