@@ -21,6 +21,15 @@
                  data-demo-src="{{ thread['profile_pic'] or 'https://via.placeholder.com/300x300' }}"
                  style="width: 24px; height: 24px; border-radius: 50%;"
                  alt="">
+            {% if current_subforum_slug %}
+            <div class="fr-post-byline">
+                <div class="fr-post-byline-top">
+                    <a class="fr-post-community" href="/{{ exp_id }}/subforum/{{ current_subforum_slug }}?feed_type={{ feed_type|default('new', true) }}">{{ current_subforum_label }}</a>
+                    <span class="forum-post-time" style="color: #7c7c7c; font-size: 12px;">&middot; {% if thread.get("display_time") %}{{ thread.get("display_time") }}{% elif thread.get("day") != "None" %}{{ _('Day %(day)s · Hour %(hour)s', day=thread.get("day"), hour="%02d"|format(thread.get("hour")|int)) }}{% endif %}</span>
+                </div>
+                <a class="fr-post-author" href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
+            </div>
+            {% else %}
             <span style="font-weight: 500; color: #1c1c1c; margin-right: 8px;">
  <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" class="ys-link-inherit">{{ thread["author"] }}</a>
             </span>
@@ -31,6 +40,7 @@
                     {{ _('Day %(day)s · Hour %(hour)s', day=thread.get("day"), hour="%02d"|format(thread.get("hour")|int)) }}
                 {% endif %}
             </span>
+            {% endif %}
         </div>
         {% if thread['author_id'] == logged_id or is_admin %}
         <div class="dropdown is-spaced is-right is-neutral dropdown-trigger" onclick="event.stopPropagation()">

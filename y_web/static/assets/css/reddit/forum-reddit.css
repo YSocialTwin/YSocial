@@ -734,3 +734,12 @@ body {
 .fr-community-card .fr-community-avatar { width: 36px; height: 36px; font-size: 14px; }
 .fr-community-card .fr-community-name { font-size: 20px; }
 .fr-community-card .fr-stat-grid dd { font-size: 18px; }
+
+/* thread header: community link with the author underneath, as on Reddit */
+.fr-post-byline { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.fr-post-byline-top { display: flex; align-items: center; gap: 6px; }
+.fr-post-community { font-size: 13px; font-weight: 600; color: var(--fr-text); text-decoration: none; }
+.fr-post-community:hover { color: var(--fr-accent); text-decoration: underline; }
+.fr-post-author { font-size: 12px; color: var(--fr-muted); text-decoration: none; }
+.fr-post-author:hover { text-decoration: underline; }
+.fr-back-label { font-size: 14px; }

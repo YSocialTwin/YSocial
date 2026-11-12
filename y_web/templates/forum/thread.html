@@ -125,7 +125,7 @@
                     <div class="reddit-thread-nav">
                         <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" aria-label="{{ _('Back to feed') }}">
                             <i class="mdi mdi-arrow-left" aria-hidden="true"></i>
-                            {% if current_subforum_label %}<span class="fr-community-avatar">y/</span><span>{{ current_subforum_label }}</span>{% else %}<span>{{ _('Back to feed') }}</span>{% endif %}
+                            <span class="fr-back-label">{{ _('Back to feed') }}</span>
                         </a>
                     </div>
 
