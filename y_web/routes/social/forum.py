@@ -344,10 +344,12 @@ def get_thread_reddit(exp_id, post_id):
             .filter(Post.id == root_post.shared_from)
             .first()
         )
+        from y_web.src.data_access.posts import _origin_community
+
         shared_from_info = (
-            (root_post.shared_from, shared_user.username)
-            if shared_user
-            else (root_post.shared_from, "Unknown")
+            root_post.shared_from,
+            shared_user.username if shared_user else "Unknown",
+            _origin_community(root_post.shared_from),
         )
 
     discussion_tree = {
