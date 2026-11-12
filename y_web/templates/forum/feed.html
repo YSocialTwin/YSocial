@@ -122,6 +122,20 @@
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
                     <!-- Create Post Button -->
+                    {% if view_mode == 'subforum' and current_subforum_label %}
+                    <header class="fr-community-header">
+                        <div class="fr-community-cover"></div>
+                        <div class="fr-community-bar">
+                            <span class="fr-community-avatar is-large">{{ (current_subforum_slug or current_subforum_label|replace("y/", ""))[:1]|upper }}</span>
+                            <h1>{{ current_subforum_label }}</h1>
+                            <div class="fr-community-actions">
+                                {% if community_joined|default(false) %}<span class="fr-pill fr-pill-soft">{{ _('Joined') }}</span>{% endif %}
+                                <a class="fr-pill" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">{{ _('Back to Feed') }}</a>
+                            </div>
+                        </div>
+                    </header>
+                    {% endif %}
+
                     <div class="forum-feed-toolbar ys-mb-20{% if view_mode == 'search' %} is-search-view{% endif %}">
                         <div class="forum-feed-toolbar-left">
                             {% set fr_sort_options = [('new', _('New')), ('hot', _('Hot')), ('top', _('Top')), ('most_commented', _('Most Commented'))] %}
@@ -210,19 +224,6 @@
                     </div>
                     {% endif %}
 
-                    {% if view_mode == 'subforum' and current_subforum_label %}
-                    <header class="fr-community-header">
-                        <div class="fr-community-cover"></div>
-                        <div class="fr-community-bar">
-                            <span class="fr-community-avatar is-large">y/</span>
-                            <h1>{{ current_subforum_label }}</h1>
-                            <div class="fr-community-actions">
-                                {% if community_joined|default(false) %}<span class="fr-pill fr-pill-soft">{{ _('Joined') }}</span>{% endif %}
-                                <a class="fr-pill" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">{{ _('Back to Feed') }}</a>
-                            </div>
-                        </div>
-                    </header>
-                    {% endif %}
 
                     {% if view_mode != 'search' %}
                     <div id="new-posts-indicator" class="notification is-link is-light" style="display: none; margin-bottom: 16px;">

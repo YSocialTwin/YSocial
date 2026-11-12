@@ -21,7 +21,7 @@
                 class="forum-community-link{% if current_subforum_slug == community.slug %} is-active{% endif %}"
                 href="/{{ exp_id }}/subforum/{{ community.slug }}?feed_type={{ feed_type }}"
             >
-                <span class="forum-community-icon">y/</span>
+                <span class="forum-community-icon">{{ community.slug[:1]|upper }}</span>
                 <span class="forum-community-meta">
                     <strong>{{ community.label }}</strong>
                     <small>
@@ -54,7 +54,7 @@
                 class="forum-community-link{% if current_subforum_slug == community.slug %} is-active{% endif %}"
                 href="/{{ exp_id }}/subforum/{{ community.slug }}?feed_type={{ feed_type }}"
             >
-                <span class="forum-community-icon">y/</span>
+                <span class="forum-community-icon">{{ community.slug[:1]|upper }}</span>
                 <span class="forum-community-meta">
                     <strong>{{ community.label }}</strong>
                     <small>

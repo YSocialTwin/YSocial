@@ -812,3 +812,8 @@ body {
 @media (max-width: 640px) {
     .fr-view-compact .reddit-post .post-image, .fr-view-compact .reddit-post .article-preview { width: 72px; height: 60px; }
 }
+
+/* the community already shows "y/" in its name: avatars carry the initial, and the post link has no extra icon */
+.forum-community-icon, .fr-community-avatar { text-transform: uppercase; }
+.forum-post-community-icon { display: none !important; }
+.fr-community-header + .forum-feed-toolbar { margin-top: 4px; }

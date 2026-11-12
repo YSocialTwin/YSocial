@@ -2,7 +2,7 @@
 {% if current_subforum_slug %}
 <section class="fr-aside-card fr-community-card">
     <div class="fr-community-card-head">
-        <span class="fr-community-avatar">y/</span>
+        <span class="fr-community-avatar">{{ current_subforum_slug[:1]|upper }}</span>
         <a class="fr-community-name" href="/{{ exp_id }}/subforum/{{ current_subforum_slug }}?feed_type={{ feed_type|default('new', true) }}">{{ current_subforum_label }}</a>
         {% if community_joined|default(false) %}<span class="fr-pill fr-pill-soft">{{ _('Joined') }}</span>{% endif %}
     </div>
