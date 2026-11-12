@@ -524,6 +524,10 @@ def get_thread_reddit(exp_id, post_id):
         exp_id=exp_id,
         back_url=_forum_resolve_back_url(exp_id),
         forum_memory_enabled=_forum_memory_enabled(exp_id),
+        recent_communities=fetch_recent_active_communities(),
+        my_communities=fetch_user_communities(
+            logged_user.id if logged_user is not None else current_user.id
+        ),
         current_subforum_slug=thread_community["slug"] if thread_community else None,
         current_subforum_label=thread_community["label"] if thread_community else None,
         community_stats=(

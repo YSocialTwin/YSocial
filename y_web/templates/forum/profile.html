@@ -3,6 +3,12 @@
 
 <div class="view-wrapper">
     <div class="container is-fluid forum-profile-shell">
+      <div class="columns forum-feed-layout">
+        <div class="column is-3 is-hidden-touch">
+            {% set view_mode = 'profile' %}
+            {% include "forum/components/sidebar.html" %}
+        </div>
+        <div class="column is-9-tablet is-9-desktop">
         <div class="forum-profile-hero">
             <div class="forum-profile-banner"></div>
             <div class="forum-profile-summary">
@@ -21,6 +27,7 @@
                         </a>
                         {% endif %}
                     </div>
+                    <div class="forum-profile-handle">y/{{ user['user_data']['username'] }}</div>
                     <div class="forum-profile-subline">
                         {% if user['user_data'].is_page == 1 %}
                         {{ _('Community Page') }}
@@ -41,6 +48,17 @@
 
         <div class="forum-profile-layout{% if forum_memory_enabled %} has-chat{% endif %}">
             <aside class="forum-profile-sidebar">
+                <div class="forum-profile-card forum-profile-idcard">
+                    <div class="forum-profile-idcover"></div>
+                    <h3>{{ user['user_data']['username'] }}</h3>
+                    <div class="forum-profile-idgrid">
+                        <div><strong>{{ user['total_followers'] }}</strong><span>{{ _('Followers') }}</span></div>
+                        <div><strong>{{ user['total_posts'] }}</strong><span>{{ _('Posts') }}</span></div>
+                        <div><strong>{{ user['total_comments'] }}</strong><span>{{ _('Comments') }}</span></div>
+                        <div><strong>{{ user['total_likes'] }}</strong><span>{{ _('Likes') }}</span></div>
+                        <div><strong>{{ user['total_dislikes'] }}</strong><span>{{ _('Dislikes') }}</span></div>
+                    </div>
+                </div>
                 {% if stress_reward_active and is_page != 1 %}
                 <div class="forum-profile-card">
                     <h3>{{ _('Stress / Reward') }}</h3>
@@ -125,6 +143,8 @@
             </aside>
             {% endif %}
         </div>
+        </div>
+      </div>
     </div>
 </div>
 

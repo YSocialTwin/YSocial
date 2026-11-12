@@ -531,6 +531,15 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         )
         forum_context = dict(common_context)
         forum_context["mentions"] = forum_mentions
+        from y_web.src.forum.service import (
+            fetch_recent_active_communities,
+            fetch_user_communities,
+        )
+
+        forum_context["recent_communities"] = fetch_recent_active_communities()
+        forum_context["my_communities"] = (
+            fetch_user_communities(forum_logged_user.id) if forum_logged_user else []
+        )
         return render_template(
             "forum/profile.html",
             profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),

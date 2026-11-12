@@ -116,9 +116,11 @@
         <div id="profile-main" class="view-wrap is-headless thread-view">
             <!-- <div id="activity-feed" class="view-wrap true-dom is-hidden"> -->
             <div class="columns forum-feed-layout">
-                <div class="column is-1 is-hidden-touch"></div>
+                <div class="column is-3 is-hidden-touch">
+                    {% include "forum/components/sidebar.html" %}
+                </div>
 
-                <div class="column is-10-tablet is-7-desktop">
+                <div class="column is-9-tablet is-5-desktop">
                     <!-- Reddit-style navigation -->
                     <div class="reddit-thread-nav">
                         <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" aria-label="{{ _('Back to feed') }}">

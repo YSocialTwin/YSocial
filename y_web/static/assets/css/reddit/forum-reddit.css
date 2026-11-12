@@ -632,3 +632,15 @@ body {
     .forum-profile-layout, .forum-profile-layout.has-chat { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "side" "main" !important; }
     .forum-profile-summary { flex-direction: column; align-items: flex-start; }
 }
+
+/* profile: Reddit-like identity card (right) and header handle */
+.forum-profile-handle { color: var(--fr-muted); font-size: 13px; }
+.forum-profile-hero .forum-profile-stats { display: none !important; }
+.forum-profile-idcover { height: 72px; margin: -16px -16px 12px; border-radius: 12px 12px 0 0; background: #0b0b0b; }
+.forum-profile-idcard h3 { font-size: 16px; font-weight: 700; color: var(--fr-text); margin: 0 0 10px; }
+.forum-profile-idgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 8px; }
+.forum-profile-idgrid strong { display: block; font-size: 15px; color: var(--fr-text); font-weight: 600; }
+.forum-profile-idgrid span { font-size: 12px; color: var(--fr-muted); }
+.forum-profile-shell { padding-left: 0; padding-right: 0; }
+.forum-profile-layout { grid-template-columns: minmax(0, 1fr) 300px !important; }
+.forum-profile-layout.has-chat { grid-template-columns: minmax(0, 1fr) 300px !important; grid-template-areas: "main side" "main chat" !important; }
