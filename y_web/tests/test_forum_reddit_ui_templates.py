@@ -152,3 +152,12 @@ def test_composer_hides_community_picker_inside_a_community():
 
     src = (Path(__file__).resolve().parents[1] / "templates/forum/feed.html").read_text()
     assert "forum-compose-community-field\"{% if current_subforum_slug %} hidden{% endif %}" in src
+
+
+def test_feed_defines_the_feed_config_once():
+    """A second ``window.redditFeedConfig`` would wipe communitySlug and make the dynamic feed ignore the community."""
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "templates/forum/feed.html").read_text()
+    assert src.count("window.redditFeedConfig =") == 1
+    assert src.count("window.redditContext =") == 1

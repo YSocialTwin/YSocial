@@ -638,7 +638,8 @@ window.redditFeedConfig = Object.freeze({
     defaultCommunitySlug: {{ current_subforum_slug|tojson }},
     hasMore: {{ has_more|tojson }},
     viewMode: {{ view_mode|default('feed', true)|tojson }},
-    expId: {{ exp_id }}
+    expId: {{ exp_id }},
+    loggedUserId: {{ logged_id|tojson }}
 });
 </script>
 
@@ -681,17 +682,6 @@ window.redditFeedConfig = Object.freeze({
 <script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
-<script>
-window.redditContext = Object.freeze({
-    loggedUserId: {{ logged_id|tojson }},
-    isAdmin: {{ 'true' if is_admin else 'false' }}
-});
-window.redditFeedConfig = Object.freeze({
-    expId: {{ exp_id }},
-    loggedUserId: {{ logged_id|tojson }},
-    viewMode: '{{ 'subforum' if active_community else 'feed' }}'
-});
-</script>
 {% include "forum/components/crosspost_modal.html" %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-crosspost.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
