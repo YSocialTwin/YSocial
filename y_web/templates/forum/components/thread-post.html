@@ -80,6 +80,12 @@
     </div>
     {% endif %}
 
+    {% if thread.get('image') and thread['image'] != "" and not ('article' in thread and thread['article'] != 0) %}
+    <div class="post-image">
+        <img src="{{ thread['image'].url }}" alt="{{ thread['image'].description }}"/>
+    </div>
+    {% endif %}
+
     <!-- Article preview (same as feed) -->
     {% if 'article' in thread and thread['article'] != 0 %}
  <div class="article-preview ys-card-border">

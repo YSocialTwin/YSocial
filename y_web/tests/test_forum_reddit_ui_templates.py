@@ -52,3 +52,9 @@ def test_profile_tabs_load_in_place():
     assert "forum-profile-tabs.js" in _read("profile.html")
     js = (ROOT / "static/assets/js/forum-profile-tabs.js").read_text()
     assert "pushState" in js and "posts-container" in js and "InfiniteScroll" in js
+
+
+def test_media_is_kept_in_compact_view_and_thread():
+    css = (ROOT / "static/assets/css/reddit/forum-reddit.css").read_text()
+    assert ".fr-view-compact .reddit-post .article-preview" in css
+    assert "post-image" in _read("components/thread-post.html")
