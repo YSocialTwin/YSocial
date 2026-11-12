@@ -602,8 +602,6 @@ body {
 .fr-child:hover { border-left-color: var(--fr-muted) !important; }
 .fr-collapse { position: absolute; left: -2px; top: 0; background: none; border: 0; padding: 0; color: var(--fr-muted); cursor: pointer; font-size: 16px; line-height: 1; opacity: 0; transition: opacity .15s; }
 .fr-branch:hover > .fr-collapse { opacity: 1; }
-.fr-branch.is-collapsed > .fr-children, .fr-branch.is-collapsed .fr-actions { display: none; }
-.fr-branch.is-collapsed > .fr-comment { max-height: 28px; overflow: hidden; opacity: .6; }
 
 /* profile */
 .forum-profile-banner { display: none !important; }
@@ -687,3 +685,52 @@ body {
 .forum-profile-shell .forum-feed-layout > .column:first-child { border-right: 1px solid var(--fr-line); }
 .forum-profile-shell .forum-feed-layout { gap: 0; }
 .forum-profile-shell .forum-feed-layout > .column:last-child { padding-left: 24px; }
+
+/* ===== Thread page, closer to Reddit ===== */
+.reddit-back-link .mdi { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--fr-bg-hover); font-size: 18px; }
+.reddit-back-link .mdi:hover { background: #dde2e5; }
+.fr-thread-post > div:first-child { margin-bottom: 4px !important; }
+.fr-thread-post > div:first-child img { width: 32px !important; height: 32px !important; }
+.fr-thread-post .forum-post-time { font-size: 12px !important; }
+.fr-thread-post h1 { font-size: 28px !important; font-weight: 600 !important; line-height: 1.25 !important; margin: 8px 0 14px !important; }
+.fr-thread-post .thread-content { font-size: 15px; line-height: 1.7; }
+.fr-thread-post > div[style*="font-size: 16px"] { font-size: 15px !important; line-height: 1.7 !important; margin-bottom: 16px !important; }
+.fr-thread-post .dropdown .button, .fr-comment .dropdown .button { border: 0 !important; background: transparent !important; box-shadow: none !important; width: 32px; height: 32px; padding: 0; border-radius: 50%; }
+.fr-thread-post .dropdown .button:hover, .fr-comment .dropdown .button:hover { background: var(--fr-bg-hover) !important; }
+
+/* post action bar: horizontal pills */
+.fr-thread-post .fr-actions { gap: 8px !important; margin-top: 4px; }
+.fr-thread-post .fr-vote { flex-direction: row !important; margin: 0 !important; padding: 0 4px; border-radius: var(--fr-radius-pill); background: #eef1f3; height: 36px; gap: 2px; }
+.fr-thread-post .fr-vote [data-role="score"] { margin: 0 4px !important; font-size: 13px !important; }
+.fr-thread-post .fr-actions .toggle-reply-button, .fr-thread-post .fr-actions .forum-report-button { height: 36px; padding: 0 14px !important; border-radius: var(--fr-radius-pill) !important; background: #eef1f3 !important; color: var(--fr-text) !important; font-size: 13px !important; }
+.fr-thread-post .fr-actions .toggle-reply-button:hover, .fr-thread-post .fr-actions .forum-report-button:hover { background: var(--fr-bg-hover) !important; }
+.fr-flair-row { margin: 12px 0 !important; }
+.fr-join-conversation { height: 44px; font-size: 15px; margin: 12px 0 20px; }
+
+/* comments: avatar column, thread line, collapse button */
+.fr-branch { position: relative; margin: 0; }
+.fr-branch::before { content: ""; position: absolute; left: 13px; top: 44px; bottom: 6px; width: 2px; background: var(--fr-line); border-radius: 1px; }
+.fr-branch:hover::before { background: #c4cbd0; }
+.fr-branch.is-collapsed::before { display: none; }
+.fr-comment { position: relative; padding: 8px 0 4px 36px !important; margin: 0 !important; border: 0 !important; background: transparent !important; }
+.fr-comment > div:first-child { margin-bottom: 2px !important; }
+.fr-comment > div:first-child img { position: absolute; left: 0; top: 8px; width: 28px !important; height: 28px !important; }
+.fr-comment > div:first-child > div:first-child { min-height: 28px; }
+.fr-comment .forum-post-time { font-size: 12px !important; }
+.fr-comment > div:first-child span a { font-size: 13px; font-weight: 600; }
+.fr-comment .comment-content { font-size: 14px; line-height: 1.6; }
+.fr-comment .fr-actions { gap: 2px !important; margin: 2px 0 4px -6px !important; }
+.fr-comment .fr-actions button, .fr-comment .fr-actions a { height: 28px; border-radius: var(--fr-radius-pill) !important; padding: 0 8px !important; font-size: 12px !important; color: var(--fr-muted) !important; }
+.fr-comment .fr-actions button:hover, .fr-comment .fr-actions a:hover { background: var(--fr-bg-hover) !important; }
+.fr-collapse { position: absolute !important; left: 4px; top: 40px !important; width: 20px; height: 20px; z-index: 2; opacity: 1 !important; background: var(--fr-bg) !important; border-radius: 50%; color: var(--fr-muted) !important; font-size: 18px !important; display: flex; align-items: center; justify-content: center; }
+.fr-collapse:hover { color: var(--fr-text) !important; }
+.fr-child { margin-left: 36px !important; padding-left: 0 !important; border-left: 0 !important; }
+.fr-branch.is-collapsed > .fr-children { display: none; }
+.fr-branch.is-collapsed > .fr-comment { padding-bottom: 30px !important; }
+.fr-branch.is-collapsed > .fr-comment > :not(:first-child) { display: none !important; }
+
+/* community card (right column) */
+.fr-community-card { background: var(--fr-bg-soft); }
+.fr-community-card .fr-community-avatar { width: 36px; height: 36px; font-size: 14px; }
+.fr-community-card .fr-community-name { font-size: 20px; }
+.fr-community-card .fr-stat-grid dd { font-size: 18px; }

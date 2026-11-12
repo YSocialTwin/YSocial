@@ -120,7 +120,7 @@
                     {% include "forum/components/sidebar.html" %}
                 </div>
 
-                <div class="column is-9-tablet is-5-desktop">
+                <div class="column is-9-tablet is-6-desktop">
                     <!-- Reddit-style navigation -->
                     <div class="reddit-thread-nav">
                         <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" aria-label="{{ _('Back to feed') }}">
@@ -149,7 +149,7 @@
                 </div>
 
                 {% if forum_memory_enabled or current_subforum_slug %}
-                <div class="column is-4-desktop is-hidden-touch">
+                <div class="column is-3-desktop is-hidden-touch">
                     {% include "forum/components/community_card.html" %}
                     {% if forum_memory_enabled %}
                     {% set forum_chat_page_kind = 'thread' %}

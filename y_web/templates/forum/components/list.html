@@ -5,7 +5,7 @@
         {% if len(thread['children'])>0 %}
         {% set data = thread['children'] %}
         {% for c in data %}
-        <div class="fr-child" style="padding-left: 24px; border-left: 1px solid #e1e8ed; margin-left: 12px;">
+        <div class="fr-child">
             {% with thread=c %}
             {% include "forum/components/list.html" %}
             {% endwith %}
