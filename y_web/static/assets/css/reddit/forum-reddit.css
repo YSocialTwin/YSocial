@@ -743,3 +743,36 @@ body {
 .fr-post-author { font-size: 12px; color: var(--fr-muted); text-decoration: none; }
 .fr-post-author:hover { text-decoration: underline; }
 .fr-back-label { font-size: 14px; }
+
+/* ===== Feed toolbar: Sort by / View menus (Reddit-like) ===== */
+.fr-sortbar { display: flex; align-items: center; gap: 4px; }
+.fr-sort-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
+.fr-menu { position: relative; }
+.fr-menu-trigger { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 12px; border: 0; border-radius: var(--fr-radius-pill); background: transparent; color: var(--fr-text); font-size: 13px; font-weight: 600; cursor: pointer; }
+.fr-menu-trigger:hover, .fr-menu.is-open > .fr-menu-trigger { background: var(--fr-bg-hover); }
+.fr-menu-trigger .mdi { font-size: 18px; line-height: 1; }
+.fr-menu-panel { display: none; position: absolute; left: 0; top: 36px; min-width: 200px; padding: 8px 0; background: var(--fr-bg); border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, .18); z-index: 40; }
+.fr-menu.is-open > .fr-menu-panel { display: block; }
+.fr-menu-title { padding: 8px 16px 10px; font-size: 15px; font-weight: 600; color: var(--fr-text); }
+.fr-menu-item { display: flex; align-items: center; gap: 12px; width: 100%; height: 48px; padding: 0 16px; border: 0; background: transparent; color: var(--fr-text); font-size: 14px; text-align: left; cursor: pointer; }
+.fr-menu-item:hover { background: var(--fr-bg-soft); }
+.fr-menu-item.is-active { background: var(--fr-bg-hover); font-weight: 600; }
+.fr-menu-item .mdi { font-size: 20px; }
+.forum-feed-toolbar { border-bottom: 1px solid var(--fr-line) !important; padding-bottom: 6px !important; margin-bottom: 0 !important; }
+
+/* ===== Compact view: thumbnail slot + title + meta + action pills on a few lines ===== */
+.fr-view-compact .reddit-post.card { border-radius: 0 !important; padding: 10px 0 !important; }
+.fr-view-compact .reddit-post .content-wrap { display: grid !important; grid-template-columns: 112px minmax(0, 1fr); grid-template-areas: "thumb head" "thumb body" "thumb foot"; column-gap: 16px; align-items: start; }
+.fr-view-compact .reddit-post .content-wrap::before { content: ""; grid-area: thumb; width: 112px; height: 80px; border-radius: 12px; background: var(--fr-bg-soft) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='%23576f76' stroke-width='1.6' stroke-linecap='round'><rect x='4' y='4' width='16' height='16' rx='3'/><path d='M8 9h8M8 13h8M8 17h4'/></svg>") center / 28px no-repeat; border: 1px solid var(--fr-line); }
+.fr-view-compact .reddit-post .card-heading { grid-area: head; padding: 0 !important; min-height: 0; }
+.fr-view-compact .reddit-post .card-heading .user-block .image img { width: 20px !important; height: 20px !important; }
+.fr-view-compact .reddit-post .card-body { grid-area: body; padding: 0 !important; }
+.fr-view-compact .reddit-post .post-text h3 { font-size: 16px !important; font-weight: 600 !important; margin: 2px 0 4px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fr-view-compact .reddit-post .post-text > div, .fr-view-compact .reddit-post .post-image, .fr-view-compact .reddit-post .article-preview { display: none !important; }
+/* posts without a title: show two lines of body instead */
+.fr-view-compact .reddit-post .post-text:not(:has(h3)) > div[style*="font-size"] { display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0 !important; font-size: 14px !important; }
+.fr-view-compact .reddit-post .content-wrap > div[style*="border-top"], .fr-view-compact .reddit-post .post-footer { grid-area: foot; border-top: 0 !important; padding: 0 !important; }
+@media (max-width: 640px) {
+    .fr-view-compact .reddit-post .content-wrap { grid-template-columns: 72px minmax(0, 1fr); column-gap: 10px; }
+    .fr-view-compact .reddit-post .content-wrap::before { width: 72px; height: 60px; }
+}

@@ -124,12 +124,35 @@
                     <!-- Create Post Button -->
                     <div class="forum-feed-toolbar ys-mb-20{% if view_mode == 'search' %} is-search-view{% endif %}">
                         <div class="forum-feed-toolbar-left">
-                            <div class="select forum-feed-sort-select">
-                                <select id="feed-type-select">
-                                    <option value="new" {% if feed_type == 'new' %}selected{% endif %}>{{ _('New') }}</option>
-                                    <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>{{ _('Hot') }}</option>
-                                    <option value="top" {% if feed_type == 'top' %}selected{% endif %}>{{ _('Top') }}</option>
-                                    <option value="most_commented" {% if feed_type == 'most_commented' %}selected{% endif %}>{{ _('Most Commented') }}</option>
+                            {% set fr_sort_options = [('new', _('New')), ('hot', _('Hot')), ('top', _('Top')), ('most_commented', _('Most Commented'))] %}
+                            <div class="fr-sortbar">
+                                <div class="fr-menu" data-fr-menu>
+                                    <button type="button" class="fr-menu-trigger" aria-haspopup="menu" aria-expanded="false">
+                                        <span data-fr-sort-label>{% for value, label in fr_sort_options %}{% if feed_type == value %}{{ label }}{% endif %}{% endfor %}</span>
+                                        <i class="mdi mdi-chevron-down" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="fr-menu-panel" role="menu">
+                                        <div class="fr-menu-title">{{ _('Sort by') }}</div>
+                                        {% for value, label in fr_sort_options %}
+                                        <button type="button" role="menuitemradio" class="fr-menu-item{% if feed_type == value %} is-active{% endif %}" data-fr-sort="{{ value }}" data-label="{{ label }}">{{ label }}</button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="fr-menu" data-fr-menu>
+                                    <button type="button" class="fr-menu-trigger is-icon" aria-haspopup="menu" aria-expanded="false" aria-label="{{ _('View') }}">
+                                        <i class="mdi mdi-view-agenda-outline" data-fr-view-icon aria-hidden="true"></i>
+                                        <i class="mdi mdi-chevron-down" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="fr-menu-panel" role="menu">
+                                        <div class="fr-menu-title">{{ _('View') }}</div>
+                                        <button type="button" role="menuitemradio" class="fr-menu-item is-active" data-fr-view="card"><i class="mdi mdi-view-agenda" aria-hidden="true"></i>{{ _('Card') }}</button>
+                                        <button type="button" role="menuitemradio" class="fr-menu-item" data-fr-view="compact"><i class="mdi mdi-view-headline" aria-hidden="true"></i>{{ _('Compact') }}</button>
+                                    </div>
+                                </div>
+                                <select id="feed-type-select" class="fr-sort-native" tabindex="-1" aria-hidden="true">
+                                    {% for value, label in fr_sort_options %}
+                                    <option value="{{ value }}" {% if feed_type == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -630,6 +653,7 @@ window.redditFeedConfig = Object.freeze({
 <script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-feed-menus.js') }}"></script>
 
 <!-- Core instance js -->
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>

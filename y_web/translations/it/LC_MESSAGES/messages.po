@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:50+0000\n"
+"POT-Creation-Date: 2026-11-12 13:06+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -3156,6 +3156,9 @@ msgstr "Pagina della community"
 
 msgid "Community size exponent (tau2)"
 msgstr "Esponente della dimensione delle comunità (tau2)"
+
+msgid "Compact"
+msgstr "Compatta"
 
 msgid ""
 "Compact view of how many hashtags remain active, emerge, and disappear "
@@ -16954,6 +16957,9 @@ msgstr "Versione"
 
 msgid "Video call"
 msgstr "Videochiamata"
+
+msgid "View"
+msgstr "Visualizzazione"
 
 msgid "View Client Details"
 msgstr "Vedi i dettagli del client"

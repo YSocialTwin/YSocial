@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:50+0000\n"
+"POT-Creation-Date: 2026-11-12 13:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2857,6 +2857,9 @@ msgid "Community Page"
 msgstr ""
 
 msgid "Community size exponent (tau2)"
+msgstr ""
+
+msgid "Compact"
 msgstr ""
 
 msgid ""
@@ -15257,6 +15260,9 @@ msgid "Version"
 msgstr ""
 
 msgid "Video call"
+msgstr ""
+
+msgid "View"
 msgstr ""
 
 msgid "View Client Details"
