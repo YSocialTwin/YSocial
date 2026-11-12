@@ -58,3 +58,10 @@ def test_media_is_kept_in_compact_view_and_thread():
     css = (ROOT / "static/assets/css/reddit/forum-reddit.css").read_text()
     assert ".fr-view-compact .reddit-post .article-preview" in css
     assert "post-image" in _read("components/thread-post.html")
+
+
+def test_compact_rows_can_be_expanded_individually():
+    css = (ROOT / "static/assets/css/reddit/forum-reddit.css").read_text()
+    assert ".reddit-post:not(.fr-expanded)" in css
+    js = (ROOT / "static/assets/js/reddit/forum-feed-menus.js").read_text()
+    assert "fr-expand-button" in js and "fr-expanded" in js

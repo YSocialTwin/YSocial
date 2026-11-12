@@ -30,6 +30,43 @@
         });
     }
 
+    // expand/collapse a single post while the compact view is on
+    function addExpandButtons(scope) {
+        (scope || document).querySelectorAll(".reddit-post").forEach(function (post) {
+            if (post.querySelector(".fr-expand-button")) { return; }
+            var footer = post.querySelector(".content-wrap > div[style*='border-top'], .post-footer");
+            if (!footer) { return; }
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "fr-expand-button";
+            btn.setAttribute("aria-label", "Expand");
+            var icon = document.createElement("i");
+            icon.className = "mdi mdi-arrow-expand";
+            btn.appendChild(icon);
+            footer.insertBefore(btn, footer.firstChild);
+        });
+    }
+    function watchFeed() {
+        addExpandButtons(document);
+        var container = document.getElementById("feed-container") || document.getElementById("posts-container");
+        if (container && window.MutationObserver) {
+            new MutationObserver(function () { addExpandButtons(container); }).observe(container, { childList: true, subtree: true });
+        }
+    }
+    document.addEventListener("click", function (ev) {
+        var btn = ev.target.closest(".fr-expand-button");
+        if (!btn) { return; }
+        ev.preventDefault();
+        ev.stopPropagation();
+        var post = btn.closest(".reddit-post");
+        if (post) {
+            var on = post.classList.toggle("fr-expanded");
+            var icon = btn.querySelector("i");
+            if (icon) { icon.className = "mdi " + (on ? "mdi-arrow-collapse" : "mdi-arrow-expand"); }
+        }
+    }, true);
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", watchFeed); } else { watchFeed(); }
+
     applyView(readView());
 
     document.addEventListener("click", function (ev) {
