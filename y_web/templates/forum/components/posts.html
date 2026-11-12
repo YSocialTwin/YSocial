@@ -98,11 +98,7 @@
 {% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, item['post_id'])) }}
 {% set ws_exp = exp_id %}{% set ws_id = item['post_id'] %}{% include 'shared/world_simulation_origin.html' %}
             <div class="post-text">
-                {% if item["shared_from"] != -1 %}
- <div class="ys-text-right-border">
-                    <p><small>{{ _('Shared from:') }} <a href="/{{exp_id}}/rthread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
-                </div>
-                {% endif %}
+                {% from "forum/components/crosspost_origin.html" import crosspost_origin %}{{ crosspost_origin(item["shared_from"], exp_id) }}
                 {% if item.get("title") %}
                 <h3 style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px; color: #1c1c1c;">
                     <a href="/{{exp_id}}/rthread/{{ item['post_id'] }}" style="text-decoration: none; color: #1c1c1c;">

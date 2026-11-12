@@ -526,6 +526,10 @@
         }, AUTO_REFRESH_INTERVAL_MS);
     }
 
+    function buildFeedCommunityUrl(slug) {
+        return "/" + getExpId() + "/subforum/" + encodeURIComponent(slug);
+    }
+
     function buildThreadUrl(postId) {
         var expId = getExpId();
         var back = getCurrentFeedUrl();
@@ -854,8 +858,11 @@
 
         var sharedSection = "";
         if (post.shared_from && post.shared_from !== -1) {
+            var originCommunity = post.shared_from[2]
+                ? '<a href="' + buildFeedCommunityUrl(post.shared_from[2]) + '" class="fr-crosspost-origin-community">y/' + escapeHtml(post.shared_from[2]) + '</a> ' + YI18n.t('by') + ' '
+                : '';
             sharedSection =
-                '<div style="text-align: right; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px;"><p><small>' + YI18n.t('Shared from:') + ' <a href="' + buildThreadUrl(post.shared_from[0]) + '">' + escapeHtml(post.shared_from[1] || "") + '</a></small></p></div>';
+                '<p class="fr-crosspost-origin"><i class="mdi mdi-repeat" aria-hidden="true"></i> ' + YI18n.t('Crossposted from') + ' ' + originCommunity + '<a href="' + buildThreadUrl(post.shared_from[0]) + '" class="fr-crosspost-origin-link">' + escapeHtml(post.shared_from[1] || "") + '</a></p>';
         }
 
         var deleteAction = "";

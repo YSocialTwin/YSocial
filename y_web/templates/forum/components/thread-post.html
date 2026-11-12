@@ -68,6 +68,7 @@
     
 {% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, thread['post_id'])) }}
 {% set ws_exp = exp_id %}{% set ws_id = thread['post_id'] %}{% include 'shared/world_simulation_origin.html' %}
+    {% from "forum/components/crosspost_origin.html" import crosspost_origin %}{{ crosspost_origin(thread.get('shared_from'), exp_id) }}
     <!-- Post title -->
     {% if thread.get("title") %}
     <h1 style="font-size: 20px; font-weight: 600; margin: 0 0 12px 0; color: #1c1c1c; line-height: 1.3;">

@@ -78,7 +78,7 @@ class FeedPost:
     created_at: Optional[str]
     round_id: Optional[int]
     stats: PostStats
-    shared_from: Optional[Tuple[int, str]]
+    shared_from: Any  # (post_id, author, community) or -1
     article_id: Optional[int]
     article_needs_enrichment: bool
     article: Optional[ArticlePreview]

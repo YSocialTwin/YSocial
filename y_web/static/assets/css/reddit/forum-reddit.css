@@ -984,3 +984,10 @@ body {
 body.fr-modal-open { overflow: hidden; }
 .fr-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1100; padding: 12px 20px; border-radius: 999px; background: #0f1a1c; color: #fff; font-size: 14px; }
 .fr-toast a { color: #8fc7ff; font-weight: 600; margin-left: 4px; }
+
+/* cross-post origin line ("Cross-post da y/community di autore"): card compatta, estesa e thread */
+.fr-crosspost-origin { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 0 0 6px !important; padding: 0 !important; border: 0 !important; font-size: 12px; line-height: 16px; color: var(--fr-muted); text-align: left !important; }
+.fr-crosspost-origin .mdi { font-size: 14px; }
+.fr-crosspost-origin a { color: var(--fr-muted); font-weight: 700; text-decoration: none; }
+.fr-crosspost-origin a:hover { color: var(--fr-accent); text-decoration: underline; }
+.fr-view-compact .reddit-post:not(.fr-expanded) .post-text > p.fr-crosspost-origin { display: flex !important; margin: 0 0 2px !important; }

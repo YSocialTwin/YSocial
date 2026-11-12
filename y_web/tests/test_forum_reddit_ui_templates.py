@@ -83,3 +83,19 @@ def test_crosspost_button_dialog_and_api_are_wired():
     assert "fr-crosspost-button" in js
     api = (ROOT / "routes/api/reddit.py").read_text()
     assert "/crosspost/targets" in api and 'post("/<int:exp_id>/crosspost")' in api
+
+
+def test_crosspost_origin_is_shown_in_cards_and_thread():
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    macro = (root / "templates/forum/components/crosspost_origin.html").read_text()
+    assert "Crossposted from" in macro and "subforum" in macro
+    for rel in ("posts.html", "thread-post.html"):
+        src = (root / "templates/forum/components" / rel).read_text()
+        assert "crosspost_origin" in src
+    js = (root / "static/assets/js/reddit/async_updates.js").read_text()
+    assert "fr-crosspost-origin" in js
+    css = (root / "static/assets/css/reddit/forum-reddit.css").read_text()
+    assert re.search(r"fr-view-compact[^{]*p\.fr-crosspost-origin", css)

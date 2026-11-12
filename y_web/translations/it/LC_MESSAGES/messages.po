@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:28+0000\n"
+"POT-Creation-Date: 2026-11-12 13:31+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -4048,6 +4048,9 @@ msgid ""
 msgstr ""
 "Cross-post: %(total)s materializzati (in %(ticks)s tick) · contenuti "
 "esportati: %(exported)s"
+
+msgid "Crossposted from"
+msgstr "Cross-post da"
 
 msgid "Cumulative Trends"
 msgstr "Andamenti cumulativi"
@@ -18185,6 +18188,9 @@ msgstr "branch %(name)s"
 
 msgid "branch archive"
 msgstr "archivio branch"
+
+msgid "by"
+msgstr "di"
 
 msgid "cancelled"
 msgstr "annullata"
