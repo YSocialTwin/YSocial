@@ -689,6 +689,8 @@ window.redditFeedConfig = Object.freeze({
     viewMode: '{{ 'subforum' if active_community else 'feed' }}'
 });
 </script>
+{% include "forum/components/crosspost_modal.html" %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-crosspost.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>

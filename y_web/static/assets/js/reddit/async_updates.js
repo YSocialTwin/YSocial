@@ -969,6 +969,7 @@
             '      <i data-feather="message-square" style="width: 16px; height: 16px;"></i>',
             '      <span><span data-role="comment-count">' + (post.t_comments || 0) + '</span> ' + YI18n.t('Comments') + '</span>',
             "    </a>",
+            '    <button type="button" class="fr-crosspost-button" data-post-id="' + post.post_id + '" data-community="' + escapeHtml((post.primary_community && post.primary_community.slug) || "") + '" aria-label="' + YI18n.t('Repost') + '" title="' + YI18n.t('Repost') + '"><i class="mdi mdi-repeat" aria-hidden="true"></i></button>',
             "  </div>",
             "</div>",
         ].join("");

@@ -72,3 +72,14 @@ def test_post_header_has_single_meta_line_markup():
     assert posts.index("forum-post-community-link") < posts.index("post-author-link") < posts.index("forum-post-time")
     js = (ROOT / "static/assets/js/reddit/async_updates.js").read_text()
     assert "communityMeta," in js and "more-horizontal" in js
+
+
+def test_crosspost_button_dialog_and_api_are_wired():
+    for page in ("feed.html", "thread.html", "profile.html"):
+        assert "crosspost_modal.html" in _read(page)
+    assert "fr-crosspost-button" in _read("components/posts.html")
+    assert "fr-crosspost-button" in _read("components/thread-post.html")
+    js = (ROOT / "static/assets/js/reddit/async_updates.js").read_text()
+    assert "fr-crosspost-button" in js
+    api = (ROOT / "routes/api/reddit.py").read_text()
+    assert "/crosspost/targets" in api and 'post("/<int:exp_id>/crosspost")' in api

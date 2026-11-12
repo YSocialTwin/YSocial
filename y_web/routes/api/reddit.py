@@ -57,6 +57,7 @@ from y_web.src.forum.actions import (
     apply_vote,
     create_comment_reddit,
     create_post_reddit,
+    crosspost_reddit,
 )
 from y_web.src.forum.service import (
     _format_display_time,
@@ -1299,6 +1300,89 @@ def api_post(exp_id: int):
         return _json_error(str(exc), 400)
 
     return _json_success({"post_id": post.id})
+
+
+@api_reddit.get("/<int:exp_id>/crosspost/targets")
+@login_required
+def api_crosspost_targets(exp_id: int):
+    """Destinations offered by the Repost dialog: the user's profile plus communities (filtered by ``q``)."""
+    from y_web.src.forum.community_icons import assign_icons, icon_for
+    from y_web.src.forum.service import (
+        fetch_available_communities,
+        fetch_community_stats,
+        fetch_user_communities,
+    )
+
+    query = (request.args.get("q") or "").strip().lower().removeprefix("y/")
+    exclude = (request.args.get("exclude") or "").strip().lower().removeprefix("y/")
+    communities = fetch_available_communities()
+    icons = assign_icons([c.get("slug") for c in communities])
+    mine = set()
+    try:
+        actor = _forum_chat_owner_user()
+        mine = {
+            c.get("slug") for c in fetch_user_communities(actor.id if actor else 0)
+        }
+    except Exception:
+        mine = set()
+
+    def _rank(c):
+        slug = str(c.get("slug") or "").lower()
+        return (
+            0 if slug.startswith(query) else 1,
+            0 if c.get("slug") in mine else 1,
+            slug,
+        )
+
+    picked = [
+        c
+        for c in communities
+        if str(c.get("slug") or "").lower() != exclude
+        and (not query or query in str(c.get("slug") or "").lower())
+    ]
+    picked.sort(key=_rank)
+    out = []
+    for c in picked[:12]:
+        stats = fetch_community_stats(c.get("slug")) or {}
+        out.append(
+            {
+                "slug": c.get("slug"),
+                "label": c.get("label") or f"y/{c.get('slug')}",
+                "icon": icon_for(c.get("slug"), icons),
+                "posts": stats.get("posts", 0),
+                "participants": stats.get("participants", 0),
+                "joined": c.get("slug") in mine,
+            }
+        )
+    owner = _forum_chat_owner_user()
+    return _json_success(
+        {
+            "profile": {"username": owner.username} if owner and not query else None,
+            "communities": out,
+        }
+    )
+
+
+@api_reddit.post("/<int:exp_id>/crosspost")
+@login_required
+def api_crosspost(exp_id: int):
+    payload = request.get_json(silent=True) or {}
+    post_id = _opaque_payload_id(payload.get("post_id"))
+    community_slug = (payload.get("community_slug") or "").strip()
+    if post_id is None:
+        return _json_error("post_id is required.", 400)
+    try:
+        post, created = crosspost_reddit(current_user, post_id, community_slug)
+    except ValueError as exc:
+        return _json_error(str(exc), 400)
+    return _json_success(
+        {
+            "post_id": post.id,
+            "created": bool(created),
+            "community_slug": community_slug,
+            "url": f"/{exp_id}/rthread/{post.id}",
+        }
+    )
 
 
 @api_reddit.post("/<int:exp_id>/post/<post_id>/delete")

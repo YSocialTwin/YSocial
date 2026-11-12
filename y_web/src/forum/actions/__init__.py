@@ -22,6 +22,7 @@ from y_web.src.forum.actions.posts import (  # noqa: F401
     _normalize_comment_for_dedupe,
     create_comment_reddit,
     create_post_reddit,
+    crosspost_reddit,
 )
 from y_web.src.forum.actions.reactions import (  # noqa: F401
     _calculate_vote_tallies,

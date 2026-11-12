@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:16+0000\n"
+"POT-Creation-Date: 2026-11-12 13:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1412,6 +1412,9 @@ msgid "Already part of the World Simulation %(name)s."
 msgstr ""
 
 msgid "Already registered?"
+msgstr ""
+
+msgid "Already reposted there"
 msgstr ""
 
 msgid "Also on"
@@ -8706,6 +8709,9 @@ msgstr ""
 msgid "No clients registered"
 msgstr ""
 
+msgid "No communities found"
+msgstr ""
+
 msgid "No configurable values found in this file."
 msgstr ""
 
@@ -11293,7 +11299,16 @@ msgstr ""
 msgid "Repository"
 msgstr ""
 
+msgid "Repost"
+msgstr ""
+
 msgid "Repost another user's content"
+msgstr ""
+
+msgid "Repost suggestions"
+msgstr ""
+
+msgid "Reposted to"
 msgstr ""
 
 msgid "Republican"
@@ -14729,6 +14744,9 @@ msgstr ""
 msgid "Unable to prepare your experiment profile."
 msgstr ""
 
+msgid "Unable to repost right now."
+msgstr ""
+
 msgid "Unable to resolve current admin user."
 msgstr ""
 
@@ -15293,6 +15311,9 @@ msgid "View as account"
 msgstr ""
 
 msgid "View as this account"
+msgstr ""
+
+msgid "View post"
 msgstr ""
 
 msgid "Viewing as"
@@ -16560,6 +16581,9 @@ msgstr ""
 msgid "or unlimited"
 msgstr ""
 
+msgid "participants"
+msgstr ""
+
 msgid "passed"
 msgstr ""
 
@@ -16570,6 +16594,9 @@ msgid "person"
 msgstr ""
 
 msgid "photos"
+msgstr ""
+
+msgid "posts"
 msgstr ""
 
 msgid "prerelease"

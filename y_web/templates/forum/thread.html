@@ -189,6 +189,8 @@ window.redditFeedConfig = Object.freeze({
     expId: {{ exp_id }}
 });
 </script>
+{% include "forum/components/crosspost_modal.html" %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-crosspost.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 <div hidden id="fr-recent-entry" data-exp-id="{{ exp_id }}" data-entry='{{ {
     "id": thread["post_id"]|string,

@@ -169,6 +169,7 @@
  <i data-feather="message-square" class="ys-icon-xs"></i>
                 <span><span data-role="comment-count">{{ item.get("t_comments", 0) }}</span> {{ _('Comments') }}</span>
             </a>
+            <button type="button" class="fr-crosspost-button" data-post-id="{{ item['post_id'] }}" data-community="{{ (item.get('primary_community') or {}).get('slug', '') }}" aria-label="{{ _('Repost') }}" title="{{ _('Repost') }}"><i class="mdi mdi-repeat" aria-hidden="true"></i></button>
             {% if item['author_id'] != logged_id %}
             <a href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
                class="forum-report-button{% if item.get('is_reported') %} is-active{% endif %}"

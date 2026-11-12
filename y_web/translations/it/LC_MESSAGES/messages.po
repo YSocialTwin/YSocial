@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:16+0000\n"
+"POT-Creation-Date: 2026-11-12 13:28+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1574,6 +1574,9 @@ msgstr "Fa già parte della World Simulation %(name)s."
 
 msgid "Already registered?"
 msgstr "Già registrato?"
+
+msgid "Already reposted there"
+msgstr "Già ricondiviso lì"
 
 msgid "Also on"
 msgstr "Presente anche su"
@@ -9626,6 +9629,9 @@ msgstr "Nessun client disponibile"
 msgid "No clients registered"
 msgstr "Nessun client registrato"
 
+msgid "No communities found"
+msgstr "Nessuna community trovata"
+
 msgid "No configurable values found in this file."
 msgstr "Nessun valore configurabile trovato in questo file."
 
@@ -12438,8 +12444,17 @@ msgstr "Segnalazioni"
 msgid "Repository"
 msgstr "Repository"
 
+msgid "Repost"
+msgstr "Ricondividi"
+
 msgid "Repost another user's content"
 msgstr "Ripubblicare i contenuti di un altro utente"
+
+msgid "Repost suggestions"
+msgstr "Suggerimenti per la ricondivisione"
+
+msgid "Reposted to"
+msgstr "Ricondiviso in"
 
 msgid "Republican"
 msgstr "Repubblicano"
@@ -16338,6 +16353,9 @@ msgstr "Impossibile preparare l'utente dell'esperimento."
 msgid "Unable to prepare your experiment profile."
 msgstr "Impossibile preparare il tuo profilo per l'esperimento."
 
+msgid "Unable to repost right now."
+msgstr "Impossibile ricondividere al momento."
+
 msgid "Unable to resolve current admin user."
 msgstr "Impossibile determinare l'utente amministratore corrente."
 
@@ -16990,6 +17008,9 @@ msgstr "Vedi come account"
 
 msgid "View as this account"
 msgstr "Vedi come questo account"
+
+msgid "View post"
+msgstr "Vedi il post"
 
 msgid "Viewing as"
 msgstr "Visualizzazione come"
@@ -18426,6 +18447,9 @@ msgstr "aperte da questo agente"
 msgid "or unlimited"
 msgstr "oppure illimitato"
 
+msgid "participants"
+msgstr "partecipanti"
+
 msgid "passed"
 msgstr "scartati"
 
@@ -18437,6 +18461,9 @@ msgstr "persona"
 
 msgid "photos"
 msgstr "foto"
+
+msgid "posts"
+msgstr "post"
 
 msgid "prerelease"
 msgstr "pre-release"

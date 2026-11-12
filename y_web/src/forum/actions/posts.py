@@ -737,3 +737,82 @@ def create_post_reddit(
     except Exception as exc:
         db.session.rollback()
         raise ValueError(f"Failed to create post: {exc}")
+
+
+def crosspost_reddit(
+    user, source_post_id, community_slug: Optional[str] = None
+) -> Tuple[Post, bool]:
+    """Cross-post an existing thread into another community (or the user's own profile).
+
+    The copy is a new top-level post by the acting user carrying the source's text, image and linked article, with
+    ``shared_from`` pointing at the original and the destination community added as its topic.
+
+    Returns ``(post, created)``; ``created`` is False when the same user already cross-posted that thread there.
+    """
+    _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
+    source = db.session.get(Post, source_post_id)
+    if source is None or source.comment_to not in (-1, "-1", None):
+        raise ValueError("Only top-level posts can be cross-posted")
+
+    slug = _normalize_community_slug(community_slug or "")
+    topic = None
+    if slug:
+        topic = db.session.scalars(select(Interests).filter_by(interest=slug)).first()
+
+    # same user, same source, same destination: reuse
+    previous = db.session.scalars(
+        select(Post).filter_by(user_id=actor_user.id, shared_from=source.id)
+    ).all()
+    for candidate in previous:
+        if slug:
+            linked = (
+                db.session.scalars(
+                    select(Post_topics).filter_by(
+                        post_id=candidate.id, topic_id=topic.iid
+                    )
+                ).first()
+                if topic is not None
+                else None
+            )
+            if linked is not None:
+                return candidate, False
+        elif not db.session.scalars(
+            select(Post_topics).filter_by(post_id=candidate.id)
+        ).first():
+            return candidate, False
+
+    round_id = _get_current_round()
+    try:
+        post = Post(
+            tweet=source.tweet,
+            round=round_id,
+            user_id=actor_user.id,
+            comment_to=-1,
+            image_id=source.image_id,
+            news_id=source.news_id,
+            shared_from=source.id,
+        )
+        db.session.add(post)
+        db.session.commit()
+        post.thread_id = post.id
+        db.session.commit()
+
+        if slug:
+            if topic is None:
+                db.session.add(Interests(interest=slug))
+                db.session.commit()
+                topic = db.session.scalars(
+                    select(Interests).filter_by(interest=slug)
+                ).first()
+            db.session.add(Post_topics(post_id=post.id, topic_id=topic.iid))
+            db.session.add(
+                User_interest(
+                    user_id=actor_user.id, interest_id=topic.iid, round_id=round_id
+                )
+            )
+            db.session.commit()
+        return post, True
+    except Exception as exc:
+        db.session.rollback()
+        raise ValueError(f"Failed to cross-post: {exc}")

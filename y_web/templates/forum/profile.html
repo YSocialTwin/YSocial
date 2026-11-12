@@ -179,6 +179,8 @@
 <script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+{% include "forum/components/crosspost_modal.html" %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-crosspost.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
