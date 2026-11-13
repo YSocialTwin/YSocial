@@ -47,6 +47,7 @@ from y_web.src.forum.service.queries import (  # noqa: F401
     _viewer_vote_subquery,
     build_user_feed_posts,
     fetch_available_communities,
+    fetch_community_directory,
     fetch_community_stats,
     fetch_feed_page,
     fetch_recent_active_communities,

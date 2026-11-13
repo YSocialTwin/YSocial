@@ -42,6 +42,7 @@
                 {{ _('No active communities detected yet.') }}
             </div>
             {% endif %}
+            <a class="forum-community-more" href="/{{ exp_id }}/communities">{{ _('See more') }}</a>
         </div>
     </div>
 
@@ -75,6 +76,7 @@
                 {{ _('You have not posted in any community yet.') }}
             </div>
             {% endif %}
+            <a class="forum-community-more" href="/{{ exp_id }}/communities?scope=mine">{{ _('See more') }}</a>
         </div>
     </div>
 </aside>

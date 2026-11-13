@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:46+0000\n"
+"POT-Creation-Date: 2026-11-13 07:42+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -731,6 +731,9 @@ msgid ""
 msgstr ""
 "Una combinazione pesata dei ranghi di altri modelli. È il predefinito di "
 "un nuovo esperimento."
+
+msgid "A-Z"
+msgstr "A-Z"
 
 msgid "AI Agent"
 msgstr "Agente IA"
@@ -1507,6 +1510,9 @@ msgstr ""
 msgid "All annotations"
 msgstr "Tutte le annotazioni"
 
+msgid "All communities"
+msgstr "Tutte le community"
+
 msgid "All content (the agent's own and that of other agents)"
 msgstr "Tutti i contenuti (dell'agente stesso e degli altri agenti)"
 
@@ -1548,6 +1554,9 @@ msgid ""
 msgstr ""
 "Tutti i dati di telemetria sono conformi al GDPR. Puoi disattivarla in "
 "qualsiasi momento dalle %(link)s dell'applicazione."
+
+msgid "All types"
+msgstr "Tutti i tipi"
 
 msgid ""
 "All: every agent is active on every platform where it has an account. One"
@@ -8032,6 +8041,9 @@ msgstr "Iscritto (round)"
 msgid "Joined Experiments"
 msgstr "Esperimenti a cui partecipa"
 
+msgid "Joined first"
+msgstr "Prima le mie"
+
 msgid "Joins and leaves"
 msgstr "Iscrizioni e abbandoni"
 
@@ -9151,6 +9163,9 @@ msgstr "Autori più raggiunti"
 msgid "Most Toxic Posts"
 msgstr "Post più tossici"
 
+msgid "Most active"
+msgstr "Più attive"
+
 msgid "Most commented"
 msgstr "Più commentati"
 
@@ -9653,6 +9668,9 @@ msgstr "Nessun client registrato"
 
 msgid "No communities found"
 msgstr "Nessuna community trovata"
+
+msgid "No communities match your search."
+msgstr "Nessuna community corrisponde alla ricerca."
 
 msgid "No configurable values found in this file."
 msgstr "Nessun valore configurabile trovato in questo file."
@@ -13014,6 +13032,9 @@ msgstr "Cerca autore o testo"
 msgid "Search by username"
 msgstr "Cerca per nome utente"
 
+msgid "Search communities"
+msgstr "Cerca community"
+
 msgid "Search experiments"
 msgstr "Cerca esperimenti"
 
@@ -13097,6 +13118,9 @@ msgstr "Vedi l'intera discussione"
 
 msgid "See how others see you"
 msgstr "Vedi come ti vedono gli altri"
+
+msgid "See more"
+msgstr "Vedi altro"
 
 msgid "See the coordinator log below."
 msgstr "Vedi il log del coordinatore qui sotto."
@@ -14314,6 +14338,9 @@ msgstr "Subreddit"
 
 msgid "Subreddit validation is done before assignment"
 msgstr "La validazione dei subreddit avviene prima dell'assegnazione"
+
+msgid "Subreddits"
+msgstr "Subreddit"
 
 msgid "Subset of population to activate initially. Leave empty to use all agents."
 msgstr ""
@@ -18024,6 +18051,9 @@ msgstr[1] "Hai accesso a %(num)s esperimenti attivi"
 msgid "You have left this platform."
 msgstr "Hai lasciato questa piattaforma."
 
+msgid "You have not joined any community yet."
+msgstr "Non fai ancora parte di nessuna community."
+
 msgid "You have not posted in any community yet."
 msgstr "Non hai ancora pubblicato in nessuna community."
 
@@ -18231,6 +18261,9 @@ msgstr "modificato"
 
 msgid "click to cancel"
 msgstr "clicca per annullare"
+
+msgid "communities"
+msgstr "community"
 
 msgid "community_name"
 msgstr "nome_community"

@@ -179,3 +179,35 @@ def test_feed_defines_the_feed_config_once():
     ).read_text()
     assert src.count("window.redditFeedConfig =") == 1
     assert src.count("window.redditContext =") == 1
+
+
+def test_communities_directory_wiring():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    sidebar = (root / "templates/forum/components/sidebar.html").read_text()
+    assert '/communities">' in sidebar and "/communities?scope=mine" in sidebar
+    page = (root / "templates/forum/communities.html").read_text()
+    assert "forum-communities.js" in page and "fr-directory-search" in page
+    js = (root / "static/assets/js/reddit/forum-communities.js").read_text()
+    assert "/api/forum_communities?" in js
+    routes = (root / "routes/social/forum.py").read_text()
+    assert (
+        "def communities_reddit(" in routes and "def api_forum_communities(" in routes
+    )
+    queries = (root / "src/forum/service/queries.py").read_text()
+    assert (
+        "def fetch_community_directory(" in queries
+        and "_fetch_new_empty_communities" in queries
+    )
+
+
+def test_community_match_score_is_smart():
+    from y_web.routes.social.forum import _community_match_score, _search_tokens
+
+    def score(slug, q):
+        return _community_match_score(slug, q, _search_tokens(q))
+
+    assert score("python", "pyth") > score("programming", "pyth")
+    assert score("machine_learning", "learning") > 0
+    assert score("linux", "windows") == 0

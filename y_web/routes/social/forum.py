@@ -45,6 +45,7 @@ from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     fetch_available_communities,
+    fetch_community_directory,
     fetch_community_stats,
     fetch_feed_page,
     fetch_recent_active_communities,
@@ -910,6 +911,111 @@ def _inject_forum_community_icon():
         return icon_for(slug, icons)
 
     return {"community_icon": community_icon}
+
+
+def _community_viewer_id():
+    logged_user = _forum_logged_user()
+    return logged_user.id if logged_user else current_user.id
+
+
+@main.get("/<int:exp_id>/communities")
+@login_required
+def communities_reddit(exp_id):
+    """Directory of the communities: searchable, sortable, with "My communities" as a scope."""
+    scope = "mine" if request.args.get("scope") == "mine" else "all"
+    logged_user = _forum_logged_user()
+    exp_user_id = _community_viewer_id()
+    feed_type = request.args.get("feed_type", _forum_default_feed_type(exp_id))
+    return render_template(
+        "forum/communities.html",
+        profile_pic=_forum_current_profile_pic(exp_id, logged_user),
+        profile_pic_feed=_forum_current_profile_pic(exp_id, logged_user),
+        logged_username=current_user.username,
+        logged_id=exp_user_id,
+        is_admin=is_admin(current_user.username),
+        feed_type=feed_type,
+        search_query="",
+        view_mode="communities",
+        exp_id=exp_id,
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
+        available_communities=fetch_available_communities(),
+        recent_communities=fetch_recent_active_communities(),
+        my_communities=fetch_user_communities(exp_user_id),
+        current_subforum_slug=None,
+        current_subforum_label=None,
+        scope=scope,
+        initial_query=(request.args.get("q") or "").strip(),
+    )
+
+
+def _community_match_score(slug, query, tokens):
+    """Relevance of a community name for ``query``: whole name, prefix, word parts (``_``/``-`` split), then fuzzy."""
+    name = str(slug or "").lower()
+    spaced = re.sub(r"[_\-]+", " ", name)
+    score = _search_score(spaced, tokens, query)
+    if name == query:
+        score += 6.0
+    elif name.startswith(query):
+        score += 3.0
+    elif query in name:
+        score += 1.5
+    return score
+
+
+@main.get("/<int:exp_id>/api/forum_communities")
+@login_required
+def api_forum_communities(exp_id):
+    """Communities for the directory page. Query: ``q`` (smart, typo tolerant), ``scope`` (all|mine),
+    ``sort`` (active|az|joined), ``kind`` (all|topic|subreddit)."""
+    query = (request.args.get("q") or "").strip().lower().removeprefix("y/").strip()
+    scope = "mine" if request.args.get("scope") == "mine" else "all"
+    sort = request.args.get("sort") or ("az" if not query else "relevance")
+    kind = request.args.get("kind") or "all"
+    items = fetch_community_directory(_community_viewer_id(), scope)
+    if kind in ("topic", "subreddit"):
+        items = [c for c in items if c.get("kind") == kind]
+
+    if query:
+        tokens = _search_tokens(re.sub(r"[_\-]+", " ", query))
+        scored = []
+        for c in items:
+            sc = _community_match_score(c["slug"], query, tokens)
+            if sc > 0:
+                scored.append((sc, c))
+        if scored:
+            scored.sort(key=lambda it: (-it[0], -it[1]["posts"], it[1]["slug"]))
+            items = [c for _, c in scored]
+        else:  # nothing contains the words: closest names by edit similarity (typos)
+            by_slug = {c["slug"]: c for c in items}
+            items = [by_slug[m] for m in _fuzzy_match(query, by_slug, 12)]
+    if not query or sort != "relevance":
+        if sort == "active":
+            items.sort(key=lambda c: (-c["posts"], -c["participants"], c["slug"]))
+        elif sort == "joined":
+            items.sort(key=lambda c: (not c["joined"], c["slug"]))
+        else:
+            items.sort(key=lambda c: c["slug"])
+
+    icons = assign_icons([c.get("slug") for c in fetch_available_communities()])
+    return jsonify(
+        {
+            "total": len(items),
+            "communities": [
+                {
+                    "slug": c["slug"],
+                    "label": c["label"],
+                    "kind": c["kind"],
+                    "icon": icon_for(c["slug"], icons),
+                    "posts": c["posts"],
+                    "comments": c["comments"],
+                    "participants": c["participants"],
+                    "joined": c["joined"],
+                    "url": f"/{exp_id}/subforum/{c['slug']}",
+                }
+                for c in items
+            ],
+        }
+    )
 
 
 def _search_tokens(query):

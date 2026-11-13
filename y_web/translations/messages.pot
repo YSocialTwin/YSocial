@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:46+0000\n"
+"POT-Creation-Date: 2026-11-13 07:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -643,6 +643,9 @@ msgstr ""
 msgid ""
 "A weighted blend of the ranks of other models. It is the default of a new"
 " experiment."
+msgstr ""
+
+msgid "A-Z"
 msgstr ""
 
 msgid "AI Agent"
@@ -1354,6 +1357,9 @@ msgstr ""
 msgid "All annotations"
 msgstr ""
 
+msgid "All communities"
+msgstr ""
+
 msgid "All content (the agent's own and that of other agents)"
 msgstr ""
 
@@ -1388,6 +1394,9 @@ msgstr ""
 msgid ""
 "All telemetry data is GDPR compliant. You can disable it anytime from the"
 " application %(link)s."
+msgstr ""
+
+msgid "All types"
 msgstr ""
 
 msgid ""
@@ -7218,6 +7227,9 @@ msgstr ""
 msgid "Joined Experiments"
 msgstr ""
 
+msgid "Joined first"
+msgstr ""
+
 msgid "Joins and leaves"
 msgstr ""
 
@@ -8246,6 +8258,9 @@ msgstr ""
 msgid "Most Toxic Posts"
 msgstr ""
 
+msgid "Most active"
+msgstr ""
+
 msgid "Most commented"
 msgstr ""
 
@@ -8730,6 +8745,9 @@ msgid "No clients registered"
 msgstr ""
 
 msgid "No communities found"
+msgstr ""
+
+msgid "No communities match your search."
 msgstr ""
 
 msgid "No configurable values found in this file."
@@ -11833,6 +11851,9 @@ msgstr ""
 msgid "Search by username"
 msgstr ""
 
+msgid "Search communities"
+msgstr ""
+
 msgid "Search experiments"
 msgstr ""
 
@@ -11915,6 +11936,9 @@ msgid "See full discussion thread"
 msgstr ""
 
 msgid "See how others see you"
+msgstr ""
+
+msgid "See more"
 msgstr ""
 
 msgid "See the coordinator log below."
@@ -13016,6 +13040,9 @@ msgid "Subreddit"
 msgstr ""
 
 msgid "Subreddit validation is done before assignment"
+msgstr ""
+
+msgid "Subreddits"
 msgstr ""
 
 msgid "Subset of population to activate initially. Leave empty to use all agents."
@@ -16174,6 +16201,9 @@ msgstr[1] ""
 msgid "You have left this platform."
 msgstr ""
 
+msgid "You have not joined any community yet."
+msgstr ""
+
 msgid "You have not posted in any community yet."
 msgstr ""
 
@@ -16366,6 +16396,9 @@ msgid "changed"
 msgstr ""
 
 msgid "click to cancel"
+msgstr ""
+
+msgid "communities"
 msgstr ""
 
 msgid "community_name"

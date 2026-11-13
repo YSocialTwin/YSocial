@@ -1005,3 +1005,24 @@ body.fr-modal-open { overflow: hidden; }
 
 /* inside a community the post goes to the current community: no picker */
 .forum-compose-community-field[hidden] { display: none !important; }
+
+/* communities directory + "see more" */
+.fr-directory { padding: 8px 0 40px; }
+.fr-directory-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.fr-directory-head h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--fr-text); }
+.fr-directory-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.fr-directory-tab { border: 0; background: var(--fr-bg-soft); color: var(--fr-text); border-radius: 999px; padding: 6px 14px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.fr-directory-tab.is-active { background: var(--fr-text); color: #fff; }
+.fr-directory-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.fr-directory-tools .fr-directory-search { flex: 1 1 260px; margin: 0; }
+.fr-directory-tools select { border: 1px solid var(--fr-line); border-radius: 999px; background: var(--fr-bg); padding: 8px 12px; font-size: 14px; color: var(--fr-text); }
+.fr-directory-count { margin: 4px 4px 8px; font-size: 12px; color: var(--fr-muted); }
+.fr-directory-letter { margin: 18px 4px 6px; font-size: 13px; font-weight: 700; color: var(--fr-muted); letter-spacing: .04em; }
+.fr-directory-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 4px 12px; }
+.fr-directory-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; color: var(--fr-text); text-decoration: none; }
+.fr-directory-item:hover { background: var(--fr-bg-hover); }
+.fr-directory-item .fr-modal-rowbody { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.fr-directory-item small { color: var(--fr-muted); font-size: 12px; }
+.fr-directory-empty { padding: 24px 8px; color: var(--fr-muted); }
+.forum-community-more { display: block; margin: 6px 12px 2px; font-size: 13px; font-weight: 700; color: var(--fr-accent); text-decoration: none; }
+.forum-community-more:hover { text-decoration: underline; }

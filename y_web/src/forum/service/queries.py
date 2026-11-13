@@ -455,7 +455,37 @@ def fetch_recent_active_communities(limit: int = 8) -> List[Dict[str, str]]:
         .limit(max(limit * 12, 96))
         .all()
     )
-    return _collect_ranked_communities_from_post_rows(recent_posts, limit)
+    ranked = _collect_ranked_communities_from_post_rows(recent_posts, limit)
+    # communities created by people have no post yet: the newest ones are listed too, so they can be found and joined
+    fresh = _fetch_new_empty_communities(exclude={c.get("slug") for c in ranked})
+    return (fresh + ranked)[:limit]
+
+
+def _fetch_new_empty_communities(exclude=None, limit: int = 3) -> List[Dict[str, str]]:
+    """Newest communities (``Interests``) that no post is tagged with yet."""
+    exclude = {str(x).lower() for x in (exclude or set())}
+    try:
+        rows = (
+            db.session.query(
+                Interests.iid, func.lower(Interests.interest).label("slug")
+            )
+            .outerjoin(Post_topics, Post_topics.topic_id == Interests.iid)
+            .filter(Post_topics.id.is_(None), Interests.interest != "")
+            .order_by(Interests.iid.desc())
+            .limit(limit * 4)
+            .all()
+        )
+    except Exception:  # noqa: BLE001 - the list degrades to the active communities
+        return []
+    out: List[Dict[str, str]] = []
+    for row in rows:
+        slug = str(row.slug or "").strip().lower()
+        if slug and slug not in exclude:
+            exclude.add(slug)
+            out.append({"slug": slug, "label": f"y/{slug}", "kind": "topic"})
+        if len(out) >= limit:
+            break
+    return out
 
 
 def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]:
@@ -490,7 +520,7 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
             seen.add(slug)
             member.append({"slug": slug, "label": f"y/{slug}", "kind": "member"})
     # communities the user created or joined come first: they may have no post yet
-    return (member + ranked)[: max(limit, len(member))]
+    return (member + ranked)[:limit]
 
 
 def _reaction_aggregates_subquery():
@@ -1322,3 +1352,40 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
 
     attach_children(root_id)
     return post_payloads[root_id]
+
+
+def fetch_community_directory(user_id, scope: str = "all") -> List[Dict[str, Any]]:
+    """Every community (with posts, or created and still empty) for the communities page.
+
+    ``scope="mine"`` keeps the ones the user joined or posted in. Each entry carries ``slug``, ``label``, ``kind``,
+    ``posts``, ``comments``, ``participants`` and ``joined``."""
+    found: Dict[str, Dict[str, Any]] = {}
+    for entry in fetch_available_communities():
+        slug = str(entry.get("slug") or "").lower()
+        if slug:
+            found[slug] = {
+                "slug": slug,
+                "label": f"y/{slug}",
+                "kind": entry.get("kind") or "topic",
+            }
+    try:
+        for row in db.session.query(func.lower(Interests.interest)).distinct().all():
+            slug = str(row[0] or "").strip().lower()
+            if slug and slug not in found:
+                found[slug] = {"slug": slug, "label": f"y/{slug}", "kind": "topic"}
+    except Exception:  # noqa: BLE001 - only the communities that have posts
+        pass
+    mine = {c.get("slug") for c in fetch_user_communities(user_id, limit=1000)}
+    out = []
+    for slug, entry in found.items():
+        entry["joined"] = slug in mine
+        if scope == "mine" and not entry["joined"]:
+            continue
+        stats = fetch_community_stats(slug)
+        entry.update(
+            posts=stats.get("posts", 0),
+            comments=stats.get("comments", 0),
+            participants=stats.get("participants", 0),
+        )
+        out.append(entry)
+    return out
