@@ -214,3 +214,41 @@ def test_experiment_prompt_hooks_match_the_previous_platform_logic():
             ["image_post"] if platform == "forum" else []
         )
         assert list(provider.server_modules) == modules
+
+
+def test_standard_runtime_hooks_match_the_previous_platform_logic(tmp_path):
+    from y_web.platforms import registry
+    from y_web.src.simulation import process_runner, server
+
+    runtimes = {key: registry.get(key).standard_runtime for key in registry.keys()}
+    assert {k for k, v in runtimes.items() if v} == {"microblogging", "forum"}
+    for key, repos in {
+        "microblogging": ("YServer", "YClient"),
+        "forum": ("YServerReddit", "YClientReddit"),
+    }.items():
+        runtime = runtimes[key]
+        assert (runtime.server_repo, runtime.client_repo) == repos
+        server_dir, script = server._resolve_server_runtime_paths(str(tmp_path), key)
+        assert server_dir.endswith(repos[0]) and script.endswith("y_server_run.py")
+        assert process_runner._resolve_client_package_dir(str(tmp_path), key).endswith(
+            repos[1]
+        )
+    for other in ("photo_sharing", "instant_messaging", "dating", "unknown"):
+        for call in (
+            lambda: server._resolve_server_runtime_paths(str(tmp_path), other),
+            lambda: process_runner._resolve_client_package_dir(str(tmp_path), other),
+        ):
+            with pytest.raises(NotImplementedError):
+                call()
+    assert [k for k in runtimes if process_runner._has_activity_profiles(k)] == [
+        "microblogging"
+    ]
+    assert runtimes["forum"].client_takes_log_file
+    assert not runtimes["microblogging"].client_takes_log_file
+    assert runtimes["forum"].fake_agent_module == "y_client.classes.fake_base_agent"
+    synced = {
+        k
+        for k in registry.keys() + ["hpc", "unknown"]
+        if registry.syncs_stress_reward(k)
+    }
+    assert synced == {"microblogging", "forum", "hpc"}

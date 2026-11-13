@@ -10,6 +10,7 @@ its own (see ``docs/platform-decoupling`` in the project).
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional, Tuple
 
@@ -18,6 +19,21 @@ from y_web.i18n import N_
 DEFAULT_ICON = "layers"
 STANDARD = "Standard"
 HPC = "HPC"
+
+
+@dataclass(frozen=True)
+class StandardRuntime:
+    """The Flask server/client pair that runs a platform in ``Standard`` mode (outside the HPC runtime)."""
+
+    #: repository of the server and of the client under ``external/``
+    server_repo: str
+    client_repo: str
+    #: module the client's ``FakeAgent`` is imported from
+    fake_agent_module: str
+    #: whether the client is started with a log file
+    client_takes_log_file: bool = False
+    #: whether agents have activity profiles (backfilled in old agent files, pages post while their profile is on)
+    activity_profiles: bool = False
 
 
 class PlatformProvider:
@@ -75,6 +91,8 @@ class PlatformProvider:
     #: ``None`` for a platform whose clients have nothing to restore
     prompt_pack: Optional[Tuple[str, str]] = None
 
+    #: the Standard runtime of the platform, ``None`` when it only runs on the HPC runtime
+    standard_runtime: Optional[StandardRuntime] = None
     #: modules the server of an experiment of this platform is configured with
     server_modules: Tuple[str, ...] = ("news", "voting", "image")
 

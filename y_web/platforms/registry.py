@@ -42,3 +42,15 @@ def providers() -> List[PlatformProvider]:
 
 def keys() -> List[str]:
     return [provider.key for provider in providers()]
+
+
+def syncs_stress_reward(platform_type: Any) -> bool:
+    """Whether the stress/reward setting of the server is copied into the client file of this platform type.
+
+    It is for the platforms with a Standard runtime and for the HPC runtime itself (``"hpc"`` is a runtime
+    family that clients are labelled with, not a platform).
+    """
+    return (
+        str(platform_type) == "hpc"
+        or resolve(platform_type).standard_runtime is not None
+    )

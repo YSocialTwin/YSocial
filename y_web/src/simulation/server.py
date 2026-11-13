@@ -22,6 +22,7 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import db
+from y_web.platforms import registry
 from y_web.src.models import (
     Client_Execution,
     Exps,
@@ -55,12 +56,10 @@ _local_terminate_process = _terminate_process
 
 def _resolve_server_runtime_paths(base_path, platform_type):
     """Resolve the server package directory and entry script for a platform."""
-    if platform_type == "microblogging":
-        server_dir = resolve_external_repo(base_path, "YServer")
-    elif platform_type == "forum":
-        server_dir = resolve_external_repo(base_path, "YServerReddit")
-    else:
+    runtime = registry.resolve(platform_type).standard_runtime
+    if runtime is None:
         raise NotImplementedError(f"Unsupported platform {platform_type}")
+    server_dir = resolve_external_repo(base_path, runtime.server_repo)
     return server_dir, os.path.join(server_dir, "y_server_run.py")
 
 
@@ -79,7 +78,7 @@ def _ensure_image_post_module_in_config(config_path):
     platform_type = str(config.get("platform_type") or "").strip().lower()
     changed = False
 
-    if platform_type == "forum":
+    if "image_post" in registry.resolve(platform_type).server_modules:
         if "image" in modules and "image_post" not in modules:
             modules = [*modules, "image_post"]
             changed = True
@@ -440,11 +439,9 @@ def _update_server_port_in_configs(exp, new_port):
                                 json.dump(client_config, f, indent=4)
 
                             print(f"Watchdog: Updated {item} with new port")
-                        if getattr(exp, "platform_type", "") in {
-                            "microblogging",
-                            "forum",
-                            "hpc",
-                        } and isinstance(server_config.get("stress_reward"), dict):
+                        if registry.syncs_stress_reward(
+                            getattr(exp, "platform_type", "")
+                        ) and isinstance(server_config.get("stress_reward"), dict):
                             desired_sr = deepcopy(server_config["stress_reward"])
                             desired_sr["enabled"] = bool(
                                 server_config["stress_reward"].get("enabled", False)

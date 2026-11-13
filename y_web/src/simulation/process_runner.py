@@ -104,6 +104,7 @@ It's designed to be called by start_client using subprocess.Popen.
 """
 
 import argparse
+import importlib
 import json
 import math
 import os
@@ -114,6 +115,7 @@ import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from y_web.platforms import registry
 from y_web.src.simulation import federation_hooks
 from y_web.src.simulation.agent_sampler import (
     archetype_of,
@@ -128,7 +130,7 @@ from y_web.src.simulation.agent_sampler import (
 def _sync_experiment_stress_reward_into_client_config(
     client_config: dict, server_config: dict, platform_type: str
 ) -> tuple[dict, bool]:
-    if platform_type not in {"microblogging", "forum", "hpc"}:
+    if not registry.syncs_stress_reward(platform_type):
         return client_config, False
     if not isinstance(client_config, dict) or not isinstance(server_config, dict):
         return client_config, False
@@ -177,11 +179,10 @@ def _resolve_client_package_dir(base_path, platform_type):
     """Resolve the external client package directory for a platform."""
     from y_web.src.system.path_utils import resolve_external_repo
 
-    if platform_type == "microblogging":
-        return resolve_external_repo(base_path, "YClient")
-    if platform_type == "forum":
-        return resolve_external_repo(base_path, "YClientReddit")
-    raise NotImplementedError(f"Unsupported platform {platform_type}")
+    runtime = registry.resolve(platform_type).standard_runtime
+    if runtime is None:
+        raise NotImplementedError(f"Unsupported platform {platform_type}")
+    return resolve_external_repo(base_path, runtime.client_repo)
 
 
 def _candidate_memory_package_dirs(base_path, client_package_dir):
@@ -201,6 +202,11 @@ def _candidate_memory_package_dirs(base_path, client_package_dir):
         if norm not in seen:
             seen.append(norm)
     return seen
+
+
+def _has_activity_profiles(platform_type) -> bool:
+    runtime = registry.resolve(platform_type).standard_runtime
+    return bool(runtime and runtime.activity_profiles)
 
 
 def _repair_legacy_agent_file(agent_file_path, platform_type):
@@ -228,7 +234,7 @@ def _repair_legacy_agent_file(agent_file_path, platform_type):
             "profession": None,
             "archetype": None,
         }
-        if platform_type == "microblogging":
+        if _has_activity_profiles(platform_type):
             defaults["activity_profile"] = default_activity_profile
 
         for key, default_value in defaults.items():
@@ -579,7 +585,8 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             "data_base_path": data_base_path,
             "first_run": first_run,
         }
-        if exp.platform_type == "forum":
+        runtime = registry.resolve(exp.platform_type).standard_runtime
+        if runtime is not None and runtime.client_takes_log_file:
             client_kwargs["log_file"] = log_file
 
         # Repair missing network_type for experiments created before the matrix-copy
@@ -680,12 +687,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
     base_path = get_base_path()
     FakeAgent = None
-    if exp.platform_type == "microblogging":
-        sys.path.append(resolve_external_repo(base_path, "YClient"))
-        from y_client.classes import FakeAgent
-    elif exp.platform_type == "forum":
-        sys.path.append(resolve_external_repo(base_path, "YClientReddit"))
-        from y_client.classes.fake_base_agent import FakeAgent
+    runtime = registry.resolve(exp.platform_type).standard_runtime
+    if runtime is not None:
+        sys.path.append(resolve_external_repo(base_path, runtime.client_repo))
+        FakeAgent = importlib.import_module(runtime.fake_agent_module).FakeAgent
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app(db_type)
@@ -739,7 +744,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
             # get active pages at this hour
             active_pages = hour_to_page[h]
 
-            if platform_type == "microblogging":
+            if _has_activity_profiles(platform_type):
                 # pages post all the time their activity profile is active
                 for page in active_pages:
                     page.select_action(

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, List, Optional, Tuple
 
 from y_web.i18n import N_
-from y_web.platforms.base import HPC, PlatformProvider
+from y_web.platforms.base import HPC, PlatformProvider, StandardRuntime
 from y_web.platforms.registry import register
 
 
@@ -17,6 +17,12 @@ class Microblogging(PlatformProvider):
     order = 10
 
     prompt_pack = ("prompts.json", "prompts.json")
+    standard_runtime = StandardRuntime(
+        server_repo="YServer",
+        client_repo="YClient",
+        fake_agent_module="y_client.classes",
+        activity_profiles=True,
+    )
 
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/feed/{user_id}/feed/rf/1"
@@ -53,6 +59,12 @@ class Forum(PlatformProvider):
     client_file_has_simulation_days = False
     prompt_pack = ("prompts_forum.json", "prompts.json")
     server_modules = ("news", "voting", "image", "image_post")
+    standard_runtime = StandardRuntime(
+        server_repo="YServerReddit",
+        client_repo="YClientReddit",
+        fake_agent_module="y_client.classes.fake_base_agent",
+        client_takes_log_file=True,
+    )
 
     def experiment_prompt_pack(self, simulator_type: str) -> Tuple[str, str]:
         return self.prompt_pack

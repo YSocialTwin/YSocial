@@ -23,7 +23,5 @@
  "y_web/src/hpc/platforms.py": 1,
  "y_web/src/hpc/server.py": 4,
  "y_web/src/im/__init__.py": 1,
- "y_web/src/simulation/process_runner.py": 8,
- "y_web/src/simulation/server.py": 3,
  "y_web/src/system/template_context.py": 1
 }

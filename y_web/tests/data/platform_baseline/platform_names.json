@@ -71,8 +71,7 @@
  "y_web/src/simulation/agent_sampler.py": 4,
  "y_web/src/simulation/execution_backend.py": 2,
  "y_web/src/simulation/federation_hooks.py": 2,
- "y_web/src/simulation/process_runner.py": 15,
- "y_web/src/simulation/server.py": 5,
+ "y_web/src/simulation/process_runner.py": 6,
  "y_web/src/system/display_names.py": 1,
  "y_web/src/system/template_context.py": 2
 }
