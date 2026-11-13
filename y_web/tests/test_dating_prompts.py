@@ -73,7 +73,11 @@ def test_form_writes_only_changed_keys_and_refuses_new_fields(tmp_path):
 def test_template_compiles(app=None):
     from jinja2 import Environment
 
-    src = (
-        Path(__file__).resolve().parents[1] / "templates/admin/prompts_dating.html"
-    ).read_text()
+    template = (
+        Path(__file__).resolve().parents[2]
+        / "external/YDating/ysocial_platform/templates/admin/prompts_dating.html"
+    )
+    if not template.exists():
+        pytest.skip("the dating pages live in the YDating repository")
+    src = template.read_text()
     Environment(extensions=["jinja2.ext.i18n"]).parse(src)

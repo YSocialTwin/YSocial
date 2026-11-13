@@ -25,7 +25,8 @@ def test_the_snapshot_exists_and_is_not_empty(name):
 @pytest.mark.parametrize("name", baseline.SNAPSHOT_NAMES)
 def test_nothing_recorded_in_the_baseline_was_lost(name, booted_app):
     problems = baseline.lost_or_changed(
-        baseline.load_snapshot(name), baseline.collect(name, booted_app)
+        baseline.without_moved(name, baseline.load_snapshot(name)),
+        baseline.collect(name, booted_app),
     )
     shown = "\n".join(problems[:25])
     assert not problems, (
@@ -38,7 +39,13 @@ def test_nothing_recorded_in_the_baseline_was_lost(name, booted_app):
 def test_every_core_template_still_compiles(booted_app):
     """A moved or renamed template, or a missing macro, breaks the page that includes it."""
     failures = []
-    for name in baseline.load_snapshot("templates"):
+    names = baseline.without_moved("templates", baseline.load_snapshot("templates"))
+    for spec in baseline.load_moved()["templates"].values():
+        if baseline.repository_templates(
+            spec
+        ).is_dir():  # moved: it compiles in its repository
+            names.append(spec["to"])
+    for name in names:
         try:
             booted_app.jinja_env.get_template(name)
         except Exception as exc:  # TemplateNotFound, TemplateSyntaxError, ...
@@ -71,3 +78,20 @@ def test_budget_flags_only_growth():
         "a.py: 3 mentions, budget 2",
         "b.py: 1 mentions, budget 0",
     ]
+
+
+def test_moved_templates_are_in_their_repository():
+    """What left the core is where the record says, for every repository that is installed."""
+    missing, installed = [], False
+    for old, spec in baseline.load_moved()["templates"].items():
+        where = baseline.moved_template_in_repository(spec)
+        if not baseline.repository_templates(spec).is_dir():
+            continue  # this repository is not installed
+        installed = True
+        if not where.exists():
+            missing.append(f"{old} -> {spec['to']}")
+    if not installed:
+        pytest.skip("the repositories of the platforms are not installed")
+    assert not missing, "moved templates not found in their repository:\n" + "\n".join(
+        missing
+    )

@@ -8,6 +8,8 @@ import subprocess
 
 import pytest
 
+from y_web.tests._platform_repos import moved_template_path
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ADMIN = ROOT / "templates/admin"
 JS = ROOT / "static/assets/js"
@@ -81,7 +83,12 @@ def test_registry_selectors_exist_in_their_templates():
             page == "prompts_forum"
         ):  # wrapper: it includes prompts.html, which carries the markers
             continue
-        src = (ADMIN / f"{page}.html").read_text(encoding="utf-8")
+        path = ADMIN / f"{page}.html"
+        if not path.exists():  # a page of a platform, now in its repository
+            path = moved_template_path(f"admin/{page}.html")
+            if path is None:
+                continue
+        src = path.read_text(encoding="utf-8")
         assert f'data-tutorial-page="{page}"' in src
         for step in steps:
             selector = step["selector"]

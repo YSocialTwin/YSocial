@@ -8,6 +8,7 @@ from y_web.src.dating import client_config as dcc
 from y_web.src.dating import server_settings as srv
 from y_web.src.dating import settings_ui as ui
 from y_web.src.system.path_utils import get_external_repo_dir
+from y_web.tests._platform_repos import platform_template
 
 REPO = get_external_repo_dir("YDating")
 pytestmark = [
@@ -374,12 +375,7 @@ def test_advanced_parameters_sit_in_a_closed_panel():
 
 
 def test_the_experiment_settings_page_is_one_form_with_tabs():
-    source = (
-        __import__("pathlib").Path(__file__).resolve().parents[1]
-        / "templates"
-        / "admin"
-        / "dating_settings.html"
-    ).read_text(encoding="utf-8")
+    source = platform_template("YDating", "admin/dating_settings.html")
     assert source.count("<form ") == 1  # one Save for the whole page
     for tab in ("recommender", "rules", "chats"):
         assert f'data-panel="{tab}"' in source

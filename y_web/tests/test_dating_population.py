@@ -8,6 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from y_web.tests._platform_repos import platform_template
+
 pytestmark = pytest.mark.integration
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -354,11 +356,11 @@ def test_generate_route_creates_a_population(app, routes):
 
 def test_the_dating_templates_compile(app):
     templates = ROOT / "y_web" / "templates" / "admin"
-    for name in (
-        "population_details.html",
-        "experiment_details_dating.html",
-    ):
-        source = (templates / name).read_text(encoding="utf-8")
+    sources = [
+        (templates / "population_details.html").read_text(encoding="utf-8"),
+        platform_template("YDating", "admin/experiment_details_dating.html"),
+    ]
+    for source in sources:
         assert app.jinja_env.parse(source) is not None
 
 

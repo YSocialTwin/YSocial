@@ -129,7 +129,7 @@ def clients_dating(idexp):
             "run_started": server_settings.run_started(exp_dir),
         }
     )
-    return render_template("admin/clients_dating.html", **context)
+    return render_template("@dating/admin/clients_dating.html", **context)
 
 
 @clientsr.route("/admin/create_dating_client", methods=["POST"])
@@ -350,7 +350,7 @@ def client_details_dating(uid):
     slots = (server_config.get("simulation") or {}).get("num_slots_per_day", 24)
     llm_enabled = _experiment_uses_llm_agents(exp)
     return render_template(
-        "admin/client_details_dating.html",
+        "@dating/admin/client_details_dating.html",
         client=client,
         experiment=exp,
         population=population,

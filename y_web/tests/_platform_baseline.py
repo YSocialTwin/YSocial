@@ -218,6 +218,35 @@ def load_snapshot(name: str):
     return json.loads(snapshot_path(name).read_text("utf-8"))
 
 
+def load_moved() -> Dict[str, Dict[str, Dict[str, str]]]:
+    """What left the core for the repository of a platform: ``{"templates": {core path: {"to", "repo"}}}``."""
+    return json.loads((DATA_DIR / "moved.json").read_text("utf-8"))
+
+
+def repository_templates(spec: Dict[str, str]) -> Path:
+    """The templates folder of the repository a template moved to (it exists only where that repository is installed)."""
+    return (
+        Path(__file__).resolve().parents[2]
+        / "external"
+        / spec["repo"]
+        / "ysocial_platform"
+        / "templates"
+    )
+
+
+def moved_template_in_repository(spec: Dict[str, str]) -> Path:
+    """Where a moved template is in the checkout of its repository (``@<platform>/<path>``)."""
+    return repository_templates(spec) / spec["to"].split("/", 1)[1]
+
+
+def without_moved(name: str, baseline):
+    """The baseline minus what was deliberately moved out of the core (checked separately, in its repository)."""
+    if name != "templates":
+        return baseline
+    moved = load_moved()["templates"]
+    return [path for path in baseline if path not in moved]
+
+
 def lost_or_changed(baseline, current, path: str = "") -> List[str]:
     """What the baseline recorded that the current state no longer has (or has differently).
 

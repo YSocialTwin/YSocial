@@ -93,7 +93,7 @@ def dating_settings(uid):
                     item["f"].path in server_settings.FIXED_AFTER_START
                 )
     return render_template(
-        "admin/dating_settings.html",
+        "@dating/admin/dating_settings.html",
         experiment=exp,
         sections=sections,
         recsys_labels=settings_ui.LABELS,

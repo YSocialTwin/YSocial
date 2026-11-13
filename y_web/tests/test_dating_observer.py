@@ -6,6 +6,7 @@ import uuid
 
 import pytest
 
+from y_web.tests._platform_repos import platform_template
 from y_web.tests.dating_fixture import SENTINELS, build_dating_db
 from y_web.tests.test_im_admin_pages import im_app  # noqa: F401
 
@@ -253,12 +254,12 @@ def test_the_profile_page_has_the_gallery_and_the_reveal_script():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[1]
-    page = (root / "templates" / "dating" / "profile.html").read_text(encoding="utf-8")
+    page = platform_template("YDating", "participant/profile.html")
     for marker in ("dt-pf-hero", "data-lightbox", "dt-reveal", "dating-profile.js"):
         assert marker in page
-    assert "{% block scripts %}" in (
-        root / "templates" / "dating" / "base.html"
-    ).read_text(encoding="utf-8")
+    assert "{% block scripts %}" in platform_template(
+        "YDating", "participant/base.html"
+    )
     script = (root / "static" / "assets" / "js" / "dating-profile.js").read_text(
         encoding="utf-8"
     )
@@ -269,7 +270,7 @@ def test_the_dating_pages_use_the_y_favicon_in_the_platform_colour():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[1]
-    base = (root / "templates" / "dating" / "base.html").read_text(encoding="utf-8")
+    base = platform_template("YDating", "participant/base.html")
     assert "assets/img/favicon_rose.png" in base
     assert (root / "static" / "assets" / "img" / "favicon_rose.png").is_file()
 

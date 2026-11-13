@@ -247,7 +247,7 @@ def dating_join(exp_id):
         exp,
         ui,
         part,
-        template="dating/join.html",
+        template="@dating/participant/join.html",
         form=form,
         error=error,
         vocab=_vocabulary(exp),
@@ -340,7 +340,9 @@ def dating_notice(exp_id):
         return redirect(url_for("main.dating_home", exp_id=exp.idexp))
     if not notice:
         return redirect(url_for("main.dating_home", exp_id=exp.idexp))
-    return _shell(exp, ui, part, template="dating/notice.html", notice=notice)
+    return _shell(
+        exp, ui, part, template="@dating/participant/notice.html", notice=notice
+    )
 
 
 @main.route("/<int:exp_id>/dating/api/deck")
@@ -468,7 +470,7 @@ def dating_me(exp_id):
         exp, ui, part = ctx.exp, ctx.ui, ctx.participant
         status, state = _gateway(exp, part, "state", part.account_id)
         return _render(
-            "dating/me.html",
+            "@dating/participant/me.html",
             ctx,
             reader,
             me=state if status == 200 else None,

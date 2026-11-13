@@ -515,7 +515,7 @@ class Dating(PlatformProvider):
             sqlite_only_note="Dating experiments use SQLite even if the platform uses PostgreSQL",
         )
 
-    details_template = "admin/experiment_details_dating.html"
+    details_template = "@dating/admin/experiment_details_dating.html"
     frontend_capabilities = frozenset(
         {
             "language",

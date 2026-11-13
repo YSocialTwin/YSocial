@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from y_web.tests._platform_repos import platform_template
+
 pytestmark = pytest.mark.integration
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -446,11 +448,13 @@ def test_create_client_writes_config_population_and_rows(app, dating_exp, tmp_pa
 
 def test_the_new_templates_compile(app):
     templates = ROOT / "y_web" / "templates" / "admin"
-    for name in ("clients_dating.html", "dating_settings.html", "_dating_fields.html"):
-        assert (
-            app.jinja_env.parse((templates / name).read_text(encoding="utf-8"))
-            is not None
-        )
+    sources = [
+        platform_template("YDating", "admin/clients_dating.html"),
+        platform_template("YDating", "admin/dating_settings.html"),
+        (templates / "_dating_fields.html").read_text(encoding="utf-8"),
+    ]
+    for source in sources:
+        assert app.jinja_env.parse(source) is not None
 
 
 @needs_runtime

@@ -24,7 +24,9 @@ def dating_participants(idexp):
         flash(_("Experiment not found."), "error")
         return redirect("/admin/experiments")
     return render_template(
-        "admin/dating_participants.html", experiment=exp, data=humans_overview(exp)
+        "@dating/admin/dating_participants.html",
+        experiment=exp,
+        data=humans_overview(exp),
     )
 
 

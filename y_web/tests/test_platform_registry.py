@@ -569,7 +569,7 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
         "forum": "admin/experiment_details_forum.html",
         "photo_sharing": "admin/experiment_details_photo.html",
         "instant_messaging": "admin/experiment_details_im.html",
-        "dating": "admin/experiment_details_dating.html",
+        "dating": "@dating/admin/experiment_details_dating.html",
     }
     assert registry.resolve("unknown").details_template == (
         "admin/experiment_details.html"

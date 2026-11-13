@@ -55,11 +55,15 @@ def test_the_composers_include_the_box_and_the_scripts_send_the_selection():
         ("forum/feed.html", "ws_exp = exp_id"),
         ("photo/base.html", "ws_exp = exp_id"),
         ("im/_menu.html", "ws_exp = exp.idexp"),
-        ("dating/base.html", "ws_exp = exp.idexp"),
     ):
         assert anchor in pathlib.Path("y_web/templates", template).read_text(
             encoding="utf-8"
         ), template
+    dating = pathlib.Path(
+        "external/YDating/ysocial_platform/templates/participant/base.html"
+    )
+    if dating.exists():  # the page belongs to the YDating repository
+        assert "ws_exp = exp.idexp" in dating.read_text(encoding="utf-8")
     for script in (
         "async_updates.js",
         "photo-overlays.js",

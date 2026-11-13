@@ -55,7 +55,7 @@ def dating_analytics(idexp):
         if is_dating_experiment(e) and e.idexp != idexp
     ]
     return render_template(
-        "admin/dating_analytics.html",
+        "@dating/admin/dating_analytics.html",
         experiment=exp,
         data=data,
         tables=etl.EXPORT_TABLES,
@@ -147,4 +147,4 @@ def dating_analytics_compare():
     for exp in (a, b):
         data = etl.cards(_folder(exp))
         sides.append({"experiment": exp, "data": data})
-    return render_template("admin/dating_analytics_compare.html", sides=sides)
+    return render_template("@dating/admin/dating_analytics_compare.html", sides=sides)

@@ -240,7 +240,9 @@ def _view(exp_id, handler):
         abort(400)
     except DatingReadError as exc:
         return (
-            render_template("dating/unavailable.html", exp=exp, message=str(exc)),
+            render_template(
+                "@dating/participant/unavailable.html", exp=exp, message=str(exc)
+            ),
             503,
         )
 
@@ -249,7 +251,7 @@ def _view(exp_id, handler):
 def dating_home(exp_id):
     def handler(ctx, reader):
         if ctx.participant is not None:
-            return _render("dating/play.html", ctx, reader)
+            return _render("@dating/participant/play.html", ctx, reader)
         page = max(_int(request.args.get("page"), 1), 1)
         deck = None
         showcase = None
@@ -259,7 +261,7 @@ def dating_home(exp_id):
         else:
             deck = reader.deck(target, ctx.vp)
         return _render(
-            "dating/home.html",
+            "@dating/participant/home.html",
             ctx,
             reader,
             deck=deck,
@@ -277,7 +279,7 @@ def dating_matches(exp_id):
         if ctx.vp.kind == PUBLIC:
             abort(404)  # the public view has no matches
         items = reader.matches(ctx.vp.account_id, ctx.vp)
-        return _render("dating/matches.html", ctx, reader, matches=items)
+        return _render("@dating/participant/matches.html", ctx, reader, matches=items)
 
     return _view(exp_id, handler)
 
@@ -297,7 +299,7 @@ def dating_chat(exp_id, match_id):
 
             convo = conversation_for(ctx.exp, ctx.participant, match_id)
         return _render(
-            "dating/chat.html",
+            "@dating/participant/chat.html",
             ctx,
             reader,
             chat=chat,
@@ -339,7 +341,7 @@ def dating_profile(exp_id, account_id):
             and not profile.get("inactive")
         ):
             _record_view(ctx, account_id)
-        return _render("dating/profile.html", ctx, reader, profile=profile)
+        return _render("@dating/participant/profile.html", ctx, reader, profile=profile)
 
     return _view(exp_id, handler)
 
@@ -381,14 +383,14 @@ def dating_search(exp_id):
         )
         if request.args.get("partial") == "1":
             return render_template(
-                "dating/_search_results.html",
+                "@dating/participant/_search_results.html",
                 link=_linker(ctx),
                 ctx=ctx,
                 exp=ctx.exp,
                 participant=ctx.participant,
                 **values,
             )
-        return _render("dating/search.html", ctx, reader, **values)
+        return _render("@dating/participant/search.html", ctx, reader, **values)
 
     return _view(exp_id, handler)
 
@@ -399,7 +401,9 @@ def dating_notifications(exp_id):
         if ctx.vp.kind != ACCOUNT:
             abort(404)
         items = reader.notifications(ctx.vp.account_id, ctx.vp)
-        return _render("dating/notifications.html", ctx, reader, items=items)
+        return _render(
+            "@dating/participant/notifications.html", ctx, reader, items=items
+        )
 
     return _view(exp_id, handler)
 

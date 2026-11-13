@@ -1,0 +1,104 @@
+{
+ "templates": {
+  "admin/client_details_dating.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/client_details_dating.html"
+  },
+  "admin/clients_dating.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/clients_dating.html"
+  },
+  "admin/dating_analytics.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/dating_analytics.html"
+  },
+  "admin/dating_analytics_compare.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/dating_analytics_compare.html"
+  },
+  "admin/dating_participants.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/dating_participants.html"
+  },
+  "admin/dating_settings.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/dating_settings.html"
+  },
+  "admin/experiment_details_dating.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/experiment_details_dating.html"
+  },
+  "admin/prompts_dating.html": {
+   "repo": "YDating",
+   "to": "@dating/admin/prompts_dating.html"
+  },
+  "dating/_avatar.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/_avatar.html"
+  },
+  "dating/_bar.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/_bar.html"
+  },
+  "dating/_card.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/_card.html"
+  },
+  "dating/_outcome.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/_outcome.html"
+  },
+  "dating/_search_results.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/_search_results.html"
+  },
+  "dating/base.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/base.html"
+  },
+  "dating/chat.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/chat.html"
+  },
+  "dating/home.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/home.html"
+  },
+  "dating/join.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/join.html"
+  },
+  "dating/matches.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/matches.html"
+  },
+  "dating/me.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/me.html"
+  },
+  "dating/notice.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/notice.html"
+  },
+  "dating/notifications.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/notifications.html"
+  },
+  "dating/play.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/play.html"
+  },
+  "dating/profile.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/profile.html"
+  },
+  "dating/search.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/search.html"
+  },
+  "dating/unavailable.html": {
+   "repo": "YDating",
+   "to": "@dating/participant/unavailable.html"
+  }
+ }
+}

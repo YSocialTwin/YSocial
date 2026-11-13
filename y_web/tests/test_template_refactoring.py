@@ -235,6 +235,17 @@ def _collect_template_strings(directory, exclude_dirs=None):
                 yield fpath, match
 
 
+def _repo_missing(name):
+    """True when the template is recorded as moved but its repository is not installed here."""
+    from y_web.tests._platform_repos import EXTERNAL, _moved
+
+    return any(
+        spec["to"] == name
+        and not (EXTERNAL / spec["repo"] / "ysocial_platform").is_dir()
+        for spec in _moved().values()
+    )
+
+
 class TestNoStaleTemplatePaths:
     """Verify that no old-style template paths remain in Python source."""
 
@@ -296,7 +307,13 @@ class TestNoStaleTemplatePaths:
     def test_all_render_template_paths_exist(self):
         """Every template string in render_template() must resolve to an actual file."""
         missing = []
+        from y_web.tests._platform_repos import namespaced_template_path
+
         for fpath, tpl in _collect_template_strings(Y_WEB_DIR):
+            if tpl.startswith("@"):  # a platform's own template, in its repository
+                if namespaced_template_path(tpl) is None and not _repo_missing(tpl):
+                    missing.append((fpath, tpl))
+                continue
             full = os.path.join(TEMPLATES_DIR, tpl)
             if not os.path.exists(full):
                 missing.append((fpath, tpl))

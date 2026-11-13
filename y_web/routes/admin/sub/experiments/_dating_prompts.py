@@ -39,7 +39,7 @@ def prompts_dating(uid):
     base = pa.base_templates(language)
     custom = pa.custom_templates(folder, language)
     return render_template(
-        "admin/prompts_dating.html",
+        "@dating/admin/prompts_dating.html",
         experiment=experiment,
         language=language,
         languages=pa.languages(),

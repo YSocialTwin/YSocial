@@ -143,8 +143,13 @@ def test_the_dating_composer_has_the_explicit_story_choice_for_enrolled_people_o
     for event in ("after_date_continue", "after_date_ghost", "after_date_close"):
         assert f'value="{event}"' in html
     assert 'id="ws-dating-story"' in html and 'id="ws-dating-story-text"' in html
-    base = pathlib.Path("y_web/templates/dating/base.html").read_text(encoding="utf-8")
-    assert "shared/world_simulation_dating_story.html" in base
+    base = pathlib.Path(
+        "external/YDating/ysocial_platform/templates/participant/base.html"
+    )
+    if base.exists():  # the page belongs to the YDating repository
+        assert "shared/world_simulation_dating_story.html" in base.read_text(
+            encoding="utf-8"
+        )
     js = pathlib.Path("y_web/static/assets/js/dating-participant.js").read_text(
         encoding="utf-8"
     )
