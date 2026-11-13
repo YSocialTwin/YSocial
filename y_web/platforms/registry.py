@@ -52,6 +52,18 @@ def resolve(platform_type: Any) -> PlatformProvider:
     return get(platform_type) or _GENERIC
 
 
+def resolve_hooks(experiment: Any) -> PlatformProvider:
+    """The provider whose switch, memory and opinion hooks apply to ``experiment``.
+
+    A platform that marks them ``hpc_only_hooks`` answers only for its HPC experiments; for the others the
+    generic platform answers (every hook a no-op), which is what they always got.
+    """
+    provider = resolve(getattr(experiment, "platform_type", None))
+    if provider.hpc_only_hooks and getattr(experiment, "simulator_type", None) != "HPC":
+        return _GENERIC
+    return provider
+
+
 def providers() -> List[PlatformProvider]:
     """All providers, in menu order."""
     return sorted(_PROVIDERS.values(), key=lambda p: (p.order, p.key))

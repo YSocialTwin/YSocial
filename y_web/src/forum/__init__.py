@@ -35,14 +35,4 @@ def is_forum_hpc_experiment(experiment) -> bool:
     )
 
 
-def forum_hpc_installed() -> bool:
-    """YForum is present (writable or bundled copy) with the two entry points the HPC launcher runs."""
-    import os
-
-    from y_web.src.system.path_utils import get_external_repo_dir
-
-    root = get_external_repo_dir("YForum")
-    return all(
-        os.path.isfile(os.path.join(root, name))
-        for name in ("run_server.py", "run_client.py")
-    )
+from .validation import forum_hpc_installed  # noqa: E402,F401

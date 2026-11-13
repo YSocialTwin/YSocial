@@ -745,16 +745,7 @@ def start_hpc_client(exp, cli, population):
         if not provider.validate_hpc_client(
             exp_folder, runtime_dir, os.path.basename(client_config)
         ):
-            if spec.key == "dating":
-                _validate = registry.library(
-                    "dating", "validation"
-                ).validate_dating_folder
-            else:
-                from y_web.src.forum.validation import (
-                    validate_forum_folder as _validate,
-                )
-
-            _validate(
+            registry.library("dating", "validation").validate_dating_folder(
                 exp_folder,
                 runtime_dir,
                 client_config=os.path.basename(client_config),

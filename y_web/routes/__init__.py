@@ -68,3 +68,9 @@ def register_blueprints(app):
     app.register_blueprint(api_reddit)
     app.register_blueprint(api_social)
     app.register_blueprint(api_interview)
+
+    # the blueprints that belong to a platform repository (its views were attached to the core's before this point)
+    from y_web.platforms import registry
+
+    for provider in registry.providers():
+        provider.register_blueprints(app)

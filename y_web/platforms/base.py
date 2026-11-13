@@ -486,6 +486,27 @@ class PlatformProvider:
     #: file of the experiment folder holding the drafts of Scenario Design when the runtime owns its database
     scenario_sidecar_file: Optional[str] = None
 
+    #: the switch, memory and opinion hooks below apply to the HPC runtime of this platform only (its Standard
+    #: runtime keeps the generic behaviour); see :func:`registry.resolve_hooks`
+    hpc_only_hooks: bool = False
+
+    def extra_runtime_availability(self) -> Mapping[str, bool]:
+        """Runtimes of this platform that are checked on disk rather than through the plugin list.
+
+        ``{name: installed}``; the names join the ``available`` mapping :meth:`resolve_simulator` receives.
+        """
+        return {}
+
+    def register_blueprints(self, app: Any) -> None:
+        """Register on ``app`` the blueprints this platform owns (the ones that are not the core's)."""
+
+    def persist_hpc_opinion_dynamics(self, context: dict) -> bool:
+        """Write the opinion-dynamics settings of the client page into the client file; ``True`` when done here."""
+        return False
+
+    def after_opinion_distribution_saved(self, context: dict) -> None:
+        """Called once the opinion distributions of an HPC client are saved (the platform may flash a note)."""
+
     def apply_client_switches(self, client_config: dict, **switches: Any) -> bool:
         """Write the behaviour switches of the experiment page into a client ``client_config``.
 

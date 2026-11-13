@@ -161,26 +161,26 @@ def _external_repo_availability():
     )
     hpc = _installed("hpc_simulator")
     forum = _installed("forum_server") and _installed("forum_client")
-    # YForum, the Ray runtime of the forum (HPC): a local check, like the launcher's own
-    try:
-        from y_web.src.forum import forum_hpc_installed
-
-        forum_hpc = forum_hpc_installed()
-    except Exception:
-        forum_hpc = False
     photo_sharing = _installed("photo_sharing")
     instant_messaging = _installed("instant_messaging")
     dating = _installed("dating")
 
-    return {
+    availability = {
         "microblogging": microblogging,
         "hpc": hpc,
         "forum": forum,
-        "forum_hpc": forum_hpc,
+        "forum_hpc": False,
         "photo_sharing": photo_sharing,
         "instant_messaging": instant_messaging,
         "dating": dating,
     }
+    # runtimes a platform checks on disk, like the launcher's own check (YForum, the Ray runtime of the forum)
+    for provider in registry.providers():
+        try:
+            availability.update(provider.extra_runtime_availability())
+        except Exception:
+            pass
+    return availability
 
 
 from sqlalchemy import select
@@ -1894,7 +1894,6 @@ def create_experiment():
     if unavailable:
         flash(unavailable, "error")
         return redirect(url_for("admin.dashboard"))
-    forum_hpc = platform_type == "forum" and simulator_type == "HPC"
 
     # Remote experiment configuration
     is_remote = 1 if request.form.get("is_remote") == "true" else 0

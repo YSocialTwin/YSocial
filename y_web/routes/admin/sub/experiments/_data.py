@@ -49,7 +49,6 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.external_runtime import load_plugins_index
-from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
@@ -669,8 +668,7 @@ def experiment_details(uid):
     memory_module_enabled = False
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
         agent_memory_plugin_installed()
-        or registry.resolve(experiment.platform_type).configures_memory
-        or is_forum_hpc_experiment(experiment)
+        or registry.resolve_hooks(experiment).configures_memory
     )
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
@@ -1020,9 +1018,7 @@ def update_experiment_config(uid):
         )
 
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
-        agent_memory_plugin_installed()
-        or registry.resolve(exp.platform_type).configures_memory
-        or is_forum_hpc_experiment(exp)
+        agent_memory_plugin_installed() or registry.resolve_hooks(exp).configures_memory
     )
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")
@@ -1100,7 +1096,7 @@ def update_experiment_config(uid):
             memory_config["enabled"] = bool(memory_config.get("enabled"))
         config["memory"] = memory_config
 
-        registry.resolve(exp.platform_type).apply_experiment_switches(
+        registry.resolve_hooks(exp).apply_experiment_switches(
             config,
             original_config,
             toxicity=toxicity_enabled,
@@ -1111,23 +1107,6 @@ def update_experiment_config(uid):
             memory=memory_config["enabled"],
             stress_reward_config=stress_reward_config,
         )
-
-        if is_forum_hpc_experiment(exp):
-            # YForum's schemas are strict: write the keys it reads next to the mirrors this page reads
-            from y_web.src.forum.experiment_config import (
-                apply_experiment_switches as apply_forum_switches,
-            )
-
-            apply_forum_switches(
-                config,
-                toxicity=toxicity_enabled,
-                sentiment=sentiment_enabled,
-                emotion=emotion_enabled,
-                opinion=opinion_dynamics_enabled,
-                stress_reward=stress_reward_enabled,
-                memory=memory_config["enabled"],
-                perspective_api=perspective_api,
-            )
 
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
@@ -1162,27 +1141,15 @@ def update_experiment_config(uid):
                 with open(client_config_file, "r") as f:
                     client_config = json.load(f)
 
-                if registry.resolve(exp.platform_type).apply_client_switches(
+                if registry.resolve_hooks(exp).apply_client_switches(
                     client_config,
                     emotion=emotion_enabled,
                     opinion=opinion_dynamics_enabled,
                     stress_reward=stress_reward_enabled,
                     memory=memory_config["enabled"],
+                    stress_reward_config=stress_reward_config,
                 ):
                     pass
-                elif is_forum_hpc_experiment(exp):
-                    from y_web.src.forum.experiment_config import (
-                        apply_switches_to_client as apply_forum_client_switches,
-                    )
-
-                    apply_forum_client_switches(
-                        client_config,
-                        emotion=emotion_enabled,
-                        opinion=opinion_dynamics_enabled,
-                        stress_reward=stress_reward_enabled,
-                        memory=memory_config["enabled"],
-                        stress_reward_config=stress_reward_config,
-                    )
                 elif exp.simulator_type == "HPC":
                     if not isinstance(client_config.get("simulation"), dict):
                         client_config["simulation"] = {}

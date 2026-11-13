@@ -59,30 +59,26 @@ def test_started_client_keeps_its_roster(tmp_path):
 def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(
     tmp_path, monkeypatch
 ):
-    from y_web.routes.admin.sub.clients import _opinion as op
+    from y_web.platforms import builtin
+    from y_web.sdk import services
 
     cfg = _config(tmp_path)
     roster = tmp_path / "agents_c1.json"
     roster.write_text("{}", encoding="utf-8")
     flashed = []
-    monkeypatch.setattr(op, "flash", lambda msg, cat="message": flashed.append(cat))
-    monkeypatch.setattr(op, "_", lambda s, **k: s)
-    monkeypatch.setattr("y_web.src.forum.is_forum_hpc_experiment", lambda e: True)
+    monkeypatch.setattr("flask.flash", lambda msg, cat="message": flashed.append(cat))
+    monkeypatch.setattr(builtin, "_", lambda s, **k: s)
     execution = SimpleNamespace(last_active_day=-1, last_active_hour=-1)
-    monkeypatch.setattr(
-        op.db.session,
-        "scalars",
-        lambda *a, **k: SimpleNamespace(first=lambda: execution),
-    )
+    monkeypatch.setattr(services, "client_execution", lambda client: execution)
     ctx = {
         "exp": object(),
         "client": SimpleNamespace(id=1, name="c1"),
         "client_config_file": cfg,
     }
-    op._refresh_forum_roster_after_opinion_change(ctx)
+    builtin.Forum().after_opinion_distribution_saved(ctx)
     assert not roster.exists() and flashed == ["info"]
 
     roster.write_text("{}", encoding="utf-8")
     execution.last_active_day = 1
-    op._refresh_forum_roster_after_opinion_change(ctx)
+    builtin.Forum().after_opinion_distribution_saved(ctx)
     assert roster.exists() and flashed == ["info", "warning"]

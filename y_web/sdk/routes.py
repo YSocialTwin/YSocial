@@ -18,6 +18,7 @@ _BLUEPRINTS = {
     "agents": ("y_web.routes.admin.sub.agents", "agents"),
     "experiments": ("y_web.routes.admin.sub.experiments._blueprint", "experiments"),
     "clients": ("y_web.routes.admin.sub.clients._blueprint", "clientsr"),
+    "user": ("y_web.routes.interactions._blueprint", "user"),
 }
 
 
