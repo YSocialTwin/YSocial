@@ -8,8 +8,7 @@ import os
 import subprocess
 from typing import List, Optional, Tuple
 
-from y_web.src.dating.validation import _python_command
-from y_web.src.simulation.subprocess_env import build_subprocess_env
+from y_web.src.simulation.subprocess_env import build_subprocess_env, python_command
 
 VALIDATE_MODULE = "YForum.cli.validate"
 VALIDATE_TIMEOUT_SECONDS = 60
@@ -36,7 +35,7 @@ def run_forum_validate(
     env["PYTHONPATH"] = os.pathsep.join(
         [repo_dir] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
     )
-    cmd = _python_command() + [
+    cmd = python_command() + [
         "-m",
         VALIDATE_MODULE,
         "--config",

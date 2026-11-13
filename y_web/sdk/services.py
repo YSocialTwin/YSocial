@@ -7,6 +7,7 @@ touching a platform, as long as the service keeps its meaning.
 
 from __future__ import annotations
 
+import os
 from typing import Any, Optional
 
 
@@ -87,3 +88,54 @@ def write_prompt_pack(
     from y_web.src.system import prompt_packs
 
     prompt_packs.write_pack(name, destination, language)
+
+
+def experiment_name_taken(name: str) -> bool:
+    """Whether an experiment with this name already exists."""
+    from sqlalchemy import select
+
+    from y_web import db
+    from y_web.src.models import Exps
+
+    return db.session.scalars(select(Exps).filter_by(exp_name=name)).first() is not None
+
+
+def suggested_port() -> Optional[int]:
+    """A free port for a new experiment server, or ``None`` when the range is exhausted."""
+    from y_web.routes.admin.sub.experiments._helpers import get_suggested_port
+
+    return get_suggested_port()
+
+
+def register_uploaded_hpc_experiment(
+    *, name: str, uid: str, platform_type: str, exp_group: str, port: int
+) -> Any:
+    """Record an uploaded HPC experiment (and its notebook slot) in the admin database; returns the ``Exps`` row."""
+    from flask_login import current_user
+
+    from y_web import db
+    from y_web.src.models import Exps, Jupyter_instances
+    from y_web.src.system import prompt_packs
+
+    exp = Exps(
+        exp_name=name,
+        db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+        prompt_language=prompt_packs.resolve(None),
+        owner=current_user.username,
+        exp_descr="",
+        status=0,
+        running=0,
+        port=port,
+        server="127.0.0.1",
+        platform_type=platform_type,
+        llm_agents_enabled=1,
+        simulator_type="HPC",
+        exp_group=exp_group,
+    )
+    db.session.add(exp)
+    db.session.commit()
+    db.session.add(
+        Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped")
+    )
+    db.session.commit()
+    return exp

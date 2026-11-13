@@ -13,6 +13,7 @@ together with its agent (see :func:`delete_picture_file`, called by the ORM list
 
 from __future__ import annotations
 
+from y_web.src.agents import appearance_form as af
 import hashlib
 import importlib.util
 import json
@@ -156,15 +157,12 @@ def available() -> bool:
 
 def defaults() -> Dict[str, Any]:
     """Values proposed by the form (the weights of the generator of the Dating platform)."""
-    from y_web.src.dating import population as dp
-    from y_web.src.dating.settings_ui import DIFFUSION_MODELS
-
     return {
-        "models": DIFFUSION_MODELS,  # the alternatives offered by the YDating client
-        "appearance": dp.APPEARANCE_DEFAULTS,
-        "appearance_options": dp.APPEARANCE_OPTIONS,
-        "height": dp.HEIGHT_DEFAULT_RANGE,
-        "glasses": dp.GLASSES_DEFAULT_PERCENT,
+        "models": af.DIFFUSION_MODELS,  # the alternatives offered by the YDating client
+        "appearance": af.APPEARANCE_DEFAULTS,
+        "appearance_options": af.APPEARANCE_OPTIONS,
+        "height": af.HEIGHT_DEFAULT_RANGE,
+        "glasses": af.GLASSES_DEFAULT_PERCENT,
         "styles": STYLES,
         "model": DEFAULT_MODEL,
         "steps": DEFAULT_STEPS,
@@ -173,17 +171,15 @@ def defaults() -> Dict[str, Any]:
 
 def appearance_config_from_form(form) -> Dict[str, Any]:
     """``{trait: {label: percent}}`` plus ``height_cm`` ``[min, max]`` and ``glasses`` (0-1) of the form."""
-    from y_web.src.dating import population as dp
-
     cfg: Dict[str, Any] = {}
-    for key in dp.APPEARANCE_LABELS:
-        weights = dp._percentages(form, f"d_appearance_{key}")
+    for key in af.APPEARANCE_LABELS:
+        weights = af.percentages(form, f"d_appearance_{key}")
         if weights:
             cfg[key] = weights
-    height = dp._pair(form, "appearance_height_cm", int, 100, 250)
+    height = af.pair(form, "appearance_height_cm", int, 100, 250)
     if height:
         cfg["height_cm"] = list(height)
-    glasses = dp._number(
+    glasses = af.number(
         form.get("appearance_glasses"), "appearance_glasses", float, 0, 100
     )
     if glasses is not None:
@@ -220,10 +216,8 @@ def _pick(rng: random.Random, weights: Dict[str, float]) -> str:
 
 def sample(cfg: Dict[str, Any], rng: random.Random) -> Dict[str, str]:
     """The traits of one agent: a label per trait drawn from its weights, a height and glasses."""
-    from y_web.src.dating import population as dp
-
     traits: Dict[str, str] = {}
-    for key in dp.APPEARANCE_LABELS:
+    for key in af.APPEARANCE_LABELS:
         weights = cfg.get(key)
         if weights:
             traits[key] = _pick(rng, weights)

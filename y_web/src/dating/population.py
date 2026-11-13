@@ -15,6 +15,7 @@ import subprocess
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
+from y_web.src.agents import appearance_form as af
 from y_web.src.dating import DATING_PLATFORM
 
 POPULATION_SCHEMA_FILE = os.path.join("schemas", "population", "population.json")
@@ -676,19 +677,30 @@ def generate(
 
 # ------------------------------------------------------------------ generator form
 
-# appearance attributes drawn from label weights (same names as the population schema)
-APPEARANCE_LABELS = (
-    "hair_color",
-    "hair_length",
-    "hair_style",
-    "eye_color",
-    "skin_tone",
-    "build",
-    "facial_hair",
-    "distinctive_features",
-    "mood",
-    "photo_style",
-)
+# the Appearance section of the forms is shared by every platform: its schema lives in the core
+APPEARANCE_LABELS = af.APPEARANCE_LABELS
+APPEARANCE_DEFAULTS = af.APPEARANCE_DEFAULTS
+APPEARANCE_OPTIONS = af.APPEARANCE_OPTIONS
+HEIGHT_DEFAULT_RANGE = af.HEIGHT_DEFAULT_RANGE
+GLASSES_DEFAULT_PERCENT = af.GLASSES_DEFAULT_PERCENT
+
+
+def _as_dating_error(function):
+    def call(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except af.AppearanceFormError as exc:
+            raise DatingPopulationError(exc.problems) from None
+
+    call.__doc__ = function.__doc__
+    return call
+
+
+_number = _as_dating_error(af.number)
+_pair = _as_dating_error(af.pair)
+_percentages = _as_dating_error(af.percentages)
+
+
 PERSONALITY_TRAITS = ("oe", "co", "ex", "ag", "ne")
 AFFECTIVE_TRAITS = (
     "sensitivity",
@@ -733,34 +745,6 @@ def parse_weights(text: Any, field: str, separator: str = ",") -> Dict[str, floa
             [f"{field}: at least one weight must be greater than zero"]
         )
     return out
-
-
-def _number(raw: Any, field: str, kind=float, low=None, high=None):
-    text = str(raw if raw is not None else "").strip()
-    if text == "":
-        return None
-    try:
-        value = kind(text)
-    except ValueError:
-        raise DatingPopulationError([f"{field}: must be a number"]) from None
-    if (low is not None and value < low) or (high is not None and value > high):
-        raise DatingPopulationError([f"{field}: must be between {low} and {high}"])
-    return value
-
-
-def _pair(form, field: str, kind=float, low=None, high=None):
-    """The range ``[<field>_min, <field>_max]`` of a form (both empty = not given; one empty = error)."""
-    lo = _number(form.get(f"{field}_min"), f"{field}_min", kind, low, high)
-    hi = _number(form.get(f"{field}_max"), f"{field}_max", kind, low, high)
-    if lo is None and hi is None:
-        return None
-    if lo is None or hi is None:
-        raise DatingPopulationError([f"{field}: give both the minimum and the maximum"])
-    if lo > hi:
-        raise DatingPopulationError(
-            [f"{field}: the minimum is greater than the maximum"]
-        )
-    return [lo, hi]
 
 
 def _seeking(text: Any) -> Dict[str, Dict[str, float]]:
@@ -961,24 +945,6 @@ SEEKING_DEFAULTS = {
     "woman": {"man": 85, "woman": 10, "man+woman": 5},
     "man": {"woman": 85, "man": 10, "man+woman": 5},
 }
-APPEARANCE_DEFAULTS: Dict[str, Dict[str, int]] = {
-    "hair_color": {"black": 30, "brown": 40, "blond": 20, "red": 5, "gray": 5},
-    "hair_length": {"short": 35, "medium": 40, "long": 25},
-    "hair_style": {"straight": 50, "wavy": 30, "curly": 20},
-    "eye_color": {"brown": 55, "blue": 20, "green": 10, "hazel": 15},
-    "skin_tone": {"light": 40, "medium": 30, "tan": 20, "dark": 10},
-    "build": {"slim": 30, "average": 40, "athletic": 25, "curvy": 5},
-    "mood": {"smiling": 50, "relaxed": 30, "serious": 20},
-    "photo_style": {"casual": 60, "outdoor": 25, "professional": 15},
-    # optional: not assigned unless the person picks them
-    "facial_hair": {},
-    "distinctive_features": {},
-}
-APPEARANCE_OPTIONS: Dict[str, List[str]] = {
-    **{k: list(v) for k, v in APPEARANCE_DEFAULTS.items()},
-    "facial_hair": ["clean-shaven", "stubble", "beard", "moustache"],
-    "distinctive_features": ["freckles", "dimples", "tattoo", "birthmark"],
-}
 LATENT_DEFAULTS = {
     "attractiveness": (2, 2),
     "selectivity": (2, 3),
@@ -986,8 +952,6 @@ LATENT_DEFAULTS = {
 }
 AFFECTIVE_DEFAULT_RANGE = (0.7, 1.3)
 ACTIVITY_DEFAULT_RANGE = (1, 3)
-HEIGHT_DEFAULT_RANGE = (155, 195)
-GLASSES_DEFAULT_PERCENT = 20
 PHOTOS_DEFAULT_RANGE = (1, 3)
 AGE_WINDOW_DEFAULT_RANGE = (4, 10)
 DISTRIBUTION_FIELDS = (  # control name of the percentage selector -> (label of the error, generator field)
@@ -997,33 +961,6 @@ DISTRIBUTION_FIELDS = (  # control name of the percentage selector -> (label of 
 ) + tuple(
     (f"d_appearance_{k}", k.replace("_", " ")) for k in APPEARANCE_LABELS
 )
-
-
-def _percentages(
-    form, field: str, names: Optional[Dict[str, str]] = None
-) -> Dict[str, float]:
-    """The ``{label: percent}`` of a multi-select with percentages (``field`` carries the ids, ``field_percentages``
-    the JSON ``{id: percent}``); the percentages must sum to 100. ``names`` maps an id to its label.
-    """
-    ids = [str(i).strip() for i in form.getlist(field) if str(i).strip()]
-    if not ids:
-        return {}
-    try:
-        raw = json.loads(form.get(f"{field}_percentages") or "{}")
-    except (TypeError, ValueError):
-        raw = {}
-    out: Dict[str, float] = {}
-    for i in ids:
-        label = (names or {}).get(i, i)
-        try:
-            out[label] = float(raw.get(i, 0))
-        except (TypeError, ValueError):
-            raise DatingPopulationError(
-                [f"{field}: invalid percentage for {i}"]
-            ) from None
-    if any(v < 0 for v in out.values()) or abs(sum(out.values()) - 100.0) > 0.05:
-        raise DatingPopulationError([f"{field}: the percentages must sum to 100"])
-    return out
 
 
 def _weights_text(weights: Dict[str, float]) -> str:
@@ -1125,3 +1062,17 @@ def language_code(name: Any) -> str:
     """Code of a language of the standard catalogue ("Italian" -> "it"); an unknown name is passed on lower-cased."""
     text = str(name or "").strip().lower()
     return LANGUAGE_CODES.get(text, text[:10])
+
+
+def generator_defaults() -> Dict[str, Any]:
+    """The defaults of the Dating sections of the population creation form (next to the shared Appearance ones)."""
+    return {
+        "intents": INTENT_DEFAULTS,
+        "seeking": SEEKING_DEFAULTS,
+        "seeking_sets": SEEKING_SETS,
+        "latent": LATENT_DEFAULTS,
+        "affective": AFFECTIVE_DEFAULT_RANGE,
+        "activity": ACTIVITY_DEFAULT_RANGE,
+        "photos": PHOTOS_DEFAULT_RANGE,
+        "age_window": AGE_WINDOW_DEFAULT_RANGE,
+    }

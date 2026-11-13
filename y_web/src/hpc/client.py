@@ -447,7 +447,7 @@ def _set_dating_run_length(
     The database holds the total length of the client (``Client.days``); the runtime counts the days from the
     moment it registers, so a restarted client gets what is left of the total.
     """
-    from y_web.src.dating import client_config as dcc
+    from y_web.src.hpc.run_length import remaining_days, set_duration
     from y_web.src.models import Client_Execution
 
     with open(client_config_path, "r", encoding="utf-8") as handle:
@@ -458,7 +458,7 @@ def _set_dating_run_length(
     ).first()
     last_day = getattr(execution, "last_active_day", -1) if execution else -1
     last_slot = getattr(execution, "last_active_hour", -1) if execution else -1
-    days = dcc.remaining_days(cli.days, last_day or -1, last_slot or -1, slots)
+    days = remaining_days(cli.days, last_day or -1, last_slot or -1, slots)
     if days == 0:
         raise RuntimeError(
             f"Client '{cli.name}' has already run all its days: extend the simulation to run it further."
@@ -472,7 +472,7 @@ def _set_dating_run_length(
             stale = config["simulation"].pop(key, None) is not None or stale
     if stale or config.get("num_days") != days:
         with open(client_config_path, "w", encoding="utf-8") as handle:
-            json.dump(dcc.set_duration(config, days), handle, indent=2)
+            json.dump(set_duration(config, days), handle, indent=2)
 
 
 def _sync_hpc_client_duration_from_config(
@@ -843,7 +843,7 @@ def start_hpc_client(exp, cli, population):
 
     if spec.validates_config:
         if spec.key == "dating":
-            from y_web.src.dating.validation import validate_dating_folder as _validate
+            _validate = registry.library("dating", "validation").validate_dating_folder
         elif spec.key == "forum":
             from y_web.src.forum.validation import validate_forum_folder as _validate
         else:

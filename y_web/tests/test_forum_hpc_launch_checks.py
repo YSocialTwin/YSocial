@@ -37,7 +37,7 @@ def yforum(monkeypatch):
     if not (YFORUM / "YForum" / "cli" / "validate.py").exists():
         pytest.skip("external/YForum is not checked out")
     pytest.importorskip("jsonschema")
-    monkeypatch.setattr(validation, "_python_command", lambda: [sys.executable])
+    monkeypatch.setattr(validation, "python_command", lambda: [sys.executable])
     return str(YFORUM)
 
 

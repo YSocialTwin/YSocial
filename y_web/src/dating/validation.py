@@ -9,7 +9,7 @@ import os
 import subprocess
 from typing import List, Optional, Tuple
 
-from y_web.src.simulation.subprocess_env import build_subprocess_env
+from y_web.src.simulation.subprocess_env import build_subprocess_env, python_command
 
 VALIDATE_MODULE = "YDating.cli.validate"
 VALIDATE_TIMEOUT_SECONDS = 60
@@ -23,17 +23,7 @@ class DatingValidationError(RuntimeError):
         super().__init__("; ".join(self.messages) or "invalid dating configuration")
 
 
-def _python_command() -> List[str]:
-    from y_web.src.simulation.server import detect_env_handler
-
-    python_cmd = detect_env_handler()
-    if (
-        isinstance(python_cmd, str)
-        and " " in python_cmd
-        and not os.path.isabs(python_cmd)
-    ):
-        return python_cmd.split()
-    return [python_cmd]
+_python_command = python_command
 
 
 def run_dating_validate(

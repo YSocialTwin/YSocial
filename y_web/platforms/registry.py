@@ -93,3 +93,23 @@ def external_platform_options() -> List[Dict[str, str]]:
         for provider in providers()
         if provider.package_dir is not None
     ]
+
+
+class PlatformNotInstalled(LookupError):
+    """A module of a platform was asked for, but the platform is not installed."""
+
+
+def library(platform_type: Any, name: str) -> Any:
+    """Module ``name`` of the platform's own package; :class:`PlatformNotInstalled` when nobody provides it."""
+    provider = get(platform_type)
+    if provider is None or not provider.library_package:
+        raise PlatformNotInstalled(str(platform_type))
+    return provider.library(name)
+
+
+def library_or_none(platform_type: Any, name: str) -> Any:
+    """Like :func:`library`, but ``None`` when the platform is not installed."""
+    try:
+        return library(platform_type, name)
+    except PlatformNotInstalled:
+        return None

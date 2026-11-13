@@ -10,6 +10,7 @@ its own (see ``docs/platform-decoupling`` in the project).
 
 from __future__ import annotations
 
+import importlib
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -312,6 +313,61 @@ class PlatformProvider:
     #: folder ``ysocial_platform/`` of the platform repository; ``None`` for a built-in platform. Its ``templates/``
     #: are reachable as ``@<key>/<name>`` and its ``static/`` as ``/platform-static/<key>/<name>``
     package_dir: Optional[Path] = None
+
+    #: dotted name of the package with the platform's own modules (``<package>.population``, ``<package>.human``...);
+    #: ``None`` when the platform has none. The core reaches them only through :func:`y_web.platforms.registry.library`
+    library_package: Optional[str] = None
+
+    def library(self, name: str) -> Any:
+        """A module of the platform's own package (see :attr:`library_package`)."""
+        if not self.library_package:
+            raise LookupError(f"platform {self.key!r} has no library")
+        return importlib.import_module(f"{self.library_package}.{name}")
+
+    #: table the runtime creates in every database of this platform and YSocial does not have: its presence tells the
+    #: core never to apply the YSocial experiment schema to that database
+    marker_table: Optional[str] = None
+
+    #: whether the platform's participants live in the runtime's own database: YSocial binds no database for the
+    #: experiment, adds no participant row to it and sends the participant to :meth:`observer_url`
+    owns_database: bool = False
+
+    # --- admin: the files of a run --------------------------------------------------------------------------------------
+
+    def clear_run_artifacts(self, exp_folder: str) -> Optional[Tuple[int, List[str]]]:
+        """Remove what a run left in ``exp_folder``; ``(removed, failed paths)``, or ``None`` for the generic clean-up."""
+        return None
+
+    def snapshot_for_download(self, folder: str, staging_dir: str) -> bool:
+        """Copy ``folder`` consistently into ``staging_dir`` for a download; ``False`` when the platform zips the folder."""
+        return False
+
+    def carries_population_fields(self, population: Any) -> bool:
+        """Whether the agents of ``population`` carry this platform's dedicated custom fields."""
+        return False
+
+    def owns_uploaded_folder(self, exp_dir: str) -> bool:
+        """Whether an unpacked uploaded experiment folder is one of this platform's experiments."""
+        return False
+
+    def import_uploaded_experiment(
+        self, exp_dir: str, uid: str, exp_name_override: str, exp_group: str
+    ) -> Any:
+        """Register the uploaded experiment unpacked in ``exp_dir``; returns the response to show."""
+        raise NotImplementedError
+
+    #: whether the client switches of the experiment page are mapped by the platform's own client forms
+    maps_client_switches: bool = False
+
+    def apply_experiment_switches(
+        self, config: dict, original: Mapping[str, Any], **switches: Any
+    ) -> bool:
+        """Write the annotation/behaviour switches of the experiment page into a server ``config``.
+
+        ``original`` is the configuration as it was read, before the core changed it. ``False`` leaves the generic
+        write in place; a platform with a strict schema writes its own keys and returns ``True``.
+        """
+        return False
 
     def attach_routes(self) -> None:
         """Import the modules that add views to the blueprints of the core (see :mod:`y_web.sdk.routes`).

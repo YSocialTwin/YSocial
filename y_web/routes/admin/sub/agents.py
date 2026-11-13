@@ -17,6 +17,8 @@ from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
+from y_web.platforms import registry
+from y_web.src.agents import appearance_form as af
 from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
@@ -360,17 +362,15 @@ def _agent_optional_context() -> dict:
 
 def _appearance_features_from_form() -> list[dict]:
     """``appearance.*`` custom features of the optional Appearance section (none when it is off or empty)."""
-    from y_web.src.dating import population as dp
-
     form = request.form
     if not form.get("include_appearance"):
         return []
     entries = []
-    for key in dp.APPEARANCE_LABELS:
+    for key in af.APPEARANCE_LABELS:
         value = (form.get("appearance_" + key) or "").strip()
         if not value:
             continue
-        if value not in dp.APPEARANCE_OPTIONS.get(key, ()):
+        if value not in af.APPEARANCE_OPTIONS.get(key, ()):
             raise ValueError(
                 _("Appearance: %(field)s has an unknown value.", field=key)
             )
@@ -454,9 +454,8 @@ def _photo_sharing_ext_from_form() -> dict:
 
 
 def _dating_runtime_available() -> bool:
-    from y_web.src.dating import population as dp
-
-    return dp.runtime_available(current_user)
+    dp = registry.library_or_none("dating", "population")
+    return dp is not None and dp.runtime_available(current_user)
 
 
 def _agent_builder_context(**overrides):
@@ -876,11 +875,14 @@ def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
     The fields are ignored by every other platform; they let an ad hoc agent take part in a dating simulation.
     Raises ``ValueError`` (shown to the admin) when the filled fields do not satisfy the YDating agent schema.
     """
-    from y_web.src.dating import agent_form
-    from y_web.src.dating import population as dp
-
+    agent_form = registry.library_or_none("dating", "agent_form")
+    dp = registry.library_or_none("dating", "population")
     form = request.form
-    if not dp.runtime_available(current_user) or not agent_form.has_dating_fields(form):
+    if (
+        dp is None
+        or not dp.runtime_available(current_user)
+        or not agent_form.has_dating_fields(form)
+    ):
         return feature_entries
     if form.get(
         "include_appearance"
@@ -888,7 +890,7 @@ def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
         from werkzeug.datastructures import MultiDict
 
         form = MultiDict(form)
-        for key in list(dp.APPEARANCE_LABELS) + ["height_cm", "glasses"]:
+        for key in list(af.APPEARANCE_LABELS) + ["height_cm", "glasses"]:
             if form.get("appearance_" + key) and not form.get(
                 "dating_appearance_" + key
             ):

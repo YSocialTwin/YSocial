@@ -147,3 +147,19 @@ def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, st
                 env["PYTHONPATH"] = os.pathsep.join([*parts, extra_src])
 
     return env
+
+
+def python_command() -> list:
+    """The interpreter (as a command list) the runtimes are started and validated with."""
+    import os
+
+    from y_web.src.simulation.server import detect_env_handler
+
+    python_cmd = detect_env_handler()
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
+        return python_cmd.split()
+    return [python_cmd]

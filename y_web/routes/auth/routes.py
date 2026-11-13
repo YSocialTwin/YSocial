@@ -307,14 +307,16 @@ def select_experiment():
         session["platform_account_id"] = user.id
         return redirect(f"/{exp.idexp}/im")
 
-    from y_web.src.dating import is_dating_experiment
+    from y_web.platforms import registry
 
-    if is_dating_experiment(exp):
-        # Dating owns its database and recognises the participant by the platform account (User_Experiment), so the
-        # session stays the account's: no row in the experiment's user_mgmt, and the person lands on the play view
+    provider = registry.resolve(exp.platform_type)
+    landing = provider.observer_url(exp.idexp) if provider.owns_database else None
+    if landing:
+        # a platform with its own database recognises the participant by the platform account (User_Experiment), so
+        # the session stays the account's: no row in the experiment's user_mgmt, and the person lands on its own view
         login_user(user, remember=remember)
         session["platform_account_id"] = user.id
-        return redirect(f"/{exp.idexp}/dating")
+        return redirect(landing)
 
     try:
         user_agent, _created = ensure_experiment_user(

@@ -16,6 +16,8 @@ The module is pure (no Flask, no database).
 
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from y_web.src.agents import appearance_form as af
+
 
 def N_(message):
     """Mark a text for extraction; the templates translate it."""
@@ -745,25 +747,7 @@ def is_advanced(path: str) -> bool:
     return any(_matches(path, key) for key in ADVANCED)
 
 
-# Small text-to-image models of the Hugging Face hub that YDating runs as they are (downloaded on first use); any
-# other diffusers id can be typed. Sizes are the approximate weights of the model files.
-DIFFUSION_MODELS: List[Tuple[str, str]] = [
-    ("segmind/tiny-sd", N_("tiny-sd: the smallest, fastest (about 1 GB). Default")),
-    (
-        "nota-ai/bk-sdm-tiny",
-        N_("bk-sdm-tiny: compact Stable Diffusion, similar size (about 1 GB)"),
-    ),
-    (
-        "nota-ai/bk-sdm-small",
-        N_("bk-sdm-small: a little larger, better detail (about 1.4 GB)"),
-    ),
-    (
-        "stabilityai/sd-turbo",
-        N_(
-            "sd-turbo: distilled, 1 to 4 steps, best quality for the time (about 2.6 GB)"
-        ),
-    ),
-]
+DIFFUSION_MODELS = af.DIFFUSION_MODELS
 DIFFUSION_MODEL = "profile_generation.images.model"
 
 

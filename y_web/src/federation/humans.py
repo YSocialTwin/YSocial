@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 from typing import Callable, Optional
 
+from y_web.platforms import registry
 from y_web import db
 from y_web.src.federation import service
 from y_web.src.federation.service import WorldSimulationError
@@ -96,8 +97,7 @@ def _ensure_im(platform_type, exp, user, hid, session=None, offline=None):
 
 
 def _ensure_dating(platform_type, exp, user, hid, session=None, offline=None):
-    from y_web.src.dating import human as dating_human
-
+    dating_human = registry.library("dating", "human")
     # the profile is filled by the person when they join (photos, preferences): the account is pending until then
     return (
         dating_human.human_account_id(dating_human.experiment_uid(exp), user.id),

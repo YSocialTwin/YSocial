@@ -42,9 +42,9 @@ def _is_im_experiment_id(exp_id) -> bool:
     return is_im_platform(platform)
 
 
-def _is_dating_experiment_id(exp_id) -> bool:
-    """Whether ``exp_id`` is a dating experiment (False when it cannot be told)."""
-    from y_web.src.dating import is_dating_platform
+def _owns_database_experiment_id(exp_id) -> bool:
+    """Whether ``exp_id`` belongs to a platform that keeps its own database (False when it cannot be told)."""
+    from y_web.platforms import registry
 
     try:
         from y_web.src.models import Exps
@@ -52,7 +52,7 @@ def _is_dating_experiment_id(exp_id) -> bool:
         platform = db.session.scalar(select(Exps.platform_type).filter_by(idexp=exp_id))
     except Exception:
         return False
-    return is_dating_platform(platform)
+    return registry.resolve(platform).owns_database
 
 
 def _is_scenario_design_request(exp_id) -> bool:
@@ -116,8 +116,8 @@ def register_experiment_database(app, exp_id, db_name):
         )
         return
 
-    # A dating experiment owns its database too: it is read by the observer in read-only mode, never bound.
-    if _is_dating_experiment_id(exp_id):
+    # A platform with its own database (dating) is read by its observer in read-only mode, never bound.
+    if _owns_database_experiment_id(exp_id):
         return
 
     bind_key = get_db_bind_key_for_exp(exp_id)

@@ -43,7 +43,6 @@ from y_web.src.content.avatars import (
     normalize_force_placeholder,
     normalize_forum_avatar_mode,
 )
-from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -1078,11 +1077,7 @@ def update_experiment_config(uid):
         with open(cfg_path, "r") as f:
             config = json.load(f)
 
-        dating_stress_reward = (
-            copy.deepcopy(config.get("stress_reward"))
-            if is_dating_experiment(exp)
-            else None
-        )
+        original_config = copy.deepcopy(config)
         config["toxicity_annotation"] = toxicity_enabled
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
@@ -1122,21 +1117,15 @@ def update_experiment_config(uid):
                 stress_reward_config=stress_reward_config,
             )
 
-        if is_dating_experiment(exp):
-            # the dating schema is strict: keep its own stress/reward block and write the runtime keys
-            from y_web.src.dating.experiment_config import (
-                apply_experiment_switches as apply_dating_switches,
-            )
-
-            config["stress_reward"] = dating_stress_reward or {}
-            apply_dating_switches(
-                config,
-                toxicity=toxicity_enabled,
-                sentiment=sentiment_enabled,
-                emotion=emotion_enabled,
-                stress_reward=stress_reward_enabled,
-                memory=memory_config["enabled"],
-            )
+        registry.resolve(exp.platform_type).apply_experiment_switches(
+            config,
+            original_config,
+            toxicity=toxicity_enabled,
+            sentiment=sentiment_enabled,
+            emotion=emotion_enabled,
+            stress_reward=stress_reward_enabled,
+            memory=memory_config["enabled"],
+        )
 
         if is_forum_hpc_experiment(exp):
             # YForum's schemas are strict: write the keys it reads next to the mirrors this page reads
@@ -1181,8 +1170,8 @@ def update_experiment_config(uid):
                     break
             if not client_config_file:
                 continue
-            if is_dating_experiment(exp):
-                continue  # the client switches of dating experiments are mapped with the client forms (plan S3)
+            if registry.resolve(exp.platform_type).maps_client_switches:
+                continue  # the platform maps them with its own client forms
 
             try:
                 with open(client_config_file, "r") as f:
@@ -1652,11 +1641,7 @@ def clear_experiment_logs(uid):
 
 def _reset_slots_per_day(exp, folder):
     """Rounds per day used for the expected duration of a client: 24, or the dating slots."""
-    if not is_dating_experiment(exp):
-        return 24
-    from y_web.src.dating.clone import slots_per_day
-
-    return slots_per_day(folder)
+    return registry.resolve(exp.platform_type).slots_per_day(folder)
 
 
 @experiments.route("/admin/reset_hpc_experiment/<int:uid>", methods=["POST"])
@@ -1727,12 +1712,15 @@ def reset_hpc_experiment(uid):
             from y_web.src.im.clone import clear_im_run_artifacts
 
             deleted_count, failed_paths = clear_im_run_artifacts(exp_folder)
-        elif is_dating_experiment(exp):
-            from y_web.src.dating.clone import clear_dating_run_artifacts
-
-            deleted_count, failed_paths = clear_dating_run_artifacts(exp_folder)
         else:
-            deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+            cleared = registry.resolve(exp.platform_type).clear_run_artifacts(
+                exp_folder
+            )
+            deleted_count, failed_paths = (
+                cleared
+                if cleared is not None
+                else clear_experiment_log_files(exp_folder)
+            )
         if failed_paths:
             for failed_path in failed_paths:
                 current_app.logger.warning(f"Could not delete log file {failed_path}")

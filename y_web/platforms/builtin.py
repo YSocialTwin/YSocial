@@ -491,6 +491,34 @@ class Dating(PlatformProvider):
     label = N_("Dating")
     icon = "heart"
     order = 50
+    library_package = "y_web.src.dating"
+    marker_table = "dating_profile"
+    owns_database = True
+    maps_client_switches = True
+
+    def clear_run_artifacts(self, exp_folder):
+        return self.library("clone").clear_dating_run_artifacts(exp_folder)
+
+    def carries_population_fields(self, population):
+        return self.library("population").has_dating_fields(population)
+
+    def owns_uploaded_folder(self, exp_dir):
+        return self.library("clone").is_dating_folder(exp_dir)
+
+    def import_uploaded_experiment(self, exp_dir, uid, exp_name_override, exp_group):
+        return self.library("upload").import_uploaded_experiment(
+            exp_dir, uid, exp_name_override, exp_group
+        )
+
+    def snapshot_for_download(self, folder, staging_dir):
+        self.library("clone").snapshot_for_download(folder, staging_dir)
+        return True
+
+    def apply_experiment_switches(self, config, original, **switches):
+        # the dating schema is strict: keep its own stress/reward block and write the runtime keys
+        config["stress_reward"] = original.get("stress_reward") or {}
+        self.library("experiment_config").apply_experiment_switches(config, **switches)
+        return True
 
     def clients_page(self, simulator_type: str) -> str:
         return "clientsr.clients_dating"

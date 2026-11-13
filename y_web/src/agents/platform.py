@@ -96,10 +96,11 @@ def population_platform_fields(population):
     if explicit in {"photo_sharing", "dating"}:
         found.add(explicit)
     try:
-        from y_web.src.dating.population import has_dating_fields
+        from y_web.platforms import registry
 
-        if has_dating_fields(population):
-            found.add("dating")
+        for provider in registry.providers():
+            if provider.carries_population_fields(population):
+                found.add(provider.key)
     except Exception:
         pass
     try:

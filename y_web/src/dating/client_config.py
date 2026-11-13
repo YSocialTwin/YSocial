@@ -11,6 +11,10 @@ import re
 from typing import Any, Dict, List, Optional
 
 from y_web.src.dating import schema_forms as sf
+from y_web.src.hpc.run_length import (
+    remaining_days,
+    set_duration,
+)  # noqa: F401  (the counting rule belongs to the core)
 
 SCHEMA = os.path.join("config", "client_config.json")
 
@@ -236,31 +240,6 @@ def values_for_form(
         f.path: sf.to_form_text(sf.get_path(base, f.path, f.default), f)
         for f in sf.fields(sch, INTERNAL)
     }
-
-
-def remaining_days(
-    total_days: int, last_day: int, last_slot: int, slots_per_day: int
-) -> int:
-    """Days the runtime must run when the client (re)starts so that the client ends after ``total_days`` in all.
-
-    The runtime counts ``num_days`` from the day it registers (days and slots start at 1). A client that never ran
-    (``last_day`` < 1) runs the whole total; one stopped inside a day runs that day again; ``-1`` means until
-    stopped. A result of 0 means that nothing is left (the runtime would read 0 as "unlimited": the caller refuses).
-    """
-    if int(total_days) <= 0:
-        return -1
-    if int(last_day) < 1:
-        start = 1
-    else:
-        start = int(last_day) + (1 if int(last_slot) >= int(slots_per_day) else 0)
-    return max(0, 1 + int(total_days) - start)
-
-
-def set_duration(config: Dict[str, Any], days: int) -> Dict[str, Any]:
-    """The client configuration with the number of days the runtime runs from now."""
-    updated = dict(config)
-    updated["num_days"] = int(days)
-    return updated
 
 
 def apply_form(

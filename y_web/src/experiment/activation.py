@@ -89,7 +89,7 @@ def activate_experiment(
     An experiment that is already active is left as it is. When the participant cannot be prepared the result is a
     failure; the status stays 1 as the admin page always did, unless ``rollback_on_failure`` asks to restore 0.
     """
-    from y_web.src.dating import is_dating_experiment
+    from y_web.platforms import registry
     from y_web.src.experiment.helpers import ensure_experiment_user
     from y_web.src.im import is_im_experiment
 
@@ -106,7 +106,7 @@ def activate_experiment(
     done = ActivationResult(
         "activated", _("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name)
     )
-    if is_im_experiment(exp) or is_dating_experiment(exp):
+    if is_im_experiment(exp) or registry.resolve(exp.platform_type).owns_database:
         # IM and dating own their database and have no YWeb participant row: nothing to bind or provision here
         _ensure_user_experiment(admin_user_id, exp_id)
         return done

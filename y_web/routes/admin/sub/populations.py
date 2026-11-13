@@ -20,6 +20,8 @@ from flask import (
 from flask_login import current_user, login_required
 from sqlalchemy import delete, func, select
 
+from y_web.platforms import registry
+from y_web.src.agents import appearance_form as af
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.src.agents.custom_features import (
@@ -254,8 +256,7 @@ def _discard_population(population):
     """Remove a population whose generation failed, with its agents: no partial population is kept."""
     db.session.rollback()
     try:
-        from y_web.src.dating import population as dp
-
+        dp = registry.library("dating", "population")
         dp.remove_agents(population.id)
     except Exception:
         db.session.rollback()
@@ -269,8 +270,7 @@ def _discard_population(population):
 
 def _dating_generator_config():
     """The YDating generator parameters of the creation form (the standard sections plus the Dating ones)."""
-    from y_web.src.dating import population as dp
-
+    dp = registry.library("dating", "population")
     return dp.config_from_population_form(
         request.form,
         {
@@ -310,8 +310,7 @@ def _apply_appearance(population):
 
 def _complete_with_dating_fields(population):
     """Give the agents just generated their dating fields (the Dating sections of the form)."""
-    from y_web.src.dating import population as dp
-
+    dp = registry.library("dating", "population")
     config = _dating_generator_config()
     config.pop(
         "archetypes", None
@@ -370,9 +369,8 @@ def create_population():
             flash(_("The Photo Sharing simulator is not installed."), "error")
             return redirect(request.referrer)
     if include_dating:
-        from y_web.src.dating import population as dp
-
-        if not dp.runtime_available(current_user):
+        dp = registry.library_or_none("dating", "population")
+        if dp is None or not dp.runtime_available(current_user):
             flash(_("The Dating simulator is not installed."), "error")
             return redirect(request.referrer)
 
@@ -1199,8 +1197,7 @@ def delete_population(uid):
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
 
     if population.username_type == "dating":
-        from y_web.src.dating.population import remove_agents
-
+        remove_agents = registry.library("dating", "population").remove_agents
         remove_agents(
             population.id
         )  # the agents of the population and their custom features
@@ -1818,8 +1815,10 @@ def merge_populations():
 # dating-only fields as custom features of the agents; no file
 # ---------------------------------------------------------------------------------------------------
 def _dating_population_or_none(uid):
-    from y_web.src.dating.population import is_dating_population
-
+    library = registry.library_or_none("dating", "population")
+    if library is None:
+        return None
+    is_dating_population = library.is_dating_population
     pop = db.session.scalars(select(Population).filter_by(id=uid)).first()
     return pop if pop is not None and is_dating_population(pop) else None
 
@@ -1897,8 +1896,7 @@ def _sync_dating_population(pop):
 
 def _register_dating_population(name, descr, data):
     """Create the ``population`` row and the agents (with their custom features) of a validated population."""
-    from y_web.src.dating import population as dp
-
+    dp = registry.library("dating", "population")
     size, age_min, age_max = dp.population_row_values(data)
     summary = dp.summarize(data)
     row = Population(
@@ -1948,10 +1946,9 @@ def agent_media(filename):
 
 def _dating_form_context():
     """Lists the Dating creation form offers next to the free-text weights (same catalogues as the standard form)."""
-    from y_web.src.dating import population as dp
-
+    dp = registry.library_or_none("dating", "population")
     return {
-        "dating_available": dp.runtime_available(current_user),
+        "dating_available": dp is not None and dp.runtime_available(current_user),
         "dating_nationalities": [
             r.nationality for r in db.session.scalars(select(Nationalities)).all()
         ],
@@ -1968,20 +1965,13 @@ def _dating_form_context():
             r.profession
             for r in db.session.scalars(select(Profession).limit(200)).all()
         ],
-        "dating_appearance_labels": dp.APPEARANCE_LABELS,
+        "dating_appearance_labels": af.APPEARANCE_LABELS,
         "dating_defaults": {
-            "intents": dp.INTENT_DEFAULTS,
-            "seeking": dp.SEEKING_DEFAULTS,
-            "seeking_sets": dp.SEEKING_SETS,
-            "appearance": dp.APPEARANCE_DEFAULTS,
-            "appearance_options": dp.APPEARANCE_OPTIONS,
-            "latent": dp.LATENT_DEFAULTS,
-            "affective": dp.AFFECTIVE_DEFAULT_RANGE,
-            "activity": dp.ACTIVITY_DEFAULT_RANGE,
-            "height": dp.HEIGHT_DEFAULT_RANGE,
-            "glasses": dp.GLASSES_DEFAULT_PERCENT,
-            "photos": dp.PHOTOS_DEFAULT_RANGE,
-            "age_window": dp.AGE_WINDOW_DEFAULT_RANGE,
+            "appearance": af.APPEARANCE_DEFAULTS,
+            "appearance_options": af.APPEARANCE_OPTIONS,
+            "height": af.HEIGHT_DEFAULT_RANGE,
+            "glasses": af.GLASSES_DEFAULT_PERCENT,
+            **({} if dp is None else dp.generator_defaults()),
         },
     }
 
@@ -1997,8 +1987,7 @@ def dating_populations():
 def _upload_dating_population():
     """Validate an uploaded document against the YDating population schema and store it (platform Dating of the
     standard upload form)."""
-    from y_web.src.dating import population as dp
-
+    dp = registry.library("dating", "population")
     upload = request.files.get("population_file")
     if upload is None or not upload.filename:
         flash(_("Choose a population file first."), "error")
@@ -2032,8 +2021,7 @@ def _upload_dating_population():
 def _generate_dating_population():
     """Generate a synthetic dating population with the generator of YDating (platform Dating of the standard
     creation form)."""
-    from y_web.src.dating import population as dp
-
+    dp = registry.library("dating", "population")
     try:
         data = dp.generate(
             request.form.get("n_agents"),
@@ -2081,9 +2069,8 @@ def _generate_dating_population():
 
 def _dating_details(uid, population):
     """What the details page adds for a dating population: the counts of the runtime summary and a profile card."""
-    from y_web.src.dating import population as dp
-
-    if population is None or not dp.has_dating_fields(population):
+    dp = registry.library_or_none("dating", "population")
+    if dp is None or population is None or not dp.has_dating_fields(population):
         return None
     try:
         data = dp.load_document(uid)
@@ -2111,8 +2098,7 @@ def download_dating_population(uid):
     check_privileges(current_user.username)
     from flask import Response
 
-    from y_web.src.dating import population as dp
-
+    dp = registry.library("dating", "population")
     pop = _dating_population_or_none(uid)
     data = dp.load_document(uid) if pop is not None else None
     if data is None:

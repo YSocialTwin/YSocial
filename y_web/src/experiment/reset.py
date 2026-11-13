@@ -76,7 +76,7 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
         _get_experiment_folder,
         clear_experiment_log_files,
     )
-    from y_web.src.dating import is_dating_experiment
+    from y_web.platforms import registry
     from y_web.src.hpc.population_backup import restore_population_for_hpc_client
     from y_web.src.im import is_im_experiment
     from y_web.src.models import (
@@ -133,12 +133,11 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
         from y_web.src.im.clone import clear_im_run_artifacts
 
         removed, failed = clear_im_run_artifacts(exp_folder)
-    elif is_dating_experiment(exp):
-        from y_web.src.dating.clone import clear_dating_run_artifacts
-
-        removed, failed = clear_dating_run_artifacts(exp_folder)
     else:
-        removed, failed = clear_experiment_log_files(exp_folder)
+        cleared = registry.resolve(exp.platform_type).clear_run_artifacts(exp_folder)
+        removed, failed = (
+            cleared if cleared is not None else clear_experiment_log_files(exp_folder)
+        )
     failed = list(failed)
 
     database = "removed (the server creates it at start)"
