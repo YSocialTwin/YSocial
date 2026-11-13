@@ -10,7 +10,8 @@ its own (see ``docs/platform-decoupling`` in the project).
 
 from __future__ import annotations
 
-from typing import Optional
+from pathlib import Path
+from typing import Any, List, Optional, Tuple
 
 from y_web.i18n import N_
 
@@ -62,3 +63,22 @@ class PlatformProvider:
             if simulator_type == HPC
             else "clientsr.client_details"
         )
+
+    # --- admin: client files and execution ----------------------------------------------------------------------
+
+    #: whether the client file carries the run length in ``simulation.days`` / ``simulation.num_days`` (a forum client
+    #: file is validated against a strict schema that has neither)
+    client_file_has_simulation_days: bool = True
+    #: prompt files, besides ``prompts.json``, that a client of this platform owns in the experiment folder
+    extra_prompt_files: Tuple[str, ...] = ()
+    #: ``(pack, file)``: the prompt pack a reset client restores, and the experiment file it is written to;
+    #: ``None`` for a platform whose clients have nothing to restore
+    prompt_pack: Optional[Tuple[str, str]] = None
+
+    def client_state_files(self, exp_dir: Path, client: Any) -> List[Path]:
+        """Files of a client's saved state, removed when the client is reset."""
+        return []
+
+    def rounds_per_day(self, exp: Any) -> Optional[int]:
+        """Rounds a client plays per simulated day when that is a property of the experiment files, else ``None``."""
+        return None

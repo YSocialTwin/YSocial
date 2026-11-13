@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from pathlib import Path
+from typing import Any, List, Optional
 
 from y_web.i18n import N_
 from y_web.platforms.base import HPC, PlatformProvider
@@ -14,6 +15,8 @@ class Microblogging(PlatformProvider):
     label = N_("Microblogging")
     icon = "message-circle"
     order = 10
+
+    prompt_pack = ("prompts.json", "prompts.json")
 
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/feed/{user_id}/feed/rf/1"
@@ -47,6 +50,8 @@ class Forum(PlatformProvider):
         )
 
     generic_hpc_client_creation = False
+    client_file_has_simulation_days = False
+    prompt_pack = ("prompts_forum.json", "prompts.json")
 
 
 class PhotoSharing(PlatformProvider):
@@ -58,8 +63,15 @@ class PhotoSharing(PlatformProvider):
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/photo/feed/all/feed/rf/1"
 
+    extra_prompt_files = ("prompts_ygram.json",)
+    prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
+
     def clients_page(self, simulator_type: str) -> str:
         return "clientsr.clients_photo"
+
+    def client_state_files(self, exp_dir: Path, client: Any) -> List[Path]:
+        # the state of the client of a population, then any other population of the same client
+        return list(exp_dir.glob(f"client_{client.name}-*.state.json"))
 
 
 class InstantMessaging(PlatformProvider):
@@ -88,6 +100,15 @@ class Dating(PlatformProvider):
 
     def client_details_page(self, simulator_type: str) -> str:
         return "clientsr.client_details_dating"
+
+    def rounds_per_day(self, exp: Any) -> Optional[int]:
+        from y_web.routes.admin.sub.clients._dating import (
+            _experiment_folder,
+            _load_server_config,
+        )
+
+        simulation = _load_server_config(_experiment_folder(exp)).get("simulation")
+        return int((simulation or {}).get("num_slots_per_day", 24))
 
     generic_hpc_client_creation = False
 

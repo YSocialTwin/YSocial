@@ -140,3 +140,37 @@ def test_which_platforms_create_their_hpc_clients_with_the_generic_route(
     platform, generic
 ):
     assert registry.resolve(platform).generic_hpc_client_creation is generic
+
+
+def test_client_files_and_execution_hooks_match_the_previous_platform_logic(tmp_path):
+    from types import SimpleNamespace
+
+    from y_web.platforms import registry
+
+    packs = {
+        "microblogging": ("prompts.json", "prompts.json"),
+        "forum": ("prompts_forum.json", "prompts.json"),
+        "photo_sharing": ("prompts_ygram.json", "prompts_ygram.json"),
+        "instant_messaging": None,
+        "dating": None,
+    }
+    for key, pack in packs.items():
+        assert registry.get(key).prompt_pack == pack
+    assert registry.get("photo_sharing").extra_prompt_files == ("prompts_ygram.json",)
+    assert [
+        k for k in packs if not registry.get(k).client_file_has_simulation_days
+    ] == ["forum"]
+    assert registry.resolve("unknown").client_file_has_simulation_days
+
+    (tmp_path / "client_a-p.state.json").write_text("{}")
+    (tmp_path / "client_a-q.state.json").write_text("{}")
+    client = SimpleNamespace(name="a")
+    names = {
+        p.name
+        for p in registry.get("photo_sharing").client_state_files(tmp_path, client)
+    }
+    assert names == {"client_a-p.state.json", "client_a-q.state.json"}
+    for key in ("microblogging", "forum", "instant_messaging", "dating"):
+        assert registry.get(key).client_state_files(tmp_path, client) == []
+        if key != "dating":
+            assert registry.get(key).rounds_per_day(None) is None

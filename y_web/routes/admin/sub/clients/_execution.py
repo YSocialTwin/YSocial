@@ -11,6 +11,7 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
 )
@@ -44,7 +45,10 @@ def _sync_duration_fields_in_client_config(
     duration_value = int(days)
     max_ticks_value = None if duration_value == -1 else duration_value * 24
     simulation = updated.get("simulation")
-    if isinstance(simulation, dict) and platform_type != "forum":
+    if (
+        isinstance(simulation, dict)
+        and registry.resolve(platform_type).client_file_has_simulation_days
+    ):
         simulation["days"] = duration_value
         simulation["num_days"] = duration_value
 
@@ -149,39 +153,24 @@ def reset_client(uid):
     if path.exists():
         path.unlink()
 
-    prompt_candidates = ["prompts.json"]
-    if exp.platform_type == "photo_sharing":
-        prompt_candidates.insert(0, "prompts_ygram.json")
-    for prompt_file in prompt_candidates:
+    provider = registry.resolve(exp.platform_type)
+    for prompt_file in (*provider.extra_prompt_files, "prompts.json"):
         prompt_path = exp_dir / prompt_file
         if prompt_path.exists():
             prompt_path.unlink()
 
-    if exp.platform_type == "photo_sharing":
-        state_candidates = [
-            exp_dir / f"client_{client.name}-{population.name}.state.json",
-        ]
-        state_candidates.extend(exp_dir.glob(f"client_{client.name}-*.state.json"))
-        for state_path in state_candidates:
-            if state_path.exists():
-                state_path.unlink()
+    for state_path in provider.client_state_files(exp_dir, client):
+        if state_path.exists():
+            state_path.unlink()
 
     # copy the original prompts.json file, in the language the client was created with
     language = prompt_packs.resolve(
         getattr(client, "prompt_language", None), exp.prompt_language
     )
-    if exp.platform_type == "photo_sharing":
-        prompt_packs.write_pack(
-            "prompts_ygram.json", exp_dir / "prompts_ygram.json", language
-        )
-    elif exp.platform_type == "microblogging":
-        prompt_packs.write_pack("prompts.json", exp_dir / "prompts.json", language)
-    elif exp.platform_type == "forum":
-        prompt_packs.write_pack(
-            "prompts_forum.json", exp_dir / "prompts.json", language
-        )
-    else:
+    if provider.prompt_pack is None:
         raise Exception(f"unsupported platform: {exp.platform_type}")
+    pack, target = provider.prompt_pack
+    prompt_packs.write_pack(pack, exp_dir / target, language)
 
     # delete client execution
     db.session.query(Client_Execution).filter_by(client_id=uid).delete()
@@ -233,16 +222,10 @@ def extend_simulation(id_client):
             "info",
         )
 
-    if exp and exp.platform_type == "dating":
+    slots = registry.resolve(exp.platform_type).rounds_per_day(exp) if exp else None
+    if slots is not None:
         # the runtime reads how many days to run from the client file at every start (see
         # hpc.client._set_dating_run_length): the new total is all that has to be recorded
-        from ._dating import _experiment_folder, _load_server_config
-
-        slots = int(
-            (
-                (_load_server_config(_experiment_folder(exp)).get("simulation") or {})
-            ).get("num_slots_per_day", 24)
-        )
         client_execution.expected_duration_rounds = (
             -1 if new_total_days == -1 else new_total_days * slots
         )
@@ -254,11 +237,12 @@ def extend_simulation(id_client):
             ),
             "success",
         )
-        return redirect(
-            request.referrer or url_for("clientsr.client_details_dating", uid=id_client)
+        details = registry.resolve(exp.platform_type).client_details_page(
+            exp.simulator_type
         )
+        return redirect(request.referrer or url_for(details, uid=id_client))
 
-    if exp and exp.platform_type != "dating":
+    if exp:
         try:
             from y_web.src.im import is_im_experiment
 
