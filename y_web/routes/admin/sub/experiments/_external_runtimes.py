@@ -292,6 +292,10 @@ def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
         repo["plugin_togglable"] = bool(repo.get("installed"))
         repo["plugin_enabled"] = plugin_enabled(repo["key"])
         repo["restart_required"] = suite_restart_required(repo["key"])
+    from y_web.platforms.discovery import platform_restart_required
+
+    if platform_restart_required(repo["key"]):
+        repo["restart_required"] = True
     return repo
 
 
@@ -913,7 +917,9 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 suite_restart_required,
             )
 
-            if suite_restart_required(repo_key):
+            from y_web.platforms.discovery import platform_restart_required
+
+            if suite_restart_required(repo_key) or platform_restart_required(repo_key):
                 flash(
                     _(
                         "Restart required: %(label)s routes are loaded at startup.",

@@ -507,6 +507,11 @@ def _import_from_suite(repo_key: str, dotted_path: str):
     return importlib.import_module(full_name)
 
 
+def import_from_suite(repo_key: str, dotted_path: str):
+    """Import a module of an installed repository under its own private namespace."""
+    return _import_from_suite(repo_key, dotted_path)
+
+
 def _import_blueprint(repo_key: str, backend_blueprint: str):
     dotted, _, attr = backend_blueprint.partition(":")
     module = _import_from_suite(repo_key, dotted)

@@ -391,8 +391,12 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     register_blueprints(app)
 
+    from y_web.platforms.discovery import discover_platforms
     from y_web.platforms.extension import install_platform_extensions
 
+    for repo_key, problems in discover_platforms().items():
+        for problem in problems:
+            app.logger.warning("[platform repository %s] %s", repo_key, problem)
     install_platform_extensions(app)
 
     from y_web.src.system.avatars_store import ensure_avatars, register_avatar_route
