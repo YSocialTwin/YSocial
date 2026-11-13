@@ -520,3 +520,42 @@ def test_platform_config_errors_become_one_refusal(
     with app.test_request_context():
         with pytest.raises(PlatformConfigError, match=message):
             registry.get(key).hpc_server_config(_server_config_request())
+
+
+def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
+    from types import SimpleNamespace as NS
+
+    from y_web.platforms import registry
+    from y_web.platforms.base import PlatformProvider
+
+    assert {k: registry.get(k).observer_url(5) for k in registry.keys()} == {
+        "microblogging": None,
+        "forum": None,
+        "photo_sharing": None,
+        "instant_messaging": "/5/im",
+        "dating": "/5/dating",
+    }
+    cloning = {k for k in registry.keys() if registry.get(k).folder_clone()}
+    assert cloning == {"instant_messaging", "dating"}
+    for key in cloning:
+        copy_folder, new_uid = registry.get(key).folder_clone()
+        assert callable(copy_folder) and callable(new_uid)
+    assert registry.resolve("unknown").folder_clone() is None
+    validating = {
+        k
+        for k in registry.keys()
+        if type(registry.get(k)).validate_before_start
+        is not PlatformProvider.validate_before_start
+    }
+    assert validating == {"instant_messaging", "dating"}
+    assert [
+        registry.resolve(k).slots_per_day("/nowhere")
+        for k in ("forum", "instant_messaging")
+    ] == [24, 24]
+    # only the Standard runtime of microblogging and forum starts from the empty server database
+    assert {
+        (k, s)
+        for k in registry.keys()
+        for s in ("Standard", "HPC")
+        if registry.get(k).creation_rules(s).copies_clean_database
+    } == {("microblogging", "Standard"), ("forum", "Standard")}

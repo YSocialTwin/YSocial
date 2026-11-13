@@ -38,7 +38,9 @@ class Microblogging(PlatformProvider):
         return f"/{exp_id}/feed/{user_id}/feed/rf/1"
 
     def creation_rules(self, simulator_type: str) -> CreationRules:
-        return CreationRules(database="server")
+        return CreationRules(
+            database="server", copies_clean_database=simulator_type == STANDARD
+        )
 
     def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
         # either runtime will do: ask for the one that is installed
@@ -123,6 +125,7 @@ class Forum(PlatformProvider):
                 "emotion_annotation": False,
             },
             database="server",
+            copies_clean_database=True,
         )
 
     def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
@@ -231,6 +234,15 @@ class PhotoSharing(PlatformProvider):
             is_remote=request.is_remote,
         )
 
+    def write_new_experiment_files(self, exp_dir: str, prompt_language: str) -> None:
+        from y_web.src.system import prompt_packs
+
+        prompt_packs.write_pack(
+            "prompts_ygram.json",
+            os.path.join(exp_dir, "prompts_ygram.json"),
+            prompt_language,
+        )
+
     extra_prompt_files = ("prompts_ygram.json",)
     prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
 
@@ -285,6 +297,27 @@ class InstantMessaging(PlatformProvider):
             database="own",
             sqlite_only_note="Instant messaging experiments use SQLite even if the platform uses PostgreSQL",
         )
+
+    def observer_url(self, exp_id: int) -> Optional[str]:
+        # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
+        return f"/{exp_id}/im"
+
+    def validate_before_start(self, exp: Any) -> Optional[str]:
+        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+        from y_web.src.im.validation import ImValidationError, validate_im_folder
+
+        try:
+            validate_im_folder(_resolve_hpc_experiment_folder(exp))
+        except ImValidationError as exc:
+            return _("The instant messaging configuration is not valid: %(why)s") % {
+                "why": "; ".join(exc.messages[:5])
+            }
+        return None
+
+    def folder_clone(self):
+        from y_web.src.im.clone import copy_im_folder, new_uid
+
+        return copy_im_folder, new_uid
 
     def hpc_server_config(self, request: ServerConfigRequest) -> dict:
         from y_web.routes.admin.sub.experiments._im import (
@@ -376,6 +409,35 @@ class Dating(PlatformProvider):
             database="own",
             sqlite_only_note="Dating experiments use SQLite even if the platform uses PostgreSQL",
         )
+
+    def observer_url(self, exp_id: int) -> Optional[str]:
+        # the observer (S6) is the only way in: dating has no per-user feed row either
+        return f"/{exp_id}/dating"
+
+    def validate_before_start(self, exp: Any) -> Optional[str]:
+        from y_web.src.dating.validation import (
+            DatingValidationError,
+            validate_dating_folder,
+        )
+        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+
+        try:
+            validate_dating_folder(_resolve_hpc_experiment_folder(exp))
+        except DatingValidationError as exc:
+            return _("The dating configuration is not valid: %(why)s") % {
+                "why": "; ".join(exc.messages[:5])
+            }
+        return None
+
+    def slots_per_day(self, exp_folder: str) -> int:
+        from y_web.src.dating.clone import slots_per_day
+
+        return slots_per_day(exp_folder)
+
+    def folder_clone(self):
+        from y_web.src.dating.clone import copy_dating_folder, new_uid
+
+        return copy_dating_folder, new_uid
 
     def hpc_server_config(self, request: ServerConfigRequest) -> dict:
         from y_web.src.dating.experiment_config import (

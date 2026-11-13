@@ -33,6 +33,8 @@ class CreationRules:
     #: who makes the database of the experiment: ``"server"`` (YSocial prepares it, SQLite or PostgreSQL), ``"own"``
     #: (the runtime creates its own SQLite database on first start) or ``"none"``
     database: str = "none"
+    #: whether the empty server database shipped with YSocial is copied into a new experiment
+    copies_clean_database: bool = False
     #: log line written when the application uses PostgreSQL but the experiment cannot
     sqlite_only_note: Optional[str] = None
 
@@ -221,6 +223,9 @@ class PlatformProvider:
         """The rules a new experiment of this platform on ``simulator_type`` must respect."""
         return CreationRules()
 
+    def write_new_experiment_files(self, exp_dir: str, prompt_language: str) -> None:
+        """Files, besides the server configuration, that a new HPC experiment starts with."""
+
     def hpc_server_config(self, request: ServerConfigRequest) -> dict:
         """Server configuration of a new experiment on the HPC runtime (raise ``PlatformConfigError`` to refuse)."""
         from y_web.routes.admin.sub.experiments._crud import generate_hpc_config
@@ -247,3 +252,21 @@ class PlatformProvider:
             db_config_dict=request.db_config_dict,
             is_remote=request.is_remote,
         )
+
+    # --- admin: opening, starting and copying an experiment ----------------------------------------------------------
+
+    def observer_url(self, exp_id: int) -> Optional[str]:
+        """Page an administrator opens an experiment on when the platform has no per-user feed, else ``None``."""
+        return None
+
+    def validate_before_start(self, exp: Any) -> Optional[str]:
+        """Translated reason the experiment cannot be started because its files are not valid, or ``None``."""
+        return None
+
+    def slots_per_day(self, exp_folder: str) -> int:
+        """Rounds per simulated day of an experiment kept in ``exp_folder``."""
+        return 24
+
+    def folder_clone(self) -> Optional[Tuple[Any, Any]]:
+        """``(copy_folder, new_uid)`` for a platform whose experiment is copied as a folder of inputs, else ``None``."""
+        return None

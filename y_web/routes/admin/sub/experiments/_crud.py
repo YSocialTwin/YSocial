@@ -41,7 +41,6 @@ from y_web.platforms import registry
 from y_web.platforms.base import PlatformConfigError, ServerConfigRequest
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
-from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -50,7 +49,6 @@ from y_web.src.experiment.access import (
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.external_runtime import runtime_installed_and_visible
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -684,12 +682,11 @@ def join_experiment(exp_id):
             flash(_("You are not allowed to access this experiment."), "error")
             return redirect("/admin/experiments")
 
-    if is_im_experiment(exp):
-        # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
-        return redirect(f"/{exp.idexp}/im")
-    if is_dating_experiment(exp):
-        # the observer (S6) is the only way in: dating has no per-user feed row either
-        return redirect(f"/{exp.idexp}/dating")
+    observer_url = registry.resolve(getattr(exp, "platform_type", None)).observer_url(
+        exp.idexp
+    )
+    if observer_url:
+        return redirect(observer_url)
 
     user_id = current_user.id
     user_email = str(getattr(current_user, "email", "") or "")
@@ -2308,7 +2305,7 @@ def create_experiment():
         if db_type == "sqlite":
             # Only Standard experiments get a pre-created database
             # HPC experiments: database is created automatically by the server on first startup
-            if simulator_type == "Standard" and platform_type != "photo_sharing":
+            if rules.copies_clean_database:
                 clean_db_source = get_resource_path(
                     os.path.join("data_schema", "database_clean_server.db")
                 )
@@ -2493,13 +2490,9 @@ def create_experiment():
             "w",
         ) as f:
             json.dump(config, f, indent=4)
-        if platform_type == "photo_sharing":
-            prompt_packs.write_pack(
-                "prompts_ygram.json",
-                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts_ygram.json",
-                prompt_language,
-            )
-        # instant messaging: the prompt pack prompts_im.json is added with the clients (Phase 5)
+        registry.resolve(platform_type).write_new_experiment_files(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", prompt_language
+        )
     else:
         with open(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
@@ -2851,36 +2844,12 @@ def start_experiment(uid):
     if exp.running == 1:
         return experiment_details(uid)
 
-    if is_im_experiment(exp):
-        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
-        from y_web.src.im.validation import ImValidationError, validate_im_folder
-
-        try:
-            validate_im_folder(_resolve_hpc_experiment_folder(exp))
-        except ImValidationError as exc:
-            flash(
-                _("The instant messaging configuration is not valid: %(why)s")
-                % {"why": "; ".join(exc.messages[:5])},
-                "error",
-            )
-            return experiment_details(uid)
-
-    if is_dating_experiment(exp):
-        from y_web.src.dating.validation import (
-            DatingValidationError,
-            validate_dating_folder,
-        )
-        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
-
-        try:
-            validate_dating_folder(_resolve_hpc_experiment_folder(exp))
-        except DatingValidationError as exc:
-            flash(
-                _("The dating configuration is not valid: %(why)s")
-                % {"why": "; ".join(exc.messages[:5])},
-                "error",
-            )
-            return experiment_details(uid)
+    invalid = registry.resolve(
+        getattr(exp, "platform_type", None)
+    ).validate_before_start(exp)
+    if invalid:
+        flash(invalid, "error")
+        return experiment_details(uid)
 
     # update the experiment status
     exp.running = 1
@@ -5399,28 +5368,17 @@ def _matrix_describe_experiment_copy_failure(source_exp):
 
 def _slots_per_day_of(folder, experiment):
     """Rounds per day: 24 for instant messaging, the configured slots for dating."""
-    from y_web.src.dating import is_dating_experiment as _is_dating
-
-    if not _is_dating(experiment):
-        return 24
-    from y_web.src.dating.clone import slots_per_day
-
-    return slots_per_day(folder)
+    return registry.resolve(experiment.platform_type).slots_per_day(folder)
 
 
 def _create_im_experiment_copy(
     source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
     """Clone an instant messaging or dating experiment: inputs only, no database, state or logs (plan, 5.6)."""
-    from y_web.src.dating import is_dating_experiment as _is_dating
     from y_web.src.im.clone import rewrite_server_config
     from y_web.src.system.path_utils import get_writable_path
 
-    if _is_dating(source_exp):
-        from y_web.src.dating.clone import copy_dating_folder as copy_im_folder
-        from y_web.src.dating.clone import new_uid
-    else:
-        from y_web.src.im.clone import copy_im_folder, new_uid
+    copy_im_folder, new_uid = registry.resolve(source_exp.platform_type).folder_clone()
 
     if config_variations:
         current_app.logger.warning(
@@ -5539,9 +5497,7 @@ def _create_single_experiment_copy(
     Returns:
         bool: True if successful, False otherwise
     """
-    from y_web.src.dating import is_dating_experiment as _is_dating_src
-
-    if is_im_experiment(source_exp) or _is_dating_src(source_exp):
+    if registry.resolve(source_exp.platform_type).folder_clone() is not None:
         return _create_im_experiment_copy(
             source_exp, new_exp_name, exp_group, config_variations, exp_descr
         )
