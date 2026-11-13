@@ -11,7 +11,6 @@ from . import (
 from ._blueprint import clientsr
 from ._crud import (
     create_client,
-    create_forum_client,
     create_hpc_client,
     create_standard_client,
     delete_client,
@@ -20,7 +19,6 @@ from ._crud import (
 __all__ = [
     "clientsr",
     "create_client",
-    "create_forum_client",
     "create_hpc_client",
     "create_standard_client",
     "delete_client",

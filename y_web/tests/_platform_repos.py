@@ -58,6 +58,7 @@ def forum_file(old_relative: str) -> str:
         ("y_web/routes/social/forum.py", "routes/social_forum.py"),
         ("y_web/routes/interactions/forum.py", "routes/interactions_forum.py"),
         ("y_web/routes/admin/sub/clients/_forum_hpc.py", "routes/clients_forum_hpc.py"),
+        ("y_web/routes/admin/sub/clients/_forum_create.py", "routes/clients_forum.py"),
         ("y_web/src/forum/", "forum/"),
         ("y_web/templates/", "templates/"),
         ("y_web/static/assets/js/reddit/", "static/js/"),

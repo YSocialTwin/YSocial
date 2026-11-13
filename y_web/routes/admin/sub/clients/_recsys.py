@@ -26,6 +26,7 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
 from ._crud import _get_experiment_folder_name, _get_experiment_mode
+from ._dispatch import mode_view
 
 
 def _update_client_simulation_internal(uid, expected_mode):
@@ -500,13 +501,6 @@ def update_standard_recsys(uid):
     return _update_recsys_internal(uid, "standard")
 
 
-@clientsr.route("/admin/update_forum_recsys/<int:uid>", methods=["POST"])
-@login_required
-def update_forum_recsys(uid):
-    """Update recommenders for a forum client."""
-    return _update_recsys_internal(uid, "forum")
-
-
 @clientsr.route("/admin/update_hpc_recsys/<int:uid>", methods=["POST"])
 @login_required
 def update_hpc_recsys(uid):
@@ -533,8 +527,9 @@ def update_recsys(uid):
     mode = _get_experiment_mode(exp)
     if mode == "hpc":
         return update_hpc_recsys(uid)
-    if mode == "forum":
-        return update_forum_recsys(uid)
+    view = mode_view("update_{mode}_recsys", mode)
+    if view is not None:
+        return view(uid)
     return update_standard_recsys(uid)
 
 
@@ -601,19 +596,6 @@ def update_standard_client_settings(uid):
     return _update_client_simulation_internal(uid, "standard")
 
 
-@clientsr.route("/admin/update_forum_client_llm/<int:uid>", methods=["POST"])
-@login_required
-def update_forum_client_llm(uid):
-    """Update LLM for a forum client."""
-    return _update_client_llm_internal(uid, "forum")
-
-
-@clientsr.route("/admin/update_forum_client_settings/<int:uid>", methods=["POST"])
-@login_required
-def update_forum_client_settings(uid):
-    return _update_client_simulation_internal(uid, "forum")
-
-
 @clientsr.route("/admin/update_hpc_client_settings/<int:uid>", methods=["POST"])
 @login_required
 def update_hpc_client_settings(uid):
@@ -646,6 +628,7 @@ def update_llm(uid):
     mode = _get_experiment_mode(exp)
     if mode == "hpc":
         return update_hpc_client_llm(uid)
-    if mode == "forum":
-        return update_forum_client_llm(uid)
+    view = mode_view("update_{mode}_client_llm", mode)
+    if view is not None:
+        return view(uid)
     return update_standard_client_llm(uid)

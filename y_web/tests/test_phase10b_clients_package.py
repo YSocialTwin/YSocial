@@ -81,7 +81,6 @@ def test_helpers_module_has_key_functions():
     from y_web.routes.admin.sub.clients import _helpers
 
     for fn_name in [
-        "_forum_effective_link_share",
         "allocate_topics_by_percentage",
     ]:
         assert hasattr(_helpers, fn_name), f"_helpers missing: {fn_name}"

@@ -41,6 +41,7 @@ from ._crud import (
     _get_experiment_folder_name,
     _opinion_dynamics_enabled_for_client_creation,
 )
+from ._dispatch import mode_view
 
 
 def _opinion_mode(exp):
@@ -276,13 +277,6 @@ def _opinion_configuration_internal(idexp, expected_mode):
 def opinion_configuration_standard(idexp):
     """Display opinion configuration for a standard microblogging experiment."""
     return _opinion_configuration_internal(idexp, "standard")
-
-
-@clientsr.route("/admin/opinion_configuration_forum/<int:idexp>")
-@login_required
-def opinion_configuration_forum(idexp):
-    """Display opinion configuration for a forum experiment."""
-    return _opinion_configuration_internal(idexp, "forum")
 
 
 @clientsr.route("/admin/opinion_configuration_hpc/<int:idexp>")
@@ -955,20 +949,6 @@ def _set_standard_opinion_distributions_internal():
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 
 
-def _set_forum_opinion_distributions_internal():
-    """Persist opinion distributions for forum experiments."""
-    context, error_response = _resolve_opinion_submission_context("forum")
-    if error_response is not None:
-        return error_response
-    save_error = _apply_opinion_distributions_to_population(context)
-    if save_error is not None:
-        return save_error
-    _persist_non_hpc_opinion_dynamics(context)
-    _sync_initial_standard_opinions_to_experiment_db(context)
-    _invalidate_opinion_evolution_cache_for_experiment(int(context["idexp"]))
-    return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
-
-
 def _set_hpc_opinion_distributions_internal():
     """Persist opinion distributions for HPC experiments."""
     context, error_response = _resolve_opinion_submission_context("hpc")
@@ -1006,13 +986,6 @@ def set_standard_opinion_distributions():
     return _set_standard_opinion_distributions_internal()
 
 
-@clientsr.route("/admin/set_forum_opinion_distributions", methods=["POST"])
-@login_required
-def set_forum_opinion_distributions():
-    """Persist opinion distributions for a forum experiment."""
-    return _set_forum_opinion_distributions_internal()
-
-
 @clientsr.route("/admin/set_hpc_opinion_distributions", methods=["POST"])
 @login_required
 def set_hpc_opinion_distributions():
@@ -1044,6 +1017,7 @@ def set_opinion_distributions():
         return set_im_opinion_distributions()
     if experiment_mode == "hpc":
         return set_hpc_opinion_distributions()
-    if experiment_mode == "forum":
-        return set_forum_opinion_distributions()
+    view = mode_view("set_{mode}_opinion_distributions", experiment_mode)
+    if view is not None:
+        return view()
     return set_standard_opinion_distributions()

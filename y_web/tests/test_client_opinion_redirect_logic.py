@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
+from y_web.tests._platform_repos import forum_file
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = pytest.mark.unit
@@ -90,7 +92,6 @@ def test_client_creation_routes_persist_and_redirect_opinion_configuration():
     assert '"opinion_dynamics": {' in source
     assert '"clientsr.opinion_configuration_standard"' in source
     assert '"clientsr.opinion_configuration_hpc"' in source
-    assert '"clientsr.opinion_configuration_forum"' in source
 
 
 def test_client_creation_context_uses_shared_opinion_resolver():
@@ -112,22 +113,18 @@ def test_standard_redirect_is_implemented_in_standard_create_function():
     ).read()
 
     standard_start = source.index("def _create_standard_client_internal():")
-    forum_start = source.index("def _create_forum_client_internal():")
-    standard_chunk = source[standard_start:forum_start]
-
-    next_def_after_forum = source.find("\ndef ", forum_start + 1)
-    if next_def_after_forum == -1:
-        next_def_after_forum = len(source)
-    forum_chunk = source[forum_start:next_def_after_forum]
+    next_def = source.find("\ndef ", standard_start + 1)
+    if next_def == -1:
+        next_def = len(source)
+    standard_chunk = source[standard_start:next_def]
 
     assert '"clientsr.opinion_configuration_standard"' in standard_chunk
-    assert '"clientsr.opinion_configuration_standard"' not in forum_chunk
+    assert '"clientsr.opinion_configuration_forum"' not in source
 
 
 def test_forum_redirect_is_implemented_in_forum_create_function():
     source = open(
-        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
-        "r",
+        forum_file("y_web/routes/admin/sub/clients/_forum_create.py"), "r"
     ).read()
 
     forum_start = source.index("def _create_forum_client_internal():")
