@@ -102,3 +102,14 @@ def test_built_in_platforms_add_nothing():
     app = Flask(__name__)
     assert install_platform_extensions(app) == {}
     assert app.url_map._rules_by_endpoint.keys() == {"static"}
+
+
+def test_external_platforms_are_offered_in_the_new_experiment_menu(
+    tmp_path, clean_registry, monkeypatch
+):
+    assert (
+        registry.external_platform_options() == []
+    )  # built-ins have their own entries
+    registry.register(_platform(tmp_path, key="demo"))
+    monkeypatch.setattr("flask_babel.gettext", lambda text: text.upper())
+    assert registry.external_platform_options() == [{"key": "demo", "label": "OTHER"}]

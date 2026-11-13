@@ -102,3 +102,37 @@ def test_installed_after_startup_asks_for_a_restart(tmp_path, world):
     assert platform_restart_required("ydemo")
     discover_platforms()
     assert not platform_restart_required("ydemo")
+
+
+def _declare(repo, **extra):
+    path = repo / "meta" / "registry.json"
+    payload = json.loads(path.read_text())
+    payload["platform"].update(extra)
+    path.write_text(json.dumps(payload))
+
+
+def test_translation_domain_is_registered_and_a_clash_is_reported(tmp_path, world):
+    from y_web.src.external_runtime import plugin_i18n
+
+    _install(world, tmp_path / "a", key="ya")
+    _declare(world["ya"].path, i18n={"domain": "demo_pf"})
+    assert discover_platforms() == {"ya": []}
+    assert plugin_i18n.registered_domains()["demo_pf"]["repo_key"] == "ya"
+    plugin_i18n.unregister_plugin_i18n("ya")
+
+
+def test_schema_module_runs_after_discovery(tmp_path, world, monkeypatch):
+    from flask import Flask
+
+    from y_web import db  # noqa: F401
+    from y_web.src.external_runtime import backend_plugins
+
+    _install(world, tmp_path, key="yschema")
+    (world["yschema"].path / "ysocial_platform" / "schema.py").write_text(
+        "CALLS = []\ndef migrate(engine):\n    CALLS.append(engine)\n    return True\n"
+    )
+    _declare(world["yschema"].path, schema_module="ysocial_platform.schema:migrate")
+    monkeypatch.setattr(backend_plugins, "_admin_engine", lambda db, app: "engine")
+    assert discover_platforms() == {"yschema": []}
+    report = discovery.run_platform_schema_migrations(Flask(__name__))
+    assert report == {"yschema": {"ok": True, "error": None}}

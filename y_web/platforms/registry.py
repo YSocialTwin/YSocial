@@ -61,3 +61,18 @@ def details_context_defaults() -> Dict[str, None]:
     return {
         key: None for provider in providers() for key in provider.details_context_keys
     }
+
+
+def external_platform_options() -> List[Dict[str, str]]:
+    """Menu entries (``key``, translated ``label``) of the platforms that come from installed repositories.
+
+    The built-in platforms have their own entries in the new-experiment form; an external one is always available,
+    since it is registered only when its repository is installed.
+    """
+    from flask_babel import gettext
+
+    return [
+        {"key": provider.key, "label": gettext(provider.label)}
+        for provider in providers()
+        if provider.package_dir is not None
+    ]

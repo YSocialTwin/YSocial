@@ -322,6 +322,7 @@ def settings():
         matrix_experiments=matrix_experiments,
         active_experiments=active_experiments,
         repo_availability=repo_availability,
+        installed_platforms=registry.external_platform_options(),
     )
 
 

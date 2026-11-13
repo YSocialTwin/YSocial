@@ -491,6 +491,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     run_backend_plugin_schema_migrations(app)
 
+    from y_web.platforms.discovery import run_platform_schema_migrations
+
+    run_platform_schema_migrations(app)
+
     # Log service start event
     try:
         from y_web.src.telemetry import Telemetry
