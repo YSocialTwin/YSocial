@@ -4,10 +4,17 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Mapping, Optional, Tuple
 
 from y_web.i18n import N_
-from y_web.platforms.base import HPC, PlatformProvider, StandardRuntime
+from y_web.i18n import gettext as _
+from y_web.platforms.base import (
+    HPC,
+    STANDARD,
+    CreationRules,
+    PlatformProvider,
+    StandardRuntime,
+)
 from y_web.platforms.registry import register
 
 
@@ -27,6 +34,27 @@ class Microblogging(PlatformProvider):
 
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/feed/{user_id}/feed/rf/1"
+
+    def creation_rules(self, simulator_type: str) -> CreationRules:
+        return CreationRules(database="server")
+
+    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
+        # either runtime will do: ask for the one that is installed
+        if simulator_type == HPC:
+            if available["hpc"]:
+                return HPC, None
+            if available["microblogging"]:
+                return STANDARD, None
+            return HPC, _(
+                "HPC microblogging experiments are unavailable because YMicroblogging is not present."
+            )
+        if available["microblogging"]:
+            return STANDARD, None
+        if available["hpc"]:
+            return HPC, None
+        return STANDARD, _(
+            "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
+        )
 
 
 class Forum(PlatformProvider):
@@ -77,6 +105,37 @@ class Forum(PlatformProvider):
             else "experiments.prompts_forum"
         )
 
+    def creation_rules(self, simulator_type: str) -> CreationRules:
+        if simulator_type == HPC:
+            return CreationRules(
+                # the forum runtime has no use for the YSimulator cache in this version
+                forced={"redis_enabled": False},
+                remote_error=_("Remote forum HPC experiments are not supported."),
+                database="own",
+                sqlite_only_note="Forum HPC experiments use SQLite even if the platform uses PostgreSQL",
+            )
+        return CreationRules(
+            forced={
+                "opinion_dynamics_enabled": False,
+                "sentiment_annotation": False,
+                "emotion_annotation": False,
+            },
+            database="server",
+        )
+
+    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
+        if simulator_type == HPC:
+            if not available.get("forum_hpc"):
+                return HPC, _(
+                    "Forum HPC experiments are unavailable because YForum is not present."
+                )
+            return HPC, None
+        if not available["forum"]:
+            return STANDARD, _(
+                "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
+            )
+        return STANDARD, None
+
     def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
         from y_web.src.forum.validation import validate_forum_folder
 
@@ -120,6 +179,16 @@ class PhotoSharing(PlatformProvider):
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/photo/feed/all/feed/rf/1"
 
+    def creation_rules(self, simulator_type: str) -> CreationRules:
+        return CreationRules(database="server")
+
+    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
+        if not available["photo_sharing"]:
+            return HPC, _(
+                "Photo Sharing experiments are unavailable because YPhotoSharing is not present."
+            )
+        return HPC, None
+
     extra_prompt_files = ("prompts_ygram.json",)
     prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
 
@@ -158,6 +227,29 @@ class InstantMessaging(PlatformProvider):
 
     def prompts_page(self, simulator_type: str) -> str:
         return "experiments.prompts_im"
+
+    def creation_rules(self, simulator_type: str) -> CreationRules:
+        # IM has its own annotation and analytics model; the YSocial toggles do not apply (plan, 5.2)
+        return CreationRules(
+            forced={
+                "opinion_dynamics_enabled": False,
+                "toxicity_annotation": False,
+                "perspective_api": None,
+                "sentiment_annotation": False,
+                "emotion_annotation": False,
+                "redis_enabled": False,
+            },
+            remote_error=_("Remote instant messaging experiments are not supported."),
+            database="own",
+            sqlite_only_note="Instant messaging experiments use SQLite even if the platform uses PostgreSQL",
+        )
+
+    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
+        if not available.get("instant_messaging"):
+            return HPC, _(
+                "Instant messaging experiments are unavailable because YInstantMessaging is not present."
+            )
+        return HPC, None
 
     def hpc_client_files(self, exp_folder: str, client: Any, population: Any):
         config, agents, _ = super().hpc_client_files(exp_folder, client, population)
@@ -204,6 +296,27 @@ class Dating(PlatformProvider):
 
     def prompts_page(self, simulator_type: str) -> str:
         return "experiments.prompts_dating"
+
+    def creation_rules(self, simulator_type: str) -> CreationRules:
+        # dating has no opinion dynamics; toxicity uses the local model (no Perspective key) and the
+        # annotations are the runtime's own (plan S1)
+        return CreationRules(
+            forced={
+                "opinion_dynamics_enabled": False,
+                "perspective_api": None,
+                "redis_enabled": False,
+            },
+            remote_error=_("Remote dating experiments are not supported."),
+            database="own",
+            sqlite_only_note="Dating experiments use SQLite even if the platform uses PostgreSQL",
+        )
+
+    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
+        if not available.get("dating"):
+            return HPC, _(
+                "Dating experiments are unavailable because YDating is not present."
+            )
+        return HPC, None
 
     def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
         from y_web.src.hpc.client import _set_dating_run_length

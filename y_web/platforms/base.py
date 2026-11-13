@@ -11,15 +11,30 @@ its own (see ``docs/platform-decoupling`` in the project).
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Mapping, Optional, Tuple
 
 from y_web.i18n import N_
 
 DEFAULT_ICON = "layers"
 STANDARD = "Standard"
 HPC = "HPC"
+
+
+@dataclass(frozen=True)
+class CreationRules:
+    """What a new experiment of a platform and simulator type must respect."""
+
+    #: settings the platform fixes whatever the form says (``opinion_dynamics_enabled``, ``redis_enabled``, ...)
+    forced: Mapping[str, Any] = field(default_factory=dict)
+    #: translated refusal of a remote experiment, ``None`` when remote is allowed
+    remote_error: Optional[str] = None
+    #: who makes the database of the experiment: ``"server"`` (YSocial prepares it, SQLite or PostgreSQL), ``"own"``
+    #: (the runtime creates its own SQLite database on first start) or ``"none"``
+    database: str = "none"
+    #: log line written when the application uses PostgreSQL but the experiment cannot
+    sqlite_only_note: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -160,3 +175,20 @@ class PlatformProvider:
 
     def stop_hpc_gateway(self, exp_folder: str) -> None:
         """Stop what ``start_hpc_gateway`` / ``after_hpc_server_started`` started, before the server is stopped."""
+
+    # --- admin: creating an experiment -----------------------------------------------------------------------------
+
+    def resolve_simulator(
+        self, simulator_type: str, available: Mapping[str, bool]
+    ) -> Tuple[str, Optional[str]]:
+        """``(simulator type, error)`` for a new experiment of this platform.
+
+        ``available`` says which runtimes are installed (keys: ``microblogging``, ``hpc``, ``forum``, ``forum_hpc``,
+        ``photo_sharing``, ``instant_messaging``, ``dating``). ``error`` is the translated reason the experiment
+        cannot be created, or ``None``.
+        """
+        return (HPC if simulator_type == HPC else STANDARD), None
+
+    def creation_rules(self, simulator_type: str) -> CreationRules:
+        """The rules a new experiment of this platform on ``simulator_type`` must respect."""
+        return CreationRules()

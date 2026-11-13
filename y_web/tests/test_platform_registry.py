@@ -315,3 +315,119 @@ def test_hpc_server_hooks_are_overridden_by_the_expected_platforms():
     assert {k for k, v in HPC_PLATFORMS.items() if v.validates_config} == expected[
         "validate_hpc_folder"
     ]
+
+
+def _legacy_resolve_simulator(platform_type, simulator_type, av):
+    """The platform chain create_experiment used before the provider answered for it."""
+    err = {
+        "forum_hpc": "Forum HPC experiments are unavailable because YForum is not present.",
+        "forum": "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present.",
+        "photo_sharing": "Photo Sharing experiments are unavailable because YPhotoSharing is not present.",
+        "instant_messaging": "Instant messaging experiments are unavailable because YInstantMessaging is not present.",
+        "dating": "Dating experiments are unavailable because YDating is not present.",
+        "mb_hpc": "HPC microblogging experiments are unavailable because YMicroblogging is not present.",
+        "mb": "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present.",
+    }
+    if platform_type == "forum" and simulator_type == "HPC":
+        if not av["forum_hpc"]:
+            return simulator_type, err["forum_hpc"]
+    elif platform_type == "forum" and not av["forum"]:
+        return simulator_type, err["forum"]
+    for key in ("photo_sharing", "instant_messaging", "dating"):
+        if platform_type == key and not av[key]:
+            return simulator_type, err[key]
+    if platform_type == "microblogging":
+        if simulator_type == "HPC":
+            if not av["hpc"]:
+                if av["microblogging"]:
+                    simulator_type = "Standard"
+                else:
+                    return simulator_type, err["mb_hpc"]
+        else:
+            if not av["microblogging"]:
+                if av["hpc"]:
+                    simulator_type = "HPC"
+                else:
+                    return simulator_type, err["mb"]
+    elif platform_type in {"photo_sharing", "instant_messaging", "dating"}:
+        simulator_type = "HPC"
+    if platform_type == "forum":
+        simulator_type = "HPC" if simulator_type == "HPC" else "Standard"
+    elif simulator_type != "HPC":
+        simulator_type = "Standard"
+    return simulator_type, None
+
+
+def test_resolve_simulator_matches_the_previous_creation_logic():
+    import itertools
+
+    from y_web.platforms import registry
+
+    names = (
+        "microblogging",
+        "hpc",
+        "forum",
+        "forum_hpc",
+        "photo_sharing",
+        "instant_messaging",
+        "dating",
+    )
+    for flags in itertools.product((False, True), repeat=len(names)):
+        available = dict(zip(names, flags))
+        for platform in registry.keys() + ["unknown"]:
+            for simulator in ("Standard", "HPC", "other"):
+                got, error = registry.resolve(platform).resolve_simulator(
+                    simulator, available
+                )
+                want, want_error = _legacy_resolve_simulator(
+                    platform, simulator, available
+                )
+                assert bool(error) == bool(want_error), (platform, simulator, flags)
+                if error:
+                    assert error == want_error
+                else:
+                    assert got == want, (platform, simulator, flags)
+
+
+def test_creation_rules_match_the_previous_creation_logic():
+    from y_web.platforms import registry
+
+    forced = {
+        ("microblogging", "Standard"): {},
+        ("microblogging", "HPC"): {},
+        ("forum", "Standard"): {
+            "opinion_dynamics_enabled": False,
+            "sentiment_annotation": False,
+            "emotion_annotation": False,
+        },
+        ("forum", "HPC"): {"redis_enabled": False},
+        ("photo_sharing", "HPC"): {},
+        ("instant_messaging", "HPC"): {
+            "opinion_dynamics_enabled": False,
+            "toxicity_annotation": False,
+            "perspective_api": None,
+            "sentiment_annotation": False,
+            "emotion_annotation": False,
+            "redis_enabled": False,
+        },
+        ("dating", "HPC"): {
+            "opinion_dynamics_enabled": False,
+            "perspective_api": None,
+            "redis_enabled": False,
+        },
+    }
+    own_database = {("forum", "HPC"), ("instant_messaging", "HPC"), ("dating", "HPC")}
+    for (platform, simulator), want in forced.items():
+        rules = registry.get(platform).creation_rules(simulator)
+        assert dict(rules.forced) == want, (platform, simulator)
+        assert (rules.database == "own") == ((platform, simulator) in own_database)
+        assert (rules.database == "server") != ((platform, simulator) in own_database)
+        # remote experiments are refused exactly where the runtime is not remote-capable
+        assert bool(rules.remote_error) == ((platform, simulator) in own_database)
+        assert bool(rules.sqlite_only_note) == ((platform, simulator) in own_database)
+    unknown = registry.resolve("unknown").creation_rules("Standard")
+    assert (dict(unknown.forced), unknown.remote_error, unknown.database) == (
+        {},
+        None,
+        "none",
+    )

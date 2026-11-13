@@ -14,7 +14,7 @@
  "y_web/routes/admin/sub/clients/_helpers.py": 1,
  "y_web/routes/admin/sub/clients/_opinion.py": 19,
  "y_web/routes/admin/sub/clients/_recsys.py": 12,
- "y_web/routes/admin/sub/experiments/_crud.py": 113,
+ "y_web/routes/admin/sub/experiments/_crud.py": 70,
  "y_web/routes/admin/sub/experiments/_data.py": 33,
  "y_web/routes/admin/sub/experiments/_external_runtimes.py": 21,
  "y_web/routes/admin/sub/experiments/_feeds.py": 45,

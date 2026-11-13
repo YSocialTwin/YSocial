@@ -2168,84 +2168,12 @@ def create_experiment():
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
     repo_availability = _external_repo_availability()
 
-    if platform_type == "forum" and simulator_type == "HPC":
-        if not repo_availability.get("forum_hpc"):
-            flash(
-                _(
-                    "Forum HPC experiments are unavailable because YForum is not present."
-                ),
-                "error",
-            )
-            return redirect(url_for("admin.dashboard"))
-    elif platform_type == "forum" and not repo_availability["forum"]:
-        flash(
-            _(
-                "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
-            ),
-            "error",
-        )
+    simulator_type, unavailable = registry.resolve(platform_type).resolve_simulator(
+        simulator_type, repo_availability
+    )
+    if unavailable:
+        flash(unavailable, "error")
         return redirect(url_for("admin.dashboard"))
-
-    if platform_type == "photo_sharing" and not repo_availability["photo_sharing"]:
-        flash(
-            _(
-                "Photo Sharing experiments are unavailable because YPhotoSharing is not present."
-            ),
-            "error",
-        )
-        return redirect(url_for("admin.dashboard"))
-
-    if platform_type == "instant_messaging" and not repo_availability.get(
-        "instant_messaging"
-    ):
-        flash(
-            _(
-                "Instant messaging experiments are unavailable because YInstantMessaging is not present."
-            ),
-            "error",
-        )
-        return redirect(url_for("admin.dashboard"))
-
-    if platform_type == "dating" and not repo_availability.get("dating"):
-        flash(
-            _("Dating experiments are unavailable because YDating is not present."),
-            "error",
-        )
-        return redirect(url_for("admin.dashboard"))
-
-    if platform_type == "microblogging":
-        if simulator_type == "HPC":
-            if not repo_availability["hpc"]:
-                if repo_availability["microblogging"]:
-                    simulator_type = "Standard"
-                else:
-                    flash(
-                        _(
-                            "HPC microblogging experiments are unavailable because YMicroblogging is not present."
-                        ),
-                        "error",
-                    )
-                    return redirect(url_for("admin.dashboard"))
-        else:
-            if not repo_availability["microblogging"]:
-                if repo_availability["hpc"]:
-                    simulator_type = "HPC"
-                else:
-                    flash(
-                        _(
-                            "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
-                        ),
-                        "error",
-                    )
-                    return redirect(url_for("admin.dashboard"))
-    elif platform_type in {"photo_sharing", "instant_messaging", "dating"}:
-        simulator_type = "HPC"
-
-    if platform_type == "forum":
-        # the forum runs on YForum (HPC) only when the form asks for it; otherwise on the Flask pair
-        simulator_type = "HPC" if simulator_type == "HPC" else "Standard"
-    elif simulator_type != "HPC":
-        simulator_type = "Standard"
     forum_hpc = platform_type == "forum" and simulator_type == "HPC"
 
     # Remote experiment configuration
@@ -2331,58 +2259,33 @@ def create_experiment():
     sentiment_annotation = request.form.get("sentiment_annotation") == "true"
     emotion_annotation = request.form.get("emotion_annotation") == "true"
 
-    if platform_type == "forum" and not forum_hpc:
-        opinion_dynamics_enabled = False
-        sentiment_annotation = False
-        emotion_annotation = False
-
-    if forum_hpc:
-        redis_enabled = False  # the forum runtime has no use for the YSimulator cache in this version
-        if is_remote:
-            flash(_("Remote forum HPC experiments are not supported."), "error")
-            return redirect(url_for("admin.dashboard"))
-        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-            current_app.logger.info(
-                "Forum HPC experiments use SQLite even if the platform uses PostgreSQL"
-            )
-
-    if platform_type == "instant_messaging":
-        # IM has its own annotation and analytics model; the YSocial toggles do not apply (plan, 5.2)
-        opinion_dynamics_enabled = False
-        toxicity_annotation = False
-        perspective_api = None
-        sentiment_annotation = False
-        emotion_annotation = False
-        redis_enabled = False
-        if is_remote:
-            flash(_("Remote instant messaging experiments are not supported."), "error")
-            return redirect(url_for("admin.dashboard"))
-        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-            current_app.logger.info(
-                "Instant messaging experiments use SQLite even if the platform uses PostgreSQL"
-            )
-
-    if platform_type == "dating":
-        # dating has no opinion dynamics; toxicity uses the local model (no Perspective key) and the
-        # annotations are the runtime's own (plan S1)
-        opinion_dynamics_enabled = False
-        perspective_api = None
-        redis_enabled = False
-        if is_remote:
-            flash(_("Remote dating experiments are not supported."), "error")
-            return redirect(url_for("admin.dashboard"))
-        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-            current_app.logger.info(
-                "Dating experiments use SQLite even if the platform uses PostgreSQL"
-            )
+    rules = registry.resolve(platform_type).creation_rules(simulator_type)
+    opinion_dynamics_enabled = rules.forced.get(
+        "opinion_dynamics_enabled", opinion_dynamics_enabled
+    )
+    toxicity_annotation = rules.forced.get("toxicity_annotation", toxicity_annotation)
+    perspective_api = rules.forced.get("perspective_api", perspective_api)
+    sentiment_annotation = rules.forced.get(
+        "sentiment_annotation", sentiment_annotation
+    )
+    emotion_annotation = rules.forced.get("emotion_annotation", emotion_annotation)
+    redis_enabled = rules.forced.get("redis_enabled", redis_enabled)
+    if rules.remote_error and is_remote:
+        flash(rules.remote_error, "error")
+        return redirect(url_for("admin.dashboard"))
+    if rules.sqlite_only_note and current_app.config[
+        "SQLALCHEMY_DATABASE_URI"
+    ].startswith("postgresql"):
+        current_app.logger.info(rules.sqlite_only_note)
 
     # the dating platform has no topics (the field is hidden in the form)
     topics = (request.form.get("tags") or "").split(",")
 
     # identify db type
     db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql") and (
-        platform_type not in {"instant_messaging", "dating"} and not forum_hpc
+    if (
+        current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql")
+        and rules.database != "own"
     ):
         db_type = "postgresql"
 
@@ -2398,9 +2301,9 @@ def create_experiment():
     db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
-    if platform_type in {"instant_messaging", "dating"} or forum_hpc:
+    if rules.database == "own":
         pass  # the runtime creates its own database on first server start: nothing to copy or ensure
-    elif platform_type in {"microblogging", "forum", "photo_sharing"}:
+    elif rules.database == "server":
         if db_type == "sqlite":
             # Only Standard experiments get a pre-created database
             # HPC experiments: database is created automatically by the server on first startup
