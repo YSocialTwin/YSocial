@@ -52,7 +52,6 @@ from y_web.src.external_runtime import load_plugins_index
 from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -593,7 +592,7 @@ def experiment_details(uid):
     if getattr(experiment, "simulator_type", None) == "HPC" and client_ids:
         try:
             from y_web.src.hpc.client import resolve_hpc_client_execution_log_path
-            from y_web.src.im.failures import describe_client_failure
+            from y_web.src.hpc.failures import describe_client_failure
 
             for row in execution_rows:
                 if getattr(row, "terminal_state", None) != "failed":
@@ -614,7 +613,7 @@ def experiment_details(uid):
                 client_failures[row.client_id] = info
         except Exception:
             current_app.logger.warning(
-                "Could not read IM client failures", exc_info=True
+                "Could not read the client failures", exc_info=True
             )
 
     # HPC reset availability: only stopped experiments that already started once.
@@ -670,7 +669,7 @@ def experiment_details(uid):
     memory_module_enabled = False
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
         agent_memory_plugin_installed()
-        or is_im_experiment(experiment)
+        or registry.resolve(experiment.platform_type).configures_memory
         or is_forum_hpc_experiment(experiment)
     )
     toxicity_annotation_enabled = bool(
@@ -1022,7 +1021,7 @@ def update_experiment_config(uid):
 
     memory_configuration_supported = bool(llm_agents_enabled_effective) and (
         agent_memory_plugin_installed()
-        or is_im_experiment(exp)
+        or registry.resolve(exp.platform_type).configures_memory
         or is_forum_hpc_experiment(exp)
     )
     if memory_configuration_supported:
@@ -1101,30 +1100,16 @@ def update_experiment_config(uid):
             memory_config["enabled"] = bool(memory_config.get("enabled"))
         config["memory"] = memory_config
 
-        if is_im_experiment(exp):
-            # IM acts on its own keys: mirror the switches there (and drop what only the others understand)
-            from y_web.src.im.experiment_config import apply_experiment_switches
-
-            config.pop("perspective_api", None)
-            apply_experiment_switches(
-                config,
-                toxicity=toxicity_enabled,
-                sentiment=sentiment_enabled,
-                emotion=emotion_enabled,
-                opinion=opinion_dynamics_enabled,
-                stress_reward=stress_reward_enabled,
-                memory=memory_config["enabled"],
-                stress_reward_config=stress_reward_config,
-            )
-
         registry.resolve(exp.platform_type).apply_experiment_switches(
             config,
             original_config,
             toxicity=toxicity_enabled,
             sentiment=sentiment_enabled,
             emotion=emotion_enabled,
+            opinion=opinion_dynamics_enabled,
             stress_reward=stress_reward_enabled,
             memory=memory_config["enabled"],
+            stress_reward_config=stress_reward_config,
         )
 
         if is_forum_hpc_experiment(exp):
@@ -1177,18 +1162,14 @@ def update_experiment_config(uid):
                 with open(client_config_file, "r") as f:
                     client_config = json.load(f)
 
-                if is_im_experiment(exp):
-                    from y_web.src.im.experiment_config import (
-                        apply_switches_to_client,
-                    )
-
-                    apply_switches_to_client(
-                        client_config,
-                        emotion=emotion_enabled,
-                        opinion=opinion_dynamics_enabled,
-                        stress_reward=stress_reward_enabled,
-                        memory=memory_config["enabled"],
-                    )
+                if registry.resolve(exp.platform_type).apply_client_switches(
+                    client_config,
+                    emotion=emotion_enabled,
+                    opinion=opinion_dynamics_enabled,
+                    stress_reward=stress_reward_enabled,
+                    memory=memory_config["enabled"],
+                ):
+                    pass
                 elif is_forum_hpc_experiment(exp):
                     from y_web.src.forum.experiment_config import (
                         apply_switches_to_client as apply_forum_client_switches,
@@ -1259,41 +1240,6 @@ def update_experiment_config(uid):
         db.session.rollback()
         flash(_("Failed to update configuration: %(error)s", error=str(exc)), "error")
 
-    return redirect(url_for("experiments.experiment_details", uid=uid))
-
-
-@experiments.route("/admin/update_im_advanced_settings/<int:uid>", methods=["POST"])
-@login_required
-def update_im_advanced_settings(uid):
-    """Save the server-level settings of an IM experiment (round pacing and participant limit)."""
-    check_privileges(current_user.username)
-
-    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
-    if not exp or not is_im_experiment(exp):
-        flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
-    if not user_can_manage_experiment(_current_admin_user_or_none(), exp):
-        flash(_("You do not have permission to update this experiment."), "error")
-        return redirect(url_for("experiments.experiment_details", uid=uid))
-
-    from y_web.src.im.experiment_config import (
-        AdvancedSettingsError,
-        write_advanced_settings,
-    )
-    from y_web.src.system.path_utils import get_writable_path
-
-    exp_folder = _get_experiment_folder(get_writable_path(), exp, _get_database_type())
-    try:
-        write_advanced_settings(
-            exp_folder,
-            min_round_seconds=request.form.get("min_round_seconds"),
-            max_humans=request.form.get("max_humans"),
-        )
-        flash(_("Advanced settings updated."), "success")
-    except AdvancedSettingsError as exc:
-        flash(_("Invalid advanced settings: %(why)s", why=str(exc)), "error")
-    except Exception as exc:
-        flash(_("Failed to update configuration: %(error)s", error=str(exc)), "error")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -1447,10 +1393,9 @@ def update_stress_reward_settings(uid):
             )
 
         config["stress_reward"] = stress_reward_config
-        if is_im_experiment(experiment):
-            from y_web.src.im.experiment_config import apply_experiment_switches
-
-            apply_experiment_switches(config, stress_reward_config=stress_reward_config)
+        registry.resolve(experiment.platform_type).apply_stress_reward_settings(
+            config, stress_reward_config
+        )
         with open(config_path, "w", encoding="utf-8") as handle:
             json.dump(config, handle, indent=4)
 
@@ -1479,14 +1424,10 @@ def update_stress_reward_settings(uid):
             try:
                 with open(client_config_file, "r", encoding="utf-8") as handle:
                     client_config = json.load(handle) or {}
-                if is_im_experiment(experiment):
-                    from y_web.src.im.experiment_config import apply_switches_to_client
-
-                    apply_switches_to_client(
-                        client_config,
-                        stress_reward=bool(stress_reward_config.get("enabled")),
-                    )
-                else:
+                if not registry.resolve(experiment.platform_type).apply_client_switches(
+                    client_config,
+                    stress_reward=bool(stress_reward_config.get("enabled")),
+                ):
                     client_config = sync_stress_reward_client_config(
                         client_config, stress_reward_config
                     )
@@ -1707,20 +1648,10 @@ def reset_hpc_experiment(uid):
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
 
-        if is_im_experiment(exp):
-            # the inputs (news snapshot, events, topic catalog) are .jsonl/.json files: keep them
-            from y_web.src.im.clone import clear_im_run_artifacts
-
-            deleted_count, failed_paths = clear_im_run_artifacts(exp_folder)
-        else:
-            cleared = registry.resolve(exp.platform_type).clear_run_artifacts(
-                exp_folder
-            )
-            deleted_count, failed_paths = (
-                cleared
-                if cleared is not None
-                else clear_experiment_log_files(exp_folder)
-            )
+        cleared = registry.resolve(exp.platform_type).clear_run_artifacts(exp_folder)
+        deleted_count, failed_paths = (
+            cleared if cleared is not None else clear_experiment_log_files(exp_folder)
+        )
         if failed_paths:
             for failed_path in failed_paths:
                 current_app.logger.warning(f"Could not delete log file {failed_path}")

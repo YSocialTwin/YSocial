@@ -182,47 +182,6 @@ def _normalize_photo_sharing_client_config(
         json.dump(client_config, handle, indent=2)
 
 
-def _normalize_im_client_config(
-    exp_folder: str, client_name: str, population_name: str, client_config_path: str
-) -> None:
-    """Align a YInstantMessaging client config with the experiment server runtime.
-
-    Only keys that IM excludes from the config hash are written (``client_id``, ``namespace``,
-    ``server_name``, ``address``, ``agents_file``, ``logging.log_dir``, ``logging.instance_name``), so
-    running it before every start never changes the hash a resumed run is checked against. No secret is
-    ever written here, and the result is the same however many times it runs.
-    """
-    from y_web.routes.admin.sub.experiments._im import IM_NAMESPACE, IM_SERVER_NAME
-
-    server_config_path = os.path.join(exp_folder, "server_config.json")
-    server_config = {}
-    if os.path.exists(server_config_path):
-        with open(server_config_path, "r", encoding="utf-8") as handle:
-            server_config = json.load(handle)
-
-    with open(client_config_path, "r", encoding="utf-8") as handle:
-        client_config = json.load(handle)
-
-    runtime_client_id = _build_hpc_runtime_client_id(exp_folder, client_name)
-    desired = {
-        "client_id": runtime_client_id,
-        "namespace": server_config.get("namespace", IM_NAMESPACE),
-        "server_name": server_config.get("server_name", IM_SERVER_NAME),
-        "address": "auto",
-        "agents_file": f"{population_name}.json",
-    }
-    logging_cfg = dict(client_config.get("logging") or {})
-    logging_cfg["log_dir"] = os.path.join(exp_folder, "logs")
-    logging_cfg["instance_name"] = runtime_client_id
-    desired["logging"] = logging_cfg
-
-    if all(client_config.get(key) == value for key, value in desired.items()):
-        return
-    client_config.update(desired)
-    with open(client_config_path, "w", encoding="utf-8") as handle:
-        json.dump(client_config, handle, indent=2)
-
-
 def _normalize_dating_client_config(
     exp_folder: str, client_name: str, population_name: str, client_config_path: str
 ) -> None:
@@ -273,7 +232,6 @@ def _normalize_forum_client_config(
 _CLIENT_NORMALIZERS = {
     "forum": _normalize_forum_client_config,
     "photo_sharing": _normalize_photo_sharing_client_config,
-    "instant_messaging": _normalize_im_client_config,
     "dating": _normalize_dating_client_config,
 }
 
@@ -658,21 +616,6 @@ def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
     return True
 
 
-def _start_im_human_gateway(exp_folder: str) -> None:
-    """Start the human gateway before the first IM client (a failure is a warning, never an error)."""
-    try:
-        from y_web.src.im.gateway_process import start_gateway
-        from y_web.src.simulation.server import detect_env_handler
-        from y_web.src.system.path_utils import get_external_repo_dir
-
-        repo_dir = get_external_repo_dir(
-            get_hpc_platform("instant_messaging").runtime_repo
-        )
-        start_gateway(exp_folder, repo_dir, detect_env_handler())
-    except Exception as exc:  # noqa: BLE001
-        print(f"Warning: human gateway not started: {exc}")
-
-
 def start_hpc_client(exp, cli, population):
     """
     Start an HPC client using subprocess.Popen.
@@ -833,27 +776,39 @@ def start_hpc_client(exp, cli, population):
         if not spec.client_config_file_arg:
             runtime_config_dir = client_config
 
-        try:
-            _CLIENT_NORMALIZERS[spec.key](
-                exp_folder, cli.name, population.name, client_config
-            )
-        except Exception:
-            if spec.key in ("instant_messaging", "dating", "forum"):
-                raise  # these must not start with a client config that could not be aligned
+        provider = registry.resolve(exp.platform_type)
+        # a platform that aligns its own client file must not start with one that could not be aligned
+        if not provider.normalize_hpc_client_config(
+            exp_folder, cli.name, population.name, client_config
+        ):
+            try:
+                _CLIENT_NORMALIZERS[spec.key](
+                    exp_folder, cli.name, population.name, client_config
+                )
+            except Exception:
+                if spec.key in ("dating", "forum"):
+                    raise  # these must not start with a client config that could not be aligned
 
     if spec.validates_config:
-        if spec.key == "dating":
-            _validate = registry.library("dating", "validation").validate_dating_folder
-        elif spec.key == "forum":
-            from y_web.src.forum.validation import validate_forum_folder as _validate
-        else:
-            from y_web.src.im.validation import validate_im_folder as _validate
+        provider = registry.resolve(exp.platform_type)
+        runtime_dir = _external_repo_dir(spec.runtime_repo)
+        if not provider.validate_hpc_client(
+            exp_folder, runtime_dir, os.path.basename(client_config)
+        ):
+            if spec.key == "dating":
+                _validate = registry.library(
+                    "dating", "validation"
+                ).validate_dating_folder
+            else:
+                from y_web.src.forum.validation import (
+                    validate_forum_folder as _validate,
+                )
 
-        _validate(
-            exp_folder,
-            _external_repo_dir(spec.runtime_repo),
-            client_config=os.path.basename(client_config),
-        )
+            _validate(
+                exp_folder,
+                runtime_dir,
+                client_config=os.path.basename(client_config),
+            )
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     is_frozen = getattr(sys, "frozen", False)

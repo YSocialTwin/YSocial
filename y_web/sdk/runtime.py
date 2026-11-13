@@ -15,6 +15,22 @@ def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, st
     return target(extra)
 
 
+def describe_client_failure(
+    execution_log_path: Optional[str],
+) -> Optional[Dict[str, Any]]:
+    """The last ERROR record that carries an exit code, as ``exit_code``, ``error_type``, ``detail``, ``message``."""
+    from y_web.src.hpc.failures import describe_client_failure as target
+
+    return target(execution_log_path)
+
+
+def exit_messages():
+    """Message per exit code of the client, in the words an administrator needs (translated)."""
+    from y_web.src.hpc.failures import exit_messages as target
+
+    return target()
+
+
 def detect_env_handler():
     """Detect the active Python environment and return executable path."""
     from y_web.src.simulation.server import detect_env_handler as target
@@ -63,9 +79,23 @@ def rewrite_server_config(
     new_folder: str, new_exp_name: str, new_db_uri: str, new_data_path: str
 ) -> None:
     """Point the copied ``server_config.json`` at the new folder; the run configuration is unchanged."""
-    from y_web.src.im.clone import rewrite_server_config as target
+    from y_web.src.hpc.server_config import rewrite_server_config as target
 
     return target(new_folder, new_exp_name, new_db_uri, new_data_path)
+
+
+def wait_for_hpc_server_ready(exp_folder: str, timeout_seconds: int = 180) -> None:
+    """Wait until the server writes its readiness marker after the orchestrator actor starts."""
+    from y_web.src.hpc.client import _wait_for_hpc_server_ready as target
+
+    return target(exp_folder, timeout_seconds)
+
+
+def build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
+    """Build a stable experiment-scoped client identifier for Ray registration."""
+    from y_web.src.hpc.client import _build_hpc_runtime_client_id as target
+
+    return target(exp_folder, client_name)
 
 
 def runtime_installed_and_visible(repo_key: "str", admin_user) -> "bool":
@@ -83,8 +113,11 @@ def set_duration(config: Dict[str, Any], days: int) -> Dict[str, Any]:
 
 
 __all__ = [
+    "build_hpc_runtime_client_id",
     "build_subprocess_env",
+    "describe_client_failure",
     "detect_env_handler",
+    "exit_messages",
     "get_external_repo_dir",
     "get_hpc_platform",
     "get_writable_path",
@@ -94,4 +127,5 @@ __all__ = [
     "rewrite_server_config",
     "runtime_installed_and_visible",
     "set_duration",
+    "wait_for_hpc_server_ready",
 ]

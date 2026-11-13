@@ -108,7 +108,14 @@ def suggested_port() -> Optional[int]:
 
 
 def register_uploaded_hpc_experiment(
-    *, name: str, uid: str, platform_type: str, exp_group: str, port: int
+    *,
+    name: str,
+    uid: str,
+    platform_type: str,
+    exp_group: str,
+    port: int,
+    prompt_language: Any = None,
+    host: str = "127.0.0.1",
 ) -> Any:
     """Record an uploaded HPC experiment (and its notebook slot) in the admin database; returns the ``Exps`` row."""
     from flask_login import current_user
@@ -120,13 +127,13 @@ def register_uploaded_hpc_experiment(
     exp = Exps(
         exp_name=name,
         db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
-        prompt_language=prompt_packs.resolve(None),
+        prompt_language=prompt_packs.resolve(prompt_language),
         owner=current_user.username,
         exp_descr="",
         status=0,
         running=0,
         port=port,
-        server="127.0.0.1",
+        server=host,
         platform_type=platform_type,
         llm_agents_enabled=1,
         simulator_type="HPC",
@@ -139,3 +146,10 @@ def register_uploaded_hpc_experiment(
     )
     db.session.commit()
     return exp
+
+
+def experiment_bind_key(exp_id: int) -> str:
+    """Bind key under which the database of an experiment is registered."""
+    from y_web.src.experiment.context import get_db_bind_key_for_exp
+
+    return get_db_bind_key_for_exp(exp_id)

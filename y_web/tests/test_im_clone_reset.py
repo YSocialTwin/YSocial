@@ -292,18 +292,21 @@ def test_uploaded_im_folder_is_validated_and_registered_without_the_ysocial_sche
                 raise validation.ImValidationError(["config: broken client"])
 
         monkeypatch.setattr(validation, "validate_im_folder", fake_validate)
+        from y_web.src.im import upload as im_upload
+
         monkeypatch.setattr(
-            env.ecrud, "current_user", SimpleNamespace(username="admin", id=1)
+            "flask_login.current_user", SimpleNamespace(username="admin", id=1)
         )
+
         monkeypatch.setattr(
-            env.ecrud, "flash", lambda m, c="message": flashes.append(str(m))
+            im_upload, "flash", lambda m, c="message": flashes.append(str(m))
         )
-        monkeypatch.setattr(env.ecrud, "url_for", lambda e, **k: f"/{e}")
+        monkeypatch.setattr(im_upload, "url_for", lambda e, **k: f"/{e}")
         monkeypatch.setattr(
             "y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path)
         )
         with app.test_request_context("/admin/upload_experiment", method="POST"):
-            env.ecrud._import_im_upload(str(upload), "newuid", "uploaded", "g")
+            im_upload.import_uploaded_experiment(str(upload), "newuid", "uploaded", "g")
         assert not any("not valid" in m or "could not" in m for m in flashes), flashes
         new = db.session.query(Exps).filter_by(exp_name="uploaded").one()
         assert (
@@ -326,7 +329,7 @@ def test_uploaded_im_folder_is_validated_and_registered_without_the_ysocial_sche
         (bad / "client_cl-pop.json").write_text("{}")
         flashes.clear()
         with app.test_request_context("/admin/upload_experiment", method="POST"):
-            env.ecrud._import_im_upload(str(bad), "baduid", "bad-one", "")
+            im_upload.import_uploaded_experiment(str(bad), "baduid", "bad-one", "")
         assert db.session.query(Exps).filter_by(exp_name="bad-one").first() is None
         assert any("not valid" in m for m in flashes), flashes
         assert not bad.exists()

@@ -25,7 +25,7 @@ from y_web.tests.test_im_client_creation import (  # noqa: F401
 
 
 def _start_client(folder, name):
-    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.hpc import normalize_client_config as _normalize_im_client_config
     from y_web.src.im.validation import validate_im_folder
 
     cfg = Path(folder) / f"client_{name}-pop.json"

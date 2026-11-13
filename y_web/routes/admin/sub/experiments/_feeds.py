@@ -37,6 +37,7 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.content.avatars import (
     normalize_force_placeholder,
     normalize_forum_avatar_mode,
@@ -47,7 +48,6 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -359,17 +359,9 @@ def rss_feeds(uid):
         except IOError:
             url_feeds_data = []
 
-    is_im = is_im_experiment(experiment)
-    snapshot = None
-    if is_im:
-        from y_web.src.im.experiment_config import run_started
-
-        snapshot = {
-            "exists": os.path.isfile(
-                os.path.join(experiment_dir, "news_snapshot.jsonl")
-            ),
-            "locked": run_started(experiment_dir),
-        }
+    provider = registry.resolve(experiment.platform_type)
+    is_im = provider.news_page_feeds
+    snapshot = provider.feeds_context(experiment, experiment_dir) if is_im else None
     return render_template(
         "admin/rss_feeds.html",
         experiment=experiment,
@@ -415,9 +407,9 @@ def update_rss_feeds(uid):
     )
     _write_experiment_rss_feed_file(experiment_dir, resources)
 
-    if not is_im_experiment(
-        experiment
-    ):  # direct article URLs are a forum notion: IM pages read feeds
+    if not registry.resolve(
+        experiment.platform_type
+    ).news_page_feeds:  # direct article URLs are a forum notion: news pages read feeds
         urls_text = request.form.get("url_feeds_text", "")
         urls = [line.strip() for line in urls_text.splitlines() if line.strip()]
         with open(url_feeds_path, "w") as handle:
@@ -433,7 +425,7 @@ def update_rss_feeds(uid):
             ),
             "info",
         )
-    if is_im_experiment(experiment):
+    if registry.resolve(experiment.platform_type).news_page_feeds:
         flash(
             _(
                 "News feeds updated. Clients created from now on get a news page for each feed."
@@ -443,71 +435,6 @@ def update_rss_feeds(uid):
         return redirect(url_for("experiments.experiment_details", uid=uid))
     flash(_("Forum feed assignments updated successfully."), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
-
-
-@experiments.route("/admin/im_news_snapshot/<int:uid>", methods=["POST"])
-@login_required
-def im_news_snapshot(uid):
-    """Fetch the news feeds of an IM experiment and write its ``news_snapshot.jsonl`` (before the first start)."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-    back = redirect(url_for("experiments.rss_feeds", uid=uid))
-    if not is_im_experiment(experiment):
-        return back
-    from y_web.src.im import news
-    from y_web.src.im.experiment_config import run_started
-    from y_web.src.models import Page, Page_Population, Population_Experiment
-
-    if run_started(experiment_dir):
-        flash(
-            _("The run already started: reset the experiment to change its news."),
-            "error",
-        )
-        return back
-    urls = [feed["feed_url"] for feed in news.selected_feeds(experiment_dir)]
-    population_ids = [
-        link.id_population
-        for link in db.session.scalars(
-            select(Population_Experiment).filter_by(id_exp=experiment.idexp)
-        ).all()
-    ]
-    for link in db.session.scalars(
-        select(Page_Population).filter(
-            Page_Population.population_id.in_(population_ids)
-        )
-    ).all():
-        page = db.session.get(Page, link.page_id)
-        if page is not None and page.feed:
-            urls.append(page.feed)
-    if not urls:
-        flash(_("There are no feeds to read: select some RSS feeds first."), "warning")
-        return back
-    try:
-        result = news.write_snapshot(experiment_dir, urls, replace=True)
-    except Exception as exc:  # noqa: BLE001 - the page tells what happened
-        flash(
-            _("Could not write the news snapshot: %(error)s", error=str(exc)), "error"
-        )
-        return back
-    failed = [url for url, count in result["feeds"].items() if not count]
-    flash(
-        _(
-            "News snapshot written: %(n)s articles from %(f)s feeds.",
-            n=result["articles"],
-            f=len(result["feeds"]) - len(failed),
-        ),
-        "success" if result["written"] else "warning",
-    )
-    if failed:
-        flash(
-            _(
-                "No articles from: %(urls)s",
-                urls=", ".join(failed[:3]) + (" ..." if len(failed) > 3 else ""),
-            ),
-            "warning",
-        )
-    return back
 
 
 @experiments.route("/admin/api/parse_rss_feed", methods=["POST"])

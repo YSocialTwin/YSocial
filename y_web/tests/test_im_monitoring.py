@@ -21,7 +21,7 @@ from y_web.tests.test_im_client_creation import (  # noqa: F401  (fixtures and h
 
 def _spawn(folder, name="cl", edit=None):
     """Start the real client and return the process (the config is normalized and validated first)."""
-    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.hpc import normalize_client_config as _normalize_im_client_config
 
     cfg = Path(folder) / f"client_{name}-pop.json"
     if edit:

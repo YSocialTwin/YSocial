@@ -160,12 +160,17 @@ def test_the_block_is_escaped_and_empty_without_a_quote():
         "forum/components/posts.html",
         "forum/components/thread-post.html",
         "photo/components/posts.html",
-        "im/_message.html",
+        "@instant_messaging/im/_message.html",
     ],
 )
 def test_the_views_call_the_helper(path):
-    with open(os.path.join(TEMPLATES, path)) as fh:
-        text = fh.read()
+    if path.startswith("@instant_messaging/"):
+        from y_web.tests._platform_repos import platform_template
+
+        text = platform_template("YInstantMessaging", path.split("/", 1)[1])
+    else:
+        with open(os.path.join(TEMPLATES, path)) as fh:
+            text = fh.read()
     assert "federation_quote_block(federation_quote(exp_id" in text
 
 

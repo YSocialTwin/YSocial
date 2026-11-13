@@ -111,6 +111,82 @@
     "dating/unavailable.html": {
       "repo": "YDating",
       "to": "@dating/participant/unavailable.html"
+    },
+    "admin/clients_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/clients_im.html"
+    },
+    "admin/experiment_details_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/experiment_details_im.html"
+    },
+    "admin/opinion_configuration_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/opinion_configuration_im.html"
+    },
+    "admin/prompts_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/prompts_im.html"
+    },
+    "im/_avatar.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/_avatar.html"
+    },
+    "im/_menu.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/_menu.html"
+    },
+    "im/_message.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/_message.html"
+    },
+    "im/_sidebar.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/_sidebar.html"
+    },
+    "im/base.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/base.html"
+    },
+    "im/chat.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/chat.html"
+    },
+    "im/index.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/index.html"
+    },
+    "im/members.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/members.html"
+    },
+    "im/notice.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/notice.html"
+    },
+    "im/notifications.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/notifications.html"
+    },
+    "im/profile.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/profile.html"
+    },
+    "im/search.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/search.html"
+    },
+    "im/thread.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/thread.html"
+    },
+    "im/unavailable.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/im/unavailable.html"
+    },
+    "admin/_im_analytics_note.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/slots/analytics_notes.html"
     }
   },
   "url_map": {
@@ -150,11 +226,43 @@
       "/admin/update_dating_client/<int:uid> -> clientsr.update_dating_client",
       "/admin/update_dating_settings/<int:uid> -> experiments.update_dating_settings",
       "/admin/update_prompts_dating/<int:uid> -> experiments.update_prompts_dating"
+    ],
+    "YInstantMessaging": [
+      "/<int:exp_id>/im -> main.im_index",
+      "/<int:exp_id>/im/act -> main.im_act",
+      "/<int:exp_id>/im/api/chat/<chat_id>/history -> main.im_api_history",
+      "/<int:exp_id>/im/api/gateway -> main.im_api_gateway",
+      "/<int:exp_id>/im/api/link-preview -> main.im_api_link_preview",
+      "/<int:exp_id>/im/api/search -> main.im_api_search",
+      "/<int:exp_id>/im/api/status -> main.im_api_status",
+      "/<int:exp_id>/im/chat/<chat_id> -> main.im_chat",
+      "/<int:exp_id>/im/chat/<chat_id>/members -> main.im_members",
+      "/<int:exp_id>/im/chat/<chat_id>/topic/<int:topic_id> -> main.im_chat_topic",
+      "/<int:exp_id>/im/invite -> main.im_invite",
+      "/<int:exp_id>/im/notice -> main.im_notice",
+      "/<int:exp_id>/im/notifications -> main.im_notifications",
+      "/<int:exp_id>/im/profile/<account_id> -> main.im_profile",
+      "/<int:exp_id>/im/search -> main.im_search",
+      "/<int:exp_id>/im/thread/<message_id> -> main.im_thread",
+      "/admin/clients_im/<idexp> -> clientsr.clients_im",
+      "/admin/create_im_client -> clientsr.create_im_client_route",
+      "/admin/im/analytics/<int:idexp>/refresh -> experiments.im_analytics_refresh",
+      "/admin/im_artifact/<int:idexp>/<kind>/<path:name> -> experiments.im_artifact",
+      "/admin/im_export/<int:idexp> -> experiments.im_export",
+      "/admin/im_news_snapshot/<int:uid> -> experiments.im_news_snapshot",
+      "/admin/im_report/<int:idexp> -> experiments.im_report",
+      "/admin/prompts_im/<int:uid> -> experiments.prompts_im",
+      "/admin/reset_prompts_im/<int:uid> -> experiments.reset_prompts_im",
+      "/admin/update_im_advanced_settings/<int:uid> -> experiments.update_im_advanced_settings",
+      "/admin/update_prompts_im/<int:uid> -> experiments.update_prompts_im"
     ]
   },
   "known_platforms": {
     "YDating": [
       "dating"
+    ],
+    "YInstantMessaging": [
+      "instant_messaging"
     ]
   }
 }

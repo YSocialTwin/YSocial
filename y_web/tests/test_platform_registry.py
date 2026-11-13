@@ -6,8 +6,21 @@ from y_web.platforms import PlatformProvider, registry
 from y_web.tests import _platform_alias
 
 #: Dating is provided by its repository: what is said about it is checked where the repository is installed
+needs_im = pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
+    reason="YInstantMessaging is not installed",
+)
+#: the tests that compare the tables of every platform need both repositories (a test of one platform alone uses its mark)
 needs_dating = pytest.mark.skipif(
-    not _platform_alias.installed(), reason="YDating is not installed"
+    not (
+        _platform_alias.installed(_platform_alias.DATING)
+        and _platform_alias.installed(_platform_alias.INSTANT_MESSAGING)
+    ),
+    reason="YDating and YInstantMessaging are not both installed",
+)
+_needs_dating_only = pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.DATING),
+    reason="YDating is not installed",
 )
 
 
@@ -49,8 +62,8 @@ def test_a_provider_needs_a_key():
         ("microblogging", "/3/feed/7/feed/rf/1"),
         ("forum", "/3/rfeed/7/feed/rf/1"),
         ("photo_sharing", "/3/photo/feed/all/feed/rf/1"),
-        ("instant_messaging", None),
-        pytest.param("dating", None, marks=needs_dating),
+        pytest.param("instant_messaging", None, marks=needs_im),
+        pytest.param("dating", None, marks=_needs_dating_only),
     ],
 )
 def test_entry_url_of_each_built_in_platform(key, expected):
@@ -121,8 +134,9 @@ REACHABLE = (
         for platform in ("microblogging", "forum", "video_chat", None)
         for simulator in ("Standard", "HPC")
     ]
-    + [(p, "HPC") for p in ("photo_sharing", "instant_messaging")]
-    + [pytest.param("dating", "HPC", marks=needs_dating)]
+    + [("photo_sharing", "HPC")]
+    + [pytest.param("instant_messaging", "HPC", marks=needs_im)]
+    + [pytest.param("dating", "HPC", marks=_needs_dating_only)]
 )
 
 
@@ -143,8 +157,8 @@ def test_client_pages_and_modes_equal_the_previous_logic(platform, simulator):
         ("microblogging", True),
         ("photo_sharing", True),
         ("forum", False),
-        ("instant_messaging", False),
-        pytest.param("dating", False, marks=needs_dating),
+        pytest.param("instant_messaging", False, marks=needs_im),
+        pytest.param("dating", False, marks=_needs_dating_only),
     ],
 )
 def test_which_platforms_create_their_hpc_clients_with_the_generic_route(
@@ -501,7 +515,7 @@ def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypat
             "DatingConfigError",
             "generate_dating_server_config",
             "Invalid dating settings: boom",
-            marks=needs_dating,
+            marks=_needs_dating_only,
         ),
         (
             "forum",
@@ -510,12 +524,13 @@ def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypat
             "generate_forum_server_config",
             "Invalid forum settings: boom",
         ),
-        (
+        pytest.param(
             "instant_messaging",
             "y_web.routes.admin.sub.experiments._im",
             "ImConfigError",
             "generate_im_server_config",
             "Invalid instant messaging settings: boom",
+            marks=needs_im,
         ),
     ],
 )
@@ -579,6 +594,10 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
 
 
 @needs_dating
+@pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
+    reason="needs the YInstantMessaging repository",
+)
 def test_experiment_page_templates_and_variables_match_the_previous_logic():
     from y_web.platforms import registry
 
@@ -586,7 +605,7 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
         "microblogging": "admin/experiment_details.html",
         "forum": "admin/experiment_details_forum.html",
         "photo_sharing": "admin/experiment_details_photo.html",
-        "instant_messaging": "admin/experiment_details_im.html",
+        "instant_messaging": "@instant_messaging/admin/experiment_details_im.html",
         "dating": "@dating/admin/experiment_details_dating.html",
     }
     assert registry.resolve("unknown").details_template == (

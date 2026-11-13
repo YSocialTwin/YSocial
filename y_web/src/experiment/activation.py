@@ -91,7 +91,6 @@ def activate_experiment(
     """
     from y_web.platforms import registry
     from y_web.src.experiment.helpers import ensure_experiment_user
-    from y_web.src.im import is_im_experiment
 
     if exp.status == 1:
         return ActivationResult("already_active", "", changed=False)
@@ -106,8 +105,9 @@ def activate_experiment(
     done = ActivationResult(
         "activated", _("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name)
     )
-    if is_im_experiment(exp) or registry.resolve(exp.platform_type).owns_database:
-        # IM and dating own their database and have no YWeb participant row: nothing to bind or provision here
+    provider = registry.resolve(exp.platform_type)
+    if provider.owns_database or provider.has_participant_standin:
+        # these runtimes own their database and have no YWeb participant row: nothing to bind or provision here
         _ensure_user_experiment(admin_user_id, exp_id)
         return done
 

@@ -12,9 +12,20 @@ def delete_pictures_of(agent_ids: "Iterable[int]") -> "int":
     return target(agent_ids)
 
 
+def summarize_agent_custom_features_bulk(
+    agent_ids: "Iterable[int]",
+) -> "dict[int, dict]":
+    from y_web.src.agents.custom_features import (
+        summarize_agent_custom_features_bulk as target,
+    )
+
+    return target(agent_ids)
+
+
 __all__ = [
     "appearance_form",
     "delete_pictures_of",
     "population",
     "profile_pictures",
+    "summarize_agent_custom_features_bulk",
 ]

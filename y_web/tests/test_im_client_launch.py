@@ -40,7 +40,7 @@ def _folder(tmp_path):
 
 
 def test_normalizer_sets_only_runtime_keys_and_is_idempotent(tmp_path):
-    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.hpc import normalize_client_config as _normalize_im_client_config
 
     folder = _folder(tmp_path)
     path = folder / "client_cl-pop.json"
@@ -76,7 +76,7 @@ def test_normalizer_does_not_change_the_im_config_hash(tmp_path):
         )
     finally:
         sys.path.remove(str(IM_REPO))
-    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.hpc import normalize_client_config as _normalize_im_client_config
 
     folder = _folder(tmp_path)
     path = folder / "client_cl-pop.json"

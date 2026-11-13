@@ -22,6 +22,25 @@ def check_privileges(username):
     return target(username)
 
 
+def allocate_topics_by_percentage(topics, topic_percentages):
+    """Allocate topics to an agent based on specified interest percentages."""
+    from y_web.routes.admin.sub.clients._helpers import (
+        allocate_topics_by_percentage as target,
+    )
+
+    return target(topics, topic_percentages)
+
+
+def client_config_path_for_platform(
+    exp_dir: "str", exp, client_name: "str", population_name: "str"
+) -> "str":
+    from y_web.routes.admin.sub.clients._crud import (
+        _client_config_path_for_platform as target,
+    )
+
+    return target(exp_dir, exp, client_name, population_name)
+
+
 def current_admin_user_or_none():
     """Resolve current admin user or None if unavailable."""
     from y_web.routes.admin.sub.experiments._helpers import (
@@ -81,6 +100,15 @@ def load_ui_settings(exp_id: int) -> dict:
     return target(exp_id)
 
 
+def load_feed_experiment_context(uid, require_manage=True):
+    """Load an experiment with news-page feeds and its writable directory."""
+    from y_web.routes.admin.sub.experiments._helpers import (
+        _load_forum_experiment_context as target,
+    )
+
+    return target(uid, require_manage)
+
+
 def user_can_manage_experiment(admin_user, experiment):
     """Check if user can stop/delete an experiment."""
     from y_web.src.experiment.access import user_can_manage_experiment as target
@@ -96,14 +124,17 @@ def user_can_view_experiment(admin_user, experiment):
 
 
 __all__ = [
+    "allocate_topics_by_percentage",
     "build_client_creation_context",
     "check_privileges",
+    "client_config_path_for_platform",
     "current_admin_user_or_none",
     "experiment_configuration_update_required",
     "experiment_uses_llm_agents",
     "get_database_type",
     "get_experiment_folder",
     "get_experiment_folder_name",
+    "load_feed_experiment_context",
     "load_ui_settings",
     "user_can_manage_experiment",
     "user_can_view_experiment",

@@ -1,11 +1,12 @@
 """Dating fields of the admin agent form: custom features ``dating.*``, validation, availability (IR-D-05)."""
 
-from y_web.tests._platform_repos import platform_template
 import json
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+
+from y_web.tests._platform_repos import platform_template
 
 pytestmark = pytest.mark.integration
 

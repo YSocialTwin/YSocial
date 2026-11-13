@@ -1439,15 +1439,13 @@ def monitor_hpc_client_execution_logs():
                                 f"PID {getattr(client, 'pid', None)} no longer alive "
                                 f"for client {client.name}"
                             )
-                            if (
-                                getattr(exp, "platform_type", None)
-                                == "instant_messaging"
-                            ):
-                                from y_web.src.im.failures import failure_reason
+                            from y_web.platforms import registry
 
-                                logged = failure_reason(execution_log_path)
-                                if logged:
-                                    reason = f"{reason}; {logged}"
+                            logged = registry.resolve(
+                                getattr(exp, "platform_type", None)
+                            ).failure_reason(execution_log_path)
+                            if logged:
+                                reason = f"{reason}; {logged}"
                             print(f"[HPC Monitor] {reason}")
                             if _mark_hpc_client_as_failed(
                                 exp.idexp, client.id, reason=reason

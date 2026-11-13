@@ -571,7 +571,7 @@ def _run_client(folder, name, timeout, kill_after=None):
     import sys
     import time
 
-    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.hpc import normalize_client_config as _normalize_im_client_config
     from y_web.src.im.validation import validate_im_folder
 
     cfg = Path(folder) / f"client_{name}-pop.json"
@@ -822,7 +822,7 @@ def test_a_client_with_typed_chats_passes_yim_validate(app, env):
     if not (IM_REPO / "run_server.py").is_file():
         pytest.skip("YInstantMessaging is not installed")
     from y_web import db
-    from y_web.src.hpc.client import _normalize_im_client_config
+    from y_web.src.im.hpc import normalize_client_config as _normalize_im_client_config
     from y_web.src.im.validation import validate_im_folder
     from y_web.src.models import Topic_List
 

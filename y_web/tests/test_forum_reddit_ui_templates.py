@@ -119,9 +119,13 @@ def test_federated_repost_wiring():
     for rel in (
         "microblogging/components/posts.html",
         "photo/components/posts.html",
-        "im/_message.html",
     ):
         assert "ws_repost_button" in (root / "templates" / rel).read_text(), rel
+    from y_web.tests._platform_repos import platform_template
+
+    assert "ws_repost_button" in platform_template(
+        "YInstantMessaging", "im/_message.html"
+    )
     assert (root / "static/assets/js/world-simulation-repost.js").exists()
 
 

@@ -67,7 +67,10 @@ def core_and_platform_loader():
         f"@{key}": jinja2.FileSystemLoader(
             str(EXTERNAL / repo / "ysocial_platform" / "templates")
         )
-        for key, repo in (("dating", "YDating"),)
+        for key, repo in (
+            ("dating", "YDating"),
+            ("instant_messaging", "YInstantMessaging"),
+        )
         if (EXTERNAL / repo / "ysocial_platform" / "templates").is_dir()
     }
     return jinja2.ChoiceLoader(

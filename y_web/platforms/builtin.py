@@ -9,9 +9,9 @@ from typing import Any, List, Mapping, Optional, Tuple
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.platforms.base import (
+    COMMON_FRONTEND_CAPABILITIES,
     HPC,
     STANDARD,
-    COMMON_FRONTEND_CAPABILITIES,
     CreationRules,
     PlatformConfigError,
     PlatformProvider,
@@ -305,192 +305,10 @@ class PhotoSharing(PlatformProvider):
         return list(exp_dir.glob(f"client_{client.name}-*.state.json"))
 
 
-class InstantMessaging(PlatformProvider):
-    key = "instant_messaging"
-    label = N_("Instant messaging")
-    icon = "send"
-    order = 40
-
-    def opinion_mode(self, simulator_type: str) -> str:
-        return "im"
-
-    def prompts_page(self, simulator_type: str) -> str:
-        return "experiments.prompts_im"
-
-    def creation_rules(self, simulator_type: str) -> CreationRules:
-        # IM has its own annotation and analytics model; the YSocial toggles do not apply (plan, 5.2)
-        return CreationRules(
-            forced={
-                "opinion_dynamics_enabled": False,
-                "toxicity_annotation": False,
-                "perspective_api": None,
-                "sentiment_annotation": False,
-                "emotion_annotation": False,
-                "redis_enabled": False,
-            },
-            remote_error=_("Remote instant messaging experiments are not supported."),
-            database="own",
-            sqlite_only_note="Instant messaging experiments use SQLite even if the platform uses PostgreSQL",
-        )
-
-    details_template = "admin/experiment_details_im.html"
-    frontend_capabilities = COMMON_FRONTEND_CAPABILITIES | {
-        "interactions_enabled",
-        "interaction_share",  # forwarding
-        "notifications_menu",
-        "annotations_enabled",  # topics, sentiment, toxicity and emotion chips on messages
-        "annotation_topics",
-        "annotation_sentiment",
-        "annotation_toxicity",
-        "annotation_emotions",
-        "annotation_agent_type",  # agent / human badge on messages
-        "annotation_author_type",
-        "profile_topics_box",
-        "infinite_scroll_enabled",
-        "im_show_forward_origin",
-        "im_show_reactions",
-        "im_show_member_roles",
-        "im_default_view",
-        "im_allow_time_travel",
-        "im_public_observer_enabled",
-        "im_participant_mode_enabled",
-        "im_participant_notice",
-        "im_participant_poll_seconds",
-    }
-    # the chat page controls belong to this platform only
-    frontend_exclusive_settings = frozenset(
-        key for key in frontend_capabilities if key.startswith("im_")
-    )
-    details_context_keys = ("im_analytics", "im_advanced", "im_switches")
-
-    def details_context(self, experiment: Any) -> dict:
-        from y_web.sdk import services
-
-        context = {"im_analytics": None, "im_advanced": None, "im_switches": None}
-        # the analytics cards follow the tables of the derived database, like every other platform's pages follow theirs
-        try:
-            from y_web.src.im import analytics
-
-            analytics.ensure_derived(experiment)
-            context["im_analytics"] = analytics.cards(experiment)
-        except Exception:
-            context["im_analytics"] = {"state": {"state": "failed", "message": ""}}
-        try:
-            from y_web.src.im.experiment_config import read_advanced_settings
-
-            context["im_advanced"] = read_advanced_settings(
-                services.experiment_folder(experiment)
-            )
-        except Exception:
-            context["im_advanced"] = None
-        try:
-            from y_web.src.im.exp_stats import refresh_exp_stats
-
-            refresh_exp_stats(experiment)
-        except Exception:
-            services.db_session().rollback()
-        try:
-            from y_web.src.im.experiment_config import (
-                load_server_config,
-                read_switches,
-            )
-            from y_web.src.im.participant import experiment_folder
-
-            context["im_switches"] = read_switches(
-                load_server_config(experiment_folder(experiment))
-            )
-        except Exception:
-            context["im_switches"] = None
-        return context
-
-    def observer_url(self, exp_id: int) -> Optional[str]:
-        # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
-        return f"/{exp_id}/im"
-
-    def validate_before_start(self, exp: Any) -> Optional[str]:
-        from y_web.sdk import services
-        from y_web.src.im.validation import ImValidationError, validate_im_folder
-
-        try:
-            validate_im_folder(services.hpc_experiment_folder(exp))
-        except ImValidationError as exc:
-            return _("The instant messaging configuration is not valid: %(why)s") % {
-                "why": "; ".join(exc.messages[:5])
-            }
-        return None
-
-    def folder_clone(self):
-        from y_web.src.im.clone import copy_im_folder, new_uid
-
-        return copy_im_folder, new_uid
-
-    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
-        from y_web.routes.admin.sub.experiments._im import (
-            ImConfigError,
-            generate_im_server_config,
-        )
-
-        try:
-            # run length, start date and round length come from the client form; humans can register
-            # at any time, so the gateway is always part of an IM experiment
-            return generate_im_server_config(
-                exp_name=request.exp_name,
-                db_uri=request.db_uri,
-                data_path=request.data_path,
-                is_remote=request.is_remote,
-                toxicity_annotation=request.toxicity_annotation,
-                sentiment_annotation=request.sentiment_annotation,
-                emotion_annotation=request.emotion_annotation,
-                opinion_dynamics_enabled=request.opinion_dynamics_enabled,
-            )
-        except ImConfigError as exc:
-            raise PlatformConfigError(
-                _("Invalid instant messaging settings: %(why)s", why=str(exc))
-            ) from exc
-
-    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
-        if not available.get("instant_messaging"):
-            return HPC, _(
-                "Instant messaging experiments are unavailable because YInstantMessaging is not present."
-            )
-        return HPC, None
-
-    def hpc_client_files(self, exp_folder: str, client: Any, population: Any):
-        config, agents, _ = super().hpc_client_files(exp_folder, client, population)
-        return config, agents, os.path.join(exp_folder, "prompts_im.json")
-
-    def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
-        from y_web.src.im.validation import validate_im_folder
-
-        validate_im_folder(exp_folder, runtime_dir)
-
-    def after_hpc_server_started(self, exp: Any) -> None:
-        from y_web.src.hpc.server import _start_im_gateway_when_ready
-
-        _start_im_gateway_when_ready(exp)
-
-    def stop_hpc_gateway(self, exp_folder: str) -> None:
-        # reverse of the start order: gateway first, then the server (plan 4.8)
-        from y_web.src.im.gateway_process import stop_gateway
-
-        stop_gateway(exp_folder)
-
-    def start_hpc_gateway(self, exp_folder: str) -> None:
-        from y_web.src.hpc.client import _start_im_human_gateway
-
-        _start_im_human_gateway(exp_folder)  # server -> gateway -> clients (plan 4.8)
-
-    def clients_page(self, simulator_type: str) -> str:
-        return "clientsr.clients_im"
-
-    generic_hpc_client_creation = False
-
-
 def register_builtin_platforms() -> None:
     for provider in (
         Microblogging(),
         Forum(),
         PhotoSharing(),
-        InstantMessaging(),
     ):
         register(provider)

@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from y_web.tests._platform_repos import platform_template, platform_static_path
+from y_web.tests._platform_repos import platform_static_path, platform_template
 from y_web.tests.dating_fixture import SENTINELS, build_dating_db
 from y_web.tests.test_im_admin_pages import im_app  # noqa: F401
 

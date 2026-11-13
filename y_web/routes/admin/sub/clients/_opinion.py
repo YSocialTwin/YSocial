@@ -21,7 +21,6 @@ from sqlalchemy import (
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.platforms import registry as platforms
-from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     AgeClass,
     Client,
@@ -56,10 +55,8 @@ def _opinion_route(mode):
 
 
 def _population_file_name(exp, population):
-    """The population file of a client: IM keeps the population name as it is, the others drop the spaces."""
-    if is_im_experiment(exp):
-        return f"{population.name}.json"
-    return f"{population.name.replace(' ', '')}.json"
+    """The population file of a client, named as the platform of the experiment names it."""
+    return platforms.resolve(exp.platform_type).population_file_name(population)
 
 
 def _opinion_configuration_internal(idexp, expected_mode):
@@ -254,8 +251,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
         "standard": "admin/opinion_configuration.html",
         "forum": "admin/opinion_configuration_forum.html",
         "hpc": "admin/opinion_configuration_hpc.html",
-        "im": "admin/opinion_configuration_im.html",
-    }[expected_mode]
+    }.get(expected_mode) or platforms.resolve(exp.platform_type).opinion_template
 
     return render_template(
         template_name,

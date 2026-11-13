@@ -71,14 +71,13 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
 
     Raises :class:`ResetError` when the experiment is running or is not a SQLite Standard / HPC experiment.
     """
+    from y_web.platforms import registry
     from y_web.routes.admin.sub.experiments._helpers import (
         _get_database_type,
         _get_experiment_folder,
         clear_experiment_log_files,
     )
-    from y_web.platforms import registry
     from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-    from y_web.src.im import is_im_experiment
     from y_web.src.models import (
         Client,
         Client_Execution,
@@ -129,15 +128,10 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
     exp_folder = _get_experiment_folder(get_writable_path(), exp, db_type)
     failed: List[str] = []
     removed = 0
-    if is_im_experiment(exp):
-        from y_web.src.im.clone import clear_im_run_artifacts
-
-        removed, failed = clear_im_run_artifacts(exp_folder)
-    else:
-        cleared = registry.resolve(exp.platform_type).clear_run_artifacts(exp_folder)
-        removed, failed = (
-            cleared if cleared is not None else clear_experiment_log_files(exp_folder)
-        )
+    cleared = registry.resolve(exp.platform_type).clear_run_artifacts(exp_folder)
+    removed, failed = (
+        cleared if cleared is not None else clear_experiment_log_files(exp_folder)
+    )
     failed = list(failed)
 
     database = "removed (the server creates it at start)"

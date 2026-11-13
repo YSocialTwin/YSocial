@@ -21,9 +21,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 # the Dating modules live in their own repository: keep the old import names for the tests that drive them
 from y_web.tests import _platform_alias  # noqa: E402
 
-collect_ignore = (
-    [] if _platform_alias.install() else list(_platform_alias.NEEDS_REPOSITORY)
-)
+_platform_alias.install()
+collect_ignore = _platform_alias.absent_tests()
 
 
 def pytest_collection_modifyitems(config, items):

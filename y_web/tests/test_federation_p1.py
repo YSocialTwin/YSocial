@@ -5,8 +5,9 @@ import pathlib
 import sqlite3
 from types import SimpleNamespace
 
-from y_web.tests._platform_repos import platform_static_path
 import pytest
+
+from y_web.tests._platform_repos import platform_static_path
 
 pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
 

@@ -1,6 +1,6 @@
 import json
 
-from y_web.routes.admin.sub.clients import _execution, _im
+from y_web.src.im import hpc as im_hpc
 from y_web.src.im.experiment_config import apply_time_parameters, load_server_config
 
 
@@ -12,10 +12,10 @@ def test_extension_grows_the_server_run_length(tmp_path, monkeypatch):
     (tmp_path / "server_config.json").write_text(
         json.dumps({"simulation": {"num_days": 1}})
     )
-    monkeypatch.setattr(_im, "_experiment_folder", lambda exp: str(tmp_path))
-    _execution._extend_im_server_run(_Exp(), 11)
+    monkeypatch.setattr(im_hpc, "experiment_folder", lambda exp: str(tmp_path))
+    im_hpc.extend_server_run(_Exp(), 11)
     assert load_server_config(str(tmp_path))["simulation"]["num_days"] == 11
-    _execution._extend_im_server_run(_Exp(), 5)  # never shortens
+    im_hpc.extend_server_run(_Exp(), 5)  # never shortens
     assert load_server_config(str(tmp_path))["simulation"]["num_days"] == 11
 
 

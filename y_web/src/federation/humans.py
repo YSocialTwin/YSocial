@@ -16,8 +16,8 @@ from __future__ import annotations
 import json
 from typing import Callable, Optional
 
-from y_web.platforms import registry
 from y_web import db
+from y_web.platforms import registry
 from y_web.src.federation import service
 from y_web.src.federation.service import WorldSimulationError
 
@@ -79,8 +79,13 @@ def _ensure_micro_like(platform_type, exp, user, hid, session=None, offline=None
 
 
 def _ensure_im(platform_type, exp, user, hid, session=None, offline=None):
-    from y_web.src.im import human_identity
-    from y_web.src.im.gateway_client import GatewayClient, GatewayUnavailable
+    provider = registry.resolve(platform_type)
+    human_identity = provider.library("human_identity")
+    gateway_client = provider.library("gateway_client")
+    GatewayClient, GatewayUnavailable = (
+        gateway_client.GatewayClient,
+        gateway_client.GatewayUnavailable,
+    )
 
     folder = str(service.experiment_dir(exp))
     uid = human_identity.experiment_uid(exp)
@@ -291,7 +296,7 @@ def enrol(
 
 
 def confirm_account(fed, user_id, member) -> bool:
-    """A pending account (dating) now exists: the person joined. True when the record changed."""
+    """A pending account now exists: the person joined. True when the record changed."""
     FederationHuman, _ = _models()
     human = (
         db.session.query(FederationHuman)

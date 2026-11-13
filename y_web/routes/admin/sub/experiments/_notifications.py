@@ -37,6 +37,7 @@ from sqlalchemy import func, select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -44,8 +45,6 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-from y_web.platforms import registry
-from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -201,11 +200,7 @@ def _zip_experiment_folder(experiment, folder, output_base):
     """Write ``<output_base>.zip`` with an experiment folder; platforms that keep a live database zip a snapshot."""
     staging = f"{output_base}_im_snapshot"
     try:
-        if is_im_experiment(experiment):
-            from y_web.src.im.clone import snapshot_for_download
-
-            snapshot_for_download(folder, staging)
-        elif not registry.resolve(experiment.platform_type).snapshot_for_download(
+        if not registry.resolve(experiment.platform_type).snapshot_for_download(
             folder, staging
         ):
             shutil.make_archive(output_base, "zip", folder)

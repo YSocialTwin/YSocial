@@ -913,11 +913,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
             validate_runtime_repo(repo_key, admin_user.username)
             flash(_("Validated %(label)s.", label=spec.label), "success")
             _run_suite_schema_migration(repo_key)
+            from y_web.platforms.discovery import platform_restart_required
             from y_web.src.external_runtime.backend_plugins import (
                 suite_restart_required,
             )
-
-            from y_web.platforms.discovery import platform_restart_required
 
             if suite_restart_required(repo_key) or platform_restart_required(repo_key):
                 flash(

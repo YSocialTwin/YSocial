@@ -1,11 +1,11 @@
 """Admin agent form: optional Appearance (with the profile picture) and platform-specific sections (as in populations)."""
 
-from y_web.tests._platform_repos import platform_template
 import json
 from pathlib import Path
 
 import pytest
 
+from y_web.tests._platform_repos import platform_template
 from y_web.tests.test_dating_agent_form import STANDARD, _post, agents_mod  # noqa: F401
 
 pytestmark = pytest.mark.integration

@@ -20,7 +20,19 @@ def folder(tmp_path, monkeypatch):
     return run
 
 
-def test_the_sidecar_is_registered_beside_the_run_database(folder):
+def _im(monkeypatch, im_ids=(7,)):
+    """``_provider_of_experiment_id`` answers with a provider that has a sidecar for the given experiment ids."""
+    with_sidecar = SimpleNamespace(scenario_sidecar_file="scenario_design_im.db")
+    without = SimpleNamespace(scenario_sidecar_file=None)
+    monkeypatch.setattr(
+        ctx,
+        "_provider_of_experiment_id",
+        lambda exp_id: with_sidecar if exp_id in im_ids else without,
+    )
+
+
+def test_the_sidecar_is_registered_beside_the_run_database(folder, monkeypatch):
+    _im(monkeypatch)
     app = SimpleNamespace(config={"SQLALCHEMY_BINDS": {}})
     db_name = "experiments/uid/database_server.db"
     assert (
@@ -36,7 +48,7 @@ def test_the_sidecar_is_registered_beside_the_run_database(folder):
 
 
 def test_only_scenario_design_requests_of_im_experiments_use_it(monkeypatch):
-    monkeypatch.setattr(ctx, "_is_im_experiment_id", lambda exp_id: exp_id == 7)
+    _im(monkeypatch)
     for blueprint, exp_id, expected in (
         ("scenario_design", 7, True),
         ("scenario_design", 8, False),  # another platform: the usual database

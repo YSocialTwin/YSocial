@@ -4,8 +4,6 @@ import threading
 
 from sqlalchemy import Integer, create_engine, inspect, text
 
-from y_web.src.im import IM_MARKER_TABLE
-
 
 def _platform_marker_tables():
     """Marker tables of the installed platforms that create their own run database."""
@@ -378,13 +376,8 @@ def ensure_sqlite_experiment_schema(db_path: str) -> bool:
         conn = sqlite3.connect(db_path, timeout=30.0)
         try:
             conn.execute("PRAGMA busy_timeout = 30000")
-            # Never touch an instant messaging database (it is not a YSocial experiment database).
-            if conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
-                (IM_MARKER_TABLE,),
-            ).fetchone():
-                return False
-            # ... nor the database of a platform that keeps its own (its rounds/user_mgmt tables differ from YSocial's)
+            # Never touch the database of a platform that keeps its own (it is not a YSocial experiment database:
+            # its rounds/user_mgmt tables differ from YSocial's)
             for marker in _platform_marker_tables():
                 if conn.execute(
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
@@ -454,8 +447,6 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> bool:
     engine = create_engine(db_uri)
     try:
         with engine.begin() as conn:
-            if _postgres_existing_columns(conn, IM_MARKER_TABLE):
-                return False  # an instant messaging database: never alter it
             for marker in _platform_marker_tables():
                 if _postgres_existing_columns(conn, marker):
                     return False  # the database of a platform that keeps its own: never alter it

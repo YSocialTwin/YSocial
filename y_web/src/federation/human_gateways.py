@@ -1,5 +1,5 @@
 """Clients of the human gateways of microblogging, forum and photo sharing (F8, H3), written in the style of
-``y_web.src.im.gateway_client``: loopback HTTP with a token, and the runtime's offline script when no gateway answers
+the gateway client of the instant messaging repository: loopback HTTP with a token, and the runtime's offline script when no gateway answers
 and no server runs. YWeb never writes the runtime databases.
 
 The three runtimes differ (``SPECS``): the microblogging gateway is a set of routes of the server itself (the token is

@@ -778,127 +778,6 @@ def change_active_experiment(exp_id):
     return redirect("/admin/dashboard")
 
 
-def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
-    """Register an uploaded instant messaging experiment (plan, 5.6): validated, never given the YSocial schema.
-
-    Only the experiment is registered; clients and populations are created again from the admin pages.
-    """
-    from y_web.src.im.clone import clear_im_run_artifacts, rewrite_server_config
-    from y_web.src.im.validation import ImValidationError, validate_im_folder
-    from y_web.src.system.path_utils import get_writable_path
-
-    def refuse(message):
-        shutil.rmtree(exp_dir, ignore_errors=True)
-        flash(message)
-        return redirect(request.referrer or url_for("admin.dashboard"))
-
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        return refuse(
-            _("Instant messaging experiments are not supported with PostgreSQL.")
-        )
-    try:
-        with open(
-            os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8"
-        ) as handle:
-            config = json.load(handle)
-    except (OSError, ValueError):
-        return refuse(
-            _(
-                "The uploaded instant messaging experiment has no readable server configuration."
-            )
-        )
-
-    name = exp_name_override or str(config.get("experiment_name") or "").strip()
-    if not name:
-        return refuse(_("The uploaded experiment has no name. Please provide one."))
-    if db.session.scalars(select(Exps).filter_by(exp_name=name)).first():
-        return refuse(
-            _(
-                "The experiment already exists. Please check the experiment name and try again."
-            )
-        )
-    suggested_port = get_suggested_port()
-    if not suggested_port:
-        return refuse(
-            _(
-                "Error: No available port found in range 5000-6000. Cannot upload experiment."
-            )
-        )
-
-    # an uploaded run is imported as inputs only: a database or state from another installation is dropped
-    clear_im_run_artifacts(exp_dir)
-    try:
-        validate_im_folder(exp_dir)
-        for item in sorted(os.listdir(exp_dir)):
-            if (
-                item.startswith("client_")
-                and item.endswith(".json")
-                and ".state." not in item
-            ):
-                validate_im_folder(exp_dir, client_config=item)
-    except ImValidationError as exc:
-        return refuse(
-            _(
-                "The uploaded instant messaging experiment is not valid: %(errors)s",
-                errors="; ".join(exc.messages),
-            )
-        )
-    except (
-        Exception
-    ) as exc:  # yim-validate unavailable: do not register what cannot be checked
-        current_app.logger.warning("yim-validate could not run for an upload: %s", exc)
-        return refuse(
-            _("The uploaded instant messaging experiment could not be validated.")
-        )
-
-    folder = os.path.join(get_writable_path(), "y_web", "experiments", uid)
-    rewrite_server_config(
-        exp_dir, name, os.path.join(folder, "database_server.db"), folder + os.sep
-    )
-    config_path = os.path.join(exp_dir, "server_config.json")
-    with open(config_path, "r", encoding="utf-8") as handle:
-        config = json.load(handle)
-    config.setdefault("server", {})["port"] = suggested_port
-    with open(config_path, "w", encoding="utf-8") as handle:
-        json.dump(config, handle, indent=2)
-    prompt_language = None
-    try:
-        with open(
-            os.path.join(exp_dir, "prompt_language.json"), "r", encoding="utf-8"
-        ) as handle:
-            prompt_language = json.load(handle).get("prompt_language")
-    except (OSError, ValueError, AttributeError):
-        pass
-
-    exp = Exps(
-        exp_name=name,
-        db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
-        prompt_language=prompt_packs.resolve(prompt_language),
-        owner=current_user.username,
-        exp_descr="",
-        status=0,
-        running=0,
-        port=suggested_port,
-        server=(config.get("server") or {}).get("host", "127.0.0.1"),
-        platform_type="instant_messaging",
-        llm_agents_enabled=1,
-        simulator_type="HPC",
-        exp_group=exp_group,
-    )
-    db.session.add(exp)
-    db.session.commit()
-    db.session.add(
-        Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped")
-    )
-    db.session.commit()
-    flash(
-        _(
-            "Instant messaging experiment imported. Create its clients from the experiment page."
-        )
-    )
-    return redirect(request.referrer or url_for("admin.dashboard"))
-
-
 @experiments.route("/admin/upload_experiment", methods=["POST"])
 @login_required
 def upload_experiment():
@@ -952,11 +831,6 @@ def upload_experiment():
                     # Remove the subdirectory (will fail if not empty, which is ok)
                     shutil.rmtree(subdir, ignore_errors=True)
                     break
-
-    from y_web.src.im.clone import is_im_folder
-
-    if is_im_folder(exp_dir):
-        return _import_im_upload(exp_dir, uid, exp_name_override, exp_group)
 
     for provider in registry.providers():
         if provider.owns_uploaded_folder(exp_dir):
@@ -5275,7 +5149,7 @@ def _create_im_experiment_copy(
     source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
     """Clone an instant messaging or dating experiment: inputs only, no database, state or logs (plan, 5.6)."""
-    from y_web.src.im.clone import rewrite_server_config
+    from y_web.sdk.runtime import rewrite_server_config
     from y_web.src.system.path_utils import get_writable_path
 
     copy_im_folder, new_uid = registry.resolve(source_exp.platform_type).folder_clone()

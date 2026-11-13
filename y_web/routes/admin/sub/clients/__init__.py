@@ -6,7 +6,6 @@ from . import (
     _details,
     _execution,
     _forum_hpc,
-    _im,
     _opinion,
     _recsys,
 )

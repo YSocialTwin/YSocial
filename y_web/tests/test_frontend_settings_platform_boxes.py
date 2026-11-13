@@ -24,11 +24,18 @@ PLATFORMS = [
     "microblogging",
     "forum",
     "photo_sharing",
-    "instant_messaging",
+    pytest.param(
+        "instant_messaging",
+        marks=pytest.mark.skipif(
+            not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
+            reason="YInstantMessaging is not installed",
+        ),
+    ),
     pytest.param(
         "dating",
         marks=pytest.mark.skipif(
-            not _platform_alias.installed(), reason="YDating is not installed"
+            not _platform_alias.installed(_platform_alias.DATING),
+            reason="YDating is not installed",
         ),
     ),
 ]

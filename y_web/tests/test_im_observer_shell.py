@@ -29,13 +29,9 @@ def test_dark_mode_button_is_outside_the_menu_for_everyone(observer):
 
 
 def test_wallpaper_is_neutral_not_green(observer):
-    import os
+    from y_web.tests._platform_repos import platform_static_path
 
-    css = open(
-        os.path.join(
-            os.path.dirname(__file__), "..", "static", "assets", "css", "im.css"
-        )
-    ).read()
+    css = platform_static_path("YInstantMessaging", "css/im.css").read_text("utf-8")
     assert "--im-wall-2" not in css and "#c6dca0" not in css and "#a9c98a" not in css
     assert "radial-gradient" not in css
 

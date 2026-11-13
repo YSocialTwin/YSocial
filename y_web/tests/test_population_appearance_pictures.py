@@ -5,6 +5,7 @@ import os
 
 import pytest
 
+from y_web.tests import _platform_alias
 from y_web.tests._platform_repos import platform_template
 from y_web.tests.test_dating_population import routes  # noqa: F401
 from y_web.tests.test_population_platform_fields import _standard_population
@@ -636,17 +637,16 @@ def test_the_photo_and_forum_frontends_show_the_generated_picture(app, media):
         )  # the current logic
 
 
+@pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
+    reason="needs the YInstantMessaging repository",
+)
 def test_the_im_avatar_shows_the_picture_when_there_is_one(app):
-    from pathlib import Path
-
-    import jinja2
-
-    root = Path(__file__).resolve().parents[1] / "templates"
-    env = app.jinja_env.overlay(loader=jinja2.FileSystemLoader(str(root)))
+    env = app.jinja_env.overlay()
     env.globals["agent_picture"] = lambda name: (
         "/media/agents/5.png" if name == "Ann" else ""
     )
-    macro = env.get_template("im/_avatar.html").module.avatar
+    macro = env.get_template("@instant_messaging/im/_avatar.html").module.avatar
     with app.test_request_context("/"):
         assert 'src="/media/agents/5.png"' in str(macro("Ann", 10, "sm"))
         assert ">BL<" in str(macro("Bo Li", 10, "sm"))

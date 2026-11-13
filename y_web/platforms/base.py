@@ -205,6 +205,18 @@ class PlatformProvider:
 
         services.sync_client_duration(client_config, client)
 
+    def normalize_hpc_client_config(
+        self, exp_folder: str, client_name: str, population_name: str, client_path: str
+    ) -> bool:
+        """Align a client file with the runtime before it starts; ``True`` when the platform did it itself."""
+        return False
+
+    def validate_hpc_client(
+        self, exp_folder: str, runtime_dir: str, client_config: str
+    ) -> bool:
+        """Check the folder and the client file before a client starts; ``True`` when the platform did it itself."""
+        return False
+
     def start_hpc_gateway(self, exp_folder: str) -> None:
         """Start what must run between the HPC server and its clients (the human gateway of a platform)."""
 
@@ -368,6 +380,79 @@ class PlatformProvider:
         write in place; a platform with a strict schema writes its own keys and returns ``True``.
         """
         return False
+
+    # --- admin: settings, analytics and the files of an experiment kept by the platform's runtime --------------------
+
+    #: whether the experiment page offers the memory settings without the Agent Memory plugin (the runtime has its own)
+    configures_memory: bool = False
+    #: Template of the opinion-configuration page, when the platform has its own (None: the core's page for the mode).
+    opinion_template: Optional[str] = None
+
+    #: whether the platform's pages read the experiment's feeds as news pages (no direct article URLs)
+    news_page_feeds: bool = False
+
+    #: whether the opinion pages read a derived analytics database built from the runtime's own, and the experiment
+    #: has no opinion rows for the core to seed
+    derived_analytics: bool = False
+
+    #: file of the experiment folder holding the drafts of Scenario Design when the runtime owns its database
+    scenario_sidecar_file: Optional[str] = None
+
+    def apply_client_switches(self, client_config: dict, **switches: Any) -> bool:
+        """Write the behaviour switches of the experiment page into a client ``client_config``.
+
+        ``True`` when the platform wrote its own keys (the generic mapping is skipped).
+        """
+        return False
+
+    def apply_stress_reward_settings(
+        self, config: dict, stress_reward_config: Mapping[str, Any]
+    ) -> bool:
+        """Mirror the stress/reward settings into the server ``config`` keys the runtime reads."""
+        return False
+
+    def population_file_name(self, population: Any) -> str:
+        """Name of the file a client reads its population from."""
+        return f"{population.name.replace(' ', '')}.json"
+
+    #: whether the runtime keeps no per-user row for the experiment: :meth:`participant_without_row` stands for it
+    has_participant_standin: bool = False
+
+    def participant_without_row(
+        self, experiment: Any, user_id: Any, username: Any
+    ) -> Any:
+        """Stand-in for a participant (``id``, ``username``, ``account_id``), or ``None`` when the user is unknown."""
+        return None
+
+    def bind_database(self, app: Any, exp_id: int, db_name: str) -> bool:
+        """Bind (or deliberately leave unbound) the database of an experiment; ``False`` leaves it to the core."""
+        return False
+
+    def extend_server_run(self, exp: Any, total_days: int) -> bool:
+        """Grow the run length held by the server configuration; ``True`` when the platform keeps one."""
+        return False
+
+    def failure_reason(self, log_path: str) -> str:
+        """One line on why a client died, from its execution log, or ``''``."""
+        return ""
+
+    def opinion_database_name(self, experiment: Any) -> Optional[str]:
+        """Database the opinion pages read when it is not the experiment's own, else ``None``."""
+        return None
+
+    def annotation_problem(self, experiment: Any, label: str) -> str:
+        """Error stored by the annotator of ``label`` (a missing library, say), else ``''``."""
+        return ""
+
+    def stress_reward_enabled(
+        self, experiment: Any, experiment_dir: str, for_settings: bool
+    ) -> Optional[bool]:
+        """Whether stress/reward is on for the platform's pages; ``None`` leaves it to the generic setting."""
+        return None
+
+    def feeds_context(self, experiment: Any, experiment_dir: str) -> Optional[dict]:
+        """What the feeds page shows besides the feed collections (platform specific), or ``None``."""
+        return None
 
     def attach_routes(self) -> None:
         """Import the modules that add views to the blueprints of the core (see :mod:`y_web.sdk.routes`).

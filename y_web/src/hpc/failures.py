@@ -1,7 +1,7 @@
-"""Why an instant messaging client stopped: the last ERROR record of its execution log (plan, 5.4).
+"""Why an HPC client stopped: the last ERROR record of its execution log (plan, 5.4).
 
-The client writes, before any exit other than 0 and 130, a record with ``level: "ERROR"``,
-``error_type``, ``error_message`` and ``exit_code`` (``docs/logging.md`` of YInstantMessaging).
+The runtimes write, before any exit other than 0 and 130, a record with ``level: "ERROR"``, ``error_type``,
+``error_message`` and ``exit_code`` (the reference of the exit codes is the ``docs/logging.md`` of the runtime).
 """
 
 import json
@@ -81,14 +81,3 @@ def describe_client_failure(
         "detail": detail,
         "message": (lambda m: m.get(code, m[1]))(exit_messages()),
     }
-
-
-def failure_reason(execution_log_path: Optional[str]) -> Optional[str]:
-    """One line for logs and cards, or ``None`` when the log says nothing."""
-    info = describe_client_failure(execution_log_path)
-    if info is None:
-        return None
-    text = f"exit code {info['exit_code']}: {info['message']}"
-    if info["detail"]:
-        text += f" ({info['detail']})"
-    return text

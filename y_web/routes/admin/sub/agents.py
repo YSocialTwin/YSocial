@@ -17,11 +17,11 @@ from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
-from y_web.platforms import registry
-from y_web.src.agents import appearance_form as af
 from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
+from y_web.src.agents import appearance_form as af
 from y_web.src.agents.custom_features import (
     delete_agent_custom_features,
     encode_opinion_feature,

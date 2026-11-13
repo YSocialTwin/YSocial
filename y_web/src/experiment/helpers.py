@@ -15,7 +15,6 @@ from sqlalchemy.orm import sessionmaker
 
 from y_web import db
 from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
-from y_web.src.im import is_im_experiment
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.system.path_utils import get_writable_path
 
@@ -135,8 +134,10 @@ def open_experiment_session(experiment: Exps):
         return None, None
 
     engine = create_engine(uri, pool_pre_ping=True)
-    if is_im_experiment(experiment):
-        pass  # IM owns its schema: YWeb only reads it
+    from y_web.platforms import registry
+
+    if registry.resolve(getattr(experiment, "platform_type", "")).marker_table:
+        pass  # the runtime owns its schema: YWeb only reads it
     elif getattr(experiment, "platform_type", "") == "photo_sharing":
         _ensure_photo_sharing_orm_tables(engine, uri)
     else:
@@ -201,27 +202,6 @@ def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
             ensure_experiment_schema_for_uri(uri)
 
 
-def _im_participant(experiment: Exps, user_id, username):
-    """What stands for a participant of an IM experiment: its id is the human account id of the runtime.
-
-    Nothing is read from or written to the experiment database, so assigning a user to an IM experiment (from the
-    users page, in bulk, by Training Modules or at login) needs no provisioning. ``None`` when the user is unknown.
-    """
-    from types import SimpleNamespace
-
-    from y_web.src.im.human_identity import experiment_uid, human_account_id
-
-    try:
-        account = int(user_id)
-    except (TypeError, ValueError):
-        return None
-    return SimpleNamespace(
-        id=human_account_id(experiment_uid(experiment), account),
-        username=str(username or ""),
-        account_id=account,
-    )
-
-
 def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     """
     Ensure a participant row exists in the experiment database.
@@ -232,10 +212,13 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     created)`` is emitted; hook errors never affect the result. Other
     arguments are those of :func:`_ensure_experiment_user`.
     """
-    if is_im_experiment(experiment):
-        # IM owns its database and keeps no YWeb participant row (no ``user_mgmt``): the participant is the
-        # runtime's human account, derived from the experiment and the user, registered when the person first acts
-        user = _im_participant(
+    from y_web.platforms import registry
+
+    provider = registry.resolve(experiment.platform_type)
+    if provider.has_participant_standin:
+        # the runtime owns its database and keeps no YWeb participant row (no ``user_mgmt``): the participant is its
+        # own account, derived from the experiment and the user, registered when the person first acts
+        user = provider.participant_without_row(
             experiment, kwargs.get("user_id"), kwargs.get("username")
         )
         if account_id is not None and user is not None:

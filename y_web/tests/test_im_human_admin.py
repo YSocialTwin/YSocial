@@ -155,13 +155,13 @@ def test_a_gateway_that_cannot_start_is_a_warning_not_an_error(tmp_path):
 
 
 def test_the_hpc_start_helper_never_raises(monkeypatch, tmp_path):
-    from y_web.src.hpc import client
+    from y_web.src.im import hpc as client
 
     monkeypatch.setattr(
-        "y_web.src.im.gateway_process.start_gateway",
+        "y_web.src.im.hpc.start_gateway",
         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")),
     )
-    client._start_im_human_gateway(str(tmp_path))  # must not raise
+    client.start_human_gateway(str(tmp_path))  # must not raise
 
 
 def test_gateway_runtime_files_are_run_artifacts():

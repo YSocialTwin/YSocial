@@ -40,6 +40,7 @@ from sqlalchemy import delete, select
 from y_web import db  # , app
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -978,12 +979,11 @@ def _build_mop_target_panel(
 
 def _resolve_opinion_experiment_db_name(experiment):
     """Resolve the sqlite database path that should back opinion evolution."""
-    if getattr(experiment, "platform_type", "") == "instant_messaging":
-        # the analytics pages read the derived database, rebuilt here when IM's database changed (plan 4.7)
-        from y_web.src.im import analytics as im_analytics
-
-        im_analytics.ensure_derived(experiment)
-        return im_analytics.derived_db_name(experiment)
+    derived = registry.resolve(
+        getattr(experiment, "platform_type", "")
+    ).opinion_database_name(experiment)
+    if derived:
+        return derived
     db_name = (
         str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
     )
@@ -1117,10 +1117,9 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
     experiment-local Agent_Opinion data, so bootstrap a first neutral/random
     snapshot in the current experiment DB and invalidate cached aggregates.
     """
-    from y_web.src.im import is_im_experiment
     from y_web.src.models import Agent_Opinion, Interests, Rounds, User_mgmt
 
-    if is_im_experiment(experiment):
+    if registry.resolve(experiment.platform_type).derived_analytics:
         # the derived analytics database is read only: never seed opinions that the run did not produce
         return 0
 
@@ -7572,16 +7571,11 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
 }
 
 
-def _im_annotation_problem(experiment, label):
-    """For an instant messaging experiment: the error its annotator stored (a missing library, say), else ''."""
+def _platform_annotation_problem(experiment, label):
+    """The error the annotator of the platform's runtime stored (a missing library, say), else ''."""
     try:
-        from y_web.src.im import analytics as im_analytics
-        from y_web.src.im import is_im_experiment
-
-        return (
-            im_analytics.annotation_problem(experiment, label)
-            if is_im_experiment(experiment)
-            else ""
+        return registry.resolve(experiment.platform_type).annotation_problem(
+            experiment, label
         )
     except Exception:  # noqa: BLE001 - an explanation is a convenience
         return ""
@@ -7613,7 +7607,7 @@ def _render_annotation_analytics_page(expid, annotation_key):
             ),
             "warning",
         )
-        problem = _im_annotation_problem(experiment, config["label"])
+        problem = _platform_annotation_problem(experiment, config["label"])
         if problem:
             flash(
                 _(

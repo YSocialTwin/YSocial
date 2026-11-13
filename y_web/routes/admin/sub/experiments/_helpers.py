@@ -42,6 +42,7 @@ from sqlalchemy import select
 from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.feeds import (
     REDDIT_FEED_USER_AGENT,
@@ -54,7 +55,6 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-from y_web.src.im import is_im_experiment  # , app
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -681,7 +681,7 @@ def _is_path_in_temp_data(path):
 
 
 def _load_forum_experiment_context(uid, require_manage=True):
-    """Load a forum experiment and its writable directory."""
+    """Load an experiment with news-page feeds and its writable directory."""
     check_privileges(current_user.username)
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
@@ -689,7 +689,10 @@ def _load_forum_experiment_context(uid, require_manage=True):
         flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
-    if experiment.platform_type not in ("forum", "instant_messaging"):
+    if (
+        experiment.platform_type != "forum"
+        and not registry.resolve(experiment.platform_type).news_page_feeds
+    ):
         flash(
             _(
                 "This page is only available for forum and instant messaging experiments."
@@ -728,12 +731,12 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     """Load a memory-capable experiment and its writable directory."""
     check_privileges(current_user.username)
 
-    from y_web.src.im import is_im_experiment
     from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if experiment and not (
-        agent_memory_plugin_installed() or is_im_experiment(experiment)
+        agent_memory_plugin_installed()
+        or registry.resolve(experiment.platform_type).configures_memory
     ):
         flash(_("The Agent Memory plugin is not installed."), "error")
         return (
@@ -831,20 +834,11 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
 
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
     stress_enabled = bool(stress_reward_cfg.get("enabled", False))
-    if experiment.platform_type == "instant_messaging":
-        if for_settings:
-            # the configuration page follows the switch of the experiment page (IM's own keys as fallback)
-            from y_web.src.im.experiment_config import load_server_config, read_switches
-
-            stress_enabled = read_switches(load_server_config(experiment_dir))[
-                "stress_reward"
-            ]
-        else:
-            # the results are offered when the derived database holds stress/reward rows
-            from y_web.src.im import analytics as im_analytics
-
-            im_analytics.ensure_derived(experiment)
-            stress_enabled = im_analytics.cards(experiment)["stress_reward"]
+    platform_enabled = registry.resolve(experiment.platform_type).stress_reward_enabled(
+        experiment, experiment_dir, for_settings
+    )
+    if platform_enabled is not None:
+        stress_enabled = platform_enabled
     if not stress_enabled:
         flash(_("Enable stress/reward in Experiment Configuration first."), "warning")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))

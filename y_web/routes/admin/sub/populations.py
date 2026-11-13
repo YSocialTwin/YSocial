@@ -20,10 +20,10 @@ from flask import (
 from flask_login import current_user, login_required
 from sqlalchemy import delete, func, select
 
-from y_web.platforms import registry
-from y_web.src.agents import appearance_form as af
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
+from y_web.src.agents import appearance_form as af
 from y_web.src.agents.custom_features import (
     agent_ext_entries_from_population_agent_payload,
     feature_entries_from_population_agent_payload,

@@ -18,7 +18,7 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    {% include "admin/_im_analytics_note.html" %}
+                    {% for slot_template in platform_slots('analytics_notes') %}{% include slot_template %}{% endfor %}
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin ys-mb-15">{{ _('Temporal Controls') }}</h3>
 

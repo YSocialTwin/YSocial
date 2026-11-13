@@ -1,17 +1,8 @@
 [
   "y_web.routes.admin.sub.experiments._crud",
   "y_web.routes.admin.sub.experiments._helpers",
-  "y_web.routes.admin.sub.experiments._im",
   "y_web.src.forum.experiment_config",
   "y_web.src.forum.roster",
   "y_web.src.forum.validation",
-  "y_web.src.hpc.client",
-  "y_web.src.hpc.server",
-  "y_web.src.im",
-  "y_web.src.im.clone",
-  "y_web.src.im.exp_stats",
-  "y_web.src.im.experiment_config",
-  "y_web.src.im.gateway_process",
-  "y_web.src.im.participant",
-  "y_web.src.im.validation"
+  "y_web.src.hpc.client"
 ]

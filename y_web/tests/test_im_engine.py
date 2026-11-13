@@ -48,8 +48,14 @@ def test_importing_the_read_services_does_not_import_ray():
     import textwrap
 
     code = textwrap.dedent("""
-        import sys
-        from y_web.src.im import engine, reader
+        import importlib, sys
+        from pathlib import Path
+        from y_web.src.external_runtime.backend_plugins import _ensure_namespace_root
+
+        repo = Path("external") / "YInstantMessaging"
+        namespace = _ensure_namespace_root("instant_messaging", repo.resolve())
+        engine = importlib.import_module(f"{namespace}.ysocial_platform.im.engine")
+        importlib.import_module(f"{namespace}.ysocial_platform.im.reader")
         engine.im_modules()
         assert "ray" not in sys.modules, "ray was imported"
         """)

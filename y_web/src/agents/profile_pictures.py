@@ -13,7 +13,6 @@ together with its agent (see :func:`delete_picture_file`, called by the ORM list
 
 from __future__ import annotations
 
-from y_web.src.agents import appearance_form as af
 import hashlib
 import importlib.util
 import json
@@ -24,6 +23,8 @@ import struct
 import threading
 import zlib
 from typing import Any, Dict, Iterable, List, Optional
+
+from y_web.src.agents import appearance_form as af
 
 MEDIA_URL_PREFIX = "/media/agents/"
 FEATURE_PREFIXES = ("appearance.", "dating.appearance.")
