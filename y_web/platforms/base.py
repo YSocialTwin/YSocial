@@ -10,6 +10,7 @@ its own (see ``docs/platform-decoupling`` in the project).
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional, Tuple
@@ -116,3 +117,32 @@ class PlatformProvider:
     def rounds_per_day(self, exp: Any) -> Optional[int]:
         """Rounds a client plays per simulated day when that is a property of the experiment files, else ``None``."""
         return None
+
+    # --- HPC runtime: starting a client --------------------------------------------------------------------------
+
+    def hpc_client_files(
+        self, exp_folder: str, client: Any, population: Any
+    ) -> Tuple[str, str, str]:
+        """``(client config, agents, prompts)`` files a client of this platform is started with."""
+        return (
+            os.path.join(exp_folder, f"client_{client.name}-{population.name}.json"),
+            os.path.join(exp_folder, f"{population.name}.json"),
+            os.path.join(exp_folder, "prompts.json"),
+        )
+
+    def prepare_hpc_client_files(
+        self, exp_folder: str, client: Any, population: Any, client_config: str
+    ) -> None:
+        """Bring the files of an older layout up to date, before the start checks that they exist."""
+
+    def prepare_hpc_client_start(self, client_config: str, client: Any) -> None:
+        """Last preparation of a client whose files are all there."""
+
+    def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
+        """Make the client file say how long the client runs (``Client.days`` is the source of truth)."""
+        from y_web.src.hpc.client import _sync_hpc_client_duration_from_config
+
+        _sync_hpc_client_duration_from_config(client_config, client)
+
+    def start_hpc_gateway(self, exp_folder: str) -> None:
+        """Start what must run between the HPC server and its clients (the human gateway of a platform)."""

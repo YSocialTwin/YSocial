@@ -19,7 +19,6 @@
  "y_web/src/federation/humans.py": 5,
  "y_web/src/federation/lifecycle.py": 1,
  "y_web/src/federation/service.py": 5,
- "y_web/src/hpc/client.py": 7,
  "y_web/src/hpc/platforms.py": 1,
  "y_web/src/hpc/server.py": 4,
  "y_web/src/im/__init__.py": 1,

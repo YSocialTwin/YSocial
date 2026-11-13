@@ -20,6 +20,7 @@ import ray
 from sqlalchemy import select
 
 from y_web import db
+from y_web.platforms import registry
 from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
@@ -712,28 +713,11 @@ def start_hpc_client(exp, cli, population):
         )
 
     # Construct paths for config, agents, and prompts files
-    if exp.platform_type == "photo_sharing":
-        client_config = os.path.join(
-            exp_folder, f"client_{cli.name}-{population.name}.json"
-        )
-        _migrate_legacy_photo_sharing_client_layout(
-            exp_folder, cli.name, population.name, client_config
-        )
-        agents_file = os.path.join(exp_folder, f"{population.name}.json")
-        prompts_file = os.path.join(exp_folder, "prompts_ygram.json")
-    else:
-        client_config = os.path.join(
-            exp_folder, f"client_{cli.name}-{population.name}.json"
-        )
-        agents_file = os.path.join(exp_folder, f"{population.name}.json")
-        prompts_file = os.path.join(
-            exp_folder,
-            (
-                "prompts_im.json"
-                if exp.platform_type == "instant_messaging"
-                else "prompts.json"
-            ),
-        )
+    provider = registry.resolve(exp.platform_type)
+    client_config, agents_file, prompts_file = provider.hpc_client_files(
+        exp_folder, cli, population
+    )
+    provider.prepare_hpc_client_files(exp_folder, cli, population, client_config)
 
     _launch_spec = find_hpc_platform(exp.platform_type)
     _required_files = [
@@ -751,21 +735,7 @@ def start_hpc_client(exp, cli, population):
                 f"Please ensure the HPC experiment is properly configured."
             )
 
-    if exp.platform_type == "forum":
-        # YForum resumes from the roster it saved: a client that never ran must read its population (and the
-        # initial opinions in it) again, not an old roster left by an aborted start
-        try:
-            from y_web.src.forum.roster import REMOVED, reset_unstarted_roster
-
-            _exec = db.session.scalars(
-                select(Client_Execution).filter_by(client_id=cli.id)
-            ).first()
-            if reset_unstarted_roster(client_config, cli.name, _exec) == REMOVED:
-                print(f"Removed the stale roster of forum client {cli.name}")
-        except Exception as exc:
-            print(
-                f"Warning: could not check the roster of forum client {cli.name}: {exc}"
-            )
+    provider.prepare_hpc_client_start(client_config, cli)
 
     _syncs_config = _launch_spec is None or _launch_spec.syncs_client_config
     try:
@@ -775,14 +745,7 @@ def start_hpc_client(exp, cli, population):
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
 
     try:
-        if exp.platform_type == "dating":
-            _set_dating_run_length(client_config, cli)
-        elif exp.platform_type == "forum":
-            # the YForum client counts num_days from the day it registers, like the dating one: a restarted or
-            # extended client gets what is left of Client.days, not the whole total again
-            _set_dating_run_length(client_config, cli, unlimited_value=0)
-        else:
-            synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+        provider.sync_hpc_run_length(client_config, cli)
     except RuntimeError:
         raise
     except Exception as exc:
@@ -826,12 +789,7 @@ def start_hpc_client(exp, cli, population):
     _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
     time.sleep(3)
 
-    if exp.platform_type == "instant_messaging":
-        _start_im_human_gateway(exp_folder)  # server -> gateway -> clients (plan 4.8)
-    elif exp.platform_type == "dating":
-        from y_web.src.dating.gateway import start_for_experiment
-
-        start_for_experiment(exp_folder)  # server -> gateway -> clients (IR-D-22)
+    provider.start_hpc_gateway(exp_folder)
 
     # Remove completion log entries from actor log if restarting
     # Actor logs are in logs/{client_name}_actor.log

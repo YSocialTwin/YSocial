@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, List, Optional, Tuple
 
@@ -76,6 +77,34 @@ class Forum(PlatformProvider):
             else "experiments.prompts_forum"
         )
 
+    def prepare_hpc_client_start(self, client_config: str, client: Any) -> None:
+        # YForum resumes from the roster it saved: a client that never ran must read its population (and the
+        # initial opinions in it) again, not an old roster left by an aborted start
+        from sqlalchemy import select
+
+        from y_web import db
+        from y_web.src.models import Client_Execution
+
+        try:
+            from y_web.src.forum.roster import REMOVED, reset_unstarted_roster
+
+            execution = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
+            if reset_unstarted_roster(client_config, client.name, execution) == REMOVED:
+                print(f"Removed the stale roster of forum client {client.name}")
+        except Exception as exc:
+            print(
+                f"Warning: could not check the roster of forum client {client.name}: {exc}"
+            )
+
+    def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
+        # the YForum client counts num_days from the day it registers, like the dating one: a restarted or
+        # extended client gets what is left of Client.days, not the whole total again
+        from y_web.src.hpc.client import _set_dating_run_length
+
+        _set_dating_run_length(client_config, client, unlimited_value=0)
+
 
 class PhotoSharing(PlatformProvider):
     key = "photo_sharing"
@@ -95,6 +124,19 @@ class PhotoSharing(PlatformProvider):
     def clients_page(self, simulator_type: str) -> str:
         return "clientsr.clients_photo"
 
+    def hpc_client_files(self, exp_folder: str, client: Any, population: Any):
+        config, agents, _ = super().hpc_client_files(exp_folder, client, population)
+        return config, agents, os.path.join(exp_folder, "prompts_ygram.json")
+
+    def prepare_hpc_client_files(
+        self, exp_folder: str, client: Any, population: Any, client_config: str
+    ) -> None:
+        from y_web.src.hpc.client import _migrate_legacy_photo_sharing_client_layout
+
+        _migrate_legacy_photo_sharing_client_layout(
+            exp_folder, client.name, population.name, client_config
+        )
+
     def client_state_files(self, exp_dir: Path, client: Any) -> List[Path]:
         # the state of the client of a population, then any other population of the same client
         return list(exp_dir.glob(f"client_{client.name}-*.state.json"))
@@ -111,6 +153,15 @@ class InstantMessaging(PlatformProvider):
 
     def prompts_page(self, simulator_type: str) -> str:
         return "experiments.prompts_im"
+
+    def hpc_client_files(self, exp_folder: str, client: Any, population: Any):
+        config, agents, _ = super().hpc_client_files(exp_folder, client, population)
+        return config, agents, os.path.join(exp_folder, "prompts_im.json")
+
+    def start_hpc_gateway(self, exp_folder: str) -> None:
+        from y_web.src.hpc.client import _start_im_human_gateway
+
+        _start_im_human_gateway(exp_folder)  # server -> gateway -> clients (plan 4.8)
 
     def clients_page(self, simulator_type: str) -> str:
         return "clientsr.clients_im"
@@ -132,6 +183,16 @@ class Dating(PlatformProvider):
 
     def prompts_page(self, simulator_type: str) -> str:
         return "experiments.prompts_dating"
+
+    def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
+        from y_web.src.hpc.client import _set_dating_run_length
+
+        _set_dating_run_length(client_config, client)
+
+    def start_hpc_gateway(self, exp_folder: str) -> None:
+        from y_web.src.dating.gateway import start_for_experiment
+
+        start_for_experiment(exp_folder)  # server -> gateway -> clients (IR-D-22)
 
     def rounds_per_day(self, exp: Any) -> Optional[int]:
         from y_web.routes.admin.sub.clients._dating import (

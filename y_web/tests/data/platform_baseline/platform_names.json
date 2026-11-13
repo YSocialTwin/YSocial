@@ -59,7 +59,7 @@
  "y_web/src/federation/profile_badges.py": 11,
  "y_web/src/federation/quotes.py": 11,
  "y_web/src/federation/service.py": 20,
- "y_web/src/hpc/client.py": 38,
+ "y_web/src/hpc/client.py": 24,
  "y_web/src/hpc/log_metrics.py": 4,
  "y_web/src/hpc/platforms.py": 22,
  "y_web/src/hpc/server.py": 12,

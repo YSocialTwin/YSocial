@@ -252,3 +252,40 @@ def test_standard_runtime_hooks_match_the_previous_platform_logic(tmp_path):
         if registry.syncs_stress_reward(k)
     }
     assert synced == {"microblogging", "forum", "hpc"}
+
+
+def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
+    from types import SimpleNamespace as NS
+
+    from y_web.platforms import registry
+
+    client, population = NS(name="c"), NS(name="p")
+    folder = str(tmp_path)
+    config = f"{folder}/client_c-p.json"
+    agents = f"{folder}/p.json"
+    prompts = {
+        "photo_sharing": "prompts_ygram.json",
+        "instant_messaging": "prompts_im.json",
+    }
+    for key in registry.keys() + ["unknown"]:
+        assert registry.resolve(key).hpc_client_files(folder, client, population) == (
+            config,
+            agents,
+            f"{folder}/{prompts.get(key, 'prompts.json')}",
+        )
+    overriding = {
+        "prepare_hpc_client_files": {"photo_sharing"},
+        "prepare_hpc_client_start": {"forum"},
+        "sync_hpc_run_length": {"forum", "dating"},
+        "start_hpc_gateway": {"instant_messaging", "dating"},
+    }
+    from y_web.platforms.base import PlatformProvider
+
+    for hook, owners in overriding.items():
+        found = {
+            k
+            for k in registry.keys()
+            if getattr(type(registry.get(k)), hook)
+            is not getattr(PlatformProvider, hook)
+        }
+        assert found == owners, hook
