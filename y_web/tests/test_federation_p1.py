@@ -5,6 +5,7 @@ import pathlib
 import sqlite3
 from types import SimpleNamespace
 
+from y_web.tests._platform_repos import platform_static_path
 import pytest
 
 pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
@@ -150,7 +151,7 @@ def test_the_dating_composer_has_the_explicit_story_choice_for_enrolled_people_o
         assert "shared/world_simulation_dating_story.html" in base.read_text(
             encoding="utf-8"
         )
-    js = pathlib.Path("y_web/static/assets/js/dating-participant.js").read_text(
+    js = platform_static_path("YDating", "js/dating-participant.js").read_text(
         encoding="utf-8"
     )
     assert "item.story = { event: storyEl.value }" in js and "isMessage" in js

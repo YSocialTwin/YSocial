@@ -454,9 +454,19 @@ def test_every_variant_has_its_style_in_the_stylesheet_of_its_frontend(name):
         "dating": "dating.css",
         "im": "im.css",
     }[name]
-    text = open(
-        os.path.join(TEMPLATES, "..", "static", "assets", "css", css), encoding="utf-8"
-    ).read()
+    if (
+        name == "dating"
+    ):  # the dating frontend and its stylesheet are in the YDating repository
+        from y_web.tests._platform_repos import platform_static_path
+
+        text = platform_static_path("YDating", "css/dating.css").read_text(
+            encoding="utf-8"
+        )
+    else:
+        text = open(
+            os.path.join(TEMPLATES, "..", "static", "assets", "css", css),
+            encoding="utf-8",
+        ).read()
     assert (
         f".ws-also--{name}" in text
         and (".is-quiet" if name == "dating" else ".is-dormant") in text

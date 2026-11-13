@@ -49,3 +49,11 @@ def namespaced_template_path(name: str):
         if spec["to"] == name:
             return moved_template_path(old)
     return None
+
+
+def platform_static_path(repo: str, relative: str) -> Path:
+    """File under ``<repo>/ysocial_platform/static``; skips the test when it is not there."""
+    path = EXTERNAL / repo / "ysocial_platform" / "static" / relative
+    if not path.is_file():
+        pytest.skip(f"{repo} with its platform files is not installed")
+    return path

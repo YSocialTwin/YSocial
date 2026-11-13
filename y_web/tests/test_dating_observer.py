@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from y_web.tests._platform_repos import platform_template
+from y_web.tests._platform_repos import platform_template, platform_static_path
 from y_web.tests.dating_fixture import SENTINELS, build_dating_db
 from y_web.tests.test_im_admin_pages import im_app  # noqa: F401
 
@@ -260,7 +260,7 @@ def test_the_profile_page_has_the_gallery_and_the_reveal_script():
     assert "{% block scripts %}" in platform_template(
         "YDating", "participant/base.html"
     )
-    script = (root / "static" / "assets" / "js" / "dating-profile.js").read_text(
+    script = platform_static_path("YDating", "js/dating-profile.js").read_text(
         encoding="utf-8"
     )
     assert "IntersectionObserver" in script and "Escape" in script
@@ -271,8 +271,8 @@ def test_the_dating_pages_use_the_y_favicon_in_the_platform_colour():
 
     root = Path(__file__).resolve().parents[1]
     base = platform_template("YDating", "participant/base.html")
-    assert "assets/img/favicon_rose.png" in base
-    assert (root / "static" / "assets" / "img" / "favicon_rose.png").is_file()
+    assert "favicon_rose.png" in base
+    assert platform_static_path("YDating", "img/favicon_rose.png").is_file()
 
 
 def test_matches_report_how_each_match_went_and_staff_get_lifecycle_stats(tmp_path):

@@ -68,9 +68,13 @@ def test_the_composers_include_the_box_and_the_scripts_send_the_selection():
         "async_updates.js",
         "photo-overlays.js",
         "im-participant.js",
-        "dating-participant.js",
         "reddit/api_client.js",
     ):
         assert "wsCrosspost" in pathlib.Path(
             "y_web/static/assets/js", script
         ).read_text(encoding="utf-8"), script
+    from y_web.tests._platform_repos import platform_static_path
+
+    assert "wsCrosspost" in platform_static_path(
+        "YDating", "js/dating-participant.js"
+    ).read_text(encoding="utf-8")
