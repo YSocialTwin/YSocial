@@ -90,7 +90,7 @@ def collect_db_schema() -> Dict[str, Dict[str, Dict[str, str]]]:
 
 
 def collect_platform_tables() -> Dict[str, dict]:
-    from y_web.src.experiment.platform_labels import KNOWN_PLATFORMS
+    from y_web.platforms import registry
     from y_web.src.hpc.platforms import HPC_PLATFORMS
 
     return {
@@ -98,8 +98,8 @@ def collect_platform_tables() -> Dict[str, dict]:
             key: dataclasses.asdict(platform) for key, platform in HPC_PLATFORMS.items()
         },
         "known_platforms": {
-            key: {"label": str(entry["label"]), "icon": entry["icon"]}
-            for key, entry in KNOWN_PLATFORMS.items()
+            provider.key: {"label": str(provider.label), "icon": provider.icon}
+            for provider in registry.providers()
         },
     }
 

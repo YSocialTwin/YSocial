@@ -9,37 +9,29 @@ from __future__ import annotations
 from itertools import groupby
 from typing import Any, Dict, Iterable, List
 
-from y_web.i18n import N_, gettext
-
-KNOWN_PLATFORMS: Dict[str, Dict[str, str]] = {
-    "microblogging": {"label": N_("Microblogging"), "icon": "message-circle"},
-    "forum": {"label": N_("Forum"), "icon": "message-square"},
-    "photo_sharing": {"label": N_("Photo sharing"), "icon": "camera"},
-    "instant_messaging": {"label": N_("Instant messaging"), "icon": "send"},
-    "dating": {"label": N_("Dating"), "icon": "heart"},
-}
-DEFAULT_ICON = "layers"
+from y_web.i18n import gettext
+from y_web.platforms import registry
+from y_web.platforms.base import DEFAULT_ICON
 
 
 def platform_label(platform_type: Any) -> str:
     """Human label of a platform type: the curated one, else the name with spaces and a capital ('video_chat' -> 'Video chat')."""
-    key = str(platform_type or "").strip()
-    if key in KNOWN_PLATFORMS:
-        return gettext(KNOWN_PLATFORMS[key]["label"])
-    text = key.replace("_", " ").replace("-", " ").strip()
+    provider = registry.get(platform_type)
+    if provider is not None:
+        return gettext(provider.label)
+    text = str(platform_type or "").strip().replace("_", " ").replace("-", " ").strip()
     return (text[:1].upper() + text[1:]) if text else gettext("Other")
 
 
 def platform_icon(platform_type: Any) -> str:
-    return KNOWN_PLATFORMS.get(str(platform_type or "").strip(), {}).get(
-        "icon", DEFAULT_ICON
-    )
+    provider = registry.get(platform_type)
+    return provider.icon if provider is not None else DEFAULT_ICON
 
 
 def group_experiments_by_platform(experiments: Iterable[Any]) -> List[Dict[str, Any]]:
     """``[{type, label, icon, experiments}]``: the experiments split by platform type, known platforms first (in their usual
     order), then the others by label; inside a group, by experiment name."""
-    order = {key: i for i, key in enumerate(KNOWN_PLATFORMS)}
+    order = {key: i for i, key in enumerate(registry.keys())}
 
     def type_of(exp):
         return str(getattr(exp, "platform_type", "") or "").strip() or "microblogging"
