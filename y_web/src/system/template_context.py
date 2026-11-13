@@ -4,7 +4,7 @@ Moved out of ``y_web/__init__.py`` (behaviour unchanged): every function keeps i
 still find them in ``app.template_context_processors``.
 """
 
-from flask import Flask, url_for
+from flask import Flask
 from sqlalchemy import select
 
 from y_web import db
@@ -107,17 +107,16 @@ def register_template_context(app: Flask) -> None:
     )
     app.jinja_env.globals["platform_label"] = platform_label
 
-    def static_v(filename: str) -> str:
-        """Static URL with the file's mtime, so edited CSS/JS is never served stale from the browser cache."""
+    def asset_v(filename: str) -> int:
+        """Modification time of a static file, used as ``?v=`` so edited CSS/JS is never served stale from cache."""
         import os
 
         try:
-            version = int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+            return int(os.path.getmtime(os.path.join(app.static_folder, filename)))
         except OSError:
-            version = 0
-        return url_for("static", filename=filename, v=version)
+            return 0
 
-    app.jinja_env.globals["static_v"] = static_v
+    app.jinja_env.globals["asset_v"] = asset_v
     app.jinja_env.globals["platform_icon"] = platform_icon
 
     @app.context_processor
