@@ -1,0 +1,262 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+{% set fed = row.fed %}
+{% set mode = 'edit' %}
+{% set seed_value = fed.seed %}{% set granularity_value = fed.granularity %}
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            {{ ws.breadcrumb([(fed.name, None)]) }}
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-detail" data-status-url="{{ url_for('world_simulation.status', fed_id=fed.id) }}">
+                        <div class="ws-title-row">
+                            <h3 class="title is-5 is-thin">{{ fed.name }} {{ ws.state_tag(fed.status, 'ws-state') }}</h3>
+                            {{ ws.run_controls(fed, id='ws-commands') }}
+                        </div>
+                        <div class="box-content">
+                            {% if fed.description %}<p class="ws-intro">{{ fed.description }}</p>{% endif %}
+                            <div class="ws-facts">
+                                {% for m in row.member_rows %}{{ ws.platform_tag(m.label, m.icon) }}{% endfor %}
+                                <span class="ws-sub">{{ _('Seed') }} {{ fed.seed }} · {{ _('Slot (hourly)') if fed.granularity == 'slot' else _('Day') }}{% if fed.owner %} · {{ fed.owner }}{% endif %}</span>
+                            </div>
+                            {% if crosspost_warning %}<p class="ws-note is-warning" id="ws-saved-crosspost-warning" role="alert"><i class="mdi mdi-alert-outline"></i> {{ crosspost_warning }}</p>{% endif %}
+                            {{ ws.tabs(fed, 'configuration') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ws-pane" data-ws-pane="configuration">
+                <div class="columns">
+                    <div class="column is-8">
+                        <div class="dashboard-box" id="ws-parameters-box">
+                            <h3 class="title is-5 is-thin">{{ _('Parameters') }}</h3>
+                            <div class="box-content">
+                                {% if not editable %}<p class="ws-note is-warning"><i class="mdi mdi-lock-outline"></i> {{ _('The parameters can be changed only while the World Simulation is stopped.') }}</p>{% endif %}
+                                <form method="post" action="{{ url_for('world_simulation.configure', fed_id=fed.id) }}" id="ws-parameters-form">
+                                    <fieldset {% if not editable %}disabled{% endif %}>
+                                    {% include 'admin/world_simulation/_options_form.html' %}
+                                    <div class="ws-actions ws-form-actions">
+                                        <button class="button is-solid primary-button" type="submit"><i class="mdi mdi-content-save-outline"></i> <span>{{ _('Save') }}</span></button>
+                                    </div>
+                                    </fieldset>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-4">
+                        <div class="dashboard-box" id="ws-members-box">
+                            <h3 class="title is-5 is-thin">{{ _('Members') }}</h3>
+                            <div class="box-content">
+                                <table class="table is-fullwidth ws-table" id="ws-config-members"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th></tr></thead><tbody>
+                                {% for m in row.member_rows %}<tr><td>{{ ws.platform_tag(m.label, m.icon) }}</td><td><a href="/admin/experiment_details/{{ m.exp.idexp }}">{{ m.exp.exp_name }}</a>{% if m.simulator == 'HPC' %} <span class="exp-tag hpc">{{ _('HPC') }}</span>{% endif %}</td></tr>{% endfor %}
+                                </tbody></table>
+                                <p class="ws-sub">{{ _('Population: shared by all members.') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-box" id="ws-participants-box">
+                            <h3 class="title is-5 is-thin">{{ _('Participants') }}</h3>
+                            <div class="box-content">
+                                <p class="ws-sub">{{ _('People take part with one account on each platform they are enrolled in, and can cross-post only there. They can be enrolled while the World Simulation runs; they stay outside the rules that apply to agents.') }}</p>
+                                {% if participants %}
+                                <table class="table is-fullwidth ws-table" id="ws-participants"><thead><tr><th>{{ _('User') }}</th><th>{{ _('Platforms') }}</th><th>{{ _('State') }}</th><th></th></tr></thead><tbody>
+                                    {% for p in participants %}
+                                    <tr><td>{{ p.username }} <span class="ws-sub">{{ p.human_id }}</span></td>
+                                        <td>{% for label, account, created in p.members %}{{ _(label) }}{% if not created %} ({{ _('waiting for the profile') }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+                                        <td>{% if p.status == 'active' %}<span class="exp-tag ws-state-running">{{ _('Enrolled') }}</span>{% else %}<span class="exp-tag ws-state-stopped">{{ _('Removed') }}</span>{% endif %}</td>
+                                        <td>{% if p.status == 'active' %}<form method="post" action="{{ url_for('world_simulation.humans_unenrol', fed_id=fed.id, user_id=p.user_id) }}" onsubmit="return confirm('{{ _('Remove this participant? Their accounts stay in the experiments.') }}');"><button class="button is-small is-danger is-light" type="submit">{{ _('Remove') }}</button></form>{% endif %}</td></tr>
+                                    {% endfor %}
+                                </tbody></table>
+                                {% else %}<p class="empty-state" id="ws-participants-empty">{{ _('No participants yet.') }}</p>{% endif %}
+                                <form method="post" action="{{ url_for('world_simulation.humans_enrol', fed_id=fed.id) }}" id="ws-enrol" class="ws-enrol">
+                                    <div class="ws-field"><label class="ws-label" for="ws-enrol-user">{{ _('User') }}</label>
+                                        <div class="select is-fullwidth"><select id="ws-enrol-user" name="user_id" required>
+                                            {% for u in candidates_users %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}
+                                        </select></div></div>
+                                    <div class="ws-field"><label class="ws-label">{{ _('Platforms') }}</label>
+                                        {% for m in row.member_rows %}<label class="ws-check"><input type="checkbox" name="members" value="{{ m.member }}"> <i class="mdi {{ m.icon }}"></i> {{ _(m.label) }}</label>{% endfor %}</div>
+                                    <button class="button is-light" type="submit"><i class="mdi mdi-account-plus-outline"></i> <span>{{ _('Enrol') }}</span></button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-box" id="ws-management-box">
+                            <h3 class="title is-5 is-thin">{{ _('Export, copy and reset') }}</h3>
+                            <div class="box-content">
+                                <p class="ws-sub">{{ _('The export holds the settings, the database of the run and the archive of each experiment. A copy starts from nothing. Resetting brings the whole World Simulation back to its initial state, as if it had never been started: the data of the run and the data of every experiment are removed (settings, populations and clients stay).') }}</p>
+                                <div class="ws-actions">
+                                    <a class="button is-light" id="ws-export" href="{{ url_for('world_simulation.export', fed_id=fed.id) }}"><i class="mdi mdi-export-variant"></i> <span>{{ _('Export') }}</span></a>
+                                    {% if editable %}
+                                    <form method="post" action="{{ url_for('world_simulation.reset', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Reset this World Simulation and all its experiments? Everything produced by the run is removed. This cannot be undone.') }}');">
+                                        <button class="button is-light" type="submit"><i class="mdi mdi-restore"></i> <span>{{ _('Reset') }}</span></button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                {% if editable %}
+                                <form method="post" action="{{ url_for('world_simulation.clone', fed_id=fed.id) }}" class="ws-actions ws-inline-form">
+                                    <input type="text" name="name" class="input ys-input-sm ws-input-name" maxlength="40" required placeholder="{{ _('Name of the copy') }}">
+                                    <button class="button is-light" type="submit"><i class="mdi mdi-content-copy"></i> <span>{{ _('Copy') }}</span></button>
+                                </form>
+                                <div class="ws-danger">
+                                    <form method="post" action="{{ url_for('world_simulation.delete', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Delete this World Simulation? The experiments are not deleted.') }}');">
+                                        <button class="button is-solid red-button" type="submit"><i class="mdi mdi-delete-outline"></i> <span>{{ _('Delete') }}</span></button>
+                                    </form>
+                                    <span class="ws-sub">{{ _('The experiments are not deleted.') }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ws-pane" data-ws-pane="execution" hidden>
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box" id="ws-execution-box">
+                            <h3 class="title is-5 is-thin">{{ _('Execution') }}</h3>
+                            <div class="box-content">
+                                <div class="notification is-warning is-light ws-banner" id="ws-problems" role="alert" hidden>
+                                    <b id="ws-problems-title">{{ _('Some members need attention') }}</b>
+                                    <ul id="ws-problems-list"></ul>
+                                    <p class="ws-sub" id="ws-problems-hint"></p>
+                                </div>
+                                <div class="notification is-danger is-light ws-banner" id="ws-coordinator-down" role="alert" hidden>{{ _('The coordinator does not answer: the members cannot advance.') }} {{ _('See the coordinator log below.') }}</div>
+                                <p class="ws-progress-line" id="ws-progress-line" hidden></p>
+                                <div class="stats-row" id="ws-counters">
+                                    <div class="stat-box"><div class="stat-value" id="ws-tick">-</div><div class="stat-label">{{ _('Global tick') }}</div></div>
+                                    <div class="stat-box"><div class="stat-value" id="ws-dayslot">-</div><div class="stat-label">{{ _('Day / slot') }}</div></div>
+                                    <div class="stat-box"><div class="stat-value" id="ws-skew">-</div><div class="stat-label">{{ _('Skew') }}</div></div>
+                                    <div class="stat-box"><div class="stat-value" id="ws-messages">0</div><div class="stat-label">{{ _('Messages') }}</div></div>
+                                    <div class="stat-box"><div class="stat-value" id="ws-deliveries">0</div><div class="stat-label">{{ _('Deliveries') }}</div></div>
+                                </div>
+                                <p class="ws-sub" id="ws-crosspost-line" hidden></p>
+                                <p class="ws-note is-warning" id="ws-crosspost-hint" role="alert" hidden></p>
+                                <div class="table-container">
+                                <table class="table is-fullwidth ws-table" id="ws-members"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th><th>{{ _('Status') }}</th><th>{{ _('Health') }}</th><th>{{ _('Tick') }}</th><th>{{ _('Waiting for') }}</th></tr></thead><tbody></tbody></table>
+                                </div>
+                                <p class="empty-state" id="ws-members-empty">{{ _('The members report their state once the World Simulation runs.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box" id="ws-frontends-box">
+                            <h3 class="title is-5 is-thin">{{ _('Web interface of the members') }}</h3>
+                            <div class="box-content">
+                                <p class="ws-sub">{{ _('A member can be opened from the web only while its experiment is active. Stopping the World Simulation does not deactivate the experiments.') }}</p>
+                                <table class="table is-fullwidth ws-table" id="ws-frontends"><thead><tr><th>{{ _('Platform') }}</th><th>{{ _('Experiment') }}</th><th>{{ _('Web interface') }}</th><th></th></tr></thead><tbody>
+                                {% for f in frontends %}
+                                <tr data-member="{{ f.member }}"><td>{{ _(platform_labels.get(f.platform, f.platform)) }}</td><td>{{ f.experiment }}</td>
+                                    <td>{% if f.active %}<span class="exp-tag ws-state-running">{{ _('Active') }}</span>{% else %}<span class="exp-tag ws-state-stopped">{{ _('Inactive') }}</span>{% endif %}</td>
+                                    <td>{% if f.url %}<a class="button is-small is-light" href="{{ f.url }}" target="_blank" rel="noopener"><i class="mdi mdi-open-in-new"></i> <span>{{ _('Open') }}</span></a>{% endif %}</td></tr>
+                                {% endfor %}
+                                </tbody></table>
+                                <div class="ws-actions" id="ws-frontends-actions">
+                                    <form method="post" action="{{ url_for('world_simulation.frontends_activate', fed_id=fed.id) }}">
+                                        <button class="button is-solid green-button" type="submit"><i class="mdi mdi-monitor-dashboard"></i> <span>{{ _('Activate frontends') }}</span></button></form>
+                                    <form method="post" action="{{ url_for('world_simulation.frontends_deactivate', fed_id=fed.id) }}">
+                                        <button class="button is-light" type="submit"><i class="mdi mdi-monitor-off"></i> <span>{{ _('Deactivate frontends') }}</span></button></form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Events') }}</h3>
+                            <div class="box-content"><div class="ws-log" id="ws-events"></div></div></div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Coordinator log') }}</h3>
+                            <div class="box-content"><div class="ws-log" id="ws-log"></div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ws-pane" data-ws-pane="analytics" hidden id="ws-analytics" data-url="{{ url_for('world_simulation.analytics_data', fed_id=fed.id) }}" data-l-discovered="{{ _('discovered') }}" data-l-joined="{{ _('joined') }}" data-l-rejoined="{{ _('rejoined') }}" data-l-left="{{ _('left') }}" data-l-lapsed="{{ _('lost interest') }}" data-l-pending="{{ _('aware, not enrolled') }}">
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box">
+                            <div class="ws-title-row">
+                                <h3 class="title is-5 is-thin">{{ _('Analytics') }} <span class="ws-sub" id="ws-an-state"></span></h3>
+                                <form method="post" action="{{ url_for('world_simulation.analytics_rebuild', fed_id=fed.id) }}"><button class="button is-light is-small" type="submit"><i class="mdi mdi-refresh"></i> <span>{{ _('Recalculate') }}</span></button></form>
+                            </div>
+                            <div class="box-content">
+                                <p class="ws-intro">{{ _('Computed from the database of the coordinator; days are numbered from 0.') }}</p>
+                                <div class="ws-actions">
+                                    {% for table, label in (('daily_attention', _('Attention')), ('migration_flows', _('Migration')), ('crosspost_flows', _('Cross-posts')), ('cascades', _('Cascades')), ('survival', _('Survival')), ('shares', _('Shares')), ('share_depth', _('Share chains')), ('bridge_agents', _('Bridge agents')), ('topics_carried', _('Topics carried')), ('topic_diffusion', _('Topic diffusion')), ('topics_created', _('Topics created')), ('topic_first_seen', _('Topic first seen')), ('discoveries', _('Discoveries')), ('membership_daily', _('Memberships per day')), ('membership_events', _('Membership events')), ('human_activity', _('People')), ('human_crossposts', _('Cross-posts of people'))) %}
+                                    <a class="button is-small is-light" href="{{ url_for('world_simulation.analytics_csv', fed_id=fed.id, table=table) }}"><i class="mdi mdi-download"></i> <span>{{ _('Download %(what)s (CSV)', what=label) }}</span></a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column is-6"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Share of attention per day') }}</h3><div class="box-content"><div class="ws-chart"><canvas id="ws-chart-attention"></canvas></div></div></div></div>
+                    <div class="column is-6"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Migration between platforms') }}</h3><div class="box-content"><div class="ws-chart"><canvas id="ws-chart-migration"></canvas></div></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-6"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Cross-posts between platforms, per day') }}</h3><div class="box-content"><div class="ws-chart"><canvas id="ws-chart-crosspost"></canvas></div></div></div></div>
+                    <div class="column is-6"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Survival per platform') }}</h3><div class="box-content"><div class="ws-chart"><canvas id="ws-chart-survival"></canvas></div></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Cross-post cascades') }}</h3><div class="box-content table-container">
+                        <table class="table is-fullwidth ws-table" id="ws-an-cascades" data-crossposts-url="{{ url_for('world_simulation.crossposts', fed_id=fed.id) }}"><thead><tr><th>{{ _('Original content') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Day') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Platforms reached') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-6"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Shares of other agents\' content') }}</h3><div class="box-content">
+                        <p class="ws-sub">{{ _('Chain depth: 1 for content of the platform where it was seen, +1 for each cross-post it went through.') }}</p>
+                        <div class="ws-chart is-short"><canvas id="ws-chart-sharedepth"></canvas></div></div></div></div>
+                    <div class="column is-6"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Bridge agents') }}</h3><div class="box-content table-container">
+                        <table class="table is-fullwidth ws-table" id="ws-an-bridges"><thead><tr><th>{{ _('Agent') }}</th><th>{{ _('Shares') }}</th><th>{{ _('Platforms of origin') }}</th><th>{{ _('Platforms reached') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Topics carried between platforms') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('From the cross-posts of the coordinator; the topics a platform had to create are in its own database.') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-topics"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('From') }}</th><th>{{ _('To') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('First day') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Topic diffusion') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('Platforms where each topic appeared through the migration, and the platforms that created it on arrival (read from the platform databases when they can be reached).') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-diffusion"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('Platforms') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Created on') }}</th><th>{{ _('First day') }}</th><th>{{ _('Last day') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Topics created on arrival') }}</h3><div class="box-content table-container">
+                        <table class="table is-fullwidth ws-table" id="ws-an-created"><thead><tr><th>{{ _('Topic') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Day') }}</th><th>{{ _('Brought by') }}</th><th>{{ _('Original name') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Discoveries, joins and leaves per day') }}</h3><div class="box-content">
+                        <p class="ws-sub">{{ _('Agents that became aware of a platform they are not enrolled on, those who joined it, left it or lost interest, and how many are aware and not enrolled yet.') }}</p>
+                        <div class="ws-chart"><canvas id="ws-chart-membership"></canvas></div></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Platform discoveries') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('Who discovered which platform, when, and what came of it: joined, still pending or lapsed (the awareness faded).') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-discoveries"><thead><tr><th>{{ _('Agent') }}</th><th>{{ _('Platform') }}</th><th>{{ _('Discovered on day') }}</th><th>{{ _('Outcome') }}</th><th>{{ _('Outcome day') }}</th><th>{{ _('Days to decide') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('Joins and leaves') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('Latest membership changes (the full list is in the CSV download).') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-membership"><thead><tr><th>{{ _('Day') }}</th><th>{{ _('Agent') }}</th><th>{{ _('Platform') }}</th><th>{{ _('From') }}</th><th>{{ _('To') }}</th><th>{{ _('Reason') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+                <div class="columns">
+                    <div class="column is-12"><div class="dashboard-box"><h3 class="title is-5 is-thin">{{ _('People') }}</h3><div class="box-content table-container">
+                        <p class="ws-sub">{{ _('People enrolled in the World Simulation (identity human:<id>); agents are not listed here.') }}</p>
+                        <table class="table is-fullwidth ws-table" id="ws-an-humans"><thead><tr><th>{{ _('Person') }}</th><th>{{ _('Cross-posts') }}</th><th>{{ _('Shares') }}</th><th>{{ _('Platforms of origin') }}</th><th>{{ _('Platforms reached') }}</th><th>{{ _('First day') }}</th><th>{{ _('Last day') }}</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-world-simulation.js') }}"></script>

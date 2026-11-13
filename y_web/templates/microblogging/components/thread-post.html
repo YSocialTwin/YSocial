@@ -36,6 +36,8 @@
                         </div>
                         {% endif %}
                     </div>
+{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, thread['post_id'])) }}
+{% set ws_exp = exp_id %}{% set ws_id = thread['post_id'] %}{% include 'shared/world_simulation_origin.html' %}
                     <div class="post-content-section is-threaded">
                     <p>
                         {{ thread["post"]|safe }}

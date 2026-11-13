@@ -30,11 +30,11 @@ from y_web.routes.admin.sub.experiments._helpers import (
 from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
-    infer_population_username_type,
-    population_matches_platform,
 )
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
+from y_web.src.forum import communities as forum_communities
+from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,
@@ -1493,10 +1493,9 @@ def _build_client_creation_context(idexp, recsys_mode):
         if population_ids
         else db.session.scalars(select(Population)).all()
     )
-    all_unassigned_pops = list(pops)
-    pops = _exclude_adhoc_populations(pops)
-    pops = [p for p in pops if population_matches_platform(p, exp.platform_type)]
-    incompatible_population_count = max(0, len(all_unassigned_pops) - len(pops))
+    pops = _exclude_adhoc_populations(
+        pops
+    )  # a population is deployable on any platform
 
     topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=idexp)).all()
     topics_ids = [t.topic_id for t in topics]
@@ -1509,13 +1508,18 @@ def _build_client_creation_context(idexp, recsys_mode):
 
     crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
-    recsys_mode_lower = str(recsys_mode or "").lower()
-    crecsys = [
-        r for r in crecsys_all if r.enabled and recsys_mode_lower in r.enabled.lower()
-    ]
-    frecsys = [
-        r for r in frecsys_all if r.enabled and recsys_mode_lower in r.enabled.lower()
-    ]
+    # ``recsys_mode`` is one simulator name or several (forum clients get the "Standard"
+    # catalogue plus the recommenders reserved to forums, e.g. HotRanking).
+    if isinstance(recsys_mode, str) or recsys_mode is None:
+        recsys_mode = (recsys_mode,)
+    recsys_modes_lower = [str(m or "").lower() for m in recsys_mode]
+
+    def _enabled_for_modes(row):
+        enabled = (row.enabled or "").lower()
+        return bool(enabled) and any(m in enabled for m in recsys_modes_lower)
+
+    crecsys = [r for r in crecsys_all if _enabled_for_modes(r)]
+    frecsys = [r for r in frecsys_all if _enabled_for_modes(r)]
 
     experiment_clock = {
         "mode": "simulated",
@@ -1697,7 +1701,6 @@ def _build_client_creation_context(idexp, recsys_mode):
     return {
         "experiment": exp,
         "populations": pops,
-        "incompatible_population_count": incompatible_population_count,
         "crecsys": crecsys,
         "frecsys": frecsys,
         "llm_agents_enabled": llm_agents_enabled,
@@ -1727,8 +1730,14 @@ def clients(idexp):
 
     experiment_mode = _get_experiment_mode(exp)
     if experiment_mode == "hpc":
+        if getattr(exp, "platform_type", None) == "instant_messaging":
+            return redirect(url_for("clientsr.clients_im", idexp=idexp))
+        if getattr(exp, "platform_type", None) == "dating":
+            return redirect(url_for("clientsr.clients_dating", idexp=idexp))
         if getattr(exp, "platform_type", None) == "photo_sharing":
             return redirect(url_for("clientsr.clients_photo", idexp=idexp))
+        if is_forum_hpc_experiment(exp):
+            return redirect(url_for("clientsr.clients_forum_hpc", idexp=idexp))
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if experiment_mode == "forum":
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -1768,7 +1777,7 @@ def clients_forum(idexp):
     """Render the dedicated forum client creation page."""
     check_privileges(current_user.username)
 
-    context = _build_client_creation_context(idexp, "Standard")
+    context = _build_client_creation_context(idexp, ("Standard", "Forum"))
     exp = context["experiment"]
     if exp is None:
         flash(_("Experiment not found."), "error")
@@ -1800,8 +1809,14 @@ def clients_hpc(idexp):
     if exp is None:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
+    if exp.platform_type == "instant_messaging":
+        return redirect(url_for("clientsr.clients_im", idexp=idexp))
+    if exp.platform_type == "dating":
+        return redirect(url_for("clientsr.clients_dating", idexp=idexp))
     if exp.platform_type == "photo_sharing":
         return redirect(url_for("clientsr.clients_photo", idexp=idexp))
+    if is_forum_hpc_experiment(exp):
+        return redirect(url_for("clientsr.clients_forum_hpc", idexp=idexp))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -2606,6 +2621,8 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     )  # Changed default from vllm to ollama for HPC
 
     llm = request.form.get("llm")
+    # key of the main model (hosted providers such as OpenAI or DeepSeek need one); "NULL" means none
+    llm_api_key = (form_data.get("llm_api_key") or "").strip() or "NULL"
     llm_v = form_data.get("llm_v", "http://127.0.0.1:11434/v1")
     llm_v_agent = form_data.get("llm_v_agent", "minicpm-v:latest")
     llm_v_temperature = form_data.get("llm_v_temperature", "0.5")
@@ -2686,7 +2703,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "port": 11434,
             "model": form_data.get("user_type", "llama3.2"),
             "temperature": float(form_data.get("llm_temperature", "0.7")),
-            "llm_api_key": "NULL",
+            "llm_api_key": llm_api_key,
             "llm_max_tokens": -1,
             "api_format": "auto",
             "batching_policy": "auto",
@@ -3387,6 +3404,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp.idexp)
         db.session.add(pop_exp)
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp.idexp, population_id)
 
     # Create client record in database
     client = Client(
@@ -4148,16 +4168,7 @@ def _create_standard_client_internal():
         flash(_("Population not found."), "error")
         return redirect(request.referrer)
 
-    pop_type = infer_population_username_type(population)
-    if pop_type not in {None, "microblogging"}:
-        flash(
-            _(
-                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'microblogging'.",
-                pop_type=pop_type,
-            ),
-            "error",
-        )
-        return redirect(request.referrer)
+    # a population is not tied to a platform: any of them can be deployed on any experiment
 
     initial_agents_int = None
     if initial_agents and initial_agents.strip():
@@ -4179,6 +4190,9 @@ def _create_standard_client_internal():
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
         db.session.add(pop_exp)
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp_id, population_id)
 
     # create the Client object
     prompt_language = prompt_packs.resolve(
@@ -5119,6 +5133,11 @@ def _create_forum_client_internal():
     max_thread_context_chars = request.form.get("max_thread_context_chars", "3200")
     max_replies_per_round = request.form.get("max_replies_per_round", "2")
     reply_cooldown_rounds = request.form.get("reply_cooldown_rounds", "2")
+    try:
+        communities_values = forum_communities.parse_form(request.form)
+    except forum_communities.CommunitiesFormError as exc:
+        flash(_("Invalid client settings: %(why)s", why=str(exc)), "error")
+        return redirect(request.referrer)
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_pair_limit = request.form.get("memory_pair_limit", "5")
     memory_prompt_max_chars = request.form.get("memory_prompt_max_chars", "1600")
@@ -5492,16 +5511,7 @@ def _create_forum_client_internal():
         flash(_("Population not found."), "error")
         return redirect(request.referrer)
 
-    pop_type = infer_population_username_type(population)
-    if pop_type not in {None, "forum"}:
-        flash(
-            _(
-                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'forum'.",
-                pop_type=pop_type,
-            ),
-            "error",
-        )
-        return redirect(request.referrer)
+    # a population is not tied to a platform: any of them can be deployed on any experiment
 
     initial_agents_int = None
     if initial_agents and initial_agents.strip():
@@ -5523,6 +5533,9 @@ def _create_forum_client_internal():
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
         db.session.add(pop_exp)
         db.session.commit()
+        from y_web.src.federation.dynamic import population_added  # INV-18
+
+        population_added(exp_id, population_id)
 
     # create the Client object
     prompt_language = prompt_packs.resolve(
@@ -5839,6 +5852,10 @@ def _create_forum_client_internal():
             "memory_cross_thread_callback_min_score": 0.8,
         },
     }
+
+    communities_section = forum_communities.config_section(communities_values)
+    if communities_section:
+        config["communities"] = communities_section
 
     if not _apply_population_attributes_to_client_config(config, population_id):
         flash(
@@ -6430,6 +6447,12 @@ def create_hpc_client_route():
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
+    if exp.platform_type == "instant_messaging":
+        return redirect(url_for("clientsr.clients_im", idexp=exp_id))
+    if exp.platform_type == "dating":
+        return redirect(url_for("clientsr.clients_dating", idexp=exp_id))
+    if is_forum_hpc_experiment(exp):
+        return redirect(url_for("clientsr.clients_forum_hpc", idexp=exp_id))
     if exp.platform_type == "photo_sharing" and not population_id:
         flash(_("Select a valid population."), "error")
         return redirect(url_for("clientsr.clients_photo", idexp=exp_id))
@@ -6655,8 +6678,31 @@ def _extract_llm_names_from_population_payload(agents_payload):
     return ",".join(list(set(llms)))
 
 
+def _normalize_hourly_activity(activity):
+    """Return ``{"0": value, ..., "23": value}`` from the shapes configs use.
+
+    A dict maps hour -> weight (YClient); a comma-separated string or a list names the active
+    hours (activity profiles of YInstantMessaging, e.g. ``"0,1,2"``), each counted as 1.
+    Anything else gives no activity.
+    """
+    if isinstance(activity, dict):
+        return activity
+    if isinstance(activity, str):
+        activity = activity.split(",")
+    if isinstance(activity, (list, tuple, set)):
+        hours = {}
+        for item in activity:
+            try:
+                hours[str(int(str(item).strip()))] = 1
+            except (TypeError, ValueError):
+                continue
+        return hours
+    return {}
+
+
 def _build_hourly_activity_chart_series(activity):
-    """Convert hourly activity dict to plotting arrays."""
+    """Convert hourly activity (dict, CSV string or list of hours) to plotting arrays."""
+    activity = _normalize_hourly_activity(activity)
     idx = []
     data = []
     for hour in range(24):

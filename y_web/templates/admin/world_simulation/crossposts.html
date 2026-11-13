@@ -1,0 +1,97 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+{% set fed = row.fed %}
+{#- One platform of a row: the icon of the platform type, the name of the experiment as tooltip, a link to the content on its frontend when that frontend is active. -#}
+{% macro content_icon(info, role) -%}
+{%- set mdi = platform_icons.get(info.platform_type, 'mdi-web') -%}
+{%- if info.href -%}
+<a class="ws-icon-link" data-role="{{ role }}" data-member="{{ info.member }}" href="{{ info.href }}" target="_blank" rel="noopener" title="{{ info.exp_name }}"><i class="mdi {{ mdi }}"></i></a>
+{%- else -%}
+{%- if not info.active %}{% set why = _('the web interface of this experiment is not active') %}
+{%- elif role == 'to' and not info.delivered %}{% set why = _('not delivered yet') %}
+{%- else %}{% set why = _('the content is not available') %}{% endif -%}
+<span class="ws-icon-link is-off" data-role="{{ role }}" data-member="{{ info.member }}" title="{{ info.exp_name }} · {{ why }}"><i class="mdi {{ mdi }}"></i></span>
+{%- endif -%}
+{%- endmacro %}
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            {{ ws.breadcrumb([(fed.name, url_for('world_simulation.detail', fed_id=fed.id)), (_('Cross-posts'), None)]) }}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-crossposts">
+                        <div class="ws-title-row">
+                            <h3 class="title is-5 is-thin">{{ fed.name }} {{ ws.state_tag(fed.status) }}</h3>
+                            <a class="button is-light is-small" id="ws-crossposts-csv" href="{{ url_for('world_simulation.crossposts_csv', fed_id=fed.id, **export_args) }}"><i class="mdi mdi-download"></i> <span>{{ _('Download %(what)s (CSV)', what=_('cross-posts')) }}</span></a>
+                        </div>
+                        <div class="box-content">
+                            {{ ws.tabs(fed, 'crossposts', panes=False) }}
+                            <p class="ws-intro">{{ _('Every content copied from one experiment to another: where it was posted, where it was sent and whether it arrived. Click an icon to open the content in the web interface of its experiment (only while that experiment is active).') }}</p>
+                            <form method="get" class="ws-actions ws-filter" id="ws-crossposts-filter">
+                                <input class="input" type="search" name="q" value="{{ f.q }}" placeholder="{{ _('Search author or text') }}">
+                                <div class="select"><select name="source">
+                                    <option value="">{{ _('Any origin') }}</option>
+                                    {% for m, name in member_options %}<option value="{{ m }}" {{ 'selected' if f.source == m }}>{{ name }}</option>{% endfor %}
+                                </select></div>
+                                <div class="select"><select name="destination">
+                                    <option value="">{{ _('Any destination') }}</option>
+                                    {% for m, name in member_options %}<option value="{{ m }}" {{ 'selected' if f.destination == m }}>{{ name }}</option>{% endfor %}
+                                </select></div>
+                                <input class="input" type="search" name="agent" value="{{ f.agent }}" placeholder="{{ _('Agent id') }}" style="max-width:8rem">
+                                <div class="select"><select name="status">
+                                    <option value="">{{ _('Delivered or pending') }}</option>
+                                    {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ _('Delivered') if s == 'delivered' else _('Pending') }}</option>{% endfor %}
+                                </select></div>
+                                <div class="select"><select name="mode">
+                                    <option value="">{{ _('Any mode') }}</option>
+                                    {% for m in modes %}<option value="{{ m }}" {{ 'selected' if f.mode == m }}>{{ m }}</option>{% endfor %}
+                                </select></div>
+                                <input class="input" type="number" min="0" name="tick_from" value="{{ f.tick_from if f.tick_from is not none }}" placeholder="{{ _('From tick') }}" style="max-width:7rem" title="{{ _('A day has %(n)s ticks (slots)', n=slots_per_day) }}">
+                                <input class="input" type="number" min="0" name="tick_to" value="{{ f.tick_to if f.tick_to is not none }}" placeholder="{{ _('To tick') }}" style="max-width:7rem">
+                                <div class="select"><select name="sort">
+                                    <option value="tick_desc" {{ 'selected' if f.sort == 'tick_desc' }}>{{ _('Newest first') }}</option>
+                                    <option value="tick_asc" {{ 'selected' if f.sort == 'tick_asc' }}>{{ _('Oldest first') }}</option>
+                                </select></div>
+                                <div class="select"><select name="size" title="{{ _('Rows per page') }}">
+                                    {% for n in page_sizes %}<option value="{{ n }}" {{ 'selected' if f.size == n }}>{{ n }}</option>{% endfor %}
+                                </select></div>
+                                <button class="button is-light" type="submit"><i class="mdi mdi-filter-outline"></i> <span>{{ _('Filter') }}</span></button>
+                                {% if export_args %}<a class="button is-light" href="{{ url_for('world_simulation.crossposts', fed_id=fed.id) }}">{{ _('Reset') }}</a>{% endif %}
+                            </form>
+                            {% if f.ref %}<p class="ws-sub">{{ _('Only copies of %(ref)s', ref=f.ref) }}</p>{% endif %}
+                            <p class="ws-sub" id="ws-crossposts-total">{{ _('%(n)s cross-posts', n=total) }}{% if capped %} ({{ _('count stopped at the limit') }}){% endif %}</p>
+                            <div class="table-container">
+                            <table class="table is-fullwidth is-hoverable ws-table" id="ws-crossposts-table"><thead><tr>
+                                <th><a href="{{ page_url(sort='tick_asc' if f.sort == 'tick_desc' else 'tick_desc') }}">{{ _('Tick') }} {{ '▼' if f.sort == 'tick_desc' else '▲' }}</a></th>
+                                <th>{{ _('Author') }}</th><th>{{ _('From') }} → {{ _('To') }}</th><th>{{ _('Text') }}</th><th>{{ _('Mode') }}</th><th>{{ _('State') }}</th></tr></thead><tbody>
+                            {% for r in rows %}
+                            <tr data-fed-msg="{{ r.fed_msg_id }}">
+                                <td><span class="ws-name">{{ _('Day %(d)s', d=r.day) }}</span> <span class="ws-sub">{{ _('slot %(s)s', s=r.slot) }} · {{ _('tick %(t)s', t=r.tick) }}</span></td>
+                                <td>{% if r.author_href %}<a class="ws-name" href="{{ r.author_href }}" target="_blank" rel="noopener">{{ r.author }}</a>{% else %}<span class="ws-name">{{ r.author or '-' }}</span>{% endif %}
+                                    {% if r.global_agent_id %}<a class="ws-sub" href="{{ page_url(agent=r.global_agent_id) }}" title="{{ _('Only this agent') }}">{{ r.global_agent_id }}</a>{% endif %}</td>
+                                <td class="ws-from-to">{{ content_icon(r.origin, 'from') }} <span class="ws-sub">→</span> {{ content_icon(r.destination, 'to') }}</td>
+                                <td>{{ r.text }}{% if r.shared %} <span class="ws-sub">· {{ _('shares a content of %(who)s', who=r.shared_from or '?') }}</span>{% endif %}</td>
+                                <td><span class="ws-sub">{{ r.mode }}</span></td>
+                                <td><span class="exp-tag {{ 'ws-agent-active' if r.delivered else 'ws-agent-dormant' }}" data-delivered="{{ 'yes' if r.delivered else 'no' }}">{{ _('Delivered') if r.delivered else _('Pending') }}</span></td>
+                            </tr>
+                            {% else %}<tr><td colspan="6"><div class="empty-state">{% if available %}{{ _('No cross-post matches.') }}{% else %}{{ _('The World Simulation has not run yet: cross-posts are shown once it starts.') }}{% endif %}</div></td></tr>{% endfor %}
+                            </tbody></table>
+                            </div>
+                            {% if pages > 1 %}
+                            <p class="ws-sub ws-pager">{{ _('Page %(page)s of %(pages)s', page=page, pages=pages) }} ·
+                                {% if page > 1 %}<a href="{{ page_url(page - 1) }}">{{ _('Previous') }}</a>{% endif %}
+                                {% if page < pages %}<a href="{{ page_url(page + 1) }}">{{ _('Next') }}</a>{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

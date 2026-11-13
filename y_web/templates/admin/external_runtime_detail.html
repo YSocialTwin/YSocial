@@ -3,6 +3,13 @@
     .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-text-dark:#111827; }
     .ext-runtimes .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
     .ext-hint { font-size:.74rem; color:#6b7280; }
+    .ext-repo-links { display:flex; flex-wrap:wrap; gap:4px 16px; margin:-6px 0 12px; font-size:.78rem; }
+    .ext-repo-links a { color:#4f46e5; text-decoration:none; }
+    .ext-repo-links a:hover { text-decoration:underline; }
+    .ext-banners { display:grid; gap:10px; margin:0 0 16px; }
+    .ext-banners figure { margin:0; }
+    .ext-banners img { display:block; width:100%; max-height:240px; object-fit:contain; border:1px solid var(--ext-border); border-radius:10px; background:#fff; }
+    .ext-banners figcaption { font-size:.7rem; color:#6b7280; margin-top:3px; }
     .ext-back { font-size:.8rem; margin-bottom:10px; display:inline-block; }
     .ext-head { display:flex; gap:8px 12px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
     .ext-head h3 { margin:0; }
@@ -53,6 +60,16 @@
                         </div>
                         <div class="box-content">
                             <p class="ext-hint" style="margin-bottom:14px;">{{ entry.description }}</p>
+                            <div class="ext-repo-links">
+                                {% for b in banners if b.repo_url %}<a href="{{ b.repo_url }}" target="_blank" rel="noopener noreferrer">{{ _('Repository') }}{% if entry.paired %} {{ b.label }}{% endif %}: {{ b.github_repo or b.repo_url }}</a>{% endfor %}
+                            </div>
+                            {% if banners|selectattr('image_url')|list %}
+                            <div class="ext-banners">
+                                {% for b in banners if b.image_url %}
+                                <figure><img src="{{ b.image_url }}" alt="{{ b.alt }}" loading="lazy" onerror="this.closest('figure').hidden=true">{% if entry.paired %}<figcaption>{{ b.label }}</figcaption>{% endif %}</figure>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                             {% if entry.community %}
                             <div class="ext-warn">{{ _('This plugin comes from the community plugin registry and is not maintained by the YSocial team. Its code runs on this computer when it is installed or updated: review the repository first.') }} <a href="{{ entry.repo_url }}" target="_blank" rel="noopener noreferrer">{{ entry.repo_url }}</a></div>
                             {% endif %}

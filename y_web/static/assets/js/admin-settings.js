@@ -553,6 +553,20 @@ var AdminSettings = (function() {
           });
   }
 
+  // World Simulation: badge next to the name and lock instead of the start/stop commands of a member
+  function renderWorldSimulationBadge(exp) {
+      if (!exp.world_simulation) {
+          return '';
+      }
+      const title = YI18n.t('Managed by the World Simulation');
+      return `<span class="exp-tag" style="background: #7b1fa2;" title="${title}">${YI18n.t('World Simulation')}: ${exp.world_simulation}</span>`;
+  }
+
+  function renderWorldSimulationLock() {
+      const title = YI18n.t('Managed by the World Simulation');
+      return `<i class="mdi mdi-lock-outline" style="font-size: 18px; color: #6c757d;" title="${title}"></i>`;
+  }
+
   function renderExperimentProgressBadge(exp, statusFilter) {
       if (statusFilter === EXP_STATUS.ACTIVE) {
           if (exp.progress === undefined || exp.progress === null) {
@@ -659,7 +673,7 @@ var AdminSettings = (function() {
                       const checkbox = statusFilter === EXP_STATUS.COMPLETED ? 
                           '<input type="checkbox" class="exp-checkbox" data-exp-id="' + exp.idexp + '" \n                                  onchange="toggleExperimentSelection(' + exp.idexp + ', this)" \n                                  ' + (selectedExperiments.has(exp.idexp) ? 'checked' : '') + '\n                                  style="margin-right: 8px;" title="' + YI18n.t('Select for download') + '"/>' : '';
                     
-                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging') + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.running === 'Running' ? 
+                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : exp.platform_type === 'dating' ? 'Dating' : 'Microblogging') + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderWorldSimulationBadge(exp) + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.world_simulation_locked ? renderWorldSimulationLock() : exp.running === 'Running' ? 
                                           (exp.can_manage ? '<a href="#" onclick="stopExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Stop Server') + '"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>' : '') : 
                                           '<a href="#" onclick="startExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Start Server') + '"><i class="mdi mdi-play-box-outline" style="font-size: 18px; color: #28a745;"></i></a>') + '\n                                      ' + (exp.web === 'Loaded' ? 
                                           '<a href="/admin/select_experiment/' + exp.idexp + '" title="' + YI18n.t('Loaded (click to unload)') + '"><i class="mdi mdi-select-all" style="font-size: 18px; color: #28a745;"></i></a>' : 
@@ -1386,7 +1400,9 @@ var AdminSettings = (function() {
   function updateButtonState() {
       const createBtn = document.getElementById('create-experiment-btn');
       if (createBtn) {
-          if (tagList.length > 0) {
+          // Dating has no topics: the experiment can be created without them
+          const platformSelect = document.getElementById('platform_type_select');
+          if (tagList.length > 0 || (platformSelect && platformSelect.value === 'dating')) {
               createBtn.disabled = false;
           } else {
               createBtn.disabled = true;
@@ -1515,7 +1531,10 @@ var AdminSettings = (function() {
       const microbloggingAvailable = !!repoAvailability.microblogging;
       const hpcAvailable = !!repoAvailability.hpc;
       const forumAvailable = !!repoAvailability.forum;
+      const forumHpcAvailable = !!repoAvailability.forum_hpc;
       const photoSharingAvailable = !!repoAvailability.photo_sharing;
+      const instantMessagingAvailable = !!repoAvailability.instant_messaging;
+      const datingAvailable = !!repoAvailability.dating;
     
       // Handle Redis Configuration collapsible toggle
       const redisConfigHeader = document.getElementById('redis-config-header');
@@ -1547,8 +1566,16 @@ var AdminSettings = (function() {
           if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {
               return;
           }
-          const isPhotoSharing = platformTypeSelect.value === 'photo_sharing';
-          if (!forumAvailable && platformTypeSelect.value === 'forum') {
+          const isInstantMessaging = platformTypeSelect.value === 'instant_messaging';
+          const isDating = platformTypeSelect.value === 'dating';
+          // The simulation topics are not used by the dating platform: hide the field
+          const topicsBox = document.getElementById('simulation-topics-box');
+          if (topicsBox) {
+              topicsBox.style.display = isDating ? 'none' : '';
+          }
+          updateButtonState();
+          const isPhotoSharing = platformTypeSelect.value === 'photo_sharing' || isInstantMessaging || isDating;
+          if (!(forumAvailable || forumHpcAvailable) && platformTypeSelect.value === 'forum') {
               platformTypeSelect.value = 'microblogging';
           }
           const isForum = platformTypeSelect.value === 'forum';
@@ -1566,11 +1593,27 @@ var AdminSettings = (function() {
                   hpcToggleContainer.style.opacity = '0.8';
               }
           } else if (isForum) {
-              hpcToggle.checked = false;
-              hpcToggle.disabled = true;
-              hpcToggleLabel.textContent = YI18n.t('Unavailable for Forum');
-              if (hpcToggleContainer) {
-                  hpcToggleContainer.style.opacity = '0.55';
+              // the forum runs on the Flask pair (Standard) or on YForum (HPC)
+              if (!forumHpcAvailable) {
+                  hpcToggle.checked = false;
+                  hpcToggle.disabled = true;
+                  hpcToggleLabel.textContent = YI18n.t('Unavailable for Forum');
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '0.55';
+                  }
+              } else if (!forumAvailable) {
+                  hpcToggle.checked = true;
+                  hpcToggle.disabled = true;
+                  hpcToggleLabel.textContent = YI18n.t('Required');
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '0.8';
+                  }
+              } else {
+                  hpcToggle.disabled = false;
+                  hpcToggleLabel.textContent = hpcToggle.checked ? YI18n.t('Enabled') : YI18n.t('Disabled');
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '1';
+                  }
               }
           } else {
               if (!hpcAvailable) {
@@ -1596,7 +1639,7 @@ var AdminSettings = (function() {
               }
           }
 
-          isHPC = !isForum && hpcToggle.checked;
+          isHPC = (!isForum || forumHpcAvailable) && hpcToggle.checked;
           simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
 
           if (!isForum && microbloggingAvailable && !hpcAvailable) {
@@ -1610,7 +1653,7 @@ var AdminSettings = (function() {
           if (platformTypeSelect) {
               const forumOption = platformTypeSelect.querySelector('option[value="forum"]');
               if (forumOption) {
-                  forumOption.disabled = !forumAvailable;
+                  forumOption.disabled = !(forumAvailable || forumHpcAvailable);
               }
               const microbloggingOption = platformTypeSelect.querySelector('option[value="microblogging"]');
               if (microbloggingOption) {
@@ -1629,6 +1672,14 @@ var AdminSettings = (function() {
           }
 
           if (platformTypeSelect) {
+              const instantMessagingOption = platformTypeSelect.querySelector('option[value="instant_messaging"]');
+              if (instantMessagingOption) {
+                  instantMessagingOption.disabled = !instantMessagingAvailable;
+              }
+              const datingOption = platformTypeSelect.querySelector('option[value="dating"]');
+              if (datingOption) {
+                  datingOption.disabled = !datingAvailable;
+              }
               const photoSharingOption = platformTypeSelect.querySelector('option[value="photo_sharing"]');
               if (photoSharingOption) {
                   photoSharingOption.disabled = !photoSharingAvailable;
@@ -1637,7 +1688,7 @@ var AdminSettings = (function() {
 
           if (isHPC) {
               hpcInfoInline.style.display = 'block';
-              redisConfigBox.style.display = 'flex';
+              redisConfigBox.style.display = (isInstantMessaging || isDating || isForum) ? 'none' : 'flex';
 
               // Disable remote experiment toggle for HPC
               if (remoteExperimentToggle) {

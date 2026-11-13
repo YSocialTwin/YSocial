@@ -5,6 +5,18 @@
         return;
     }
 
+    // Ids are integers in standard experiments and UUID strings in HPC ones: never parse them as numbers.
+    function opaqueId(value) {
+        if (value === null || value === undefined) {
+            return null;
+        }
+        var text = String(value).trim();
+        if (!text) {
+            return null;
+        }
+        return /^-?\d+$/.test(text) ? Number(text) : text;
+    }
+
     var Api = window.RedditApi || null;
     if (!Api) {
         console.warn(
@@ -459,8 +471,7 @@
         if (!$first.length) {
             return null;
         }
-        var value = parseInt($first.attr("data-post-id"), 10);
-        return Number.isFinite(value) ? value : null;
+        return opaqueId($first.attr("data-post-id"));
     }
 
     function showNewPostsNotice() {
@@ -482,8 +493,8 @@
                     return;
                 }
                 var currentTop = getTopRenderedPostId();
-                var nextTop = parseInt(posts[0].post_id, 10);
-                if (!Number.isFinite(nextTop)) {
+                var nextTop = opaqueId(posts[0].post_id);
+                if (nextTop === null) {
                     return;
                 }
                 if (currentTop === null) {
@@ -515,6 +526,10 @@
         }, AUTO_REFRESH_INTERVAL_MS);
     }
 
+    function buildFeedCommunityUrl(slug) {
+        return "/" + getExpId() + "/subforum/" + encodeURIComponent(slug);
+    }
+
     function buildThreadUrl(postId) {
         var expId = getExpId();
         var back = getCurrentFeedUrl();
@@ -542,7 +557,7 @@
 
     function currentViewerCanDelete(authorId, loggedUserId) {
         var isAdmin = !!(window.redditContext && window.redditContext.isAdmin);
-        return isAdmin || (loggedUserId && Number(authorId) === Number(loggedUserId));
+        return isAdmin || (loggedUserId && String(authorId) === String(loggedUserId));
     }
 
     function parseVoteState($post) {
@@ -551,7 +566,7 @@
         var score = parseInt($post.attr("data-score"), 10) || likes - dislikes;
         var vote = $post.attr("data-vote") || "neutral";
         return {
-            postId: parseInt($post.attr("data-post-id"), 10),
+            postId: opaqueId($post.attr("data-post-id")),
             likes: likes,
             dislikes: dislikes,
             score: score,
@@ -734,15 +749,12 @@
         var hasDeletePrivilege = currentViewerCanDelete(post.author_id, loggedUserId);
         var communityMeta = "";
         if (post.primary_community && post.primary_community.slug) {
-            communityMeta = [
-                '<span class="forum-post-community-separator">·</span>',
+            communityMeta =
                 '<a class="forum-post-community-link" href="' +
-                    buildSubforumUrl(post.primary_community.slug) +
-                    '">',
-                '  <i data-feather="hash" class="forum-post-community-icon"></i>',
-                '  <span>' + escapeHtml(post.primary_community.label || "") + "</span>",
-                "</a>",
-            ].join("");
+                buildSubforumUrl(post.primary_community.slug) +
+                '">' +
+                escapeHtml(post.primary_community.label || "") +
+                "</a>";
         }
 
         var articleSection = "";
@@ -846,8 +858,11 @@
 
         var sharedSection = "";
         if (post.shared_from && post.shared_from !== -1) {
+            var originCommunity = post.shared_from[2]
+                ? '<a href="' + buildFeedCommunityUrl(post.shared_from[2]) + '" class="fr-crosspost-origin-community">y/' + escapeHtml(post.shared_from[2]) + '</a> ' + YI18n.t('by') + ' '
+                : '';
             sharedSection =
-                '<div style="text-align: right; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px;"><p><small>' + YI18n.t('Shared from:') + ' <a href="' + buildThreadUrl(post.shared_from[0]) + '">' + escapeHtml(post.shared_from[1] || "") + '</a></small></p></div>';
+                '<p class="fr-crosspost-origin"><i class="mdi mdi-repeat" aria-hidden="true"></i> ' + YI18n.t('Crossposted from') + ' ' + originCommunity + '<a href="' + buildThreadUrl(post.shared_from[0]) + '" class="fr-crosspost-origin-link">' + escapeHtml(post.shared_from[1] || "") + '</a></p>';
         }
 
         var deleteAction = "";
@@ -897,20 +912,20 @@
                 escapeHtml(post.author || "") +
                 '" style="border-radius: 50%; width: 40px; height: 40px;">',
             "        </div>",
-            '        <div class="user-info" style="display: flex; flex-direction: column;">',
+            '        <div class="user-info">',
+            communityMeta,
             '          <a class="post-author-link" href="' +
                 buildProfileUrl(post.author_id) +
                 '" style="color: inherit; text-decoration: none; font-weight: 500;">' +
                 escapeHtml(post.author || "") +
                 "</a>",
-            '          <span class="time">' +
+            '          <span class="time forum-post-time">' +
                 formatDisplayTime(post) +
-                communityMeta +
                 "</span>",
             "        </div>",
             "      </div>",
             '      <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">',
-            '        <div class="button"><i data-feather="more-vertical"></i></div>',
+            '        <div class="button"><i data-feather="more-horizontal"></i></div>',
             '        <div class="dropdown-menu" role="menu">',
             '          <div class="dropdown-content">',
             '            <a href="' +
@@ -961,6 +976,7 @@
             '      <i data-feather="message-square" style="width: 16px; height: 16px;"></i>',
             '      <span><span data-role="comment-count">' + (post.t_comments || 0) + '</span> ' + YI18n.t('Comments') + '</span>',
             "    </a>",
+            '    <button type="button" class="fr-crosspost-button" data-post-id="' + post.post_id + '" data-community="' + escapeHtml((post.primary_community && post.primary_community.slug) || "") + '" aria-label="' + YI18n.t('Repost') + '" title="' + YI18n.t('Repost') + '"><i class="mdi mdi-repeat" aria-hidden="true"></i></button>',
             "  </div>",
             "</div>",
         ].join("");
@@ -1025,7 +1041,7 @@
         var postById = {};
         (posts || []).forEach(function (p) {
             if (p && p.post_id != null) {
-                postById[Number(p.post_id)] = p;
+                postById[String(p.post_id)] = p;
             }
         });
 
@@ -1068,7 +1084,7 @@
             enhanceRedditMedia($post);
 
             // Lazy enrichment for link summaries and image descriptions.
-            var postId = Number($post.attr("data-post-id"));
+            var postId = String($post.attr("data-post-id"));
             var postData = postById[postId] || null;
             if (postData) {
                 maybeEnrichPost($post, postData);
@@ -1749,7 +1765,7 @@
         }
 
         var parentAttr = button.getAttribute("data-parent-id");
-        var parentId = parentAttr ? parseInt(parentAttr, 10) : NaN;
+        var parentId = parentAttr ? opaqueId(parentAttr) : NaN;
         if (!parentId) {
             return;
         }
@@ -1967,7 +1983,7 @@
         }
 
         var articleNeeds = $threadRoot.attr("data-article-needs-enrichment") === "1";
-        var articleId = Number($threadRoot.attr("data-article-id") || 0) || 0;
+        var articleId = opaqueId($threadRoot.attr("data-article-id")) || 0;
         if (articleNeeds && articleId && !articleEnrichInFlight.has(articleId)) {
             articleEnrichInFlight.add(articleId);
             Api.enrichArticle(articleId, false)
@@ -1984,7 +2000,7 @@
         }
 
         var imageNeeds = $threadRoot.attr("data-image-needs-enrichment") === "1";
-        var imageId = Number($threadRoot.attr("data-image-id") || 0) || 0;
+        var imageId = opaqueId($threadRoot.attr("data-image-id")) || 0;
         if (imageNeeds && imageId && !imageEnrichInFlight.has(imageId)) {
             imageEnrichInFlight.add(imageId);
             Api.enrichImage(imageId, false)

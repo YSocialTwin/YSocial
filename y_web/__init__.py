@@ -282,6 +282,111 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     register_template_context(app)
 
+    from y_web.src.agents.profile_pictures import picture_of_username
+
+    app.jinja_env.globals["agent_picture"] = (
+        picture_of_username  # the IM avatars show the agent's picture
+    )
+
+    from y_web.src.federation.availability import sdk_available
+
+    app.jinja_env.globals["ws_sdk_available"] = (
+        sdk_available  # the World Simulation menu hides without the YFederation plugin
+    )
+
+    from y_web.src.federation.service import world_simulation_of
+
+    app.jinja_env.globals["world_simulation_of"] = (
+        world_simulation_of  # badge and disabled commands of the members
+    )
+
+    from y_web.src.federation.quotes import federation_quote
+
+    app.jinja_env.globals["federation_quote"] = (
+        federation_quote  # attribution of shared content (P4)
+    )
+
+    def _ws_destinations(exp_id):
+        """Where the logged-in person can also post (F8): empty unless enrolled in the World Simulation of the experiment."""
+        try:
+            from flask_login import current_user
+
+            from y_web.src.federation.availability import sdk_available
+            from y_web.src.federation.human_outbox import destinations_for
+
+            if not sdk_available():
+                return []
+
+            return (
+                destinations_for(exp_id, getattr(current_user, "id", None))
+                if current_user.is_authenticated
+                else []
+            )
+        except (
+            Exception
+        ):  # noqa: BLE001 - a composer never fails because of the federation
+            return []
+
+    app.jinja_env.globals["ws_destinations"] = _ws_destinations
+
+    def _ws_pending(exp_id):
+        """What others cross-posted to the logged-in person's stopped platform (P7); empty for everybody else."""
+        try:
+            from flask_login import current_user
+
+            from y_web.src.federation.availability import sdk_available
+            from y_web.src.federation.pending_notice import pending_for
+
+            if not sdk_available():
+                return []
+
+            return (
+                pending_for(exp_id, getattr(current_user, "id", None))
+                if current_user.is_authenticated
+                else []
+            )
+        except Exception:  # noqa: BLE001 - a page never fails because of the federation
+            return []
+
+    app.jinja_env.globals["ws_pending"] = _ws_pending
+
+    def _ws_profile_badges(exp_id, account_id):
+        """The other platforms where the account of a profile page takes part (World Simulation); empty elsewhere."""
+        try:
+            from y_web.src.federation.availability import sdk_available
+            from y_web.src.federation.profile_badges import badges_for
+
+            if not sdk_available():
+                return []
+            return badges_for(exp_id, account_id)
+        except (
+            Exception
+        ):  # noqa: BLE001 - a profile page never fails because of the federation
+            return []
+
+    app.jinja_env.globals["ws_profile_badges"] = _ws_profile_badges
+
+    def _ws_origin(exp_id, local_id):
+        """Where a cross-posted post, photo or message comes from (World Simulation); None elsewhere."""
+        try:
+            from y_web.src.federation.backlinks import origin_for
+
+            return origin_for(exp_id, local_id)
+        except Exception:  # noqa: BLE001 - a page never fails because of the federation
+            return None
+
+    def _ws_copies(exp_id, local_id):
+        """Where a post, photo or message was cross-posted to (World Simulation); empty elsewhere."""
+        try:
+            from y_web.src.federation.backlinks import copies_for
+
+            return copies_for(exp_id, local_id)
+        except Exception:  # noqa: BLE001
+            return []
+
+    app.jinja_env.globals["ws_origin"] = _ws_origin
+    app.jinja_env.globals["ws_copies"] = _ws_copies
+
     from y_web.routes import register_blueprints
 
     register_blueprints(app)
@@ -290,6 +395,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     register_avatar_route(app)
     ensure_avatars()
+
+    # profile pictures whose generation a shutdown interrupted continue where they stopped
+    from y_web.src.agents.profile_pictures import resume_later
+
+    resume_later(app)
 
     # ------------------------------------------------------------------
     # Frontend plugin suites (e.g. Frontend Adds-on) — registered ONLY for suites

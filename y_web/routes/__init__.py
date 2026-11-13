@@ -29,6 +29,7 @@ def register_blueprints(app):
         population,
         tutorial,
         users,
+        world_simulation,
     )
     from .api import api_interview, api_reddit, api_social
     from .auth import auth
@@ -63,6 +64,7 @@ def register_blueprints(app):
     app.register_blueprint(i18n_bp)
     app.register_blueprint(lab)
     app.register_blueprint(tutorial)
+    app.register_blueprint(world_simulation)
     app.register_blueprint(api_reddit)
     app.register_blueprint(api_social)
     app.register_blueprint(api_interview)

@@ -1,0 +1,24 @@
+{#- World Simulation: back-links of cross-posted content. Set `ws_exp` (the experiment id) and `ws_id` (the id of the post, photo
+    or message on this platform) before including. On a copy it shows "Cross-posted from <platform> · @author" linking to the
+    original (no link when the web interface of that experiment is not active or the original was removed); on an original,
+    "Cross-posted to <platform>" with one link for each copy. Content that shares a quote keeps its "Shared from" block, so
+    no origin line is shown there. Nothing is rendered for content outside a World Simulation or never cross-posted. -#}
+{% from "shared/world_simulation_icon.html" import ws_icon %}
+{% set ws_from = ws_origin(ws_exp, ws_id) if ws_exp is defined and ws_id is defined and ws_origin is defined and not (federation_quote is defined and federation_quote(ws_exp, ws_id)) else None %}
+{% set ws_to = ws_copies(ws_exp, ws_id) if ws_exp is defined and ws_id is defined and ws_copies is defined else [] %}
+{% if ws_from %}
+<div class="ws-origin" data-ws-origin data-ws-member="{{ ws_from.member }}" style="margin:0 0 .4rem 0;font-size:.8em;opacity:.85">
+  {{ _('Cross-posted from') }}
+  {% if ws_from.href %}<a class="ws-origin-link" href="{{ ws_from.href }}" title="{{ _('Open the original on %(platform)s', platform=ws_from.label) }}" style="text-decoration:none">{{ ws_icon(ws_from.icon) }} <strong>{{ ws_from.label }}</strong>{% if ws_from.author %} &middot; @{{ ws_from.author }}{% endif %} &#8599;</a>
+  {% else %}<span class="ws-origin-nolink" title="{{ _('The original is not available') }}">{{ ws_icon(ws_from.icon) }} <strong>{{ ws_from.label }}</strong>{% if ws_from.author %} &middot; @{{ ws_from.author }}{% endif %}</span>{% endif %}
+</div>
+{% endif %}
+{% if ws_to %}
+<div class="ws-copies" data-ws-copies style="margin:0 0 .4rem 0;font-size:.8em;opacity:.85">
+  {{ _('Cross-posted to') }}
+  {% for c in ws_to %}
+  {% if c.href %}<a class="ws-copy-link" href="{{ c.href }}" data-ws-member="{{ c.member }}" title="{{ _('Open the copy on %(platform)s', platform=c.label) }}" style="text-decoration:none;margin-right:.5rem;white-space:nowrap">{{ ws_icon(c.icon) }} <strong>{{ c.label }}</strong> &#8599;</a>
+  {% else %}<span class="ws-copy-nolink" data-ws-member="{{ c.member }}" style="margin-right:.5rem;white-space:nowrap">{{ ws_icon(c.icon) }} <strong>{{ c.label }}</strong></span>{% endif %}
+  {% endfor %}
+</div>
+{% endif %}

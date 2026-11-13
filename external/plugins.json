@@ -41,6 +41,46 @@
       "repository_url": "https://github.com/YSocialTwin/YClientReddit"
     },
     {
+      "plugin_name": "YDating",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Simulation runtime for Tinder-like dating experiments: profiles, swipes, mutual matches, private conversations and interchangeable matching recommenders.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YDating"
+    },
+    {
+      "plugin_name": "YFederation",
+      "category": "Simulation Runtime Stack",
+      "group": "World Simulation",
+      "description": "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YFederation"
+    },
+    {
+      "plugin_name": "YForum",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YForum"
+    },
+    {
+      "plugin_name": "YInstantMessaging",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Simulation runtime for Telegram-like instant messaging experiments: channels, groups, forwards and discussion dynamics.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YInstantMessaging"
+    },
+    {
       "plugin_name": "YPhotoSharing",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
@@ -71,10 +111,10 @@
       "repository_url": "https://github.com/YSocialTwin/YServerReddit"
     },
     {
-      "plugin_name": "YSimulator",
+      "plugin_name": "YMicroblogging",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
+      "description": "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters.",
       "authors": [
         "YSocialTwin"
       ],

@@ -6,6 +6,7 @@ Routes: interview, get_thread_reddit, feeed_logged_reddit,
         feed_reddit, search_reddit, api_feed_reddit.
 """
 
+import difflib
 import re
 from urllib.parse import urlencode
 
@@ -37,10 +38,15 @@ from y_web.src.data_access import (
     get_trending_hashtags,
     get_unanswered_mentions,
 )
+from y_web.src.forum.community_icons import assign_icons, icon_for
+from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     fetch_available_communities,
+    fetch_community_directory,
+    fetch_community_stats,
     fetch_feed_page,
     fetch_recent_active_communities,
     fetch_user_communities,
@@ -282,7 +288,7 @@ def get_thread_reddit(exp_id, post_id):
 
     posts = (
         Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
-        .order_by(Post.created_at.asc(), Post.id.asc())
+        .order_by(Post.created_at.asc(), seq_or_id(Post).asc())
         .all()
     )
     if hidden_ids:
@@ -339,10 +345,12 @@ def get_thread_reddit(exp_id, post_id):
             .filter(Post.id == root_post.shared_from)
             .first()
         )
+        from y_web.src.data_access.posts import _origin_community
+
         shared_from_info = (
-            (root_post.shared_from, shared_user.username)
-            if shared_user
-            else (root_post.shared_from, "Unknown")
+            root_post.shared_from,
+            shared_user.username if shared_user else "Unknown",
+            _origin_community(root_post.shared_from),
         )
 
     discussion_tree = {
@@ -498,6 +506,11 @@ def get_thread_reddit(exp_id, post_id):
     mention_user_id = logged_user.id if logged_user is not None else None
     mentions = get_unanswered_mentions(mention_user_id) if mention_user_id else []
 
+    thread_communities = _build_forum_sidebar_communities(
+        [{"article": {}, "topics": discussion_tree.get("topics") or []}]
+    )
+    thread_community = thread_communities[0] if thread_communities else None
+
     return render_template(
         "forum/thread.html",
         thread=discussion_tree,
@@ -516,6 +529,18 @@ def get_thread_reddit(exp_id, post_id):
         exp_id=exp_id,
         back_url=_forum_resolve_back_url(exp_id),
         forum_memory_enabled=_forum_memory_enabled(exp_id),
+        recent_communities=fetch_recent_active_communities(),
+        my_communities=fetch_user_communities(
+            logged_user.id if logged_user is not None else current_user.id
+        ),
+        current_subforum_slug=thread_community["slug"] if thread_community else None,
+        current_subforum_label=thread_community["label"] if thread_community else None,
+        community_stats=(
+            fetch_community_stats(thread_community["slug"])
+            if thread_community
+            else None
+        ),
+        feed_type=request.args.get("feed_type", _forum_default_feed_type(exp_id)),
     )
 
 
@@ -609,6 +634,8 @@ def rnotifications(exp_id):
     Reply = aliased(Post)
     Parent = aliased(Post)
     Author = aliased(User_mgmt)
+    # the order of the replies: their id for integer ids, the server sequence for UUID ids
+    reply_order = seq_or_id(Reply)
 
     from y_web.src.data_access.posts import _hidden_author_ids_for_viewer
 
@@ -625,17 +652,17 @@ def rnotifications(exp_id):
     unread_before_open = (
         db.session.query(func.count(Reply.id))
         .join(Parent, Reply.comment_to == Parent.id)
-        .filter(*base_filters, Reply.id > cutoff)
+        .filter(*base_filters, reply_order > cutoff)
         .scalar()
     )
     unread_before_open = int(unread_before_open or 0)
 
     rows = (
-        db.session.query(Reply, Parent, Author)
+        db.session.query(Reply, Parent, Author, reply_order.label("reply_seq"))
         .join(Parent, Reply.comment_to == Parent.id)
         .join(Author, Author.id == Reply.user_id)
         .filter(*base_filters)
-        .order_by(Reply.id.desc())
+        .order_by(reply_order.desc())
         .limit(per_page + 1)
         .offset(offset)
         .all()
@@ -659,13 +686,13 @@ def rnotifications(exp_id):
             "reply_excerpt": _excerpt(getattr(reply_post, "tweet", "")),
             "parent_excerpt": _excerpt(getattr(parent_post, "tweet", "")),
             "parent_is_root": bool(getattr(parent_post, "comment_to", -1) == -1),
-            "was_unread": bool(reply_post.id > cutoff),
+            "was_unread": bool(int(reply_seq or 0) > cutoff),
         }
-        for reply_post, parent_post, author in rows
+        for reply_post, parent_post, author, reply_seq in rows
     ]
 
     max_reply_id = (
-        db.session.query(func.max(Reply.id))
+        db.session.query(func.max(reply_order))
         .join(Parent, Reply.comment_to == Parent.id)
         .filter(*base_filters)
         .scalar()
@@ -861,7 +888,273 @@ def subforum_reddit(exp_id, community_slug):
         my_communities=my_communities,
         current_subforum_slug=current_subforum["slug"] if current_subforum else None,
         current_subforum_label=current_subforum["label"] if current_subforum else None,
+        community_stats=fetch_community_stats(community_slug),
+        community_joined=any(
+            entry.get("slug") == community_slug for entry in my_communities
+        ),
     )
+
+
+@main.app_context_processor
+def _inject_forum_community_icon():
+    """``community_icon(slug)`` for templates: stable, mostly unique icon per community."""
+    from flask import g
+
+    def community_icon(slug):
+        icons = getattr(g, "_forum_community_icons", None)
+        if icons is None:
+            try:
+                slugs = [c.get("slug") for c in fetch_available_communities()]
+            except Exception:
+                slugs = []
+            icons = g._forum_community_icons = assign_icons(slugs)
+        return icon_for(slug, icons)
+
+    return {"community_icon": community_icon}
+
+
+def _community_viewer_id():
+    logged_user = _forum_logged_user()
+    return logged_user.id if logged_user else current_user.id
+
+
+@main.get("/<int:exp_id>/communities")
+@login_required
+def communities_reddit(exp_id):
+    """Directory of the communities: searchable, sortable, with "My communities" as a scope."""
+    scope = "mine" if request.args.get("scope") == "mine" else "all"
+    logged_user = _forum_logged_user()
+    exp_user_id = _community_viewer_id()
+    feed_type = request.args.get("feed_type", _forum_default_feed_type(exp_id))
+    return render_template(
+        "forum/communities.html",
+        profile_pic=_forum_current_profile_pic(exp_id, logged_user),
+        profile_pic_feed=_forum_current_profile_pic(exp_id, logged_user),
+        logged_username=current_user.username,
+        logged_id=exp_user_id,
+        is_admin=is_admin(current_user.username),
+        feed_type=feed_type,
+        search_query="",
+        view_mode="communities",
+        exp_id=exp_id,
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
+        available_communities=fetch_available_communities(),
+        recent_communities=fetch_recent_active_communities(),
+        my_communities=fetch_user_communities(exp_user_id),
+        current_subforum_slug=None,
+        current_subforum_label=None,
+        scope=scope,
+        initial_query=(request.args.get("q") or "").strip(),
+    )
+
+
+def _community_match_score(slug, query, tokens):
+    """Relevance of a community name for ``query``: whole name, prefix, word parts (``_``/``-`` split), then fuzzy."""
+    name = str(slug or "").lower()
+    spaced = re.sub(r"[_\-]+", " ", name)
+    score = _search_score(spaced, tokens, query)
+    if name == query:
+        score += 6.0
+    elif name.startswith(query):
+        score += 3.0
+    elif query in name:
+        score += 1.5
+    return score
+
+
+@main.get("/<int:exp_id>/api/forum_communities")
+@login_required
+def api_forum_communities(exp_id):
+    """Communities for the directory page. Query: ``q`` (smart, typo tolerant), ``scope`` (all|mine),
+    ``sort`` (active|az|joined), ``kind`` (all|topic|subreddit)."""
+    query = (request.args.get("q") or "").strip().lower().removeprefix("y/").strip()
+    scope = "mine" if request.args.get("scope") == "mine" else "all"
+    sort = request.args.get("sort") or ("az" if not query else "relevance")
+    kind = request.args.get("kind") or "all"
+    items = fetch_community_directory(_community_viewer_id(), scope)
+    if kind in ("topic", "subreddit"):
+        items = [c for c in items if c.get("kind") == kind]
+
+    if query:
+        tokens = _search_tokens(re.sub(r"[_\-]+", " ", query))
+        scored = []
+        for c in items:
+            sc = _community_match_score(c["slug"], query, tokens)
+            if sc > 0:
+                scored.append((sc, c))
+        if scored:
+            scored.sort(key=lambda it: (-it[0], -it[1]["posts"], it[1]["slug"]))
+            items = [c for _, c in scored]
+        else:  # nothing contains the words: closest names by edit similarity (typos)
+            by_slug = {c["slug"]: c for c in items}
+            items = [by_slug[m] for m in _fuzzy_match(query, by_slug, 12)]
+    if not query or sort != "relevance":
+        if sort == "active":
+            items.sort(key=lambda c: (-c["posts"], -c["participants"], c["slug"]))
+        elif sort == "joined":
+            items.sort(key=lambda c: (not c["joined"], c["slug"]))
+        else:
+            items.sort(key=lambda c: c["slug"])
+
+    icons = assign_icons([c.get("slug") for c in fetch_available_communities()])
+    return jsonify(
+        {
+            "total": len(items),
+            "communities": [
+                {
+                    "slug": c["slug"],
+                    "label": c["label"],
+                    "kind": c["kind"],
+                    "icon": icon_for(c["slug"], icons),
+                    "posts": c["posts"],
+                    "comments": c["comments"],
+                    "participants": c["participants"],
+                    "joined": c["joined"],
+                    "url": f"/{exp_id}/subforum/{c['slug']}",
+                }
+                for c in items
+            ],
+        }
+    )
+
+
+def _search_tokens(query):
+    return [tok for tok in re.split(r"\s+", query.lower().strip()) if tok]
+
+
+def _search_score(text, tokens, phrase):
+    """Relevance of ``text`` for the query: phrase > all tokens > some tokens, prefix hits first."""
+    haystack = (text or "").lower()
+    if not haystack or not tokens:
+        return 0.0
+    score = 0.0
+    if phrase and phrase in haystack:
+        score += 4.0
+        if haystack.startswith(phrase):
+            score += 2.0
+    hits = sum(1 for tok in tokens if tok in haystack)
+    score += 3.0 * hits / len(tokens)
+    if hits == len(tokens):
+        score += 2.0
+    score += 0.5 * sum(
+        1 for tok in tokens if re.search(r"\b" + re.escape(tok), haystack)
+    )
+    return score
+
+
+def _fuzzy_match(query, candidates, limit):
+    """Typo-tolerant fallback: closest candidates by edit similarity."""
+    lowered = {c.lower(): c for c in candidates if c}
+    close = difflib.get_close_matches(query.lower(), list(lowered), n=limit, cutoff=0.6)
+    return [lowered[c] for c in close]
+
+
+@main.get("/<int:exp_id>/api/forum_search")
+@login_required
+def api_forum_search(exp_id):
+    """Live search suggestions for the forum top bar: communities, people and posts, ranked and typo tolerant.
+
+    ``q`` supports prefixes: ``y/`` limits to communities, ``@`` to people. ``community`` scopes post results.
+    """
+    raw = (request.args.get("q") or "").strip()
+    scope = (request.args.get("community") or "").strip().lower() or None
+    only = None
+    query = raw
+    if query.lower().startswith("y/"):
+        only, query = "communities", query[2:].strip()
+    elif query.startswith("@"):
+        only, query = "users", query[1:].strip()
+    if len(query) < 1 or (only is None and len(query) < 2):
+        return jsonify({"communities": [], "users": [], "posts": []})
+
+    tokens = _search_tokens(query)
+    phrase = query.lower()
+    out = {"communities": [], "users": [], "posts": []}
+
+    if only in (None, "communities"):
+        communities = fetch_available_communities()
+        scored = []
+        for c in communities:
+            slug = str(c.get("slug") or "")
+            sc = _search_score(slug, tokens, phrase)
+            if slug.lower().startswith(phrase):
+                sc += 1.0
+            if sc > 0:
+                scored.append((sc, c))
+        scored.sort(key=lambda item: (-item[0], str(item[1].get("slug"))))
+        picked = [c for _, c in scored[:5]]
+        if not picked:
+            by_slug = {str(c.get("slug")): c for c in communities}
+            picked = [by_slug[m] for m in _fuzzy_match(query, by_slug, 3)]
+        out["communities"] = [
+            {
+                "label": c.get("label") or f"y/{c.get('slug')}",
+                "slug": c.get("slug"),
+                "url": f"/{exp_id}/subforum/{c.get('slug')}",
+            }
+            for c in picked
+        ]
+
+    if only in (None, "users"):
+        rows = (
+            User_mgmt.query.filter(User_mgmt.username.ilike(f"%{query}%"))
+            .limit(30)
+            .all()
+        )
+        if not rows:
+            everyone = User_mgmt.query.limit(2000).all()
+            wanted = set(_fuzzy_match(query, [u.username for u in everyone], 4))
+            rows = [u for u in everyone if u.username in wanted]
+        rows.sort(
+            key=lambda u: (
+                -_search_score(u.username, tokens, phrase),
+                u.username.lower(),
+            )
+        )
+        out["users"] = [
+            {
+                "username": u.username,
+                "is_page": bool(getattr(u, "is_page", 0) == 1),
+                "url": f"/{exp_id}/profile/{u.id}/recent/1",
+            }
+            for u in rows[:4]
+        ]
+
+    if only is None:
+        # fetch a wider window with the longest token, then rank all tokens in Python
+        longest = max(tokens, key=len)
+        page_obj = fetch_feed_page(
+            viewer_id=_forum_viewer_id(),
+            page=1,
+            per_page=40,
+            feed_type="top",
+            search_query=longest,
+            community_slug=scope,
+        )
+        ranked = []
+        for post in page_obj.posts:
+            d = post.to_dict()
+            title = d.get("title") or ""
+            body = strip_tags(d.get("post") or "")
+            sc = 2.0 * _search_score(title, tokens, phrase) + _search_score(
+                body, tokens, phrase
+            )
+            if sc > 0:
+                ranked.append((sc, d, title, body))
+        ranked.sort(key=lambda r: -r[0])
+        for _, d, title, body in ranked[:5]:
+            community = d.get("primary_community") or {}
+            out["posts"].append(
+                {
+                    "title": title or body[:90],
+                    "snippet": body[:140] if title else "",
+                    "author": d.get("author"),
+                    "community": community.get("label") if community else "",
+                    "score": (d.get("likes") or 0) - (d.get("dislikes") or 0),
+                    "url": f"/{exp_id}/rthread/{d.get('post_id')}",
+                }
+            )
+    return jsonify(out)
 
 
 @main.get("/<int:exp_id>/rsearch")
@@ -968,7 +1261,7 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         viewer_id=_forum_viewer_id(),
         page=page,
         per_page=max_post_per_page,
-        feed_user_id=None if user_id == "all" else int(user_id),
+        feed_user_id=None if user_id == "all" else opaque_id(user_id),
         feed_type=feed_type,
         search_query="",
         community_slug=community_slug,

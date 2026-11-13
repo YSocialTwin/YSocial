@@ -8,6 +8,7 @@ association with experiments and pages.
 
 import json
 import os
+import re
 
 from flask import (
     Blueprint,
@@ -31,6 +32,7 @@ from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
     normalize_population_username_type,
+    population_platform_fields,
 )
 from y_web.src.agents.population import generate_population
 from y_web.src.llm.ollama_manager import get_ollama_models
@@ -221,6 +223,108 @@ def create_population_empty():
     return populations()
 
 
+def _is_dating_document(upload):
+    """Whether an uploaded JSON file is a YDating population document (it has no ``population_data`` block, which
+    every export of YSocial has). The stream is left at its start."""
+    try:
+        data = json.loads(upload.read().decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return False
+    finally:
+        upload.seek(0)
+    return isinstance(data, dict) and "population_data" not in data and "agents" in data
+
+
+def _flag(name):
+    """Whether a checkbox of the form is on."""
+    return (request.form.get(name) or "").strip().lower() in {"1", "on", "true", "yes"}
+
+
+def _photo_sharing_available():
+    """Whether the Photo Sharing simulator is installed (and visible to this admin)."""
+    try:
+        from y_web.src.external_runtime import runtime_installed_and_visible
+
+        return bool(runtime_installed_and_visible("photo_sharing", current_user))
+    except Exception:
+        return False
+
+
+def _discard_population(population):
+    """Remove a population whose generation failed, with its agents: no partial population is kept."""
+    db.session.rollback()
+    try:
+        from y_web.src.dating import population as dp
+
+        dp.remove_agents(population.id)
+    except Exception:
+        db.session.rollback()
+    db.session.execute(
+        delete(PopulationActivityProfile).filter_by(population=population.id)
+    )
+    db.session.execute(delete(Agent_Population).filter_by(population_id=population.id))
+    db.session.delete(population)
+    db.session.commit()
+
+
+def _dating_generator_config():
+    """The YDating generator parameters of the creation form (the standard sections plus the Dating ones)."""
+    from y_web.src.dating import population as dp
+
+    return dp.config_from_population_form(
+        request.form,
+        {
+            str(r.id): (r.age_start, r.age_end)
+            for r in db.session.scalars(select(AgeClass)).all()
+        },
+        {
+            str(r.id): r.education_level
+            for r in db.session.scalars(select(Education)).all()
+        },
+        {str(r.id): r.leaning for r in db.session.scalars(select(Leanings)).all()},
+    )
+
+
+def _apply_appearance(population):
+    """Draw the appearance of the agents just generated (the Appearance section of the form).
+
+    Returns ``(agent ids, picture settings)`` when the profile pictures are requested, else ``None``. With the
+    Dating fields on, the traits already come with them (``dating.appearance.*``) and are kept.
+    """
+    from y_web.src.agents import profile_pictures as pp
+
+    ids = [
+        row[0]
+        for row in db.session.execute(
+            select(Agent_Population.agent_id).where(
+                Agent_Population.population_id == population.id
+            )
+        ).all()
+    ]
+    if not _flag("include_dating"):
+        pp.assign_appearance(ids, pp.appearance_config_from_form(request.form))
+    if not _flag("generate_profile_pictures"):
+        return None
+    return ids, pp.pictures_config_from_form(request.form)
+
+
+def _complete_with_dating_fields(population):
+    """Give the agents just generated their dating fields (the Dating sections of the form)."""
+    from y_web.src.dating import population as dp
+
+    config = _dating_generator_config()
+    config.pop(
+        "archetypes", None
+    )  # the rhythm of the agents is the standard activity profiles'
+    dp.complete_population(
+        population.id,
+        config=config,
+        seed=request.form.get("seed") or None,
+        language=dp.language_code(request.form.get("languages")) or None,
+        apply_activity=True,
+    )
+
+
 @population.route("/admin/create_population", methods=["POST"])
 @login_required
 def create_population():
@@ -243,6 +347,8 @@ def create_population():
     """
     check_privileges(current_user.username)
     ensure_population_username_type_column()
+    if (request.form.get("username_type") or "").strip().lower() == "dating":
+        return _generate_dating_population()
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")
     n_agents = request.form.get("n_agents")
@@ -252,6 +358,23 @@ def create_population():
     username_type = normalize_population_username_type(
         request.form.get("username_type")
     )
+    # A population is not tied to a platform: the dedicated fields of a platform are optional sections of the
+    # form (offered only when its simulator is installed), generated on the same agents.
+    include_photo_sharing = username_type == "photo_sharing" or _flag(
+        "include_photo_sharing"
+    )
+    include_dating = _flag("include_dating")
+    include_appearance = _flag("include_appearance")
+    if include_photo_sharing and username_type != "photo_sharing":
+        if not _photo_sharing_available():
+            flash(_("The Photo Sharing simulator is not installed."), "error")
+            return redirect(request.referrer)
+    if include_dating:
+        from y_web.src.dating import population as dp
+
+        if not dp.runtime_available(current_user):
+            flash(_("The Dating simulator is not installed."), "error")
+            return redirect(request.referrer)
 
     # Get gender distribution
     male_percentage = int(request.form.get("male_percentage", "50"))
@@ -380,7 +503,7 @@ def create_population():
     }
 
     photo_sharing_config = None
-    if username_type == "photo_sharing":
+    if include_photo_sharing:
         photo_story_visibility = {
             "public": _parse_percentage_value(
                 request.form.get("photo_story_public_percentage"), 20
@@ -480,16 +603,11 @@ def create_population():
             profession_backgrounds,
             photo_sharing_config,
         )
+        if include_dating:
+            _complete_with_dating_fields(population)
+        appearance_job = _apply_appearance(population) if include_appearance else None
     except Exception as exc:
-        db.session.execute(
-            delete(PopulationActivityProfile).filter_by(population=population.id)
-        )
-        db.session.execute(
-            delete(Agent_Population).filter_by(population_id=population.id)
-        )
-        db.session.execute(delete(Agent_Profile).filter_by(population_id=population.id))
-        db.session.delete(population)
-        db.session.commit()
+        _discard_population(population)
         flash(
             _(
                 "Population generation failed: %(error)s. No partial population was kept.",
@@ -498,6 +616,21 @@ def create_population():
             "error",
         )
         return redirect(request.referrer)
+
+    if appearance_job:
+        from flask import current_app
+
+        from y_web.src.agents import profile_pictures as pp
+
+        pp.start_generation(
+            current_app._get_current_object(), current_user.id, *appearance_job
+        )
+        flash(
+            _(
+                "Profile pictures are being generated in the background: follow the progress in the notifications menu."
+            ),
+            "info",
+        )
 
     from y_web.src.telemetry import Telemetry
 
@@ -562,6 +695,10 @@ def populations_data():
     # response
     res = query.all()
 
+    for pop in res:
+        if pop.username_type == "dating" and not pop.education:
+            _sync_dating_population(pop)
+
     # Get activity profiles for each population
     population_profiles = {}
     for pop in res:
@@ -612,6 +749,7 @@ def populations_data():
                 ],
                 "username_type": infer_population_username_type(pop) or "microblogging",
                 "platform_type": infer_population_username_type(pop) or "microblogging",
+                "platform_fields": population_platform_fields(pop),
                 "pop_type": pop.pop_type or "standard",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
@@ -666,6 +804,9 @@ def populations():
         age_classes=age_classes,
         activity_profiles=activity_profiles,
         profession_backgrounds=profession_backgrounds,
+        photo_available=_photo_sharing_available(),
+        **_appearance_form_context(),
+        **_dating_form_context(),
     )
 
 
@@ -676,6 +817,9 @@ def population_details(uid):
     check_privileges(current_user.username)
     # get population details
     population = db.session.scalars(select(Population).filter_by(id=uid)).first()
+    population_row = population
+    if population is not None and population.username_type == "dating":
+        _sync_dating_population(population)
 
     # get experiment populations along with experiment names and ids
     experiment_populations = (
@@ -944,8 +1088,28 @@ def population_details(uid):
     crecsys = db.session.scalars(select(Content_Recsys)).all()
     frecsys = db.session.scalars(select(Follow_Recsys)).all()
 
+    from y_web.src.agents.custom_field_stats import collect
+
+    custom_fields = collect([a[0].id for a in agents])
+    kpis = {
+        "agents": len(agents),
+        "age_range": (
+            f"{min(a[0].age for a in agents if a[0].age is not None)}–"
+            f"{max(a[0].age for a in agents if a[0].age is not None)}"
+            if any(a[0].age is not None for a in agents)
+            else "—"
+        ),
+        "nationalities": len([n for n in dd["nationalities"]["nationalities"] if n]),
+        "languages": len([n for n in dd["languages"]["languages"] if n]),
+        "experiments": len(exps),
+        "fields": sum(g["count"] for g in custom_fields),
+    }
+
     return render_template(
         "admin/population_details.html",
+        custom_fields=custom_fields,
+        kpis=kpis,
+        platform_fields=population_platform_fields(population_row),
         population=population,
         population_experiments=exps,
         agents=agents,
@@ -955,6 +1119,7 @@ def population_details(uid):
         llm_backend=llm_backend,
         crecsys=crecsys,
         frecsys=frecsys,
+        dating=_dating_details(uid, population_row),
     )
 
 
@@ -985,6 +1150,11 @@ def add_to_experiment():
 
     db.session.add(ap)
     db.session.commit()
+    from y_web.src.federation.dynamic import (
+        population_added,  # INV-18: the agents join a World Simulation the experiment belongs to
+    )
+
+    population_added(experiment_id, population_id)
 
     return population_details(population_id)
 
@@ -1028,6 +1198,13 @@ def delete_population(uid):
                 )
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
 
+    if population.username_type == "dating":
+        from y_web.src.dating.population import remove_agents
+
+        remove_agents(
+            population.id
+        )  # the agents of the population and their custom features
+
     db.session.delete(population)
     db.session.commit()
 
@@ -1058,6 +1235,8 @@ def download_population(uid):
     """Download population."""
     check_privileges(current_user.username)
     ensure_population_username_type_column()
+    if _dating_population_or_none(uid) is not None:
+        return redirect(f"/admin/dating_population/{uid}/download")
 
     # get all agents in the population
     agents = (
@@ -1200,6 +1379,11 @@ def upload_population():
     ensure_population_username_type_column()
 
     population_file = request.files["population_file"]
+    # a file is either a YSocial population export or a YDating population document: told apart by content
+    if (
+        request.form.get("upload_population_type") or ""
+    ).strip().lower() == "dating" or _is_dating_document(population_file):
+        return _upload_dating_population()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -1482,25 +1666,7 @@ def merge_populations():
             return redirect(request.referrer)
         source_populations.append(pop)
 
-    source_types = {
-        infer_population_username_type(pop)
-        for pop in source_populations
-        if infer_population_username_type(pop)
-    }
-    if len(source_types) > 1:
-        flash(
-            _(
-                "Selected populations have incompatible platform types and cannot be merged."
-            )
-        )
-        return redirect(request.referrer)
-    if source_types and merged_population_type not in source_types:
-        flash(
-            _(
-                "Merged population type must match the selected population platform type."
-            )
-        )
-        return redirect(request.referrer)
+    # populations of any platform can be merged: the custom fields of the agents are kept with them
 
     # Collect unique agent IDs from all selected populations (optimized query)
     agent_populations = db.session.scalars(
@@ -1589,9 +1755,35 @@ def merge_populations():
         frecsys=frecsys,
         llm_url=llm_url,
         username_type=merged_population_type,
+        # the kind of the sources (custom-agent populations) is kept when they all share it
+        pop_type=(
+            source_populations[0].pop_type
+            if len({pop.pop_type for pop in source_populations}) == 1
+            else None
+        ),
     )
     db.session.add(merged_population)
     db.session.flush()  # Flush to get the ID without committing
+
+    # The merged population follows the activity profiles of its agents (the share of agents on each): without them
+    # no agent would be sampled in any hour and the simulation would stay silent
+    from y_web.src.simulation.agent_sampler import find_activity_profile
+
+    counts = {}
+    for a in agents:
+        if a.activity_profile in (None, ""):
+            continue
+        found = find_activity_profile(db.session, a.activity_profile)
+        if found is not None:
+            counts[found.id] = counts.get(found.id, 0) + 1
+    for profile_id, n in counts.items():
+        db.session.add(
+            PopulationActivityProfile(
+                population=merged_population.id,
+                activity_profile=profile_id,
+                percentage=round(100.0 * n / max(sum(counts.values()), 1), 2),
+            )
+        )
 
     # Add unique agents to the new population
     for agent_id in unique_agent_ids:
@@ -1619,3 +1811,316 @@ def merge_populations():
         )
     )
     return populations()
+
+
+# ---------------------------------------------------------------------------------------------------
+# Dating populations (plan S2, IR-D-05, decision D-10): one ``population`` row, standard ``agents`` rows and the
+# dating-only fields as custom features of the agents; no file
+# ---------------------------------------------------------------------------------------------------
+def _dating_population_or_none(uid):
+    from y_web.src.dating.population import is_dating_population
+
+    pop = db.session.scalars(select(Population).filter_by(id=uid)).first()
+    return pop if pop is not None and is_dating_population(pop) else None
+
+
+def _unique_population_name(base_name):
+    name = base_name
+    suffix = 0
+    while db.session.scalars(select(Population).filter_by(name=name)).first():
+        suffix += 1
+        tail = f"_{suffix}"
+        name = f"{base_name[: 50 - len(tail)]}{tail}"
+    return name
+
+
+def _store_dating_activity_profiles(population_id, profiles):
+    """Link the activity profiles (name -> percent) assigned in the form to the population, as the other platforms do."""
+    for name, pct in (profiles or {}).items():
+        profile = db.session.scalars(
+            select(ActivityProfile).filter_by(name=name)
+        ).first()
+        if profile is not None:
+            db.session.add(
+                PopulationActivityProfile(
+                    population=population_id,
+                    activity_profile=profile.id,
+                    percentage=float(pct),
+                )
+            )
+    db.session.commit()
+
+
+def _sync_dating_population(pop):
+    """Fill the columns of a dating population that the list and the details page read, from its agents.
+
+    The education, political leanings and nationalities of the ``population`` row, and the activity profile of every
+    agent that has an archetype named like one (the archetype of a dating agent is its activity profile).
+    """
+    agents = db.session.scalars(
+        select(Agent)
+        .join(Agent_Population, Agent_Population.agent_id == Agent.id)
+        .where(Agent_Population.population_id == pop.id)
+    ).all()
+    changed = False
+
+    def labels(attr, limit):
+        seen = []
+        for a in agents:
+            value = getattr(a, attr, None)
+            if value and str(value) not in seen:
+                seen.append(str(value))
+        return ",".join(seen)[:limit]
+
+    for column, attr, limit in (
+        ("education", "education_level", 100),
+        ("leanings", "leaning", 200),
+        ("nationalities", "nationality", 200),
+    ):
+        if not getattr(pop, column):
+            value = labels(attr, limit)
+            if value:
+                setattr(pop, column, value)
+                changed = True
+    by_name = {
+        p.name.lower(): p.id for p in db.session.scalars(select(ActivityProfile)).all()
+    }
+    for a in agents:
+        if a.activity_profile is None and a.archetype:
+            profile = by_name.get(str(a.archetype).lower())
+            if profile is not None:
+                a.activity_profile = profile
+                changed = True
+    if changed:
+        db.session.commit()
+
+
+def _register_dating_population(name, descr, data):
+    """Create the ``population`` row and the agents (with their custom features) of a validated population."""
+    from y_web.src.dating import population as dp
+
+    size, age_min, age_max = dp.population_row_values(data)
+    summary = dp.summarize(data)
+    row = Population(
+        name=_unique_population_name(name),
+        descr=(descr or "")[:200],
+        size=size,
+        age_min=age_min,
+        age_max=age_max,
+        interests=",".join(list(summary["interests"])[:30])[:300],
+        languages=",".join(summary["languages"])[:100],
+        username_type="dating",
+    )
+    db.session.add(row)
+    db.session.commit()
+    try:
+        dp.store_agents(row.id, data)
+    except Exception:
+        db.session.rollback()
+        db.session.delete(row)
+        db.session.commit()
+        raise
+    _sync_dating_population(row)
+    return row
+
+
+def _appearance_form_context():
+    """Defaults and availability of the Appearance section (independent of the platforms)."""
+    from y_web.src.agents import profile_pictures as pp
+
+    return {
+        "appearance_defaults": pp.defaults(),
+        "images_available": pp.available(),
+    }
+
+
+@population.route("/media/agents/<path:filename>")
+def agent_media(filename):
+    """The profile pictures generated for the agents (media folder); public, like the avatars."""
+    from flask import abort, send_from_directory
+
+    from y_web.src.agents import profile_pictures as pp
+
+    if filename != os.path.basename(filename) or filename.startswith("."):
+        abort(404)
+    return send_from_directory(pp.media_dir(), filename)
+
+
+def _dating_form_context():
+    """Lists the Dating creation form offers next to the free-text weights (same catalogues as the standard form)."""
+    from y_web.src.dating import population as dp
+
+    return {
+        "dating_available": dp.runtime_available(current_user),
+        "dating_nationalities": [
+            r.nationality for r in db.session.scalars(select(Nationalities)).all()
+        ],
+        "dating_education_levels": [
+            r.education_level for r in db.session.scalars(select(Education)).all()
+        ],
+        "dating_leanings": [
+            r.leaning for r in db.session.scalars(select(Leanings)).all()
+        ],
+        "dating_languages": [
+            r.language for r in db.session.scalars(select(Languages)).all()
+        ],
+        "dating_professions": [
+            r.profession
+            for r in db.session.scalars(select(Profession).limit(200)).all()
+        ],
+        "dating_appearance_labels": dp.APPEARANCE_LABELS,
+        "dating_defaults": {
+            "intents": dp.INTENT_DEFAULTS,
+            "seeking": dp.SEEKING_DEFAULTS,
+            "seeking_sets": dp.SEEKING_SETS,
+            "appearance": dp.APPEARANCE_DEFAULTS,
+            "appearance_options": dp.APPEARANCE_OPTIONS,
+            "latent": dp.LATENT_DEFAULTS,
+            "affective": dp.AFFECTIVE_DEFAULT_RANGE,
+            "activity": dp.ACTIVITY_DEFAULT_RANGE,
+            "height": dp.HEIGHT_DEFAULT_RANGE,
+            "glasses": dp.GLASSES_DEFAULT_PERCENT,
+            "photos": dp.PHOTOS_DEFAULT_RANGE,
+            "age_window": dp.AGE_WINDOW_DEFAULT_RANGE,
+        },
+    }
+
+
+@population.route("/admin/dating_populations")
+@login_required
+def dating_populations():
+    """Dating populations are managed in the populations page, like those of the other platforms."""
+    check_privileges(current_user.username)
+    return redirect("/admin/populations")
+
+
+def _upload_dating_population():
+    """Validate an uploaded document against the YDating population schema and store it (platform Dating of the
+    standard upload form)."""
+    from y_web.src.dating import population as dp
+
+    upload = request.files.get("population_file")
+    if upload is None or not upload.filename:
+        flash(_("Choose a population file first."), "error")
+        return redirect("/admin/populations")
+    try:
+        data = dp.read_upload(upload.read(dp.MAX_UPLOAD_BYTES + 1))
+        problems = dp.validate_population(data)
+        if problems:
+            raise dp.DatingPopulationError(problems)
+    except dp.DatingPopulationError as exc:
+        flash(
+            _(
+                "The population is not valid for dating: %(why)s",
+                why=" | ".join(exc.problems[:5]),
+            ),
+            "error",
+        )
+        return redirect("/admin/populations")
+    default_name = os.path.splitext(os.path.basename(upload.filename))[0]
+    row = _register_dating_population(
+        dp.clean_name(request.form.get("pop_name"))
+        or dp.clean_name(default_name)
+        or "dating",
+        request.form.get("pop_descr"),
+        data,
+    )
+    flash(_("Dating population '%(name)s' imported.", name=row.name), "success")
+    return redirect(f"/admin/population_details/{row.id}")
+
+
+def _generate_dating_population():
+    """Generate a synthetic dating population with the generator of YDating (platform Dating of the standard
+    creation form)."""
+    from y_web.src.dating import population as dp
+
+    try:
+        data = dp.generate(
+            request.form.get("n_agents"),
+            seed=request.form.get("seed"),
+            language=dp.language_code(request.form.get("languages")) or None,
+            config=dp.config_from_population_form(
+                request.form,
+                {
+                    str(r.id): (r.age_start, r.age_end)
+                    for r in db.session.scalars(select(AgeClass)).all()
+                },
+                {
+                    str(r.id): r.education_level
+                    for r in db.session.scalars(select(Education)).all()
+                },
+                {
+                    str(r.id): r.leaning
+                    for r in db.session.scalars(select(Leanings)).all()
+                },
+            ),
+        )
+    except dp.DatingPopulationError as exc:
+        flash(
+            _(
+                "The population could not be generated: %(why)s",
+                why=" | ".join(exc.problems[:5]),
+            ),
+            "error",
+        )
+        return redirect("/admin/populations")
+    dp.give_names(
+        data,
+        {a for (a,) in db.session.query(Agent.name).all()},
+        request.form.get("seed") or None,
+    )
+    row = _register_dating_population(
+        dp.clean_name(request.form.get("pop_name")) or "dating",
+        request.form.get("pop_descr"),
+        data,
+    )
+    _store_dating_activity_profiles(row.id, dp.activity_profiles(request.form))
+    flash(_("Dating population '%(name)s' generated.", name=row.name), "success")
+    return redirect(f"/admin/population_details/{row.id}")
+
+
+def _dating_details(uid, population):
+    """What the details page adds for a dating population: the counts of the runtime summary and a profile card."""
+    from y_web.src.dating import population as dp
+
+    if population is None or not dp.has_dating_fields(population):
+        return None
+    try:
+        data = dp.load_document(uid)
+    except (
+        Exception
+    ):  # the runtime that describes the fields is not installed: no card, the statistics remain
+        return None
+    agents = (data or {}).get("agents") or []
+    if not agents:
+        return None
+    index = request.args.get("agent", type=int, default=0) or 0
+    index = max(0, min(index, len(agents) - 1))
+    return {
+        "summary": dp.summarize(data),
+        "card": dp.profile_card(agents[index]),
+        "index": index,
+        "names": [a["username"] for a in agents[:500]],
+    }
+
+
+@population.route("/admin/dating_population/<int:uid>/download")
+@login_required
+def download_dating_population(uid):
+    """Export the population as a YDating document (the same file that can be uploaded back)."""
+    check_privileges(current_user.username)
+    from flask import Response
+
+    from y_web.src.dating import population as dp
+
+    pop = _dating_population_or_none(uid)
+    data = dp.load_document(uid) if pop is not None else None
+    if data is None:
+        flash(_("Population not found."), "error")
+        return redirect("/admin/populations")
+    filename = re.sub(r"[^A-Za-z0-9_.-]+", "_", pop.name) or "population"
+    return Response(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        mimetype="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+    )

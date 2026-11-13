@@ -23,6 +23,17 @@ PARTIALS = {
     "_prompt_language_switch",
     "prompts_forum",
     "experiment_details_photo",
+    "experiment_details_im",
+    "experiment_details_dating",
+    "_dating_fields",
+    "_forum_communities",
+    "_dating_population_form",
+    "_population_appearance",
+    "_population_macros",
+    "_dating_agent_fields",
+    "_agent_appearance",
+    "_agent_photo_sharing",
+    "_im_analytics_note",
     "select_experiment_unused",
 }
 

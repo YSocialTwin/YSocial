@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sqlite3
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -13,6 +14,7 @@ from sqlalchemy import desc, func, select, text
 
 from y_web import db, prompt_store
 from y_web.src.content.avatars import resolve_forum_profile_pic
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -861,11 +863,51 @@ def _build_memory_snapshot_local_db(
         except Exception:
             return int(default)
 
-    def _to_int_or_none(value: Any) -> Optional[int]:
+    def _oid(value: Any, default: Any = 0) -> Any:
+        """An id as the experiment stores it: integer, or UUID string (never cast to int)."""
+        if value is None:
+            return default
+        text_value = str(value).strip()
+        if not text_value:
+            return default
+        return int(text_value) if re.fullmatch(r"-?\d+", text_value) else text_value
+
+    def _oid_or_none(value: Any) -> Any:
+        found = _oid(value, None)
+        return found if _valid_id(found) else None
+
+    def _valid_id(value: Any) -> bool:
+        if value is None:
+            return False
+        return value > 0 if isinstance(value, int) else bool(str(value).strip())
+
+    rounds_index: Dict[str, int] = {}
+
+    def _load_rounds(rows: Any) -> None:
+        # a round id is a UUID in HPC forum databases: its position in time is day * 24 + hour
+        for rid, day, hour in rows:
+            try:
+                rounds_index[str(rid)] = int(day) * 24 + int(hour)
+            except Exception:
+                continue
+
+    def _round_of(value: Any) -> int:
+        key = str(value)
+        if key in rounds_index:
+            return rounds_index[key]
+        return _to_int(value, 0)
+
+    def _order_of(table: str, alias: str, columns: Any) -> str:
+        column = "seq" if "seq" in columns else "id"
+        return f"{alias}.{column}" if alias else column
+
+    def _columns_of(execute: Any, table: str) -> set:
         try:
-            return int(value)
+            return {
+                str(r[1]) for r in execute(f"PRAGMA table_info({table})").fetchall()
+            }
         except Exception:
-            return None
+            return set()
 
     db_path = _experiment_sqlite_db_path(exp)
     if db_path is not None and db_path.exists():
@@ -878,6 +920,19 @@ def _build_memory_snapshot_local_db(
                 usernames_by_id = {
                     str(row["id"]): str(row["username"] or "") for row in user_rows
                 }
+                try:
+                    _load_rounds(
+                        conn.execute("SELECT id, day, hour FROM rounds").fetchall()
+                    )
+                except Exception:
+                    pass
+                ord_post = _order_of("post", "", _columns_of(conn.execute, "post"))
+                ord_mention = _order_of(
+                    "mentions", "m", _columns_of(conn.execute, "mentions")
+                )
+                ord_reaction = _order_of(
+                    "reactions", "r", _columns_of(conn.execute, "reactions")
+                )
 
                 def _username(uid: Any) -> str:
                     return str(usernames_by_id.get(str(uid), "") or "")
@@ -887,17 +942,19 @@ def _build_memory_snapshot_local_db(
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = ?
-                    ORDER BY id DESC
+                    ORDER BY """
+                    + ord_post
+                    + """ DESC
                     LIMIT 20
                     """,
                     (normalized_agent_user_id_text,),
                 ).fetchall()
                 for row in reversed(post_rows):
-                    round_id = _to_int(row["round"], 0)
-                    post_id = _to_int(row["id"], 0)
-                    thread_root_id = _to_int_or_none(row["thread_id"])
-                    if thread_root_id is None or thread_root_id <= 0:
-                        thread_root_id = post_id if post_id > 0 else None
+                    round_id = _round_of(row["round"])
+                    post_id = _oid(row["id"])
+                    thread_root_id = _oid_or_none(row["thread_id"])
+                    if not _valid_id(thread_root_id):
+                        thread_root_id = post_id if _valid_id(post_id) else None
                     ev = {
                         "round_id": round_id,
                         "event_type": "post",
@@ -915,7 +972,7 @@ def _build_memory_snapshot_local_db(
                         thread_seen.add(tr)
                         threads.append(
                             {
-                                "thread_root_id": int(tr),
+                                "thread_root_id": tr,
                                 "thread_card": {
                                     "gist_text": _truncate_middle(
                                         str(row["tweet"] or "").strip(), 220
@@ -938,14 +995,16 @@ def _build_memory_snapshot_local_db(
                     FROM mentions m
                     JOIN post p ON p.id = m.post_id
                     WHERE CAST(m.user_id AS TEXT) = ?
-                    ORDER BY m.id DESC
+                    ORDER BY """
+                    + ord_mention
+                    + """ DESC
                     LIMIT 20
                     """,
                     (normalized_agent_user_id_text,),
                 ).fetchall()
                 for row in reversed(mention_rows):
                     actor_id = _coerce_experiment_user_id(row["actor_user_id"])
-                    round_id = _to_int(row["round_id"], 0)
+                    round_id = _round_of(row["round_id"])
                     _register_other(actor_id, round_id)
                     events.append(
                         {
@@ -953,8 +1012,8 @@ def _build_memory_snapshot_local_db(
                             "event_type": "mention",
                             "relation_label": "",
                             "tone_label": "",
-                            "thread_root_id": _to_int_or_none(row["thread_id"]),
-                            "target_post_id": _to_int(row["source_post_id"], 0),
+                            "thread_root_id": _oid_or_none(row["thread_id"]),
+                            "target_post_id": _oid(row["source_post_id"]),
                             "actor_user_id": actor_id,
                             "actor_username": _username(actor_id),
                             "salient_claim": _truncate_middle(
@@ -974,14 +1033,16 @@ def _build_memory_snapshot_local_db(
                     FROM reactions r
                     LEFT JOIN post p ON p.id = r.post_id
                     WHERE CAST(r.user_id AS TEXT) = ?
-                    ORDER BY r.id DESC
+                    ORDER BY """
+                    + ord_reaction
+                    + """ DESC
                     LIMIT 20
                     """,
                     (normalized_agent_user_id_text,),
                 ).fetchall()
                 for row in reversed(reaction_rows):
                     target_user_id = _coerce_experiment_user_id(row["target_user_id"])
-                    round_id = _to_int(row["round_id"], 0)
+                    round_id = _round_of(row["round_id"])
                     _register_other(target_user_id, round_id)
                     events.append(
                         {
@@ -989,8 +1050,8 @@ def _build_memory_snapshot_local_db(
                             "event_type": f"reaction:{str(row['reaction_type'] or '').strip()}",
                             "relation_label": "",
                             "tone_label": "",
-                            "thread_root_id": _to_int_or_none(row["thread_id"]),
-                            "target_post_id": _to_int(row["post_id"], 0),
+                            "thread_root_id": _oid_or_none(row["thread_id"]),
+                            "target_post_id": _oid(row["post_id"]),
                             "target_user_id": target_user_id,
                             "salient_claim": "",
                         }
@@ -1006,26 +1067,51 @@ def _build_memory_snapshot_local_db(
                 text("SELECT id, username FROM user_mgmt")
             ).fetchall()
             usernames_by_id = {str(row[0]): str(row[1] or "") for row in user_rows}
+            try:
+                _load_rounds(
+                    db.session.execute(
+                        text("SELECT id, day, hour FROM rounds")
+                    ).fetchall()
+                )
+            except Exception:
+                pass
+            ord_post = _order_of(
+                "post", "", _columns_of(lambda q: db.session.execute(text(q)), "post")
+            )
+            ord_mention = _order_of(
+                "mentions",
+                "m",
+                _columns_of(lambda q: db.session.execute(text(q)), "mentions"),
+            )
+            ord_reaction = _order_of(
+                "reactions",
+                "r",
+                _columns_of(lambda q: db.session.execute(text(q)), "reactions"),
+            )
 
             def _username(uid: Any) -> str:
                 return str(usernames_by_id.get(str(uid), "") or "")
 
             post_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = :uid
-                    ORDER BY id DESC
+                    ORDER BY """
+                    + ord_post
+                    + """ DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(post_rows):
-                round_id = _to_int(row[1], 0)
-                post_id = _to_int(row[0], 0)
-                thread_root_id = _to_int_or_none(row[2])
-                if thread_root_id is None or thread_root_id <= 0:
-                    thread_root_id = post_id if post_id > 0 else None
+                round_id = _round_of(row[1])
+                post_id = _oid(row[0])
+                thread_root_id = _oid_or_none(row[2])
+                if not _valid_id(thread_root_id):
+                    thread_root_id = post_id if _valid_id(post_id) else None
                 ev = {
                     "round_id": round_id,
                     "event_type": "post",
@@ -1041,7 +1127,7 @@ def _build_memory_snapshot_local_db(
                     thread_seen.add(tr)
                     threads.append(
                         {
-                            "thread_root_id": int(tr),
+                            "thread_root_id": tr,
                             "thread_card": {
                                 "gist_text": _truncate_middle(
                                     str(row[3] or "").strip(), 220
@@ -1053,7 +1139,8 @@ def _build_memory_snapshot_local_db(
                     )
 
             mention_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                       m.post_id,
                       p.id AS source_post_id,
@@ -1064,14 +1151,17 @@ def _build_memory_snapshot_local_db(
                     FROM mentions m
                     JOIN post p ON p.id = m.post_id
                     WHERE CAST(m.user_id AS TEXT) = :uid
-                    ORDER BY m.id DESC
+                    ORDER BY """
+                    + ord_mention
+                    + """ DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(mention_rows):
                 actor_id = _coerce_experiment_user_id(row[2])
-                round_id = _to_int(row[3], 0)
+                round_id = _round_of(row[3])
                 _register_other(actor_id, round_id)
                 events.append(
                     {
@@ -1079,8 +1169,8 @@ def _build_memory_snapshot_local_db(
                         "event_type": "mention",
                         "relation_label": "",
                         "tone_label": "",
-                        "thread_root_id": _to_int_or_none(row[4]),
-                        "target_post_id": _to_int(row[1], 0),
+                        "thread_root_id": _oid_or_none(row[4]),
+                        "target_post_id": _oid(row[1]),
                         "actor_user_id": actor_id,
                         "actor_username": _username(actor_id),
                         "salient_claim": _truncate_middle(
@@ -1090,7 +1180,8 @@ def _build_memory_snapshot_local_db(
                 )
 
             reaction_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                       r.post_id,
                       r.round AS round_id,
@@ -1100,14 +1191,17 @@ def _build_memory_snapshot_local_db(
                     FROM reactions r
                     LEFT JOIN post p ON p.id = r.post_id
                     WHERE CAST(r.user_id AS TEXT) = :uid
-                    ORDER BY r.id DESC
+                    ORDER BY """
+                    + ord_reaction
+                    + """ DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(reaction_rows):
                 target_user_id = _coerce_experiment_user_id(row[3])
-                round_id = _to_int(row[1], 0)
+                round_id = _round_of(row[1])
                 _register_other(target_user_id, round_id)
                 events.append(
                     {
@@ -1115,8 +1209,8 @@ def _build_memory_snapshot_local_db(
                         "event_type": f"reaction:{str(row[2] or '').strip()}",
                         "relation_label": "",
                         "tone_label": "",
-                        "thread_root_id": _to_int_or_none(row[4]),
-                        "target_post_id": _to_int(row[0], 0),
+                        "thread_root_id": _oid_or_none(row[4]),
+                        "target_post_id": _oid(row[0]),
                         "target_user_id": target_user_id,
                         "salient_claim": "",
                     }
@@ -1129,21 +1223,23 @@ def _build_memory_snapshot_local_db(
         try:
             posts = (
                 Post.query.filter_by(user_id=normalized_agent_user_id)
-                .order_by(Post.id.desc())
+                .order_by(seq_or_id(Post).desc())
                 .limit(20)
                 .all()
             )
             for p in reversed(posts):
-                thread_root_id = int(getattr(p, "thread_id", -1) or -1)
-                if thread_root_id <= 0:
-                    thread_root_id = int(getattr(p, "id", -1) or -1)
+                thread_root_id = _oid(getattr(p, "thread_id", None), -1)
+                if not _valid_id(thread_root_id):
+                    thread_root_id = _oid(getattr(p, "id", None), -1)
                 ev = {
-                    "round_id": int(getattr(p, "round", 0) or 0),
+                    "round_id": _round_of(getattr(p, "round", 0)),
                     "event_type": "post",
                     "relation_label": "",
                     "tone_label": "",
-                    "thread_root_id": thread_root_id if thread_root_id > 0 else None,
-                    "target_post_id": int(getattr(p, "id", 0) or 0),
+                    "thread_root_id": (
+                        thread_root_id if _valid_id(thread_root_id) else None
+                    ),
+                    "target_post_id": _oid(getattr(p, "id", None)),
                     "salient_claim": _truncate_middle(
                         str(getattr(p, "tweet", "") or "").strip(), 180
                     ),
@@ -1154,13 +1250,13 @@ def _build_memory_snapshot_local_db(
                     thread_seen.add(tr)
                     threads.append(
                         {
-                            "thread_root_id": int(tr),
+                            "thread_root_id": tr,
                             "thread_card": {
                                 "gist_text": _truncate_middle(
                                     str(getattr(p, "tweet", "") or "").strip(), 220
                                 ),
                                 "my_role": "author",
-                                "last_seen_round_id": int(getattr(p, "round", 0) or 0),
+                                "last_seen_round_id": _round_of(getattr(p, "round", 0)),
                             },
                         }
                     )
@@ -1171,12 +1267,12 @@ def _build_memory_snapshot_local_db(
         try:
             mention_rows = (
                 Mentions.query.filter_by(user_id=normalized_agent_user_id)
-                .order_by(Mentions.id.desc())
+                .order_by(seq_or_id(Mentions).desc())
                 .limit(20)
                 .all()
             )
             for m in reversed(mention_rows):
-                post_obj = db.session.get(Post, int(getattr(m, "post_id", 0) or 0))
+                post_obj = db.session.get(Post, _oid(getattr(m, "post_id", None)))
                 if post_obj is None:
                     continue
                 actor_id = _coerce_experiment_user_id(
@@ -1188,15 +1284,17 @@ def _build_memory_snapshot_local_db(
                     actor_username = str(getattr(actor_user, "username", "") or "")
                 except Exception:
                     actor_username = ""
-                _register_other(actor_id, int(getattr(post_obj, "round", 0) or 0))
+                _register_other(actor_id, _round_of(getattr(post_obj, "round", 0)))
                 events.append(
                     {
-                        "round_id": int(getattr(post_obj, "round", 0) or 0),
+                        "round_id": _round_of(getattr(post_obj, "round", 0)),
                         "event_type": "mention",
                         "relation_label": "",
                         "tone_label": "",
-                        "thread_root_id": int(getattr(post_obj, "thread_id", -1) or -1),
-                        "target_post_id": int(getattr(post_obj, "id", 0) or 0),
+                        "thread_root_id": _oid(
+                            getattr(post_obj, "thread_id", None), -1
+                        ),
+                        "target_post_id": _oid(getattr(post_obj, "id", None)),
                         "actor_user_id": actor_id,
                         "actor_username": actor_username,
                         "salient_claim": _truncate_middle(
@@ -1211,30 +1309,30 @@ def _build_memory_snapshot_local_db(
         try:
             reaction_rows = (
                 Reactions.query.filter_by(user_id=normalized_agent_user_id)
-                .order_by(Reactions.id.desc())
+                .order_by(seq_or_id(Reactions).desc())
                 .limit(20)
                 .all()
             )
             for r in reversed(reaction_rows):
-                target_post = db.session.get(Post, int(getattr(r, "post_id", 0) or 0))
+                target_post = db.session.get(Post, _oid(getattr(r, "post_id", None)))
                 target_user_id = (
                     _coerce_experiment_user_id(getattr(target_post, "user_id", None))
                     if target_post is not None
                     else None
                 )
-                _register_other(target_user_id, int(getattr(r, "round", 0) or 0))
+                _register_other(target_user_id, _round_of(getattr(r, "round", 0)))
                 events.append(
                     {
-                        "round_id": int(getattr(r, "round", 0) or 0),
+                        "round_id": _round_of(getattr(r, "round", 0)),
                         "event_type": f"reaction:{str(getattr(r, 'type', '') or '').strip()}",
                         "relation_label": "",
                         "tone_label": "",
                         "thread_root_id": (
-                            int(getattr(target_post, "thread_id", -1) or -1)
+                            _oid(getattr(target_post, "thread_id", None), -1)
                             if target_post is not None
                             else None
                         ),
-                        "target_post_id": int(getattr(r, "post_id", 0) or 0),
+                        "target_post_id": _oid(getattr(r, "post_id", None)),
                         "target_user_id": target_user_id,
                         "salient_claim": "",
                     }

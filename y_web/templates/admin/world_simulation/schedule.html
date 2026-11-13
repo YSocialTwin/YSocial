@@ -1,0 +1,51 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            {{ ws.breadcrumb([(_('Schedule'), None)]) }}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-schedule">
+                        <h3 class="title is-5 is-thin">{{ _('Schedule') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-intro">{{ _('Queue of World Simulations: one runs at a time, in order.') }}</p>
+                            <form method="post" action="{{ url_for('world_simulation.schedule_enqueue') }}" class="ws-actions ws-filter">
+                                <div class="select"><select name="simulation_id" required>
+                                    {% for fed in addable %}<option value="{{ fed.id }}">{{ fed.name }}</option>
+                                    {% else %}<option value="" disabled selected>{{ _('No World Simulation to add.') }}</option>{% endfor %}
+                                </select></div>
+                                <button class="button is-solid primary-button" type="submit" {% if not addable %}disabled{% endif %}><i class="mdi mdi-playlist-plus"></i> <span>{{ _('Add to the queue') }}</span></button>
+                            </form>
+                            <div class="table-container">
+                            <table class="table is-fullwidth is-hoverable ws-table" id="world-simulation-queue">
+                                <thead><tr><th>#</th><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Added') }}</th><th>{{ _('Started') }}</th><th>{{ _('Finished') }}</th><th class="ws-col-actions">{{ _('Actions') }}</th></tr></thead>
+                                <tbody>
+                                {% for item, fed in entries %}
+                                <tr data-queue-item="{{ item.id }}">
+                                    <td>{{ item.position }}</td>
+                                    <td><a class="ws-name" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}">{{ fed.name }}</a></td>
+                                    <td>{{ ws.state_tag(item.status) }}</td>
+                                    <td>{{ item.enqueued_at.strftime('%Y-%m-%d %H:%M') if item.enqueued_at else '-' }}</td>
+                                    <td>{{ item.started_at.strftime('%Y-%m-%d %H:%M') if item.started_at else '-' }}</td>
+                                    <td>{{ item.finished_at.strftime('%Y-%m-%d %H:%M') if item.finished_at else '-' }}</td>
+                                    <td class="ws-col-actions">{% if item.status == 'queued' %}<form method="post" action="{{ url_for('world_simulation.schedule_cancel', item_id=item.id) }}" onsubmit="return confirm('{{ _('Remove this World Simulation from the queue?') }}');"><button class="button is-small is-danger is-light" type="submit"><i class="mdi mdi-close"></i> <span>{{ _('Remove') }}</span></button></form>{% endif %}</td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="7"><div class="empty-state ws-empty"><i class="mdi mdi-calendar-clock"></i><p>{{ _('The queue is empty.') }}</p></div></td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

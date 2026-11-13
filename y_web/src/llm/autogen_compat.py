@@ -118,6 +118,11 @@ def _build_chat_model(llm_config: dict | None):
             kwargs["temperature"] = cfg.temperature
         if cfg.max_tokens is not None:
             kwargs["num_predict"] = cfg.max_tokens
+        if (cfg.api_key or "").upper() not in {"", "NULL", "EMPTY"}:
+            # authenticated Ollama endpoints (e.g. hosted ones) expect the key as a bearer token
+            kwargs["client_kwargs"] = {
+                "headers": {"Authorization": f"Bearer {cfg.api_key}"}
+            }
         return ChatOllama(**kwargs)
 
     try:

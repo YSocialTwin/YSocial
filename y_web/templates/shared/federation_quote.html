@@ -1,0 +1,8 @@
+{#- Attribution of content that a cross-post shared from another agent (P4). Renders nothing without a quote. -#}
+{% macro federation_quote_block(q) -%}
+{%- if q -%}
+<div class="federation-quote" style="margin: 0 0 .5rem 0; padding: .4rem .75rem; border-left: 3px solid #1f9d8b; background: rgba(31, 157, 139, .08); border-radius: 4px; font-size: .85em;">
+  <small><strong>{{ _('Shared from %(author)s on %(platform)s', author=q.author_name, platform=q.platform) }}</strong>{% if q.excerpt %}<br><em>&laquo;{{ q.excerpt }}&raquo;</em>{% endif %}</small>
+</div>
+{%- endif -%}
+{%- endmacro %}

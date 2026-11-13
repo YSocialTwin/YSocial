@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 
 from y_web import db
 from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+from y_web.src.im import is_im_experiment
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.system.path_utils import get_writable_path
 
@@ -134,7 +135,9 @@ def open_experiment_session(experiment: Exps):
         return None, None
 
     engine = create_engine(uri, pool_pre_ping=True)
-    if getattr(experiment, "platform_type", "") == "photo_sharing":
+    if is_im_experiment(experiment):
+        pass  # IM owns its schema: YWeb only reads it
+    elif getattr(experiment, "platform_type", "") == "photo_sharing":
         _ensure_photo_sharing_orm_tables(engine, uri)
     else:
         _ensure_experiment_orm_tables(engine)
@@ -162,6 +165,11 @@ def _ensure_experiment_orm_tables(engine) -> None:
         seen.add(table.name)
         tables.append(table)
 
+    from y_web.src.experiment.schema import ensure_text_key_reply_inbox
+
+    ensure_text_key_reply_inbox(
+        engine
+    )  # string user ids (YForum): before create_all makes it with INTEGER
     if tables:
         db.metadata.create_all(bind=engine, tables=tables)
 
@@ -193,6 +201,27 @@ def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
             ensure_experiment_schema_for_uri(uri)
 
 
+def _im_participant(experiment: Exps, user_id, username):
+    """What stands for a participant of an IM experiment: its id is the human account id of the runtime.
+
+    Nothing is read from or written to the experiment database, so assigning a user to an IM experiment (from the
+    users page, in bulk, by Training Modules or at login) needs no provisioning. ``None`` when the user is unknown.
+    """
+    from types import SimpleNamespace
+
+    from y_web.src.im.human_identity import experiment_uid, human_account_id
+
+    try:
+        account = int(user_id)
+    except (TypeError, ValueError):
+        return None
+    return SimpleNamespace(
+        id=human_account_id(experiment_uid(experiment), account),
+        username=str(username or ""),
+        account_id=account,
+    )
+
+
 def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     """
     Ensure a participant row exists in the experiment database.
@@ -203,6 +232,20 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     created)`` is emitted; hook errors never affect the result. Other
     arguments are those of :func:`_ensure_experiment_user`.
     """
+    if is_im_experiment(experiment):
+        # IM owns its database and keeps no YWeb participant row (no ``user_mgmt``): the participant is the
+        # runtime's human account, derived from the experiment and the user, registered when the person first acts
+        user = _im_participant(
+            experiment, kwargs.get("user_id"), kwargs.get("username")
+        )
+        if account_id is not None and user is not None:
+            # Training Modules marks the scenario as entered from this hook, whatever the platform
+            from y_web.src.external_runtime.plugin_hooks import emit_hook
+
+            emit_hook(
+                "experiment_user_provisioned", experiment, account_id, user.id, False
+            )
+        return user, False
     user, created = _ensure_experiment_user(experiment, **kwargs)
     if account_id is not None and user is not None:
         from y_web.src.external_runtime.plugin_hooks import emit_hook
@@ -211,6 +254,76 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
             "experiment_user_provisioned", experiment, account_id, user.id, created
         )
     return user, created
+
+
+def _check_constraint_values(engine: Engine) -> Dict[str, str]:
+    """First allowed value of every ``col IN ('a', 'b', ...)`` CHECK constraint of ``user_mgmt``."""
+    import re
+
+    from sqlalchemy import inspect
+
+    found: Dict[str, str] = {}
+    try:
+        checks = inspect(engine).get_check_constraints("user_mgmt")
+    except Exception:
+        return found
+    for check in checks:
+        match = re.match(
+            r"^\s*\(?\s*[\"`\[]?(\w+)[\"`\]]?\s+IN\s*\(\s*'([^']*)'",
+            check.get("sqltext", ""),
+            re.IGNORECASE,
+        )
+        if match:
+            found.setdefault(match.group(1), match.group(2))
+    return found
+
+
+def _required_unmapped_columns(engine: Engine) -> Dict[str, object]:
+    """NOT NULL columns of ``user_mgmt`` without a default that the ``User_mgmt`` model does not map, with a neutral
+    value for each (``""`` for text, ``0`` for numbers). Empty for every database YWeb itself creates.
+    """
+    from sqlalchemy import inspect
+
+    try:
+        columns = inspect(engine).get_columns("user_mgmt")
+    except Exception:
+        return {}
+    mapped = {c.name for c in User_mgmt.__table__.columns}
+    allowed = _check_constraint_values(engine)
+    extra: Dict[str, object] = {}
+    for col in columns:
+        if col["name"] in mapped or col.get("nullable", True):
+            continue
+        if col.get("default") is not None or col.get("autoincrement") is True:
+            continue
+        if col["name"] in allowed:
+            # a CHECK ... IN (...) column (Dating ``status``): the first listed value is the initial one ("active")
+            extra[col["name"]] = allowed[col["name"]]
+            continue
+        kind = str(col.get("type", "")).upper()
+        extra[col["name"]] = (
+            0 if any(t in kind for t in ("INT", "REAL", "FLOAT", "NUM", "BOOL")) else ""
+        )
+    return extra
+
+
+def _insert_user_with_extra_columns(
+    engine: Engine, user: User_mgmt, extra: Dict[str, object]
+) -> None:
+    """Insert ``user`` (an unsaved ``User_mgmt``) with the extra columns of :func:`_required_unmapped_columns`."""
+    from sqlalchemy import MetaData, Table
+
+    table = Table("user_mgmt", MetaData(), autoload_with=engine)
+    values: Dict[str, object] = {}
+    for col in User_mgmt.__table__.columns:
+        value = getattr(user, col.key, None)
+        if value is None and col.default is not None and col.default.is_scalar:
+            value = col.default.arg
+        if value is not None and col.name in table.c:
+            values[col.name] = value
+    values.update(extra)
+    with engine.begin() as connection:
+        connection.execute(table.insert().values(**values))
 
 
 def _ensure_experiment_user(
@@ -285,6 +398,14 @@ def _ensure_experiment_user(
             joined_on=joined_on,
             cover_image=cover_image,
         )
+        extra = _required_unmapped_columns(engine)
+        if extra:
+            # a runtime that owns the table (Dating) has NOT NULL columns the YWeb model does not know: insert the
+            # row with them, taking the defaults of the model for everything else
+            _insert_user_with_extra_columns(engine, new_user, extra)
+            db_session.expire_all()
+            new_user = db_session.query(User_mgmt).filter_by(username=username).first()
+            return new_user, True
         db_session.add(new_user)
         db_session.commit()
         db_session.refresh(new_user)

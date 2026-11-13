@@ -33,21 +33,15 @@
 
                 </div>
                 <div class="user-info">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
-                    <span class="time forum-post-time">
-                        {{ item.get("display_time", "") }}
-                        {% if item.get("primary_community") %}
-                        <span class="forum-post-community-separator">·</span>
-                        <a
-                            class="forum-post-community-link"
-                            href="/{{ exp_id }}/subforum/{{ item['primary_community']['slug'] }}?feed_type={{ feed_type }}"
-                            onclick="event.stopPropagation()"
-                        >
-                            <i data-feather="hash" class="forum-post-community-icon"></i>
-                            <span>{{ item['primary_community']['label'] }}</span>
-                        </a>
-                        {% endif %}
-                    </span>
+                    {% if item.get("primary_community") %}
+                    <a
+                        class="forum-post-community-link"
+                        href="/{{ exp_id }}/subforum/{{ item['primary_community']['slug'] }}?feed_type={{ feed_type }}"
+                        onclick="event.stopPropagation()"
+                    >{{ item['primary_community']['label'] }}</a>
+                    {% endif %}
+                    <a class="post-author-link" href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
+                    <span class="time forum-post-time">{{ item.get("display_time", "") }}</span>
                 </div>
             </div>
             <!-- Right side dropdown -->
@@ -56,7 +50,7 @@
                  onclick="{% if profile_delete_inline %}return window.redditProfileToggleDropdown ? window.redditProfileToggleDropdown(event, this) : false;{% else %}event.stopPropagation(){% endif %}">
                 <div>
                     <div class="button">
-                        <i data-feather="more-vertical"></i>
+                        <i data-feather="more-horizontal"></i>
                     </div>
                 </div>
                 <div class="dropdown-menu" role="menu">
@@ -101,12 +95,10 @@
         <!-- Post body -->
         <div class="card-body" style="padding: 12px 16px;">
             <!-- Post body text -->
+{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, item['post_id'])) }}
+{% set ws_exp = exp_id %}{% set ws_id = item['post_id'] %}{% include 'shared/world_simulation_origin.html' %}
             <div class="post-text">
-                {% if item["shared_from"] != -1 %}
- <div class="ys-text-right-border">
-                    <p><small>{{ _('Shared from:') }} <a href="/{{exp_id}}/rthread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
-                </div>
-                {% endif %}
+                {% from "forum/components/crosspost_origin.html" import crosspost_origin %}{{ crosspost_origin(item["shared_from"], exp_id) }}
                 {% if item.get("title") %}
                 <h3 style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px; color: #1c1c1c;">
                     <a href="/{{exp_id}}/rthread/{{ item['post_id'] }}" style="text-decoration: none; color: #1c1c1c;">
@@ -173,6 +165,7 @@
  <i data-feather="message-square" class="ys-icon-xs"></i>
                 <span><span data-role="comment-count">{{ item.get("t_comments", 0) }}</span> {{ _('Comments') }}</span>
             </a>
+            <button type="button" class="fr-crosspost-button" data-post-id="{{ item['post_id'] }}" data-community="{{ (item.get('primary_community') or {}).get('slug', '') }}" aria-label="{{ _('Repost') }}" title="{{ _('Repost') }}"><i class="mdi mdi-repeat" aria-hidden="true"></i></button>
             {% if item['author_id'] != logged_id %}
             <a href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
                class="forum-report-button{% if item.get('is_reported') %} is-active{% endif %}"

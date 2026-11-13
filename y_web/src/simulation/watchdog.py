@@ -104,6 +104,31 @@ def wait_for_servers_ready(server_urls: List[str]) -> bool:
     return False
 
 
+# World Simulation: a client whose member is ahead of the shared clock is waiting at the gate (its log stays quiet on
+# purpose). The federation lifecycle registers a probe per client process id; a probe answering True means "waiting
+# for the gate", and such a client is neither hung nor restarted. No probe registered: behaviour unchanged.
+_gate_wait_probes: Dict[str, Callable[[], bool]] = {}
+
+
+def register_gate_wait_probe(process_id: str, probe: Callable[[], bool]) -> None:
+    _gate_wait_probes[process_id] = probe
+
+
+def unregister_gate_wait_probe(process_id: str) -> None:
+    _gate_wait_probes.pop(process_id, None)
+
+
+def is_waiting_for_gate(process_id: str) -> bool:
+    probe = _gate_wait_probes.get(process_id)
+    if probe is None:
+        return False
+    try:
+        return bool(probe())
+    except Exception as exc:  # an unreachable coordinator is not "waiting"
+        logger.debug(f"Watchdog: gate probe of {process_id} failed: {exc}")
+        return False
+
+
 class ProcessWatchdog:
     """
     A lightweight watchdog that monitors processes using log files as heartbeats.
@@ -450,6 +475,13 @@ class ProcessWatchdog:
                 # HTTP servers can legitimately be idle and stop writing logs.
                 # A healthy /status response is the real heartbeat for them.
                 process_info.last_heartbeat = datetime.now()
+
+        if (
+            is_running
+            and process_info.process_type == "client"
+            and is_waiting_for_gate(process_info.process_id)
+        ):
+            process_info.last_heartbeat = datetime.now()
 
         now = datetime.now()
         time_since_heartbeat = now - process_info.last_heartbeat

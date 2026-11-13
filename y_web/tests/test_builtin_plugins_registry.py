@@ -35,7 +35,7 @@ def _normalise(spec: ExternalRuntimeSpec) -> dict:
 
 
 def test_built_in_specs_are_identical_to_the_previous_hard_coded_ones():
-    """Golden copy of the 12 specs taken before they moved to the JSON file."""
+    """Golden copy of the specs (12 taken before they moved to the JSON file, plus instant_messaging, dating, forum_hpc and federation)."""
     assert [g["key"] for g in GOLDEN] == list(SUPPORTED_EXTERNAL_REPOS)
     for expected in GOLDEN:
         assert _normalise(SUPPORTED_EXTERNAL_REPOS[expected["key"]]) == expected
@@ -62,6 +62,9 @@ def test_seeded_directories_are_the_simulation_runtimes():
         "YServerReddit",
         "YSimulator",
         "YPhotoSharing",
+        "YInstantMessaging",
+        "YDating",
+        "YForum",
     ]
 
 
@@ -106,3 +109,22 @@ def test_every_entry_has_the_fields_the_loader_needs():
             "repo",
         ):
             assert entry.get(field), (entry.get("key"), field)
+
+
+def test_yforum_is_a_seeded_hpc_runtime_next_to_ysimulator():
+    spec = SUPPORTED_EXTERNAL_REPOS["forum_hpc"]
+    assert (spec.label, spec.path.name, spec.group) == ("YForum", "YForum", "hpc")
+    assert spec.github_repo == "YSocialTwin/YForum"
+    # the bundle needs neither PostgreSQL nor a model: only the requirements of the runtime
+    assert [list(c)[-2:] for c in spec.install_commands] == [["-r", "requirements.txt"]]
+    assert "YSimulator" in {s.path.name for s in SUPPORTED_EXTERNAL_REPOS.values()}
+
+
+def test_yfederation_is_listed_in_the_install_menu_but_not_seeded():
+    spec = SUPPORTED_EXTERNAL_REPOS["federation"]
+    assert (spec.label, spec.path.name) == ("YFederation", "YFederation")
+    assert spec.github_repo == "YSocialTwin/YFederation"
+    assert "federation" in [g for g, _label, _specs in registry.grouped_runtime_specs()]
+    assert "YFederation" not in [
+        e["directory"] for e in registry._BUILTIN_PAYLOAD if e.get("seed")
+    ]

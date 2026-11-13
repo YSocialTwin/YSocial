@@ -29,6 +29,69 @@ def get_db_bind_key_for_exp(exp_id):
     return f"db_exp_{exp_id}"
 
 
+def _is_im_experiment_id(exp_id) -> bool:
+    """Whether ``exp_id`` is an instant messaging experiment (False when it cannot be told)."""
+    from y_web.src.im import is_im_platform
+
+    try:
+        from y_web.src.models import Exps
+
+        platform = db.session.scalar(select(Exps.platform_type).filter_by(idexp=exp_id))
+    except Exception:
+        return False
+    return is_im_platform(platform)
+
+
+def _is_dating_experiment_id(exp_id) -> bool:
+    """Whether ``exp_id`` is a dating experiment (False when it cannot be told)."""
+    from y_web.src.dating import is_dating_platform
+
+    try:
+        from y_web.src.models import Exps
+
+        platform = db.session.scalar(select(Exps.platform_type).filter_by(idexp=exp_id))
+    except Exception:
+        return False
+    return is_dating_platform(platform)
+
+
+def _is_scenario_design_request(exp_id) -> bool:
+    """Whether this request is a Scenario Design one for an instant messaging experiment.
+
+    The runtime owns an instant messaging database, so the drafts of Scenario Design live in a sidecar database of
+    the experiment folder: for these requests (and only these) ``db_exp`` points at it.
+    """
+    try:
+        blueprint = request.blueprint
+    except RuntimeError:
+        return False
+    return blueprint == "scenario_design" and _is_im_experiment_id(exp_id)
+
+
+def get_scenario_bind_key_for_exp(exp_id):
+    """Bind key of the Scenario Design sidecar of an instant messaging experiment."""
+    return f"{get_db_bind_key_for_exp(exp_id)}_sd"
+
+
+def register_scenario_sidecar(app, exp_id, db_name):
+    """Register the Scenario Design sidecar database of an instant messaging experiment (no schema is applied:
+    the plugin creates its own tables). Nothing is registered until the run has its database, as for the other
+    platforms. Returns the bind key, or ``None``."""
+    from y_web.src.im.scenario import SCENARIO_DB_FILE
+    from y_web.src.system.path_utils import get_writable_path
+
+    folder = os.path.dirname(os.path.join("y_web", db_name))
+    if not os.path.isfile(
+        get_writable_path(os.path.join(folder, "database_server.db"))
+    ):
+        return None
+    bind_key = get_scenario_bind_key_for_exp(exp_id)
+    app.config["SQLALCHEMY_BINDS"][bind_key] = "sqlite:///" + get_writable_path(
+        os.path.join(folder, SCENARIO_DB_FILE)
+    )
+    return bind_key
+
+
 def register_experiment_database(app, exp_id, db_name):
     """
     Register an experiment database in the app's SQLALCHEMY_BINDS.
@@ -38,6 +101,25 @@ def register_experiment_database(app, exp_id, db_name):
         exp_id: Experiment ID
         db_name: Database name or path (e.g., "experiments/uid/database_server.db")
     """
+    # An instant messaging experiment owns its database: never bind it as ``db_exp`` nor touch its schema.
+    if _is_im_experiment_id(exp_id):
+        from y_web.src.im.analytics import is_derived_db_name
+
+        if not is_derived_db_name(db_name):
+            return
+        # the derived analytics database is YWeb's own and has only the tables its data fills: bind it
+        # without applying the YSocial schema (the pages detect their tables by presence)
+        from y_web.src.system.path_utils import get_writable_path
+
+        app.config["SQLALCHEMY_BINDS"][get_db_bind_key_for_exp(exp_id)] = (
+            "sqlite:///" + get_writable_path(os.path.join("y_web", db_name))
+        )
+        return
+
+    # A dating experiment owns its database too: it is read by the observer in read-only mode, never bound.
+    if _is_dating_experiment_id(exp_id):
+        return
+
     bind_key = get_db_bind_key_for_exp(exp_id)
 
     # Use get_writable_path to handle both development and PyInstaller modes
@@ -81,11 +163,19 @@ def _activate_db_exp_bind(exp_id):
 
     from y_web.src.models import Exps
 
-    bind_key = get_db_bind_key_for_exp(exp_id)
+    sidecar = _is_scenario_design_request(exp_id)
+    bind_key = (
+        get_scenario_bind_key_for_exp(exp_id)
+        if sidecar
+        else get_db_bind_key_for_exp(exp_id)
+    )
     if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
         exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp is not None:
-            register_experiment_database(current_app, exp_id, exp.db_name)
+            if sidecar:
+                register_scenario_sidecar(current_app, exp_id, exp.db_name)
+            else:
+                register_experiment_database(current_app, exp_id, exp.db_name)
 
     binds = current_app.config["SQLALCHEMY_BINDS"]
     target_uri = binds.get(bind_key)
@@ -96,9 +186,10 @@ def _activate_db_exp_bind(exp_id):
     if not target_uri:
         return original_bind, original_engine, None
 
-    from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+    if not sidecar:  # the sidecar is the plugin's own: it creates its tables
+        from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 
-    ensure_experiment_schema_for_uri(target_uri)
+        ensure_experiment_schema_for_uri(target_uri)
 
     # Build a fresh engine for the experiment database using the same options
     # configured for the app (NullPool, check_same_thread, timeout, …).

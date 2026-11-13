@@ -1,21 +1,51 @@
 {% include "admin/head.html" %}
 <style>
-    .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-text-dark:#111827; }
-    .ext-runtimes .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
-    .ext-intro { font-size:.82rem; color:#6b7280; margin-bottom:14px; }
-    .ext-plugin-table { width:100%; border-collapse:collapse; }
-    .ext-plugin-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; padding:8px 10px; border-bottom:1px solid var(--ext-border); }
-    .ext-plugin-table td { padding:12px 10px; border-bottom:1px solid var(--ext-border); vertical-align:middle; font-size:.84rem; }
-    .ext-plugin-name { font-weight:700; color:var(--ext-text-dark); }
-    .ext-plugin-sub { font-size:.72rem; color:#6b7280; }
-    .ext-plugin-desc { color:#4b5563; max-width:520px; }
-    .ext-row-actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
-    .ext-row-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
+    .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-text-dark:#111827; --ext-muted:#6b7280; }
+    .ext-runtimes .badge { font-size:.66rem; padding:.2em .55em; font-weight:600; }
+    .ext-intro { font-size:.82rem; color:var(--ext-muted); margin:0 0 12px; max-width:820px; line-height:1.45; }
+    .ext-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 14px; }
+    .ext-search { position:relative; flex:1 1 280px; max-width:460px; }
+    .ext-search input { width:100%; height:2.1rem; padding:0 2.2rem 0 2rem; border:1px solid var(--ext-border); border-radius:8px; font-size:.82rem; background:#fff; }
+    .ext-search input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+    .ext-search .ext-search-icon { position:absolute; left:.65rem; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:.8rem; pointer-events:none; }
+    .ext-search .ext-search-clear { position:absolute; right:.35rem; top:50%; transform:translateY(-50%); border:0; background:transparent; color:#9ca3af; cursor:pointer; font-size:1rem; line-height:1; padding:.2rem .4rem; display:none; }
+    .ext-search.has-text .ext-search-clear { display:block; }
+    .ext-toolbar select { height:2.1rem; border:1px solid var(--ext-border); border-radius:8px; font-size:.8rem; padding:0 .6rem; background:#fff; color:var(--ext-text-dark); }
+    .ext-count { font-size:.75rem; color:var(--ext-muted); margin-left:auto; white-space:nowrap; }
+    .ext-section { margin:0 0 14px; }
+    .ext-section[hidden], .ext-row[hidden] { display:none; }
+    .ext-section-head { display:flex; align-items:baseline; gap:6px; margin:0 0 5px; padding:0 2px; }
+    .ext-section-title { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ext-text-dark); margin:0; }
+    .ext-section-count { font-size:.7rem; color:var(--ext-muted); }
+    .ext-section-list { border:1px solid var(--ext-border); border-radius:8px; background:#fff; overflow:hidden; }
+    .ext-row { display:grid; grid-template-columns:200px minmax(0,1fr) 250px 140px; align-items:center; gap:4px 14px; padding:7px 12px; border-top:1px solid var(--ext-border); }
+    .ext-row:first-child, .ext-row[data-first] { border-top:0; }
+    .ext-row:hover { background:var(--ext-bg-subtle); }
+    .ext-plugin-name { font-weight:700; font-size:.84rem; color:var(--ext-text-dark); display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ext-plugin-meta { font-size:.66rem; font-weight:600; color:var(--ext-muted); background:#eef2f7; border-radius:4px; padding:0 5px; }
+    .ext-plugin-desc { font-size:.78rem; color:#4b5563; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ext-status { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+    .ext-row-actions { display:flex; gap:5px; justify-content:flex-end; flex-wrap:nowrap; }
+    .ext-row-actions .button { font-size:.72rem; height:auto; min-height:1.75rem; padding:.2em .75em; white-space:nowrap; }
     .ext-danger-text { color:#b91c1c; }
-    .ext-ver { margin-top:4px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
-    .ext-tag { display:inline-block; font-size:.7rem; font-weight:600; line-height:1.4; padding:1px 8px; border-radius:999px; background:#eef2f7; color:#374151; border:1px solid #dbe2ea; }
+    .ext-ver { display:inline-flex; align-items:center; gap:4px; font-size:.68rem; color:var(--ext-muted); }
+    .ext-tag { display:inline-block; font-size:.66rem; font-weight:600; line-height:1.35; padding:0 7px; border-radius:999px; background:#eef2f7; color:#374151; border:1px solid #dbe2ea; }
     .ext-tag.is-new { background:#fff1e0; color:#b45309; border-color:#f5b971; }
-    .ext-ver-arrow { color:#9ca3af; font-size:.8rem; }
+    .ext-ver-arrow { color:#9ca3af; font-size:.75rem; }
+    .ext-empty { padding:16px; font-size:.82rem; color:var(--ext-muted); }
+    @media (max-width: 1100px) {
+        .ext-row { grid-template-columns:170px minmax(0,1fr) 140px; }
+        .ext-status { grid-column:2 / 3; grid-row:2; }
+        .ext-plugin-name { grid-row:1; }
+        .ext-row-actions { grid-row:1 / 3; grid-column:3; }
+    }
+    @media (max-width: 700px) {
+        .ext-row { grid-template-columns:1fr; }
+        .ext-status, .ext-row-actions, .ext-plugin-name { grid-row:auto; grid-column:auto; }
+        .ext-plugin-desc { white-space:normal; }
+        .ext-row-actions { justify-content:flex-start; }
+        .ext-count { margin-left:0; }
+    }
 </style>
 
 <div class="view-wrapper is-dashboard ext-runtimes">
@@ -27,19 +57,52 @@
                     <div class="dashboard-box" id="external-runtimes-main">
                         <h3 class="title is-5 is-thin">{{ _('Plugins') }}</h3>
                         <div class="box-content">
-                            <p class="ext-intro">{{ _('Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which you install and update independently from the plugin page.') }}</p>
-                            <div class="table-responsive">
-                            <table class="ext-plugin-table" id="external-runtimes-list">
-                                <thead><tr><th>{{ _('Plugin') }}</th><th>{{ _('Description') }}</th><th>{{ _('Status') }}</th><th></th></tr></thead>
-                                <tbody>
-                                {% for entry in plugin_entries %}
-                                <tr data-runtime-repo data-entry-key="{{ entry.key }}">
-                                    <td>
-                                        <div class="ext-plugin-name">{{ entry.label }}</div>
-                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; {{ _('server + client') }}{% endif %}{% if entry.community %} &middot; <span class="badge badge-warning">{{ _('Community') }}</span>{% endif %}</div>
-                                    </td>
-                                    <td class="ext-plugin-desc">{{ entry.description or _('No description available.') }}</td>
-                                    <td>
+                            <p class="ext-intro">{{ _('Install, update and remove the components of YSocial: platforms, agent plugins and system plugins. Search by name or description, filter by status, and open a plugin to choose its source and follow the output of the operation.') }}</p>
+                            <div class="ext-toolbar" id="ext-toolbar"
+                                 data-count-tpl="{{ _('%(shown)s of %(total)s plugins', shown='{shown}', total='{total}') }}">
+                                <div class="ext-search" id="ext-search">
+                                    <span class="ext-search-icon" aria-hidden="true">&#128269;</span>
+                                    <input type="search" id="ext-q" autocomplete="off" spellcheck="false"
+                                           placeholder="{{ _('Search plugins...') }}" aria-label="{{ _('Search plugins') }}"
+                                           title="{{ _('Words must all match. Use "quotes" for an exact phrase, -word to exclude a word, and is:installed, is:missing, is:partial, is:update, is:enabled or is:disabled to filter by status. Press / to search.') }}">
+                                    <button type="button" class="ext-search-clear" id="ext-q-clear" aria-label="{{ _('Clear') }}">&times;</button>
+                                </div>
+                                <select id="ext-f-state" aria-label="{{ _('Status') }}">
+                                    <option value="">{{ _('All statuses') }}</option>
+                                    <option value="installed">{{ _('Installed') }}</option>
+                                    <option value="missing">{{ _('Not installed') }}</option>
+                                    <option value="partial">{{ _('Partially installed') }}</option>
+                                    <option value="update">{{ _('Update available') }}</option>
+                                    <option value="enabled">{{ _('Enabled') }}</option>
+                                    <option value="disabled">{{ _('Disabled') }}</option>
+                                </select>
+                                <select id="ext-f-section" aria-label="{{ _('Section') }}">
+                                    <option value="">{{ _('All sections') }}</option>
+                                    {% for section in plugin_sections %}<option value="{{ section.key }}">{{ section.label }}</option>{% endfor %}
+                                </select>
+                                <span class="ext-count" id="ext-count" aria-live="polite"></span>
+                            </div>
+                            <div id="external-runtimes-list">
+                            {% for section in plugin_sections %}
+                            <section class="ext-section" data-section="{{ section.key }}">
+                                <div class="ext-section-head">
+                                    <h4 class="ext-section-title">{{ section.label }}</h4>
+                                    <span class="ext-section-count">{{ section.entries|length }}</span>
+                                </div>
+                                <div class="ext-section-list">
+                                {% for entry in section.entries %}
+                                {% set has_update = entry.versions|selectattr('update')|list|length > 0 %}
+                                <div class="ext-row" data-runtime-repo data-entry-key="{{ entry.key }}"
+                                     data-state="{{ entry.state }}" data-update="{{ 1 if has_update else 0 }}"
+                                     data-enabled="{{ ('1' if entry.enabled else '0') if (entry.togglable and entry.state != 'missing') else '' }}"
+                                     data-community="{{ 1 if entry.community else 0 }}"
+                                     data-search="{{ entry.label }} {{ entry.key }} {{ entry.description }} {{ section.label }}{% for v in entry.versions %} {{ v.label }} {{ v.installed }}{% endfor %}">
+                                    <div class="ext-plugin-name" title="{{ entry.label }}">{{ entry.label }}
+                                        {% if entry.paired %}<span class="ext-plugin-meta">Flask</span>{% endif %}
+                                        {% if entry.community %}<span class="badge badge-warning">{{ _('Community') }}</span>{% endif %}
+                                    </div>
+                                    <div class="ext-plugin-desc" title="{{ entry.description }}">{{ entry.description or _('No description available.') }}</div>
+                                    <div class="ext-status">
                                         {% if entry.state == 'installed' %}<span class="badge badge-success">{{ _('Installed') }}</span>
                                         {% elif entry.state == 'partial' %}<span class="badge badge-warning">{{ _('Partially installed') }}</span>
                                         {% else %}<span class="badge badge-secondary">{{ _('Not installed') }}</span>{% endif %}
@@ -47,22 +110,22 @@
                                             {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                                         {% endif %}
                                         {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
-                                        {% for v in entry.versions %}<div class="ext-ver">{% if v.label %}<span class="ext-hint">{{ v.label }}</span> {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest and (v.latest|trim|lower|replace('v','')) != (v.installed|trim|lower|replace('v','')) %} <span class="ext-ver-arrow" aria-hidden="true">&rarr;</span> <span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</div>{% endfor %}
-                                    </td>
-                                    <td>
-                                        <div class="ext-row-actions">
-                                            <a class="button is-solid primary-button" data-ext-open data-label="{{ entry.label }}" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
-                                            {% if entry.any_exists %}
-                                            <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr><td colspan="4" class="ext-plugin-sub">{{ _('No plugin is available.') }}</td></tr>
+                                        {% for v in entry.versions %}<span class="ext-ver">{% if v.label %}{{ v.label }} {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest and (v.latest|trim|lower|replace('v','')) != (v.installed|trim|lower|replace('v','')) %}<span class="ext-ver-arrow" aria-hidden="true">&rarr;</span><span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</span>{% endfor %}
+                                    </div>
+                                    <div class="ext-row-actions">
+                                        <a class="button is-solid primary-button" data-ext-open data-label="{{ entry.label }}" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
+                                        {% if entry.any_exists %}
+                                        <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
+                                        {% endif %}
+                                    </div>
+                                </div>
                                 {% endfor %}
-                                </tbody>
-                            </table>
+                                </div>
+                            </section>
+                            {% else %}
+                            <div class="ext-empty">{{ _('No plugin is available.') }}</div>
+                            {% endfor %}
+                            <div class="ext-empty" id="ext-no-match" hidden>{{ _('No plugin matches your search.') }}</div>
                             </div>
                         </div>
                     </div>
@@ -108,5 +171,99 @@ document.addEventListener('click', async function (event) {
         window.location.reload();
     }
 });
+</script>
+<script>
+// Search and filters of the plugin list: all in the page, nothing is sent to the server.
+(function () {
+    var input = document.getElementById('ext-q');
+    if (!input) return;
+    var clear = document.getElementById('ext-q-clear');
+    var box = document.getElementById('ext-search');
+    var fState = document.getElementById('ext-f-state');
+    var fSection = document.getElementById('ext-f-section');
+    var count = document.getElementById('ext-count');
+    var none = document.getElementById('ext-no-match');
+    var tpl = document.getElementById('ext-toolbar').dataset.countTpl || '{shown} / {total}';
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#external-runtimes-list [data-runtime-repo]'));
+    var sections = Array.prototype.slice.call(document.querySelectorAll('#external-runtimes-list .ext-section'));
+    var fold = function (t) {
+        return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+    rows.forEach(function (row) { row.__hay = fold(row.dataset.search); });
+
+    // "exact phrase", -excluded, is:status and plain words
+    function parse(query) {
+        var q = {words: [], not: [], is: []};
+        var re = /(-?)(?:"([^"]*)"|(\S+))/g, m;
+        while ((m = re.exec(query))) {
+            var neg = m[1] === '-', term = fold(m[2] !== undefined ? m[2] : m[3]).trim();
+            if (!term) continue;
+            if (!neg && term.indexOf('is:') === 0 && m[2] === undefined) { q.is.push(term.slice(3)); continue; }
+            (neg ? q.not : q.words).push(term);
+        }
+        return q;
+    }
+    function hasStatus(row, status) {
+        var d = row.dataset;
+        switch (status) {
+            case 'installed': return d.state === 'installed';
+            case 'missing': case 'notinstalled': return d.state === 'missing';
+            case 'partial': return d.state === 'partial';
+            case 'update': case 'updates': return d.update === '1';
+            case 'enabled': return d.enabled === '1';
+            case 'disabled': return d.enabled === '0';
+            case 'community': return d.community === '1';
+            default: return false;
+        }
+    }
+    function apply() {
+        var q = parse(input.value), state = fState.value, section = fSection.value, shown = 0;
+        box.classList.toggle('has-text', !!input.value);
+        rows.forEach(function (row) {
+            var ok = true, hay = row.__hay;
+            if (section && row.closest('.ext-section').dataset.section !== section) ok = false;
+            if (ok && state && !hasStatus(row, state)) ok = false;
+            if (ok) ok = q.words.every(function (w) { return hay.indexOf(w) !== -1; })
+                && q.not.every(function (w) { return hay.indexOf(w) === -1; })
+                && q.is.every(function (s) { return hasStatus(row, s); });
+            row.hidden = !ok;
+            if (ok) shown += 1;
+        });
+        sections.forEach(function (sec) {
+            var visible = sec.querySelectorAll('[data-runtime-repo]:not([hidden])');
+            sec.hidden = visible.length === 0;
+            Array.prototype.forEach.call(sec.querySelectorAll('[data-runtime-repo]'), function (r) { r.removeAttribute('data-first'); });
+            if (visible.length) visible[0].setAttribute('data-first', '');
+            var c = sec.querySelector('.ext-section-count');
+            if (c) { if (!c.dataset.total) c.dataset.total = c.textContent; c.textContent = visible.length === +c.dataset.total ? c.dataset.total : visible.length + '/' + c.dataset.total; }
+        });
+        count.textContent = tpl.replace('{shown}', shown).replace('{total}', rows.length);
+        if (none) none.hidden = shown !== 0 || rows.length === 0;
+        try {
+            var url = new URL(window.location.href);
+            ['q', 'status', 'section'].forEach(function (k) { url.searchParams.delete(k); });
+            if (input.value) url.searchParams.set('q', input.value);
+            if (state) url.searchParams.set('status', state);
+            if (section) url.searchParams.set('section', section);
+            window.history.replaceState(null, '', url);
+        } catch (e) { /* the filters still work without the address */ }
+    }
+    var params = new URLSearchParams(window.location.search);
+    input.value = params.get('q') || '';
+    fState.value = params.get('status') || '';
+    fSection.value = params.get('section') || '';
+    input.addEventListener('input', apply);
+    fState.addEventListener('change', apply);
+    fSection.addEventListener('change', apply);
+    clear.addEventListener('click', function () { input.value = ''; input.focus(); apply(); });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { input.value = ''; apply(); } });
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+        var t = e.target && e.target.tagName;
+        if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+        e.preventDefault(); input.focus(); input.select();
+    });
+    apply();
+})();
 </script>
 {% include "admin/footer.html" %}

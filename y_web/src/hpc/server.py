@@ -21,6 +21,7 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import db
+from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Exps
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
 from y_web.src.system.path_utils import get_base_path, get_writable_path
@@ -191,10 +192,8 @@ def start_hpc_server(exp):
             return candidate
         return os.path.join(resource_external, repo_name)
 
-    if exp.platform_type == "photo_sharing":
-        sys.path.append(_external_repo_dir("YPhotoSharing"))
-    else:
-        sys.path.append(_external_repo_dir("YSimulator"))
+    _spec = find_hpc_platform(exp.platform_type)
+    sys.path.append(_external_repo_dir(_spec.runtime_repo if _spec else "YSimulator"))
 
     exp_folder = _resolve_hpc_experiment_folder(exp)
     _clear_hpc_runtime_markers(exp_folder)
@@ -225,14 +224,34 @@ def start_hpc_server(exp):
         config = exp_folder
 
     # Determine the server directory and script path based on platform type.
-    if exp.platform_type == "photo_sharing":
-        server_dir = _external_repo_dir("YPhotoSharing")
-        script_path = os.path.join(server_dir, "run_server.py")
-    elif exp.platform_type == "microblogging":
-        server_dir = _external_repo_dir("YServer")
-        script_path = os.path.join(_external_repo_dir("YSimulator"), "run_server.py")
-    else:
-        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+    spec = get_hpc_platform(exp.platform_type)
+    server_dir = _external_repo_dir(spec.server_repo)
+    script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_server.py")
+
+    if spec.validates_config:
+        if spec.key == "dating":
+            from y_web.src.dating.validation import validate_dating_folder
+
+            validate_dating_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+        elif spec.key == "forum":
+            from y_web.src.forum.validation import validate_forum_folder
+
+            validate_forum_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+        else:
+            from y_web.src.im.validation import validate_im_folder
+
+            validate_im_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+    if spec.key == "dating":
+        # the settings that shape the run are fixed from the first start (S3 lock)
+        from y_web.src.dating import server_settings
+
+        _config_file = os.path.join(exp_folder, "server_config.json")
+        with open(_config_file, "r", encoding="utf-8") as handle:
+            _server_config = json.load(handle)
+        if server_settings.ensure_humans(_server_config):  # people are always welcome
+            with open(_config_file, "w", encoding="utf-8") as handle:
+                json.dump(_server_config, handle, indent=4)
+        server_settings.write_lock(exp_folder, _server_config)
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     # Check multiple PyInstaller indicators
@@ -244,9 +263,7 @@ def start_hpc_server(exp):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
-        expected_repo = (
-            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
-        )
+        expected_repo = spec.runtime_repo
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
             f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
@@ -270,7 +287,7 @@ def start_hpc_server(exp):
     # Set up environment (always needed, gunicorn branch adds extra vars)
     env = build_subprocess_env()
 
-    if use_gunicorn and exp.platform_type != "photo_sharing":
+    if use_gunicorn and spec.supports_gunicorn:
         # Use gunicorn for PostgreSQL
         print(f"Starting server for experiment {exp_uid} with gunicorn (PostgreSQL)...")
 
@@ -405,7 +422,7 @@ def start_hpc_server(exp):
         is_bundle_exe = "python" not in Path(sys.executable).name.lower()
 
         if is_frozen or has_meipass or is_bundle_exe:
-            if exp.platform_type == "photo_sharing":
+            if spec.frozen_server_runs_script:
                 cmd = [sys.executable, script_path, "--config", config]
             else:
                 # Running from PyInstaller - invoke the bundled executable with special flag
@@ -539,7 +556,33 @@ def start_hpc_server(exp):
                 )
                 if attempt == max_retries - 1:
                     print("Warning: Server may not be fully started, proceeding anyway")
+    if getattr(exp, "platform_type", "") == "instant_messaging":
+        _start_im_gateway_when_ready(exp)
     return process
+
+
+def _start_im_gateway_when_ready(exp):
+    """Human participation does not depend on the agent clients: the gateway starts with the server.
+
+    It runs in the background (the server may need a while to be ready) and a failure is only a warning.
+    """
+    import threading
+
+    exp_folder = _resolve_hpc_experiment_folder(exp)
+
+    def _run():
+        try:
+            from y_web.src.hpc.client import (
+                _start_im_human_gateway,
+                _wait_for_hpc_server_ready,
+            )
+
+            _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
+            _start_im_human_gateway(exp_folder)
+        except Exception as exc:  # noqa: BLE001
+            print(f"Warning: human gateway not started with the server: {exc}")
+
+    threading.Thread(target=_run, name="im-gateway-start", daemon=True).start()
 
 
 def stop_hpc_server(exp_id):
@@ -579,6 +622,24 @@ def stop_hpc_server(exp_id):
                 f"Cleared stale PID state for HPC server experiment {exp_id}; nothing to terminate."
             )
             return True
+
+        if exp.platform_type == "instant_messaging":
+            try:  # reverse of the start order: gateway first, then the server (plan 4.8)
+                from y_web.src.im.gateway_process import stop_gateway
+
+                stop_gateway(exp_folder)
+            except Exception as exc:  # noqa: BLE001
+                print(f"Warning: human gateway not stopped cleanly: {exc}")
+
+        if exp.platform_type == "dating":
+            try:  # reverse of the start order: gateway first, then the server
+                from y_web.src.dating.gateway import (
+                    stop_gateway as _stop_dating_gateway,
+                )
+
+                _stop_dating_gateway(exp_folder)
+            except Exception as exc:  # noqa: BLE001
+                print(f"Warning: human gateway not stopped cleanly: {exc}")
 
         pid = exp.server_pid
         print(f"Terminating HPC server process with PID {pid}...")

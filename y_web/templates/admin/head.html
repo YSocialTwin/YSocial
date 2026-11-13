@@ -117,6 +117,38 @@
             </div>
         </div>
 
+        <!-- World Simulation: configuration, execution and analysis of multi-platform simulations (needs an optional plugin) -->
+        {% if ws_sdk_available is not defined or ws_sdk_available() %}
+        <div class="dashboard-aside-group" id="sidebar-group-world-simulation">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-world-simulation" data-group="world-simulation" aria-expanded="false" aria-controls="sidebar-submenu-world-simulation">
+                <div>
+                    <i data-feather="globe"></i>
+                    <span>{{ _('World Simulation') }}</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-world-simulation">
+                <div class="dashboard-aside-submenu-title">{{ _('World Simulation') }}</div>
+                <a href="/admin/world_simulation" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-world-simulations">
+                    <i data-feather="globe"></i>
+                    <span>{{ _('Simulations') }}</span>
+                </a>
+                <a href="/admin/world_simulation/new" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-world-simulation-new">
+                    <i data-feather="plus-circle"></i>
+                    <span>{{ _('New simulation') }}</span>
+                </a>
+                <a href="/admin/world_simulation/analytics" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-world-simulation-analytics">
+                    <i data-feather="bar-chart-2"></i>
+                    <span>{{ _('Analytics') }}</span>
+                </a>
+                <a href="/admin/world_simulation/schedule" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-world-simulation-schedule">
+                    <i data-feather="calendar"></i>
+                    <span>{{ _('Schedule') }}</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
 {% endif %}
         <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
              see backend_plugins.backend_suite_sidebar_groups()); same markup

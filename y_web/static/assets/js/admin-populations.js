@@ -23,6 +23,8 @@ var AdminPopulations = (function() {
   const platformLabel = (platformType) => {
       if (platformType === 'forum') return YI18n.t('Forum');
       if (platformType === 'photo_sharing') return YI18n.t('Photo Sharing');
+      if (platformType === 'instant_messaging') return YI18n.t('Instant Messaging');
+      if (platformType === 'dating') return YI18n.t('Dating');
       return YI18n.t('Microblogging');
   };
 
@@ -428,9 +430,15 @@ var AdminPopulations = (function() {
       { id: 'id', hidden: true },
       { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
       {
-        id: 'platform_type',
-        name: YI18n.t('Platform'),
-        formatter: (cell) => platformLabel(cell),
+        id: 'platform_fields',
+        name: YI18n.t('Platform fields'),
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return gridjs.html('<span class="ys-text-tiny-gray">' + YI18n.t('Standard') + '</span>');
+          }
+          return gridjs.html(cell.map(f => '<span class="ys-plat-badge is-' + (f === 'dating' ? 'dating' : 'photo') + '">' + platformLabel(f) + '</span>').join(' '));
+        },
       },
       { id: "size", name: YI18n.t('Agents') },
       { 
@@ -627,12 +635,9 @@ var AdminPopulations = (function() {
 
   function renderMergeAvailablePopulations() {
       const container = document.getElementById('merge-available-populations');
-      const selectedType = document.getElementById('merged_population_type').value;
-    
-      // Filter out already selected populations
+      // Filter out already selected populations (populations of any platform can be merged)
       const available = mergeAvailablePopulations.filter(pop => 
-          !mergeSelectedPopulations.find(selected => selected.id === pop.id) &&
-          pop.username_type === selectedType
+          !mergeSelectedPopulations.find(selected => selected.id === pop.id)
       );
 
       if (available.length === 0) {
@@ -704,7 +709,7 @@ var AdminPopulations = (function() {
               id: parsedId,
               name: data.name,
               size: parseInt(data.size, 10) || 0,
-              username_type: data.username_type || document.getElementById('merged_population_type').value
+              username_type: data.username_type || 'microblogging'
           });
           renderMergeSelectedPopulations();
           renderMergeAvailablePopulations();
@@ -720,12 +725,6 @@ var AdminPopulations = (function() {
   // Initialize merge drag and drop
   document.addEventListener('DOMContentLoaded', function() {
       loadMergePopulations();
-      bindById('merged_population_type', 'change', function() {
-          mergeSelectedPopulations = [];
-          renderMergeSelectedPopulations();
-          renderMergeAvailablePopulations();
-      });
-    
       const selectedContainer = document.getElementById('merge-selected-populations');
       if (!selectedContainer) return;
       selectedContainer.addEventListener('dragover', handleMergeDragOver);
@@ -812,6 +811,43 @@ var AdminPopulations = (function() {
       toxicity_levels: {},
       age_classes: {}
   };
+
+  // Dating selectors (same component, labels as ids) and the defaults proposed by the form
+  const DATING_FIELDS = ['d_intents', 'd_seek_woman', 'd_seek_man'];
+  // Appearance selectors: an optional section of its own, independent of the platform
+  const APPEARANCE_FIELDS = ['hair_color', 'hair_length', 'hair_style', 'eye_color', 'skin_tone', 'build',
+      'facial_hair', 'distinctive_features', 'mood', 'photo_style'].map(k => 'd_appearance_' + k);
+  DATING_FIELDS.concat(APPEARANCE_FIELDS).forEach(f => { multiSelectData[f] = {}; });
+
+  function datingDefaults() {
+      const box = document.getElementById('dating-population-sections');
+      if (!box) { return; }
+      let d = {};
+      try { d = JSON.parse(box.getAttribute('data-defaults') || '{}'); } catch (e) { d = {}; }
+      const plan = {d_intents: d.intents, d_seek_woman: (d.seeking || {}).woman, d_seek_man: (d.seeking || {}).man};
+      applyDefaultsPlan(plan);
+  }
+
+  function appearanceDefaults() {
+      const box = document.getElementById('appearance-population-sections');
+      if (!box) { return; }
+      let d = {};
+      try { d = JSON.parse(box.getAttribute('data-defaults') || '{}'); } catch (e) { d = {}; }
+      const plan = {};
+      Object.keys(d.appearance || {}).forEach(k => { plan['d_appearance_' + k] = d.appearance[k]; });
+      applyDefaultsPlan(plan);
+  }
+
+  function applyDefaultsPlan(plan) {
+      Object.keys(plan).forEach(field => {
+          Object.entries(plan[field] || {}).forEach(([label, pct]) => {
+              multiSelectData[field][label] = {label: label, percentage: pct};
+          });
+          updateDisplay(field);
+          updateOptionStyles(field);
+          updatePercentages(field);
+      });
+  }
 
   function updateFemalePercentage() {
       const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
@@ -1024,7 +1060,9 @@ var AdminPopulations = (function() {
       }
     
       // Validate percentages before submission
-      const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
+      const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes']
+          .concat(isDatingPlatform() ? DATING_FIELDS : [])
+          .concat(isSwitchOn('include_appearance') ? APPEARANCE_FIELDS : []);
       for (const fieldName of fieldsToValidate) {
           const data = multiSelectData[fieldName];
           const items = Object.values(data);
@@ -1046,6 +1084,7 @@ var AdminPopulations = (function() {
       }
     
       // Remove old hidden inputs
+      this.querySelectorAll('input[data-ms]').forEach(input => input.remove());
       this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"], input[name="age_classes"]').forEach(input => input.remove());
       this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"], input[name="age_classes_percentages"]').forEach(input => input.remove());
     
@@ -1057,6 +1096,7 @@ var AdminPopulations = (function() {
               input.type = 'hidden';
               input.name = fieldName;
               input.value = id;
+              input.setAttribute('data-ms', '1');
               this.appendChild(input);
           });
       });
@@ -1073,6 +1113,7 @@ var AdminPopulations = (function() {
           input.type = 'hidden';
           input.name = fieldName + '_percentages';
           input.value = JSON.stringify(percentageData);
+          input.setAttribute('data-ms', '1');
           this.appendChild(input);
       });
   });
@@ -1360,22 +1401,57 @@ var AdminPopulations = (function() {
       }
   }
 
-  function togglePhotoSharingConfigPanel() {
-      const select = document.getElementById('population_username_type');
-      const wrapper = document.getElementById('photo-sharing-config-wrapper');
-      const panel = document.getElementById('photo-sharing-config-panel');
-      if (!select || !wrapper || !panel) {
-          return;
+  // Optional platform fields (Photo Sharing, Dating): a section is shown, validated and submitted only when its
+  // switch is on; the population itself is not tied to a platform.
+  function isSwitchOn(id) {
+      const box = document.getElementById(id);
+      return !!box && box.checked;
+  }
+
+  function isDatingPlatform() {
+      return isSwitchOn('include_dating');
+  }
+
+  function togglePlatformFields() {
+      const photo = isSwitchOn('include_photo_sharing');
+      const dating = isDatingPlatform();
+      const photoWrapper = document.getElementById('photo-sharing-config-wrapper');
+      if (photoWrapper) {
+          photoWrapper.classList.toggle('d-none', !photo);
+          if (photo) {
+              renderPhotoFavoriteFilters();
+              updatePhotoAttentionBudgetDistributionParams();
+          }
       }
-      const visible = select.value === 'photo_sharing';
-      wrapper.classList.toggle('d-none', !visible);
-      panel.open = visible;
-      if (visible) {
-          renderPhotoFavoriteFilters();
-          updatePhotoAttentionBudgetDistributionParams();
+      const datingWrapper = document.getElementById('dating-config-wrapper');
+      if (datingWrapper) {
+          datingWrapper.classList.toggle('d-none', !dating);
       }
+      document.querySelectorAll('[data-optional-section="dating"]').forEach(el => {
+          el.disabled = !dating;
+          el.hidden = !dating;
+      });
+      const appearance = isSwitchOn('include_appearance');
+      const appearanceWrapper = document.getElementById('appearance-config-wrapper');
+      if (appearanceWrapper) {
+          appearanceWrapper.classList.toggle('d-none', !appearance);
+      }
+      document.querySelectorAll('[data-optional-section="appearance"]').forEach(el => {
+          el.disabled = !appearance;
+      });
+      // the profile pictures (Stable Diffusion) are a toggle inside the Appearance section, off by default
+      const pictures = appearance && isSwitchOn('generate_profile_pictures');
+      const picturesBox = document.getElementById('profile-pictures-config');
+      if (picturesBox) { picturesBox.classList.toggle('d-none', !pictures); }
+      const picturesFields = document.getElementById('profile-pictures-fields');
+      if (picturesFields) { picturesFields.disabled = !pictures; }
       validatePhotoSharingDistributions();
       validateFormFields();
+  }
+
+  // kept for the pages and tests that still call the former name
+  function togglePhotoSharingConfigPanel() {
+      togglePlatformFields();
   }
 
   function validatePhotoSharingDistributions() {
@@ -1441,9 +1517,17 @@ var AdminPopulations = (function() {
                   updateHiddenField();
               }
       renderPhotoFavoriteFilters();
-      togglePhotoSharingConfigPanel();
-        
-    
+      datingDefaults();
+      appearanceDefaults();
+      // image model: one of the YDating alternatives or any Hugging Face model id
+      document.querySelectorAll('[data-diffusion-select]').forEach(select => {
+          const text = select.closest('.dating-diffusion').querySelector('[data-diffusion-text]');
+          select.addEventListener('change', () => {
+              if (select.value === '__other__') { text.hidden = false; text.value = ''; text.focus(); }
+              else { text.value = select.value; text.hidden = true; }
+          });
+      });
+      togglePlatformFields();
   });
 
   // Function to show/hide distribution-specific parameters
@@ -1549,6 +1633,7 @@ var AdminPopulations = (function() {
       toggleProfessionBackgrounds,
       toggleProfessionTag,
       togglePhotoSharingConfigPanel,
+      togglePlatformFields,
       togglePhotoFavoriteFilterTag,
       addPhotoFavoriteFilter,
       updatePhotoAttentionBudgetDistributionParams,

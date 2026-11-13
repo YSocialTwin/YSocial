@@ -20,6 +20,7 @@ import ray
 from sqlalchemy import select
 
 from y_web import db
+from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
 from y_web.src.system.path_utils import get_base_path, get_writable_path
@@ -180,6 +181,102 @@ def _normalize_photo_sharing_client_config(
         json.dump(client_config, handle, indent=2)
 
 
+def _normalize_im_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Align a YInstantMessaging client config with the experiment server runtime.
+
+    Only keys that IM excludes from the config hash are written (``client_id``, ``namespace``,
+    ``server_name``, ``address``, ``agents_file``, ``logging.log_dir``, ``logging.instance_name``), so
+    running it before every start never changes the hash a resumed run is checked against. No secret is
+    ever written here, and the result is the same however many times it runs.
+    """
+    from y_web.routes.admin.sub.experiments._im import IM_NAMESPACE, IM_SERVER_NAME
+
+    server_config_path = os.path.join(exp_folder, "server_config.json")
+    server_config = {}
+    if os.path.exists(server_config_path):
+        with open(server_config_path, "r", encoding="utf-8") as handle:
+            server_config = json.load(handle)
+
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+
+    runtime_client_id = _build_hpc_runtime_client_id(exp_folder, client_name)
+    desired = {
+        "client_id": runtime_client_id,
+        "namespace": server_config.get("namespace", IM_NAMESPACE),
+        "server_name": server_config.get("server_name", IM_SERVER_NAME),
+        "address": "auto",
+        "agents_file": f"{population_name}.json",
+    }
+    logging_cfg = dict(client_config.get("logging") or {})
+    logging_cfg["log_dir"] = os.path.join(exp_folder, "logs")
+    logging_cfg["instance_name"] = runtime_client_id
+    desired["logging"] = logging_cfg
+
+    if all(client_config.get(key) == value for key, value in desired.items()):
+        return
+    client_config.update(desired)
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=2)
+
+
+def _normalize_dating_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Check that a dating client file still matches its client and its population file.
+
+    Nothing is rewritten (the file is the one the form wrote, and its content is part of what a resumed
+    run is compared with); a mismatch stops the start with a clear message.
+    """
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+    if client_config.get("client_name") != client_name:
+        raise ValueError(
+            f"{os.path.basename(client_config_path)} is for client "
+            f"{client_config.get('client_name')!r}, not {client_name!r}"
+        )
+    population_file = client_config.get("population_file") or ""
+    if not population_file or not os.path.isfile(
+        os.path.join(exp_folder, population_file)
+    ):
+        raise FileNotFoundError(
+            f"population file {population_file!r} of client {client_name!r} not found"
+        )
+
+
+def _normalize_forum_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Check that a forum client file still matches its client and its population file.
+
+    Nothing is rewritten (the file is the one the form wrote); a mismatch stops the start with a clear message.
+    """
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+    if client_config.get("client_name") != client_name:
+        raise ValueError(
+            f"{os.path.basename(client_config_path)} is for client "
+            f"{client_config.get('client_name')!r}, not {client_name!r}"
+        )
+    population_file = (client_config.get("population") or {}).get("file") or ""
+    if not population_file or not os.path.isfile(
+        os.path.join(exp_folder, population_file)
+    ):
+        raise FileNotFoundError(
+            f"population file {population_file!r} of client {client_name!r} not found"
+        )
+
+
+_CLIENT_NORMALIZERS = {
+    "forum": _normalize_forum_client_config,
+    "photo_sharing": _normalize_photo_sharing_client_config,
+    "instant_messaging": _normalize_im_client_config,
+    "dating": _normalize_dating_client_config,
+}
+
+
 def _migrate_legacy_photo_sharing_client_layout(
     exp_folder: str, client_name: str, population_name: str, client_config_path: str
 ) -> None:
@@ -198,6 +295,37 @@ def _migrate_legacy_photo_sharing_client_layout(
         json.dump(client_config, handle, indent=2)
 
 
+def _resolve_hpc_client_file(exp, client_name, suffix, log_folder=None):
+    exp_folder = _resolve_hpc_experiment_folder(exp)
+    logs_dir = Path(log_folder or os.path.join(exp_folder, "logs"))
+    client_name = str(client_name or "").strip()
+    if not client_name:
+        return None
+
+    exact_match = logs_dir / f"{client_name}{suffix}"
+    if exact_match.exists():
+        return str(exact_match)
+
+    if not logs_dir.exists():
+        return None
+
+    matches = []
+    for entry in logs_dir.iterdir():
+        if not entry.is_file() or not entry.name.endswith(suffix):
+            continue
+        stem = entry.name[: -len(suffix)]
+        if stem == client_name:
+            return str(entry)
+        if stem.rsplit(":", 1)[-1] == client_name:
+            matches.append(entry)
+
+    if not matches:
+        return None
+
+    matches.sort(key=lambda path: (path.stat().st_mtime, path.name), reverse=True)
+    return str(matches[0])
+
+
 def resolve_hpc_client_log_path(
     exp,
     client_name: str,
@@ -213,35 +341,23 @@ def resolve_hpc_client_log_path(
     """
     if not client_name:
         return None
+    return _resolve_hpc_client_file(exp, client_name, "_client.log", log_folder)
 
-    exp_folder = _resolve_hpc_experiment_folder(exp)
-    logs_dir = Path(log_folder or os.path.join(exp_folder, "logs"))
-    client_name = str(client_name).strip()
+
+def resolve_hpc_client_execution_log_path(
+    exp,
+    client_name: str,
+    *,
+    log_folder: Optional[str] = None,
+) -> Optional[str]:
+    """Same lookup as :func:`resolve_hpc_client_log_path` for ``*_execution.log``.
+
+    The YInstantMessaging client names its files after the runtime client id
+    (``<experiment-folder>:<client-name>_execution.log``).
+    """
     if not client_name:
         return None
-
-    exact_match = logs_dir / f"{client_name}_client.log"
-    if exact_match.exists():
-        return str(exact_match)
-
-    if not logs_dir.exists():
-        return None
-
-    matches = []
-    for entry in logs_dir.iterdir():
-        if not entry.is_file() or not entry.name.endswith("_client.log"):
-            continue
-        stem = entry.name[: -len("_client.log")]
-        if stem == client_name:
-            return str(entry)
-        if stem.rsplit(":", 1)[-1] == client_name:
-            matches.append(entry)
-
-    if not matches:
-        return None
-
-    matches.sort(key=lambda path: (path.stat().st_mtime, path.name), reverse=True)
-    return str(matches[0])
+    return _resolve_hpc_client_file(exp, client_name, "_execution.log", log_folder)
 
 
 def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
@@ -320,6 +436,42 @@ def _resolve_hpc_client_days_from_config(client_config_path: str) -> Optional[in
         return -1 if parsed == 0 else parsed
 
     return None
+
+
+def _set_dating_run_length(
+    client_config_path: str, cli, unlimited_value: int = -1
+) -> None:
+    """Write in the client file how many days the dating or forum runtime runs from this start.
+
+    The database holds the total length of the client (``Client.days``); the runtime counts the days from the
+    moment it registers, so a restarted client gets what is left of the total.
+    """
+    from y_web.src.dating import client_config as dcc
+    from y_web.src.models import Client_Execution
+
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        config = json.load(handle)
+    slots = int(config.get("num_slots_per_day") or 24)
+    execution = db.session.scalars(
+        select(Client_Execution).filter_by(client_id=cli.id)
+    ).first()
+    last_day = getattr(execution, "last_active_day", -1) if execution else -1
+    last_slot = getattr(execution, "last_active_hour", -1) if execution else -1
+    days = dcc.remaining_days(cli.days, last_day or -1, last_slot or -1, slots)
+    if days == 0:
+        raise RuntimeError(
+            f"Client '{cli.name}' has already run all its days: extend the simulation to run it further."
+        )
+    if days == -1:
+        days = unlimited_value  # YForum reads 0 as "until stopped"
+    stale = False
+    if unlimited_value == 0 and isinstance(config.get("simulation"), dict):
+        # forum schema is strict: drop the duration keys an older extension wrote under "simulation"
+        for key in ("days", "num_days"):
+            stale = config["simulation"].pop(key, None) is not None or stale
+    if stale or config.get("num_days") != days:
+        with open(client_config_path, "w", encoding="utf-8") as handle:
+            json.dump(dcc.set_duration(config, days), handle, indent=2)
 
 
 def _sync_hpc_client_duration_from_config(
@@ -505,6 +657,21 @@ def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
     return True
 
 
+def _start_im_human_gateway(exp_folder: str) -> None:
+    """Start the human gateway before the first IM client (a failure is a warning, never an error)."""
+    try:
+        from y_web.src.im.gateway_process import start_gateway
+        from y_web.src.simulation.server import detect_env_handler
+        from y_web.src.system.path_utils import get_external_repo_dir
+
+        repo_dir = get_external_repo_dir(
+            get_hpc_platform("instant_messaging").runtime_repo
+        )
+        start_gateway(exp_folder, repo_dir, detect_env_handler())
+    except Exception as exc:  # noqa: BLE001
+        print(f"Warning: human gateway not started: {exc}")
+
+
 def start_hpc_client(exp, cli, population):
     """
     Start an HPC client using subprocess.Popen.
@@ -559,32 +726,71 @@ def start_hpc_client(exp, cli, population):
             exp_folder, f"client_{cli.name}-{population.name}.json"
         )
         agents_file = os.path.join(exp_folder, f"{population.name}.json")
-        prompts_file = os.path.join(exp_folder, "prompts.json")
+        prompts_file = os.path.join(
+            exp_folder,
+            (
+                "prompts_im.json"
+                if exp.platform_type == "instant_messaging"
+                else "prompts.json"
+            ),
+        )
 
-    # Validate that required files exist
-    for file_path, file_name in [
+    _launch_spec = find_hpc_platform(exp.platform_type)
+    _required_files = [
         (client_config, "client config"),
         (agents_file, "agents"),
-        (prompts_file, "prompts"),
-    ]:
+    ]
+    if _launch_spec is None or _launch_spec.requires_prompts_file:
+        _required_files.append((prompts_file, "prompts"))
+
+    # Validate that required files exist
+    for file_path, file_name in _required_files:
         if not Path(file_path).exists():
             raise FileNotFoundError(
                 f"{file_name.capitalize()} file not found: {file_path}\n"
                 f"Please ensure the HPC experiment is properly configured."
             )
 
+    if exp.platform_type == "forum":
+        # YForum resumes from the roster it saved: a client that never ran must read its population (and the
+        # initial opinions in it) again, not an old roster left by an aborted start
+        try:
+            from y_web.src.forum.roster import REMOVED, reset_unstarted_roster
+
+            _exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=cli.id)
+            ).first()
+            if reset_unstarted_roster(client_config, cli.name, _exec) == REMOVED:
+                print(f"Removed the stale roster of forum client {cli.name}")
+        except Exception as exc:
+            print(
+                f"Warning: could not check the roster of forum client {cli.name}: {exc}"
+            )
+
+    _syncs_config = _launch_spec is None or _launch_spec.syncs_client_config
     try:
-        _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
+        if _syncs_config:
+            _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
 
     try:
-        synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+        if exp.platform_type == "dating":
+            _set_dating_run_length(client_config, cli)
+        elif exp.platform_type == "forum":
+            # the YForum client counts num_days from the day it registers, like the dating one: a restarted or
+            # extended client gets what is left of Client.days, not the whole total again
+            _set_dating_run_length(client_config, cli, unlimited_value=0)
+        else:
+            synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+    except RuntimeError:
+        raise
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC client duration: {exc}")
 
     try:
-        _sync_hpc_network_bootstrap(exp_folder, client_config, cli)
+        if _syncs_config:
+            _sync_hpc_network_bootstrap(exp_folder, client_config, cli)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC network bootstrap: {exc}")
 
@@ -620,12 +826,19 @@ def start_hpc_client(exp, cli, population):
     _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
     time.sleep(3)
 
+    if exp.platform_type == "instant_messaging":
+        _start_im_human_gateway(exp_folder)  # server -> gateway -> clients (plan 4.8)
+    elif exp.platform_type == "dating":
+        from y_web.src.dating.gateway import start_for_experiment
+
+        start_for_experiment(exp_folder)  # server -> gateway -> clients (IR-D-22)
+
     # Remove completion log entries from actor log if restarting
     # Actor logs are in logs/{client_name}_actor.log
     logs_folder = os.path.join(exp_folder, "logs")
     actor_log_path = os.path.join(logs_folder, f"{cli.name}_actor.log")
 
-    if os.path.exists(actor_log_path):
+    if _syncs_config and os.path.exists(actor_log_path):
         try:
             # Read all lines from the actor log
             with open(actor_log_path, "r", encoding="utf-8") as f:
@@ -654,22 +867,35 @@ def start_hpc_client(exp, cli, population):
             return candidate
         return os.path.join(resource_external, repo_name)
 
-    # Determine the script path based on platform type
+    # Determine the script path and arguments from the platform spec
+    spec = get_hpc_platform(exp.platform_type)
     runtime_config_dir = exp_folder
-    if exp.platform_type == "photo_sharing":
-        script_path = os.path.join(_external_repo_dir("YPhotoSharing"), "run_client.py")
-        runtime_config_dir = client_config
+    script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_client.py")
+    if spec.normalizes_client_config:
+        if not spec.client_config_file_arg:
+            runtime_config_dir = client_config
 
         try:
-            _normalize_photo_sharing_client_config(
+            _CLIENT_NORMALIZERS[spec.key](
                 exp_folder, cli.name, population.name, client_config
             )
         except Exception:
-            pass
-    elif exp.platform_type == "microblogging":
-        script_path = os.path.join(_external_repo_dir("YSimulator"), "run_client.py")
-    else:
-        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+            if spec.key in ("instant_messaging", "dating", "forum"):
+                raise  # these must not start with a client config that could not be aligned
+
+    if spec.validates_config:
+        if spec.key == "dating":
+            from y_web.src.dating.validation import validate_dating_folder as _validate
+        elif spec.key == "forum":
+            from y_web.src.forum.validation import validate_forum_folder as _validate
+        else:
+            from y_web.src.im.validation import validate_im_folder as _validate
+
+        _validate(
+            exp_folder,
+            _external_repo_dir(spec.runtime_repo),
+            client_config=os.path.basename(client_config),
+        )
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     is_frozen = getattr(sys, "frozen", False)
@@ -680,9 +906,7 @@ def start_hpc_client(exp, cli, population):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
-        expected_repo = (
-            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
-        )
+        expected_repo = spec.runtime_repo
         raise FileNotFoundError(
             f"Client script not found: {script_path}\n"
             f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
@@ -692,70 +916,42 @@ def start_hpc_client(exp, cli, population):
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
+    def _client_args():
+        if spec.client_config_only:
+            if spec.client_config_file_arg:
+                return [
+                    "--config",
+                    runtime_config_dir,
+                    "--client-config",
+                    os.path.basename(client_config),
+                ]
+            return ["--config", runtime_config_dir]
+        return [
+            "--config",
+            client_config,
+            "--agents",
+            agents_file,
+            "--prompts",
+            prompts_file,
+        ]
+
     # Build the command
     if is_frozen or has_meipass or is_bundle_exe:
         # Running from PyInstaller bundle
-        if exp.platform_type == "photo_sharing":
-            cmd = [
-                sys.executable,
-                script_path,
-                "--config",
-                runtime_config_dir,
-            ]
+        if spec.client_config_only:
+            cmd = [sys.executable, script_path] + _client_args()
         else:
-            cmd = [
-                sys.executable,
-                "--run-hpc-client-subprocess",
-                "--config",
-                client_config,
-                "--agents",
-                agents_file,
-                "--prompts",
-                prompts_file,
-            ]
+            cmd = [sys.executable, "--run-hpc-client-subprocess"] + _client_args()
     elif (
         isinstance(python_cmd, str)
         and " " in python_cmd
         and not os.path.isabs(python_cmd)
     ):
         # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        if exp.platform_type == "photo_sharing":
-            cmd = cmd_parts + [
-                script_path,
-                "--config",
-                runtime_config_dir,
-            ]
-        else:
-            cmd = cmd_parts + [
-                script_path,
-                "--config",
-                client_config,
-                "--agents",
-                agents_file,
-                "--prompts",
-                prompts_file,
-            ]
+        cmd = python_cmd.split() + [script_path] + _client_args()
     else:
         # Simple python executable path (may contain spaces on Windows)
-        if exp.platform_type == "photo_sharing":
-            cmd = [
-                python_cmd,
-                script_path,
-                "--config",
-                runtime_config_dir,
-            ]
-        else:
-            cmd = [
-                python_cmd,
-                script_path,
-                "--config",
-                client_config,
-                "--agents",
-                agents_file,
-                "--prompts",
-                prompts_file,
-            ]
+        cmd = [python_cmd, script_path] + _client_args()
 
     cmd = ray_safe_cmd(cmd)
 
@@ -917,18 +1113,12 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                             runtime_client_id = _build_hpc_runtime_client_id(
                                 exp_folder, cli.name
                             )
-                            is_photo_sharing = (
-                                getattr(exp, "platform_type", None) == "photo_sharing"
-                            )
-                            orchestrator_name = (
-                                "orchestrator_server"
-                                if is_photo_sharing
-                                else "Orchestrator"
-                            )
-                            runtime_actor_name = (
-                                f"Client_{runtime_client_id}"
-                                if is_photo_sharing
-                                else runtime_client_id
+                            actor_spec = find_hpc_platform(
+                                getattr(exp, "platform_type", None)
+                            ) or get_hpc_platform("microblogging")
+                            orchestrator_name = actor_spec.orchestrator_actor
+                            runtime_actor_name = actor_spec.client_actor_name(
+                                runtime_client_id
                             )
                             orchestrator = ray.get_actor(
                                 orchestrator_name, namespace=namespace

@@ -114,11 +114,14 @@ import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from y_web.src.simulation import federation_hooks
 from y_web.src.simulation.agent_sampler import (
+    archetype_of,
     ensure_agents_have_archetype,
     get_users_per_hour,
     process_agent,
     sample_agents,
+    warn_if_empty_slot,
 )
 
 
@@ -703,6 +706,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     hour_to_page = get_users_per_hour(population, page_agents, session)
 
     archetypes = _get_client_archetypes(cl)
+    empty_slot_days = set()  # days already warned about a slot that sampled nobody
 
     for d1 in range(total_days):
         common_agents = [p for p in cl.agents.agents if not p.is_page]
@@ -714,13 +718,23 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
         for _ in range(daily_slots):
             tid, d, h = cl.sim_clock.get_current_slot()
 
+            # World Simulation: adopt the accounts the federation created and hide the agents that must not act
+            # (the same lists, nothing drawn, without a federation)
+            common_agents, hour_to_users, pool = federation_hooks.prepare_slot(
+                cl,
+                common_agents,
+                hour_to_users,
+                h,
+                lambda agents: get_users_per_hour(population, agents, session),
+            )
+
             # get expected active users for this time slot considering the global population (at least 1)
             expected_active_users = max(
                 int(len(cl.agents.agents) * cl.hourly_activity[str(h)]), 1
             )
 
             # take the minimum between expected active over the whole population and available users at time h
-            expected_active_users = min(expected_active_users, len(hour_to_users[h]))
+            expected_active_users = min(expected_active_users, len(pool))
 
             # get active pages at this hour
             active_pages = hour_to_page[h]
@@ -739,12 +753,21 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
             # get the daily activities of each agent (stratified on archetypes if enabled)
             try:
-                sagents = sample_agents(
-                    hour_to_users[h], expected_active_users, archetypes
-                )
+                sagents = sample_agents(pool, expected_active_users, archetypes)
             except Exception as e:
                 print(f"Error sampling agents: {e}", file=sys.stderr)
                 sagents = []
+
+            warn_if_empty_slot(
+                empty_slot_days,
+                d,
+                h,
+                len(common_agents),
+                sagents,
+                pool,
+                expected_active_users,
+                archetypes,
+            )
 
             # shuffle agents
             random.shuffle(sagents)
@@ -952,8 +975,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                 for agent in cl.agents.agents:
                     # Use getattr with default to handle agents without archetype attribute
                     # Default to 'broadcaster' as it's the most permissive archetype with full action capabilities
-                    current_archetype = getattr(agent, "archetype", "broadcaster")
-                    probabilities = archetypes["transitions"][current_archetype]
+                    current_archetype = archetype_of(agent)
+                    probabilities = archetypes["transitions"].get(current_archetype)
+                    if not probabilities:
+                        continue
                     choice = random.choices(
                         population=list(probabilities.keys()),
                         weights=list(probabilities.values()),

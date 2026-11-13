@@ -381,6 +381,7 @@
                 <a href="#">about.{{ user.get('username', '').lower() }}</a>
                 <span>@{{ user.get('username', '').lower() }}</span>
             </div>
+            {% set ws_exp = exp_id %}{% set ws_account = user.get('id') %}{% set ws_variant = 'photo' %}{% include 'shared/world_simulation_profile_badges.html' %}
 
             <div class="photo-profile-actions">
                 {% if can_follow_profile %}

@@ -31,6 +31,8 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.context import get_current_experiment_id
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
+from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -510,7 +512,7 @@ def _forum_logged_user():
     ).first()
     if user is None and str(getattr(current_user, "id", "")).isdigit():
         user = db.session.scalars(
-            select(User_mgmt).filter_by(id=int(current_user.id))
+            select(User_mgmt).filter_by(id=opaque_id(current_user.id))
         ).first()
     return user
 
@@ -652,20 +654,20 @@ def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
                 desc("score"),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(Post.id),
+                desc(seq_or_id(Post)),
             )
         )
     elif normalized_feed == "most_commented":
         query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
             desc(func.coalesce(Rounds.day, -1)),
             desc(func.coalesce(Rounds.hour, -1)),
-            desc(Post.id),
+            desc(seq_or_id(Post)),
         )
     else:
         query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
             desc(func.coalesce(Rounds.day, -1)),
             desc(func.coalesce(Rounds.hour, -1)),
-            desc(Post.id),
+            desc(seq_or_id(Post)),
         )
 
     return normalized_feed, query.paginate(
@@ -688,46 +690,9 @@ def _forum_resolve_back_url(exp_id):
 # ---------------------------------------------------------------------------
 # Frontend UI settings — loaded per experiment for public-facing pages
 # ---------------------------------------------------------------------------
-_UI_DEFAULTS = {
-    "interactions_enabled": True,
-    "interaction_post": True,
-    "interaction_comment": True,
-    "interaction_like": True,
-    "interaction_dislike": True,
-    "interaction_share": True,
-    "annotations_enabled": True,
-    "annotation_emotions": True,
-    "annotation_topics": True,
-    "annotation_sentiment": True,
-    "annotation_toxicity": True,
-    "annotation_agent_type": True,
-    "annotation_author_type": True,
-    "show_post_time": True,
-    "show_suggested_friends": True,
-    "show_trending_hashtags": True,
-    "show_recsys_info": False,
-    "show_annotation_stats": False,
-    "language": "",
-    "language_switch_allowed": False,
-    "notifications_menu": True,
-    "default_content_recsys": "",
-    "default_follow_recsys": "",
-    "profile_topics_box": True,
-    "onboarding_enabled": True,
-    "infinite_scroll_enabled": True,
-    "posts_per_page": 10,
-    "default_forum_feed_type": "new",
-    "default_photo_feed_tab": "for_you",
-    # FilterBubble (Personalized Feed) parameters
-    "filter_bubble_alpha": 2.0,
-    "filter_bubble_beta": 0.0,
-    "filter_bubble_gamma": 0.0,
-    "filter_bubble_lr": 0.05,
-    "filter_bubble_sort": "score",
-    "filter_bubble_wr": 1.0,
-    "filter_bubble_wc": 1.5,
-    "filter_bubble_ws": 2.0,
-}
+from y_web.src.experiment.frontend_defaults import (
+    DEFAULT_SETTINGS as _UI_DEFAULTS,
+)  # noqa: E402
 
 
 def _load_ui_settings(exp_id: int) -> dict:
@@ -856,9 +821,16 @@ def _platform_ui_context():
         from y_web.src.models import Exps  # noqa: PLC0415
 
         exp = db.session.get(Exps, int(raw))
-        if exp is None or exp.platform_type not in ("forum", "photo_sharing"):
+        if exp is None or exp.platform_type not in (
+            "forum",
+            "photo_sharing",
+            "instant_messaging",
+        ):
             return {}
         ui = _load_ui_settings(int(raw))
+        if exp.platform_type == "instant_messaging":
+            # frontend plugin modules (microblogging/forum/photo hooks) have nothing to attach to in the chat pages
+            return {"frontend_adds_on_modules": [], "ui": ui, "platform_ui": "im"}
         annotations = bool(ui.get("annotations_enabled", True))
         modules = []
         try:

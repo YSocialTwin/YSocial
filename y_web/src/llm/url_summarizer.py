@@ -22,10 +22,16 @@ class UrlSummarizer:
         self._max_input_chars = int(self._config.get("max_input_chars") or 6000)
         self._max_summary_chars = int(self._config.get("max_summary_chars") or 500)
         self._headers = {"Content-Type": "application/json"}
+        api_key = str(self._config.get("api_key") or "").strip()
+        if api_key and api_key.upper() not in {"NULL", "NONE", "EMPTY"}:
+            self._headers["Authorization"] = f"Bearer {api_key}"
 
     @staticmethod
     def build_config(
-        *, model: str | None = None, base_url: str | None = None
+        *,
+        model: str | None = None,
+        base_url: str | None = None,
+        api_key: str | None = None,
     ) -> dict[str, Any] | None:
         model_name = str(model or "").strip()
         endpoint = str(base_url or "").strip()
@@ -46,6 +52,7 @@ class UrlSummarizer:
             "timeout": 12,
             "max_input_chars": 6000,
             "max_summary_chars": 500,
+            "api_key": str(api_key or "").strip(),
         }
 
     def summarize_url(self, url: str) -> str:

@@ -33,7 +33,9 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/app.css') }}"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/core.css') }}"/>
     <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-components.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-components.css') }}?v={{ asset_v('assets/css/reddit/forum-components.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-reddit.css') }}?v={{ asset_v('assets/css/reddit/forum-reddit.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-dark.css') }}?v={{ asset_v('assets/css/reddit/forum-dark.css') }}"/>
     {% include 'shared/platform_ui_gating.html' %}
     <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="simulation" defer></script>
 </head>
@@ -78,6 +80,20 @@
                 />
             </a>
         </div>
+        <form class="forum-nav-search" role="search" method="get" action="/{{ exp_id }}/rsearch" data-i18n='{{ {
+            "Recent searches": _("Recent searches"), "Clear": _("Clear"), "Communities": _("Communities"),
+            "People": _("People"), "Posts": _("Posts"), "Search for": _("Search for"), "Community Page": _("Community Page")
+        }|tojson }}'>
+            <i class="mdi mdi-magnify" aria-hidden="true"></i>
+            {% if current_subforum_label is defined and current_subforum_label %}
+            <a class="forum-nav-scope" href="/{{ exp_id }}/subforum/{{ current_subforum_slug }}?feed_type={{ feed_type|default('new', true) }}">{{ current_subforum_label }}</a>
+            {% endif %}
+            <input id="forum-nav-search-input" name="q" type="search" autocomplete="off"
+                   placeholder="{{ _('Search Y') }}"
+                   value="{{ search_query|default('', true) }}"/>
+            {% if feed_type is defined and feed_type %}<input type="hidden" name="feed_type" value="{{ feed_type }}"/>{% endif %}
+        </form>
+        <script src="{{ url_for('static', filename='assets/js/reddit/forum-search-suggest.js') }}" defer></script>
         <div class="navbar-menu">
             <div class="navbar-end">
                 {% if is_admin and active_sim_clock %}

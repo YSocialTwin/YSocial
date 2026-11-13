@@ -13,6 +13,7 @@ from .pages import pages
 from .populations import population
 from .tutorial import tutorial
 from .users import users
+from .world_simulation import world_simulation
 
 experiments = experiments_pkg.experiments
 # Preserve dotted patch/import paths like
@@ -31,4 +32,5 @@ __all__ = [
     "population",
     "tutorial",
     "users",
+    "world_simulation",
 ]

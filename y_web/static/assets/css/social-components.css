@@ -2283,3 +2283,54 @@
 }
 .ys-ep-topic-card__title { font-size: .92rem; font-weight: 700; color: #1a1a2e; margin: 0 0 2px; }
 .ys-ep-topic-card__sub   { font-size: .76rem; color: #999; margin: 0; }
+
+/* World Simulation: "Also on" of the profile page (microblogging: chips under the name, in the language of the follow pill;
+   photo sharing: a row under the profile links, in the language of the links). Chips are named after the experiment. */
+.ws-also-chip .ws-origin-icon { width: 14px; height: 14px; flex: none; }
+.ws-also--microblogging {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 8px;
+  margin: 12px auto 18px; padding-top: 12px; max-width: 520px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+/* The profile header styles every <span> of its middle column as a grey block (core.css `.subheader-middle span`):
+   the label, the chips and their parts are reset here so they stay in one line, whatever the theme. */
+.ys-profile-hero-center .ws-also--microblogging span { display: inline; font-size: inherit; font-weight: inherit; color: inherit; }
+.ys-profile-hero-center .ws-also--microblogging .ws-also-label {
+  display: inline; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #91a0b6;
+}
+.ws-also--microblogging .ws-also-chip, .ys-profile-hero-center .ws-also--microblogging span.ws-also-chip {
+  display: inline-flex; flex-direction: row; align-items: center; gap: 6px; min-height: 28px; max-width: 100%; padding: 0 12px 0 10px;
+  border-radius: 999px; border: 1px solid rgba(148, 163, 184, 0.28); background: #ffffff; color: #475569;
+  font-size: .8rem; font-weight: 600; line-height: 1; text-decoration: none; white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); transition: background .15s, color .15s, border-color .15s;
+}
+.ws-also--microblogging a.ws-also-chip:hover { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.18); }
+.ws-also--microblogging .ws-also-chip:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.ws-also--microblogging .ws-also-chip .ws-origin-icon { display: inline-block; vertical-align: middle; color: #64748b; }
+.ws-also--microblogging a.ws-also-chip:hover .ws-origin-icon { color: inherit; }
+.ys-profile-hero-center .ws-also--microblogging .ws-also-name { display: inline-block; overflow: hidden; text-overflow: ellipsis; max-width: 18ch; }
+.ys-profile-hero-center .ws-also--microblogging .ws-also-handle { display: inline; font-weight: 500; color: #64748b; }
+.ws-also--microblogging .ws-also-state, .ws-also--photo .ws-also-state,
+.ys-profile-hero-center .ws-also--microblogging span.ws-also-state {
+  display: inline-block; padding: 2px 7px; border-radius: 999px; background: #e2e8f0; color: #475569; font-size: .66rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+}
+.ws-also--microblogging .ws-also-chip.is-dormant, .ws-also--microblogging .ws-also-chip.is-left, .ws-also--microblogging .ws-also-chip.is-inactive {
+  border-style: dashed; background: #f8fafc; color: #64748b; box-shadow: none;
+}
+.ws-also--microblogging .ws-also-chip.is-nolink { cursor: default; }
+body.is-dark .ws-also--microblogging { border-top-color: rgba(148, 163, 184, 0.18); }
+body.is-dark .ys-profile-hero-center .ws-also--microblogging span.ws-also-chip, body.is-dark .ws-also--microblogging .ws-also-chip { background: #171c26; color: #d5d9e6; border-color: rgba(148, 163, 184, 0.24); box-shadow: none; }
+body.is-dark .ws-also--microblogging .ws-also-chip.is-dormant, body.is-dark .ws-also--microblogging .ws-also-chip.is-left, body.is-dark .ws-also--microblogging .ws-also-chip.is-inactive { background: transparent; color: #a2a5b9; }
+body.is-dark .ws-also--microblogging a.ws-also-chip:hover { background: #1f2a44; color: #93c5fd; }
+body.is-dark .ys-profile-hero-center .ws-also--microblogging .ws-also-state { background: #2a3346; color: #c4cadb; }
+@media (max-width: 760px) { .ws-also--microblogging { margin: 10px auto 14px; padding-top: 10px; } }
+
+.ws-also--photo { align-items: center; gap: 6px 16px; margin-top: 8px; }
+.ws-also--photo .ws-also-label { color: #666; font-size: .95rem; }
+.ws-also--photo .ws-also-chip { display: inline-flex; align-items: center; gap: 6px; color: #111; font-weight: 700; text-decoration: none; }
+.ws-also--photo a.ws-also-chip:hover { text-decoration: underline; }
+.ws-also--photo .ws-also-chip:focus-visible { outline: 2px solid #111; outline-offset: 3px; border-radius: 4px; }
+.ws-also--photo .ws-also-handle { font-weight: 400; color: #666; }
+.ws-also--photo .ws-also-chip.is-dormant, .ws-also--photo .ws-also-chip.is-left, .ws-also--photo .ws-also-chip.is-inactive { color: #666; font-weight: 600; }
+.ws-also--photo .ws-also-chip.is-nolink { cursor: default; }
+@media (max-width: 760px) { .ws-also--photo { justify-content: center; } }

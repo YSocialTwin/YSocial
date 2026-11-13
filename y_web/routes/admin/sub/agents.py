@@ -18,6 +18,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
 from y_web import db
+from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.src.agents.custom_features import (
     delete_agent_custom_features,
@@ -97,61 +98,56 @@ def _page_resources_available() -> bool:
     )
 
 
-def _deployment_group_key(tags: list[str]) -> str:
-    normalized = set(tags or [])
-    if {"microblogging", "forum"}.issubset(normalized):
-        return "all"
-    if normalized == {"microblogging"}:
-        return "microblogging"
-    if normalized == {"forum"}:
-        return "forum"
-    return "all"
+# platform key -> (short tag label, repositories that must all be installed for the platform to count as installed;
+# a tuple of alternatives means any one of those sets is enough)
+_PLATFORMS = {
+    "microblogging": (
+        N_("Microblogging"),
+        (("microblogging_server", "microblogging_client"), ("hpc_simulator",)),
+    ),
+    "forum": (N_("Forum"), (("forum_server", "forum_client"),)),
+    "photo_sharing": (N_("Photo sharing"), (("photo_sharing",),)),
+    "instant_messaging": (N_("Instant Messaging"), (("instant_messaging",),)),
+}
 
 
-def _group_agent_resource_cards(cards: list[dict]) -> list[dict]:
-    definitions = [
-        {
-            "key": "all",
-            "label": _("All Experiments"),
-            "description": _(
-                "Agent types that can be deployed in both microblogging and forum simulations."
-            ),
-        },
-        {
-            "key": "microblogging",
-            "label": _("Microblogging Only"),
-            "description": _(
-                "Agent types that currently target microblogging experiments only."
-            ),
-        },
-        {
-            "key": "forum",
-            "label": _("Forum Only"),
-            "description": _(
-                "Agent types that currently target forum experiments only."
-            ),
-        },
+# Ad hoc (plugin) agents write straight into the experiment database in the YServer layout: ``post``, ``user_mgmt``,
+# ``rounds``, ``reactions``, ``follow``, ``mentions``, hashtags/topics, plus ``stress_reward``, ``agent_opinion``,
+# ``reported`` and ``sys_messages`` (created on demand). Only the microblogging and forum servers have that layout;
+# photo sharing stores ``photos`` instead of ``post`` and instant messaging owns a different schema.
+_PLUGIN_AGENT_PLATFORMS = ("microblogging", "forum")
+
+
+def _installed_platforms() -> list[str]:
+    """The platforms whose runtime is installed (and visible to this admin), in a fixed order."""
+    return [
+        key
+        for key, (_label, alternatives) in _PLATFORMS.items()
+        if any(
+            all(_runtime_installed(repo) for repo in repos) for repos in alternatives
+        )
     ]
 
-    grouped = []
-    for definition in definitions:
-        section_cards = [
-            card
-            for card in cards
-            if _deployment_group_key(card.get("deployment_tags", []))
-            == definition["key"]
+
+def _tag_agent_resource_cards(cards: list[dict], installed: list[str]) -> list[dict]:
+    """Keep the cards usable on at least one installed platform and tag each with where it can be deployed.
+
+    ``deployment_tags`` lists the platforms a card supports; only installed ones are shown, and a card that covers
+    every installed platform gets the single tag "All" (when more than one platform is installed).
+    """
+    out = []
+    for card in cards:
+        supported = [
+            p for p in installed if p in set(card.get("deployment_tags") or _PLATFORMS)
         ]
-        if not section_cards:
+        if not supported:
             continue
-        grouped.append(
-            {
-                "key": definition["key"],
-                "label": definition["label"],
-                "description": definition["description"],
-                "cards": section_cards,
-            }
-        )
-    return grouped
+        if len(installed) > 1 and supported == installed:
+            tags = [{"key": "all", "label": _("All")}]
+        else:
+            tags = [{"key": p, "label": _(_PLATFORMS[p][0])} for p in supported]
+        out.append({**card, "platform_tags": tags, "platforms": supported})
+    return out
 
 
 def _manifest_paths():
@@ -225,6 +221,12 @@ def _plugin_agent_specs() -> list[dict]:
                     "parameter_sections": entry.get("parameter_sections", []) or [],
                     "repo_name": repo_name,
                     "manifest_path": str(manifest_path),
+                    # where the agent type can be deployed: the manifest's "platforms", else the platforms whose
+                    # database has the tables plugin agents write to (``post``, ``user_mgmt``: microblogging, forum)
+                    "platforms": [
+                        p for p in (entry.get("platforms") or []) if p in _PLATFORMS
+                    ]
+                    or list(_PLUGIN_AGENT_PLATFORMS),
                 }
             )
     return specs
@@ -291,10 +293,8 @@ def _discover_plugin_agent_types() -> list[dict]:
             {
                 "title": spec["display_name"],
                 "subtitle": _("Plugin agent type · %(repo)s", repo=spec["repo_name"]),
-                "icon": "package",
-                "accent": "#7c3aed",
-                "surface": "linear-gradient(135deg, #faf5ff 0%, #f5f3ff 55%, #ffffff 100%)",
-                "border": "#ddd6fe",
+                "icon": "mdi-puzzle-outline",
+                "tone": "is-primary",
                 "description": spec["description"],
                 "highlights": [
                     _("Type id: %(id)s", id=spec["agent_type"]),
@@ -323,12 +323,140 @@ def _discover_plugin_agent_types() -> list[dict]:
                 "secondary_label": _(
                     "Configure this plugin agent from a manifest-driven custom agent page."
                 ),
-                "deployment_tags": ["microblogging", "forum"],
+                "deployment_tags": spec["platforms"],
                 "is_plugin": True,
             }
         )
 
     return plugin_cards
+
+
+_STORY_VISIBILITY = ("public", "followers", "private")
+_CREATOR_TIERS = ("standard", "pro", "influencer")
+
+
+def _photo_sharing_available() -> bool:
+    """Whether the Photo Sharing simulator is installed (and visible to this admin)."""
+    try:
+        from y_web.src.external_runtime import runtime_installed_and_visible
+
+        return bool(runtime_installed_and_visible("photo_sharing", current_user))
+    except Exception:
+        return False
+
+
+def _agent_optional_context() -> dict:
+    """Availability and defaults of the optional sections of the agent form (as in the population form)."""
+    from y_web.src.agents import profile_pictures as pp
+
+    return {
+        "appearance_defaults": pp.defaults(),
+        "images_available": pp.available(),
+        "photo_available": _photo_sharing_available(),
+        "story_visibility_options": _STORY_VISIBILITY,
+        "creator_tier_options": _CREATOR_TIERS,
+    }
+
+
+def _appearance_features_from_form() -> list[dict]:
+    """``appearance.*`` custom features of the optional Appearance section (none when it is off or empty)."""
+    from y_web.src.dating import population as dp
+
+    form = request.form
+    if not form.get("include_appearance"):
+        return []
+    entries = []
+    for key in dp.APPEARANCE_LABELS:
+        value = (form.get("appearance_" + key) or "").strip()
+        if not value:
+            continue
+        if value not in dp.APPEARANCE_OPTIONS.get(key, ()):
+            raise ValueError(
+                _("Appearance: %(field)s has an unknown value.", field=key)
+            )
+        entries.append(
+            {"feature_type": "custom", "key": f"appearance.{key}", "value": value}
+        )
+    height = (form.get("appearance_height_cm") or "").strip()
+    if height:
+        try:
+            number = int(height)
+        except ValueError:
+            number = 0
+        if not 100 <= number <= 250:
+            raise ValueError(
+                _("Appearance: the height must be between 100 and 250 cm.")
+            )
+        entries.append(
+            {
+                "feature_type": "custom",
+                "key": "appearance.height_cm",
+                "value": str(number),
+            }
+        )
+    glasses = (form.get("appearance_glasses") or "").strip()
+    if glasses:
+        if glasses not in ("yes", "no"):
+            raise ValueError(_("Appearance: glasses must be yes or no."))
+        entries.append(
+            {
+                "feature_type": "custom",
+                "key": "appearance.glasses",
+                "value": "true" if glasses == "yes" else "false",
+            }
+        )
+    return entries
+
+
+def _photo_sharing_ext_from_form() -> dict:
+    """The Photo Sharing extensions of the optional section (none when it is off); ``ValueError`` when invalid."""
+    form = request.form
+    if not form.get("include_photo_sharing"):
+        return {}
+    if not _photo_sharing_available():
+        raise ValueError(_("The Photo Sharing simulator is not installed."))
+    ext: dict = {}
+    bio = (form.get("photo_bio") or "").strip()
+    if bio:
+        ext["bio"] = bio
+    for name in ("is_private", "is_verified"):
+        value = (form.get("photo_" + name) or "").strip()
+        if value in ("yes", "no"):
+            ext[name] = json.dumps(value == "yes")
+    budget = (form.get("photo_attention_budget") or "").strip()
+    if budget:
+        try:
+            number = int(budget)
+        except ValueError:
+            number = 0
+        if number <= 0:
+            raise ValueError(_("Photo attention budget must be a positive integer."))
+        ext["attention_budget"] = str(number)
+    filters = [
+        t.strip()
+        for t in (form.get("photo_favorite_filters") or "").split(",")
+        if t.strip()
+    ]
+    if filters:
+        ext["favorite_filters"] = json.dumps(list(dict.fromkeys(filters)))
+    for name, allowed in (
+        ("story_visibility", _STORY_VISIBILITY),
+        ("creator_tier", _CREATOR_TIERS),
+    ):
+        value = (form.get("photo_" + name) or "").strip()
+        if value:
+            if value not in allowed:
+                raise ValueError(
+                    _("Photo Sharing: %(field)s has an unknown value.", field=name)
+                )
+            ext[name] = value
+    return ext
+
+
+def _dating_runtime_available() -> bool:
+    from y_web.src.dating import population as dp
+
+    return dp.runtime_available(current_user)
 
 
 def _agent_builder_context(**overrides):
@@ -400,6 +528,8 @@ def _agent_builder_context(**overrides):
         "hello_populations": [],
         "available_profile_pics": available_profile_pics,
         "available_cover_images": available_cover_images,
+        "dating_available": _dating_runtime_available(),
+        **_agent_optional_context(),
     }
     context.update(overrides)
     return context
@@ -740,6 +870,63 @@ def _parse_structured_agent_features_from_form() -> list[dict]:
     return entries
 
 
+def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
+    """Add the ``dating.*`` custom features described by the dating fields of the form (none when YDating is absent).
+
+    The fields are ignored by every other platform; they let an ad hoc agent take part in a dating simulation.
+    Raises ``ValueError`` (shown to the admin) when the filled fields do not satisfy the YDating agent schema.
+    """
+    from y_web.src.dating import agent_form
+    from y_web.src.dating import population as dp
+
+    form = request.form
+    if not dp.runtime_available(current_user) or not agent_form.has_dating_fields(form):
+        return feature_entries
+    if form.get(
+        "include_appearance"
+    ):  # the Appearance section feeds the Dating appearance too
+        from werkzeug.datastructures import MultiDict
+
+        form = MultiDict(form)
+        for key in list(dp.APPEARANCE_LABELS) + ["height_cm", "glasses"]:
+            if form.get("appearance_" + key) and not form.get(
+                "dating_appearance_" + key
+            ):
+                form["dating_appearance_" + key] = form.get("appearance_" + key)
+    try:
+        age = int(str(form.get("age") or "").strip())
+    except ValueError:
+        raise ValueError(_("A dating agent needs a numeric age.")) from None
+    personality = {
+        trait: form.get(trait)
+        for trait in ("oe", "co", "ex", "ag", "ne")
+        if form.get(trait)
+    }
+    base = {
+        "username": (form.get("name") or "").strip(),
+        "age": age,
+        "gender": form.get("gender"),
+        "language": form.get("language"),
+        "nationality": form.get("nationality"),
+        "education_level": form.get("education_level"),
+        "profession": form.get("profession"),
+        "leaning": form.get("leaning"),
+        "personality": personality or None,
+    }
+    entries, problems = agent_form.entries_from_form(form, base)
+    if problems:
+        raise ValueError(
+            _("The dating fields are not valid: %(why)s", why=" | ".join(problems[:5]))
+        )
+    taken = {entry["key"] for entry in entries}
+    kept = [
+        entry
+        for entry in feature_entries
+        if not (entry.get("feature_type") == "custom" and entry.get("key") in taken)
+    ]
+    return kept + entries
+
+
 def _ensure_interest_topics_exist(feature_entries: list[dict]) -> None:
     seen: set[str] = set()
     for entry in feature_entries:
@@ -879,10 +1066,8 @@ def agents_dashboard():
         {
             "title": _("Synthetic Agents"),
             "subtitle": _("Built-in resource"),
-            "icon": "cpu",
-            "accent": "#0f766e",
-            "surface": "linear-gradient(135deg, #ecfeff 0%, #f0fdfa 55%, #ffffff 100%)",
-            "border": "#99f6e4",
+            "icon": "mdi-robot-outline",
+            "tone": "is-success",
             "description": _(
                 "Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives."
             ),
@@ -903,20 +1088,23 @@ def agents_dashboard():
                 "Manage existing agents, remove orphaned entries, and create fully custom profiles."
             ),
             "meta": {},
-            "deployment_tags": ["microblogging", "forum"],
+            "deployment_tags": [
+                "microblogging",
+                "forum",
+                "photo_sharing",
+                "instant_messaging",
+            ],
             "is_plugin": False,
         }
     ]
 
-    if _page_resources_available():
+    if True:  # shown when microblogging or IM is installed (the platform tags filter)
         agent_resource_cards.append(
             {
                 "title": _("News Pages"),
                 "subtitle": _("Built-in resource"),
-                "icon": "file-text",
-                "accent": "#1d4ed8",
-                "surface": "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #ffffff 100%)",
-                "border": "#bfdbfe",
+                "icon": "mdi-newspaper-variant-outline",
+                "tone": "is-link",
                 "description": _(
                     "Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents."
                 ),
@@ -937,7 +1125,12 @@ def agents_dashboard():
                     "Configure page identity, leaning, feed sources, and upload page collections in bulk."
                 ),
                 "meta": {},
-                "deployment_tags": ["microblogging"],
+                "deployment_tags": [
+                    "microblogging",
+                    "forum",
+                    "photo_sharing",
+                    "instant_messaging",
+                ],
                 "is_plugin": False,
             }
         )
@@ -945,14 +1138,12 @@ def agents_dashboard():
     agent_resource_cards.extend(
         [
             {
-                "title": _("Forum RSS Feeds"),
+                "title": _("News RSS Feeds"),
                 "subtitle": _("Built-in resource"),
-                "icon": "rss",
-                "accent": "#c2410c",
-                "surface": "linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%)",
-                "border": "#fdba74",
+                "icon": "mdi-rss-box",
+                "tone": "is-warning",
                 "description": _(
-                    "Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments."
+                    "Validate and register reusable RSS news sources. Once saved, the same feed can be assigned to multiple experiments, on every platform that shares news."
                 ),
                 "highlights": [
                     _(
@@ -960,24 +1151,22 @@ def agents_dashboard():
                         count=forum_rss_feed_count,
                     ),
                     _("Validation happens once in the dashboard workspace"),
-                    _("Forum experiments assign from the shared registry"),
+                    _("Experiments assign feeds from the shared registry"),
                 ],
                 "cta_label": _("Manage RSS Resources"),
                 "cta_href": "/admin/forum_rss_resources",
                 "secondary_label": _(
-                    "Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time."
+                    "Create feed entries centrally, then reuse them across simulations without revalidating the same source each time."
                 ),
                 "meta": {},
-                "deployment_tags": ["forum"],
+                "deployment_tags": ["forum", "instant_messaging"],
                 "is_plugin": False,
             },
             {
                 "title": _("Forum Image Feeds"),
                 "subtitle": _("Built-in resource"),
-                "icon": "image",
-                "accent": "#7c3aed",
-                "surface": "linear-gradient(135deg, #f5f3ff 0%, #faf5ff 55%, #ffffff 100%)",
-                "border": "#c4b5fd",
+                "icon": "mdi-image-multiple-outline",
+                "tone": "is-info",
                 "description": _(
                     "Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion."
                 ),
@@ -1002,11 +1191,23 @@ def agents_dashboard():
     )
 
     agent_resource_cards.extend(plugin_agent_cards)
-    agent_resource_groups = _group_agent_resource_cards(agent_resource_cards)
+    installed_platforms = _installed_platforms()
+    agent_resource_cards = _tag_agent_resource_cards(
+        agent_resource_cards, installed_platforms
+    )
+    platform_filters = [
+        {
+            "key": key,
+            "label": _(_PLATFORMS[key][0]),
+            "count": sum(1 for c in agent_resource_cards if key in c["platforms"]),
+        }
+        for key in installed_platforms
+    ]
 
     return render_template(
         "admin/agents_dashboard.html",
-        agent_resource_groups=agent_resource_groups,
+        agent_resource_cards=agent_resource_cards,
+        platform_filters=platform_filters,
         agent_resources_summary={
             "total_agents": synthetic_agent_count,
             "total_pages": page_count,
@@ -1111,6 +1312,16 @@ def create_agent():
     try:
         structured_features = _parse_structured_agent_features_from_form()
         _ensure_interest_topics_exist(structured_features)
+        structured_features = structured_features + _appearance_features_from_form()
+        structured_features = _with_dating_features(structured_features)
+        photo_ext = _photo_sharing_ext_from_form()
+        picture_cfg = None
+        if request.form.get("include_appearance") and request.form.get(
+            "generate_profile_pictures"
+        ):
+            from y_web.src.agents import profile_pictures as pp
+
+            picture_cfg = pp.pictures_config_from_form(request.form)
     except ValueError as exc:
         flash(str(exc), "error")
         return _agent_builder_for_type(user_type)
@@ -1166,7 +1377,24 @@ def create_agent():
     db.session.flush()
     db.session.commit()
     replace_agent_custom_features(agent.id, structured_features)
+    for feature_name, feature_value in photo_ext.items():
+        _upsert_agent_ext(agent.id, feature_name, feature_value)
     db.session.commit()
+
+    if picture_cfg:
+        from flask import current_app
+
+        from y_web.src.agents import profile_pictures as pp
+
+        pp.start_generation(
+            current_app._get_current_object(), current_user.id, [agent.id], picture_cfg
+        )
+        flash(
+            _(
+                "The profile picture is being generated in the background: follow the progress in the notifications menu."
+            ),
+            "info",
+        )
 
     if population != "none":
         ap = Agent_Population(agent_id=agent.id, population_id=population)
@@ -1322,6 +1550,10 @@ def agent_details(uid):
         for ext in db.session.scalars(select(Agent_Ext).filter_by(agent_id=uid)).all()
     }
     structured_features = summarize_agent_custom_features(uid)
+    from y_web.src.agents.custom_field_stats import PHOTO_FIELDS, agent_groups
+
+    custom_groups = agent_groups(structured_features["custom_features"], ext_features)
+    other_ext = {k: v for k, v in ext_features.items() if k not in PHOTO_FIELDS}
     back_href = (
         f"/admin/custom_agent/{custom_spec['slug']}" if custom_spec else "/admin/agents"
     )
@@ -1339,8 +1571,9 @@ def agent_details(uid):
         populations=populations,
         activity_profile=activity_profile,
         llm_backend=llm_backend,
-        agent_ext_features=ext_features,
+        agent_ext_features=other_ext,
         agent_structured_features=structured_features,
+        agent_custom_groups=custom_groups,
         agent_back_href=back_href,
         agent_back_label=back_label,
     )

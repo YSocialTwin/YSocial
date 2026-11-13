@@ -708,6 +708,16 @@ var AdminExperiments = (function() {
               const response = await fetch(progressUrl);
               const data = await response.json();
               applyProgressBarState($(bar), data);
+              // the client stopped (finished, paused, or died) or started since the page was drawn: redraw the buttons and alerts
+              if (
+                  data && data.status !== undefined && data.status !== null &&
+                  bar.dataset.clientStatus !== undefined &&
+                  String(data.status) !== bar.dataset.clientStatus &&
+                  !window.__ysClientStatusReloading
+              ) {
+                  window.__ysClientStatusReloading = true;
+                  window.location.reload();
+              }
               return data;
           } catch (error) {
               console.error(`Error refreshing progress from ${progressUrl}:`, error);

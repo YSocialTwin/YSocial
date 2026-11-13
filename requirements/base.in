@@ -43,6 +43,7 @@ tqdm
 numpy
 networkx
 nltk>=3.8.0
+vaderSentiment>=3.3.2
 psutil
 bs4
 colorama>=0.4.4

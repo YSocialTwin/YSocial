@@ -1,0 +1,99 @@
+{#- Building blocks shared by the World Simulation pages (import with context: ``{% import 'admin/world_simulation/_macros.html' as ws with context %}``).
+    They only compose the classes of the other admin pages (dashboard-box, box-line, form-section-header, exp-tag, switch-small, table)
+    plus the few ``ws-`` classes of admin-world-simulation.css. -#}
+
+{% macro state_tag(status, id=None) -%}
+<span class="exp-tag ws-state-{{ status }}"{% if id %} id="{{ id }}"{% endif %}>{{ _(status|capitalize) }}</span>
+{%- endmacro %}
+
+{% macro platform_tag(label, icon) -%}
+<span class="exp-tag platform ws-platform"><i class="mdi {{ icon }}"></i> {{ _(label) }}</span>
+{%- endmacro %}
+
+{# Page header: breadcrumb box in the style of the experiment pages. ``trail`` is a list of (label, url or None). #}
+{% macro breadcrumb(trail) -%}
+<div class="columns">
+    <div class="column is-12">
+        <div class="dashboard-box ws-crumb">
+            <a href="{{ url_for('world_simulation.simulations') }}">{{ _('World Simulation') }}</a>
+            {%- for label, url in trail %} &gt; {% if url %}<a href="{{ url }}">{{ label }}</a>{% else %}{{ label }}{% endif %}{% endfor %}
+            {{ caller() if caller else '' }}
+        </div>
+    </div>
+</div>
+{%- endmacro %}
+
+{# Buttons of the run controls (the same set on the list and on the detail page). ``compact``: icons only. #}
+{% macro run_controls(fed, compact=False, id=None) -%}
+<div class="ws-actions"{% if id %} id="{{ id }}"{% endif %}>
+    {% if fed.status in ('stopped', 'completed', 'failed') %}
+    <form method="post" action="{{ url_for('world_simulation.command_start', fed_id=fed.id) }}">
+        <button class="button is-solid green-button {{ 'is-small' if compact }}" type="submit" title="{{ _('Start') }}"><i class="mdi mdi-play"></i>{% if not compact %}<span>{{ _('Start') }}</span>{% endif %}</button></form>
+    {% elif fed.status == 'running' %}
+    <form method="post" action="{{ url_for('world_simulation.command_pause', fed_id=fed.id) }}">
+        <button class="button is-light {{ 'is-small' if compact }}" type="submit" title="{{ _('Pause') }}"><i class="mdi mdi-pause"></i>{% if not compact %}<span>{{ _('Pause') }}</span>{% endif %}</button></form>
+    {% elif fed.status == 'paused' %}
+    <form method="post" action="{{ url_for('world_simulation.command_resume', fed_id=fed.id) }}">
+        <button class="button is-solid green-button {{ 'is-small' if compact }}" type="submit" title="{{ _('Resume') }}"><i class="mdi mdi-play"></i>{% if not compact %}<span>{{ _('Resume') }}</span>{% endif %}</button></form>
+    {% endif %}
+    {% if fed.status in ('running', 'paused', 'starting') %}
+    <form method="post" action="{{ url_for('world_simulation.command_stop', fed_id=fed.id) }}" onsubmit="return confirm('{{ _('Stop this World Simulation? Every member experiment stops with it.') }}');">
+        <button class="button is-solid orange-button {{ 'is-small' if compact }}" type="submit" title="{{ _('Stop') }}"><i class="mdi mdi-stop"></i>{% if not compact %}<span>{{ _('Stop') }}</span>{% endif %}</button></form>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{# Tabs of a World Simulation. ``active``: configuration, execution, analytics, agents or crossposts. The first three switch panes on the detail page. #}
+{% macro tabs(fed, active, panes=True) -%}
+<div class="ws-tabs" role="tablist">
+    {% for key, label, icon in (('configuration', _('Configuration'), 'mdi-cog-outline'), ('execution', _('Execution'), 'mdi-play-circle-outline'), ('analytics', _('Analytics'), 'mdi-chart-line')) %}
+    {% if panes %}<button type="button" class="ws-tab {{ 'is-active' if key == active }}" data-ws-tab="{{ key }}"><i class="mdi {{ icon }}"></i> {{ label }}</button>
+    {% else %}<a class="ws-tab" href="{{ url_for('world_simulation.detail', fed_id=fed.id) }}{{ '#' + key if key != 'configuration' }}"><i class="mdi {{ icon }}"></i> {{ label }}</a>{% endif %}
+    {% endfor %}
+    <a class="ws-tab {{ 'is-active' if active == 'agents' }}" href="{{ url_for('world_simulation.agents', fed_id=fed.id) }}"><i class="mdi mdi-account-group-outline"></i> {{ _('Agents') }}</a>
+    <a class="ws-tab {{ 'is-active' if active == 'crossposts' }}" href="{{ url_for('world_simulation.crossposts', fed_id=fed.id) }}"><i class="mdi mdi-share-variant-outline"></i> {{ _('Cross-posts') }}</a>
+</div>
+{%- endmacro %}
+
+{# A section of the parameter form: the heading style of the other admin forms, with a step number on the creation page. #}
+{% macro section(id, title, intro, step=None) -%}
+<div class="tutorial-section ws-section" id="ws-section-{{ id }}">
+    <div class="form-section-header">{% if step %}<span class="ws-step">{{ step }}</span>{% endif %}{{ title }}</div>
+    <div class="form-section-description">{{ intro }}</div>
+    {{ caller() }}
+</div>
+{%- endmacro %}
+
+{# Text of the default value shown under a field. #}
+{% macro default_text(p) -%}
+{%- if p.kind == 'bool' -%}{{ _('On') if p.default else _('Off') }}
+{%- elif p.kind == 'choice' -%}{% for value, label in p.choices %}{% if value == p.default %}{{ _(label) }}{% endif %}{% endfor %}
+{%- else -%}{{ schema.fmt(p.default) }}{%- endif -%}
+{%- endmacro %}
+
+{# One parameter as a row of the form: label, help and default on the left, the control on the right. #}
+{% macro param(p, values, id_prefix='') -%}
+{% set v = values[p.name] %}
+<div class="box-line ws-param" data-param="{{ p.dotted }}">
+    <span class="left">
+        <label class="ws-label" for="{{ id_prefix }}{{ p.name }}">{{ _(p.label) }}</label>
+        {% if p.help %}<span class="ws-help">{{ _(p.help) }}</span>{% endif %}
+        <span class="ws-default">{{ _('Default') }}: {{ default_text(p) }}</span>
+    </span>
+    <span class="right">
+        {% if p.kind == 'bool' %}
+        {% if schema.PRESENCE.get(p.path) %}<input type="hidden" name="{{ schema.PRESENCE[p.path] }}" value="1">{% endif %}
+        <label class="switch-small"><input type="checkbox" id="{{ id_prefix }}{{ p.name }}" name="{{ p.name }}" value="1" {{ 'checked' if v }}><span class="slider-small round"></span></label>
+        {% elif p.kind == 'choice' %}
+        <div class="select"><select id="{{ id_prefix }}{{ p.name }}" name="{{ p.name }}">
+            {% for value, label in p.choices %}<option value="{{ value }}" {{ 'selected' if value == v }}>{{ _(label) }}</option>{% endfor %}
+        </select></div>
+        {% else %}
+        <input class="input" type="number" id="{{ id_prefix }}{{ p.name }}" name="{{ p.name }}" value="{{ v }}" step="{{ '1' if p.kind == 'int' else 'any' }}"
+               {% if p.minimum is not none and not p.min_exclusive %}min="{{ '%g'|format(p.minimum) }}"{% endif %}
+               {% if p.maximum is not none %}max="{{ '%g'|format(p.maximum) }}"{% endif %}
+               placeholder="{{ schema.fmt(p.default) }}">
+        {% endif %}
+    </span>
+</div>
+{%- endmacro %}

@@ -73,7 +73,64 @@ def pytest_collection_modifyitems(config, items):
         "test_alembic_0007_sync_dashboard_schema.py::test_hpc_monitor_schema_guard",
     )
 
+    # Tests that read an IM database need the YInstantMessaging runtime (an external repository, not installed on
+    # GitHub Actions): they are skipped when it cannot be imported.
+    im_runtime_missing = False
+    try:
+        from y_web.src.im.engine import ImReadError, ensure_im_importable
+
+        try:
+            ensure_im_importable()
+        except ImReadError:
+            im_runtime_missing = True
+    except Exception:
+        im_runtime_missing = True
+    skip_im_runtime = pytest.mark.skip(
+        reason="the YInstantMessaging runtime (external repository) is not installed"
+    )
+    _im_module_cache = {}
+
+    def _needs_im_runtime(item):
+        path = str(getattr(item, "fspath", "") or "")
+        if path not in _im_module_cache:
+            try:
+                text = Path(path).read_text(encoding="utf-8")
+            except OSError:
+                text = ""
+            _im_module_cache[path] = any(
+                token in text
+                for token in (
+                    "build_random_db",
+                    "im_modules(",
+                    "import yinstantmessaging",
+                )
+            )
+        return _im_module_cache[path]
+
+    im_repo_missing = (
+        im_runtime_missing or not (external_dir / "YInstantMessaging").exists()
+    )
+    dating_repo_missing = not (external_dir / "YDating").exists()
+    skip_dating_repo = pytest.mark.skip(
+        reason="the YDating runtime (external repository) is not installed"
+    )
+    # tests that read the schemas / run the runtime of a repository that is not checked out
+    dating_dependent = (
+        "test_dating_settings.py::test_a_save_without_a_model_keeps_or_repairs_the_default_model",
+        "test_agent_form_optional_sections.py::test_the_appearance_feeds_the_dating_fields",
+    )
+
     for item in items:
+        base = Path(str(getattr(item, "fspath", "") or "")).name
+        if (
+            im_repo_missing and (base.startswith("test_im_") or _needs_im_runtime(item))
+        ) or (im_runtime_missing and _needs_im_runtime(item)):
+            item.add_marker(skip_im_runtime)
+        if dating_repo_missing and (
+            base.startswith("test_dating_")
+            or any(d in item.nodeid for d in dating_dependent)
+        ):
+            item.add_marker(skip_dating_repo)
         for plugin, prefixes in plugin_tests:
             if (ci_plugins_off or not (external_dir / plugin).exists()) and any(
                 prefix in item.nodeid for prefix in prefixes
@@ -298,3 +355,23 @@ def _clear_external_runtime_remote_cache():
     manager.clear_remote_cache()
     yield
     manager.clear_remote_cache()
+
+
+@pytest.fixture(autouse=True)
+def _world_simulation_start_leaves_experiment_databases_alone(request, monkeypatch):
+    """Starting a World Simulation activates the web interface of its members (registers their database, creates the
+    participant). The start tests only look at the processes: without this the activation would write into the real
+    ``y_web/experiments`` folder. The tests of the activation itself request the ``toggle`` fixture, which stubs those steps.
+    """
+    node = request.node.nodeid
+    if "toggle" in request.fixturenames or not any(
+        k in node for k in ("federation", "world_simulation")
+    ):
+        yield
+        return
+    from y_web.src.simulation import execution_backend as eb
+
+    monkeypatch.setattr(
+        eb, "_activate_member_frontends", lambda fed, admin_user=None: None
+    )
+    yield

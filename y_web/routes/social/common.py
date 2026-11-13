@@ -39,7 +39,10 @@ from y_web.routes.social.helpers import (
     get_safe_profile_pic,
     is_admin,
 )
-from y_web.src.agents.custom_features import summarize_agent_custom_features
+from y_web.src.agents.custom_features import (
+    platform_agnostic_custom_features,
+    summarize_agent_custom_features,
+)
 from y_web.src.content.cover_images import (
     DEFAULT_COVER_IMAGE_PATH,
     available_cover_image_urls,
@@ -57,6 +60,7 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.external_runtime.plugin_loader import active_modules_context
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -93,7 +97,7 @@ def _latest_follow_action(*, follower_id, user_id):
         db.session.query(Follow)
         .outerjoin(Rounds, Follow.round == Rounds.id)
         .filter(Follow.user_id == follower_id, Follow.follower_id == user_id)
-        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Follow.id.desc())
+        .order_by(Rounds.day.desc(), Rounds.hour.desc(), seq_or_id(Follow).desc())
         .first()
     )
     return str(getattr(follow_event, "action", "") or "").strip().lower()
@@ -448,6 +452,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             )
         except Exception:
             agent_custom_features = {}
+        agent_custom_features = platform_agnostic_custom_features(agent_custom_features)
 
     # Other functions as before
     rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)
@@ -526,6 +531,15 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         )
         forum_context = dict(common_context)
         forum_context["mentions"] = forum_mentions
+        from y_web.src.forum.service import (
+            fetch_recent_active_communities,
+            fetch_user_communities,
+        )
+
+        forum_context["recent_communities"] = fetch_recent_active_communities()
+        forum_context["my_communities"] = (
+            fetch_user_communities(forum_logged_user.id) if forum_logged_user else []
+        )
         return render_template(
             "forum/profile.html",
             profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),
@@ -537,7 +551,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             sfollow=suggested_users,
             spages=suggested_pages,
             forum_memory_enabled=_forum_memory_enabled(exp_id),
-            can_follow_profile=int(user.id) != int(logged_id),
+            can_follow_profile=str(user.id) != str(logged_id),
             feed_type="new",
             **forum_context,
         )

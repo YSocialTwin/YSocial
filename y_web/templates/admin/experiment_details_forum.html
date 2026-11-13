@@ -44,6 +44,10 @@
                                         {% else %}
                                         {{ experiment.exp_name }}
                                         {% endif %}
+                                        {% set ws = world_simulation_of(experiment.idexp) %}
+                                        {% if ws %}
+ <a class="ys-badge-success" href="{{ url_for('world_simulation.detail', fed_id=ws.id) }}" title="{{ _('This experiment belongs to a World Simulation: it starts and stops with it') }}">{{ _('World Simulation') }}: {{ ws.name }}</a>
+                                        {% endif %}
                                         {% if has_infinite_client %}
  <span class="ys-badge-success" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">∞</span>
                                         {% endif %}
@@ -280,6 +284,30 @@
                                     {% endif %}
                                 </div>
 
+                                <form method="post" action="/admin/update_forum_avatar_mode/{{ experiment.idexp }}" style="margin: 0 0 0.9em 0;">
+                                    <input type="hidden" name="force_placeholder_present" value="1">
+                                    <div class="box-line" style="align-items: center;">
+                                        <span class="left">{{ _('Force placeholders') }}</span>
+                                        <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <label class="switch-small">
+                                            <input type="checkbox" name="force_placeholder_avatars" value="1" {% if forum_avatar_settings.force_placeholder %}checked{% endif %} onchange="this.form.submit()">
+                                            <span class="slider-small round"></span>
+                                        </label>
+                                        {% else %}
+                                        <i class="mdi mdi-lock ys-icon-muted" title="{{ _('Only owner/admin/shared researchers can edit avatar mode') }}"></i>
+                                        {% endif %}
+                                        </span>
+                                    </div>
+                                </form>
+                                <div style="font-size: 0.8em; color: #777; margin: -0.8em 0 0.9em 0;">
+                                    {% if forum_avatar_settings.force_placeholder %}
+                                    {{ _('Pictures generated for the agents are ignored: every actor gets a placeholder.') }}
+                                    {% else %}
+                                    {{ _('Pictures generated for the agents are used; the others follow the setting above.') }}
+                                    {% endif %}
+                                </div>
+
                                 {% if forum_feed_health %}
                                 <div style="margin: 0.2em 0 1em 0; padding: 0.75em 0.85em; border: 1px solid #e4e7eb; border-radius: 10px; background: #fafbfc;">
                                     <div style="font-size: 0.85em; font-weight: 600; color: #2f3a4a; margin-bottom: 0.55em;">{{ _('Feed Health') }}</div>
@@ -436,7 +464,11 @@
  <span class="right ys-flex-gap-8">
  <div class="ys-flex-gap-3">
                                             {% if experiment.running == 0 %}
-                                            {% if configuration_update_required %}
+                                            {% if ws and ws.locked %}
+ <span class="link-tooltip" title="{{ _('Managed by the World Simulation') }}">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+ </span>
+ {% elif configuration_update_required %}
  <span class="link-tooltip" title="{{ _('Update configuration first') }}">
  <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
                                             </span>
@@ -447,7 +479,11 @@
                                             {% endif %}
                                             {% endif %}
                                         {% if experiment.running == 1 and can_manage_experiment %}
-                                            {% if configuration_update_required %}
+                                            {% if ws and ws.locked %}
+ <span class="link-tooltip" title="{{ _('Managed by the World Simulation') }}">
+ <i class="mdi mdi-stop ys-icon-muted"></i>
+ </span>
+ {% elif configuration_update_required %}
  <span class="link-tooltip" title="{{ _('Update configuration first') }}">
  <i class="mdi mdi-stop ys-icon-muted"></i>
                                             </span>
@@ -557,7 +593,7 @@
                                 </div>
  <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
  <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
-                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}" data-client-status="{{ client.status }}">
  <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
@@ -600,7 +636,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+                                {% if client_failures and client_failures.get(client.id) %}
+                                {% set failure = client_failures.get(client.id) %}
+ <div class="ys-cell-pad" style="font-size: 0.85em; color: #b42318;">
+                                    <i class="mdi mdi-alert-circle-outline"></i>
+                                    {{ failure.message }}
+                                    {% if failure.detail %}<br><span style="color: #777;">{{ failure.error_type }}: {{ failure.detail }}</span>{% endif %}
+                                </div>
+                                {% endif %}
 
                             </div>
                             {% endfor %}

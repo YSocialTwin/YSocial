@@ -77,6 +77,13 @@
                                     <div id="fetch-status-add-user" style="min-height: 20px; margin-top: 5px; margin-bottom: 10px; font-size: 0.9rem;"></div>
 
                                     <div class="box-line">
+                                        <span class="left">{{ _('API Key') }} <small>{{ _('(optional)') }}</small></span>
+                                        <input type="password" id="custom_llm_api_key_add" name="llm_api_key" class="input"
+                                               autocomplete="off"
+                                               placeholder="{{ _('Needed by providers such as OpenAI or DeepSeek') }}">
+                                    </div>
+
+                                    <div class="box-line">
                                         <span class="left">{{ _('LLM') }} <small>{{ _('(for text annotation)') }}</small></span>
                                         <div class="select">
                                             <select name="llm" id="llm_model_select_add">

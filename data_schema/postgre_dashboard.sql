@@ -454,7 +454,10 @@ INSERT INTO content_recsys (name, value, enabled, category) VALUES
   ('CollaborativeUserUser', '(CUU) CollaborativeUserUser', 'HPC', 'Collaborative Filtering'),
   ('CollaborativeItemItem', '(CII) CollaborativeItemItem', 'HPC', 'Collaborative Filtering'),
   ('HybridLinearRanker', '(HLR) Hybrid Linear Ranker', 'HPC', 'Ensemble'),
-  ('FilterBubble', 'Personalized Feed', 'HumanOnly', 'Personalization');
+  ('FilterBubble', 'Personalized Feed', 'HumanOnly', 'Personalization'),
+  ('HotRanking', '(HOT) Hot Ranking', 'Forum', 'Reddit-style Ranking'),
+  ('TopRanking', '(TOP) Top Ranking', 'Forum', 'Reddit-style Ranking'),
+  ('MostCommented', '(MC) Most Commented', 'Forum', 'Reddit-style Ranking');
 
 INSERT INTO follow_recsys (name, value, category, enabled) VALUES
 ('FollowRecSys', 'Random', 'Baseline & Exploration', 'HPC,Standard'),

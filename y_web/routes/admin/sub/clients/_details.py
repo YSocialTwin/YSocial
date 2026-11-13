@@ -42,6 +42,7 @@ from ._crud import (
     _get_client_population_pages,
     _get_experiment_folder_name,
     _get_experiment_mode,
+    _normalize_hourly_activity,
     _read_json_if_exists,
 )
 from ._helpers import _forum_effective_link_share
@@ -57,6 +58,8 @@ def client_details(uid):
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
 
+    if experiment and experiment.platform_type == "dating":
+        return redirect(url_for("clientsr.client_details_dating", uid=uid))
     # Redirect HPC clients to dedicated HPC client details page
     if (
         experiment
@@ -187,7 +190,12 @@ def client_details_forum(uid):
     frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
     crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
-    crecsys = [r for r in crecsys_all if r.enabled and "Standard" in r.enabled]
+    # forum clients also get the recommenders reserved to forums (Hot, Top, Most commented)
+    crecsys = [
+        r
+        for r in crecsys_all
+        if r.enabled and ("Standard" in r.enabled or "Forum" in r.enabled)
+    ]
 
     forum_action_weights = {
         "post": client.post,
@@ -234,6 +242,9 @@ def client_details_hpc(uid):
     if not experiment:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
+
+    if experiment.platform_type == "dating":
+        return redirect(url_for("clientsr.client_details_dating", uid=uid))
 
     population = db.session.scalars(
         select(Population).filter_by(id=client.population_id)
@@ -380,6 +391,7 @@ def client_details_hpc(uid):
             activity = first_profile
             idx, data = _build_hourly_activity_chart_series(activity)
 
+    activity = _normalize_hourly_activity(activity)
     if not activity:
         activity = {str(x): 0 for x in range(24)}
         idx, data = _build_hourly_activity_chart_series(activity)
@@ -468,8 +480,16 @@ def get_progress(client_id):
         except Exception:
             pass
 
+    # what the page needs to notice that the client stopped (finished, paused, died) without a reload
+    raw_status = getattr(client, "status", None) if client else None
+    raw_terminal = getattr(client_execution, "terminal_state", None)
+    state = {
+        "status": raw_status if isinstance(raw_status, int) else None,
+        "terminal_state": raw_terminal if isinstance(raw_terminal, str) else None,
+    }
+
     if client_execution is None:
-        return json.dumps({"progress": 0, "infinite": False})
+        return json.dumps({"progress": 0, "infinite": False, **state})
 
     # Check if this is an infinite client (expected_duration_rounds = -1)
     if client_execution.expected_duration_rounds == -1:
@@ -486,6 +506,7 @@ def get_progress(client_id):
                 "elapsed_hours": remaining_hours,
                 "last_active_day": client_execution.last_active_day,
                 "last_active_hour": client_execution.last_active_hour,
+                **state,
             }
         )
 
@@ -501,7 +522,7 @@ def get_progress(client_id):
     else:
         progress = 0
 
-    return json.dumps({"progress": progress, "infinite": False})
+    return json.dumps({"progress": progress, "infinite": False, **state})
 
 
 @clientsr.route("/admin/progress_adhoc/<int:idexp>/<path:client_key>")

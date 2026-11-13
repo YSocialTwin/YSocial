@@ -66,6 +66,7 @@
                                         <td>
                                             <strong>{{ n.title }}</strong>
  <div class="is-size-7 ys-text-gray">{{ n.message }}</div>
+{% if n.progress and n.status == 'processing' %}<progress class="progress is-info is-small" value="{{ n.progress.percent }}" max="100"></progress>{% endif %}
                                             {% if n.related_experiments %}
                                             <div class="is-size-7" style="margin-top: 0.25rem;">
                                                 {{ _('Related:') }}

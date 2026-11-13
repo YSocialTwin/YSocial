@@ -32,13 +32,19 @@ from y_web.src.system.path_utils import get_resource_path
 from ._blueprint import clientsr
 
 
-def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
-    """Keep all duration fields in a client config aligned with the new total."""
+def _sync_duration_fields_in_client_config(
+    config: dict, days: int, platform_type: str = ""
+) -> dict:
+    """Keep all duration fields in a client config aligned with the new total.
+
+    A forum client file is validated against a strict schema: it has no ``simulation.days`` / ``num_days`` (its
+    run length is the top-level ``num_days``, written at every start), so they are never added there.
+    """
     updated = dict(config)
     duration_value = int(days)
     max_ticks_value = None if duration_value == -1 else duration_value * 24
     simulation = updated.get("simulation")
-    if isinstance(simulation, dict):
+    if isinstance(simulation, dict) and platform_type != "forum":
         simulation["days"] = duration_value
         simulation["num_days"] = duration_value
 
@@ -50,6 +56,44 @@ def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
         updated["max_ticks"] = max_ticks_value
 
     return updated
+
+
+def _extend_im_server_run(exp, new_total_days: int) -> None:
+    """Grow the run length held by the YInstantMessaging server configuration.
+
+    The IM client plays ``min(client days, server days)`` rounds, and the server reads its
+    ``simulation.num_days`` at every start, so an extension must be written there too. The
+    server accepts a changed configuration on restart, so this can be done after the run began.
+    """
+    from y_web.src.im.experiment_config import load_server_config, save_server_config
+
+    from ._im import _experiment_folder
+
+    if new_total_days <= 0:
+        return
+    folder = _experiment_folder(exp)
+    config = load_server_config(folder)
+    simulation = config.setdefault("simulation", {})
+    if int(simulation.get("num_days", 0)) < new_total_days:
+        simulation["num_days"] = int(new_total_days)
+        save_server_config(folder, config)
+
+
+def _reopen_completed_execution(
+    client_execution, new_total_days: int, slots: int = 24
+) -> bool:
+    """Leave the ``completed`` state when an extension gives the client rounds it has not run yet.
+
+    The HPC monitor counts a stopped client whose ``terminal_state`` is ``completed`` as finished, so an extended
+    client would never be started again. ``paused`` means "stopped, can be resumed".
+    """
+    if getattr(client_execution, "terminal_state", None) != "completed":
+        return False
+    done = int(getattr(client_execution, "elapsed_time", 0) or 0)
+    if new_total_days != -1 and new_total_days * slots <= done:
+        return False
+    client_execution.terminal_state = "paused"
+    return True
 
 
 def _hpc_client_process_still_running(exp, client) -> bool:
@@ -173,6 +217,7 @@ def extend_simulation(id_client):
     client_execution.expected_duration_rounds = (
         -1 if new_total_days == -1 else new_total_days * 24
     )
+    _reopen_completed_execution(client_execution, new_total_days)
     db.session.commit()
 
     # Check if the experiment was completed, and reset to stopped if so
@@ -187,6 +232,51 @@ def extend_simulation(id_client):
             ),
             "info",
         )
+
+    if exp and exp.platform_type == "dating":
+        # the runtime reads how many days to run from the client file at every start (see
+        # hpc.client._set_dating_run_length): the new total is all that has to be recorded
+        from ._dating import _experiment_folder, _load_server_config
+
+        slots = int(
+            (
+                (_load_server_config(_experiment_folder(exp)).get("simulation") or {})
+            ).get("num_slots_per_day", 24)
+        )
+        client_execution.expected_duration_rounds = (
+            -1 if new_total_days == -1 else new_total_days * slots
+        )
+        db.session.commit()
+        flash(
+            _(
+                "The client will run %(days)s days in all. Start it again to continue.",
+                days=new_total_days,
+            ),
+            "success",
+        )
+        return redirect(
+            request.referrer or url_for("clientsr.client_details_dating", uid=id_client)
+        )
+
+    if exp and exp.platform_type != "dating":
+        try:
+            from y_web.src.im import is_im_experiment
+
+            if is_im_experiment(exp):
+                _extend_im_server_run(exp, new_total_days)
+                slots = 24
+                client_execution.expected_duration_rounds = (
+                    -1 if new_total_days == -1 else new_total_days * slots
+                )
+                db.session.commit()
+        except Exception as exc:  # the client file below is still updated
+            flash(
+                _(
+                    "Warning: Could not update the server run length: %(error)s",
+                    error=str(exc),
+                ),
+                "warning",
+            )
 
     # Update the client config JSON file for HPC experiments
     # This ensures the client uses the extended duration when restarted
@@ -228,7 +318,9 @@ def extend_simulation(id_client):
                         config = json.load(f)
 
                     # Keep every duration field aligned with the new total value.
-                    config = _sync_duration_fields_in_client_config(config, client.days)
+                    config = _sync_duration_fields_in_client_config(
+                        config, client.days, exp.platform_type
+                    )
 
                     if "simulation" in config:
 

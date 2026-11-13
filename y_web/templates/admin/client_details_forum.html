@@ -227,7 +227,7 @@
                                 </div>
                                 <div class="box-line">
                                     <span class="left">{{ _('API Key') }}</span>
-                                    <span class="right">{{ client.llm_api_key }}</span>
+                                    <span class="right" id="client_llm_api_key_value">{{ client.llm_api_key }}</span>
                                 </div>
 
                                 <div class="box-line">
@@ -326,7 +326,7 @@
                                                 
                                                 {% if uncategorized %}
                                                     {% for recsys in uncategorized %}
-                                                    <option value="{{ recsys.name }}" {% if client.frecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if client.crecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 {% endif %}
                                             </select>

@@ -1,0 +1,46 @@
+{#- The viewpoint and time bar: one slim strip for researchers/admins (viewpoint, account picker, time) and for
+    viewers who may travel in time (time only). It replaces the side panels and the banners. -#}
+{% set r = ctx.vp.round %}
+{% set here = request.path[(('/%s/dating' % exp.idexp)|length):] %}
+{% set qs_round = '&round=%d' % r if r != ctx.latest else '' %}
+<div class="dt-bar" role="region" aria-label="{{ _('Viewpoint and time') }}">
+  <div class="dt-bar-in">
+    {% if is_staff %}
+    <div class="dt-bar-group">
+      <div class="dt-seg dt-vp" role="group" aria-label="{{ _('Viewpoint') }}">
+        <a class="{{ 'is-on' if ctx.vp.kind == 'overview' and not ctx.focus }}" href="/{{ exp.idexp }}/dating?vp=overview{{ qs_round }}"{% if ctx.vp.kind == 'overview' and not ctx.focus %} aria-current="true"{% endif %}>{{ _('Researcher overview') }}</a>
+        <a class="{{ 'is-on' if ctx.vp.kind == 'public' }}" href="/{{ exp.idexp }}/dating?vp=public{{ qs_round }}"{% if ctx.vp.kind == 'public' %} aria-current="true"{% endif %}>{{ _('Public observer') }}</a>
+        <span class="{{ 'is-on' if ctx.vp.kind == 'account' or ctx.focus }}">{{ _('As account') }}</span>
+      </div>
+      <form method="get" action="/{{ exp.idexp }}/dating" class="dt-acc" data-accounts="/{{ exp.idexp }}/dating/api/accounts" data-round="{{ r }}" role="search">
+        <input type="hidden" name="vp" value="account">
+        {% if r != ctx.latest %}<input type="hidden" name="round" value="{{ r }}">{% endif %}
+        <input type="hidden" name="acc" value="{{ viewed.id if viewed else '' }}" data-acc-id>
+        <span class="dt-acc-thumb" data-acc-thumb aria-hidden="true">{% if viewed %}{% if viewed.photo %}<img src="{{ dating_media(viewed.photo) }}" alt="">{% else %}<i style="--dt-hue: {{ viewed.hue }}">{{ viewed.initials }}</i>{% endif %}{% else %}<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>{% endif %}</span>
+        <label class="dt-sr" for="dt-acc">{{ _('View as account') }}</label>
+        <input id="dt-acc" class="dt-acc-input" type="search" name="acc_name" value="{{ viewed.username if viewed else '' }}" placeholder="{{ _('Search a username') }}" autocomplete="off" data-none="{{ _('No account with that name.') }}" role="combobox" aria-expanded="false" aria-controls="dt-acc-list" aria-autocomplete="list">
+        <ul class="dt-acc-list" id="dt-acc-list" role="listbox" hidden></ul>
+      </form>
+      {% if ctx.vp.kind == 'overview' and not ctx.focus %}
+      <details class="dt-info"><summary aria-label="{{ _('What this view shows') }}">i</summary>
+        <p>{{ _('Researcher overview: everything the run recorded is shown, including private chats, deleted messages and the recommender internals. This is not what a user sees.') }}</p></details>
+      {% elif ctx.vp.kind == 'account' %}
+      <details class="dt-info"><summary aria-label="{{ _('What this view shows') }}">i</summary>
+        <p>{{ _('Viewing as %(name)s: exactly what this account could see at this round.', name=(viewed.username if viewed else ctx.vp.account_id)) }}</p></details>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if time_travel and ctx.latest %}
+    <div class="dt-bar-group dt-time" data-time>
+      {% if r > 1 %}<a class="dt-ico" href="{{ link(here, round=r-1) }}" rel="prev" aria-label="{{ _('Previous') }}">‹</a>{% else %}<span class="dt-ico is-off">‹</span>{% endif %}
+      <label class="dt-sr" for="dt-slider">{{ _('Round') }}</label>
+      <input id="dt-slider" class="dt-slider" type="range" min="1" max="{{ ctx.latest }}" value="{{ r }}" data-slider>
+      {% if r < ctx.latest %}<a class="dt-ico" href="{{ link(here, round=r+1) }}" rel="next" aria-label="{{ _('Next') }}">›</a>{% else %}<span class="dt-ico is-off">›</span>{% endif %}
+      <span class="dt-now"><strong>{{ _('Day %(d)s', d=day) }}</strong> · {{ _('round %(h)s', h=hour) }}</span>
+      {% if r != ctx.latest %}<span class="dt-pill is-past">{{ _('Time travel') }}</span><a class="dt-btn dt-btn-sm" href="{{ link(here, round=None) }}">{{ _('Back to the latest') }}</a>
+      {% else %}<span class="dt-pill is-live">{{ _('Latest') }}</span>{% endif %}
+    </div>
+    {% endif %}
+    <div id="dt-live" class="dt-livechip" hidden role="status"><span>{{ _('New rounds are available.') }}</span> <a href="">{{ _('Refresh') }}</a></div>
+  </div>
+</div>

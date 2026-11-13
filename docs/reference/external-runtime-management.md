@@ -279,7 +279,7 @@ The plugin panel is working correctly when:
 ## Backend plugin extension points
 
 Backend plugin suites (group `backend_settings`) can opt in to a few generic
-extension points through their own `meta/registry.json`. Every key is optional;
+extension points (five hooks, listed below) through their own `meta/registry.json`. Every key is optional;
 with none declared, YSocial behaves exactly as before. Errors raised by a plugin
 hook are logged and never interrupt the core flow.
 
@@ -300,7 +300,9 @@ hook are logged and never interrupt the core flow.
   "hooks": {
     "post_login": "modules.my.backend.hooks:post_login",
     "experiment_access_guard": "modules.my.backend.hooks:guard",
-    "experiment_user_provisioned": "modules.my.backend.hooks:provisioned"
+    "staff_experiment_access": "modules.my.backend.hooks:staff_access",
+    "experiment_user_provisioned": "modules.my.backend.hooks:provisioned",
+    "experiment_page_widget": "modules.my.backend.hooks:page_widget"
   },
   "permissions": "modules.my.backend.perms:PERMISSIONS",
   "training_components": []
@@ -312,7 +314,9 @@ hook are logged and never interrupt the core flow.
 | `schema_module` | `migrate(engine_admin) -> bool`, idempotent. Called after the core Alembic upgrade at startup and after an install from the Plugin Manager. |
 | `hooks.post_login` | `post_login(admin_user) -> url | None`. Called for participant roles (`user`, `student`) before the experiment selection; a returned local path (starting with `/`) redirects the participant. The session also carries `platform_account_id`. |
 | `hooks.experiment_access_guard` | `guard(account_id, exp_id) -> None | url | response`. Called for participant sessions on every request whose URL has an `exp_id`; `None` allows. |
+| `hooks.staff_experiment_access` | `fn(user, exp_id) -> True | None`. Asked when a staff session that may not view an experiment tries to enter it, and by the teacher gate for every experiment URL. `True` lets the session in; `None` leaves the decision to the core (`exp_id` is `None` on feed pages without an experiment id). |
 | `hooks.experiment_user_provisioned` | `fn(exp, account_id, exp_user_id, created)`. Emitted by `ensure_experiment_user` when the caller passes `account_id`. |
+| `hooks.experiment_page_widget` | `fn(account_id, exp_id) -> html | None`. Called while a microblogging page is rendered for a participant session; a returned string is trusted HTML (escape everything you did not write) placed at the end of the page header. |
 | `permissions` | `dotted.module:attr` descriptor of the permissions the plugin declares (validated, reserved for the plugin). |
 | `sidebar.group` | Optional top-level sidebar group; items are shown only to the listed `roles` (default admin and researcher). The flat `sidebar` entry still adds one item under *Extensions*. |
 | `training_components` | Third-party step types for the TrainingModules editor (`type_key`, `label`, `contract_version`, flat `config_schema`, local-path `launch`/`instance_picker`/`activity_export`/`health`, `signals`). Read from any installed plugin; invalid descriptors are skipped and reported. |

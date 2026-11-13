@@ -361,8 +361,9 @@ def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]
     return None
 
 
-def _shared_from(post: Post) -> Optional[Tuple[int, str]]:
-    if post.shared_from == -1:
+def _shared_from(post: Post):
+    """Origin of a cross-post as ``(post_id, author, community_slug)``; ``-1`` when the post is not a cross-post."""
+    if post.shared_from == -1 or post.shared_from is None:
         return -1
     author = (
         db.session.query(User_mgmt.username)
@@ -370,7 +371,22 @@ def _shared_from(post: Post) -> Optional[Tuple[int, str]]:
         .filter(Post.id == post.shared_from)
         .scalar()
     )
-    return (post.shared_from, author) if author else -1
+    if not author:
+        return -1
+    community = ""
+    try:
+        from y_web.src.models import Interests, Post_topics
+
+        community = (
+            db.session.query(Interests.interest)
+            .join(Post_topics, Post_topics.topic_id == Interests.iid)
+            .filter(Post_topics.post_id == post.shared_from)
+            .scalar()
+            or ""
+        )
+    except Exception:  # noqa: BLE001 - the origin line degrades to the author only
+        community = ""
+    return (post.shared_from, author, community)
 
 
 def _get_profile_pic(user: User_mgmt) -> str:

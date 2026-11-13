@@ -1,0 +1,65 @@
+{#- World Simulation: where else this account takes part. One entry for each other platform of the identity, labelled with the
+    NAME OF ITS EXPERIMENT (the platform type is only the icon), muted when the agent is not active there, linking to the
+    profile there while that interface is active. Nothing is rendered (no placeholder, no layout shift) outside a World Simulation.
+    Set `ws_exp` (experiment id), `ws_account` (account id on this platform) and `ws_variant` (the frontend: microblogging,
+    forum, photo, dating or im) before including; each frontend styles its own variant in its own stylesheet, with its own
+    components and tokens (`.ws-also--<variant>`). -#}
+{% from "shared/world_simulation_icon.html" import ws_icon %}
+{% set ws_badges = ws_profile_badges(ws_exp, ws_account) if ws_exp is defined and ws_account is defined and ws_profile_badges is defined else [] %}
+{% set ws_v = ws_variant if ws_variant is defined else 'microblogging' %}
+{% macro ws_tip(b) -%}
+{%- if b.href %}{{ _('Open the profile on %(platform)s', platform=b.label) }}{% else %}{{ _('%(platform)s is not running: its profile cannot be opened now', platform=b.label) }}{% endif %}
+{%- if b.state == 'dormant' %} · {{ _('Dormant there: the agent takes a break on this platform') }}
+{%- elif b.state == 'left' %} · {{ _('Left this platform') }}
+{%- elif not b.active %} · {{ _('Not active there') }}{% endif %}
+{%- if b.handle %} · {{ _('Username there: %(name)s', name=b.handle) }}{% endif %}
+{%- if b.crossposts %} · {{ _('Cross-posts delivered there: %(n)s', n=b.crossposts) }}{% endif %}
+{%- endmacro %}
+{% macro ws_state(b) -%}
+{%- if b.state == 'dormant' %}{{ _('Dormant') }}{% elif b.state == 'left' %}{{ _('Left') }}{% elif not b.active %}{{ _('Inactive') }}{% endif %}
+{%- endmacro %}
+{% macro ws_chip(b, cls, rich=true) -%}
+{%- set cls_all = cls ~ ('' if b.active else ' is-' ~ (b.state if b.state in ('dormant', 'left') else 'inactive')) ~ ('' if b.href else ' is-nolink') -%}
+{%- if b.href -%}<a class="{{ cls_all }}" href="{{ b.href }}" data-ws-member="{{ b.member }}" data-ws-state="{{ b.state }}" title="{{ ws_tip(b) }}">
+{%- else -%}<span class="{{ cls_all }}" data-ws-member="{{ b.member }}" data-ws-state="{{ b.state }}" title="{{ ws_tip(b) }}" tabindex="0">{%- endif -%}
+{{ ws_icon(b.icon) }}<span class="ws-also-name">{{ b.label }}</span>
+{%- if rich and b.handle %}<span class="ws-also-handle">@{{ b.handle }}</span>{% endif -%}
+{%- if rich and not b.active %}<span class="ws-also-state">{{ ws_state(b) }}</span>{% endif -%}
+{%- if b.href -%}</a>{%- else -%}</span>{%- endif -%}
+{%- endmacro %}
+{% if ws_badges %}
+{% if ws_v == 'forum' %}
+<div class="forum-profile-card ws-also ws-also--forum" data-ws-profile-badges role="group" aria-label="{{ _('Also on') }}">
+  <h3>{{ _('Also on') }}</h3>
+  <div class="forum-profile-about">
+    {% for b in ws_badges %}
+    <div class="forum-profile-about-row"><span>{{ ws_chip(b, 'ws-also-chip', false) }}</span><span class="ws-also-aside">{% if b.handle %}@{{ b.handle }}{% endif %}{% if b.handle and not b.active %} · {% endif %}{% if not b.active %}{{ ws_state(b) }}{% endif %}{% if not b.handle and b.active %}{{ _('Active') }}{% endif %}</span></div>
+    {% endfor %}
+  </div>
+</div>
+{% elif ws_v == 'photo' %}
+<div class="photo-profile-links ws-also ws-also--photo" data-ws-profile-badges role="group" aria-label="{{ _('Also on') }}">
+  <span class="ws-also-label">{{ _('Also on') }}</span>
+  {% for b in ws_badges %}{{ ws_chip(b, 'ws-also-chip') }}{% endfor %}
+</div>
+{% elif ws_v == 'dating' %}
+<ul class="dt-pf-facts ws-also ws-also--dating" data-ws-profile-badges aria-label="{{ _('Also on') }}">
+  <li class="ws-also-label">{{ _('Also on') }}</li>
+  {% for b in ws_badges %}<li class="ws-also-item{{ '' if b.active else ' is-quiet' }}">{{ ws_chip(b, 'ws-also-chip') }}</li>{% endfor %}
+</ul>
+{% elif ws_v == 'im' %}
+<section class="im-card ws-also ws-also--im" data-ws-profile-badges aria-label="{{ _('Also on') }}">
+  <h3>{{ _('Also on') }}</h3>
+  <dl class="im-facts">
+    {% for b in ws_badges %}
+    <div><dt>{{ ws_chip(b, 'ws-also-chip', false) }}</dt><dd>{% if b.handle %}<span class="ws-also-handle">@{{ b.handle }}</span>{% endif %}{% if b.active %}{% if not b.handle %}<span class="ws-also-handle">{{ _('Active') }}</span>{% endif %}{% else %} <span class="ws-also-state">{{ ws_state(b) }}</span>{% endif %}</dd></div>
+    {% endfor %}
+  </dl>
+</section>
+{% else %}
+<div class="ws-also ws-also--microblogging" data-ws-profile-badges role="group" aria-label="{{ _('Also on') }}">
+  <span class="ws-also-label">{{ _('Also on') }}</span>
+  {% for b in ws_badges %}{{ ws_chip(b, 'ws-also-chip') }}{% endfor %}
+</div>
+{% endif %}
+{% endif %}

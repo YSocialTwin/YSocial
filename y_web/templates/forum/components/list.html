@@ -1,10 +1,11 @@
-<div>
+<div class="fr-branch">
+    <button type="button" class="fr-collapse" aria-label="{{ _('Collapse') }}" aria-expanded="true"><i class="mdi mdi-minus-circle-outline" aria-hidden="true"></i></button>
     {% include "forum/components/comment.html" %}
-    <div id="child-{{ thread['post_id'] }}">
+    <div id="child-{{ thread['post_id'] }}" class="fr-children">
         {% if len(thread['children'])>0 %}
         {% set data = thread['children'] %}
         {% for c in data %}
-        <div style="padding-left: 24px; border-left: 1px solid #e1e8ed; margin-left: 12px;">
+        <div class="fr-child">
             {% with thread=c %}
             {% include "forum/components/list.html" %}
             {% endwith %}

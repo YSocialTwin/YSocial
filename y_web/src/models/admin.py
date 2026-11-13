@@ -29,6 +29,7 @@ class Admin_users(UserMixin, db.Model):
     role = db.Column(db.String(10), nullable=False)
     llm = db.Column(db.String(50), default="")
     llm_url = db.Column(db.String(200), default="")
+    llm_api_key = db.Column(db.String(300), default="")
     profile_pic = db.Column(db.String(400), default="")
     perspective_api = db.Column(db.String(300), default=None)
     telemetry_enabled = db.Column(db.Boolean, default=True)
@@ -566,7 +567,7 @@ class Jupyter_instances(db.Model):
     exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
     port = db.Column(db.Integer, nullable=False)
     notebook_dir = db.Column(db.String(300), nullable=False)
-    process = db.Column(db.Integer, nullable=False)
+    process = db.Column(db.Integer, nullable=True)
     status = db.Column(db.String(10), nullable=False, default="stopped")
 
 
@@ -1007,3 +1008,129 @@ class SignupTarget(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kind = db.Column(db.String(16), nullable=False)
     ref = db.Column(db.String(64), nullable=False)
+
+
+class Federation(db.Model):
+    """A World Simulation: a group of member experiments (one per platform) run on one shared clock.
+
+    ``status``: "stopped" (default), "starting", "running", "paused", "stopping", "completed", "failed".
+    ``federation_id`` is the stable identifier written to ``federation.json`` and used in ``source_ref``.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_id = db.Column(db.String(64), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=False, default="")
+    owner = db.Column(db.String(50), nullable=False, default="")
+    seed = db.Column(db.Integer, nullable=False, default=0)
+    granularity = db.Column(db.String(10), nullable=False, default="slot")
+    status = db.Column(db.String(20), nullable=False, default="stopped")
+    host = db.Column(db.String(50), nullable=False, default="127.0.0.1")
+    port = db.Column(db.Integer, nullable=True, default=None)
+    coordinator_pid = db.Column(db.Integer, nullable=True, default=None)
+    token = db.Column(db.String(128), nullable=False, default="")
+    folder = db.Column(db.String(255), nullable=False, default="")
+    config_json = db.Column(db.Text, nullable=False, default="{}")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
+class FederationMember(db.Model):
+    """An experiment taking part in a World Simulation (one member per experiment; several members may share a platform type)."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_member"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "federation_pk", "member", name="uq_federation_member_name"
+        ),
+        db.UniqueConstraint("federation_pk", "exp_id", name="uq_federation_member_exp"),
+    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_pk = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    member = db.Column(db.String(50), nullable=False)
+    platform_type = db.Column(db.String(50), nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+
+
+class FederationIdentityLink(db.Model):
+    """Global agent identity of a World Simulation and its local account on one member."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_identity_link"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "federation_pk", "global_agent_id", "member", name="uq_federation_identity"
+        ),
+    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_pk = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    global_agent_id = db.Column(db.String(64), nullable=False)
+    member = db.Column(db.String(50), nullable=False)
+    # "" until the runtime reports the account: agents are bound by username (INV-17), people carry their account
+    local_account_id = db.Column(
+        db.String(64), nullable=False, default="", server_default=""
+    )
+    # the username the agent has on this member (the agent name); NULL for people and for links of older releases
+    username = db.Column(db.String(120))
+
+
+class FederationHuman(db.Model):
+    """A person (YWeb user) enrolled in a World Simulation under the identity ``human:<user id>`` (F8, H3).
+
+    ``members_json`` maps each enrolled member to ``{"account_id", "created"}``: ``created`` is false while the
+    account does not exist yet (dating asks the person for a profile first). ``status``: "active" or "inactive"
+    (never deletes an account: it only stops the person being offered the destinations).
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_human"
+    __table_args__ = (
+        db.UniqueConstraint("federation_pk", "user_id", name="uq_federation_human"),
+    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_pk = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    user_id = db.Column(db.Integer, nullable=False)
+    human_id = db.Column(db.String(64), nullable=False)
+    members_json = db.Column(db.Text, nullable=False, default="{}")
+    status = db.Column(db.String(10), nullable=False, default="active")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
+class FederationScheduleQueue(db.Model):
+    """Queue of World Simulations, separate from the experiment scheduler (one runs at a time, in order of position).
+
+    ``status``: "queued", "running", "completed", "failed", "cancelled".
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "federation_schedule_queue"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    federation_id = db.Column(
+        db.Integer, db.ForeignKey("federation.id"), nullable=False
+    )
+    position = db.Column(db.Integer, nullable=False, default=0)
+    status = db.Column(db.String(20), nullable=False, default="queued")
+    enqueued_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    started_at = db.Column(db.DateTime, nullable=True, default=None)
+    finished_at = db.Column(db.DateTime, nullable=True, default=None)
+
+
+def _delete_agent_picture(mapper, connection, agent):
+    """The generated profile picture of an agent is deleted with the agent (file of the media folder)."""
+    from y_web.src.agents.profile_pictures import delete_picture_file
+
+    delete_picture_file(agent.profile_pic)
+
+
+from sqlalchemy import event as _sa_event  # noqa: E402
+
+_sa_event.listen(Agent, "after_delete", _delete_agent_picture)

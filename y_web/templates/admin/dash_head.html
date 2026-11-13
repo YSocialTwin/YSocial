@@ -103,10 +103,18 @@
                         </div>
                         <div class="dropdown-menu" id="join-simulation-menu" role="menu">
                             <div class="dropdown-content">
-                                {% for exp in active_experiments %}
-                                <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item">
+                                {% for group in group_experiments_by_platform(active_experiments) %}
+                                {% if not loop.first %}<hr class="dropdown-divider">{% endif %}
+                                <div class="join-menu-group" role="presentation" data-platform-type="{{ group.type }}">
+                                    <i data-feather="{{ group.icon }}" aria-hidden="true"></i>
+                                    <span>{{ group.label }}</span>
+                                    <span class="join-menu-count">{{ group.experiments|length }}</span>
+                                </div>
+                                {% for exp in group.experiments %}
+                                <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item join-menu-item" role="menuitem">
                                     {{ exp.exp_name }}
                                 </a>
+                                {% endfor %}
                                 {% endfor %}
                             </div>
                         </div>

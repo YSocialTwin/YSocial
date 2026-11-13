@@ -22,7 +22,8 @@
         agent_details: [
             { selector: '[data-tut="agent-profile"]', title: '@heading', description: 'Full profile of the agent: identity, demographics, interests, personality traits and the behaviour settings it was generated with.', position: 'auto' },
             { selector: '[data-tut="population-memberships"]', title: '@heading', description: 'The populations this agent belongs to. Click a population to open it.', position: 'auto' },
-            { selector: '[data-tut="add-to-population"]', title: '@heading', description: 'Add this agent to another population: choose the population and confirm.', position: 'auto' }
+            { selector: '[data-tut="add-to-population"]', title: '@heading', description: 'Add this agent to another population: choose the population and confirm.', position: 'auto' },
+            { selector: '[data-tut="custom-attributes"]', title: '@heading', description: 'Interests, appearance, platform-specific fields and other custom data stored with the agent, in ordered groups.', position: 'auto' }
         ],
         annotation_analytics: [
             { selector: '[data-tut="temporal-controls"]', title: '@heading', description: 'Replay the simulation over time: press play, change the speed, and every chart follows the selected moment.', position: 'auto' },
@@ -41,6 +42,39 @@
             { selector: '[data-tut="custom-population-overview"]', title: '@heading', description: 'Name, description and key attributes of this population.', position: 'auto' },
             { selector: '[data-tut="experiment-deployments"]', title: '@heading', description: 'The experiments where this population is deployed.', position: 'auto' },
             { selector: '[data-tut="assigned-agents"]', title: '@heading', description: 'The agents that belong to the population.', position: 'auto' }
+        ],
+        dating_analytics: [
+            { selector: '[data-tut="analytics-state"]', title: 'Analytics data', description: 'When the derived data were last built. Refresh them to read the latest rounds of a running experiment; the run itself is never modified.', position: 'auto' },
+            { selector: '[data-tut="run-totals"]', title: '@heading', description: 'Headline figures of the run: agents, matches, date proposals, exits and paused profiles.', position: 'auto' },
+            { selector: '[data-tut="recommenders"]', title: '@heading', description: 'Exposure and outcome of each recommender model: like rate, matches per stack and how unequal the exposure is.', position: 'auto' },
+            { selector: '[data-tut="day-by-day"]', title: '@heading', description: 'The run day by day: swipes, matches, messages and dates.', position: 'auto' },
+            { selector: '[data-tut="date-funnel"]', title: '@heading', description: 'From proposal to outcome: how many dates were proposed, accepted, declined or expired.', position: 'auto' },
+            { selector: '[data-tut="exits"]', title: '@heading', description: 'Who left and why: success (a couple formed) or frustration (churn).', position: 'auto' },
+            { selector: '[data-tut="export"]', title: '@heading', description: 'Download any derived table as CSV, or everything in one ZIP together with the field map.', position: 'auto' },
+            { selector: '[data-tut="compare"]', title: '@heading', description: 'Compare this run with another dating experiment. The comparison is clean when population and seed are the same and only the recommender differs.', position: 'auto' }
+        ],
+        dating_analytics_compare: [
+            { selector: '#dating-compare', title: 'Comparison', description: 'The two experiments side by side, metric by metric.', position: 'auto' }
+        ],
+        dating_participants: [
+            { selector: '#dating-gateway-status', title: 'Gateway', description: 'Whether the local gateway that carries the actions of the people to the run is answering.', position: 'auto' },
+            { selector: '#dating-humans', title: 'Participants', description: 'The users assigned to this experiment who can play: whether they have entered and what they have done so far.', position: 'auto' }
+        ],
+        dating_settings: [
+            { selector: '#box-dating-settings', title: '@heading', description: 'The rules shared by every client of the experiment: the default recommender and the parameters of each model, quotas, chats and dates. You can edit them whenever the experiment is not running.', position: 'auto' }
+        ],
+        clients_dating: [
+            { selector: '#box-new-client', title: '@heading', description: 'Choose the population and how long the client runs (30 days by default), then the models: language model, image model and recommender. The other settings have defaults that follow whether the experiment uses language models.', position: 'auto' }
+        ],
+        client_details_dating: [
+            { selector: '#box-extend-simulation', title: '@heading', description: 'Add days to the total length of the client, then start it again: it continues from where it stopped.', position: 'auto' },
+            { selector: '#box-client-settings', title: '@heading', description: 'The settings of the agents of this client. They can be changed while the client is stopped.', position: 'auto' }
+        ],
+        prompts_dating: [
+            { selector: '[data-tut="dating-prompts"]', title: '@heading', description: 'The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.', position: 'auto' }
+        ],
+        prompts_im: [
+            { selector: '[data-tut="im-prompts"]', title: '@heading', description: 'The prompts the agents use in the chats. You can reword them for this experiment; only the prompts you change are saved.', position: 'auto' }
         ],
         download_notifications: [
             { selector: '[data-tut="notifications"]', title: '@heading', description: 'History of exports and background jobs: status, download links and the experiments involved. Mark entries as read or remove them.', position: 'auto' }
@@ -150,6 +184,7 @@
     var aliases = {
         opinion_configuration_forum: 'opinion_configuration',
         opinion_configuration_hpc: 'opinion_configuration',
+        opinion_configuration_im: 'opinion_configuration',
         prompts_forum: 'prompts'
     };
     Object.keys(aliases).forEach(function (k) { pages[k] = pages[aliases[k]]; });

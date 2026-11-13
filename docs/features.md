@@ -30,6 +30,10 @@ Typical tasks:
 - inspect profiles and content metadata
 - participate in interview flows when enabled
 
+## Platforms
+
+Microblogging, forum and photo sharing. Further platform runtimes can be installed from the Plugins page when available.
+
 ## Core feature areas
 
 ### Experiment management

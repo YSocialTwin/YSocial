@@ -10,12 +10,16 @@ platform views.  The sub-package is assembled from:
   microblogging.py – Twitter-style feed / thread / hashtag routes
   photo.py         – Instagram-style feed routes
   forum.py        – Reddit-style feed / thread / search routes
+  instant_messaging.py – read-only chat observer for instant messaging experiments
 """
 
 from . import (  # side-effect: registers routes
     common,
+    dating,
+    dating_participant,
     forum,
     helpers,
+    instant_messaging,
     microblogging,
     photo,
 )

@@ -32,11 +32,19 @@ from ._blueprint import experiments
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
 # ------------------------------------------------------------------
-SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing")
+SUPPORTED_PLATFORMS = (
+    "microblogging",
+    "forum",
+    "photo_sharing",
+    "instant_messaging",
+    "dating",
+)
 PLATFORM_LABELS = {
     "microblogging": N_("Microblogging"),
     "forum": N_("Forum"),
     "photo_sharing": N_("Photo sharing"),
+    "instant_messaging": N_("Instant messaging"),
+    "dating": N_("Dating"),
 }
 
 _COMMON_CAPABILITIES = {
@@ -79,6 +87,39 @@ PLATFORM_CAPABILITIES = {
         "annotation_agent_type",
         "default_photo_feed_tab",
     },
+    "instant_messaging": _COMMON_CAPABILITIES
+    | {
+        "interactions_enabled",
+        "interaction_share",  # forwarding
+        "notifications_menu",
+        "annotations_enabled",  # topics, sentiment, toxicity and emotion chips on messages
+        "annotation_topics",
+        "annotation_sentiment",
+        "annotation_toxicity",
+        "annotation_emotions",
+        "annotation_agent_type",  # agent / human badge on messages
+        "annotation_author_type",
+        "profile_topics_box",
+        "infinite_scroll_enabled",
+        "im_show_forward_origin",
+        "im_show_reactions",
+        "im_show_member_roles",
+        "im_default_view",
+        "im_allow_time_travel",
+        "im_public_observer_enabled",
+        "im_participant_mode_enabled",
+        "im_participant_notice",
+        "im_participant_poll_seconds",
+    },
+    "dating": {
+        "language",
+        "language_switch_allowed",
+        "dating_allow_time_travel",
+        "dating_public_observer_enabled",
+        "dating_participant_mode_enabled",
+        "dating_participant_notice",
+        "dating_poll_seconds",
+    },
 }
 
 # Platform-specific feed orderings that replace the microblogging recommenders.
@@ -117,64 +158,35 @@ def capabilities_for(platform_type: str):
 def excluded_capabilities_for(platform_type: str):
     """Setting keys to hide for a platform that otherwise offers everything."""
     if PLATFORM_CAPABILITIES.get(platform_type, 0) is None:
-        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES)
+        # the chat and dating page controls ("im_*", "dating_*") belong to those platforms only
+        own = {
+            key
+            for caps in (
+                PLATFORM_CAPABILITIES["instant_messaging"],
+                PLATFORM_CAPABILITIES["dating"],
+            )
+            for key in caps
+            if key.startswith(("im_", "dating_"))
+        }
+        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES | own)
     return []
 
 
 # ------------------------------------------------------------------
-# Default settings — all interactions shown/enabled
+# Default settings: one source shared with the participant pages
 # ------------------------------------------------------------------
-DEFAULT_SETTINGS = {
-    # Interactions
-    "interactions_enabled": True,
-    "interaction_post": True,
-    "interaction_comment": True,
-    "interaction_like": True,
-    "interaction_dislike": True,
-    "interaction_share": True,
-    "notifications_menu": True,  # Bell / mentions icon, shown alongside interactions in the admin UI
-    # Annotations
-    "annotations_enabled": True,
-    "annotation_emotions": True,
-    "annotation_topics": True,
-    "annotation_sentiment": True,
-    "annotation_toxicity": True,
-    "annotation_agent_type": True,
-    "annotation_author_type": True,
-    "show_post_time": True,  # show "Day X - HH:00" below each post/comment
-    "show_trending_hashtags": True,  # show the "Trending Hashtags" box (microblogging only)
-    "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
-    "show_recsys_info": False,  # box: the user's content recommender system, explained (microblogging / photo)
-    # Interface language of the participant pages (decision D4: set per experiment)
-    "language": "",  # empty = the default language (English); otherwise a supported code
-    "language_switch_allowed": False,  # let participants pick another language (cookie ys_lang_sim)
-    "show_annotation_stats": False,  # box: live distributions of the user's annotations (needs the annotation add-on)
-    # Feed & Profile
-    "default_content_recsys": "",  # empty = system default
-    "default_follow_recsys": "",  # empty = system default
-    "profile_topics_box": True,  # show Topics & Opinions card in edit_profile
-    "onboarding_enabled": True,  # show onboarding screen on first login
-    # Infinite scroll & pagination
-    "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
-    "posts_per_page": 10,  # posts per page when infinite scroll is disabled
-    # Platform-specific feed defaults (forum / photo sharing)
-    "default_forum_feed_type": "new",  # new | hot | top | most_commented
-    "default_photo_feed_tab": "for_you",  # for_you | follower
-    # FilterBubble (Personalized Feed) recommender parameters
-    "filter_bubble_alpha": 2.0,  # opinion similarity width (Gaussian)
-    "filter_bubble_beta": 0.0,  # recency decay (0 = disabled)
-    "filter_bubble_gamma": 0.0,  # engagement amplification (0 = disabled)
-    "filter_bubble_lr": 0.05,  # EMA learning rate for real-time interest update
-    "filter_bubble_sort": "score",  # ranking mode: score | recency | engagement | hybrid
-    "filter_bubble_wr": 1.0,  # weight for reactions in engagement score
-    "filter_bubble_wc": 1.5,  # weight for comments in engagement score
-    "filter_bubble_ws": 2.0,  # weight for shares in engagement score
-}
-
+from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS  # noqa: E402
 
 _ENUM_SETTINGS = {
     "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
     "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},
+    "im_default_view": {"latest", "start"},
+}
+
+# integer settings with a server-side range: (low, high)
+_INT_RANGES = {
+    "im_participant_poll_seconds": (1, 60),
+    "dating_poll_seconds": (1, 60),
 }
 
 
@@ -448,11 +460,16 @@ def frontend_settings_save():
                 safe[k] = int(new_settings[k])
             except (TypeError, ValueError):
                 safe[k] = default
+            if k in _INT_RANGES:
+                low, high = _INT_RANGES[k]
+                safe[k] = max(low, min(high, safe[k]))
         else:
             # string settings (recsys names, sort mode…)
             value = str(new_settings[k])
             allowed = _language_choices() if k == "language" else _ENUM_SETTINGS.get(k)
             safe[k] = value if allowed is None or value in allowed else default
+            if k in ("im_participant_notice", "dating_participant_notice"):
+                safe[k] = value.strip()[:4000]
 
     if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
         safe["show_annotation_stats"] = (

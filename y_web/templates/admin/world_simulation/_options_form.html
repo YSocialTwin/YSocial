@@ -1,0 +1,196 @@
+{#- The parameter sections of a World Simulation, shared by the creation page and the Configuration tab: every option has its own
+    control with its default pre-filled; the groups of tuning values are collapsed by default. Context: schema, values,
+    ws_platforms (member names, or candidate keys in the creation form), ws_labels (their labels: experiment names), ws_platform_types, platform_labels, platform_icons, mode ("new" or "edit"), and for "edit" unknown and config_preview.
+    ``first_step`` is the number of the first section on the creation page. -#}
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+{% set step = namespace(n=first_step if first_step is defined else 0) %}
+{% macro next_step() %}{% if mode == 'new' %}{% set step.n = step.n + 1 %}{{ step.n }}{% endif %}{% endmacro %}
+
+{% call ws.section('clock', _('Clock and schedule'), _('Every member runs on one simulated clock of 24 slots a day. The seed fixes every random draw, so the same seed and parameters give the same run.'), next_step()|trim) %}
+<div class="box-lines">
+    <div class="box-line ws-param">
+        <span class="left"><label class="ws-label" for="ws-seed">{{ _('Seed') }}</label>
+            <span class="ws-help">{{ _('Any integer. Leave it empty to draw one at random when the World Simulation is created.') }}</span></span>
+        <span class="right"><input class="input" type="number" step="1" id="ws-seed" name="seed" value="{{ seed_value }}" placeholder="{{ _('random') }}"></span>
+    </div>
+    <div class="box-line ws-param">
+        <span class="left"><label class="ws-label" for="ws-granularity">{{ _('Clock granularity') }}</label>
+            <span class="ws-help">{{ _('Slot: a member starts the next hour of simulated time only when every member has finished the current one. Day: members may be up to a day apart.') }}</span>
+            <span class="ws-default">{{ _('Default') }}: {{ _('Slot (hourly)') }}</span></span>
+        <span class="right"><div class="select"><select id="ws-granularity" name="granularity">
+            <option value="slot" {{ 'selected' if granularity_value == 'slot' }}>{{ _('Slot (hourly)') }}</option>
+            <option value="day" {{ 'selected' if granularity_value == 'day' }}>{{ _('Day') }}</option>
+        </select></div></span>
+    </div>
+</div>
+<p class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('To run several World Simulations one after the other, add them to the %(link)s.', link=wrap('a', _('queue'), href=url_for('world_simulation.schedule'))) }}</p>
+{% endcall %}
+
+{% call ws.section('attention', _('Attention'), _('How the daily activity of an agent is shared among the platforms where it is active, and when it leaves one.'), next_step()|trim) %}
+<div class="box-lines">
+    {{ ws.param(schema.BY_PATH[('attention', 'enabled')], values) }}
+    <details class="ws-advanced">
+        <summary class="ys-accordion-header"><i class="mdi mdi-chevron-right"></i> {{ _('Advanced attention parameters') }}</summary>
+        <div class="ys-content-panel">
+            {% for p in schema.advanced(schema.ATTENTION) %}{{ ws.param(p, values) }}{% endfor %}
+        </div>
+    </details>
+    <div class="ws-subhead">{{ _('Leaving a platform') }}</div>
+    {{ ws.param(schema.BY_PATH[('leave', 'enabled')], values) }}
+    <details class="ws-advanced">
+        <summary class="ys-accordion-header"><i class="mdi mdi-chevron-right"></i> {{ _('Advanced leave parameters') }}</summary>
+        <div class="ys-content-panel">
+            {% for p in schema.advanced(schema.LEAVE) %}{{ ws.param(p, values) }}{% endfor %}
+        </div>
+    </details>
+</div>
+{% endcall %}
+
+{% call ws.section('discovery', _('Discovery'), _('Whether agents find out about the other platforms and join them while the World Simulation runs.'), next_step()|trim) %}
+<div class="box-lines">
+    {{ ws.param(schema.BY_PATH[('discovery', 'enabled')], values) }}
+    {% for p in schema.basic(schema.DISCOVERY) if p.path[1] != 'enabled' %}{{ ws.param(p, values) }}{% endfor %}
+    <details class="ws-advanced">
+        <summary class="ys-accordion-header"><i class="mdi mdi-chevron-right"></i> {{ _('Advanced discovery parameters') }}</summary>
+        <div class="ys-content-panel">
+            {% for p in schema.advanced(schema.DISCOVERY) %}{{ ws.param(p, values) }}{% endfor %}
+            <div class="box-line ws-param">
+                <span class="left"><span class="ws-label">{{ _('Weights of the logistic rule') }}</span>
+                    <span class="ws-help">{{ _('Used only with the logistic decision rule: the probability of joining is the logistic function of the intercept plus each weight times its evidence.') }}</span></span>
+            </div>
+            <div class="ws-beta">
+                {% for p in schema.BETA %}
+                <div class="ws-beta-item"><label class="ws-label" for="{{ p.name }}">{{ _(schema.BETA_KEYS[loop.index0][1]) }}</label>
+                    <input class="input" type="number" step="any" id="{{ p.name }}" name="{{ p.name }}" value="{{ values[p.name] }}" placeholder="{{ schema.fmt(p.default) }}">
+                    <span class="ws-default">{{ _('Default') }}: {{ schema.fmt(p.default) }}</span></div>
+                {% endfor %}
+            </div>
+        </div>
+    </details>
+</div>
+{% endcall %}
+
+{% call ws.section('crosspost', _('Cross-posting'), _('What travels between platforms, who decides it and with which probability.'), next_step()|trim) %}
+<div class="box-lines">
+    {{ ws.param(schema.BY_PATH[('crosspost', 'mode')], values) }}
+    {{ ws.param(schema.BY_PATH[('crosspost', 'decision')], values) }}
+    <div class="ws-block" id="ws-crosspost-decision-options" {{ 'hidden' if values['opt__crosspost__decision'] != 'llm' }}>
+        <div class="box-line ws-param" id="ws-crosspost-decision-triggers" data-param="crosspost.decision_triggers">
+            <span class="left"><span class="ws-label">{{ _('Events the agent decides on') }}</span>
+                <span class="ws-help">{{ _('After publishing: the agent has just published its own content. After interacting: the agent has just shared or forwarded content of somebody else, which becomes the candidate (comments, replies and reactions cannot leave the platform). Both are on by default. With the coordinator rule only publishing counts, because the content of others never leaves its platform.') }}</span>
+                <span class="ws-default">{{ _('Default') }}: {{ _('both') }}</span></span>
+            <span class="right ws-checks">
+                <input type="hidden" name="crosspost_decision_triggers_present" value="1">
+                {% set cp_triggers = values['crosspost_decision_triggers'] %}
+                <label class="ws-check"><input type="checkbox" name="crosspost_decision_triggers" value="publish" {{ 'checked' if 'publish' in cp_triggers }}> {{ _('After publishing its own content') }}</label>
+                <label class="ws-check"><input type="checkbox" name="crosspost_decision_triggers" value="interaction" {{ 'checked' if 'interaction' in cp_triggers }}> {{ _('After interacting with the content of others') }}</label>
+            </span>
+        </div>
+        {{ ws.param(schema.BY_PATH[('crosspost', 'decision_max_per_day')], values) }}
+        <p class="ws-help" id="ws-crosspost-decision-note">{{ _('With the coordinator rule the model only decides whether the content is marked for cross-posting: the destinations stay under the probabilities of the pairs of platforms below. When the agents choose their own cross-posts the model also chooses the destinations and may write the text for each. The coordinator still applies the content filter and the destinations the agent is active on. A model decision is not reproducible from the seed (the draws of the random mode are).') }}</p>
+        <p class="ws-help" id="ws-crosspost-decision-support">{{ _('Supported by the clients of:') }}
+            {% for platform, publish, interaction, note in schema.llm_decision_notes(ws_platform_types) %}{{ _(platform_labels[platform]) }}{% if note %} ({{ note }}){% endif %}{{ ', ' if not loop.last else '.' }}{% endfor %}</p>
+    </div>
+    {{ ws.param(schema.BY_PATH[('crosspost', 'propensity')], values) }}
+    {% set cp_warning = schema.crosspost_warning(schema.crosspost_causes_from_values(values, ws_platforms)) %}
+    <p class="ws-note is-warning" id="ws-crosspost-warning" role="alert" {{ 'hidden' if not cp_warning }}
+       data-text-propensity="{{ schema.crosspost_warning(['propensity']) }}"
+       data-text-probability="{{ schema.crosspost_warning(['probability']) }}"
+       data-text-both="{{ schema.crosspost_warning(['propensity', 'probability']) }}"><i class="mdi mdi-alert-outline"></i> <span id="ws-crosspost-warning-text">{{ cp_warning }}</span></p>
+    <div class="box-line ws-param ws-block" id="ws-crosspost-content">
+        <span class="left"><span class="ws-label">{{ _('Agent content that can be cross-posted') }}</span>
+            <span class="ws-help">{{ _('Choose All, or add the kinds of content that may be cross-posted: each option you add widens what can travel (own content, plus content with news, plus content with images). Read at each start or restart.') }}</span></span>
+        <span class="right ws-checks">
+            <input type="hidden" name="crosspost_content_present" value="1">
+            {% set cp_content = values['crosspost_content'] %}{% set cp_all = not cp_content %}
+            <label class="ws-check"><input type="checkbox" name="crosspost_content" value="all" {{ 'checked' if cp_all }}> {{ _('All content (the agent\'s own and that of other agents)') }}</label>
+            <label class="ws-check"><input type="checkbox" name="crosspost_content" value="own_content" {{ 'checked' if not cp_all and 'own_content' in cp_content }} {{ 'disabled' if cp_all }}> {{ _('The agent\'s own content') }}</label>
+            <label class="ws-check"><input type="checkbox" name="crosspost_content" value="news" {{ 'checked' if not cp_all and 'news' in cp_content }} {{ 'disabled' if cp_all }}> {{ _('Content with news (a link)') }}</label>
+            <label class="ws-check"><input type="checkbox" name="crosspost_content" value="images" {{ 'checked' if not cp_all and 'images' in cp_content }} {{ 'disabled' if cp_all }}> {{ _('Content with images') }}</label>
+        </span>
+    </div>
+    <div class="ws-block" id="ws-crosspost-probability">
+        <div class="ws-subhead">{{ _('Probability of a cross-post for each pair of platforms') }}</div>
+        <p class="ws-help">{{ _('Used when the coordinator decides: the chance that a post marked for cross-posting (see the propensity above) is copied from the platform in the row to the platform in the column. Between 0 and 1; 0 means never for that pair. An empty cell takes the default, %(default)s.', default=schema.DEFAULT_PAIR_PROBABILITY) }}</p>
+        <div class="table-container">
+        <table class="table is-fullwidth ws-matrix" id="ws-probability-matrix">
+            <thead><tr><th>{{ _('From') }} \ {{ _('To') }}</th>{% for dst in ws_platforms %}<th data-platform="{{ dst }}">{{ ws_labels[dst] }}</th>{% endfor %}</tr></thead>
+            <tbody>
+            {% for src in ws_platforms %}
+            <tr data-platform="{{ src }}"><th>{{ ws_labels[src] }}</th>
+                {% for dst in ws_platforms %}<td data-platform="{{ dst }}">{% if src != dst %}<input class="input" type="number" min="0" max="1" step="any" name="prob__{{ src }}__{{ dst }}" value="{{ values['prob__' ~ src ~ '__' ~ dst] }}" placeholder="{{ schema.DEFAULT_PAIR_PROBABILITY }}" aria-label="{{ ws_labels[src] }} &rarr; {{ ws_labels[dst] }}">{% else %}<span class="ws-sub">&ndash;</span>{% endif %}</td>{% endfor %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {{ ws.param(schema.BY_PATH[('topics', 'migration')], values) }}
+</div>
+{% endcall %}
+
+{% call ws.section('identity', _('Identity and populations'), _('Who starts where, whether names are hidden and whether a platform can open accounts for agents that discover it.'), next_step()|trim) %}
+<div class="box-lines">
+    <div class="box-line ws-param">
+        <span class="left"><label class="ws-label" for="ws-membership-initial">{{ _('Starting state of the agents') }}</label>
+            <span class="ws-help">{{ _('All: every agent is active on every platform where it has an account. One at random: each agent starts on a single platform and may discover the others. Custom: each agent starts on a platform with the probability you give.') }}</span>
+            <span class="ws-default">{{ _('Default') }}: {{ _('All platforms') }}</span></span>
+        <span class="right"><div class="select"><select id="ws-membership-initial" name="membership_initial">
+            <option value="all" {{ 'selected' if values['membership_initial'] == 'all' }}>{{ _('All platforms') }}</option>
+            <option value="one_random" {{ 'selected' if values['membership_initial'] == 'one_random' }}>{{ _('One platform at random') }}</option>
+            <option value="custom" {{ 'selected' if values['membership_initial'] == 'custom' }}>{{ _('Custom probabilities') }}</option>
+        </select></div></span>
+    </div>
+    <div class="ws-block" id="ws-membership-custom">
+        <div class="ws-beta">
+            {% for m in ws_platforms %}
+            <div class="ws-beta-item" data-platform="{{ m }}"><label class="ws-label" for="membership_p__{{ m }}">{{ ws_labels[m] }}</label>
+                <input class="input" type="number" min="0" max="1" step="any" id="membership_p__{{ m }}" name="membership_p__{{ m }}" value="{{ values['membership_p__' ~ m] }}" placeholder="0">
+                <span class="ws-default">{{ _('Probability of starting here') }}</span></div>
+            {% endfor %}
+        </div>
+    </div>
+    {{ ws.param(schema.BY_PATH[('pseudonyms', 'enabled')], values) }}
+    <div class="box-line ws-param" id="ws-provisioning">
+        <span class="left"><span class="ws-label">{{ _('Platforms that open accounts for agents that discover them') }}</span>
+            <span class="ws-help">{{ _('When an agent discovers one of these platforms the platform creates its account on the fly. Any platform can be chosen; it is only useful with Discovery on. Platforms not chosen need the account to exist already.') }}</span>
+            <span class="ws-default">{{ _('Default') }}: {{ _('None') }}</span></span>
+        <span class="right ws-checks">
+            <input type="hidden" name="provisioning_present" value="1">
+            {% for m in schema.PROVISIONABLE %}
+            <label class="ws-check"><input type="checkbox" name="provisioning_members" value="{{ m }}" {{ 'checked' if m in values['provisioning_members'] }}> {{ _(platform_labels[m]) }}</label>
+            {% endfor %}
+        </span>
+    </div>
+</div>
+{% endcall %}
+
+{% call ws.section('frontends', _('Web interface of the members'), _('Open the web interface of the member experiments from the World Simulation, without activating each experiment by hand.'), next_step()|trim) %}
+<div class="box-lines">
+    {{ ws.param(schema.BY_PATH[('frontends', 'activate_on_start')], values) }}
+</div>
+{% endcall %}
+
+{% call ws.section('humans', _('People'), _('People take part with one account on each platform they are enrolled in. They stay outside the rules that apply to agents.'), next_step()|trim) %}
+{% if mode == 'new' %}
+<p class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('People are enrolled after the World Simulation has been created, also while it runs.') }}</p>
+{% else %}
+<p class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('Enrol and remove people in the Participants box.') }}</p>
+{% endif %}
+{% endcall %}
+
+<details class="ws-advanced" id="ws-advanced-section">
+    <summary class="ys-accordion-header"><i class="mdi mdi-chevron-right"></i> {{ _('Advanced: stored parameters and generated file') }}</summary>
+    <div class="ys-content-panel">
+        {% if mode == 'edit' %}
+        <p class="ws-help">{{ _('Parameters stored with this World Simulation that this form does not show. They are kept as they are when you save.') }}</p>
+        {% if unknown %}
+        <ul class="ws-unknown" id="ws-unknown">{% for name in unknown %}<li><code>{{ name }}</code></li>{% endfor %}</ul>
+        {% else %}<p class="empty-state">{{ _('None.') }}</p>{% endif %}
+        <p class="ws-help">{{ _('The configuration file the coordinator reads, as saved (read only). Save the form to refresh it.') }}</p>
+        <pre class="ws-preview" id="ws-config-preview">{{ config_preview }}</pre>
+        {% else %}
+        <p class="ws-help">{{ _('Every parameter is a field above. After creation this section shows the configuration file the coordinator reads.') }}</p>
+        {% endif %}
+    </div>
+</details>

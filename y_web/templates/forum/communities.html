@@ -1,0 +1,75 @@
+{% include "forum/header.html" %}
+
+<div class="view-wrapper">
+    <div id="main-feed" class="container">
+        <div id="profile-main" class="view-wrap is-headless">
+            <div class="columns forum-feed-layout">
+                <div class="column is-3 is-hidden-touch">
+                    {% include "forum/components/sidebar.html" %}
+                </div>
+                <div class="column is-9-tablet is-9-desktop">
+                    <section class="fr-directory" id="fr-directory" data-exp-id="{{ exp_id }}" data-scope="{{ scope }}" data-query="{{ initial_query }}"
+                             data-i18n='{{ {
+                                "posts": _("posts"), "participants": _("participants"), "joined": _("Joined"),
+                                "empty": _("No communities match your search."), "count": _("communities"),
+                                "emptyMine": _("You have not joined any community yet."),
+                                "error": _("Unable to load the communities right now.")
+                             }|tojson }}'>
+                        <header class="fr-directory-head">
+                            <h1>{{ _('Communities') }}</h1>
+                            <button type="button" class="fr-create-community-button" data-fr-create-community><i class="mdi mdi-plus" aria-hidden="true"></i> {{ _('Create community') }}</button>
+                        </header>
+                        <div class="fr-directory-tabs" role="tablist">
+                            <button type="button" role="tab" data-scope="all" class="fr-directory-tab{% if scope != 'mine' %} is-active{% endif %}">{{ _('All communities') }}</button>
+                            <button type="button" role="tab" data-scope="mine" class="fr-directory-tab{% if scope == 'mine' %} is-active{% endif %}">{{ _('My Communities') }}</button>
+                        </div>
+                        <div class="fr-directory-tools">
+                            <label class="fr-modal-search fr-directory-search">
+                                <i class="mdi mdi-magnify" aria-hidden="true"></i>
+                                <input type="search" id="fr-directory-search" value="{{ initial_query }}" placeholder="{{ _('Search communities') }}" autocomplete="off"/>
+                            </label>
+                            <select id="fr-directory-sort" aria-label="{{ _('Sort by') }}">
+                                <option value="az">{{ _('A-Z') }}</option>
+                                <option value="active">{{ _('Most active') }}</option>
+                                <option value="joined">{{ _('Joined first') }}</option>
+                            </select>
+                            <select id="fr-directory-kind" aria-label="{{ _('Type') }}">
+                                <option value="all">{{ _('All types') }}</option>
+                                <option value="topic">{{ _('Topics') }}</option>
+                                <option value="subreddit">{{ _('Subreddits') }}</option>
+                            </select>
+                        </div>
+                        <p class="fr-directory-count" id="fr-directory-count" aria-live="polite"></p>
+                        <div id="fr-directory-list" class="fr-directory-list"></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script>
+window.redditContext = Object.freeze({
+    loggedUserId: {{ logged_id|tojson }},
+    isAdmin: {{ 'true' if is_admin else 'false' }},
+    loggedUsername: {{ logged_username|tojson }}
+});
+window.redditFeedConfig = Object.freeze({
+    expId: {{ exp_id }},
+    loggedUserId: {{ logged_id|tojson }},
+    viewMode: "communities"
+});
+</script>
+<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-communities.js') }}"></script>
+{% include "shared/plugin_loader.html" %}
+</body>
+</html>

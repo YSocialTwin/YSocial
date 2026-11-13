@@ -18,6 +18,8 @@ from y_web.src.content.text_utils import (
 from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.experiment.context import get_current_experiment_id
 from y_web.src.forum.hot_rank import rank_posts_longtail
+from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.forum.service.data_classes import (
     ArticlePreview,
     FeedPage,
@@ -54,6 +56,7 @@ from y_web.src.models import (
     Reactions,
     Reported,
     Rounds,
+    User_interest,
     User_mgmt,
     Websites,
 )
@@ -68,7 +71,7 @@ def _order_by_simulation_time_desc(query):
     """Order posts by simulation day/hour descending with stable fallback."""
     return query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
         _simulation_time_index_expr().desc(),
-        Post.id.desc(),
+        seq_or_id(Post).desc(),
     )
 
 
@@ -101,7 +104,7 @@ def _community_entry(slug: str, kind: str) -> Dict[str, str]:
 def _build_root_post_community_map(
     root_ids: List[int],
 ) -> Dict[int, List[Dict[str, str]]]:
-    normalized_root_ids = [int(root_id) for root_id in root_ids if root_id]
+    normalized_root_ids = [opaque_id(root_id) for root_id in root_ids if root_id]
     if not normalized_root_ids:
         return {}
 
@@ -134,13 +137,13 @@ def _build_root_post_community_map(
         slug = _normalize_sidebar_slug(row.topic_slug or "")
         if not slug:
             continue
-        topic_map.setdefault(int(row.post_id), [])
-        if slug not in topic_map[int(row.post_id)]:
-            topic_map[int(row.post_id)].append(slug)
+        topic_map.setdefault(opaque_id(row.post_id), [])
+        if slug not in topic_map[opaque_id(row.post_id)]:
+            topic_map[opaque_id(row.post_id)].append(slug)
 
     root_map: Dict[int, List[Dict[str, str]]] = {}
     for row in root_rows:
-        post_id = int(row.post_id)
+        post_id = opaque_id(row.post_id)
         subreddit_slug = _subreddit_slug_from_sources(
             row.website_rss or "",
             row.article_link or "",
@@ -163,7 +166,9 @@ def _collect_ranked_communities_from_post_rows(
     ordered_root_ids: List[int] = []
     seen_roots: set[int] = set()
     for row in post_rows:
-        root_id = int(getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0)
+        root_id = opaque_id(
+            getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0
+        )
         if not root_id or root_id in seen_roots:
             continue
         seen_roots.add(root_id)
@@ -210,6 +215,40 @@ def _primary_community_payload(
     return None
 
 
+def _shared_from_with_community(post):
+    """``_shared_from`` whose community is resolved like the community of any post (subreddit of the article or image,
+    else the first topic), so a cross-post always names the community it was copied from.
+    """
+    origin = _shared_from(post)
+    if not origin or origin == -1:
+        return origin
+    try:
+        mapped = _build_root_post_community_map([origin[0]]).get(origin[0]) or []
+        if mapped:
+            return (origin[0], origin[1], mapped[0]["slug"])
+        source = db.session.get(Post, origin[0])
+        if source is None:
+            return origin
+        article_row = (
+            db.session.scalars(select(Articles).filter_by(id=source.news_id)).first()
+            if source.news_id
+            else None
+        )
+        article = _resolve_article(article_row)
+        image = _resolve_image_post(
+            getattr(source, "image_post_id", None)
+        ) or _resolve_image(source.image_id)
+        if not image and article and article.image:
+            image = article.image
+        entry = _primary_community_payload(
+            article, get_topics(source.id, source.user_id), image
+        )
+        slug = (entry or {}).get("slug") or ""
+    except Exception:  # noqa: BLE001 - keep the community found by _shared_from
+        slug = ""
+    return (origin[0], origin[1], slug or origin[2])
+
+
 def _apply_community_filter(base_query, community_slug: Optional[str]):
     slug = str(community_slug or "").strip().lower()
     if not slug:
@@ -251,7 +290,7 @@ def _apply_community_filter(base_query, community_slug: Optional[str]):
 def _fetch_viewer_report_map(
     viewer_id: Optional[int], post_ids: List[int]
 ) -> Dict[int, bool]:
-    normalized_ids = [int(pid) for pid in post_ids if pid]
+    normalized_ids = [opaque_id(pid) for pid in post_ids if pid]
     if not viewer_id or not normalized_ids:
         return {}
     rows = (
@@ -260,11 +299,11 @@ def _fetch_viewer_report_map(
         .distinct()
         .all()
     )
-    return {int(row[0]): True for row in rows if row and row[0] is not None}
+    return {opaque_id(row[0]): True for row in rows if row and row[0] is not None}
 
 
 def _fetch_report_count_map(post_ids: List[int]) -> Dict[int, int]:
-    normalized_ids = [int(pid) for pid in post_ids if pid]
+    normalized_ids = [opaque_id(pid) for pid in post_ids if pid]
     if not normalized_ids:
         return {}
     rows = (
@@ -274,7 +313,7 @@ def _fetch_report_count_map(post_ids: List[int]) -> Dict[int, int]:
         .all()
     )
     return {
-        int(row[0]): int(row[1])
+        opaque_id(row[0]): int(row[1])
         for row in rows
         if row and row[0] is not None and row[1] is not None
     }
@@ -341,18 +380,112 @@ def fetch_available_communities() -> List[Dict[str, str]]:
         seen.add(slug)
         communities.append({"slug": slug, "label": f"y/{slug}", "kind": "topic"})
 
+    # communities the logged-in person joined or created (a new community has no post yet, so it is not listed above)
+    try:
+        from flask_login import current_user
+
+        username = getattr(current_user, "username", "") if current_user else ""
+        member = (
+            db.session.query(User_mgmt.id).filter_by(username=username).scalar()
+            if username
+            else None
+        )
+        if member:
+            joined = (
+                db.session.query(func.lower(Interests.interest).label("slug"))
+                .join(User_interest, User_interest.interest_id == Interests.iid)
+                .filter(User_interest.user_id == member, Interests.interest != "")
+                .distinct()
+                .order_by(text("slug asc"))
+                .all()
+            )
+            for row in joined:
+                slug = str(row.slug or "").strip().lower()
+                if slug and slug not in seen:
+                    seen.add(slug)
+                    communities.append(
+                        {"slug": slug, "label": f"y/{slug}", "kind": "topic"}
+                    )
+    except (
+        Exception
+    ):  # noqa: BLE001 - the list degrades to the communities that have posts
+        pass
+
     return communities
+
+
+def fetch_community_stats(community_slug: Optional[str]) -> Dict[str, int]:
+    """Counts shown in the side card of a community: posts, comments, participants and the first emotions.
+
+    Posts are the thread roots the community filter selects; comments are the replies in those threads; participants
+    are the distinct authors of both. Empty when the community has no post."""
+    slug = str(community_slug or "").strip().lower()
+    empty = {"posts": 0, "comments": 0, "participants": 0}
+    if not slug:
+        return empty
+    roots = _apply_community_filter(
+        db.session.query(Post.id).filter(_root_post_filter(Post.comment_to)), slug
+    )
+    root_ids = [row[0] for row in roots.all()]
+    if not root_ids:
+        return empty
+    in_threads = or_(Post.thread_id.in_(root_ids), Post.id.in_(root_ids))
+    comment_count = (
+        db.session.query(func.count(Post.id))
+        .filter(Post.thread_id.in_(root_ids), Post.id.notin_(root_ids))
+        .scalar()
+    )
+    participants = (
+        db.session.query(func.count(func.distinct(Post.user_id)))
+        .filter(in_threads)
+        .scalar()
+    )
+    return {
+        "posts": len(root_ids),
+        "comments": int(comment_count or 0),
+        "participants": int(participants or 0),
+    }
 
 
 def fetch_recent_active_communities(limit: int = 8) -> List[Dict[str, str]]:
     recent_posts = (
         db.session.query(Post.id, Post.thread_id)
         .outerjoin(Rounds, Post.round == Rounds.id)
-        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
+        .order_by(_simulation_time_index_expr().desc(), seq_or_id(Post).desc())
         .limit(max(limit * 12, 96))
         .all()
     )
-    return _collect_ranked_communities_from_post_rows(recent_posts, limit)
+    ranked = _collect_ranked_communities_from_post_rows(recent_posts, limit)
+    # communities created by people have no post yet: the newest ones are listed too, so they can be found and joined
+    fresh = _fetch_new_empty_communities(exclude={c.get("slug") for c in ranked})
+    return (fresh + ranked)[:limit]
+
+
+def _fetch_new_empty_communities(exclude=None, limit: int = 3) -> List[Dict[str, str]]:
+    """Newest communities (``Interests``) that no post is tagged with yet."""
+    exclude = {str(x).lower() for x in (exclude or set())}
+    try:
+        rows = (
+            db.session.query(
+                Interests.iid, func.lower(Interests.interest).label("slug")
+            )
+            .outerjoin(Post_topics, Post_topics.topic_id == Interests.iid)
+            .filter(Post_topics.id.is_(None), Interests.interest != "")
+            .order_by(Interests.iid.desc())
+            .limit(limit * 4)
+            .all()
+        )
+    except Exception:  # noqa: BLE001 - the list degrades to the active communities
+        return []
+    out: List[Dict[str, str]] = []
+    for row in rows:
+        slug = str(row.slug or "").strip().lower()
+        if slug and slug not in exclude:
+            exclude.add(slug)
+            out.append({"slug": slug, "label": f"y/{slug}", "kind": "topic"})
+        if len(out) >= limit:
+            break
+    return out
 
 
 def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]:
@@ -360,13 +493,34 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
         return []
     user_posts = (
         db.session.query(Post.id, Post.thread_id)
-        .filter(Post.user_id == int(user_id))
+        .filter(Post.user_id == opaque_id(user_id))
         .outerjoin(Rounds, Post.round == Rounds.id)
-        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
+        .order_by(_simulation_time_index_expr().desc(), seq_or_id(Post).desc())
         .limit(max(limit * 12, 96))
         .all()
     )
-    return _collect_ranked_communities_from_post_rows(user_posts, limit)
+    ranked = _collect_ranked_communities_from_post_rows(user_posts, limit)
+    try:
+        joined = (
+            db.session.query(func.lower(Interests.interest).label("slug"))
+            .join(User_interest, User_interest.interest_id == Interests.iid)
+            .filter(
+                User_interest.user_id == opaque_id(user_id), Interests.interest != ""
+            )
+            .order_by(User_interest.id.desc())
+            .all()
+        )
+    except Exception:  # noqa: BLE001 - the list degrades to the communities with posts
+        return ranked
+    seen = {c.get("slug") for c in ranked}
+    member = []
+    for row in joined:
+        slug = str(row.slug or "").strip().lower()
+        if slug and slug not in seen:
+            seen.add(slug)
+            member.append({"slug": slug, "label": f"y/{slug}", "kind": "member"})
+    # communities the user created or joined come first: they may have no post yet
+    return (member + ranked)[:limit]
 
 
 def _reaction_aggregates_subquery():
@@ -411,7 +565,7 @@ def _viewer_vote_subquery(viewer_id: int):
     # get latest reaction per post for viewer
     latest_ids = (
         db.session.query(
-            func.max(Reactions.id).label("latest_id"),
+            func.max(seq_or_id(Reactions)).label("latest_id"),
             Reactions.post_id.label("post_id"),
         )
         .filter(Reactions.user_id == viewer_id)
@@ -422,7 +576,7 @@ def _viewer_vote_subquery(viewer_id: int):
     rv = aliased(Reactions)
     return (
         db.session.query(rv.post_id.label("post_id"), rv.type.label("vote_type"))
-        .join(latest_ids, latest_ids.c.latest_id == rv.id)
+        .join(latest_ids, latest_ids.c.latest_id == seq_or_id(rv))
         .subquery()
     )
 
@@ -519,7 +673,7 @@ def _build_comment_payload(
     comments_list = (
         db.session.query(Post)
         .filter(Post.thread_id == post.id, Post.id != post.id)
-        .order_by(Post.id.asc())
+        .order_by(seq_or_id(Post).asc())
         .all()
     )
 
@@ -668,7 +822,7 @@ def _create_feed_post(
     )
     if not image and article and article.image:
         image = article.image
-    shared_from = _shared_from(post)
+    shared_from = _shared_from_with_community(post)
 
     emotions = get_elicited_emotions(post.id)
     topics = get_topics(post.id, post.user_id)
@@ -784,7 +938,7 @@ def build_user_feed_posts(
             _root_post_filter(Post.comment_to),
         )
         .outerjoin(Rounds, Post.round == Rounds.id)
-        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
+        .order_by(_simulation_time_index_expr().desc(), seq_or_id(Post).desc())
         .limit(per_page)
         .all()
     )
@@ -802,7 +956,7 @@ def build_user_feed_posts(
         else []
     )
     post_time_idx = {
-        int(pid): (int(day) if day is not None else -1) * 24
+        opaque_id(pid): (int(day) if day is not None else -1) * 24
         + (int(hour) if hour is not None else -1)
         for pid, day, hour in time_map_rows
     }
@@ -902,7 +1056,7 @@ def fetch_feed_page(
             .order_by(
                 score_expr.desc(),
                 _simulation_time_index_expr().desc(),
-                Post.id.desc(),
+                seq_or_id(Post).desc(),
             )
         )
     elif feed_type == "hot":
@@ -952,7 +1106,7 @@ def fetch_feed_page(
             candidates = (
                 base_query.outerjoin(reaction_sub, reaction_sub.c.post_id == Post.id)
                 .outerjoin(Rounds, Post.round == Rounds.id)
-                .order_by(hot_score.desc(), sim_time_idx.desc(), Post.id.desc())
+                .order_by(hot_score.desc(), sim_time_idx.desc(), seq_or_id(Post).desc())
                 .limit(limit)
                 .all()
             )
@@ -972,7 +1126,7 @@ def fetch_feed_page(
                 .all()
             )
             post_time_map = {
-                int(pid): (int(day) if day is not None else -1) * 24
+                opaque_id(pid): (int(day) if day is not None else -1) * 24
                 + (int(hour) if hour is not None else -1)
                 for pid, day, hour in post_time_rows
             }
@@ -1008,7 +1162,7 @@ def fetch_feed_page(
             .order_by(
                 hot_score.desc(),
                 sim_time_idx.desc(),
-                Post.id.desc(),
+                seq_or_id(Post).desc(),
             )
         )
     elif feed_type == "most_commented":
@@ -1020,7 +1174,7 @@ def fetch_feed_page(
             .order_by(
                 comment_expr.desc(),
                 _simulation_time_index_expr().desc(),
-                Post.id.desc(),
+                seq_or_id(Post).desc(),
             )
         )
     else:
@@ -1118,7 +1272,7 @@ def _post_with_aggregates(
         "post": processed_body,
         "profile_pic": profile_pic,
         "image": image_obj,
-        "shared_from": _shared_from(post),
+        "shared_from": _shared_from_with_community(post),
         "post_id": post.id,
         "author": author.username if author else "",
         "author_id": post.user_id,
@@ -1151,7 +1305,7 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
 
     thread_posts = (
         Post.query.filter_by(thread_id=post.thread_id or post.id)
-        .order_by(Post.id.asc())
+        .order_by(seq_or_id(Post).asc())
         .all()
     )
 
@@ -1198,3 +1352,40 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
 
     attach_children(root_id)
     return post_payloads[root_id]
+
+
+def fetch_community_directory(user_id, scope: str = "all") -> List[Dict[str, Any]]:
+    """Every community (with posts, or created and still empty) for the communities page.
+
+    ``scope="mine"`` keeps the ones the user joined or posted in. Each entry carries ``slug``, ``label``, ``kind``,
+    ``posts``, ``comments``, ``participants`` and ``joined``."""
+    found: Dict[str, Dict[str, Any]] = {}
+    for entry in fetch_available_communities():
+        slug = str(entry.get("slug") or "").lower()
+        if slug:
+            found[slug] = {
+                "slug": slug,
+                "label": f"y/{slug}",
+                "kind": entry.get("kind") or "topic",
+            }
+    try:
+        for row in db.session.query(func.lower(Interests.interest)).distinct().all():
+            slug = str(row[0] or "").strip().lower()
+            if slug and slug not in found:
+                found[slug] = {"slug": slug, "label": f"y/{slug}", "kind": "topic"}
+    except Exception:  # noqa: BLE001 - only the communities that have posts
+        pass
+    mine = {c.get("slug") for c in fetch_user_communities(user_id, limit=1000)}
+    out = []
+    for slug, entry in found.items():
+        entry["joined"] = slug in mine
+        if scope == "mine" and not entry["joined"]:
+            continue
+        stats = fetch_community_stats(slug)
+        entry.update(
+            posts=stats.get("posts", 0),
+            comments=stats.get("comments", 0),
+            participants=stats.get("participants", 0),
+        )
+        out.append(entry)
+    return out

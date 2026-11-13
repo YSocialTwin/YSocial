@@ -1,0 +1,71 @@
+{# One World Simulation card of the admin home page. ``c``: a card of ``dashboard_card`` (also the polling answer). #}
+<div class="box-content ws-dash-card {{ c.state_class }}" id="ws-dash-card-{{ c.id }}" data-fed-id="{{ c.id }}" data-state="{{ c.state }}">
+    <div class="ws-dash-head">
+        <span class="ws-dash-title">
+            <i class="mdi mdi-earth ws-dash-icon"></i>
+            <a class="ws-dash-name" href="{{ c.detail_url }}" title="{{ c.name }}">{{ c.name }}</a>
+            <span class="ws-dash-pill {{ c.state_class }}">{{ c.state_label }}</span>
+        </span>
+        <span class="ws-dash-actions">
+            {% if c.state in ('stopped', 'completed', 'failed') %}
+            <form method="post" action="{{ url_for('world_simulation.command_start', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
+                <button class="button is-small is-solid green-button" type="submit" title="{{ _('Start') }}"><i class="mdi mdi-play"></i> <span>{{ _('Start') }}</span></button></form>
+            {% elif c.state == 'running' %}
+            <form method="post" action="{{ url_for('world_simulation.command_pause', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
+                <button class="button is-small is-light" type="submit" title="{{ _('Pause') }}"><i class="mdi mdi-pause"></i> <span>{{ _('Pause') }}</span></button></form>
+            {% elif c.state == 'paused' %}
+            <form method="post" action="{{ url_for('world_simulation.command_resume', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
+                <button class="button is-small is-solid green-button" type="submit" title="{{ _('Resume') }}"><i class="mdi mdi-play"></i> <span>{{ _('Resume') }}</span></button></form>
+            {% endif %}
+            {% if c.state in ('running', 'paused', 'starting') %}
+            <form method="post" action="{{ url_for('world_simulation.command_stop', fed_id=c.id) }}" data-confirm="{{ _('Stop this World Simulation? Every member experiment stops with it.') }}"><input type="hidden" name="next" value="dashboard">
+                <button class="button is-small is-solid orange-button" type="submit" title="{{ _('Stop') }}"><i class="mdi mdi-stop"></i> <span>{{ _('Stop') }}</span></button></form>
+            {% endif %}
+            <form method="post" action="{{ url_for('world_simulation.frontends_activate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
+                <button class="button is-small is-light" type="submit" title="{{ _('Activate frontends') }}"><i class="mdi mdi-monitor-dashboard"></i> <span>{{ _('Activate frontends') }}</span></button></form>
+            <form method="post" action="{{ url_for('world_simulation.frontends_deactivate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
+                <button class="button is-small is-light" type="submit" title="{{ _('Deactivate frontends') }}"><i class="mdi mdi-monitor-off"></i> <span>{{ _('Deactivate frontends') }}</span></button></form>
+            <a class="button is-small is-light" href="{{ c.detail_url }}" title="{{ _('Details') }}"><i class="mdi mdi-open-in-new"></i> <span>{{ _('Details') }}</span></a>
+        </span>
+    </div>
+
+    {% if c.state in ('running', 'paused', 'starting', 'stopping', 'completed') %}
+    <div class="ws-dash-progress">
+        <div class="sleek-progress-container ws-dash-bar" title="{{ c.progress.text }}">
+            <div class="sleek-progress-bar" style="width: {{ c.progress.percent or 0 }}%;" {# dynamic #}><span class="ys-badge-text">{{ (c.progress.percent ~ '%') if c.progress.percent is not none else '' }}</span></div>
+        </div>
+        <span class="ws-sub ws-dash-progress-text">
+            {% if c.progress.text %}{{ c.progress.text }}{% elif c.state == 'starting' %}{{ _('Starting') }}{% endif %}
+            {% if c.day is not none %}<span class="ws-dash-dayslot" title="{{ _('Day / slot') }}">{{ _('Day / slot') }}: {{ c.day }} / {{ c.slot }}</span>{% endif %}
+        </span>
+    </div>
+    {% endif %}
+
+    {% if c.coordinator_down %}
+    <div class="notification is-danger is-light ws-banner ws-dash-banner" role="alert">{{ _('The coordinator does not answer: the members cannot advance.') }} <a href="{{ c.detail_url }}#execution">{{ _('Details') }}</a></div>
+    {% endif %}
+    {% if c.problems %}
+    <div class="notification is-warning is-light ws-banner ws-dash-banner" role="alert">
+        <b>{{ _('Some members need attention') }}</b>
+        <ul>
+            {% for p in c.problems %}<li><b>{{ p.label }}</b> {{ p.text }}{% if p.cause %}. {{ p.cause }}{% endif %}</li>{% endfor %}
+        </ul>
+        <a href="{{ c.detail_url }}#execution">{{ _('See the details') }}{% if c.problems_total > c.problems|length %} (+{{ c.problems_total - c.problems|length }}){% endif %}</a>
+    </div>
+    {% endif %}
+
+    <div class="ws-dash-members">
+        {% for m in c.members %}
+        <div class="ws-dash-member" data-member="{{ m.member }}">
+            <span class="ws-dash-member-name"><i class="mdi {{ m.icon }}" title="{{ m.platform }}"></i> <span title="{{ m.name }}">{{ m.name }}</span></span>
+            <span class="ws-dash-member-state">
+                <span class="ws-dash-pill {{ m.badge.class }}">{{ m.badge.text }}</span>
+                {% if m.frontend_active %}<span class="ws-dash-fe is-active" title="{{ _('Web interface') }}: {{ _('Active') }}"><i class="mdi mdi-monitor-dashboard"></i></span>
+                {% else %}<span class="ws-dash-fe" title="{{ _('Web interface') }}: {{ _('Inactive') }}"><i class="mdi mdi-monitor-off"></i></span>{% endif %}
+                {% if m.url %}<a class="ws-dash-open" href="{{ m.url }}" target="_blank" rel="noopener" title="{{ _('Open') }}"><i class="mdi mdi-open-in-new"></i> {{ _('Open') }}</a>{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+        {% if c.members_more %}<div class="ws-sub"><a href="{{ c.detail_url }}">{{ _('%(n)s more members', n=c.members_more) }}</a></div>{% endif %}
+    </div>
+</div>

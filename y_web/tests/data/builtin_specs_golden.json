@@ -141,7 +141,7 @@
     "group_label": "HPC",
     "category": "simulation_runtimes",
     "category_label": "Simulation Runtime Stack",
-    "label": "YSimulator",
+    "label": "YMicroblogging",
     "path": "YSimulator",
     "github_repo": "YSocialTwin/YSimulator",
     "repo_url": "https://github.com/YSocialTwin/YSimulator.git",
@@ -165,7 +165,7 @@
     "visible_to_usernames": [],
     "trust": "official",
     "source": "builtin",
-    "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
+    "description": "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters.",
     "authors": [],
     "min_ysocial_version": null
   },
@@ -201,6 +201,136 @@
     "trust": "official",
     "source": "builtin",
     "description": "Simulation runtime for photo-sharing experiments, with an Instagram-like platform.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
+    "key": "instant_messaging",
+    "group": "instant_messaging",
+    "group_label": "Instant Messaging",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YInstantMessaging",
+    "path": "YInstantMessaging",
+    "github_repo": "YSocialTwin/YInstantMessaging",
+    "repo_url": "https://github.com/YSocialTwin/YInstantMessaging.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "yinstantmessaging",
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Simulation runtime for instant-messaging experiments, with Telegram-like chats, groups, channels and forum topics.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
+    "key": "dating",
+    "group": "dating",
+    "group_label": "Dating",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YDating",
+    "path": "YDating",
+    "github_repo": "YSocialTwin/YDating",
+    "repo_url": "https://github.com/YSocialTwin/YDating.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "YDating",
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Simulation runtime for Tinder-like dating experiments: profiles, swipes, mutual matches, private conversations and interchangeable matching recommenders.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
+    "key": "forum_hpc",
+    "group": "hpc",
+    "group_label": "HPC",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YForum",
+    "path": "YForum",
+    "github_repo": "YSocialTwin/YForum",
+    "repo_url": "https://github.com/YSocialTwin/YForum.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "YForum",
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
+    "authors": [],
+    "min_ysocial_version": null
+  },
+  {
+    "key": "federation",
+    "group": "federation",
+    "group_label": "World Simulation",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YFederation",
+    "path": "YFederation",
+    "github_repo": "YSocialTwin/YFederation",
+    "repo_url": "https://github.com/YSocialTwin/YFederation.git",
+    "default_branch": "main",
+    "install_commands": [],
+    "validate_entrypoints": [
+      "pyproject.toml",
+      "ysocial_federation"
+    ],
+    "validate_import": null,
+    "is_private": true,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them.",
     "authors": [],
     "min_ysocial_version": null
   },

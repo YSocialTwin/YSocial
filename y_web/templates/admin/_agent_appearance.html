@@ -1,0 +1,91 @@
+{# Optional "Appearance" section of the agent form: how the agent looks and, with the toggle, its profile picture drawn
+   by a Stable Diffusion model. Independent of the platform; the same traits as the population form, one value each. #}
+{% set ad = appearance_defaults %}
+{% macro look(name, label, options, hint='') -%}
+<div class="box-line">
+    <span class="left">{{ label }}</span>
+    <span class="right ys-w-70">
+        <div class="select is-fullwidth">
+            <select name="appearance_{{ name }}">
+                <option value=""></option>
+                {% for option in options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}
+            </select>
+        </div>
+        {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}
+    </span>
+</div>
+{%- endmacro %}
+<fieldset id="appearance-agent-sections" class="ys-fieldset-reset" data-optional-section="appearance" disabled>
+    <div class="form-section-description">{{ _('Look of the agent. An attribute left empty is not assigned. The traits are stored with the agent and read by every platform that needs them (the Dating profile photos, for one).') }}</div>
+    {{ look('hair_color', _('Hair colour'), ad.appearance_options.hair_color) }}
+    {{ look('hair_length', _('Hair length'), ad.appearance_options.hair_length) }}
+    {{ look('hair_style', _('Hair style'), ad.appearance_options.hair_style) }}
+    {{ look('eye_color', _('Eye colour'), ad.appearance_options.eye_color) }}
+    {{ look('skin_tone', _('Skin tone'), ad.appearance_options.skin_tone) }}
+    {{ look('build', _('Build'), ad.appearance_options.build) }}
+    {{ look('facial_hair', _('Facial hair'), ad.appearance_options.facial_hair, _('Optional.')) }}
+    {{ look('distinctive_features', _('Distinctive features'), ad.appearance_options.distinctive_features, _('Optional.')) }}
+    {{ look('mood', _('Mood in photos'), ad.appearance_options.mood) }}
+    {{ look('photo_style', _('Photo style'), ad.appearance_options.photo_style) }}
+    <div class="box-line">
+        <span class="left">{{ _('Height (cm)') }}</span>
+        <span class="right ys-w-70"><input type="number" name="appearance_height_cm" class="input" min="100" max="250" step="1" placeholder="{{ ad.height[0] }}–{{ ad.height[1] }}"></span>
+    </div>
+    <div class="box-line">
+        <span class="left">{{ _('Wearing glasses') }}</span>
+        <span class="right ys-w-70">
+            <div class="select is-fullwidth"><select name="appearance_glasses"><option value=""></option><option value="yes">{{ _('Yes') }}</option><option value="no">{{ _('No') }}</option></select></div>
+        </span>
+    </div>
+
+    <div class="form-section-header ys-sub-header">{{ _('Profile picture') }}</div>
+    <label class="box-line ys-opt-head">
+        <span class="left">{{ _('Generate the profile picture') }}</span>
+        <span class="right ys-w-70">
+            <input type="checkbox" name="generate_profile_pictures" id="generate_profile_pictures" value="1">
+            <small class="ys-label-hint">{{ _('Off by default. The picture is drawn from the age, gender and appearance with a Stable Diffusion model, saved in the media folder and linked to the agent (it replaces the picture URL above). It runs in the background: the progress is shown in the notifications menu. The picture is deleted with the agent.') }}</small>
+        </span>
+    </label>
+    <div id="profile-pictures-config" class="d-none">
+        <fieldset class="ys-fieldset-reset" id="profile-pictures-fields" disabled>
+            <div class="box-line">
+                <span class="left">{{ _('Look of the photos') }}</span>
+                <span class="right ys-w-70">
+                    <select name="pictures_style" class="input">
+                        {% for style, label in (('photorealistic', _('Photorealistic human faces')), ('cartoon', _('Fantasy cartoon characters'))) %}
+                        <option value="{{ style }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+            </div>
+            <div class="box-line">
+                <span class="left">{{ _('Image generator') }}</span>
+                <span class="right ys-w-70">
+                    <select name="pictures_generator" class="input">
+                        <option value="diffusion" {% if not images_available %}disabled{% else %}selected{% endif %}>{{ _('Image model') }}</option>
+                        <option value="stub" {% if not images_available %}selected{% endif %}>{{ _('Placeholder') }}</option>
+                    </select>
+                    {% if not images_available %}<small class="ys-label-hint">{{ _('The packages of the image model (torch, diffusers) are not installed: only the placeholder can be used.') }}</small>{% endif %}
+                </span>
+            </div>
+            <div class="box-line">
+                <span class="left">{{ _('Image model (diffusion)') }}</span>
+                <span class="right ys-w-70">
+                    {% set known = ad.models|map(attribute=0)|list %}
+                    <div class="dating-diffusion">
+                        <div class="select is-fullwidth"><select data-diffusion-select>
+                            {% for m, label in ad.models %}<option value="{{ m }}" {% if m == ad.model %}selected{% endif %}>{{ _(label) }}</option>{% endfor %}
+                            <option value="__other__" {% if ad.model not in known %}selected{% endif %}>{{ _('Other (a Hugging Face model id)') }}</option>
+                        </select></div>
+                        <input type="text" class="input" name="pictures_model" value="{{ ad.model }}" data-diffusion-text {% if ad.model in known %}hidden{% endif %}>
+                    </div>
+                    <small class="ys-label-hint">{{ _('A Hugging Face diffusers model, downloaded on first use.') }}</small>
+                </span>
+            </div>
+            <div class="box-line">
+                <span class="left">{{ _('Denoising steps') }}</span>
+                <span class="right ys-w-70"><input type="number" name="pictures_steps" class="input" min="1" max="100" value="{{ ad.steps }}"></span>
+            </div>
+        </fieldset>
+    </div>
+</fieldset>

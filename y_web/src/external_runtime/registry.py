@@ -31,7 +31,21 @@ RUNTIME_TEXTS = (
     N_(
         "Simulation runtime for photo-sharing experiments, with an Instagram-like platform."
     ),
-    N_("Runs large-scale simulations in a distributed way on HPC clusters."),
+    N_(
+        "Simulation runtime for instant-messaging experiments, with Telegram-like chats, groups, channels and forum topics."
+    ),
+    N_(
+        "Simulation runtime for Tinder-like dating experiments: profiles, swipes, mutual matches, private conversations and interchangeable matching recommenders."
+    ),
+    N_(
+        "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters."
+    ),
+    N_(
+        "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters."
+    ),
+    N_(
+        "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them."
+    ),
     N_(
         "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
     ),
@@ -224,7 +238,10 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         "microblogging",
         "forum",
         "photo_sharing",
+        "instant_messaging",
+        "dating",
         "hpc",
+        "federation",
         "agent_plugins",
         "frontend_plugins",
         "backend_settings",

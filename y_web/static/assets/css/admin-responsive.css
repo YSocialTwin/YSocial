@@ -488,3 +488,9 @@
         display: block;
     }
 }
+
+/* Join Simulation menu: simulations grouped by platform type */
+.join-menu-group { display: flex; align-items: center; gap: 8px; padding: 8px 16px 4px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #6b7280; }
+.join-menu-group svg { width: 14px; height: 14px; }
+.join-menu-group .join-menu-count { margin-left: auto; font-weight: 600; background: #eef0f3; border-radius: 999px; padding: 0 7px; }
+.join-menu-item { padding-left: 38px; }

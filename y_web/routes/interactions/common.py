@@ -15,6 +15,7 @@ from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Follow,
     Mentions,
@@ -85,7 +86,9 @@ def _resolve_follow_round_id(exp_id):
                     round_row = (
                         session.query(Rounds)
                         .order_by(
-                            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+                            Rounds.day.desc(),
+                            Rounds.hour.desc(),
+                            seq_or_id(Rounds).desc(),
                         )
                         .first()
                     )
@@ -108,7 +111,7 @@ def _resolve_follow_round_id(exp_id):
     try:
         current_round = db.session.scalars(
             select(Rounds).order_by(
-                Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+                Rounds.day.desc(), Rounds.hour.desc(), seq_or_id(Rounds).desc()
             )
         ).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
@@ -213,7 +216,7 @@ def follow(exp_id, user_id, follower_id):
         )
         latest_follow = (
             query.filter_by(user_id=source_user_id, follower_id=user_id)
-            .order_by(Follow.id.desc())
+            .order_by(seq_or_id(Follow).desc())
             .first()
         )
         new_action = (
@@ -270,6 +273,32 @@ def follow(exp_id, user_id, follower_id):
             engine.dispose()
 
 
+@user.route("/<int:exp_id>/federation/crosspost_suggest")
+@login_required
+def federation_crosspost_suggest(exp_id):
+    """World Simulation (P7): the text the composer prefills for each destination (``{member: {text, limit}}``).
+
+    Query params: ``text`` (what the person wrote), ``crosspost`` (optional: only these members). Empty for a person who is
+    not enrolled. The server never trusts what the page sends back: ``crosspost_to`` is recomputed on publishing.
+    """
+    from y_web.src.federation import human_outbox as _ho
+
+    try:
+        members = _ho.requested_members(request.args.getlist("crosspost")) or None
+        return jsonify(
+            {
+                "texts": _ho.suggestions_for(
+                    exp_id,
+                    getattr(current_user, "id", None),
+                    request.args.get("text", ""),
+                    members,
+                )
+            }
+        )
+    except Exception:  # noqa: BLE001 - a composer never fails because of the federation
+        return jsonify({"texts": {}})
+
+
 @user.route("/<int:exp_id>/share_content")
 @login_required
 def share_content(exp_id):
@@ -298,6 +327,29 @@ def share_content(exp_id):
     exp_user_id = exp_user.id
 
     post_id = request.args.get("post_id")
+
+    # World Simulation (F8): an enrolled person who picked other platforms shares through the runtime gateway
+    from y_web.src.federation import human_outbox as _ho
+
+    _requested = _ho.requested_members(request.args.getlist("crosspost"))
+    if _requested and post_id:
+        _comment = request.args.get("comment") or ""
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _requested,
+            _comment,
+            lambda t: _ho.micro_share(post_id, _comment, t),
+            only="microblogging",
+        )
+        if _sent is not None:
+            if not _sent:
+                flash(_("The post could not be sent to the other platforms."), "error")
+            return (
+                ("", 204)
+                if _sent
+                else (redirect(request.referrer) if request.referrer else ("", 204))
+            )
 
     # Normalise post_id: Standard experiments use integer IDs, HPC experiments use UUID strings.
     # Try numeric conversion so SQLAlchemy can match the Integer column; keep as string for UUIDs.
@@ -573,3 +625,80 @@ def cancel_notification(exp_id):
         db.session.commit()
 
     return {"message": "Notification cancelled", "status": 200}
+
+
+@user.route("/<int:exp_id>/federation/repost_targets")
+@login_required
+def federation_repost_targets(exp_id):
+    """Other platforms of the World Simulation where the logged-in person is enrolled (``[]`` for everybody else): the
+    "Other platforms" section of the Repost menus on every platform."""
+    from y_web.src.federation import human_outbox as _ho
+
+    try:
+        return jsonify(
+            {
+                "platforms": _ho.destinations_for(
+                    exp_id, getattr(current_user, "id", None)
+                )
+            }
+        )
+    except Exception:  # noqa: BLE001 - a menu never fails because of the federation
+        return jsonify({"platforms": []})
+
+
+@user.route("/<int:exp_id>/federation/repost", methods=["POST"])
+@login_required
+def federation_repost(exp_id):
+    """Repost something of this platform on other platforms of the World Simulation as the logged-in person.
+
+    JSON: ``members`` (the destinations), ``post_id`` (the item reposted), ``text`` (its words) and, for the forum,
+    ``community``. The gateway only creates an item on the origin platform with ``crosspost_to``, so the repost also shows
+    on the person's profile here. The destinations are recomputed server side (never trusted from the page).
+    """
+    from y_web.src.federation import human_outbox as _ho
+    from y_web.src.models import Exps
+
+    payload = request.get_json(silent=True) or {}
+    members = _ho.requested_members(payload.get("members") or [])
+    ctx = _ho.context_for(exp_id, getattr(current_user, "id", None))
+    if ctx is None or not members:
+        return jsonify({"ok": False, "code": "not_enrolled"}), 400
+
+    text = str(payload.get("text") or "").strip()
+    post_id = payload.get("post_id")
+    if post_id is not None and ctx.platform_type in ("forum", "microblogging"):
+        try:
+            source = db.session.get(Post, int(post_id))
+        except (TypeError, ValueError):
+            source = None
+        if source is not None and source.tweet:
+            text = str(source.tweet).strip()
+    if text[:6].upper() == "TITLE:":
+        text = text[6:].strip()
+    if not text:
+        return jsonify({"ok": False, "code": "empty"}), 400
+
+    platform = ctx.platform_type
+    exp = db.session.get(Exps, int(exp_id))
+    if platform == "forum":
+        community = _ho.forum_community(exp, payload.get("community"))
+        build = lambda t: _ho.forum_post(text, t, community)  # noqa: E731
+    elif platform == "microblogging":
+        build = (  # noqa: E731
+            (lambda t: _ho.micro_share(post_id, text, t))
+            if post_id
+            else (lambda t: _ho.micro_post(text, t))
+        )
+    elif platform == "photo_sharing" and post_id:
+        build = lambda t: _ho.photo_share(post_id, text, t)  # noqa: E731
+    elif platform == "instant_messaging":
+        build = lambda t: _ho.im_action("post", t, text=text)  # noqa: E731
+    else:
+        return jsonify({"ok": False, "code": "unsupported"}), 400
+
+    sent = _ho.try_deliver(exp_id, current_user, members, text, build)
+    if sent is None:
+        return jsonify({"ok": False, "code": "no_destination"}), 400
+    if not sent:
+        return jsonify({"ok": False, "code": "gateway"}), 502
+    return jsonify({"ok": True, "members": members})

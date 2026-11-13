@@ -38,12 +38,14 @@ from sqlalchemy import func, select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -217,7 +219,20 @@ def _build_single_experiment_zip(eid, output_zip_path):
     )
     if os.path.exists(f"{output_base}.zip"):
         os.remove(f"{output_base}.zip")
-    shutil.make_archive(output_base, "zip", folder)
+    if is_im_experiment(experiment) or is_dating_experiment(experiment):
+        if is_dating_experiment(experiment):
+            from y_web.src.dating.clone import snapshot_for_download
+        else:
+            from y_web.src.im.clone import snapshot_for_download
+
+        staging = f"{output_base}_im_snapshot"
+        try:
+            snapshot_for_download(folder, staging)
+            shutil.make_archive(output_base, "zip", staging)
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
+    else:
+        shutil.make_archive(output_base, "zip", folder)
 
     safe_exp_name = _sanitize_filename(experiment.exp_name, f"experiment_{eid}")
     return f"{safe_exp_name}.zip"
@@ -261,7 +276,20 @@ def _build_bulk_experiments_zip(exp_ids, output_zip_path):
             used_names.add(safe_exp_name)
 
             exp_zip_path = os.path.join(bulk_download_dir, safe_exp_name)
-            shutil.make_archive(exp_zip_path, "zip", folder)
+            if is_im_experiment(experiment) or is_dating_experiment(experiment):
+                if is_dating_experiment(experiment):
+                    from y_web.src.dating.clone import snapshot_for_download
+                else:
+                    from y_web.src.im.clone import snapshot_for_download
+
+                staging = f"{exp_zip_path}_im_snapshot"
+                try:
+                    snapshot_for_download(folder, staging)
+                    shutil.make_archive(exp_zip_path, "zip", staging)
+                finally:
+                    shutil.rmtree(staging, ignore_errors=True)
+            else:
+                shutil.make_archive(exp_zip_path, "zip", folder)
 
         output_base = (
             output_zip_path[:-4]

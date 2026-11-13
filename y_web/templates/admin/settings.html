@@ -101,7 +101,9 @@
                                                 <select id="platform_type_select" name="platform_type" class="w-100">
                                                     <option value="microblogging">{{ _('Microblogging (i.e., X/BlueSky)') }}</option>
                                                     <option value="photo_sharing" {% if not repo_availability.photo_sharing %}disabled{% endif %}>{{ _('Photo Sharing (e.g., Instagram)') }}{% if not repo_availability.photo_sharing %} - {{ _('Unavailable') }}{% endif %}</option>
-                                                    <option value="forum" {% if not repo_availability.forum %}disabled{% endif %}>{{ _('Forum (i.e., Reddit)') }}{% if not repo_availability.forum %} - {{ _('Unavailable') }}{% endif %}</option>
+                                                    <option value="instant_messaging" {% if not repo_availability.instant_messaging %}disabled{% endif %}>{{ _('Instant Messaging (e.g., Telegram)') }}{% if not repo_availability.instant_messaging %} - {{ _('Unavailable') }}{% endif %}</option>
+                                                    <option value="dating" {% if not repo_availability.dating %}disabled{% endif %}>{{ _('Dating (swipe-based matching)') }}{% if not repo_availability.dating %} - {{ _('Unavailable') }}{% endif %}</option>
+                                                    <option value="forum" {% if not (repo_availability.forum or repo_availability.forum_hpc) %}disabled{% endif %}>{{ _('Forum (i.e., Reddit)') }}{% if not (repo_availability.forum or repo_availability.forum_hpc) %} - {{ _('Unavailable') }}{% endif %}</option>
                                                 </select>
                                             </div>
                                             <div id="hpc-toggle-container" style="display: flex; align-items: center; gap: 8px; min-width: 140px; flex-shrink: 0;">
@@ -165,14 +167,14 @@
                                         </span>
                                     </div>
 
-                                    <div class="box-line">
+                                    <div class="box-line" id="simulation-topics-box">
                                         <span class="left">{{ _('Simulation Topics') }}</span>
  <span class="right ys-w-70">
 
  <div class="tags-input w-100">
                                             <ul id="tags"></ul>
                                             <input type="hidden" id="tags-hidden" name="tags">
- <input type="text" id="input-tag" placeholder="{{ _('Enter topic name') }}" class="w-100"/>
+ <input type="text" id="input-tag" name="topic_input" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" readonly onfocus="this.removeAttribute('readonly')" placeholder="{{ _('Enter topic name') }}" class="w-100"/>
                                         </div>
                                         
                                         <!-- Numeric input for number of topics when LLM agents are disabled -->

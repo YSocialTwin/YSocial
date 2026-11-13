@@ -16,6 +16,8 @@ from werkzeug.utils import safe_join
 
 from y_web import db, prompt_store
 from y_web.src.data_access import get_elicited_emotions, get_topics
+from y_web.src.forum.ids import opaque_id
+from y_web.src.forum.ordering import seq_or_id
 from y_web.src.system import prompt_packs
 
 try:
@@ -54,7 +56,9 @@ from y_web.routes.social.helpers import _experiment_memory_enabled
 from y_web.src.forum.actions import (
     apply_vote,
     create_comment_reddit,
+    create_community,
     create_post_reddit,
+    crosspost_reddit,
 )
 from y_web.src.forum.service import (
     _format_display_time,
@@ -122,30 +126,40 @@ def _forum_chat_owner_user() -> User_mgmt | None:
     ).first()
 
 
+def _opaque_payload_id(value):
+    """An id sent by the page: integer for standard experiments, UUID string for HPC ones (``None`` if unusable)."""
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, str)):
+        value = opaque_id(value)
+        return value if value not in ("", None) else None
+    return None
+
+
 def _forum_viewer_id() -> int:
     viewer = db.session.scalars(
         select(User_mgmt).filter_by(
             username=getattr(current_user, "username", "") or ""
         )
     ).first()
-    return int(viewer.id) if viewer is not None else int(current_user.id)
+    return opaque_id(viewer.id) if viewer is not None else opaque_id(current_user.id)
 
 
 def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
     followed_ids: set[int] = set()
     latest_actions: dict[int, str] = {}
     follow_events = (
-        Follow.query.filter(Follow.user_id == int(owner_user_id))
+        Follow.query.filter(Follow.user_id == opaque_id(owner_user_id))
         .outerjoin(Rounds, Follow.round == Rounds.id)
         .order_by(
             Rounds.day.desc(),
             Rounds.hour.desc(),
-            Follow.id.desc(),
+            seq_or_id(Follow).desc(),
         )
         .all()
     )
     for event in follow_events:
-        target_id = int(getattr(event, "follower_id", 0) or 0)
+        target_id = opaque_id(getattr(event, "follower_id", 0) or 0)
         if not target_id or target_id in latest_actions:
             continue
         latest_actions[target_id] = (
@@ -194,7 +208,7 @@ def _forum_chat_session_payload(
 ) -> dict:
     payload = {
         "id": int(session.id),
-        "target_user_id": int(session.target_user_id),
+        "target_user_id": opaque_id(session.target_user_id),
         "target_username": str(session.target_username or ""),
         "target_profile_pic": str(session.target_profile_pic or ""),
         "last_message_preview": str(session.last_message_preview or ""),
@@ -276,8 +290,8 @@ def _forum_chat_upsert_session(
 ) -> ForumChatSession:
     session = (
         ForumChatSession.query.filter_by(
-            owner_user_id=int(owner_user.id),
-            target_user_id=int(target_user.id),
+            owner_user_id=opaque_id(owner_user.id),
+            target_user_id=opaque_id(target_user.id),
         )
         .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .first()
@@ -289,11 +303,11 @@ def _forum_chat_upsert_session(
             )
         return session
 
-    interests = _get_top_interests_for_user(int(target_user.id))
+    interests = _get_top_interests_for_user(opaque_id(target_user.id))
     session = ForumChatSession(
-        owner_user_id=int(owner_user.id),
+        owner_user_id=opaque_id(owner_user.id),
         owner_username=str(owner_user.username or ""),
-        target_user_id=int(target_user.id),
+        target_user_id=opaque_id(target_user.id),
         target_username=str(target_user.username or ""),
         target_profile_pic=_resolve_interview_profile_pic(target_user, exp),
         persona_snapshot=_build_persona_snapshot(target_user, interests, exp),
@@ -307,13 +321,13 @@ def _forum_chat_refresh_runtime_context(
     *, exp: Exps, target_user: User_mgmt, session: ForumChatSession, query_text: str
 ) -> dict:
     if not session.persona_snapshot:
-        interests = _get_top_interests_for_user(int(target_user.id))
+        interests = _get_top_interests_for_user(opaque_id(target_user.id))
         session.persona_snapshot = _build_persona_snapshot(target_user, interests, exp)
 
     run_id = str(session.run_id or "").strip() or None
     if not run_id:
         run_pick = _detect_run_id_from_server_log(
-            exp, agent_user_id=int(target_user.id), probe_memory_coverage=True
+            exp, agent_user_id=opaque_id(target_user.id), probe_memory_coverage=True
         )
         run_id = str(run_pick.get("run_id") or "").strip() or None
         session.run_id = run_id
@@ -325,7 +339,7 @@ def _forum_chat_refresh_runtime_context(
             snapshot = _build_memory_snapshot(
                 exp,
                 run_id=run_id,
-                agent_user_id=int(target_user.id),
+                agent_user_id=opaque_id(target_user.id),
                 memory_mode="semantic",
                 query_text=query_text,
             )
@@ -356,7 +370,7 @@ def _forum_chat_generate_reply(
     )
     memory_pack = _forum_chat_render_memory_pack(memory_snapshot)
     facts_snapshot = _build_facts_snapshot(
-        agent_user_id=int(target_user.id),
+        agent_user_id=opaque_id(target_user.id),
         admin_text=memory_query,
     )
     facts_pack = _format_facts_pack(facts_snapshot)
@@ -673,6 +687,14 @@ def _get_admin_llm_settings(username: str) -> tuple[str, str]:
     return model, llm_url
 
 
+def _get_admin_llm_api_key(username: str) -> str:
+    """API key stored for the current dashboard user ("" when none)."""
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=username)
+    ).first()
+    return (getattr(admin_user, "llm_api_key", "") or "").strip()
+
+
 def _llm_backend_configured(llm_url: str) -> bool:
     if llm_url:
         return True
@@ -691,9 +713,10 @@ def _article_summary_needs_enrichment(summary: str) -> bool:
     return len(s) < 60
 
 
-@api_reddit.post("/<int:exp_id>/enrich/article/<int:article_id>")
+@api_reddit.post("/<int:exp_id>/enrich/article/<article_id>")
 @login_required
 def api_enrich_article(exp_id: int, article_id: int):
+    article_id = opaque_id(article_id)
     payload = request.get_json(silent=True) or {}
     force = bool(payload.get("force"))
 
@@ -716,7 +739,11 @@ def api_enrich_article(exp_id: int, article_id: int):
 
     model, llm_url = _get_admin_llm_settings(getattr(current_user, "username", ""))
     cfg = (
-        UrlSummarizer.build_config(model=model, base_url=llm_url or None)
+        UrlSummarizer.build_config(
+            model=model,
+            base_url=llm_url or None,
+            api_key=_get_admin_llm_api_key(getattr(current_user, "username", "")),
+        )
         if UrlSummarizer is not None
         else None
     )
@@ -781,9 +808,10 @@ def api_enrich_article(exp_id: int, article_id: int):
     )
 
 
-@api_reddit.post("/<int:exp_id>/enrich/image/<int:image_id>")
+@api_reddit.post("/<int:exp_id>/enrich/image/<image_id>")
 @login_required
 def api_enrich_image(exp_id: int, image_id: int):
+    image_id = opaque_id(image_id)
     payload = request.get_json(silent=True) or {}
     force = bool(payload.get("force"))
 
@@ -821,7 +849,11 @@ def api_enrich_image(exp_id: int, image_id: int):
     try:
         # Vision model is fixed in the current UI stack.
         llm_v = "minicpm-v"
-        annotator = Annotator(llm_v, llm_url=llm_url or None)
+        annotator = Annotator(
+            llm_v,
+            llm_url=llm_url or None,
+            llm_api_key=_get_admin_llm_api_key(getattr(current_user, "username", "")),
+        )
         descr = annotator.annotate(ref)
     except Exception as exc:
         return _json_success(
@@ -871,7 +903,11 @@ def api_enrich_pending(exp_id: int):
 
     model, llm_url = _get_admin_llm_settings(getattr(current_user, "username", ""))
     cfg = (
-        UrlSummarizer.build_config(model=model, base_url=llm_url or None)
+        UrlSummarizer.build_config(
+            model=model,
+            base_url=llm_url or None,
+            api_key=_get_admin_llm_api_key(getattr(current_user, "username", "")),
+        )
         if UrlSummarizer is not None
         else None
     )
@@ -885,7 +921,13 @@ def api_enrich_pending(exp_id: int):
     annotator = None
     if vision_enabled and Annotator is not None:
         try:
-            annotator = Annotator("minicpm-v", llm_url=llm_url or None)
+            annotator = Annotator(
+                "minicpm-v",
+                llm_url=llm_url or None,
+                llm_api_key=_get_admin_llm_api_key(
+                    getattr(current_user, "username", "")
+                ),
+            )
         except Exception:
             annotator = None
 
@@ -894,7 +936,7 @@ def api_enrich_pending(exp_id: int):
 
     if summarizer and max_articles:
         candidates = db.session.scalars(
-            select(Articles).order_by(Articles.id.desc()).limit(200)
+            select(Articles).order_by(seq_or_id(Articles).desc()).limit(200)
         ).all()
         for art in candidates:
             if enriched_articles >= max_articles:
@@ -912,7 +954,7 @@ def api_enrich_pending(exp_id: int):
 
     if annotator and max_images:
         candidates = db.session.scalars(
-            select(Images).order_by(Images.id.desc()).limit(200)
+            select(Images).order_by(seq_or_id(Images).desc()).limit(200)
         ).all()
         for img in candidates:
             if enriched_images >= max_images:
@@ -1128,9 +1170,10 @@ def api_search(exp_id: int):
     )
 
 
-@api_reddit.get("/<int:exp_id>/thread/<int:post_id>")
+@api_reddit.get("/<int:exp_id>/thread/<post_id>")
 @login_required
 def api_thread(exp_id: int, post_id: int):
+    post_id = opaque_id(post_id)
     try:
         thread = fetch_thread(post_id, viewer_id=_forum_viewer_id())
     except ValueError:
@@ -1145,7 +1188,8 @@ def api_vote(exp_id: int):
     post_id = payload.get("post_id")
     action = payload.get("action")
 
-    if not isinstance(post_id, int) or action not in {"like", "dislike", "neutral"}:
+    post_id = _opaque_payload_id(post_id)
+    if post_id is None or action not in {"like", "dislike", "neutral"}:
         return _json_error("Invalid payload.", 400)
 
     try:
@@ -1174,7 +1218,8 @@ def api_comment(exp_id: int):
     content = (payload.get("content") or "").strip()
     client_action_id = (payload.get("client_action_id") or "").strip() or None
 
-    if not isinstance(parent_id, int) or not content:
+    parent_id = _opaque_payload_id(parent_id)
+    if parent_id is None or not content:
         return _json_error("parent_id and content are required.", 400)
 
     try:
@@ -1218,6 +1263,38 @@ def api_post(exp_id: int):
     if not content:
         return _json_error("content is required.", 400)
 
+    # World Simulation (F8): an enrolled person who picked other platforms posts through the forum gateway (which has no
+    # community field: the thread goes to the default one); every other post keeps the direct path
+    from y_web.src.federation import human_outbox as _ho
+
+    _wanted = payload.get("crosspost")
+    _wanted = _wanted if isinstance(_wanted, list) else [_wanted] if _wanted else []
+    if _wanted and not url:
+        _plain = (
+            f"{title}. {body}" if title and body else (title or body or legacy_content)
+        )
+        from y_web.src.models import (
+            Exps as _Exps,
+        )  # the community the person chose, as the topic name the forum server lists
+
+        _community = _ho.forum_community(
+            db.session.get(_Exps, int(exp_id)), community_slug
+        )
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _ho.requested_members(_wanted),
+            _plain,
+            lambda t: _ho.forum_post(content, t, _community),
+            only="forum",
+        )
+        if _sent is not None:
+            return (
+                _json_success({"post_id": None, "crossposted": True})
+                if _sent
+                else _json_error("The gateway refused the post.", 502)
+            )
+
     try:
         post = create_post_reddit(current_user, content, url, community_slug)
     except ValueError as exc:
@@ -1226,9 +1303,111 @@ def api_post(exp_id: int):
     return _json_success({"post_id": post.id})
 
 
-@api_reddit.post("/<int:exp_id>/post/<int:post_id>/delete")
+@api_reddit.get("/<int:exp_id>/crosspost/targets")
+@login_required
+def api_crosspost_targets(exp_id: int):
+    """Destinations offered by the Repost dialog: the user's profile plus communities (filtered by ``q``)."""
+    from y_web.src.forum.community_icons import assign_icons, icon_for
+    from y_web.src.forum.service import (
+        fetch_available_communities,
+        fetch_community_stats,
+        fetch_user_communities,
+    )
+
+    query = (request.args.get("q") or "").strip().lower().removeprefix("y/")
+    exclude = (request.args.get("exclude") or "").strip().lower().removeprefix("y/")
+    communities = fetch_available_communities()
+    icons = assign_icons([c.get("slug") for c in communities])
+    mine = set()
+    try:
+        actor = _forum_chat_owner_user()
+        mine = {c.get("slug") for c in fetch_user_communities(actor.id if actor else 0)}
+    except Exception:
+        mine = set()
+
+    def _rank(c):
+        slug = str(c.get("slug") or "").lower()
+        return (
+            0 if slug.startswith(query) else 1,
+            0 if c.get("slug") in mine else 1,
+            slug,
+        )
+
+    picked = [
+        c
+        for c in communities
+        if str(c.get("slug") or "").lower() != exclude
+        and (not query or query in str(c.get("slug") or "").lower())
+    ]
+    picked.sort(key=_rank)
+    out = []
+    for c in picked[:12]:
+        stats = fetch_community_stats(c.get("slug")) or {}
+        out.append(
+            {
+                "slug": c.get("slug"),
+                "label": c.get("label") or f"y/{c.get('slug')}",
+                "icon": icon_for(c.get("slug"), icons),
+                "posts": stats.get("posts", 0),
+                "participants": stats.get("participants", 0),
+                "joined": c.get("slug") in mine,
+            }
+        )
+    owner = _forum_chat_owner_user()
+    return _json_success(
+        {
+            "profile": {"username": owner.username} if owner and not query else None,
+            "communities": out,
+        }
+    )
+
+
+@api_reddit.post("/<int:exp_id>/crosspost")
+@login_required
+def api_crosspost(exp_id: int):
+    payload = request.get_json(silent=True) or {}
+    post_id = _opaque_payload_id(payload.get("post_id"))
+    community_slug = (payload.get("community_slug") or "").strip()
+    if post_id is None:
+        return _json_error("post_id is required.", 400)
+    try:
+        post, created = crosspost_reddit(current_user, post_id, community_slug)
+    except ValueError as exc:
+        return _json_error(str(exc), 400)
+    return _json_success(
+        {
+            "post_id": post.id,
+            "created": bool(created),
+            "community_slug": community_slug,
+            "url": f"/{exp_id}/rthread/{post.id}",
+        }
+    )
+
+
+@api_reddit.post("/<int:exp_id>/communities")
+@login_required
+def api_create_community(exp_id: int):
+    """The human user creates a community (subreddit) and joins it."""
+    payload = request.get_json(silent=True) or {}
+    try:
+        topic, created = create_community(current_user, payload.get("name"))
+    except ValueError as exc:
+        return _json_error(str(exc), 400)
+    return _json_success(
+        {
+            "slug": topic.interest,
+            "label": f"y/{topic.interest}",
+            "created": bool(created),
+            "url": f"/{exp_id}/subforum/{topic.interest}",
+        },
+        status=201 if created else 200,
+    )
+
+
+@api_reddit.post("/<int:exp_id>/post/<post_id>/delete")
 @login_required
 def api_delete_post(exp_id: int, post_id: int):
+    post_id = opaque_id(post_id)
     post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is None:
         return _json_error("Post not found.", 404)
@@ -1242,38 +1421,38 @@ def api_delete_post(exp_id: int, post_id: int):
         ).first()
         is not None
     )
-    actor_ids = {int(current_user.id)}
+    actor_ids = {opaque_id(current_user.id)}
     if exp_user is not None:
-        actor_ids.add(int(exp_user.id))
+        actor_ids.add(opaque_id(exp_user.id))
 
-    if not is_admin_user and int(post.user_id) not in actor_ids:
+    if not is_admin_user and opaque_id(post.user_id) not in actor_ids:
         return _json_error("Not authorized to delete this post.", 403)
 
     target_post_ids = set()
-    if int(getattr(post, "comment_to", -1)) == -1:
+    if opaque_id(getattr(post, "comment_to", -1)) in (-1, None):
         rows = (
             db.session.query(Post.id)
             .filter((Post.id == post.id) | (Post.thread_id == post.id))
             .all()
         )
-        target_post_ids = {int(row[0]) for row in rows}
+        target_post_ids = {opaque_id(row[0]) for row in rows}
     else:
-        target_post_ids = {int(post.id)}
-        frontier = [int(post.id)]
+        target_post_ids = {opaque_id(post.id)}
+        frontier = [opaque_id(post.id)]
         while frontier:
             parent_id = frontier.pop()
             child_rows = (
                 db.session.query(Post.id).filter(Post.comment_to == parent_id).all()
             )
             for row in child_rows:
-                child_id = int(row[0])
+                child_id = opaque_id(row[0])
                 if child_id in target_post_ids:
                     continue
                 target_post_ids.add(child_id)
                 frontier.append(child_id)
 
     if not target_post_ids:
-        target_post_ids = {int(post.id)}
+        target_post_ids = {opaque_id(post.id)}
 
     try:
         Reactions.query.filter(Reactions.post_id.in_(target_post_ids)).delete(
@@ -1333,18 +1512,18 @@ def api_forum_chat_bootstrap(exp_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     agents = (
         User_mgmt.query.filter(User_mgmt.is_page == 0)
         .filter(User_mgmt.user_type != "user")
-        .filter(User_mgmt.id != int(owner_user.id))
+        .filter(User_mgmt.id != opaque_id(owner_user.id))
         .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
         .order_by(User_mgmt.username.asc())
         .all()
     )
     sessions = (
-        ForumChatSession.query.filter_by(owner_user_id=int(owner_user.id))
+        ForumChatSession.query.filter_by(owner_user_id=opaque_id(owner_user.id))
         .order_by(
             ForumChatSession.last_message_at.desc(),
             ForumChatSession.updated_at.desc(),
@@ -1353,16 +1532,18 @@ def api_forum_chat_bootstrap(exp_id: int):
         .all()
     )
     sessions = [
-        sess for sess in sessions if int(sess.target_user_id) in followed_agent_ids
+        sess
+        for sess in sessions
+        if opaque_id(sess.target_user_id) in followed_agent_ids
     ]
 
-    session_map = {int(sess.target_user_id): sess for sess in sessions}
+    session_map = {opaque_id(sess.target_user_id): sess for sess in sessions}
     agent_payload = []
     for agent in agents:
-        sess = session_map.get(int(agent.id))
+        sess = session_map.get(opaque_id(agent.id))
         agent_payload.append(
             {
-                "user_id": int(agent.id),
+                "user_id": opaque_id(agent.id),
                 "username": str(agent.username or ""),
                 "profile_pic": _resolve_interview_profile_pic(agent, exp),
                 "profession": str(getattr(agent, "profession", "") or ""),
@@ -1379,7 +1560,7 @@ def api_forum_chat_bootstrap(exp_id: int):
     return _json_success(
         {
             "owner": {
-                "user_id": int(owner_user.id),
+                "user_id": opaque_id(owner_user.id),
                 "username": str(owner_user.username or ""),
             },
             "agents": agent_payload,
@@ -1401,24 +1582,24 @@ def api_forum_chat_open_session(exp_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     payload = request.get_json(silent=True) or {}
     agent_user_id = payload.get("agent_user_id")
     try:
-        agent_user_id = int(agent_user_id)
+        agent_user_id = opaque_id(agent_user_id)
     except Exception:
         return _json_error("agent_user_id must be an integer.", 400)
 
     target_user = (
         User_mgmt.query.filter(User_mgmt.is_page == 0)
         .filter(User_mgmt.user_type != "user")
-        .filter(User_mgmt.id == int(agent_user_id))
+        .filter(User_mgmt.id == opaque_id(agent_user_id))
         .first()
     )
     if target_user is None:
         return _json_error("Target agent not found.", 404)
-    if int(target_user.id) not in followed_agent_ids:
+    if opaque_id(target_user.id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     session = _forum_chat_upsert_session(
@@ -1441,16 +1622,16 @@ def api_forum_chat_get_session(exp_id: int, session_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     session = db.session.scalars(
         select(ForumChatSession).filter_by(
-            id=int(session_id), owner_user_id=int(owner_user.id)
+            id=int(session_id), owner_user_id=opaque_id(owner_user.id)
         )
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if int(session.target_user_id) not in followed_agent_ids:
+    if opaque_id(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     return _json_success(_forum_chat_session_payload(session, include_messages=True))
@@ -1469,20 +1650,20 @@ def api_forum_chat_send_message(exp_id: int, session_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
-    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
+    followed_agent_ids = _forum_chat_followed_agent_ids(opaque_id(owner_user.id))
 
     session = db.session.scalars(
         select(ForumChatSession).filter_by(
-            id=int(session_id), owner_user_id=int(owner_user.id)
+            id=int(session_id), owner_user_id=opaque_id(owner_user.id)
         )
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if int(session.target_user_id) not in followed_agent_ids:
+    if opaque_id(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     target_user = db.session.scalars(
-        select(User_mgmt).filter_by(id=int(session.target_user_id))
+        select(User_mgmt).filter_by(id=opaque_id(session.target_user_id))
     ).first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)

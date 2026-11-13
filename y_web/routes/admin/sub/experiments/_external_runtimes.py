@@ -64,17 +64,46 @@ _PAIRED_ENTRIES = {
         "label": N_("Microblogging"),
         "members": ("microblogging_server", "microblogging_client"),
         "description": N_(
-            "Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page."
+            "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
         ),
     },
     "forum": {
         "label": N_("Forum"),
         "members": ("forum_server", "forum_client"),
         "description": N_(
-            "Forum simulator (threads and replies). Server and client are installed and updated independently from its page."
+            "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
         ),
     },
 }
+# The sections of the plugin list (presentation only: the groups of the specs keep driving the active-experiment checks).
+# Each section lists the entry keys it shows, in this order; a plugin that is in none (a community plugin, say) goes to
+# "Other plugins", which is shown only when it has something in it.
+_LIST_SECTIONS = (
+    (
+        "platforms",
+        N_("Platforms"),
+        (
+            "hpc_simulator",
+            "forum_hpc",
+            "photo_sharing",
+            "instant_messaging",
+            "dating",
+            "federation",
+        ),
+    ),
+    ("platforms_legacy", N_("Platforms (Legacy)"), ("microblogging", "forum")),
+    (
+        "agent_plugins",
+        N_("Agent Plugins"),
+        ("agent_plugins", "agent_memory", "reactive_agents"),
+    ),
+    (
+        "system_plugins",
+        N_("System Plugins"),
+        ("frontend_adds_on", "scenario_design", "training_modules"),
+    ),
+)
+_OTHER_SECTION = ("other", N_("Other plugins"))
 _PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
 # actions that fetch or run a community plugin's code (need ``confirm_community=1``)
 _COMMUNITY_CONFIRM_ACTIONS = frozenset(
@@ -104,6 +133,10 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
         )
     elif group_key == "photo_sharing":
         query = base_query.filter(Exps.platform_type == "photo_sharing")
+    elif group_key == "instant_messaging":
+        query = base_query.filter(Exps.platform_type == "instant_messaging")
+    elif group_key == "dating":
+        query = base_query.filter(Exps.platform_type == "dating")
     elif group_key == "forum":
         query = base_query.filter(Exps.platform_type == "forum")
     elif group_key == "hpc":
@@ -201,9 +234,20 @@ def _slugify(value: str) -> str:
     return slug or "group"
 
 
+# Built-in plugins that YSocial names itself: the name and the description of the spec are shown even when the
+# installed repository still carries the old ones in its meta/info.json (YSimulator is presented as YMicroblogging).
+_NAMED_BY_YSOCIAL = frozenset({"hpc_simulator"})
+
+
 def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
     repo = dict(repo)
     plugin_metadata = plugin_metadata_for_runtime(spec, plugins_index)
+    if plugin_metadata and spec.key in _NAMED_BY_YSOCIAL:
+        plugin_metadata = {
+            **plugin_metadata,
+            "plugin_name": spec.label,
+            "description": spec.description or plugin_metadata.get("description"),
+        }
     if plugin_metadata:
         repo["label"] = plugin_metadata.get("plugin_name") or repo["label"]
         repo["plugin_metadata"] = plugin_metadata
@@ -356,6 +400,24 @@ def _plugin_entries(grouped_status) -> list[dict]:
     return entries
 
 
+def _plugin_sections(entries: list[dict]) -> list[dict]:
+    """The list entries grouped in the sections of ``_LIST_SECTIONS``; empty sections are left out."""
+    by_key = {e["key"]: e for e in entries}
+    placed: set[str] = set()
+    sections = []
+    for key, label, members in _LIST_SECTIONS:
+        rows = [by_key[m] for m in members if m in by_key]
+        placed.update(e["key"] for e in rows)
+        if rows:
+            sections.append({"key": key, "label": _(label), "entries": rows})
+    rest = [e for e in entries if e["key"] not in placed]
+    if rest:
+        sections.append(
+            {"key": _OTHER_SECTION[0], "label": _(_OTHER_SECTION[1]), "entries": rest}
+        )
+    return sections
+
+
 @experiments.route("/admin/external_runtimes")
 @login_required
 def external_runtimes():
@@ -366,9 +428,11 @@ def external_runtimes():
     grouped_status = _visible_runtime_groups(
         admin_user, _session_github_token(), include_remote_metadata=False
     )
+    entries = _plugin_entries(grouped_status)
     return render_template(
         "admin/external_runtimes.html",
-        plugin_entries=_plugin_entries(grouped_status),
+        plugin_entries=entries,
+        plugin_sections=_plugin_sections(entries),
     )
 
 
@@ -423,6 +487,26 @@ def external_runtime_detail(entry_key: str):
         releases = repos[0]["available_releases"]
     else:
         releases = []
+    from y_web.src.external_runtime.readme_banner import find_banner
+
+    banners = []
+    for repo in repos:
+        # an installed plugin gives its own file; one that is not installed is asked to GitHub when the image is opened
+        path = repo.get("path")
+        found = True if not path or not Path(path).exists() else find_banner(path)
+        banners.append(
+            {
+                "label": repo["label"],
+                "repo_url": (repo.get("repo_url") or "").removesuffix(".git"),
+                "github_repo": repo.get("github_repo") or "",
+                "image_url": (
+                    url_for("experiments.external_runtime_banner", repo_key=repo["key"])
+                    if found
+                    else ""
+                ),
+                "alt": repo["label"],
+            }
+        )
     logs = []
     for key in member_keys:
         logs.extend(read_external_runtime_logs(limit=30, repo_key=key))
@@ -431,6 +515,7 @@ def external_runtime_detail(entry_key: str):
     return render_template(
         "admin/external_runtime_detail.html",
         entry=entry,
+        banners=banners,
         common_branches=common_branches,
         default_branch=default_branch,
         releases=releases,
@@ -445,6 +530,45 @@ def external_runtime_detail(entry_key: str):
         current_python_executable=resolve_python_executable(),
         host_git_available=host_git_available(),
     )
+
+
+@experiments.route("/admin/external_runtimes/<repo_key>/banner")
+@login_required
+def external_runtime_banner(repo_key: str):
+    """The header image of the README of an installed plugin (nothing in the address chooses the file)."""
+    from flask import abort, current_app, send_file
+
+    from y_web.src.external_runtime.readme_banner import find_banner
+
+    admin_user = _require_admin_user()
+    if admin_user is None:
+        abort(403)
+    try:
+        spec = runtime_spec(repo_key)
+    except KeyError:
+        abort(404)
+    if not runtime_visible_to_user(spec, admin_user):
+        abort(403)
+    if spec.path.exists():
+        # installed: the image of the local README, never GitHub
+        found = find_banner(spec.path)
+        if found is None:
+            abort(404)
+        response = send_file(found[0], max_age=300)
+    else:
+        from y_web.src.external_runtime.readme_banner import fetch_remote_banner
+
+        remote = fetch_remote_banner(spec, _session_github_token())
+        if remote is None:
+            abort(404)
+        response = current_app.response_class(remote[0], mimetype=remote[1])
+        response.headers["Cache-Control"] = "private, max-age=300"
+    # an SVG of a plugin must not run anything, even if it is opened on its own
+    response.headers["Content-Security-Policy"] = (
+        "sandbox; default-src 'none'; style-src 'unsafe-inline'"
+    )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @experiments.route("/admin/external_runtimes/github_session", methods=["POST"])

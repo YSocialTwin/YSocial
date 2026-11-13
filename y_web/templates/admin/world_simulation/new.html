@@ -1,0 +1,83 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+{% set mode = 'new' %}
+{% set seed_value = form.get('seed', '') %}{% set granularity_value = form.get('granularity', 'slot') %}
+{% set first_step = 1 %}
+
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            {{ ws.breadcrumb([(_('New simulation'), None)]) }}
+            <form method="post" action="{{ url_for('world_simulation.new') }}" id="world-simulation-form"
+                  data-text-none="{{ _('No platform chosen yet.') }}" data-text-count="{{ _('{n} of 2 to 8 experiments chosen') }}">
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box" id="world-simulation-new">
+                        <h3 class="title is-5 is-thin">{{ _('New simulation') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-intro">{{ _('A World Simulation runs several experiments on one shared clock. Work through the steps below: every parameter has a default, so you only change what you need.') }}</p>
+
+                            {% call ws.section('members', _('Name and platforms'), _('Choose two to eight stopped experiments that use the simulated clock with hourly slots; several can be of the same platform. Their populations may differ: an agent is active on the experiments whose population contains it.'), 1) %}
+                            <div class="box-lines">
+                                <div class="box-line ws-param">
+                                    <span class="left"><label class="ws-label" for="ws-name">{{ _('Name') }} <span class="text-danger">*</span></label></span>
+                                    <span class="right"><input class="input" id="ws-name" name="name" required maxlength="100" value="{{ form.get('name', '') }}"></span>
+                                </div>
+                            </div>
+                            <div class="ws-platforms" id="ws-members-pick">
+                                {% for group in groups %}
+                                <div class="ws-platform-card" data-type="{{ group.platform_type }}">
+                                    <div class="ws-platform-head"><i class="mdi {{ group.icon }}"></i> <span class="ws-name">{{ _(group.label) }}</span>
+                                        <span class="ws-sub">{{ group.experiments|length }}</span></div>
+                                    {% for c in group.experiments %}
+                                    {% set blocked = c.problems %}
+                                    <label class="ws-pick {{ 'is-off' if blocked }}">
+                                        <input type="checkbox" name="experiments" value="{{ c.exp.idexp }}" data-platform="{{ c.key }}" data-type="{{ c.platform_type }}" data-name="{{ c.exp.exp_name }}"
+                                               {{ 'checked' if c.exp.idexp|string in form.getlist('experiments') }} {{ 'disabled' if blocked }}>
+                                        <span class="ws-pick-body">
+                                            <span class="ws-name">{{ c.exp.exp_name }}</span>
+                                            {% if c.exp.simulator_type == 'HPC' %}<span class="exp-tag hpc">{{ _('HPC') }}</span>{% endif %}
+                                            <span class="ws-sub">{% if c.populations %}{{ _('Population') }}: {% for pop in c.populations %}{{ pop.name }} ({{ _('%(n)s agents', n=pop.agents) }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ _('No population yet.') }}{% endif %}</span>
+                                            {% if 'experiment_running' in blocked %}<span class="ws-problem">{{ _('Running: stop it first.') }}</span>{% endif %}
+                                            {% if 'already_member' in blocked %}<span class="ws-problem">{{ _('Already part of the World Simulation %(name)s.', name=c.info.other_federation) }}</span>{% endif %}
+                                            {% if 'clock' in blocked %}<span class="ws-problem">{{ _('Needs the simulated clock with hourly slots (24 a day).') }}</span>{% endif %}
+                                            {% if 'simulator_type' in blocked or 'platform' in blocked %}<span class="ws-problem">{{ _('This backend cannot take part in a World Simulation.') }}</span>{% endif %}
+                                        </span>
+                                    </label>
+                                    {% else %}<p class="empty-state">{{ _('No experiment is available.') }}</p>{% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endcall %}
+
+                            {% include 'admin/world_simulation/_options_form.html' %}
+
+                            <div class="ws-actions ws-form-actions">
+                                <button class="button is-solid primary-button" type="submit"><i class="mdi mdi-check"></i> <span>{{ _('Create') }}</span></button>
+                                <a class="button is-light" href="{{ url_for('world_simulation.simulations') }}">{{ _('Cancel') }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box ws-summary" id="ws-summary-box">
+                        <h3 class="title is-5 is-thin">{{ _('Summary') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-sub" id="ws-summary-count"></p>
+                            <ul class="ws-summary-list" id="ws-summary-list"></ul>
+                            <div class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('The experiments are not changed until the World Simulation starts, and they go back to normal when it stops.') }}</div>
+                            <div class="ws-note"><i class="mdi mdi-information-outline"></i> {{ _('Parameters can be changed later, while the World Simulation is stopped.') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-world-simulation.js') }}"></script>

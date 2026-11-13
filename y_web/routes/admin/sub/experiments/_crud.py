@@ -39,6 +39,7 @@ from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
+from y_web.src.dating import is_dating_experiment
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -47,6 +48,7 @@ from y_web.src.experiment.access import (
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.external_runtime import runtime_installed_and_visible
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -159,13 +161,25 @@ def _external_repo_availability():
     )
     hpc = _installed("hpc_simulator")
     forum = _installed("forum_server") and _installed("forum_client")
+    # YForum, the Ray runtime of the forum (HPC): a local check, like the launcher's own
+    try:
+        from y_web.src.forum import forum_hpc_installed
+
+        forum_hpc = forum_hpc_installed()
+    except Exception:
+        forum_hpc = False
     photo_sharing = _installed("photo_sharing")
+    instant_messaging = _installed("instant_messaging")
+    dating = _installed("dating")
 
     return {
         "microblogging": microblogging,
         "hpc": hpc,
         "forum": forum,
+        "forum_hpc": forum_hpc,
         "photo_sharing": photo_sharing,
+        "instant_messaging": instant_messaging,
+        "dating": dating,
     }
 
 
@@ -180,16 +194,9 @@ def _get_exp_default_recsys(exp_id: int):
 
     Returns "default" for either field when no override is configured.
     """
-    try:
-        row = db.session.get(ExpFrontendSettings, exp_id)
-        if row is None:
-            return "default", "default"
-        settings = json.loads(row.settings_json or "{}")
-    except Exception:
-        return "default", "default"
-    content = settings.get("default_content_recsys") or "default"
-    follow = settings.get("default_follow_recsys") or "default"
-    return content, follow
+    from y_web.src.experiment.activation import get_exp_default_recsys
+
+    return get_exp_default_recsys(exp_id)
 
 
 @experiments.route("/admin/experiments")
@@ -621,7 +628,7 @@ def join_simulation():
     admin_user = _current_admin_user_or_none()
     if not admin_user:
         flash(_("Unable to resolve current user."))
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Get visible active experiments
     active_exps = get_visible_experiment_query(admin_user).filter_by(status=1).all()
@@ -674,6 +681,13 @@ def join_experiment(exp_id):
         ):
             flash(_("You are not allowed to access this experiment."), "error")
             return redirect("/admin/experiments")
+
+    if is_im_experiment(exp):
+        # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
+        return redirect(f"/{exp.idexp}/im")
+    if is_dating_experiment(exp):
+        # the observer (S6) is the only way in: dating has no per-user feed row either
+        return redirect(f"/{exp.idexp}/dating")
 
     user_id = current_user.id
     user_email = str(getattr(current_user, "email", "") or "")
@@ -731,9 +745,6 @@ def change_active_experiment(exp_id):
     """
     check_privileges(current_user.username)
     uname = str(current_user.username)
-    admin_user_id = current_user.id
-    admin_user_email = current_user.email
-    admin_user_password = current_user.password
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
@@ -744,65 +755,21 @@ def change_active_experiment(exp_id):
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
         flash(_("You are not allowed to access this experiment."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
-    # Toggle experiment status
+    # Toggle experiment status (the steps are shared with the World Simulation: y_web.src.experiment.activation)
+    from y_web.src.experiment.activation import (
+        activate_experiment,
+        deactivate_experiment,
+    )
+
     if exp.status == 1:
-        # Deactivate the experiment
-        exp.status = 0
-        db.session.commit()
-        flash(_("Experiment '%(exp_name)s' deactivated.", exp_name=exp.exp_name))
+        result = deactivate_experiment(exp)
     else:
-        # Activate the experiment
-        exp.status = 1
-        db.session.commit()
-
-        # Register the experiment database dynamically
-        from y_web.src.experiment.context import register_experiment_database
-
-        register_experiment_database(current_app, exp_id, exp.db_name)
-
-        if exp.platform_type == "photo_sharing":
-            participant_id = admin_user_id
-        elif exp.simulator_type == "HPC":
-            participant_id = str(uuid.uuid4())
-        else:
-            participant_id = admin_user_id
-        _exp_content_recsys, _exp_follow_recsys = _get_exp_default_recsys(exp_id)
-        participant, created = ensure_experiment_user(
-            exp,
-            user_id=participant_id,
-            username=uname,
-            email=admin_user_email,
-            password=admin_user_password,
-            cover_image=random_cover_image_url(),
-            recsys_type=_exp_content_recsys,
-            frecsys_type=_exp_follow_recsys,
-            joined_on=int(time.time()),
-            account_id=admin_user_id,
-        )
-        if participant is None:
-            flash(_("Unable to prepare the experiment user."))
-            return redirect(url_for("experiments.settings"))
-        if created:
-            current_app.logger.info(
-                "Created experiment participant %s for experiment %s",
-                uname,
-                exp_id,
-            )
-
-        # Add user to experiment if not present
-        user_exp = (
-            db.session.query(User_Experiment)
-            .filter_by(user_id=admin_user_id, exp_id=exp_id)
-            .first()
-        )
-        if user_exp is None:
-            user_exp = User_Experiment(user_id=admin_user_id, exp_id=exp_id)
-            db.session.add(user_exp)
-            db.session.commit()
-
-        flash(_("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name))
+        result = activate_experiment(exp, admin_user)
+    flash(result.message)
+    if not result.ok:
+        return redirect(url_for("admin.dashboard"))
 
     # Reload user session from admin database (not experiment database)
     # Use Admin_users which is in the main database
@@ -813,6 +780,229 @@ def change_active_experiment(exp_id):
         login_user(admin_user, remember=True, force=True)
 
     return redirect("/admin/dashboard")
+
+
+def _import_im_upload(exp_dir, uid, exp_name_override, exp_group):
+    """Register an uploaded instant messaging experiment (plan, 5.6): validated, never given the YSocial schema.
+
+    Only the experiment is registered; clients and populations are created again from the admin pages.
+    """
+    from y_web.src.im.clone import clear_im_run_artifacts, rewrite_server_config
+    from y_web.src.im.validation import ImValidationError, validate_im_folder
+    from y_web.src.system.path_utils import get_writable_path
+
+    def refuse(message):
+        shutil.rmtree(exp_dir, ignore_errors=True)
+        flash(message)
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return refuse(
+            _("Instant messaging experiments are not supported with PostgreSQL.")
+        )
+    try:
+        with open(
+            os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8"
+        ) as handle:
+            config = json.load(handle)
+    except (OSError, ValueError):
+        return refuse(
+            _(
+                "The uploaded instant messaging experiment has no readable server configuration."
+            )
+        )
+
+    name = exp_name_override or str(config.get("experiment_name") or "").strip()
+    if not name:
+        return refuse(_("The uploaded experiment has no name. Please provide one."))
+    if db.session.scalars(select(Exps).filter_by(exp_name=name)).first():
+        return refuse(
+            _(
+                "The experiment already exists. Please check the experiment name and try again."
+            )
+        )
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        return refuse(
+            _(
+                "Error: No available port found in range 5000-6000. Cannot upload experiment."
+            )
+        )
+
+    # an uploaded run is imported as inputs only: a database or state from another installation is dropped
+    clear_im_run_artifacts(exp_dir)
+    try:
+        validate_im_folder(exp_dir)
+        for item in sorted(os.listdir(exp_dir)):
+            if (
+                item.startswith("client_")
+                and item.endswith(".json")
+                and ".state." not in item
+            ):
+                validate_im_folder(exp_dir, client_config=item)
+    except ImValidationError as exc:
+        return refuse(
+            _(
+                "The uploaded instant messaging experiment is not valid: %(errors)s",
+                errors="; ".join(exc.messages),
+            )
+        )
+    except (
+        Exception
+    ) as exc:  # yim-validate unavailable: do not register what cannot be checked
+        current_app.logger.warning("yim-validate could not run for an upload: %s", exc)
+        return refuse(
+            _("The uploaded instant messaging experiment could not be validated.")
+        )
+
+    folder = os.path.join(get_writable_path(), "y_web", "experiments", uid)
+    rewrite_server_config(
+        exp_dir, name, os.path.join(folder, "database_server.db"), folder + os.sep
+    )
+    config_path = os.path.join(exp_dir, "server_config.json")
+    with open(config_path, "r", encoding="utf-8") as handle:
+        config = json.load(handle)
+    config.setdefault("server", {})["port"] = suggested_port
+    with open(config_path, "w", encoding="utf-8") as handle:
+        json.dump(config, handle, indent=2)
+    prompt_language = None
+    try:
+        with open(
+            os.path.join(exp_dir, "prompt_language.json"), "r", encoding="utf-8"
+        ) as handle:
+            prompt_language = json.load(handle).get("prompt_language")
+    except (OSError, ValueError, AttributeError):
+        pass
+
+    exp = Exps(
+        exp_name=name,
+        db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+        prompt_language=prompt_packs.resolve(prompt_language),
+        owner=current_user.username,
+        exp_descr="",
+        status=0,
+        running=0,
+        port=suggested_port,
+        server=(config.get("server") or {}).get("host", "127.0.0.1"),
+        platform_type="instant_messaging",
+        llm_agents_enabled=1,
+        simulator_type="HPC",
+        exp_group=exp_group,
+    )
+    db.session.add(exp)
+    db.session.commit()
+    db.session.add(
+        Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped")
+    )
+    db.session.commit()
+    flash(
+        _(
+            "Instant messaging experiment imported. Create its clients from the experiment page."
+        )
+    )
+    return redirect(request.referrer or url_for("admin.dashboard"))
+
+
+def _import_dating_upload(exp_dir, uid, exp_name_override, exp_group):
+    """Register an uploaded dating experiment: validated, never given the YSocial schema.
+
+    Inputs only (a database or lock from another installation is dropped). The client files are checked
+    one by one; clients and populations are created again from the admin pages.
+    """
+    from y_web.src.dating import DATING_PLATFORM
+    from y_web.src.dating.clone import clear_dating_run_artifacts, rewrite_server_config
+    from y_web.src.dating.validation import (
+        DatingValidationError,
+        validate_dating_folder,
+    )
+    from y_web.src.system.path_utils import get_writable_path
+
+    def refuse(message):
+        shutil.rmtree(exp_dir, ignore_errors=True)
+        flash(message)
+        return redirect(request.referrer or url_for("admin.dashboard"))
+
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return refuse(_("Dating experiments are not supported with PostgreSQL."))
+    try:
+        with open(
+            os.path.join(exp_dir, "server_config.json"), "r", encoding="utf-8"
+        ) as handle:
+            config = json.load(handle)
+    except (OSError, ValueError):
+        return refuse(
+            _("The uploaded dating experiment has no readable server configuration.")
+        )
+
+    name = exp_name_override or str(config.get("experiment_name") or "").strip()
+    if not name:
+        return refuse(_("The uploaded experiment has no name. Please provide one."))
+    if db.session.scalars(select(Exps).filter_by(exp_name=name)).first():
+        return refuse(
+            _(
+                "The experiment already exists. Please check the experiment name and try again."
+            )
+        )
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        return refuse(
+            _(
+                "Error: No available port found in range 5000-6000. Cannot upload experiment."
+            )
+        )
+
+    clear_dating_run_artifacts(exp_dir)
+    try:
+        validate_dating_folder(exp_dir)
+        for item in sorted(os.listdir(exp_dir)):
+            if item.startswith("client_") and item.endswith(".json"):
+                validate_dating_folder(exp_dir, client_config=item)
+    except DatingValidationError as exc:
+        return refuse(
+            _(
+                "The uploaded dating experiment is not valid: %(errors)s",
+                errors="; ".join(exc.messages),
+            )
+        )
+    except (
+        Exception
+    ) as exc:  # validator unavailable: do not register what cannot be checked
+        current_app.logger.warning(
+            "dating validator could not run for an upload: %s", exc
+        )
+        return refuse(_("The uploaded dating experiment could not be validated."))
+
+    folder = os.path.join(get_writable_path(), "y_web", "experiments", uid)
+    rewrite_server_config(
+        exp_dir, name, os.path.join(folder, "database_server.db"), folder + os.sep
+    )
+    exp = Exps(
+        exp_name=name,
+        db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+        prompt_language=prompt_packs.resolve(None),
+        owner=current_user.username,
+        exp_descr="",
+        status=0,
+        running=0,
+        port=suggested_port,
+        server="127.0.0.1",
+        platform_type=DATING_PLATFORM,
+        llm_agents_enabled=1,
+        simulator_type="HPC",
+        exp_group=exp_group,
+    )
+    db.session.add(exp)
+    db.session.commit()
+    db.session.add(
+        Jupyter_instances(port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped")
+    )
+    db.session.commit()
+    flash(
+        _(
+            "Dating experiment imported. Create its populations and clients from the experiment page."
+        )
+    )
+    return redirect(request.referrer or url_for("admin.dashboard"))
 
 
 @experiments.route("/admin/upload_experiment", methods=["POST"])
@@ -868,6 +1058,16 @@ def upload_experiment():
                     # Remove the subdirectory (will fail if not empty, which is ok)
                     shutil.rmtree(subdir, ignore_errors=True)
                     break
+
+    from y_web.src.im.clone import is_im_folder
+
+    if is_im_folder(exp_dir):
+        return _import_im_upload(exp_dir, uid, exp_name_override, exp_group)
+
+    from y_web.src.dating.clone import is_dating_folder
+
+    if is_dating_folder(exp_dir):
+        return _import_dating_upload(exp_dir, uid, exp_name_override, exp_group)
 
     # Determine database type
     db_type = "sqlite"
@@ -1954,9 +2154,10 @@ def generate_photo_sharing_config(
 
 
 def _hpc_prompts_filename(experiment) -> str:
-    if getattr(experiment, "platform_type", None) == "photo_sharing":
-        return "prompts_ygram.json"
-    return "prompts.json"
+    from y_web.src.hpc.platforms import find_hpc_platform
+
+    spec = find_hpc_platform(getattr(experiment, "platform_type", None))
+    return spec.prompts_filename if spec else "prompts.json"
 
 
 @experiments.route("/admin/create_experiment", methods=["POST", "GET"])
@@ -1974,14 +2175,23 @@ def create_experiment():
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
     repo_availability = _external_repo_availability()
 
-    if platform_type == "forum" and not repo_availability["forum"]:
+    if platform_type == "forum" and simulator_type == "HPC":
+        if not repo_availability.get("forum_hpc"):
+            flash(
+                _(
+                    "Forum HPC experiments are unavailable because YForum is not present."
+                ),
+                "error",
+            )
+            return redirect(url_for("admin.dashboard"))
+    elif platform_type == "forum" and not repo_availability["forum"]:
         flash(
             _(
                 "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
             ),
             "error",
         )
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if platform_type == "photo_sharing" and not repo_availability["photo_sharing"]:
         flash(
@@ -1990,7 +2200,25 @@ def create_experiment():
             ),
             "error",
         )
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
+
+    if platform_type == "instant_messaging" and not repo_availability.get(
+        "instant_messaging"
+    ):
+        flash(
+            _(
+                "Instant messaging experiments are unavailable because YInstantMessaging is not present."
+            ),
+            "error",
+        )
+        return redirect(url_for("admin.dashboard"))
+
+    if platform_type == "dating" and not repo_availability.get("dating"):
+        flash(
+            _("Dating experiments are unavailable because YDating is not present."),
+            "error",
+        )
+        return redirect(url_for("admin.dashboard"))
 
     if platform_type == "microblogging":
         if simulator_type == "HPC":
@@ -2000,11 +2228,11 @@ def create_experiment():
                 else:
                     flash(
                         _(
-                            "HPC microblogging experiments are unavailable because YSimulator is not present."
+                            "HPC microblogging experiments are unavailable because YMicroblogging is not present."
                         ),
                         "error",
                     )
-                    return redirect(url_for("experiments.settings"))
+                    return redirect(url_for("admin.dashboard"))
         else:
             if not repo_availability["microblogging"]:
                 if repo_availability["hpc"]:
@@ -2012,18 +2240,20 @@ def create_experiment():
                 else:
                     flash(
                         _(
-                            "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."
+                            "Microblogging experiments are unavailable because neither YServer/YClient nor YMicroblogging is present."
                         ),
                         "error",
                     )
-                    return redirect(url_for("experiments.settings"))
-    elif platform_type == "photo_sharing":
+                    return redirect(url_for("admin.dashboard"))
+    elif platform_type in {"photo_sharing", "instant_messaging", "dating"}:
         simulator_type = "HPC"
 
     if platform_type == "forum":
-        simulator_type = "Standard"
+        # the forum runs on YForum (HPC) only when the form asks for it; otherwise on the Flask pair
+        simulator_type = "HPC" if simulator_type == "HPC" else "Standard"
     elif simulator_type != "HPC":
         simulator_type = "Standard"
+    forum_hpc = platform_type == "forum" and simulator_type == "HPC"
 
     # Remote experiment configuration
     is_remote = 1 if request.form.get("is_remote") == "true" else 0
@@ -2034,7 +2264,7 @@ def create_experiment():
         host = request.form.get("remote_host", "").strip()
         if not host:
             flash(_("Remote host address is required for remote experiments."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         # Basic validation for hostname/IP format
         # Allow: IP addresses (IPv4), domain names, and localhost
@@ -2044,23 +2274,23 @@ def create_experiment():
         # Pattern allows: alphanumeric, dots, hyphens, and colons (for IPv6)
         if not re.match(r"^[a-zA-Z0-9\.\-\:]+$", host):
             flash(_("Invalid remote host format. Use IP address or domain name."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         # Validate and parse remote_port
         remote_port_str = request.form.get("remote_port", "").strip()
         if not remote_port_str:
             flash(_("Remote port is required for remote experiments."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         try:
             port = int(remote_port_str)
             # Validate port range
             if not (1 <= port <= 65535):
                 flash(_("Invalid remote port. Port must be between 1 and 65535."))
-                return redirect(url_for("experiments.settings"))
+                return redirect(url_for("admin.dashboard"))
         except ValueError:
             flash(_("Invalid remote port. Please enter a valid number."))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
     else:
         # For local experiments, use default local settings
         host = "127.0.0.1"
@@ -2071,7 +2301,7 @@ def create_experiment():
                 _("No available port could be assigned for the new experiment."),
                 "error",
             )
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
     # Redis configuration parameters for HPC simulator
     prompt_language = prompt_packs.resolve(request.form.get("prompt_language"))
@@ -2108,16 +2338,59 @@ def create_experiment():
     sentiment_annotation = request.form.get("sentiment_annotation") == "true"
     emotion_annotation = request.form.get("emotion_annotation") == "true"
 
-    if platform_type == "forum":
+    if platform_type == "forum" and not forum_hpc:
         opinion_dynamics_enabled = False
         sentiment_annotation = False
         emotion_annotation = False
 
-    topics = request.form.get("tags").split(",")
+    if forum_hpc:
+        redis_enabled = False  # the forum runtime has no use for the YSimulator cache in this version
+        if is_remote:
+            flash(_("Remote forum HPC experiments are not supported."), "error")
+            return redirect(url_for("admin.dashboard"))
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            current_app.logger.info(
+                "Forum HPC experiments use SQLite even if the platform uses PostgreSQL"
+            )
+
+    if platform_type == "instant_messaging":
+        # IM has its own annotation and analytics model; the YSocial toggles do not apply (plan, 5.2)
+        opinion_dynamics_enabled = False
+        toxicity_annotation = False
+        perspective_api = None
+        sentiment_annotation = False
+        emotion_annotation = False
+        redis_enabled = False
+        if is_remote:
+            flash(_("Remote instant messaging experiments are not supported."), "error")
+            return redirect(url_for("admin.dashboard"))
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            current_app.logger.info(
+                "Instant messaging experiments use SQLite even if the platform uses PostgreSQL"
+            )
+
+    if platform_type == "dating":
+        # dating has no opinion dynamics; toxicity uses the local model (no Perspective key) and the
+        # annotations are the runtime's own (plan S1)
+        opinion_dynamics_enabled = False
+        perspective_api = None
+        redis_enabled = False
+        if is_remote:
+            flash(_("Remote dating experiments are not supported."), "error")
+            return redirect(url_for("admin.dashboard"))
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            current_app.logger.info(
+                "Dating experiments use SQLite even if the platform uses PostgreSQL"
+            )
+
+    # the dating platform has no topics (the field is hidden in the form)
+    topics = (request.form.get("tags") or "").split(",")
 
     # identify db type
     db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql") and (
+        platform_type not in {"instant_messaging", "dating"} and not forum_hpc
+    ):
         db_type = "postgresql"
 
     from y_web.src.system.path_utils import get_writable_path
@@ -2132,7 +2405,9 @@ def create_experiment():
     db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
-    if platform_type in {"microblogging", "forum", "photo_sharing"}:
+    if platform_type in {"instant_messaging", "dating"} or forum_hpc:
+        pass  # the runtime creates its own database on first server start: nothing to copy or ensure
+    elif platform_type in {"microblogging", "forum", "photo_sharing"}:
         if db_type == "sqlite":
             # Only Standard experiments get a pre-created database
             # HPC experiments: database is created automatically by the server on first startup
@@ -2266,7 +2541,81 @@ def create_experiment():
                 "password": parsed_uri.password or "password",
             }
 
-        if platform_type == "photo_sharing":
+        if platform_type == "instant_messaging":
+            from ._im import ImConfigError, generate_im_server_config
+
+            try:
+                # run length, start date and round length come from the client form; humans can register
+                # at any time, so the gateway is always part of an IM experiment
+                config = generate_im_server_config(
+                    exp_name=exp_name,
+                    db_uri=db_uri,
+                    data_path=data_path,
+                    is_remote=is_remote,
+                    toxicity_annotation=toxicity_annotation,
+                    sentiment_annotation=sentiment_annotation,
+                    emotion_annotation=emotion_annotation,
+                    opinion_dynamics_enabled=opinion_dynamics_enabled,
+                )
+            except ImConfigError as exc:
+                shutil.rmtree(data_path, ignore_errors=True)
+                flash(
+                    _("Invalid instant messaging settings: %(why)s", why=str(exc)),
+                    "error",
+                )
+                return redirect(url_for("admin.dashboard"))
+        elif platform_type == "dating":
+            from y_web.src.dating.experiment_config import (
+                DatingConfigError,
+                generate_dating_server_config,
+            )
+
+            try:
+                config = generate_dating_server_config(
+                    exp_name=exp_name,
+                    db_uri=db_uri,
+                    data_path=data_path,
+                    is_remote=is_remote,
+                    seed=request.form.get("seed"),
+                    toxicity_annotation=toxicity_annotation,
+                    sentiment_annotation=sentiment_annotation,
+                    emotion_annotation=emotion_annotation,
+                )
+            except DatingConfigError as exc:
+                shutil.rmtree(data_path, ignore_errors=True)
+                flash(
+                    _("Invalid dating settings: %(why)s", why=str(exc)),
+                    "error",
+                )
+                return redirect(url_for("admin.dashboard"))
+        elif forum_hpc:
+            from y_web.src.forum.experiment_config import (
+                ForumConfigError,
+                generate_forum_server_config,
+            )
+
+            try:
+                config = generate_forum_server_config(
+                    exp_name=exp_name,
+                    db_uri=db_uri,
+                    data_path=data_path,
+                    is_remote=is_remote,
+                    seed=request.form.get("seed"),
+                    topics=topics,
+                    toxicity_annotation=toxicity_annotation,
+                    sentiment_annotation=sentiment_annotation,
+                    emotion_annotation=emotion_annotation,
+                    opinion_dynamics_enabled=opinion_dynamics_enabled,
+                    perspective_api=perspective_api,
+                )
+            except ForumConfigError as exc:
+                shutil.rmtree(data_path, ignore_errors=True)
+                flash(
+                    _("Invalid forum settings: %(why)s", why=str(exc)),
+                    "error",
+                )
+                return redirect(url_for("admin.dashboard"))
+        elif platform_type == "photo_sharing":
             config = generate_photo_sharing_config(
                 exp_name=exp_name,
                 db_type=db_type,
@@ -2335,6 +2684,7 @@ def create_experiment():
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts_ygram.json",
                 prompt_language,
             )
+        # instant messaging: the prompt pack prompts_im.json is added with the clients (Phase 5)
     else:
         with open(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
@@ -2606,14 +2956,14 @@ def delete_simulations_bulk():
         exp_ids = json.loads(exp_ids_json)
     except json.JSONDecodeError:
         flash(_("Invalid experiment IDs provided."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     admin_user = _current_admin_user_or_none()
     normalized_ids = _resolve_bulk_experiment_ids(exp_ids, admin_user=admin_user)
 
     if not normalized_ids:
         flash(_("No experiments selected for deletion."), "warning")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     deleted_count = 0
     failed_ids = []
@@ -2644,7 +2994,7 @@ def delete_simulations_bulk():
             "warning",
         )
 
-    return redirect(url_for("experiments.settings"))
+    return redirect(url_for("admin.dashboard"))
 
 
 @experiments.route("/admin/start_experiment/<int:uid>")
@@ -2653,12 +3003,25 @@ def start_experiment(uid):
     """Handle start experiment operation."""
     check_privileges(current_user.username)
 
+    from y_web.src.federation.service import world_simulation_of
+
+    ws = world_simulation_of(uid)
+    if ws and ws["locked"]:
+        flash(
+            _(
+                "This experiment is managed by the World Simulation '%(name)s'.",
+                name=ws["name"],
+            ),
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
     # get experiment
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
         flash(_("You are not allowed to start this experiment."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if _experiment_configuration_update_required(exp):
         flash(
@@ -2672,6 +3035,37 @@ def start_experiment(uid):
     # check if the experiment is already running
     if exp.running == 1:
         return experiment_details(uid)
+
+    if is_im_experiment(exp):
+        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+        from y_web.src.im.validation import ImValidationError, validate_im_folder
+
+        try:
+            validate_im_folder(_resolve_hpc_experiment_folder(exp))
+        except ImValidationError as exc:
+            flash(
+                _("The instant messaging configuration is not valid: %(why)s")
+                % {"why": "; ".join(exc.messages[:5])},
+                "error",
+            )
+            return experiment_details(uid)
+
+    if is_dating_experiment(exp):
+        from y_web.src.dating.validation import (
+            DatingValidationError,
+            validate_dating_folder,
+        )
+        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+
+        try:
+            validate_dating_folder(_resolve_hpc_experiment_folder(exp))
+        except DatingValidationError as exc:
+            flash(
+                _("The dating configuration is not valid: %(why)s")
+                % {"why": "; ".join(exc.messages[:5])},
+                "error",
+            )
+            return experiment_details(uid)
 
     # update the experiment status
     exp.running = 1
@@ -2702,12 +3096,25 @@ def stop_experiment(uid):
     """
     check_privileges(current_user.username)
 
+    from y_web.src.federation.service import world_simulation_of
+
+    ws = world_simulation_of(uid)
+    if ws and ws["locked"]:
+        flash(
+            _(
+                "This experiment is managed by the World Simulation '%(name)s'.",
+                name=ws["name"],
+            ),
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
     # get experiment
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
         flash(_("You do not have permission to stop this experiment."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if _experiment_configuration_update_required(exp):
         flash(
@@ -2812,6 +3219,10 @@ def prompts(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
 
     # Route to the configuration page matching the experiment type.
+    if is_im_experiment(experiment):
+        return redirect(url_for("experiments.prompts_im", uid=uid))
+    if is_dating_experiment(experiment):
+        return redirect(url_for("experiments.prompts_dating", uid=uid))
     if experiment.simulator_type == "HPC":
         return redirect(url_for("experiments.prompts_hpc", uid=uid))
     if experiment.platform_type == "forum":
@@ -2843,7 +3254,7 @@ def prompts_forum(uid):
 
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if experiment.simulator_type == "HPC":
         return redirect(url_for("experiments.prompts_hpc", uid=uid))
@@ -2878,7 +3289,7 @@ def prompts_hpc(uid):
 
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
@@ -2927,7 +3338,7 @@ def set_prompt_language(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     language = prompt_packs.resolve(request.form.get("prompt_language"))
     exp_dir = os.path.join(
@@ -2991,7 +3402,7 @@ def update_prompts_hpc(uid):
 
     if not experiment:
         flash(_("Experiment not found."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
@@ -3090,7 +3501,7 @@ def copy_experiment():
     # Validate inputs
     if not new_exp_name or not source_exp_id:
         flash(_("Both experiment name and source experiment are required."))
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Parse and validate num_copies
     try:
@@ -3104,7 +3515,7 @@ def copy_experiment():
     source_exp = db.session.scalars(select(Exps).filter_by(idexp=source_exp_id)).first()
     if not source_exp:
         flash(_("Source experiment not found."))
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     # Generate list of experiment names to create
     exp_names_to_create = _build_copy_experiment_names(new_exp_name, num_copies)
@@ -3114,7 +3525,7 @@ def copy_experiment():
         existing_exp = db.session.scalars(select(Exps).filter_by(exp_name=name)).first()
         if existing_exp:
             flash(_("An experiment with name '%(name)s' already exists.", name=name))
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
     # Create each copy
     created_count = 0
@@ -3166,7 +3577,7 @@ def copy_experiment():
                 )
             )
 
-    return redirect(url_for("experiments.settings"))
+    return redirect(url_for("admin.dashboard"))
 
 
 def _build_copy_group_experiment_name(
@@ -3328,7 +3739,7 @@ def copy_experiment_group():
             flash(structured_failure_message, "error")
         else:
             flash(error_message, "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if structured_failure_message:
         flash(structured_failure_message, "warning")
@@ -3350,7 +3761,7 @@ def copy_experiment_group():
             )
         )
 
-    return redirect(url_for("experiments.settings"))
+    return redirect(url_for("admin.dashboard"))
 
 
 @experiments.route("/admin/experiment_matrix", methods=["GET", "POST"])
@@ -3362,7 +3773,7 @@ def experiment_matrix():
     user = _current_admin_user_or_none()
     if not user:
         flash(_("Invalid user session."), "error")
-        return redirect(url_for("experiments.settings"))
+        return redirect(url_for("admin.dashboard"))
 
     if user.role not in ("admin", "researcher"):
         flash(_("Access denied. Please use the experiment feed."))
@@ -3485,10 +3896,10 @@ def experiment_matrix():
             and (source_exp.exp_group or "").strip() != source_group
         ):
             flash(_("Source experiment not found."), "error")
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
         if not source_exp:
             flash(_("Source experiment not found."), "error")
-            return redirect(url_for("experiments.settings"))
+            return redirect(url_for("admin.dashboard"))
 
         variation_items = _matrix_parse_variation_payload(variation_payload)
         unlocked_items = []
@@ -3893,6 +4304,8 @@ def _matrix_recsys_catalog(experiment):
     """Return mode-filtered content and follow recsys choices."""
     mode = _matrix_get_experiment_mode(experiment)
     mode_lower = mode.lower()
+    # forum experiments use the "Standard" catalogue plus the forum-only recommenders
+    mode_tokens = ("standard", "forum") if mode_lower == "forum" else (mode_lower,)
     content_recsys = [
         {
             "name": recsys.name,
@@ -3903,7 +4316,7 @@ def _matrix_recsys_catalog(experiment):
         for recsys in db.session.scalars(
             select(Content_Recsys).order_by(Content_Recsys.id.asc())
         ).all()
-        if recsys.enabled and mode_lower in recsys.enabled.lower()
+        if recsys.enabled and any(t in recsys.enabled.lower() for t in mode_tokens)
     ]
     follow_recsys = [
         {
@@ -3915,7 +4328,7 @@ def _matrix_recsys_catalog(experiment):
         for recsys in db.session.scalars(
             select(Follow_Recsys).order_by(Follow_Recsys.id.asc())
         ).all()
-        if recsys.enabled and mode_lower in recsys.enabled.lower()
+        if recsys.enabled and any(t in recsys.enabled.lower() for t in mode_tokens)
     ]
     return {"content": content_recsys, "follow": follow_recsys}
 
@@ -5178,6 +5591,132 @@ def _matrix_describe_experiment_copy_failure(source_exp):
     return None
 
 
+def _slots_per_day_of(folder, experiment):
+    """Rounds per day: 24 for instant messaging, the configured slots for dating."""
+    from y_web.src.dating import is_dating_experiment as _is_dating
+
+    if not _is_dating(experiment):
+        return 24
+    from y_web.src.dating.clone import slots_per_day
+
+    return slots_per_day(folder)
+
+
+def _create_im_experiment_copy(
+    source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
+):
+    """Clone an instant messaging or dating experiment: inputs only, no database, state or logs (plan, 5.6)."""
+    from y_web.src.dating import is_dating_experiment as _is_dating
+    from y_web.src.im.clone import rewrite_server_config
+    from y_web.src.system.path_utils import get_writable_path
+
+    if _is_dating(source_exp):
+        from y_web.src.dating.clone import copy_dating_folder as copy_im_folder
+        from y_web.src.dating.clone import new_uid
+    else:
+        from y_web.src.im.clone import copy_im_folder, new_uid
+
+    if config_variations:
+        current_app.logger.warning(
+            "Configuration variations are not supported for instant messaging experiments"
+        )
+        return False
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return False
+
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        return False
+    base = os.path.join(get_writable_path(), "y_web", "experiments")
+    source_parts = source_exp.db_name.split(os.sep)
+    if len(source_parts) < 2:
+        return False
+    source_folder = os.path.join(base, source_parts[1])
+    if not os.path.isdir(source_folder):
+        return False
+
+    uid = new_uid()
+    new_folder = os.path.join(base, uid)
+    new_db_name = f"experiments{os.sep}{uid}{os.sep}database_server.db"
+    try:
+        copy_im_folder(source_folder, new_folder)
+        rewrite_server_config(
+            new_folder,
+            new_exp_name,
+            os.path.join(new_folder, "database_server.db"),
+            new_folder + os.sep,
+        )
+    except Exception:
+        shutil.rmtree(new_folder, ignore_errors=True)
+        raise
+
+    new_exp = Exps(
+        exp_name=new_exp_name,
+        prompt_language=source_exp.prompt_language,
+        platform_type=source_exp.platform_type,
+        db_name=new_db_name,
+        owner=current_user.username,
+        exp_descr=exp_descr if exp_descr is not None else source_exp.exp_descr,
+        status=0,
+        running=0,
+        port=suggested_port,
+        server=source_exp.server,
+        annotations=source_exp.annotations,
+        llm_agents_enabled=source_exp.llm_agents_enabled,
+        simulator_type=source_exp.simulator_type,
+        exp_group=exp_group,
+    )
+    db.session.add(new_exp)
+    db.session.commit()
+
+    for link in db.session.scalars(
+        select(Exp_Topic).filter_by(exp_id=source_exp.idexp)
+    ).all():
+        db.session.add(Exp_Topic(exp_id=new_exp.idexp, topic_id=link.topic_id))
+    for link in db.session.scalars(
+        select(Population_Experiment).filter_by(id_exp=source_exp.idexp)
+    ).all():
+        db.session.add(
+            Population_Experiment(
+                id_exp=new_exp.idexp, id_population=link.id_population
+            )
+        )
+    db.session.commit()
+
+    for source_client in db.session.scalars(
+        select(Client).filter_by(id_exp=source_exp.idexp)
+    ).all():
+        new_client = Client(
+            name=source_client.name,
+            prompt_language=source_client.prompt_language,
+            descr=source_client.descr,
+            days=source_client.days,
+            llm=source_client.llm,
+            status=0,
+            id_exp=new_exp.idexp,
+            population_id=source_client.population_id,
+            pid=None,
+        )
+        db.session.add(new_client)
+        db.session.commit()
+        db.session.add(
+            Client_Execution(
+                client_id=new_client.id,
+                last_active_hour=-1,
+                last_active_day=-1,
+                expected_duration_rounds=max(int(source_client.days or 0), 0)
+                * _slots_per_day_of(new_folder, source_exp),
+            )
+        )
+    db.session.add(
+        Jupyter_instances(
+            port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped"
+        )
+    )
+    db.session.commit()
+    return True
+
+
 def _create_single_experiment_copy(
     source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
@@ -5194,6 +5733,13 @@ def _create_single_experiment_copy(
     Returns:
         bool: True if successful, False otherwise
     """
+    from y_web.src.dating import is_dating_experiment as _is_dating_src
+
+    if is_im_experiment(source_exp) or _is_dating_src(source_exp):
+        return _create_im_experiment_copy(
+            source_exp, new_exp_name, exp_group, config_variations, exp_descr
+        )
+
     # Create new unique ID for the folder
     new_uid = str(uuid.uuid4()).replace("-", "_")
 

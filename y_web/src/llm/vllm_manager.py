@@ -17,6 +17,77 @@ import requests
 _MODELS_DOWN_CACHE = {}
 _MODELS_DOWN_TTL = 10.0  # seconds
 
+# Values the forms and the client configs use for "no key".
+_NO_API_KEY = {"", "NULL", "NONE", "EMPTY"}
+
+
+class LLMAuthenticationError(Exception):
+    """The LLM server rejected the request because of a missing or wrong API key."""
+
+    def __init__(self, url, status_code):
+        self.url = url
+        self.status_code = status_code
+        super().__init__(f"HTTP {status_code} from {url}")
+
+
+def llm_auth_headers(api_key=None):
+    """HTTP headers for an OpenAI-compatible server: a Bearer token, or none.
+
+    The key is never put in a URL: it would end up in server logs and in the
+    browser history.
+    """
+    key = str(api_key or "").strip()
+    if key.upper() in _NO_API_KEY:
+        return {}
+    return {"Authorization": f"Bearer {key}"}
+
+
+def _same_endpoint(a, b):
+    return (
+        str(a or "").strip().rstrip("/").lower()
+        == str(b or "").strip().rstrip("/").lower()
+    )
+
+
+def _ambient_api_key(llm_url):
+    """The key to use for *llm_url* when the caller did not pass one (``None``), or ``None``.
+
+    Admin pages list the models of the default server without knowing which key it needs. The key comes from the
+    ``LLM_API_KEY`` environment variable (the companion of ``LLM_URL``) or, inside a request, from the logged-in
+    administrator's own LLM configuration when that configuration points at the same server. A key is never
+    guessed for another server.
+    """
+    import os
+
+    env_key = (os.getenv("LLM_API_KEY") or "").strip()
+    if env_key and env_key.upper() not in _NO_API_KEY:
+        return env_key
+    try:
+        from flask import has_request_context
+        from flask_login import current_user
+        from sqlalchemy import select
+
+        if not has_request_context() or not getattr(
+            current_user, "is_authenticated", False
+        ):
+            return None
+        from y_web import db
+        from y_web.src.models import Admin_users
+
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username=current_user.username)
+        ).first()
+        key = str(getattr(user, "llm_api_key", "") or "").strip()
+        if (
+            key
+            and key.upper() not in _NO_API_KEY
+            and _same_endpoint(getattr(user, "llm_url", ""), llm_url)
+        ):
+            return key
+    except Exception:  # noqa: BLE001 - a listing must never fail because of this lookup
+        return None
+    return None
+
 
 def is_vllm_installed():
     """Check if a supported embedded vLLM runtime is installed in the current environment."""
@@ -118,13 +189,19 @@ def get_vllm_models():
         return []
 
 
-def get_llm_models(llm_url=None):
+def get_llm_models(llm_url=None, api_key=None, raise_on_auth_error=False):
     """
     Get list of models from any OpenAI-compatible LLM server.
 
     Args:
         llm_url: Base URL of the LLM server (e.g., 'http://localhost:8000/v1').
                  If None, uses LLM_URL from environment or falls back to ollama.
+        api_key: API key sent as ``Authorization: Bearer <key>``; "NULL" or "" sends
+                 no header (local Ollama and vLLM need none). None means "the key
+                 configured for this server, if any" (``LLM_API_KEY`` or the logged-in
+                 administrator's own configuration for the same URL).
+        raise_on_auth_error: when the server answers 401 or 403, raise
+                 LLMAuthenticationError instead of returning an empty list.
 
     Returns:
         List of model names available on the LLM server
@@ -140,6 +217,9 @@ def get_llm_models(llm_url=None):
                 llm_url = "http://127.0.0.1:8000/v1"
             else:
                 llm_url = "http://127.0.0.1:11434/v1"
+
+    if api_key is None:
+        api_key = _ambient_api_key(llm_url)
 
     def _candidate_model_endpoints(raw_url):
         base_url = str(raw_url or "").rstrip("/")
@@ -212,10 +292,20 @@ def get_llm_models(llm_url=None):
     if cached and now - cached < _MODELS_DOWN_TTL:
         return []
 
+    headers = llm_auth_headers(api_key)
     last_error = None
     for models_url in _candidate_model_endpoints(llm_url):
         try:
-            response = requests.get(models_url, timeout=15)
+            response = requests.get(models_url, headers=headers, timeout=15)
+            if response.status_code in (401, 403):
+                # Another path on the same host will not accept the same key.
+                print(
+                    f"LLM server at {models_url} refused the request "
+                    f"(HTTP {response.status_code}): check the API key."
+                )
+                if raise_on_auth_error:
+                    raise LLMAuthenticationError(models_url, response.status_code)
+                return []
             response.raise_for_status()
             data = response.json()
             models = _models_from_payload(data)

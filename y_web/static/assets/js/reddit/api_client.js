@@ -83,6 +83,9 @@
             if (url && !payload.url) {
                 payload.url = url;
             }
+            if (window.wsCrosspostList && window.wsCrosspostList().length) {
+                payload.crosspost = window.wsCrosspostList();  // World Simulation (F8): also post on these members
+            }
             return postJson('/api/reddit/' + expId + '/post', payload).then(function (response) {
                 return response.data;
             });

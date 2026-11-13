@@ -43,3 +43,12 @@ markdown_extensions:
   - toc:
       permalink: true
       toc_depth: "2-2"
+
+# Pages of optional plugins that are not publicly released yet
+exclude_docs: |
+  instant-messaging.md
+  dating.md
+  dating-analytics-mapping.md
+  im-analytics-mapping.md
+  world-simulation*.md
+  reference/world-simulation-configuration.md

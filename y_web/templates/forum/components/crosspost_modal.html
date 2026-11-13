@@ -1,0 +1,22 @@
+{# "Repost" dialog: pick the profile or a community to cross-post a thread into #}
+<div class="fr-modal" id="fr-crosspost" hidden role="dialog" aria-modal="true" aria-labelledby="fr-crosspost-title"
+     data-exp-id="{{ exp_id }}"
+     data-i18n='{{ {
+        "posted": _("Reposted to"), "view": _("View post"), "profile": _("Your profile"), "empty": _("No communities found"),
+        "error": _("Unable to repost right now."), "posts": _("posts"), "participants": _("participants"), "already": _("Already reposted there"), "platforms": _("Other platforms"), "platformHint": _("Cross-post on another platform")
+     }|tojson }}'>
+    <div class="fr-modal-backdrop" data-fr-crosspost-close></div>
+    <div class="fr-modal-card">
+        <header class="fr-modal-head">
+            <h2 id="fr-crosspost-title">{{ _('Repost') }}</h2>
+            <button type="button" class="fr-modal-close" data-fr-crosspost-close aria-label="{{ _('Close') }}"><i class="mdi mdi-close" aria-hidden="true"></i></button>
+        </header>
+        <label class="fr-modal-search">
+            <i class="mdi mdi-magnify" aria-hidden="true"></i>
+            <input type="search" id="fr-crosspost-search" placeholder="{{ _('Search') }}" autocomplete="off"/>
+        </label>
+        <h3 class="fr-modal-subtitle">{{ _('Repost suggestions') }}</h3>
+        <ul class="fr-modal-list" id="fr-crosspost-list"></ul>
+    </div>
+</div>
+<div class="fr-toast" id="fr-toast" hidden></div>

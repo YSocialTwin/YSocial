@@ -454,10 +454,12 @@ def create_post_reddit(
     ).first()
     llm = "llama3.2:latest"
     llm_url = None
+    llm_api_key = None
     if admin_user:
         if getattr(admin_user, "llm", None):
             llm = admin_user.llm
         llm_url = getattr(admin_user, "llm_url", None) or None
+        llm_api_key = getattr(admin_user, "llm_api_key", None) or None
 
     try:
         if normalized_url:
@@ -505,6 +507,7 @@ def create_post_reddit(
                             image_annotator = Annotator(
                                 llm_v,
                                 llm_url=llm_url,
+                                llm_api_key=llm_api_key,
                                 language=prompt_packs.experiment_language(
                                     getattr(g, "current_exp_id", None)
                                 ),
@@ -611,6 +614,7 @@ def create_post_reddit(
             annotator = ContentAnnotator(
                 llm=llm,
                 llm_url=llm_url,
+                llm_api_key=llm_api_key,
                 language=prompt_packs.experiment_language(
                     getattr(g, "current_exp_id", None)
                 ),
@@ -733,3 +737,113 @@ def create_post_reddit(
     except Exception as exc:
         db.session.rollback()
         raise ValueError(f"Failed to create post: {exc}")
+
+
+def crosspost_reddit(
+    user, source_post_id, community_slug: Optional[str] = None
+) -> Tuple[Post, bool]:
+    """Cross-post an existing thread into another community (or the user's own profile).
+
+    The copy is a new top-level post by the acting user carrying the source's text, image and linked article, with
+    ``shared_from`` pointing at the original and the destination community added as its topic.
+
+    Returns ``(post, created)``; ``created`` is False when the same user already cross-posted that thread there.
+    """
+    _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
+    source = db.session.get(Post, source_post_id)
+    if source is None or source.comment_to not in (-1, "-1", None):
+        raise ValueError("Only top-level posts can be cross-posted")
+
+    slug = _normalize_community_slug(community_slug or "")
+    topic = None
+    if slug:
+        topic = db.session.scalars(select(Interests).filter_by(interest=slug)).first()
+
+    # same user, same source, same destination: reuse
+    previous = db.session.scalars(
+        select(Post).filter_by(user_id=actor_user.id, shared_from=source.id)
+    ).all()
+    for candidate in previous:
+        if slug:
+            linked = (
+                db.session.scalars(
+                    select(Post_topics).filter_by(
+                        post_id=candidate.id, topic_id=topic.iid
+                    )
+                ).first()
+                if topic is not None
+                else None
+            )
+            if linked is not None:
+                return candidate, False
+        elif not db.session.scalars(
+            select(Post_topics).filter_by(post_id=candidate.id)
+        ).first():
+            return candidate, False
+
+    round_id = _get_current_round()
+    try:
+        post = Post(
+            tweet=source.tweet,
+            round=round_id,
+            user_id=actor_user.id,
+            comment_to=-1,
+            image_id=source.image_id,
+            news_id=source.news_id,
+            shared_from=source.id,
+        )
+        db.session.add(post)
+        db.session.commit()
+        post.thread_id = post.id
+        db.session.commit()
+
+        if slug:
+            if topic is None:
+                db.session.add(Interests(interest=slug))
+                db.session.commit()
+                topic = db.session.scalars(
+                    select(Interests).filter_by(interest=slug)
+                ).first()
+            db.session.add(Post_topics(post_id=post.id, topic_id=topic.iid))
+            db.session.add(
+                User_interest(
+                    user_id=actor_user.id, interest_id=topic.iid, round_id=round_id
+                )
+            )
+            db.session.commit()
+        return post, True
+    except Exception as exc:
+        db.session.rollback()
+        raise ValueError(f"Failed to cross-post: {exc}")
+
+
+COMMUNITY_NAME_RE = re.compile(r"^[a-z0-9_]{3,20}$")
+
+
+def create_community(user, name: str) -> Tuple[Interests, bool]:
+    """Create a community (an ``Interests`` row) on behalf of the human user and make them a member.
+
+    ``name`` may carry the ``y/`` prefix; it is lower-cased and must be 3-20 letters, digits or underscores. Returns
+    ``(interest, created)``; ``created`` is False when the community already exists (nothing is changed then).
+    """
+    _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
+    slug = str(name or "").strip().lower().removeprefix("y/").removeprefix("r/")
+    if not COMMUNITY_NAME_RE.fullmatch(slug):
+        raise ValueError(
+            "Community names have 3-20 characters: letters, digits and underscores."
+        )
+    existing = db.session.scalars(select(Interests).filter_by(interest=slug)).first()
+    if existing is not None:
+        return existing, False
+    topic = Interests(interest=slug)
+    db.session.add(topic)
+    db.session.commit()
+    db.session.add(
+        User_interest(
+            user_id=actor_user.id, interest_id=topic.iid, round_id=_get_current_round()
+        )
+    )
+    db.session.commit()
+    return topic, True

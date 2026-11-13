@@ -309,3 +309,105 @@ def test_opening_a_plugin_shows_a_loading_message_right_away():
             / f"{lang}.json"
         ).read_text(encoding="utf-8")
         assert "Opening {label}... checking GitHub" in catalog
+
+
+def test_the_plugin_list_is_split_in_the_four_sections():
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    keys = [
+        "microblogging",
+        "forum",
+        "hpc_simulator",
+        "forum_hpc",
+        "photo_sharing",
+        "instant_messaging",
+        "dating",
+        "federation",
+        "agent_plugins",
+        "agent_memory",
+        "reactive_agents",
+        "frontend_adds_on",
+        "scenario_design",
+        "training_modules",
+        "some_community_plugin",
+    ]
+    sections = route_mod._plugin_sections([{"key": k} for k in keys])
+    assert [(s["key"], [e["key"] for e in s["entries"]]) for s in sections] == [
+        (
+            "platforms",
+            [
+                "hpc_simulator",
+                "forum_hpc",
+                "photo_sharing",
+                "instant_messaging",
+                "dating",
+                "federation",
+            ],
+        ),
+        ("platforms_legacy", ["microblogging", "forum"]),
+        ("agent_plugins", ["agent_plugins", "agent_memory", "reactive_agents"]),
+        (
+            "system_plugins",
+            ["frontend_adds_on", "scenario_design", "training_modules"],
+        ),
+        ("other", ["some_community_plugin"]),
+    ]
+    assert [s["key"] for s in route_mod._plugin_sections([{"key": "dating"}])] == [
+        "platforms"
+    ]
+
+
+def test_the_plugin_list_has_search_and_filters_and_names_the_legacy_ones_flask():
+    page = (
+        Path(__file__).resolve().parents[1]
+        / "templates"
+        / "admin"
+        / "external_runtimes.html"
+    ).read_text(encoding="utf-8")
+    for hook in (
+        'id="ext-q"',
+        'id="ext-f-state"',
+        'id="ext-f-section"',
+        'data-state="{{ entry.state }}"',
+        "is:update",
+    ):
+        assert hook in page, hook
+    assert "server + client" not in page
+    assert '<span class="ext-plugin-meta">Flask</span>' in page
+    # the guided tour keeps finding its anchors
+    assert "external-runtimes-list" in page and "ext-row-actions" in page
+
+
+def test_the_hpc_simulator_is_called_ymicroblogging():
+    from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+
+    spec = SUPPORTED_EXTERNAL_REPOS["hpc_simulator"]
+    assert spec.label == "YMicroblogging" and spec.path.name == "YSimulator"
+    assert "microblogging" in spec.description.lower()
+
+
+def test_the_name_chosen_by_ysocial_wins_over_the_installed_plugin_info():
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+    from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+
+    spec = SUPPORTED_EXTERNAL_REPOS["hpc_simulator"]
+    index = [
+        {
+            "plugin_name": "YSimulator",
+            "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
+            "category": "Simulation Runtime Stack",
+            "group": "HPC",
+            "authors": [],
+            "repository_url": "https://github.com/YSocialTwin/YSimulator",
+        }
+    ]
+    repo = {
+        "key": spec.key,
+        "label": spec.label,
+        "category_label": "",
+        "group_label": "",
+        "repo_url": spec.repo_url,
+    }
+    out = route_mod._decorate_repo(repo, spec, index)
+    assert out["label"] == "YMicroblogging" and out["plugin_name"] == "YMicroblogging"
+    assert out["plugin_description"] == spec.description

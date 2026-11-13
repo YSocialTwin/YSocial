@@ -60,10 +60,7 @@
                                         <span class="left"></span>
                                         <span class="right" style="width: 70%; color: #b45309; font-size: 0.95em;">
                                             {{ _('No populations are available for this %(platform)s experiment.', platform=experiment.platform_type) }}
-                                            {% if incompatible_population_count %}
-                                            {{ _('Existing unassigned populations are incompatible with this platform type.') }}
-                                            {% endif %}
-                                            {{ _('Create or upload a population with username type %(type)s in the populations page.', type=wrap('strong', experiment.platform_type)) }}
+                                            {{ _('Create or upload a population in the populations page.') }}
                                         </span>
                                     </div>
                                     {% endif %}
@@ -610,6 +607,7 @@
                                         </span>
                                     </div>
                                     </div><!-- End section-reply-controls -->
+                                    {% include 'admin/_forum_communities.html' %}
                                     {% if llm_agents_enabled %}
                                     <div class="form-section-header">{{ _('Large Language Models') }}</div>
                                     <div class="form-section-description">
@@ -1080,101 +1078,6 @@
                                     </details>
                                     </div><!-- End section-activity-rates -->
 
-                                    <div id="section-agent-archetypes" class="tutorial-section">
- <div class="form-section-header ys-field-note">{{ _('Agent Archetypes and Transitions') }} <span>{{ _('(Optional)') }}</span></div>
-                                    <div class="form-section-description">
-                                        {{ _('Configure the behavioral archetypes and transition probabilities for agents.') }}
-                                    </div>
-
- <div class="ys-note-box">
- <label class="ys-flex-link">
- <input type="checkbox" id="enable_archetypes" name="enable_archetypes" checked class="ys-mr-click">
-                                            <span>{{ _('Enable Agent Archetypes Distribution') }}</span>
-                                        </label>
- <p class="ys-text-xs-indent">
-                                            {{ _('When disabled, all agents will be able to perform all actions without archetype restrictions.') }}
-                                        </p>
-                                    </div>
-
- <details class="ys-mb-20" id="archetype-details">
- <summary class="ys-accordion-header">
- <span class="ys-inline-flex-gap">
- <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                                {{ _('Archetype Configuration') }}
-                                            </span>
-                                        </summary>
- <div class="ys-content-panel">
- <div class="network-option-card ys-card-gray-mb">
-                                                <div class="network-card-title">
-                                                    <span class="network-card-icon">👥</span>
-                                                    {{ _('Archetype Distribution (%%)') }}
-                                                </div>
- <p class="ys-field-hint">
-                                                    {{ _('Define the percentage of agents in each behavioral archetype (must sum to 100%%).') }}
-                                                </p>
-                                                <div class="archetype-boxes">
-                                                    <div class="archetype-box" id="archetype-validator-box">
-                                                        <h4>{{ _('The Validator') }}</h4>
-                                                        <p>{{ _('Active Audience - ~70%% of activity is validating others') }}</p>
- <input type="number" id="archetype_validator" name="archetype_validator" value="52" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
-                                                    </div>
-                                                    <div class="archetype-box" id="archetype-broadcaster-box">
-                                                        <h4>{{ _('The Broadcaster') }}</h4>
-                                                        <p>{{ _('Content Creator - ~75%% of actions are posts/comments') }}</p>
- <input type="number" id="archetype_broadcaster" name="archetype_broadcaster" value="20" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
-                                                    </div>
-                                                    <div class="archetype-box" id="archetype-explorer-box">
-                                                        <h4>{{ _('The Explorer') }}</h4>
-                                                        <p>{{ _('Network Growth - Focused on expanding social graph') }}</p>
- <input type="number" id="archetype_explorer" name="archetype_explorer" value="28" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
- <div class="network-option-card ys-card-white">
-                                                <div class="network-card-title">
-                                                    <span class="network-card-icon">🔄</span>
-                                                    {{ _('Transition Probabilities (%%)') }}
-                                                </div>
- <p class="ys-field-hint">
-                                                    {{ _('Probability that an agent transitions from one archetype to another (each row must sum to 100%%).') }}
-                                                </p>
-                                                <table class="transition-table-compact">
-                                                    <thead>
-                                                        <tr>
- <th class="text-start">{{ _('From / To') }}</th>
-                                                            <th>{{ _('Validator') }}</th>
-                                                            <th>{{ _('Broadcaster') }}</th>
-                                                            <th>{{ _('Explorer') }}</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td>{{ _('Validator') }}</td>
-                                                            <td><input type="number" id="trans_val_val" name="trans_val_val" value="85.3" step="0.1" min="0" max="100"></td>
-                                                            <td><input type="number" id="trans_val_broad" name="trans_val_broad" value="8.1" step="0.1" min="0" max="100"></td>
-                                                            <td><input type="number" id="trans_val_expl" name="trans_val_expl" value="6.6" step="0.1" min="0" max="100"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>{{ _('Broadcaster') }}</td>
-                                                            <td><input type="number" id="trans_broad_val" name="trans_broad_val" value="19.5" step="0.1" min="0" max="100"></td>
-                                                            <td><input type="number" id="trans_broad_broad" name="trans_broad_broad" value="72.9" step="0.1" min="0" max="100"></td>
-                                                            <td><input type="number" id="trans_broad_expl" name="trans_broad_expl" value="7.5" step="0.1" min="0" max="100"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>{{ _('Explorer') }}</td>
-                                                            <td><input type="number" id="trans_expl_val" name="trans_expl_val" value="36.4" step="0.1" min="0" max="100"></td>
-                                                            <td><input type="number" id="trans_expl_broad" name="trans_expl_broad" value="14.6" step="0.1" min="0" max="100"></td>
-                                                            <td><input type="number" id="trans_expl_expl" name="trans_expl_expl" value="49.0" step="0.1" min="0" max="100"></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </details>
-                                    </div><!-- End section-agent-archetypes -->
-
                                 </div>
                                 <div class="button-wrap">
                                     <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
@@ -1255,15 +1158,6 @@
                                 <b>{{ _('Hourly Activity Rates (Optional)') }}</b><br>
                                 {{ _('Customize agent activity patterns by hour.') }}<br><br>
                                 {{ _('Leave fields empty to use the default activity profile.') }}
-                            </p>
-                            <hr>
-                            <p>
-                                <b>{{ _('Agent Archetypes and Transitions (Optional)') }}</b><br>
-                                {{ _('Configure behavioral archetypes and transition probabilities for agents.') }}<br><br>
-                                <em>{{ _('Enable/Disable Toggle:') }}</em> {{ _('When disabled, all agents can perform all actions without archetype restrictions.') }}<br><br>
-                                <em>{{ _('The Validator:') }}</em> {{ _('Active Audience (~70%% validation activity)') }}<br>
-                                <em>{{ _('The Broadcaster:') }}</em> {{ _('Content Creator (~75%% posts/comments)') }}<br>
-                                <em>{{ _('The Explorer:') }}</em> {{ _('Network Growth (focused on connections).') }}
                             </p>
 
                         </div>

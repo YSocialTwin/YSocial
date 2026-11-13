@@ -17,6 +17,12 @@
                         {% if experiment_details_variant == 'photo' %}
  <span class="tag is-info">{{ _('Photo Sharing') }}</span>
                         {% endif %}
+                        {% if experiment_details_variant == 'im' %}
+ <span class="tag is-info">{{ _('Instant Messaging') }}</span>
+                        {% endif %}
+                        {% if experiment_details_variant == 'dating' %}
+ <span class="tag is-info">{{ _('Dating') }}</span>
+                        {% endif %}
                         {% if has_infinite_client %}
  <span class="ys-badge-success2" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">{{ _('∞ Infinite') }}</span>
                         {% endif %}
@@ -46,6 +52,10 @@
                                         </form>
                                         {% else %}
                                         {{ experiment.exp_name }}
+                                        {% endif %}
+                                        {% set ws = world_simulation_of(experiment.idexp) %}
+                                        {% if ws %}
+ <a class="ys-badge-success" href="{{ url_for('world_simulation.detail', fed_id=ws.id) }}" title="{{ _('This experiment belongs to a World Simulation: it starts and stops with it') }}">{{ _('World Simulation') }}: {{ ws.name }}</a>
                                         {% endif %}
                                         {% if has_infinite_client %}
  <span class="ys-badge-success" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">∞</span>
@@ -117,6 +127,7 @@
                                                 <span>{{ _('Sentiment') }}</span>
                                             </div>
                                             {% endif %}
+                                            {% if experiment_details_variant != 'dating' %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" name="opinion_dynamics_enabled" {% if opinion_dynamics_enabled %}checked{% endif %}>
@@ -124,7 +135,8 @@
                                                 </label>
                                                 <span>{{ _('Opinion Dynamics') }}</span>
                                             </div>
-                                            {% if experiment.platform_type in ["microblogging", "hpc"] %}
+                                            {% endif %}
+                                            {% if experiment.platform_type in ["microblogging", "hpc", "instant_messaging", "dating"] %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" name="stress_reward_enabled" {% if stress_reward_enabled %}checked{% endif %}>
@@ -189,12 +201,51 @@
  <div class="ys-content-panel">
  <p class="ys-label-hint">{{ _('Adjust experiment prompts and supporting configuration.') }}</p>
 
-                                {% if len(clients)>0 %}
+                                {% if len(clients)>0 and experiment_details_variant not in ['im', 'dating'] %}
                                 <div class="box-line">
                                     <span class="left">{{ _('Edit LLM Prompts') }}</span>
                                     <span class="right">
                                         <a class="link-tooltip" href="/admin/prompts/{{ experiment.idexp }}" title="{{ _('Edit') }}">
  <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                {% if experiment_details_variant == 'dating' %}
+                                <div class="box-line">
+                                    <span class="left">{{ _('Advanced settings and recommender') }}</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/dating_settings/{{ experiment.idexp }}" title="{{ _('Edit') }}">
+ <i class="mdi mdi-tune ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">{{ _('Edit LLM Prompts') }}</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/prompts_dating/{{ experiment.idexp }}" title="{{ _('Edit') }}">
+ <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                {% if experiment_details_variant == 'im' %}
+                                <div class="box-line">
+                                    <span class="left">{{ _('Edit LLM Prompts') }}</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/prompts_im/{{ experiment.idexp }}" title="{{ _('Edit') }}">
+ <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">{{ _('News feeds (RSS)') }}</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="{{ _('Select RSS Feeds') }}">
+ <i class="mdi mdi-rss-box ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="{{ _('Only owner/admin/shared researchers can edit forum feeds') }}"></i>
+                                        {% endif %}
                                     </span>
                                 </div>
                                 {% endif %}
@@ -232,6 +283,28 @@
                                         <i class="mdi mdi-lock ys-icon-muted" title="{{ _('Only owner/admin/shared researchers can edit stress/reward settings') }}"></i>
                                         {% endif %}
                                     </span>
+                                </div>
+                                {% endif %}
+                                                                {% if experiment_details_variant == 'im' and im_advanced %}
+                                <div id="im-advanced-settings">
+                                    <hr>
+                                    <p class="ys-label-hint">{{ _('Server settings of the instant messaging simulation. People can register at any time: these settings only shape how they take part.') }}</p>
+                                    <form method="POST" action="/admin/update_im_advanced_settings/{{ experiment.idexp }}">
+                                            <div class="box-line">
+                                                <span class="left">{{ _('Minimum round duration (seconds, 0 = off)') }}</span>
+                                                <span class="right"><input type="number" name="min_round_seconds" class="input" min="0" max="3600" step="1" value="{{ im_advanced.min_round_seconds|int if im_advanced.min_round_seconds == im_advanced.min_round_seconds|int else im_advanced.min_round_seconds }}" {% if im_advanced.locked %}disabled{% endif %}></span>
+                                            </div>
+                                            <div class="ys-text-xs-meta">{{ _('A round never closes sooner than this, so that people have time to act. It is a lower bound: the simulation never waits for a person.') }}</div>
+                                            <div class="box-line">
+                                                <span class="left">{{ _('Maximum number of participants') }}</span>
+                                                <span class="right"><input type="number" name="max_humans" class="input" min="1" max="1000" value="{{ im_advanced.max_humans }}" {% if im_advanced.locked %}disabled{% endif %}></span>
+                                            </div>
+                                            {% if im_advanced.locked %}
+                                            <div class="ys-text-xs-meta">{{ _('The run already started: reset the experiment to change these settings.') }}</div>
+                                            {% else %}
+                                            <button type="submit" class="button is-small is-info ys-mt-8">{{ _('Update Configuration') }}</button>
+                                            {% endif %}
+                                        </form>
                                 </div>
                                 {% endif %}
                                     </div>
@@ -376,7 +449,11 @@
  <span class="right ys-flex-gap-8">
  <div class="ys-flex-gap-3">
                                             {% if experiment.running == 0 %}
-                                            {% if configuration_update_required %}
+                                            {% if ws and ws.locked %}
+ <span class="link-tooltip" title="{{ _('Managed by the World Simulation') }}">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+ </span>
+ {% elif configuration_update_required %}
  <span class="link-tooltip" title="{{ _('Update configuration first') }}">
  <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
                                             </span>
@@ -387,7 +464,11 @@
                                             {% endif %}
                                             {% endif %}
                                         {% if experiment.running == 1 and can_manage_experiment %}
-                                            {% if configuration_update_required %}
+                                            {% if ws and ws.locked %}
+ <span class="link-tooltip" title="{{ _('Managed by the World Simulation') }}">
+ <i class="mdi mdi-stop ys-icon-muted"></i>
+ </span>
+ {% elif configuration_update_required %}
  <span class="link-tooltip" title="{{ _('Update configuration first') }}">
  <i class="mdi mdi-stop ys-icon-muted"></i>
                                             </span>
@@ -483,8 +564,8 @@
  <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
  <div class="ys-text-flex-sm" style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ client.name }}">{{ client.name }}</span>
-                                        {% if (opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations)) and (not configuration_update_required or experiment.running == 0) %}
-                                        <a href="/admin/opinion_configuration_standard/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="{{ _('Configure Opinion Dynamics') }}">
+                                        {% if (opinion_dynamics_enabled or (experiment_details_variant != 'im' and experiment.annotations and 'opinions' in experiment.annotations)) and (not configuration_update_required or experiment.running == 0) %}
+                                        <a href="/admin/opinion_configuration_{{ 'im' if experiment_details_variant == 'im' else 'standard' }}/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="{{ _('Configure Opinion Dynamics') }}">
                                             <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6;"></i>
                                         </a>
                                         {% endif %}
@@ -497,7 +578,7 @@
                                 </div>
  <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
  <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
-                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}" data-client-status="{{ client.status }}">
  <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
@@ -540,6 +621,14 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% if client_failures and client_failures.get(client.id) %}
+                                {% set failure = client_failures.get(client.id) %}
+ <div class="ys-cell-pad" style="font-size: 0.85em; color: #b42318;">
+                                    <i class="mdi mdi-alert-circle-outline"></i>
+                                    {{ failure.message }}
+                                    {% if failure.detail %}<br><span style="color: #777;">{{ failure.error_type }}: {{ failure.detail }}</span>{% endif %}
+                                </div>
+                                {% endif %}
                                 
 
                             </div>
@@ -697,11 +786,49 @@
                         </div>
                     </div>
 
-                    {% set has_analytics_pages = experiment.is_remote == 0 %}
+                    {# IM analytics stay hidden until the derived analytics database exists (plan, 5.7) #}
+                    {% set has_analytics_pages = experiment.is_remote == 0 and experiment_details_variant != 'dating' and (experiment_details_variant != 'im' or im_analytics) %}
+                    {% if experiment_details_variant == 'dating' and experiment.is_remote == 0 %}
+                    <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
+                        <h3 class="title is-5 is-thin">{{ _('Analytics Pages') }}</h3>
+                        <div class="box-content ys-flex-1">
+                            <div class="ys-analytics-pages-grid">
+                                <a href="/admin/dating_analytics/{{ experiment.idexp }}" class="ys-analytics-page-card is-primary">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-multiple-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">{{ _('Dating analytics') }}</span>
+                                        <span class="ys-analytics-page-meta">{{ _('Recommenders, matches, dates, exits, export') }}</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">{{ _('Open') }}</span>
+                                </a>
+                                <a href="/admin/dating_participants/{{ experiment.idexp }}" class="ys-analytics-page-card">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-account-group-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">{{ _('Participants') }}</span>
+                                        <span class="ys-analytics-page-meta">{{ _('People who play next to the agents, gateway status') }}</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">{{ _('Open') }}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% if has_analytics_pages %}
                     <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">{{ _('Analytics Pages') }}</h3>
                         <div class="box-content ys-flex-1">
+                            {% if experiment_details_variant == 'im' and im_analytics %}
+                            {% set im_state = im_analytics.state %}
+                            <p class="ys-analytics-pages-intro" id="im-analytics-state">
+                                {% if im_state.state == 'failed' %}{{ _('Analytics data could not be built: %(message)s', message=im_state.message or _('unknown error')) }}
+                                {% elif im_state.state == 'running' %}{{ _('Analytics data are being built.') }}
+                                {% elif im_state.day %}{{ _('Analytics data as of day %(d)s, slot %(s)s. The pages count a message as a post and a slot as the time unit.', d=im_state.day, s=im_state.slot) }}
+                                {% else %}{{ _('Analytics data have not been built yet.') }}{% endif %}
+                            </p>
+                            <form method="post" action="/admin/im/analytics/{{ experiment.idexp }}/refresh" style="margin-bottom:.75rem;">
+                                <button type="submit" class="button is-small is-info">{{ _('Refresh analytics data') }}</button>
+                            </form>
+                            {% endif %}
                             <p class="ys-analytics-pages-intro">
                                 {{ _('Open the active experiment dashboards from a single compact panel.') }}
                             </p>
@@ -730,6 +857,7 @@
                                     </span>
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
+                                {% if experiment_details_variant != 'im' %}
                                 <a href="/admin/recsys_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-view-dashboard-outline"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -738,7 +866,8 @@
                                     </span>
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
-                                {% if experiment.annotations and 'opinions' in experiment.annotations %}
+                                {% endif %}
+                                {% if (im_switches.opinion if experiment_details_variant == 'im' and im_switches else (experiment.annotations and 'opinions' in experiment.annotations)) %}
                                 <a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-info">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-line"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -748,7 +877,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if stress_reward_enabled %}
+                                {% if (im_switches.stress_reward if experiment_details_variant == 'im' and im_switches else stress_reward_enabled) %}
                                 <a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-pulse"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -758,7 +887,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if toxicity_annotation_enabled %}
+                                {% if (im_switches.toxicity if experiment_details_variant == 'im' and im_switches else toxicity_annotation_enabled) %}
                                 <a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-alert-octagon-outline"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -768,7 +897,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if sentiment_annotation_enabled %}
+                                {% if (im_switches.sentiment if experiment_details_variant == 'im' and im_switches else sentiment_annotation_enabled) %}
                                 <a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-success">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-bell-curve"></i></span>
                                     <span class="ys-analytics-page-body">
@@ -778,7 +907,7 @@
                                     <span class="ys-analytics-page-action">{{ _('Open') }}</span>
                                 </a>
                                 {% endif %}
-                                {% if emotion_annotation_enabled %}
+                                {% if (im_switches.emotion if experiment_details_variant == 'im' and im_switches else emotion_annotation_enabled) %}
                                 <a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="ys-analytics-page-card is-warning">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-emoticon-outline"></i></span>
                                     <span class="ys-analytics-page-body">

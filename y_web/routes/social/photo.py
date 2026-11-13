@@ -382,6 +382,10 @@ def _photo_media_url(exp: Exps, raw_url: Optional[str]) -> str:
         return ""
     if value.startswith("http://") or value.startswith("https://"):
         return value
+    if value.startswith(
+        "/media/agents/"
+    ):  # generated profile picture of an agent (served by the admin app)
+        return value
     if value.startswith("/static/") or value.startswith("/assets/"):
         return value
     if value.startswith("file://"):
@@ -430,6 +434,15 @@ def _photo_profile_pic_url(
     raw_profile_pic: Optional[str] = "",
     is_page: int = 0,
 ) -> str:
+    if not int(
+        is_page or 0
+    ):  # the picture generated for the agent comes first; without one, the usual logic
+        from y_web.src.agents.profile_pictures import picture_of_username
+
+        generated = picture_of_username(username)
+        if generated:
+            return generated
+
     value = _photo_media_url(exp, raw_profile_pic)
     if value:
         return value
@@ -2699,6 +2712,27 @@ def api_photo_share_post(exp_id, photo_id):
     if not db_path:
         return {"ok": False, "error": "database_unavailable"}, 500
 
+    # World Simulation (F8): an enrolled person who picked other platforms shares through the runtime gateway
+    from y_web.src.federation import human_outbox as _ho
+
+    _requested = _ho.requested_members(request.values.getlist("crosspost"))
+    if _requested and photo_key:
+        _caption = str(request.values.get("caption") or "").strip()
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _requested,
+            _caption,
+            lambda t: _ho.photo_share(photo_key, _caption, t),
+            only="photo_sharing",
+        )
+        if _sent is not None:
+            return (
+                ({"ok": True, "crossposted": True}, 200)
+                if _sent
+                else ({"ok": False, "error": "gateway_refused"}, 502)
+            )
+
     round_id = _photo_latest_round_id(exp)
     new_photo_id = str(uuid.uuid4())
     with sqlite3.connect(db_path) as conn:
@@ -3102,6 +3136,39 @@ def api_photo_share(exp_id):
     alt_text = str(request.form.get("alt_text") or "").strip()
     if not caption and not alt_text:
         return {"ok": False, "error": "missing_text"}, 400
+
+    # World Simulation (F8): an enrolled person who picked other platforms posts through the runtime gateway
+    from y_web.src.federation import human_outbox as _ho
+
+    _requested = _ho.requested_members(request.form.getlist("crosspost"))
+    if _requested:
+        import base64 as _b64
+        import os as _os
+
+        _raw = upload_file.read()
+        upload_file.seek(0)
+        _ext = (
+            _os.path.splitext(str(upload_file.filename))[1].lstrip(".").lower() or "jpg"
+        )
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _requested,
+            caption or alt_text,
+            lambda t: _ho.photo_post(
+                caption or alt_text,
+                t,
+                image_base64=_b64.b64encode(_raw).decode("ascii"),
+                extension=_ext,
+            ),
+            only="photo_sharing",
+        )
+        if _sent is not None:
+            return (
+                ({"ok": True, "crossposted": True}, 200)
+                if _sent
+                else ({"ok": False, "error": "gateway_refused"}, 502)
+            )
 
     viewer_user = _photo_active_user(exp)
     user_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()

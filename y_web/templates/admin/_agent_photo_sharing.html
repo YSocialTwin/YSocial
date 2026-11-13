@@ -1,0 +1,42 @@
+{# Photo Sharing fields of an agent (optional, shown only when the Photo Sharing simulator is installed). They are
+   stored as agent extensions, which the other platforms ignore. #}
+{% macro yesno(name, label) -%}
+<div class="box-line">
+    <span class="left">{{ label }}</span>
+    <span class="right ys-w-70">
+        <div class="select is-fullwidth"><select name="photo_{{ name }}"><option value=""></option><option value="yes">{{ _('Yes') }}</option><option value="no">{{ _('No') }}</option></select></div>
+    </span>
+</div>
+{%- endmacro %}
+<fieldset id="photo-agent-sections" class="ys-fieldset-reset" data-optional-section="photo" disabled>
+    <div class="form-section-description">{{ _('Fields read only by Photo Sharing. A field left empty is not stored: the simulator then uses its own default.') }}</div>
+    <div class="box-line">
+        <span class="left">{{ _('Bio') }}</span>
+        <span class="right ys-w-70"><textarea name="photo_bio" class="textarea" rows="2"></textarea></span>
+    </div>
+    {{ yesno('is_private', _('Private account')) }}
+    {{ yesno('is_verified', _('Verified account')) }}
+    <div class="box-line">
+        <span class="left">{{ _('Attention Budget') }}</span>
+        <span class="right ys-w-70"><input type="number" name="photo_attention_budget" class="input" min="1" step="1" placeholder="50–150"></span>
+    </div>
+    <div class="box-line">
+        <span class="left">{{ _('Favourite filters') }}</span>
+        <span class="right ys-w-70">
+            <input type="text" name="photo_favorite_filters" class="input" placeholder="{{ _('e.g. warm, vintage, mono') }}">
+            <small class="ys-label-hint">{{ _('Comma-separated filter names.') }}</small>
+        </span>
+    </div>
+    <div class="box-line">
+        <span class="left">{{ _('Story visibility') }}</span>
+        <span class="right ys-w-70">
+            <div class="select is-fullwidth"><select name="photo_story_visibility"><option value=""></option>{% for v in story_visibility_options %}<option value="{{ v }}">{{ v }}</option>{% endfor %}</select></div>
+        </span>
+    </div>
+    <div class="box-line">
+        <span class="left">{{ _('Creator tier') }}</span>
+        <span class="right ys-w-70">
+            <div class="select is-fullwidth"><select name="photo_creator_tier"><option value=""></option>{% for v in creator_tier_options %}<option value="{{ v }}">{{ v }}</option>{% endfor %}</select></div>
+        </span>
+    </div>
+</fieldset>

@@ -1,0 +1,547 @@
+"""The admin pages of an IM experiment render without errors in the real application (plan, Phase 6)."""
+
+import uuid
+
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def im_app(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+
+    from y_web import create_app, db
+    from y_web.src.models import Admin_users
+
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_writable_path", lambda *a: str(tmp_path)
+    )
+    app = create_app(db_type="sqlite")
+    app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
+    with app.app_context():
+        admin = db.session.query(Admin_users).filter_by(role="admin").first()
+        if admin is None:
+            admin = Admin_users(
+                username="adm",
+                email=f"{uuid.uuid4().hex}@x.test",
+                password="x",
+                last_seen="2026-01-01",
+                role="admin",
+            )
+            db.session.add(admin)
+            db.session.commit()
+        user = SimpleNamespace(
+            is_authenticated=True,
+            is_active=True,
+            is_anonymous=False,
+            id=admin.id,
+            username=admin.username,
+            role="admin",
+            telemetry_enabled=0,
+            get_id=lambda: str(admin.id),
+            email=admin.email,
+        )
+    # the login loader reads a per-experiment table that the shipped dummy database lacks (pre-existing)
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: user)
+    monkeypatch.setattr(
+        "y_web.src.system.miscellanea.check_privileges", lambda *a, **k: None
+    )
+    return app, app.test_client()
+
+
+def _make_im_experiment(app):
+    from y_web import db
+    from y_web.src.models import Exps
+
+    with app.app_context():
+        exp = Exps(
+            exp_name="im pages",
+            platform_type="instant_messaging",
+            simulator_type="HPC",
+            db_name=f"experiments/{uuid.uuid4().hex}/database_server.db",
+            owner="adm",
+            exp_descr="d",
+            status=0,
+            port=5099,
+            server="127.0.0.1",
+            prompt_language="en",
+        )
+        db.session.add(exp)
+        db.session.commit()
+        return exp.idexp
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        ("/admin/dashboard", 200),
+        ("/admin/experiments", 200),
+        ("/admin/experiment_details/{id}", 200),
+        ("/admin/clients_im/{id}", 200),
+        ("/admin/clients/{id}", 302),
+    ],
+)
+def test_pages_render_for_an_im_experiment(im_app, monkeypatch, path, expected):
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    response = client.get(path.format(id=exp_id))
+    assert response.status_code == expected, response.data[:800]
+    if expected == 302:
+        assert "clients_im" in response.headers["Location"]
+    else:
+        assert b"Traceback" not in response.data
+
+
+def test_im_details_page_has_analytics_and_the_same_configuration_toggles(im_app):
+    from y_web import db
+    from y_web.src.models import Exps
+
+    app, client = im_app
+    im_id = _make_im_experiment(app)
+    with app.app_context():
+        other = Exps(
+            exp_name="mb",
+            platform_type="microblogging",
+            simulator_type="HPC",
+            db_name=f"experiments/{uuid.uuid4().hex}/database_server.db",
+            owner="adm",
+            exp_descr="d",
+            status=0,
+            port=5098,
+            server="127.0.0.1",
+            prompt_language="en",
+        )
+        db.session.add(other)
+        db.session.commit()
+        other_id = other.idexp
+    im_page = client.get(f"/admin/experiment_details/{im_id}").data.decode()
+    mb_page = client.get(f"/admin/experiment_details/{other_id}").data.decode()
+    # the same configuration box as the other platforms, with the switches IM implements
+    assert "update_experiment_config" in im_page
+    for name in (
+        "opinion_dynamics_enabled",
+        "stress_reward_enabled",
+        "toxicity_annotation",
+        "sentiment_annotation",
+    ):
+        assert f'name="{name}"' in im_page, name
+    assert "analytics-pages-section" in im_page and "Refresh analytics data" in im_page
+    assert "have not been built yet" in im_page  # no run yet
+    assert "Instant Messaging" in im_page
+    assert (
+        "analytics-pages-section" in mb_page and "update_experiment_config" in mb_page
+    )
+
+
+def test_failed_client_shows_the_reason_from_its_execution_log(
+    im_app, monkeypatch, tmp_path
+):
+    import json
+
+    from y_web import db
+    from y_web.src.models import Client, Client_Execution, Exps
+
+    for module in ("server", "client"):
+        monkeypatch.setattr(
+            f"y_web.src.hpc.{module}.get_writable_path", lambda *a: str(tmp_path)
+        )
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    with app.app_context():
+        exp = db.session.get(Exps, exp_id)
+        folder = tmp_path / "y_web" / "experiments" / exp.db_name.split("/")[1]
+        (folder / "logs").mkdir(parents=True)
+        (folder / "logs" / "uid:cl_execution.log").write_text(
+            json.dumps(
+                {
+                    "level": "ERROR",
+                    "error_type": "TooManyLLMFailuresError",
+                    "error_message": "7 of 8 sessions failed",
+                    "exit_code": 5,
+                }
+            )
+            + "\n"
+        )
+        cl = Client(
+            name="cl", descr="", id_exp=exp_id, population_id=1, days=1, status=0
+        )
+        db.session.add(cl)
+        db.session.commit()
+        db.session.add(
+            Client_Execution(
+                client_id=cl.id, terminal_state="failed", expected_duration_rounds=24
+            )
+        )
+        db.session.commit()
+    page = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    assert "language-model sessions failed" in page and "7 of 8 sessions failed" in page
+
+
+def test_export_panel_lists_files_serves_them_and_runs_the_export(
+    im_app, monkeypatch, tmp_path
+):
+    from y_web import db
+    from y_web.routes.admin.sub.experiments import _im_exports
+    from y_web.src.models import Exps
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    with app.app_context():
+        exp = db.session.get(Exps, exp_id)
+        folder = tmp_path / "y_web" / "experiments" / exp.db_name.split("/")[1]
+        (folder / "exports").mkdir(parents=True)
+        (folder / "reports").mkdir()
+        (folder / "exports" / "messages.csv").write_text("id\n1\n")
+        (folder / "reports" / "activity_report.json").write_text("{}")
+        (tmp_path / "secret.txt").write_text("no")
+
+    page = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    assert (
+        "im-export-section" not in page
+    )  # the download action covers it; the routes stay for direct use
+
+    ok = client.get(f"/admin/im_artifact/{exp_id}/exports/messages.csv")
+    assert ok.status_code == 200 and ok.data == b"id\n1\n"
+    for bad in (
+        "exports/../../secret.txt",
+        "other/messages.csv",
+        "exports/missing.csv",
+    ):
+        kind, _, name = bad.partition("/")
+        assert (
+            client.get(f"/admin/im_artifact/{exp_id}/{kind}/{name}").status_code == 302
+        )
+
+    calls = []
+
+    def fake_export(folder, fmt="csv", no_text=False, snapshot=False, repo_dir=None):
+        calls.append((fmt, no_text, snapshot))
+        return True, {}
+
+    monkeypatch.setattr(_im_exports, "run_export", fake_export)
+    assert (
+        client.post(
+            f"/admin/im_export/{exp_id}", data={"format": "csv", "no_text": "1"}
+        ).status_code
+        == 302
+    )
+    assert (
+        client.post(f"/admin/im_export/{exp_id}", data={"format": "xml"}).status_code
+        == 302
+    )
+    assert calls == [("csv", True, False)]
+
+    reports = []
+
+    def fake_report(folder, command, snapshot=False, repo_dir=None):
+        reports.append((command, snapshot))
+        return True, {}
+
+    monkeypatch.setattr(_im_exports, "run_report", fake_report)
+    assert (
+        client.post(
+            f"/admin/im_report/{exp_id}", data={"report": "network"}
+        ).status_code
+        == 302
+    )
+    assert (
+        client.post(
+            f"/admin/im_report/{exp_id}", data={"report": "laundering"}
+        ).status_code
+        == 302
+    )
+    assert reports == [("network", False)]
+
+
+def test_run_report_rejects_unknown_and_reports_failures(tmp_path):
+    from y_web.src.im.analysis import run_report
+
+    ok, result = run_report(str(tmp_path), "rm -rf")
+    assert not ok and "unknown report" in result["error"]
+    ok, result = run_report(str(tmp_path / "missing"), "activity")
+    assert not ok and result["error"]
+
+
+def test_run_export_reports_failures_and_resolve_artifact_stays_inside(tmp_path):
+    from y_web.src.im.analysis import resolve_artifact, run_export
+
+    ok, result = run_export(str(tmp_path), "xml")
+    assert not ok and "unknown export format" in result["error"]
+    (tmp_path / "exports").mkdir()
+    (tmp_path / "exports" / "a.csv").write_text("x")
+    assert resolve_artifact(str(tmp_path), "exports", "a.csv")
+    assert resolve_artifact(str(tmp_path), "exports", "../a.csv") is None
+    assert resolve_artifact(str(tmp_path), "db", "a.csv") is None
+
+
+def test_analytics_pages_without_data_show_the_normal_unavailable_state(im_app):
+    app, client = im_app
+    im_id = _make_im_experiment(app)
+    for path in (
+        "topic_evolution",
+        "network_analysis",
+        "opinion_evolution",
+        "toxicity_evolution",
+        "recsys_evolution",
+    ):
+        r = client.get(f"/admin/{path}/{im_id}")
+        assert r.status_code == 302, path  # flash + redirect, never a 500
+    for path in ("topic_evolution_data", "toxicity_evolution_data"):
+        assert client.get(f"/admin/{path}/{im_id}").status_code in (400, 404)
+    # the dashboard labels the platform
+    assert "Instant Messaging" in client.get("/admin/dashboard").data.decode()
+
+
+def test_client_form_has_the_sections_of_the_other_platforms(im_app, monkeypatch):
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    page = client.get(f"/admin/clients_im/{_make_im_experiment(app)}").data.decode()
+    # language model like the other clients: LLM service URL, Fetch Models, model picked from the list
+    for expected in (
+        "fetchModelsForClient",
+        'name="llm"',
+        'id="models_select_client"',
+        'name="llm_model"',
+        'name="llm_max_tokens"',
+        'name="llm_temperature"',
+        'id="create_client_button"',
+    ):
+        assert expected in page, expected
+    # run parameters live in the client form
+    for expected in ('name="days"', 'name="start_date"', 'name="ticks_per_round"'):
+        assert expected in page, expected
+    # structured advanced settings, no free JSON, no opinion model or switches (those are the experiment's)
+    assert "advanced_json" not in page and 'name="opinion_model"' not in page
+    assert (
+        'name="opinion_enabled"' not in page
+        and 'name="stress_reward_enabled"' not in page
+    )
+    # not offered: logs (the runtime decides) and archetypes (they make no sense for chats)
+    assert "adv.logging." not in page and "agent_archetypes" not in page
+    for expected in (
+        'name="adv.telegram.reactive.probability"',
+        'name="adv.telegram.discovery.mode"',
+        'name="adv.telegram.actions_likelihood.post"',
+        'name="adv.telegram.moderation.policy"',
+        'data-scale-factor="0.05"',
+        'name="adv.agents.memory_total_max_chars"',
+        'id="standard_memory_config_fields"',
+    ):
+        assert expected in page, expected
+
+
+def test_memory_embeddings_are_configured_for_im_like_the_other_platforms(
+    im_app, tmp_path
+):
+    import json
+    import os
+
+    from y_web import db
+    from y_web.src.models import Exps
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    with app.app_context():
+        folder = os.path.dirname(db.session.get(Exps, exp_id).db_name).split("/")[-1]
+    exp_dir = tmp_path / "y_web" / "experiments" / folder
+    exp_dir.mkdir(parents=True)
+    (exp_dir / "server_config.json").write_text(
+        json.dumps({"memory": {"enabled": True}})
+    )
+    page = client.get(f"/admin/embedding_settings/{exp_id}")
+    assert (
+        page.status_code == 200 and b"Instant Messaging Memory Embeddings" in page.data
+    )
+    done = client.post(
+        f"/admin/update_embedding_settings/{exp_id}",
+        data={
+            "embedding_service": "ollama",
+            "embedding_host": "box:11434",
+            "embedding_model": "m",
+        },
+    )
+    assert done.status_code == 302
+    saved = json.loads((exp_dir / "server_config.json").read_text())
+    assert saved["memory_embeddings"] == {
+        "service": "ollama",
+        "host": "http://box:11434",
+        "model": "m",
+    }
+    assert saved["memory"] == {"enabled": True}
+
+
+@pytest.mark.parametrize("switch, status", [(True, 200), (False, 302)])
+def test_stress_reward_settings_follow_the_experiment_switch(
+    im_app, tmp_path, switch, status
+):
+    """The configuration page opens when the switch is on, whether or not the run has produced results yet."""
+    import json
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    from y_web import db
+    from y_web.src.models import Exps
+
+    with app.app_context():
+        uid = db.session.get(Exps, exp_id).db_name.split("/")[1]
+    folder = tmp_path / "y_web" / "experiments" / uid
+    folder.mkdir(parents=True)
+    (folder / "server_config.json").write_text(
+        json.dumps({"stress_reward_enabled": switch})
+    )
+    response = client.get(f"/admin/stress_reward_settings/{exp_id}")
+    assert response.status_code == status, response.data[:500]
+    if status == 302:
+        assert f"experiment_details/{exp_id}" in response.headers["Location"]
+    else:
+        assert b"Traceback" not in response.data
+
+
+def test_client_form_explains_its_sections_and_uses_the_common_hourly_activity_layout(
+    im_app, monkeypatch
+):
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    page = client.get(f"/admin/clients_im/{_make_im_experiment(app)}").data.decode()
+    # the hourly rates look like the ones of the other platforms: preview chart plus a grid of 24 inputs
+    assert (
+        'id="activity_rates_im"' in page
+        and page.count('class="activity-hour-create"') == 24
+    )
+    assert (
+        'name="hourly_0"' in page
+        and 'name="hourly_23"' in page
+        and "hourly_custom" not in page
+    )
+    # topic interest, chats by topic and the other sections say what they do
+    assert "every agent is interested in a topic with the probability you enter" in page
+    assert "the chats you define are created first" in page
+    assert 'id="im-chat-empty"' in page and "section-activity-rates" in page
+    assert "Time steps in an hour" in page
+
+
+def test_im_experiment_links_to_the_prompts_page_and_edits_only_what_changes(
+    im_app, monkeypatch, tmp_path
+):
+    import json
+
+    from y_web.src.im import prompts_admin as pa
+
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    folder = tmp_path / "exp"
+    folder.mkdir()
+    import importlib
+
+    module = importlib.import_module("y_web.routes.admin.sub.experiments._im_prompts")
+    monkeypatch.setattr(module, "_folder", lambda experiment: str(folder))
+    # the details page offers the link, and the generic /admin/prompts entry leads to it
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+        raising=False,
+    )
+    assert (
+        f"/admin/prompts_im/{exp_id}"
+        in client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    )
+    assert (
+        f"/admin/prompts_im/{exp_id}"
+        in client.get(f"/admin/prompts/{exp_id}").headers["Location"]
+    )
+    page = client.get(f"/admin/prompts_im/{exp_id}")
+    html = page.data.decode()
+    assert (
+        page.status_code == 200 and "persona_system" in html and "{chat_title}" in html
+    )
+    # a changed prompt is the only thing written; unknown fields are refused
+    base = pa.base_templates("en")
+    form = {f"p.{k}": v for k, v in base.items() if isinstance(v, str)}
+    form["p.nothing_new"] = "(no news)"
+    client.post(f"/admin/update_prompts_im/{exp_id}", data=form)
+    assert json.loads((folder / "prompts_im.json").read_text()) == {
+        "nothing_new": "(no news)"
+    }
+    form["p.nothing_new"] = "(no news) {surprise}"
+    client.post(f"/admin/update_prompts_im/{exp_id}", data=form)
+    assert json.loads((folder / "prompts_im.json").read_text()) == {
+        "nothing_new": "(no news)"
+    }
+    client.post(f"/admin/reset_prompts_im/{exp_id}")
+    assert not (folder / "prompts_im.json").exists()
+
+
+def test_agents_dashboard_lists_flat_tagged_resources(im_app, monkeypatch):
+    import importlib
+
+    module = importlib.import_module("y_web.routes.admin.sub.agents")
+    monkeypatch.setattr(
+        module,
+        "_runtime_installed",
+        lambda key: key
+        in {"instant_messaging", "microblogging_server", "microblogging_client"},
+    )
+    app, client = im_app
+    html = client.get("/admin/agents_dashboard").data.decode()
+    assert (
+        "data-agent-resource-group" not in html and "data-agent-resource-card" in html
+    )
+    assert (
+        'data-platform-tag="all"' in html
+    )  # the agent builder covers both installed platforms
+    assert "Forum Image Feeds" not in html  # forum is not installed
+    assert "News RSS Feeds" in html  # but its feeds serve IM
+
+
+def test_agents_dashboard_filters_by_platform(im_app, monkeypatch):
+    import importlib
+
+    module = importlib.import_module("y_web.routes.admin.sub.agents")
+    monkeypatch.setattr(
+        module,
+        "_runtime_installed",
+        lambda key: key in {"instant_messaging", "forum_server", "forum_client"},
+    )
+    app, client = im_app
+    html = client.get("/admin/agents_dashboard").data.decode()
+    assert 'id="agents-platform-filter"' in html
+    assert (
+        'data-platform-filter="forum"' in html
+        and 'data-platform-filter="instant_messaging"' in html
+    )
+    assert (
+        'data-platform-filter="photo_sharing"' not in html
+    )  # only installed platforms are offered
+    # the filter keys sit on the cards: the forum image feeds are forum only
+    assert 'data-platforms="forum"' in html
+    # with one platform there is nothing to filter
+    monkeypatch.setattr(
+        module, "_runtime_installed", lambda key: key == "instant_messaging"
+    )
+    assert (
+        'id="agents-platform-filter"'
+        not in client.get("/admin/agents_dashboard").data.decode()
+    )
+
+
+def test_im_details_page_has_no_ad_hoc_agent_clients(im_app, monkeypatch):
+    """Plugin agents need the post/user_mgmt tables of the microblogging and forum databases; IM has others."""
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._im._experiment_configuration_update_required",
+        lambda exp: False,
+    )
+    app, client = im_app
+    exp_id = _make_im_experiment(app)
+    html = client.get(f"/admin/experiment_details/{exp_id}").data.decode()
+    assert "adhoc-agent-clients-section" not in html

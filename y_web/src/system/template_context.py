@@ -8,6 +8,7 @@ from flask import Flask
 from sqlalchemy import select
 
 from y_web import db
+from y_web.src.forum.ids import opaque_id
 
 
 def register_template_context(app: Flask) -> None:
@@ -64,7 +65,7 @@ def register_template_context(app: Flask) -> None:
                     )
                 ).first()
                 if exp_user is not None:
-                    feed_user_id = int(exp_user.id)
+                    feed_user_id = opaque_id(exp_user.id)
 
             if feed_user_id is None:
                 return dict(feed_home_url=f"/{exp.idexp}/feed/all/feed/rf/1")
@@ -94,6 +95,29 @@ def register_template_context(app: Flask) -> None:
             )
         except Exception:
             return dict(experiment_memory_enabled=False)
+
+    from y_web.src.experiment.platform_labels import (
+        group_experiments_by_platform,
+        platform_icon,
+        platform_label,
+    )
+
+    app.jinja_env.globals["group_experiments_by_platform"] = (
+        group_experiments_by_platform
+    )
+    app.jinja_env.globals["platform_label"] = platform_label
+
+    def asset_v(filename: str) -> int:
+        """Modification time of a static file, used as ``?v=`` so edited CSS/JS is never served stale from cache."""
+        import os
+
+        try:
+            return int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+        except OSError:
+            return 0
+
+    app.jinja_env.globals["asset_v"] = asset_v
+    app.jinja_env.globals["platform_icon"] = platform_icon
 
     @app.context_processor
     def inject_active_experiments():

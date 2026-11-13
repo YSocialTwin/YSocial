@@ -315,3 +315,16 @@ def agent_ext_entries_from_population_agent_payload(agent_payload: dict) -> list
         add_entry("creator_tier", photo_sharing.get("creator_tier"))
 
     return entries
+
+
+def platform_agnostic_custom_features(features: dict) -> dict:
+    """Keep the custom fields that every platform can show.
+
+    Fields owned by a platform are namespaced ("dating.latent.selectivity") and stay out of the other
+    platforms' pages; the ones without a namespace and "appearance.*" belong to every platform.
+    """
+    return {
+        key: value
+        for key, value in (features or {}).items()
+        if "." not in str(key) or str(key).startswith("appearance.")
+    }

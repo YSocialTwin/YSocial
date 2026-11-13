@@ -1,0 +1,33 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-world-simulation.css') }}"/>
+{% import 'admin/world_simulation/_macros.html' as ws with context %}
+<div class="view-wrapper is-dashboard ws-page">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+        <div class="dashboard-body">
+            {{ ws.breadcrumb([(_('Analytics'), None)]) }}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" id="world-simulation-analytics">
+                        <h3 class="title is-5 is-thin">{{ _('Analytics') }}</h3>
+                        <div class="box-content">
+                            <p class="ws-intro">{{ _('Choose a World Simulation to see its analytics.') }}</p>
+                            <div class="table-container">
+                            <table class="table is-fullwidth is-hoverable ws-table"><thead><tr><th>{{ _('Name') }}</th><th>{{ _('Status') }}</th><th>{{ _('Members') }}</th></tr></thead><tbody>
+{% for row in rows %}
+<tr><td><a class="ws-name" href="{{ url_for('world_simulation.detail', fed_id=row.fed.id) }}#analytics">{{ row.fed.name }}</a></td>
+<td>{{ ws.state_tag(row.fed.status) }}</td>
+<td>{% for m in row.member_rows %}{{ ws.platform_tag(m.label, m.icon) }} {% endfor %}</td></tr>
+{% else %}<tr><td colspan="3"><div class="empty-state ws-empty"><i class="mdi mdi-chart-line"></i><p>{{ _('No World Simulation yet.') }}</p></div></td></tr>{% endfor %}
+                            </tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/footer.html" %}

@@ -273,6 +273,29 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run admin language column migration: {e}")
 
     # ------------------------------------------------------------------
+    # admin_users.llm_api_key column (API key of the LLM server)
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_admin_llm_api_key_column import (
+                migrate_sqlite as migrate_admin_llm_api_key_sqlite,
+            )
+
+            if dashboard_db_path:
+                migrate_admin_llm_api_key_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_admin_llm_api_key_column import (
+                migrate_postgresql as migrate_admin_llm_api_key_postgresql,
+            )
+
+            if pg["password"]:
+                migrate_admin_llm_api_key_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run admin LLM API key column migration: {e}")
+
+    # ------------------------------------------------------------------
     # exp_details_tutorial_shown column
     # ------------------------------------------------------------------
     try:

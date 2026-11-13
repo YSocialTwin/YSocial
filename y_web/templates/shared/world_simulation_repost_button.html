@@ -1,0 +1,12 @@
+{#- "Repost on another platform" for a person enrolled in a World Simulation (nothing is rendered for anybody else):
+    `{% from "shared/world_simulation_repost_button.html" import ws_repost_button %}` then
+    `ws_repost_button(exp_id, post_id, text, css_class)`. world-simulation-repost.js opens the menu of the other platforms. -#}
+{% macro ws_repost_button(exp_id, post_id='', text='', css_class='') -%}
+{%- if ws_destinations is defined and ws_destinations(exp_id) -%}
+<button type="button" class="ws-repost-button {{ css_class }}" data-ws-repost data-ws-exp="{{ exp_id }}" data-post-id="{{ post_id }}" data-text="{{ text }}" title="{{ _('Repost on another platform') }}" aria-label="{{ _('Repost on another platform') }}"
+        data-i18n='{{ {"title": _("Other platforms"), "posted": _("Reposted to"), "error": _("Unable to repost right now.")}|tojson }}'>
+  <i data-feather="share-2" class="ys-icon-xs"></i>
+</button>
+<script src="{{ url_for('static', filename='assets/js/world-simulation-repost.js') }}"></script>
+{%- endif -%}
+{%- endmacro %}

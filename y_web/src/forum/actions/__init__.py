@@ -21,7 +21,9 @@ from y_web.src.forum.actions.posts import (  # noqa: F401
     _get_current_round,
     _normalize_comment_for_dedupe,
     create_comment_reddit,
+    create_community,
     create_post_reddit,
+    crosspost_reddit,
 )
 from y_web.src.forum.actions.reactions import (  # noqa: F401
     _calculate_vote_tallies,

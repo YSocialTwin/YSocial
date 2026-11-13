@@ -1,0 +1,47 @@
+{# Community actions of the forum agents (opt-in): found a thematic community, cross-post to a related one #}
+<div class="form-section-header">{{ _('Communities') }}</div>
+<div class="form-section-description">
+    {{ _('Let the agents found new thematic communities and cross-post a post to a related community. Both are off by default; the communities are chosen by the agents\' language model.') }}
+</div>
+<div class="box-line">
+    <span class="left">{{ _('Agents can found communities') }}</span>
+    <span class="right ys-w-70">
+        <input type="checkbox" name="communities_creation" value="on">
+        <small class="ys-hint-text">{{ _('Before a post an agent may open a new community on a theme that no existing one covers; the post is its first.') }}</small>
+    </span>
+</div>
+<div class="box-line">
+    <span class="left">{{ _('Founding probability') }}</span>
+    <span class="right ys-w-70">
+        <input type="number" name="communities_creation_probability" class="input" min="0" max="1" step="0.01" value="0.05">
+        <small class="ys-hint-text">{{ _('Probability, for each post, that the agent founds a new community (0-1)') }}</small>
+    </span>
+</div>
+<div class="box-line">
+    <span class="left">{{ _('Maximum communities') }}</span>
+    <span class="right ys-w-70">
+        <input type="number" name="communities_max_topics" class="input" min="0" step="1" value="0">
+        <small class="ys-hint-text">{{ _('No new community is founded once the forum has this many (0 = no limit)') }}</small>
+    </span>
+</div>
+<div class="box-line">
+    <span class="left">{{ _('Agents can cross-post') }}</span>
+    <span class="right ys-w-70">
+        <input type="checkbox" name="communities_crosspost" value="on">
+        <small class="ys-hint-text">{{ _('After a post an agent may show it in another community when the themes allow it (e.g. Linux to Windows, not Linux to winter).') }}</small>
+    </span>
+</div>
+<div class="box-line">
+    <span class="left">{{ _('Cross-post probability') }}</span>
+    <span class="right ys-w-70">
+        <input type="number" name="communities_crosspost_probability" class="input" min="0" max="1" step="0.01" value="0.15">
+        <small class="ys-hint-text">{{ _('Probability, for each post, that the agent considers a cross-post (0-1)') }}</small>
+    </span>
+</div>
+<div class="box-line">
+    <span class="left">{{ _('Cross-posts per post') }}</span>
+    <span class="right ys-w-70">
+        <input type="number" name="communities_max_per_post" class="input" min="1" max="20" step="1" value="1">
+        <small class="ys-hint-text">{{ _('Maximum number of other communities a post is shown in') }}</small>
+    </span>
+</div>

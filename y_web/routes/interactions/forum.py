@@ -52,11 +52,29 @@ def publish_post_reddit(exp_id):
     text = request.args.get("post")
     url = request.args.get("url")
 
+    # World Simulation (F8): an enrolled person who picked other platforms posts through the runtime gateway
+    from y_web.src.federation import human_outbox as _ho
+
+    if not url:
+        _sent = _ho.try_deliver(
+            exp_id,
+            current_user,
+            _ho.requested_members(request.args.getlist("crosspost")),
+            text,
+            lambda t: _ho.forum_post(text, t),
+            only="forum",
+        )
+        if _sent is not None:
+            if not _sent:
+                flash(_("The post could not be sent to the other platforms."), "error")
+            return redirect(request.referrer)
+
     user = db.session.scalars(
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     llm = user.llm if user.llm != "" else "llama3.2:latest"
     llm_url = user.llm_url if user.llm_url != "" else None
+    llm_api_key = user.llm_api_key or None
 
     # Get experiment user (not admin user)
     exp_user = db.session.scalars(
@@ -83,6 +101,7 @@ def publish_post_reddit(exp_id):
                 image_annotator = Annotator(
                     llm_v,
                     llm_url=llm_url,
+                    llm_api_key=llm_api_key,
                     language=prompt_packs.experiment_language(exp_id),
                 )
                 annotation = image_annotator.annotate(url)
@@ -235,7 +254,10 @@ def publish_post_reddit(exp_id):
     sentiment = vader_sentiment(text)
 
     annotator = ContentAnnotator(
-        llm=llm, llm_url=llm_url, language=prompt_packs.experiment_language(exp_id)
+        llm=llm,
+        llm_url=llm_url,
+        llm_api_key=llm_api_key,
+        language=prompt_packs.experiment_language(exp_id),
     )
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
@@ -512,9 +534,13 @@ def publish_comment(exp_id):
     ).first()
     llm = user.llm if user.llm != "" else "llama3.1"
     llm_url = user.llm_url if user.llm_url != "" else None
+    llm_api_key = user.llm_api_key or None
 
     annotator = ContentAnnotator(
-        llm=llm, llm_url=llm_url, language=prompt_packs.experiment_language(exp_id)
+        llm=llm,
+        llm_url=llm_url,
+        llm_api_key=llm_api_key,
+        language=prompt_packs.experiment_language(exp_id),
     )
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")

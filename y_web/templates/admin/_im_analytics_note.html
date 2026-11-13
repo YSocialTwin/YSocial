@@ -1,0 +1,6 @@
+{# Shown on every analytics page of an instant messaging experiment (plan 4.7, "what is not claimed"). #}
+{% if experiment is defined and experiment and experiment.platform_type == 'instant_messaging' %}
+<div class="notification is-light ys-mb-15" role="note" id="im-analytics-note">
+    {{ _('Instant messaging experiment: a message is counted as a post, a reply as a comment, a forward as a share, and the time unit is the slot of the day, not an hour. These figures are not directly comparable with the other platforms.') }}
+</div>
+{% endif %}

@@ -978,6 +978,12 @@ def _build_mop_target_panel(
 
 def _resolve_opinion_experiment_db_name(experiment):
     """Resolve the sqlite database path that should back opinion evolution."""
+    if getattr(experiment, "platform_type", "") == "instant_messaging":
+        # the analytics pages read the derived database, rebuilt here when IM's database changed (plan 4.7)
+        from y_web.src.im import analytics as im_analytics
+
+        im_analytics.ensure_derived(experiment)
+        return im_analytics.derived_db_name(experiment)
     db_name = (
         str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
     )
@@ -1111,7 +1117,12 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
     experiment-local Agent_Opinion data, so bootstrap a first neutral/random
     snapshot in the current experiment DB and invalidate cached aggregates.
     """
+    from y_web.src.im import is_im_experiment
     from y_web.src.models import Agent_Opinion, Interests, Rounds, User_mgmt
+
+    if is_im_experiment(experiment):
+        # the derived analytics database is read only: never seed opinions that the run did not produce
+        return 0
 
     if db.session.query(Agent_Opinion.id).limit(1).first() is not None:
         return 0
@@ -4344,6 +4355,10 @@ def _network_graph_metrics(graph):
 
 def _available_network_analysis_types(db_path):
     available = []
+    if not db_path or not os.path.exists(db_path):
+        return (
+            available  # nothing built yet: the page shows its normal unavailable state
+        )
     with sqlite3.connect(db_path) as conn:
         table_names = {
             row["name"] if isinstance(row, sqlite3.Row) else row[0]
@@ -7557,6 +7572,21 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
 }
 
 
+def _im_annotation_problem(experiment, label):
+    """For an instant messaging experiment: the error its annotator stored (a missing library, say), else ''."""
+    try:
+        from y_web.src.im import analytics as im_analytics
+        from y_web.src.im import is_im_experiment
+
+        return (
+            im_analytics.annotation_problem(experiment, label)
+            if is_im_experiment(experiment)
+            else ""
+        )
+    except Exception:  # noqa: BLE001 - an explanation is a convenience
+        return ""
+
+
 def _render_annotation_analytics_page(expid, annotation_key):
     config = _ANNOTATION_ANALYTICS_REGISTRY[annotation_key]
     declared_title = config["title"]  # declared with N_ in the registry
@@ -7583,6 +7613,15 @@ def _render_annotation_analytics_page(expid, annotation_key):
             ),
             "warning",
         )
+        problem = _im_annotation_problem(experiment, config["label"])
+        if problem:
+            flash(
+                _(
+                    "The annotator reported: %(error)s. Install or fix it in the environment that runs the simulation and restart it.",
+                    error=problem,
+                ),
+                "error",
+            )
         return redirect(url_for("experiments.experiment_details", uid=expid))
 
     max_day, max_hour = _get_annotation_max_round(db_path)

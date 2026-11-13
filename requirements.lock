@@ -558,6 +558,8 @@ uuid-utils==0.17.0
     # via
     #   langchain-core
     #   langsmith
+vadersentiment==3.3.2
+    # via -r requirements/base.txt
 virtualenv==21.7.8
     # via ray
 websockets==16.1.1

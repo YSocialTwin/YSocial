@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="{{ get_locale() }}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ exp.exp_name }} · {{ _('Dating') }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/dating.css') }}"></head>
+<body class="dt-body">
+<main class="dt-main dt-unavailable dt-panel">
+  <h1>{{ exp.exp_name }}</h1>
+  <p>{{ _('The app cannot be shown right now.') }}</p>
+  <p class="dt-empty">{{ message }}</p>
+  <p><a href="/admin/experiments">{{ _('Back to the experiments') }}</a></p>
+</main>
+</body>
+</html>

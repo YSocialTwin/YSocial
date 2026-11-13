@@ -113,8 +113,10 @@ def llm_backend_status():
             response = requests.get(models_url, timeout=3)
             status = response.status_code in [
                 200,
+                401,
+                403,
                 404,
-            ]  # 404 means server is up but endpoint may not exist
+            ]  # 404: up but no such endpoint; 401/403: up, and it wants an API key
         except:
             status = False
 

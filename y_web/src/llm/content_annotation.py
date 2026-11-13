@@ -21,7 +21,7 @@ class ContentAnnotator(object):
     to analyze text content for emotional content and topics.
     """
 
-    def __init__(self, llm=None, llm_url=None, language=None):
+    def __init__(self, llm=None, llm_url=None, language=None, llm_api_key=None):
         """
         Initialize the content annotator with LLM configuration.
 
@@ -31,6 +31,8 @@ class ContentAnnotator(object):
             llm_url: Optional custom LLM server URL. If None, uses
                      environment variable or defaults based on backend.
             language: Prompt language (e.g. the experiment's); None = English.
+            llm_api_key: API key of the server, for providers that need one
+                     (OpenAI, DeepSeek); None or empty sends none.
         """
 
         self.language = language
@@ -60,7 +62,7 @@ class ContentAnnotator(object):
                     "base_url": base_url,
                     "timeout": 10000,
                     "api_type": "open_ai",
-                    "api_key": "NULL",
+                    "api_key": llm_api_key or "NULL",
                     "price": [0, 0],
                 }
             ]

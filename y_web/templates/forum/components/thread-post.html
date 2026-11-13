@@ -5,7 +5,7 @@
 {% elif thread.get('is_disliked', False) %}
     {% set thread_vote = 'dislike' %}
 {% endif %}
-<div class="reddit-thread-post"
+<div class="reddit-thread-post fr-thread-post"
      data-reddit-post
      data-post-id="{{ thread['post_id'] }}"
      data-thread-id="{{ thread.get('thread_id', thread['post_id']) }}"
@@ -21,6 +21,15 @@
                  data-demo-src="{{ thread['profile_pic'] or 'https://via.placeholder.com/300x300' }}"
                  style="width: 24px; height: 24px; border-radius: 50%;"
                  alt="">
+            {% if current_subforum_slug %}
+            <div class="fr-post-byline">
+                <div class="fr-post-byline-top">
+                    <a class="fr-post-community" href="/{{ exp_id }}/subforum/{{ current_subforum_slug }}?feed_type={{ feed_type|default('new', true) }}">{{ current_subforum_label }}</a>
+                    <span class="forum-post-time" style="color: #7c7c7c; font-size: 12px;">&middot; {% if thread.get("display_time") %}{{ thread.get("display_time") }}{% elif thread.get("day") != "None" %}{{ _('Day %(day)s · Hour %(hour)s', day=thread.get("day"), hour="%02d"|format(thread.get("hour")|int)) }}{% endif %}</span>
+                </div>
+                <a class="fr-post-author" href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
+            </div>
+            {% else %}
             <span style="font-weight: 500; color: #1c1c1c; margin-right: 8px;">
  <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" class="ys-link-inherit">{{ thread["author"] }}</a>
             </span>
@@ -31,6 +40,7 @@
                     {{ _('Day %(day)s · Hour %(hour)s', day=thread.get("day"), hour="%02d"|format(thread.get("hour")|int)) }}
                 {% endif %}
             </span>
+            {% endif %}
         </div>
         {% if thread['author_id'] == logged_id or is_admin %}
         <div class="dropdown is-spaced is-right is-neutral dropdown-trigger" onclick="event.stopPropagation()">
@@ -56,6 +66,9 @@
         {% endif %}
     </div>
     
+{% from "shared/federation_quote.html" import federation_quote_block %}{{ federation_quote_block(federation_quote(exp_id, thread['post_id'])) }}
+{% set ws_exp = exp_id %}{% set ws_id = thread['post_id'] %}{% include 'shared/world_simulation_origin.html' %}
+    {% from "forum/components/crosspost_origin.html" import crosspost_origin %}{{ crosspost_origin(thread.get('shared_from'), exp_id) }}
     <!-- Post title -->
     {% if thread.get("title") %}
     <h1 style="font-size: 20px; font-weight: 600; margin: 0 0 12px 0; color: #1c1c1c; line-height: 1.3;">
@@ -65,6 +78,12 @@
     {% if thread["post"] %}
     <div style="color: #1c1c1c; font-size: 16px; line-height: 1.5; margin-bottom: 12px; font-family: 'Reddit Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; text-indent: 0 !important; margin-left: 0 !important; padding-left: 0 !important;">
  <div class="thread-content ys-pre-wrap">{{- thread["post"]|safe -}}</div>
+    </div>
+    {% endif %}
+
+    {% if thread.get('image') and thread['image'] != "" and not ('article' in thread and thread['article'] != 0) %}
+    <div class="post-image">
+        <img src="{{ thread['image'].url }}" alt="{{ thread['image'].description }}"/>
     </div>
     {% endif %}
 
@@ -93,9 +112,9 @@
     {% endif %}
 
     <!-- Post actions -->
-    <div style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 12px; font-weight: 700;">
+    <div class="fr-actions" style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 12px; font-weight: 700;">
         <!-- Reddit-style voting (consistent with feed) -->
-        <div style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
+        <div class="fr-vote" style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
             <button class="vote-button ys-icon-btn" type="button" data-action="like">
  <i data-feather="arrow-up" class="ys-icon-xs"></i>
             </button>
@@ -111,6 +130,7 @@
  <i data-feather="message-square" class="ys-icon-xs"></i>
             {{ _('Reply') }}
         </button>
+        <button type="button" class="fr-crosspost-button" data-post-id="{{ thread['post_id'] }}" data-community="{{ current_subforum_slug or '' }}" aria-label="{{ _('Repost') }}" title="{{ _('Repost') }}"><i class="mdi mdi-repeat" aria-hidden="true"></i></button>
         {% if thread['author_id'] != logged_id %}
         <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive"
            class="forum-report-button{% if thread.get('is_reported') %} is-active{% endif %}"
@@ -121,6 +141,22 @@
         </a>
         {% endif %}
     </div>
+
+    {% if (thread.get('emotions') or thread.get('topics')) %}
+    <div class="fr-flair-row">
+        {% if forum_show_emotions is not defined or forum_show_emotions %}
+        {% for em in thread.get('emotions') or [] %}
+        <a class="forum-meta-chip forum-emotion-chip" href="/{{exp_id}}/emotion/{{ em[2] }}/1"><i class="mdi {{ em[1] }}"></i><span>{{ em[0] }}</span></a>
+        {% endfor %}
+        {% endif %}
+        {% if forum_show_topics is not defined or forum_show_topics %}
+        {% for tp in thread.get('topics') or [] %}
+        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip {% if tp[2] == 'positive' %}is-positive{% elif tp[2] == 'negative' %}is-negative{% else %}is-neutral{% endif %}">{{ tp[1] }}</a>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+    <button type="button" class="fr-join-conversation" data-reply-target="{{ thread['post_id'] }}">{{ _('Join the conversation') }}</button>
 
     <!-- Reply form (initially hidden) -->
  <div class="ys-mt-12">

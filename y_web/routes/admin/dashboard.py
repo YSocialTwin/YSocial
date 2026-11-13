@@ -28,7 +28,11 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
 )
 from y_web.src.llm.ollama_manager import get_ollama_models
-from y_web.src.llm.vllm_manager import get_llm_models, get_vllm_models
+from y_web.src.llm.vllm_manager import (
+    LLMAuthenticationError,
+    get_llm_models,
+    get_vllm_models,
+)
 from y_web.src.models import (
     Admin_users,
     Client,
@@ -91,6 +95,56 @@ def _is_embedding_model_name(model_name: str) -> bool:
     return any(marker in lowered for marker in embedding_markers)
 
 
+LLM_API_KEY_HEADER = "X-LLM-API-Key"
+
+
+def _llm_api_key_from_request():
+    """The API key for the request.
+
+    The key typed in the form is sent in a header (never in the URL, which is
+    logged). When the form is empty and names an admin user (``user_id``) the key
+    stored for that user is used, so "Fetch Models" works on a saved
+    configuration; a user may only use their own, except administrators and
+    researchers.
+    """
+    typed = (request.headers.get(LLM_API_KEY_HEADER) or "").strip()
+    if typed:
+        return typed
+    try:
+        user_id = int(request.args.get("user_id", ""))
+    except ValueError:
+        return ""
+    current = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if current is None or (
+        current.id != user_id and current.role not in ("admin", "researcher")
+    ):
+        return ""
+    target = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
+    return (getattr(target, "llm_api_key", "") or "").strip()
+
+
+def _llm_failure(message, status, **extra):
+    """A failed model-list request. ``error`` is what the forms display; ``message`` is kept for older callers."""
+    return (
+        jsonify({"success": False, "error": message, "message": message, **extra}),
+        status,
+    )
+
+
+def _llm_auth_error_response(llm_url, error):
+    return _llm_failure(
+        _(
+            "%(llm_url)s refused the request (HTTP %(status)s). Check the API key.",
+            llm_url=llm_url,
+            status=error.status_code,
+        ),
+        401,
+        auth_error=True,
+    )
+
+
 @admin.route("/admin/api/fetch_models")
 @login_required
 def fetch_models():
@@ -110,30 +164,25 @@ def fetch_models():
         return jsonify({"error": _("llm_url parameter is required")}), 400
 
     try:
-        models = get_llm_models(llm_url)
+        models = get_llm_models(
+            llm_url,
+            api_key=_llm_api_key_from_request(),
+            raise_on_auth_error=True,
+        )
         if models:
             return jsonify({"success": True, "models": models, "url": llm_url})
         else:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": _("No models found at %(llm_url)s", llm_url=llm_url),
-                    }
-                ),
-                404,
+            return _llm_failure(
+                _("No models found at %(llm_url)s", llm_url=llm_url), 404
             )
+    except LLMAuthenticationError as e:
+        return _llm_auth_error_response(llm_url, e)
     except Exception as e:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": _(
-                        "Failed to connect to %(llm_url)s: %(error)s",
-                        llm_url=llm_url,
-                        error=str(e),
-                    ),
-                }
+        return _llm_failure(
+            _(
+                "Failed to connect to %(llm_url)s: %(error)s",
+                llm_url=llm_url,
+                error=str(e),
             ),
             500,
         )
@@ -150,21 +199,22 @@ def fetch_embedding_models():
     try:
         models = [
             model
-            for model in get_llm_models(llm_url)
+            for model in get_llm_models(
+                llm_url,
+                api_key=_llm_api_key_from_request(),
+                raise_on_auth_error=True,
+            )
             if _is_embedding_model_name(model)
         ]
         return jsonify({"success": True, "models": models, "url": llm_url})
+    except LLMAuthenticationError as e:
+        return _llm_auth_error_response(llm_url, e)
     except Exception as e:
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "message": _(
-                        "Failed to connect to %(llm_url)s: %(error)s",
-                        llm_url=llm_url,
-                        error=str(e),
-                    ),
-                }
+        return _llm_failure(
+            _(
+                "Failed to connect to %(llm_url)s: %(error)s",
+                llm_url=llm_url,
+                error=str(e),
             ),
             500,
         )
@@ -202,6 +252,39 @@ def _dashboard_news(limit=4):
         return []
 
 
+def _world_simulation_member_ids():
+    """Ids of the experiments that belong to a World Simulation, whatever its state: they are shown in the World Simulation box
+    and never in the standard experiment boxes. Empty (nothing is hidden) when the YFederation plugin is not available.
+    """
+    try:
+        from y_web.src.federation import availability
+
+        if not availability.sdk_available():
+            return set()
+        from y_web.src.federation.service import world_simulation_map
+
+        return set(world_simulation_map())
+    except (
+        Exception
+    ):  # noqa: BLE001 - the page must work where the federation tables cannot be read
+        return set()
+
+
+def _world_simulation_box(user):
+    """The cards of the World Simulation box (first block of the page) or None when it is not rendered."""
+    try:
+        from y_web.src.federation import availability
+
+        if not availability.sdk_available():
+            return None
+        from y_web.routes.admin.sub.world_simulation import dashboard_cards
+
+        return dashboard_cards(user) or None
+    except Exception:  # noqa: BLE001 - a failing box must never take the home page down
+        current_app.logger.exception("World Simulation box of the dashboard failed")
+        return None
+
+
 @admin.route("/admin/dashboard")
 @login_required
 def dashboard():
@@ -227,6 +310,9 @@ def dashboard():
         all_experiments = (
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
+        hidden_ids = _world_simulation_member_ids()
+        if hidden_ids:
+            all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
@@ -465,6 +551,44 @@ def dashboard():
         show_telemetry_notice=show_telemetry_notice,
         can_manage_experiment=can_manage_experiment_for_current_user,
         news_posts=_dashboard_news(),
+        world_simulation_cards=_world_simulation_box(user),
+    )
+
+
+@admin.route("/admin/dashboard/world_simulations")
+@login_required
+def dashboard_world_simulations():
+    """
+    Polling endpoint of the World Simulation box: the cards (data and the rendered HTML of each) visible to the person.
+
+    Returns:
+        JSON ``{"available": bool, "cards": [{"id", "state", "active", "html", "data"}]}``; ``available`` is false (and the
+        list empty) when the YFederation plugin is not installed.
+    """
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if user is None or user.role not in ("admin", "researcher"):
+        return jsonify({"error": _("Access denied")}), 403
+    cards = _world_simulation_box(user) or []
+    from y_web.src.federation import availability
+
+    return jsonify(
+        {
+            "available": availability.sdk_available(),
+            "cards": [
+                {
+                    "id": c["id"],
+                    "state": c["state"],
+                    "active": c["active"],
+                    "html": render_template(
+                        "admin/world_simulation/_dashboard_card.html", c=c
+                    ),
+                    "data": c,
+                }
+                for c in cards
+            ],
+        }
     )
 
 
@@ -499,6 +623,9 @@ def dashboard_experiments_by_status(status):
         all_experiments = (
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
+        hidden_ids = _world_simulation_member_ids()
+        if hidden_ids:
+            all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
         return jsonify({"error": _("Access denied")}), 403
 
@@ -634,6 +761,9 @@ def dashboard_status():
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
         all_experiments = get_visible_experiment_query(user).all()
+        hidden_ids = _world_simulation_member_ids()
+        if hidden_ids:
+            all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
         return jsonify({"error": _("Access denied")}), 403
 

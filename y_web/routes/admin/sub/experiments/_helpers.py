@@ -39,7 +39,7 @@ from flask_babel import format_datetime
 from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
-from y_web import db  # , app
+from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -54,6 +54,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.im import is_im_experiment  # , app
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -132,10 +133,10 @@ DEFAULT_STRESS_REWARD_SYSTEM = {
     },
     "churn": {
         "enabled": False,
-        "stress_weight": 1.5,
+        "stress_weight": 2.0,
         "reward_weight": 1.0,
-        "bias": -2.2,
-        "temperature": 0.35,
+        "bias": -1.8,
+        "temperature": 0.3,
         "min_probability": 0.0,
         "max_probability": 0.95,
     },
@@ -688,8 +689,13 @@ def _load_forum_experiment_context(uid, require_manage=True):
         flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
-    if experiment.platform_type != "forum":
-        flash(_("This page is only available for forum experiments."), "warning")
+    if experiment.platform_type not in ("forum", "instant_messaging"):
+        flash(
+            _(
+                "This page is only available for forum and instant messaging experiments."
+            ),
+            "warning",
+        )
         return (
             None,
             None,
@@ -722,9 +728,13 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     """Load a memory-capable experiment and its writable directory."""
     check_privileges(current_user.username)
 
+    from y_web.src.im import is_im_experiment
     from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 
-    if not agent_memory_plugin_installed():
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
+    if experiment and not (
+        agent_memory_plugin_installed() or is_im_experiment(experiment)
+    ):
         flash(_("The Agent Memory plugin is not installed."), "error")
         return (
             None,
@@ -732,7 +742,6 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
             redirect(url_for("experiments.experiment_details", uid=uid)),
         )
 
-    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -759,8 +768,14 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     return experiment, experiment_dir, None
 
 
-def _load_stress_reward_experiment_context(uid, require_manage=True):
-    """Load a stress/reward-enabled experiment and its directory."""
+def _load_stress_reward_experiment_context(uid, require_manage=True, for_settings=None):
+    """Load a stress/reward-enabled experiment and its directory.
+
+    ``for_settings`` (default: the same as ``require_manage``) tells the configuration pages from the results pages:
+    an instant messaging experiment is configured whenever its switch is on, but has results only once its derived
+    database holds stress/reward rows."""
+    if for_settings is None:
+        for_settings = require_manage
     check_privileges(current_user.username)
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
@@ -777,6 +792,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
         "microblogging",
         "forum",
         "hpc",
+        "instant_messaging",
     }:
         flash(
             _(
@@ -814,7 +830,22 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
             config = {}
 
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
-    if not bool(stress_reward_cfg.get("enabled", False)):
+    stress_enabled = bool(stress_reward_cfg.get("enabled", False))
+    if experiment.platform_type == "instant_messaging":
+        if for_settings:
+            # the configuration page follows the switch of the experiment page (IM's own keys as fallback)
+            from y_web.src.im.experiment_config import load_server_config, read_switches
+
+            stress_enabled = read_switches(load_server_config(experiment_dir))[
+                "stress_reward"
+            ]
+        else:
+            # the results are offered when the derived database holds stress/reward rows
+            from y_web.src.im import analytics as im_analytics
+
+            im_analytics.ensure_derived(experiment)
+            stress_enabled = im_analytics.cards(experiment)["stress_reward"]
+    if not stress_enabled:
         flash(_("Enable stress/reward in Experiment Configuration first."), "warning")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -1018,6 +1049,8 @@ def _read_forum_avatar_settings(experiment_dir):
     return settings
 
 
+_PROGRESS_MARKER_RE = re.compile(r"\s*\[progress:(\d+)/(\d+)\]")
+
 _NOTIFICATION_STATUS_LABELS = {
     "ready": N_("ready"),
     "failed": N_("failed"),
@@ -1039,8 +1072,18 @@ _NOTIFICATION_TEXTS = [
     N_("Download file is no longer available."),
     N_("Detoxify model download in progress."),
     N_("Detoxify model download failed."),
+    N_("Agent profile pictures"),
+    N_("Profile picture generation failed."),
 ]
 _NOTIFICATION_PATTERNS = [
+    (
+        re.compile(r"^Generating profile pictures: (?P<done>\d+) of (?P<total>\d+)$"),
+        N_("Generating profile pictures: %(done)s of %(total)s"),
+    ),
+    (
+        re.compile(r"^(?P<count>\d+) profile pictures generated\.$"),
+        N_("%(count)s profile pictures generated."),
+    ),
     (re.compile(r"^Export (?P<name>.+)$", re.S), N_("Export %(name)s")),
     (
         re.compile(r"^Experiment shared: (?P<name>.+)$", re.S),
@@ -1099,6 +1142,16 @@ def _serialize_download_notification(notification):
     clean_message, related_exp_ids = _extract_related_experiment_ids(
         notification.message
     )
+    progress = None
+    progress_match = _PROGRESS_MARKER_RE.search(clean_message)
+    if progress_match:
+        done, total = int(progress_match.group(1)), int(progress_match.group(2))
+        progress = {
+            "done": done,
+            "total": total,
+            "percent": round(100 * done / total) if total else 100,
+        }
+        clean_message = _PROGRESS_MARKER_RE.sub("", clean_message).strip()
     related_experiments = []
     if related_exp_ids:
         experiments = db.session.scalars(
@@ -1150,6 +1203,7 @@ def _serialize_download_notification(notification):
         "action_url": action_url,
         "download_url": action_url,
         "related_experiments": related_experiments,
+        "progress": progress,
     }
 
 

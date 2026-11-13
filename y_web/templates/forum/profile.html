@@ -3,6 +3,12 @@
 
 <div class="view-wrapper">
     <div class="container is-fluid forum-profile-shell">
+      <div class="columns forum-feed-layout">
+        <div class="column is-3 is-hidden-touch">
+            {% set view_mode = 'profile' %}
+            {% include "forum/components/sidebar.html" %}
+        </div>
+        <div class="column is-9-tablet is-9-desktop">
         <div class="forum-profile-hero">
             <div class="forum-profile-banner"></div>
             <div class="forum-profile-summary">
@@ -21,6 +27,7 @@
                         </a>
                         {% endif %}
                     </div>
+                    <div class="forum-profile-handle">y/{{ user['user_data']['username'] }}</div>
                     <div class="forum-profile-subline">
                         {% if user['user_data'].is_page == 1 %}
                         {{ _('Community Page') }}
@@ -41,6 +48,17 @@
 
         <div class="forum-profile-layout{% if forum_memory_enabled %} has-chat{% endif %}">
             <aside class="forum-profile-sidebar">
+                <div class="forum-profile-card forum-profile-idcard">
+                    <div class="forum-profile-idcover"></div>
+                    <h3>{{ user['user_data']['username'] }}</h3>
+                    <div class="forum-profile-idgrid">
+                        <div><strong>{{ user['total_followers'] }}</strong><span>{{ _('Followers') }}</span></div>
+                        <div><strong>{{ user['total_posts'] }}</strong><span>{{ _('Posts') }}</span></div>
+                        <div><strong>{{ user['total_comments'] }}</strong><span>{{ _('Comments') }}</span></div>
+                        <div><strong>{{ user['total_likes'] }}</strong><span>{{ _('Likes') }}</span></div>
+                        <div><strong>{{ user['total_dislikes'] }}</strong><span>{{ _('Dislikes') }}</span></div>
+                    </div>
+                </div>
                 {% if stress_reward_active and is_page != 1 %}
                 <div class="forum-profile-card">
                     <h3>{{ _('Stress / Reward') }}</h3>
@@ -85,6 +103,8 @@
                     </div>
                 </div>
 
+                {% set ws_exp = exp_id %}{% set ws_account = user['user_data']['id'] %}{% set ws_variant = 'forum' %}{% include 'shared/world_simulation_profile_badges.html' %}
+
                 <div class="forum-profile-card">
                     <h3>{{ _('Interests') }}</h3>
                     {% if interests %}
@@ -123,6 +143,8 @@
             </aside>
             {% endif %}
         </div>
+        </div>
+      </div>
     </div>
 </div>
 
@@ -130,7 +152,7 @@
     window.EXP_ID = {{ exp_id if exp_id else 'null' }};
     window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
     window.redditContext = Object.freeze({
-        loggedUserId: {{ logged_id }},
+        loggedUserId: {{ logged_id|tojson }},
         isAdmin: {{ 'true' if is_admin else 'false' }},
         loggedUsername: {{ logged_username|tojson }},
         profilePic: {{ profile_pic|tojson }},
@@ -142,7 +164,7 @@
         perPage: 10,
         feedType: 'new',
         searchQuery: '',
-        userId: {{ user_id }},
+        userId: {{ user_id|tojson }},
         hasMore: false,
         viewMode: 'profile'
     });
@@ -157,12 +179,15 @@
 <script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+{% include "forum/components/crosspost_modal.html" %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-crosspost.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
 <script>var YS_DATA_FORUM_PROFILE = { expId: "{{exp_id}}", userId: "{{user_id}}", mode: "{{mode}}", page: {{ page }} };</script>
 
 <script src="{{ url_for('static', filename='assets/js/forum-profile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/forum-profile-tabs.js') }}"></script>
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
 {% endif %}

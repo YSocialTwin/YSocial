@@ -1,0 +1,219 @@
+# World Simulation analytics: derived tables
+
+Generated from `y_web/src/federation/analytics_etl.py` (`render_field_map`); a test keeps this file equal to it. The
+derived database `analytics_federation.db` is rebuilt from `federation.db` (opened read-only) in the folder of the
+World Simulation; days are canonical days (`tick // 24`), numbered from 0.
+
+### `daily_attention`
+
+Attention of the agents on each platform, one row per day and member. Source: federation_attention.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | canonical day, from 0 |
+| `member` | TEXT | platform member |
+| `agents` | INTEGER | agents with a weight on this member that day |
+| `weight` | REAL | sum of the weights of those agents |
+| `share` | REAL | weight / total weight of the day over all members (0 when nobody has attention) |
+
+### `migration_flows`
+
+Agents that became active on a member, by the member they had most recently left (or '(new)'). Source: federation_event (membership_change).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | day of the join |
+| `from_member` | TEXT | member left most recently by the agent, '(new)' when none |
+| `to_member` | TEXT | member joined |
+| `n` | INTEGER | agents |
+
+### `crosspost_flows`
+
+Cross-posts delivered between platforms, one row per day, origin and destination. Source: federation_message (crosspost.v1).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | day the cross-post was emitted |
+| `source` | TEXT | member where the content was posted (from its source_ref) |
+| `target` | TEXT | member the cross-post was addressed to |
+| `n` | INTEGER | cross-posts |
+
+### `cascades`
+
+How far each cross-posted content went: one row per original content. Source: federation_message (crosspost.v1).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `source_ref` | TEXT | ysocial:// reference of the original content |
+| `origin` | TEXT | member of the original content |
+| `day` | INTEGER | day of the first cross-post |
+| `size` | INTEGER | cross-posts of this content |
+| `targets` | INTEGER | distinct platforms reached |
+
+### `survival`
+
+Agents still present on each platform at the end of each day, and those who left that day. Source: federation_affective, federation_event (membership_change).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | canonical day |
+| `member` | TEXT | platform member |
+| `active` | INTEGER | agents with an affective report for the day (active at its end) |
+| `left` | INTEGER | agents whose membership ended that day |
+| `survival` | REAL | active / active on the first day with data for the member |
+
+### `shares`
+
+Cross-posts that share the content of another agent (crosspost.v1 with `quoted`), one row per share and destination. Source: federation_message (crosspost.v1, quoted).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | day the share was emitted |
+| `tick` | INTEGER | tick the share was emitted |
+| `sharer` | TEXT | global_agent_id of the agent that shares |
+| `origin_member` | TEXT | platform where the sharer saw the content (quoted.member) |
+| `destination` | TEXT | member the share was addressed to |
+| `original_author` | TEXT | name of the author of the shared content |
+| `original_author_id` | TEXT | global_agent_id of that author, '' when it is not a federation identity |
+| `quoted_ref` | TEXT | reference of the shared content ('' for an author outside the federation) |
+| `depth` | INTEGER | 1 for a share of local content, +1 for each earlier cross-post the content went through |
+
+### `share_depth`
+
+How many shares sit at each depth of a chain. Source: federation_message (crosspost.v1, quoted).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `depth` | INTEGER | depth in the chain (see shares.depth) |
+| `shares` | INTEGER | shares at that depth |
+
+### `bridge_agents`
+
+Agents whose shares carry content from one platform to another, most active first. Source: federation_message (crosspost.v1, quoted).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `agent` | TEXT | global_agent_id of the sharer |
+| `shares` | INTEGER | shares sent |
+| `origins` | INTEGER | distinct platforms the shared content came from |
+| `destinations` | INTEGER | distinct platforms the shares reached |
+
+### `topics_carried`
+
+Topics that travelled with cross-posted content, by platform pair. Coordinator data only: which platform created the topic on arrival is in `topics_created`, read from the member databases when they can be reached. Source: federation_message (crosspost.v1, topics).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name as sent |
+| `source` | TEXT | member where the content was posted (from its source_ref) |
+| `target` | TEXT | member the content was addressed to |
+| `n` | INTEGER | cross-posts carrying the topic |
+| `first_day` | INTEGER | day of the first one |
+
+### `human_crossposts`
+
+Cross-posts sent by people (identity `human:<id>`), one row per day, platform pair and kind. The identities of the agents never start with `human:` (INV-14), so this is exactly what the people did. Source: federation_message (crosspost.v1 whose global_agent_id starts with human:).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | day the cross-post was emitted |
+| `human` | TEXT | global_agent_id of the person (human:<id>) |
+| `source` | TEXT | member the person posted on (source_member of the message) |
+| `target` | TEXT | member the cross-post was addressed to |
+| `shares` | INTEGER | of them, shares of another agent's content (with `quoted`) |
+| `n` | INTEGER | cross-posts |
+
+### `human_activity`
+
+What each person did across the platforms, most active first. Source: federation_message (crosspost.v1 whose global_agent_id starts with human:).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `human` | TEXT | global_agent_id of the person (human:<id>) |
+| `crossposts` | INTEGER | cross-posts sent |
+| `shares` | INTEGER | of them, shares of another agent's content |
+| `origins` | INTEGER | distinct platforms the person posted from |
+| `destinations` | INTEGER | distinct platforms the cross-posts reached |
+| `first_day` | INTEGER | day of the first cross-post |
+| `last_day` | INTEGER | day of the last one |
+
+### `topics_created`
+
+Topics a platform created on arrival of cross-posted content (topic migration), read READ-ONLY from the `federation_topic` (and `federation_topic_origin`) tables of the member databases. Empty when no member database can be reached. Source: member databases: federation_topic, federation_topic_origin.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name as the platform stored it (runtimes may cut long names) |
+| `member` | TEXT | platform member that created it |
+| `day` | INTEGER | day of the creation (NULL when the runtime did not record the tick) |
+| `source` | TEXT | member whose content brought it |
+| `original` | TEXT | full name as sent when the platform cut it, otherwise the same as topic |
+
+### `topic_first_seen`
+
+First time a topic shows up on each platform, through the migration only (never counts topics a platform had before). Source: federation_message (crosspost.v1, topics) and topics_created.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name, lower case |
+| `member` | TEXT | platform member |
+| `first_tick` | INTEGER | canonical tick: emission for the platform that posted the content, delivery for the one that received it, creation when known |
+| `via` | TEXT | source (posted there), received (delivered there) or created (the platform created it) |
+
+### `topic_diffusion`
+
+How far each topic travelled, most carried first. Source: federation_message (crosspost.v1, topics) and topics_created.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `topic` | TEXT | topic name, lower case |
+| `platforms` | INTEGER | platforms where it appeared through the migration |
+| `carried` | INTEGER | cross-posts that carried it |
+| `created_on` | INTEGER | platforms that created it on arrival (0 when the member databases were not reachable) |
+| `first_day` | INTEGER | day of the first appearance |
+| `last_day` | INTEGER | day of the last cross-post carrying it |
+
+### `membership_events`
+
+Every change of an agent's relation with a platform: it became aware of it, joined, rejoined, left, or lost interest. One row per change, oldest first. Source: federation_event (membership_change, discovery_state), federation_agent_name.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `tick` | INTEGER | canonical tick of the change |
+| `day` | INTEGER | canonical day of the change |
+| `agent` | TEXT | global_agent_id |
+| `agent_name` | TEXT | name of the agent ('' when not known) |
+| `member` | TEXT | platform member |
+| `from_state` | TEXT | unaware, aware, active or left |
+| `to_state` | TEXT | unaware, aware, active or left |
+| `reason` | TEXT | join, rejoin, leave_rule, churn, awareness (became aware) or awareness_lost (the awareness faded) |
+
+### `discoveries`
+
+Agents that discovered a platform they were not enrolled on, and what came of it: one row per discovery. Source: federation_event (membership_change, discovery_state), federation_agent_name.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `agent` | TEXT | global_agent_id |
+| `agent_name` | TEXT | name of the agent ('' when not known) |
+| `member` | TEXT | platform discovered |
+| `aware_day` | INTEGER | day the agent became aware of the platform |
+| `outcome` | TEXT | joined (enrolled), pending (aware and not enrolled yet) or lapsed (the awareness faded) |
+| `outcome_day` | INTEGER | day of the join or of the loss, NULL while pending |
+| `days_to_decide` | INTEGER | outcome_day - aware_day, NULL while pending |
+
+### `membership_daily`
+
+Discoveries, joins and leaves of each platform, one row per day and member (days without changes have no row). Source: federation_event (membership_change, discovery_state).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `day` | INTEGER | canonical day |
+| `member` | TEXT | platform member |
+| `discovered` | INTEGER | agents that became aware of the platform |
+| `lapsed` | INTEGER | agents whose awareness faded without joining |
+| `joined` | INTEGER | agents that joined for the first time |
+| `rejoined` | INTEGER | agents that came back after leaving |
+| `left` | INTEGER | agents that left |
+| `aware_pending` | INTEGER | agents aware of the platform and not enrolled, at the end of the day |
+

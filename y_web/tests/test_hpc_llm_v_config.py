@@ -252,6 +252,24 @@ class TestHPCLLMVConfig:
         assert '"memory_embedding_model": memory_embedding_model' in create_block
         assert '"memory_backend": (' in create_block
 
+    def test_create_hpc_client_source_writes_the_key_of_the_main_model(self):
+        source = open(
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
+        ).read()
+        create_block = source.split("def create_hpc_client(", 1)[1].split(
+            "def generate_hpc_client_config(", 1
+        )[0]
+        ollama_block = create_block.split("else:  # ollama", 1)[1].split(
+            "# Get activity profiles", 1
+        )[0]
+
+        assert (
+            'llm_api_key = (form_data.get("llm_api_key") or "").strip()' in create_block
+        )
+        llm_config = ollama_block.split("llm_v_config = {", 1)[0]
+        assert '"llm_api_key": llm_api_key,' in llm_config
+        assert '"llm_api_key": "NULL"' not in llm_config
+
     def test_create_hpc_client_source_disables_vllm_shared_pool_limit(self):
         source = open(
             str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
