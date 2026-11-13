@@ -258,3 +258,9 @@ def test_forum_header_loads_the_night_mode_stylesheet():
     assert "css/reddit/forum-dark.css" in html
     css = (ROOT / "static/assets/css/reddit/forum-dark.css").read_text(encoding="utf-8")
     assert "body.is-dark .forum-community-meta strong" in css
+
+
+def test_night_mode_restyles_topic_chips():
+    css = (ROOT / "static/assets/css/reddit/forum-dark.css").read_text(encoding="utf-8")
+    for kind in ("positive", "negative", "neutral"):
+        assert f"body.is-dark .forum-topic-chip.is-{kind}" in css

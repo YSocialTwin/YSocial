@@ -214,3 +214,13 @@ body.is-dark [style*="color: #888"], body.is-dark [style*="color: #555"], body.i
 body.is-dark [style*="background: #fff"], body.is-dark [style*="background-color: #fff"],
 body.is-dark [style*="background: white"] { background: var(--fr-bg) !important; }
 body.is-dark [style*="border-top: 1px solid #"], body.is-dark [style*="border-bottom: 1px solid #"] { border-color: var(--fr-line) !important; }
+
+/* Chips: light pastel surfaces become dark tints with light text (must beat `.reddit-post a` in forum-reddit.css). */
+body.is-dark .reddit-post a.forum-meta-chip, body.is-dark .fr-thread-post a.forum-meta-chip,
+body.is-dark a.forum-meta-chip, body.is-dark .forum-meta-chip { background: #3a2218 !important; color: #ffb594 !important; }
+body.is-dark a.forum-topic-chip.is-positive, body.is-dark .forum-topic-chip.is-positive { background: #14301f !important; color: #7ddc9a !important; }
+body.is-dark a.forum-topic-chip.is-negative, body.is-dark .forum-topic-chip.is-negative { background: #3b1a18 !important; color: #ff9d94 !important; }
+body.is-dark a.forum-topic-chip.is-neutral, body.is-dark .forum-topic-chip.is-neutral { background: #24343e !important; color: #c3d3d9 !important; }
+body.is-dark .fr-pill, body.is-dark .fr-pill-soft { color: var(--fr-text) !important; }
+body.is-dark .tag.is-danger.is-light { background: #3b1a18 !important; color: #ff9d94 !important; }
+body.is-dark .tag:not(body) { color: var(--fr-text); }
