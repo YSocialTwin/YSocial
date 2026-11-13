@@ -194,7 +194,7 @@ def test_dating_frontend_settings_are_declared():
         "dating_public_observer_enabled",
         "dating_poll_seconds",
     }
-    assert "dating" in fs.SUPPORTED_PLATFORMS
+    assert "dating" in fs.supported_platforms()
     assert keys <= set(fs.capabilities_for("dating"))
     assert keys <= set(DEFAULT_SETTINGS)
     assert fs._INT_RANGES["dating_poll_seconds"] == (1, 60)

@@ -11,6 +11,7 @@ from y_web.i18n import gettext as _
 from y_web.platforms.base import (
     HPC,
     STANDARD,
+    COMMON_FRONTEND_CAPABILITIES,
     CreationRules,
     PlatformConfigError,
     PlatformProvider,
@@ -93,6 +94,17 @@ class Forum(PlatformProvider):
     prompt_pack = ("prompts_forum.json", "prompts.json")
     server_modules = ("news", "voting", "image", "image_post")
     details_template = "admin/experiment_details_forum.html"
+    frontend_capabilities = COMMON_FRONTEND_CAPABILITIES | {
+        "interaction_dislike",  # downvote
+        "notifications_menu",
+        "annotations_enabled",
+        "annotation_emotions",
+        "annotation_topics",
+        "default_forum_feed_type",
+    }
+    frontend_exclusive_settings = frozenset(
+        {"default_forum_feed_type"}
+    )  # feed ordering
     details_context_keys = ("forum_feed_health",)
 
     def details_context(self, experiment: Any) -> dict:
@@ -265,6 +277,15 @@ class PhotoSharing(PlatformProvider):
         )
 
     details_template = "admin/experiment_details_photo.html"
+    frontend_capabilities = COMMON_FRONTEND_CAPABILITIES | {
+        "show_suggested_friends",  # "Suggestions for you" rail
+        "show_recsys_info",
+        "show_annotation_stats",
+        "interaction_share",
+        "annotation_agent_type",
+        "default_photo_feed_tab",
+    }
+    frontend_exclusive_settings = frozenset({"default_photo_feed_tab"})  # home tab
     extra_prompt_files = ("prompts_ygram.json",)
     prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
 
@@ -321,6 +342,33 @@ class InstantMessaging(PlatformProvider):
         )
 
     details_template = "admin/experiment_details_im.html"
+    frontend_capabilities = COMMON_FRONTEND_CAPABILITIES | {
+        "interactions_enabled",
+        "interaction_share",  # forwarding
+        "notifications_menu",
+        "annotations_enabled",  # topics, sentiment, toxicity and emotion chips on messages
+        "annotation_topics",
+        "annotation_sentiment",
+        "annotation_toxicity",
+        "annotation_emotions",
+        "annotation_agent_type",  # agent / human badge on messages
+        "annotation_author_type",
+        "profile_topics_box",
+        "infinite_scroll_enabled",
+        "im_show_forward_origin",
+        "im_show_reactions",
+        "im_show_member_roles",
+        "im_default_view",
+        "im_allow_time_travel",
+        "im_public_observer_enabled",
+        "im_participant_mode_enabled",
+        "im_participant_notice",
+        "im_participant_poll_seconds",
+    }
+    # the chat page controls belong to this platform only
+    frontend_exclusive_settings = frozenset(
+        key for key in frontend_capabilities if key.startswith("im_")
+    )
     details_context_keys = ("im_analytics", "im_advanced", "im_switches")
 
     def details_context(self, experiment: Any) -> dict:
@@ -483,6 +531,21 @@ class Dating(PlatformProvider):
         )
 
     details_template = "admin/experiment_details_dating.html"
+    frontend_capabilities = frozenset(
+        {
+            "language",
+            "language_switch_allowed",
+            "dating_allow_time_travel",
+            "dating_public_observer_enabled",
+            "dating_participant_mode_enabled",
+            "dating_participant_notice",
+            "dating_poll_seconds",
+        }
+    )
+    # the dating page controls belong to this platform only
+    frontend_exclusive_settings = frozenset(
+        key for key in frontend_capabilities if key.startswith("dating_")
+    )
 
     def observer_url(self, exp_id: int) -> Optional[str]:
         # the observer (S6) is the only way in: dating has no per-user feed row either

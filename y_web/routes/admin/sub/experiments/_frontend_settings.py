@@ -4,7 +4,7 @@ Frontend Settings admin route.
 Allows administrators to configure UI parameters per experiment of any
 supported platform (microblogging, forum, photo sharing); the panel shows only
 the settings that exist in the chosen platform's templates (see
-``PLATFORM_CAPABILITIES``).
+``frontend_capabilities`` of each platform provider).
 Settings are stored in ExpFrontendSettings (one JSON row per experiment).
 
 Also serves the generic, repo_key-parameterized "frontend plugin suite"
@@ -23,104 +23,21 @@ from sqlalchemy import select
 from y_web import db
 from y_web.i18n import N_, available_languages
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.models import ExpFrontendSettings, Exps
 from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
 
+
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
 # ------------------------------------------------------------------
-SUPPORTED_PLATFORMS = (
-    "microblogging",
-    "forum",
-    "photo_sharing",
-    "instant_messaging",
-    "dating",
-)
-PLATFORM_LABELS = {
-    "microblogging": N_("Microblogging"),
-    "forum": N_("Forum"),
-    "photo_sharing": N_("Photo sharing"),
-    "instant_messaging": N_("Instant messaging"),
-    "dating": N_("Dating"),
-}
+def supported_platforms():
+    """Platform types that have frontend settings, in menu order."""
+    return tuple(registry.keys())
 
-_COMMON_CAPABILITIES = {
-    "interaction_post",
-    "interaction_comment",
-    "interaction_like",
-    "show_post_time",
-    "posts_per_page",
-    # the interface language is resolved for every platform (y_web.i18n)
-    "language",
-    "language_switch_allowed",
-}
-
-# Controls that only exist on one platform: microblogging ("everything" otherwise)
-# must not offer them, because nothing in its templates reads them.
-MICROBLOGGING_EXCLUDED_CAPABILITIES = {
-    "default_forum_feed_type",  # forum feed ordering
-    "default_photo_feed_tab",  # photo-sharing home tab
-}
-
-# Settings each platform's templates honour. Anything not listed is hidden
-# in the admin panel for that platform (it would be a switch wired to nothing).
-PLATFORM_CAPABILITIES = {
-    "microblogging": None,  # everything
-    "forum": _COMMON_CAPABILITIES
-    | {
-        "interaction_dislike",  # downvote
-        "notifications_menu",
-        "annotations_enabled",
-        "annotation_emotions",
-        "annotation_topics",
-        "default_forum_feed_type",
-    },
-    "photo_sharing": _COMMON_CAPABILITIES
-    | {
-        "show_suggested_friends",  # "Suggestions for you" rail
-        "show_recsys_info",
-        "show_annotation_stats",
-        "interaction_share",
-        "annotation_agent_type",
-        "default_photo_feed_tab",
-    },
-    "instant_messaging": _COMMON_CAPABILITIES
-    | {
-        "interactions_enabled",
-        "interaction_share",  # forwarding
-        "notifications_menu",
-        "annotations_enabled",  # topics, sentiment, toxicity and emotion chips on messages
-        "annotation_topics",
-        "annotation_sentiment",
-        "annotation_toxicity",
-        "annotation_emotions",
-        "annotation_agent_type",  # agent / human badge on messages
-        "annotation_author_type",
-        "profile_topics_box",
-        "infinite_scroll_enabled",
-        "im_show_forward_origin",
-        "im_show_reactions",
-        "im_show_member_roles",
-        "im_default_view",
-        "im_allow_time_travel",
-        "im_public_observer_enabled",
-        "im_participant_mode_enabled",
-        "im_participant_notice",
-        "im_participant_poll_seconds",
-    },
-    "dating": {
-        "language",
-        "language_switch_allowed",
-        "dating_allow_time_travel",
-        "dating_public_observer_enabled",
-        "dating_participant_mode_enabled",
-        "dating_participant_notice",
-        "dating_poll_seconds",
-    },
-}
 
 # Platform-specific feed orderings that replace the microblogging recommenders.
 FORUM_FEED_TYPES = [
@@ -145,31 +62,30 @@ def _localized_options(items):
 
 
 def _localized_platform_label(value):
-    text = PLATFORM_LABELS[value]  # declared with N_ above
+    text = registry.resolve(value).label  # declared with N_ in the provider
     return _(text)
 
 
 def capabilities_for(platform_type: str):
     """Sorted list of setting keys the platform supports, or ``None`` for all."""
-    caps = PLATFORM_CAPABILITIES.get(platform_type)
+    provider = registry.get(platform_type)
+    caps = provider.frontend_capabilities if provider else None
     return None if caps is None else sorted(caps)
 
 
 def excluded_capabilities_for(platform_type: str):
     """Setting keys to hide for a platform that otherwise offers everything."""
-    if PLATFORM_CAPABILITIES.get(platform_type, 0) is None:
-        # the chat and dating page controls ("im_*", "dating_*") belong to those platforms only
-        own = {
+    provider = registry.get(platform_type)
+    if provider is None or provider.frontend_capabilities is not None:
+        return []
+    # the settings that only some other platform's templates read
+    return sorted(
+        {
             key
-            for caps in (
-                PLATFORM_CAPABILITIES["instant_messaging"],
-                PLATFORM_CAPABILITIES["dating"],
-            )
-            for key in caps
-            if key.startswith(("im_", "dating_"))
+            for other in registry.providers()
+            for key in other.frontend_exclusive_settings
         }
-        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES | own)
-    return []
+    )
 
 
 # ------------------------------------------------------------------
@@ -317,7 +233,7 @@ def frontend_settings():
 
     exps = db.session.scalars(
         select(Exps)
-        .filter(Exps.platform_type.in_(SUPPORTED_PLATFORMS))
+        .filter(Exps.platform_type.in_(supported_platforms()))
         .order_by(Exps.exp_name.asc())
     ).all()
 
@@ -335,7 +251,7 @@ def frontend_settings():
     platforms_json = json.dumps(
         [
             {"value": value, "label": _localized_platform_label(value)}
-            for value in SUPPORTED_PLATFORMS
+            for value in supported_platforms()
         ]
     )
 
@@ -402,7 +318,7 @@ def frontend_settings_get():
         return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+    if exp is None or exp.platform_type not in supported_platforms():
         return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     return jsonify(
@@ -441,7 +357,7 @@ def frontend_settings_save():
         return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+    if exp is None or exp.platform_type not in supported_platforms():
         return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     safe = {}
@@ -568,7 +484,7 @@ def frontend_plugin_suite_settings_get(repo_key):
         return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+    if exp is None or exp.platform_type not in supported_platforms():
         return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
@@ -687,7 +603,7 @@ def frontend_plugin_suite_settings_save(repo_key):
         return jsonify({"ok": False, "error": _("Missing exp_id or module_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+    if exp is None or exp.platform_type not in supported_platforms():
         return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (

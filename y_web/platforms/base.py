@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Tuple
+from typing import Any, FrozenSet, List, Mapping, Optional, Tuple
 
 from y_web.i18n import N_
 
@@ -80,6 +80,21 @@ class StandardRuntime:
     client_takes_log_file: bool = False
     #: whether agents have activity profiles (backfilled in old agent files, pages post while their profile is on)
     activity_profiles: bool = False
+
+
+#: frontend settings every platform that does not offer all of them honours
+COMMON_FRONTEND_CAPABILITIES = frozenset(
+    {
+        "interaction_post",
+        "interaction_comment",
+        "interaction_like",
+        "show_post_time",
+        "posts_per_page",
+        # the interface language is resolved for every platform (y_web.i18n)
+        "language",
+        "language_switch_allowed",
+    }
+)
 
 
 class PlatformProvider:
@@ -281,3 +296,10 @@ class PlatformProvider:
     def details_context(self, experiment: Any) -> dict:
         """Template variables, named in ``details_context_keys``, that only the page of this platform uses."""
         return {}
+
+    # --- admin: the frontend settings of an experiment ------------------------------------------------------------------
+
+    #: setting keys the templates of the platform honour; ``None`` when they honour all of them
+    frontend_capabilities: Optional[FrozenSet[str]] = None
+    #: setting keys only this platform's templates read: the platforms that offer everything hide them
+    frontend_exclusive_settings: FrozenSet[str] = frozenset()

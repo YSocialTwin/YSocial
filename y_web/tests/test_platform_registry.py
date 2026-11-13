@@ -585,3 +585,26 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
         # a platform provides exactly the variables it names
         if not provider.details_context_keys:
             assert provider.details_context(None) == {}
+
+
+def test_frontend_capabilities_match_the_previous_tables():
+    import json
+    import pathlib
+
+    from y_web.platforms import registry
+    from y_web.routes.admin.sub.experiments import _frontend_settings as fs
+
+    expected = json.loads(
+        (
+            pathlib.Path(__file__).parent
+            / "data"
+            / "platform_baseline"
+            / "frontend_capabilities.json"
+        ).read_text()
+    )
+    assert fs.supported_platforms() == tuple(registry.keys())
+    for platform, want in expected.items():
+        assert fs.capabilities_for(platform) == want["caps"], platform
+        assert fs.excluded_capabilities_for(platform) == want["excluded"], platform
+        if "label" in want:
+            assert fs._localized_platform_label(platform) == want["label"]

@@ -1,0 +1,113 @@
+{
+ "dating": {
+  "caps": [
+   "dating_allow_time_travel",
+   "dating_participant_mode_enabled",
+   "dating_participant_notice",
+   "dating_poll_seconds",
+   "dating_public_observer_enabled",
+   "language",
+   "language_switch_allowed"
+  ],
+  "excluded": [],
+  "label": "Dating"
+ },
+ "forum": {
+  "caps": [
+   "annotation_emotions",
+   "annotation_topics",
+   "annotations_enabled",
+   "default_forum_feed_type",
+   "interaction_comment",
+   "interaction_dislike",
+   "interaction_like",
+   "interaction_post",
+   "language",
+   "language_switch_allowed",
+   "notifications_menu",
+   "posts_per_page",
+   "show_post_time"
+  ],
+  "excluded": [],
+  "label": "Forum"
+ },
+ "instant_messaging": {
+  "caps": [
+   "annotation_agent_type",
+   "annotation_author_type",
+   "annotation_emotions",
+   "annotation_sentiment",
+   "annotation_topics",
+   "annotation_toxicity",
+   "annotations_enabled",
+   "im_allow_time_travel",
+   "im_default_view",
+   "im_participant_mode_enabled",
+   "im_participant_notice",
+   "im_participant_poll_seconds",
+   "im_public_observer_enabled",
+   "im_show_forward_origin",
+   "im_show_member_roles",
+   "im_show_reactions",
+   "infinite_scroll_enabled",
+   "interaction_comment",
+   "interaction_like",
+   "interaction_post",
+   "interaction_share",
+   "interactions_enabled",
+   "language",
+   "language_switch_allowed",
+   "notifications_menu",
+   "posts_per_page",
+   "profile_topics_box",
+   "show_post_time"
+  ],
+  "excluded": [],
+  "label": "Instant messaging"
+ },
+ "microblogging": {
+  "caps": null,
+  "excluded": [
+   "dating_allow_time_travel",
+   "dating_participant_mode_enabled",
+   "dating_participant_notice",
+   "dating_poll_seconds",
+   "dating_public_observer_enabled",
+   "default_forum_feed_type",
+   "default_photo_feed_tab",
+   "im_allow_time_travel",
+   "im_default_view",
+   "im_participant_mode_enabled",
+   "im_participant_notice",
+   "im_participant_poll_seconds",
+   "im_public_observer_enabled",
+   "im_show_forward_origin",
+   "im_show_member_roles",
+   "im_show_reactions"
+  ],
+  "label": "Microblogging"
+ },
+ "photo_sharing": {
+  "caps": [
+   "annotation_agent_type",
+   "default_photo_feed_tab",
+   "interaction_comment",
+   "interaction_like",
+   "interaction_post",
+   "interaction_share",
+   "language",
+   "language_switch_allowed",
+   "posts_per_page",
+   "show_annotation_stats",
+   "show_post_time",
+   "show_recsys_info",
+   "show_suggested_friends"
+  ],
+  "excluded": [],
+  "label": "Photo sharing"
+ },
+ "unknown": {
+  "caps": null,
+  "excluded": []
+ }
+}

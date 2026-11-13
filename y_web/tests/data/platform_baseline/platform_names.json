@@ -18,7 +18,7 @@
  "y_web/routes/admin/sub/experiments/_data.py": 30,
  "y_web/routes/admin/sub/experiments/_external_runtimes.py": 21,
  "y_web/routes/admin/sub/experiments/_feeds.py": 45,
- "y_web/routes/admin/sub/experiments/_frontend_settings.py": 30,
+ "y_web/routes/admin/sub/experiments/_frontend_settings.py": 7,
  "y_web/routes/admin/sub/experiments/_helpers.py": 22,
  "y_web/routes/admin/sub/experiments/_notifications.py": 3,
  "y_web/routes/admin/sub/experiments/_opinion.py": 7,
