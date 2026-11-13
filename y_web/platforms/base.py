@@ -306,3 +306,13 @@ class PlatformProvider:
 
     #: whether the LLM defaults of a new client start from the latest client of the experiment
     inherits_client_llm_defaults: bool = False
+
+    # --- extension: what an installed platform adds to the application --------------------------------------------------
+
+    #: folder ``ysocial_platform/`` of the platform repository; ``None`` for a built-in platform. Its ``templates/``
+    #: are reachable as ``@<key>/<name>`` and its ``static/`` as ``/platform-static/<key>/<name>``
+    package_dir: Optional[Path] = None
+
+    def blueprints(self) -> List[Any]:
+        """Flask blueprints of the platform (participant pages, admin pages, APIs), registered at startup."""
+        return []
