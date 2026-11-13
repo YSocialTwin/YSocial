@@ -530,9 +530,10 @@ def update_recsys(uid):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    if getattr(exp, "simulator_type", "Standard") == "HPC":
+    mode = _get_experiment_mode(exp)
+    if mode == "hpc":
         return update_hpc_recsys(uid)
-    if exp.platform_type == "forum":
+    if mode == "forum":
         return update_forum_recsys(uid)
     return update_standard_recsys(uid)
 
@@ -551,11 +552,7 @@ def _update_client_llm_internal(uid, expected_mode):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    actual_mode = (
-        "hpc"
-        if getattr(exp, "simulator_type", "Standard") == "HPC"
-        else ("forum" if exp.platform_type == "forum" else "standard")
-    )
+    actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
         flash(_("Update route does not match the experiment modality."), "error")
         if actual_mode == "hpc":
@@ -646,8 +643,9 @@ def update_llm(uid):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    if getattr(exp, "simulator_type", "Standard") == "HPC":
+    mode = _get_experiment_mode(exp)
+    if mode == "hpc":
         return update_hpc_client_llm(uid)
-    if exp.platform_type == "forum":
+    if mode == "forum":
         return update_forum_client_llm(uid)
     return update_standard_client_llm(uid)

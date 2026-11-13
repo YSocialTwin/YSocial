@@ -43,9 +43,19 @@ from ._crud import (
     _get_experiment_folder_name,
     _get_experiment_mode,
     _normalize_hourly_activity,
+    _provider_of,
     _read_json_if_exists,
+    _simulator_of,
 )
 from ._helpers import _forum_effective_link_share
+
+
+def _redirect_to_details_page(experiment, current_endpoint, uid):
+    """Redirect to the details page of the clients of this experiment when ``current_endpoint`` is not it."""
+    target = _provider_of(experiment).client_details_page(_simulator_of(experiment))
+    if target == current_endpoint:
+        return None
+    return redirect(url_for(target, uid=uid))
 
 
 @clientsr.route("/admin/client_details/<int:uid>")
@@ -58,17 +68,12 @@ def client_details(uid):
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
 
-    if experiment and experiment.platform_type == "dating":
-        return redirect(url_for("clientsr.client_details_dating", uid=uid))
-    # Redirect HPC clients to dedicated HPC client details page
-    if (
-        experiment
-        and hasattr(experiment, "simulator_type")
-        and experiment.simulator_type == "HPC"
-    ):
-        return redirect(url_for("clientsr.client_details_hpc", uid=uid))
-    if experiment and experiment.platform_type == "forum":
-        return redirect(url_for("clientsr.client_details_forum", uid=uid))
+    if experiment:
+        misplaced = _redirect_to_details_page(
+            experiment, "clientsr.client_details", uid
+        )
+        if misplaced is not None:
+            return misplaced
 
     population = db.session.scalars(
         select(Population).filter_by(id=client.population_id)
@@ -147,10 +152,11 @@ def client_details_forum(uid):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    if experiment.simulator_type == "HPC":
-        return redirect(url_for("clientsr.client_details_hpc", uid=uid))
-    if experiment.platform_type != "forum":
-        return redirect(url_for("clientsr.client_details", uid=uid))
+    misplaced = _redirect_to_details_page(
+        experiment, "clientsr.client_details_forum", uid
+    )
+    if misplaced is not None:
+        return misplaced
 
     population = db.session.scalars(
         select(Population).filter_by(id=client.population_id)
@@ -243,8 +249,9 @@ def client_details_hpc(uid):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    if experiment.platform_type == "dating":
-        return redirect(url_for("clientsr.client_details_dating", uid=uid))
+    own_page = _provider_of(experiment).client_details_page("HPC")
+    if own_page != "clientsr.client_details_hpc":
+        return redirect(url_for(own_page, uid=uid))
 
     population = db.session.scalars(
         select(Population).filter_by(id=client.population_id)

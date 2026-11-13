@@ -1,9 +1,6 @@
 {
- "y_web/routes/admin/sub/clients/_crud.py": 22,
- "y_web/routes/admin/sub/clients/_details.py": 4,
+ "y_web/routes/admin/sub/clients/_crud.py": 9,
  "y_web/routes/admin/sub/clients/_execution.py": 8,
- "y_web/routes/admin/sub/clients/_opinion.py": 1,
- "y_web/routes/admin/sub/clients/_recsys.py": 3,
  "y_web/routes/admin/sub/experiments/_crud.py": 28,
  "y_web/routes/admin/sub/experiments/_data.py": 6,
  "y_web/routes/admin/sub/experiments/_external_runtimes.py": 5,

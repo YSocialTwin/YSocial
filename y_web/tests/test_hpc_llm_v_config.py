@@ -338,7 +338,12 @@ class TestHPCLLMVConfig:
             encoding="utf-8",
         ).read()
 
-        assert 'url_for("clientsr.clients_photo"' in crud_source
+        from y_web.platforms import registry
+
+        # the creation page of the platform is stated by its provider
+        assert registry.get("photo_sharing").clients_page("HPC") == (
+            "clientsr.clients_photo"
+        )
         assert '"llm_vision"' in crud_source
         assert '"use_local_diffusion"' in crud_source
         assert '"local_diffusion_model"' in crud_source

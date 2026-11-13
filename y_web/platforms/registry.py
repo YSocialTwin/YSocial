@@ -27,6 +27,14 @@ def get(platform_type: Any) -> Optional[PlatformProvider]:
     return _PROVIDERS.get(str(platform_type or "").strip())
 
 
+_GENERIC = PlatformProvider()
+
+
+def resolve(platform_type: Any) -> PlatformProvider:
+    """The provider of a platform type; a type nobody provides behaves like the generic platform."""
+    return get(platform_type) or _GENERIC
+
+
 def providers() -> List[PlatformProvider]:
     """All providers, in menu order."""
     return sorted(_PROVIDERS.values(), key=lambda p: (p.order, p.key))

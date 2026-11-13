@@ -63,3 +63,80 @@ def test_landing_redirect_follows_the_platform_of_the_experiment(app):
             assert (
                 _landing_redirect(NS(platform_type=without_landing, idexp=3), 7) is None
             )
+
+
+# --- admin client pages: the answers of the providers equal the chains of tests they replaced -----------------------
+
+
+def _legacy_clients_page(platform, simulator):
+    """The dispatcher of client creation before the providers (routes/admin/sub/clients/_crud.py)."""
+    if simulator == "HPC":
+        if platform == "instant_messaging":
+            return "clientsr.clients_im"
+        if platform == "dating":
+            return "clientsr.clients_dating"
+        if platform == "photo_sharing":
+            return "clientsr.clients_photo"
+        if platform == "forum":
+            return "clientsr.clients_forum_hpc"
+        return "clientsr.clients_hpc"
+    if platform == "forum":
+        return "clientsr.clients_forum"
+    return "clientsr.clients_standard"
+
+
+def _legacy_client_mode(platform, simulator):
+    if simulator == "HPC":
+        return "hpc"
+    return "forum" if platform == "forum" else "standard"
+
+
+def _legacy_client_details_page(platform, simulator):
+    if platform == "dating":
+        return "clientsr.client_details_dating"
+    if simulator == "HPC":
+        return "clientsr.client_details_hpc"
+    if platform == "forum":
+        return "clientsr.client_details_forum"
+    return "clientsr.client_details"
+
+
+def _legacy_opinion_mode(platform, simulator):
+    if platform == "instant_messaging":
+        return "im"
+    return _legacy_client_mode(platform, simulator)
+
+
+#: the platform/simulator pairs an experiment can have (photo sharing, instant messaging and dating run on HPC only)
+REACHABLE = [
+    (platform, simulator)
+    for platform in ("microblogging", "forum", "video_chat", None)
+    for simulator in ("Standard", "HPC")
+] + [(p, "HPC") for p in ("photo_sharing", "instant_messaging", "dating")]
+
+
+@pytest.mark.parametrize("platform, simulator", REACHABLE)
+def test_client_pages_and_modes_equal_the_previous_logic(platform, simulator):
+    provider = registry.resolve(platform)
+    assert provider.clients_page(simulator) == _legacy_clients_page(platform, simulator)
+    assert provider.client_mode(simulator) == _legacy_client_mode(platform, simulator)
+    assert provider.client_details_page(simulator) == _legacy_client_details_page(
+        platform, simulator
+    )
+    assert provider.opinion_mode(simulator) == _legacy_opinion_mode(platform, simulator)
+
+
+@pytest.mark.parametrize(
+    "platform, generic",
+    [
+        ("microblogging", True),
+        ("photo_sharing", True),
+        ("forum", False),
+        ("instant_messaging", False),
+        ("dating", False),
+    ],
+)
+def test_which_platforms_create_their_hpc_clients_with_the_generic_route(
+    platform, generic
+):
+    assert registry.resolve(platform).generic_hpc_client_creation is generic

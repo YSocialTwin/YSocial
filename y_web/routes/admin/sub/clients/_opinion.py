@@ -20,6 +20,7 @@ from sqlalchemy import (
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.platforms import registry as platforms
 from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     AgeClass,
@@ -45,11 +46,9 @@ from ._crud import (
 
 def _opinion_mode(exp):
     """The opinion page family of an experiment: instant messaging has its own, the others follow their modality."""
-    if is_im_experiment(exp):
-        return "im"
-    if getattr(exp, "simulator_type", "Standard") == "HPC":
-        return "hpc"
-    return "forum" if exp.platform_type == "forum" else "standard"
+    return platforms.resolve(exp.platform_type).opinion_mode(
+        getattr(exp, "simulator_type", "Standard")
+    )
 
 
 def _opinion_route(mode):

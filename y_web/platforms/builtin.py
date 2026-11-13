@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from y_web.i18n import N_
-from y_web.platforms.base import PlatformProvider
+from y_web.platforms.base import HPC, PlatformProvider
 from y_web.platforms.registry import register
 
 
@@ -28,6 +28,26 @@ class Forum(PlatformProvider):
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/rfeed/{user_id}/rfeed/rf/1"
 
+    # The Flask pair (YServerReddit/YClientReddit) and the Ray runtime (YForum) have their own pages.
+    def client_mode(self, simulator_type: str) -> str:
+        return "hpc" if simulator_type == HPC else "forum"
+
+    def clients_page(self, simulator_type: str) -> str:
+        return (
+            "clientsr.clients_forum_hpc"
+            if simulator_type == HPC
+            else "clientsr.clients_forum"
+        )
+
+    def client_details_page(self, simulator_type: str) -> str:
+        return (
+            "clientsr.client_details_hpc"
+            if simulator_type == HPC
+            else "clientsr.client_details_forum"
+        )
+
+    generic_hpc_client_creation = False
+
 
 class PhotoSharing(PlatformProvider):
     key = "photo_sharing"
@@ -38,6 +58,9 @@ class PhotoSharing(PlatformProvider):
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         return f"/{exp_id}/photo/feed/all/feed/rf/1"
 
+    def clients_page(self, simulator_type: str) -> str:
+        return "clientsr.clients_photo"
+
 
 class InstantMessaging(PlatformProvider):
     key = "instant_messaging"
@@ -45,12 +68,28 @@ class InstantMessaging(PlatformProvider):
     icon = "send"
     order = 40
 
+    def opinion_mode(self, simulator_type: str) -> str:
+        return "im"
+
+    def clients_page(self, simulator_type: str) -> str:
+        return "clientsr.clients_im"
+
+    generic_hpc_client_creation = False
+
 
 class Dating(PlatformProvider):
     key = "dating"
     label = N_("Dating")
     icon = "heart"
     order = 50
+
+    def clients_page(self, simulator_type: str) -> str:
+        return "clientsr.clients_dating"
+
+    def client_details_page(self, simulator_type: str) -> str:
+        return "clientsr.client_details_dating"
+
+    generic_hpc_client_creation = False
 
 
 def register_builtin_platforms() -> None:

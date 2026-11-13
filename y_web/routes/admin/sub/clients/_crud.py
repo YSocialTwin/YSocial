@@ -22,6 +22,7 @@ from sqlalchemy import delete, select
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.platforms import registry as platforms
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -34,7 +35,6 @@ from y_web.src.agents.platform import (
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
 from y_web.src.forum import communities as forum_communities
-from y_web.src.forum import is_forum_hpc_experiment
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,
@@ -1728,20 +1728,7 @@ def clients(idexp):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    experiment_mode = _get_experiment_mode(exp)
-    if experiment_mode == "hpc":
-        if getattr(exp, "platform_type", None) == "instant_messaging":
-            return redirect(url_for("clientsr.clients_im", idexp=idexp))
-        if getattr(exp, "platform_type", None) == "dating":
-            return redirect(url_for("clientsr.clients_dating", idexp=idexp))
-        if getattr(exp, "platform_type", None) == "photo_sharing":
-            return redirect(url_for("clientsr.clients_photo", idexp=idexp))
-        if is_forum_hpc_experiment(exp):
-            return redirect(url_for("clientsr.clients_forum_hpc", idexp=idexp))
-        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
-    if experiment_mode == "forum":
-        return redirect(url_for("clientsr.clients_forum", idexp=idexp))
-    return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    return redirect(url_for(_clients_page(exp), idexp=idexp))
 
 
 @clientsr.route("/admin/clients_standard/<idexp>")
@@ -1755,10 +1742,9 @@ def clients_standard(idexp):
     if exp is None:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
-    if getattr(exp, "simulator_type", "Standard") == "HPC":
-        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
-    if exp.platform_type == "forum":
-        return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+    misplaced = _redirect_to_clients_page(exp, "clientsr.clients_standard")
+    if misplaced is not None:
+        return misplaced
     if _experiment_configuration_update_required(exp):
         flash(
             _(
@@ -1782,10 +1768,9 @@ def clients_forum(idexp):
     if exp is None:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
-    if getattr(exp, "simulator_type", "Standard") == "HPC":
-        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
-    if exp.platform_type != "forum":
-        return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    misplaced = _redirect_to_clients_page(exp, "clientsr.clients_forum")
+    if misplaced is not None:
+        return misplaced
     if _experiment_configuration_update_required(exp):
         flash(
             _(
@@ -1809,18 +1794,9 @@ def clients_hpc(idexp):
     if exp is None:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
-    if exp.platform_type == "instant_messaging":
-        return redirect(url_for("clientsr.clients_im", idexp=idexp))
-    if exp.platform_type == "dating":
-        return redirect(url_for("clientsr.clients_dating", idexp=idexp))
-    if exp.platform_type == "photo_sharing":
-        return redirect(url_for("clientsr.clients_photo", idexp=idexp))
-    if is_forum_hpc_experiment(exp):
-        return redirect(url_for("clientsr.clients_forum_hpc", idexp=idexp))
-    if getattr(exp, "simulator_type", "Standard") != "HPC":
-        if exp.platform_type == "forum":
-            return redirect(url_for("clientsr.clients_forum", idexp=idexp))
-        return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    misplaced = _redirect_to_clients_page(exp, "clientsr.clients_hpc")
+    if misplaced is not None:
+        return misplaced
     if _experiment_configuration_update_required(exp):
         flash(
             _(
@@ -1845,12 +1821,9 @@ def clients_photo(idexp):
     if exp is None:
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
-    if getattr(exp, "simulator_type", "Standard") != "HPC":
-        if exp.platform_type == "forum":
-            return redirect(url_for("clientsr.clients_forum", idexp=idexp))
-        return redirect(url_for("clientsr.clients_standard", idexp=idexp))
-    if exp.platform_type != "photo_sharing":
-        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
+    misplaced = _redirect_to_clients_page(exp, "clientsr.clients_photo")
+    if misplaced is not None:
+        return misplaced
     if _experiment_configuration_update_required(exp):
         flash(
             _(
@@ -6444,18 +6417,15 @@ def create_hpc_client_route():
             ),
             "error",
         )
-        if exp.platform_type == "forum":
-            return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
-        return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
-    if exp.platform_type == "instant_messaging":
-        return redirect(url_for("clientsr.clients_im", idexp=exp_id))
-    if exp.platform_type == "dating":
-        return redirect(url_for("clientsr.clients_dating", idexp=exp_id))
-    if is_forum_hpc_experiment(exp):
-        return redirect(url_for("clientsr.clients_forum_hpc", idexp=exp_id))
-    if exp.platform_type == "photo_sharing" and not population_id:
+        return redirect(url_for(_clients_page(exp), idexp=exp_id))
+    provider = platforms.resolve(exp.platform_type)
+    own_page = provider.clients_page("HPC")
+    if not provider.generic_hpc_client_creation:
+        return redirect(url_for(own_page, idexp=exp_id))
+    if not population_id and own_page != "clientsr.clients_hpc":
+        # a platform whose own page posts to this route: the page is where a population is picked
         flash(_("Select a valid population."), "error")
-        return redirect(url_for("clientsr.clients_photo", idexp=exp_id))
+        return redirect(url_for(own_page, idexp=exp_id))
 
     return create_hpc_client(exp, name, descr, population_id, request.form)
 
@@ -6472,9 +6442,10 @@ def create_client():
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    if getattr(exp, "simulator_type", "Standard") == "HPC":
+    experiment_mode = _get_experiment_mode(exp)
+    if experiment_mode == "hpc":
         return create_hpc_client_route()
-    if exp.platform_type == "forum":
+    if experiment_mode == "forum":
         return create_forum_client()
     return create_standard_client()
 
@@ -6552,13 +6523,30 @@ def delete_adhoc_client_route(idexp, client_key):
     return experiment_details(idexp)
 
 
+def _provider_of(experiment):
+    return platforms.resolve(getattr(experiment, "platform_type", None))
+
+
+def _simulator_of(experiment):
+    return getattr(experiment, "simulator_type", "Standard")
+
+
 def _get_experiment_mode(experiment):
     """Return the route/template mode for the given experiment."""
-    if getattr(experiment, "simulator_type", "Standard") == "HPC":
-        return "hpc"
-    if getattr(experiment, "platform_type", "microblogging") == "forum":
-        return "forum"
-    return "standard"
+    return _provider_of(experiment).client_mode(_simulator_of(experiment))
+
+
+def _clients_page(experiment):
+    """Endpoint of the page that creates the clients of this experiment."""
+    return _provider_of(experiment).clients_page(_simulator_of(experiment))
+
+
+def _redirect_to_clients_page(experiment, current_endpoint):
+    """Redirect to the creation page of the experiment when ``current_endpoint`` is not it; ``None`` when it is."""
+    target = _clients_page(experiment)
+    if target == current_endpoint:
+        return None
+    return redirect(url_for(target, idexp=experiment.idexp))
 
 
 def _get_experiment_folder_name(experiment):
