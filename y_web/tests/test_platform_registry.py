@@ -174,3 +174,43 @@ def test_client_files_and_execution_hooks_match_the_previous_platform_logic(tmp_
         assert registry.get(key).client_state_files(tmp_path, client) == []
         if key != "dating":
             assert registry.get(key).rounds_per_day(None) is None
+
+
+def _legacy_prompts_page(platform, simulator):
+    if platform in ("instant_messaging",):
+        return "experiments.prompts_im"
+    if platform == "dating":
+        return "experiments.prompts_dating"
+    if simulator == "HPC":
+        return "experiments.prompts_hpc"
+    if platform == "forum":
+        return "experiments.prompts_forum"
+    return "experiments.prompts"
+
+
+def _legacy_prompt_pack(platform, simulator):
+    if platform == "photo_sharing":
+        return "prompts_ygram.json", "prompts_ygram.json"
+    if platform == "forum":
+        return "prompts_forum.json", "prompts.json"
+    if simulator == "HPC":
+        return "prompts_hpc.json", "prompts.json"
+    return "prompts.json", "prompts.json"
+
+
+def test_experiment_prompt_hooks_match_the_previous_platform_logic():
+    from y_web.platforms import registry
+
+    for platform in registry.keys() + ["unknown"]:
+        provider = registry.resolve(platform)
+        for simulator in ("Standard", "HPC"):
+            assert provider.prompts_page(simulator) == _legacy_prompts_page(
+                platform, simulator
+            ), (platform, simulator)
+            assert provider.experiment_prompt_pack(simulator) == _legacy_prompt_pack(
+                platform, simulator
+            ), (platform, simulator)
+        modules = ["news", "voting", "image"] + (
+            ["image_post"] if platform == "forum" else []
+        )
+        assert list(provider.server_modules) == modules

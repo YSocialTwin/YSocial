@@ -75,6 +75,22 @@ class PlatformProvider:
     #: ``None`` for a platform whose clients have nothing to restore
     prompt_pack: Optional[Tuple[str, str]] = None
 
+    #: modules the server of an experiment of this platform is configured with
+    server_modules: Tuple[str, ...] = ("news", "voting", "image")
+
+    def experiment_prompt_pack(self, simulator_type: str) -> Tuple[str, str]:
+        """``(pack, file)``: the prompt pack an experiment starts with and its file in the experiment folder."""
+        pack = "prompts_hpc.json" if simulator_type == HPC else "prompts.json"
+        return pack, "prompts.json"
+
+    def prompts_page(self, simulator_type: str) -> str:
+        """Endpoint of the page where the prompts of an experiment of this platform are edited."""
+        return (
+            "experiments.prompts_hpc"
+            if simulator_type == HPC
+            else "experiments.prompts"
+        )
+
     def client_state_files(self, exp_dir: Path, client: Any) -> List[Path]:
         """Files of a client's saved state, removed when the client is reset."""
         return []

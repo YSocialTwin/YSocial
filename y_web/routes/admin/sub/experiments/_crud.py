@@ -37,6 +37,7 @@ from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.dating import is_dating_experiment
@@ -1965,11 +1966,7 @@ def generate_standard_config(
         "port": port,
         "debug": "False",
         "reset_db": "False",
-        "modules": (
-            ["news", "voting", "image", "image_post"]
-            if platform_type == "forum"
-            else ["news", "voting", "image"]
-        ),
+        "modules": list(registry.resolve(platform_type).server_modules),
         "perspective_api": (
             perspective_api if perspective_api and len(perspective_api) > 0 else None
         ),
@@ -3219,14 +3216,11 @@ def prompts(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
 
     # Route to the configuration page matching the experiment type.
-    if is_im_experiment(experiment):
-        return redirect(url_for("experiments.prompts_im", uid=uid))
-    if is_dating_experiment(experiment):
-        return redirect(url_for("experiments.prompts_dating", uid=uid))
-    if experiment.simulator_type == "HPC":
-        return redirect(url_for("experiments.prompts_hpc", uid=uid))
-    if experiment.platform_type == "forum":
-        return redirect(url_for("experiments.prompts_forum", uid=uid))
+    page = registry.resolve(experiment.platform_type).prompts_page(
+        experiment.simulator_type
+    )
+    if page != "experiments.prompts":
+        return redirect(url_for(page, uid=uid))
 
     # get the prompts file for the experiment
     prompts = os.path.join(
@@ -3318,13 +3312,9 @@ def prompts_hpc(uid):
 
 def _experiment_prompt_pack(experiment):
     """(pack file, file name in the experiment folder) holding the prompts of an experiment."""
-    if experiment.platform_type == "photo_sharing":
-        return "prompts_ygram.json", "prompts_ygram.json"
-    if experiment.platform_type == "forum":
-        return "prompts_forum.json", "prompts.json"
-    if experiment.simulator_type == "HPC":
-        return "prompts_hpc.json", "prompts.json"
-    return "prompts.json", "prompts.json"
+    return registry.resolve(experiment.platform_type).experiment_prompt_pack(
+        experiment.simulator_type
+    )
 
 
 @experiments.route("/admin/prompts_language/<int:uid>", methods=["POST"])
@@ -4293,11 +4283,9 @@ def _matrix_format_value(value):
 
 def _matrix_get_experiment_mode(experiment):
     """Return the matrix catalog mode for the given experiment."""
-    if getattr(experiment, "simulator_type", "Standard") == "HPC":
-        return "hpc"
-    if getattr(experiment, "platform_type", "microblogging") == "forum":
-        return "forum"
-    return "standard"
+    return registry.resolve(
+        getattr(experiment, "platform_type", "microblogging")
+    ).client_mode(getattr(experiment, "simulator_type", "Standard"))
 
 
 def _matrix_recsys_catalog(experiment):

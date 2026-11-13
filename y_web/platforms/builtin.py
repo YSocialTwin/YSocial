@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 from y_web.i18n import N_
 from y_web.platforms.base import HPC, PlatformProvider
@@ -52,6 +52,17 @@ class Forum(PlatformProvider):
     generic_hpc_client_creation = False
     client_file_has_simulation_days = False
     prompt_pack = ("prompts_forum.json", "prompts.json")
+    server_modules = ("news", "voting", "image", "image_post")
+
+    def experiment_prompt_pack(self, simulator_type: str) -> Tuple[str, str]:
+        return self.prompt_pack
+
+    def prompts_page(self, simulator_type: str) -> str:
+        return (
+            "experiments.prompts_hpc"
+            if simulator_type == HPC
+            else "experiments.prompts_forum"
+        )
 
 
 class PhotoSharing(PlatformProvider):
@@ -65,6 +76,9 @@ class PhotoSharing(PlatformProvider):
 
     extra_prompt_files = ("prompts_ygram.json",)
     prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
+
+    def experiment_prompt_pack(self, simulator_type: str) -> Tuple[str, str]:
+        return self.prompt_pack
 
     def clients_page(self, simulator_type: str) -> str:
         return "clientsr.clients_photo"
@@ -83,6 +97,9 @@ class InstantMessaging(PlatformProvider):
     def opinion_mode(self, simulator_type: str) -> str:
         return "im"
 
+    def prompts_page(self, simulator_type: str) -> str:
+        return "experiments.prompts_im"
+
     def clients_page(self, simulator_type: str) -> str:
         return "clientsr.clients_im"
 
@@ -100,6 +117,9 @@ class Dating(PlatformProvider):
 
     def client_details_page(self, simulator_type: str) -> str:
         return "clientsr.client_details_dating"
+
+    def prompts_page(self, simulator_type: str) -> str:
+        return "experiments.prompts_dating"
 
     def rounds_per_day(self, exp: Any) -> Optional[int]:
         from y_web.routes.admin.sub.clients._dating import (
