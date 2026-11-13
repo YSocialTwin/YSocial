@@ -38,6 +38,7 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.src.content.avatars import (
     normalize_force_placeholder,
     normalize_forum_avatar_mode,
@@ -144,7 +145,6 @@ from ._helpers import (
     _normalize_embedding_service,
     _normalize_forum_embedding_host,
     _normalize_forum_embedding_service,
-    _read_forum_feed_health,
     default_stress_reward_config,
     normalize_stress_reward_config,
     sync_stress_reward_client_config,
@@ -650,7 +650,6 @@ def experiment_details(uid):
     embedding_settings = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
-    forum_feed_health = None
     llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
     detoxify_download_state = refresh_detoxify_download_state()
     detoxify_ready = detoxify_download_state.get("status") == "ready"
@@ -800,73 +799,12 @@ def experiment_details(uid):
         list_adhoc_clients(experiment) if has_agent_plugins_installed else []
     )
 
-    if experiment.platform_type == "forum":
-        try:
-            from y_web.src.system.path_utils import get_writable_path
-
-            base_dir = get_writable_path()
-            exp_folder = _get_experiment_folder(
-                base_dir, experiment, _get_database_type()
-            )
-            forum_feed_health = _read_forum_feed_health(experiment, exp_folder)
-        except Exception:
-            forum_feed_health = None
-
-    im_analytics = None
-    if is_im_experiment(experiment):
-        # the analytics cards follow the tables of the derived database, like every other platform's pages follow theirs
-        try:
-            from y_web.src.im import analytics as im_analytics_module
-
-            im_analytics_module.ensure_derived(experiment)
-            im_analytics = im_analytics_module.cards(experiment)
-            # the analytics cards follow the data (im_analytics); the switches above stay the configuration
-        except Exception:
-            im_analytics = {"state": {"state": "failed", "message": ""}}
-
-    im_advanced = None
-    if is_im_experiment(experiment):
-        try:
-            from y_web.src.im.experiment_config import read_advanced_settings
-            from y_web.src.system.path_utils import get_writable_path
-
-            im_advanced = read_advanced_settings(
-                _get_experiment_folder(
-                    get_writable_path(), experiment, _get_database_type()
-                )
-            )
-        except Exception:
-            im_advanced = None
-
-    if is_im_experiment(experiment):
-        try:
-            from y_web.src.im.exp_stats import refresh_exp_stats
-
-            refresh_exp_stats(experiment)
-        except Exception:
-            db.session.rollback()
-
-    im_switches = None
-    if is_im_experiment(experiment):
-        try:
-            from y_web.src.im.experiment_config import load_server_config, read_switches
-            from y_web.src.im.participant import experiment_folder
-
-            im_switches = read_switches(
-                load_server_config(experiment_folder(experiment))
-            )
-        except Exception:
-            im_switches = None
-
-    template_name = "admin/experiment_details.html"
-    if experiment.platform_type == "forum":
-        template_name = "admin/experiment_details_forum.html"
-    elif experiment.platform_type == "photo_sharing":
-        template_name = "admin/experiment_details_photo.html"
-    elif is_im_experiment(experiment):
-        template_name = "admin/experiment_details_im.html"
-    elif is_dating_experiment(experiment):
-        template_name = "admin/experiment_details_dating.html"
+    provider = registry.resolve(experiment.platform_type)
+    page_context = {
+        **registry.details_context_defaults(),
+        **provider.details_context(experiment),
+    }
+    template_name = provider.details_template
 
     return render_template(
         template_name,
@@ -903,11 +841,8 @@ def experiment_details(uid):
         embedding_settings=embedding_settings,
         forum_embedding_settings=forum_embedding_settings,
         forum_avatar_settings=forum_avatar_settings,
-        forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
-        im_analytics=im_analytics,
-        im_switches=im_switches,
-        im_advanced=im_advanced,
+        **page_context,
     )
 
 

@@ -559,3 +559,29 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
         for s in ("Standard", "HPC")
         if registry.get(k).creation_rules(s).copies_clean_database
     } == {("microblogging", "Standard"), ("forum", "Standard")}
+
+
+def test_experiment_page_templates_and_variables_match_the_previous_logic():
+    from y_web.platforms import registry
+
+    assert {k: registry.get(k).details_template for k in registry.keys()} == {
+        "microblogging": "admin/experiment_details.html",
+        "forum": "admin/experiment_details_forum.html",
+        "photo_sharing": "admin/experiment_details_photo.html",
+        "instant_messaging": "admin/experiment_details_im.html",
+        "dating": "admin/experiment_details_dating.html",
+    }
+    assert registry.resolve("unknown").details_template == (
+        "admin/experiment_details.html"
+    )
+    assert registry.details_context_defaults() == {
+        "forum_feed_health": None,
+        "im_analytics": None,
+        "im_advanced": None,
+        "im_switches": None,
+    }
+    for key in registry.keys():
+        provider = registry.get(key)
+        # a platform provides exactly the variables it names
+        if not provider.details_context_keys:
+            assert provider.details_context(None) == {}

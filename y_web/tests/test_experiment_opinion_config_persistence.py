@@ -240,7 +240,7 @@ def test_new_experiment_form_supports_photo_sharing_platform():
         "prompts_ygram.json",
         "prompts_ygram.json",
     )
-    assert "experiment_details_photo.html" in data_source
+    assert provider.details_template == "admin/experiment_details_photo.html"
 
 
 def test_client_details_pages_expose_editable_simulation_and_action_fields():

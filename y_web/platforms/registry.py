@@ -54,3 +54,10 @@ def syncs_stress_reward(platform_type: Any) -> bool:
         str(platform_type) == "hpc"
         or resolve(platform_type).standard_runtime is not None
     )
+
+
+def details_context_defaults() -> Dict[str, None]:
+    """Every template variable some platform adds to the experiment page, set to ``None``."""
+    return {
+        key: None for provider in providers() for key in provider.details_context_keys
+    }

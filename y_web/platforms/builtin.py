@@ -92,6 +92,27 @@ class Forum(PlatformProvider):
     client_file_has_simulation_days = False
     prompt_pack = ("prompts_forum.json", "prompts.json")
     server_modules = ("news", "voting", "image", "image_post")
+    details_template = "admin/experiment_details_forum.html"
+    details_context_keys = ("forum_feed_health",)
+
+    def details_context(self, experiment: Any) -> dict:
+        from y_web.routes.admin.sub.experiments._helpers import (
+            _get_database_type,
+            _get_experiment_folder,
+            _read_forum_feed_health,
+        )
+        from y_web.src.system.path_utils import get_writable_path
+
+        try:
+            exp_folder = _get_experiment_folder(
+                get_writable_path(), experiment, _get_database_type()
+            )
+            return {
+                "forum_feed_health": _read_forum_feed_health(experiment, exp_folder)
+            }
+        except Exception:
+            return {"forum_feed_health": None}
+
     standard_runtime = StandardRuntime(
         server_repo="YServerReddit",
         client_repo="YClientReddit",
@@ -243,6 +264,7 @@ class PhotoSharing(PlatformProvider):
             prompt_language,
         )
 
+    details_template = "admin/experiment_details_photo.html"
     extra_prompt_files = ("prompts_ygram.json",)
     prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
 
@@ -297,6 +319,56 @@ class InstantMessaging(PlatformProvider):
             database="own",
             sqlite_only_note="Instant messaging experiments use SQLite even if the platform uses PostgreSQL",
         )
+
+    details_template = "admin/experiment_details_im.html"
+    details_context_keys = ("im_analytics", "im_advanced", "im_switches")
+
+    def details_context(self, experiment: Any) -> dict:
+        from y_web import db
+        from y_web.routes.admin.sub.experiments._helpers import (
+            _get_database_type,
+            _get_experiment_folder,
+        )
+        from y_web.src.system.path_utils import get_writable_path
+
+        context = {"im_analytics": None, "im_advanced": None, "im_switches": None}
+        # the analytics cards follow the tables of the derived database, like every other platform's pages follow theirs
+        try:
+            from y_web.src.im import analytics
+
+            analytics.ensure_derived(experiment)
+            context["im_analytics"] = analytics.cards(experiment)
+        except Exception:
+            context["im_analytics"] = {"state": {"state": "failed", "message": ""}}
+        try:
+            from y_web.src.im.experiment_config import read_advanced_settings
+
+            context["im_advanced"] = read_advanced_settings(
+                _get_experiment_folder(
+                    get_writable_path(), experiment, _get_database_type()
+                )
+            )
+        except Exception:
+            context["im_advanced"] = None
+        try:
+            from y_web.src.im.exp_stats import refresh_exp_stats
+
+            refresh_exp_stats(experiment)
+        except Exception:
+            db.session.rollback()
+        try:
+            from y_web.src.im.experiment_config import (
+                load_server_config,
+                read_switches,
+            )
+            from y_web.src.im.participant import experiment_folder
+
+            context["im_switches"] = read_switches(
+                load_server_config(experiment_folder(experiment))
+            )
+        except Exception:
+            context["im_switches"] = None
+        return context
 
     def observer_url(self, exp_id: int) -> Optional[str]:
         # IM has no per-user feed row: the observer opens on the chat list (plan, 6.3)
@@ -409,6 +481,8 @@ class Dating(PlatformProvider):
             database="own",
             sqlite_only_note="Dating experiments use SQLite even if the platform uses PostgreSQL",
         )
+
+    details_template = "admin/experiment_details_dating.html"
 
     def observer_url(self, exp_id: int) -> Optional[str]:
         # the observer (S6) is the only way in: dating has no per-user feed row either

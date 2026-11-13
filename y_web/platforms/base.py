@@ -270,3 +270,14 @@ class PlatformProvider:
     def folder_clone(self) -> Optional[Tuple[Any, Any]]:
         """``(copy_folder, new_uid)`` for a platform whose experiment is copied as a folder of inputs, else ``None``."""
         return None
+
+    # --- admin: the experiment page -----------------------------------------------------------------------------------
+
+    #: template of the experiment page
+    details_template: str = "admin/experiment_details.html"
+    #: names of the template variables :meth:`details_context` provides (the page of other platforms sees ``None``)
+    details_context_keys: Tuple[str, ...] = ()
+
+    def details_context(self, experiment: Any) -> dict:
+        """Template variables, named in ``details_context_keys``, that only the page of this platform uses."""
+        return {}
