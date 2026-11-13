@@ -14,6 +14,8 @@ repository's ``meta/registry.json``) imports from here and from nothing else in 
 from y_web.i18n import N_, gettext
 from y_web.platforms.base import (
     COMMON_FRONTEND_CAPABILITIES,
+    HPC,
+    STANDARD,
     CreationRules,
     PlatformConfigError,
     PlatformProvider,
@@ -27,10 +29,12 @@ from y_web.sdk.version import PLATFORM_API
 __all__ = [
     "COMMON_FRONTEND_CAPABILITIES",
     "CreationRules",
+    "HPC",
     "N_",
     "PLATFORM_API",
     "PlatformConfigError",
     "PlatformProvider",
+    "STANDARD",
     "ServerConfigRequest",
     "StandardRuntime",
     "gettext",

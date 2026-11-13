@@ -6,6 +6,9 @@
     "CreationRules": {
       "kind": "class"
     },
+    "HPC": {
+      "kind": "value"
+    },
     "N_": {
       "kind": "function",
       "signature": "(message)"
@@ -18,6 +21,9 @@
     },
     "PlatformProvider": {
       "kind": "class"
+    },
+    "STANDARD": {
+      "kind": "value"
     },
     "ServerConfigRequest": {
       "kind": "class"

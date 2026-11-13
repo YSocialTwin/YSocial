@@ -14,6 +14,10 @@ from y_web.platforms.extension import (
 @pytest.fixture
 def clean_registry():
     before = dict(registry._PROVIDERS)
+    # platforms of installed repositories (found by an application started earlier) are not part of these tests
+    for key, provider in before.items():
+        if provider.package_dir is not None:
+            del registry._PROVIDERS[key]
     yield
     registry._PROVIDERS.clear()
     registry._PROVIDERS.update(before)
@@ -98,7 +102,7 @@ def test_a_failing_platform_is_reported_and_the_others_still_load(
         assert render_template(template_name("fine", "hello.html"), who="z")
 
 
-def test_built_in_platforms_add_nothing():
+def test_built_in_platforms_add_nothing(clean_registry):
     app = Flask(__name__)
     assert install_platform_extensions(app) == {}
     assert app.url_map._rules_by_endpoint.keys() == {"static"}
