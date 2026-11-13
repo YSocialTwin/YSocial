@@ -1052,7 +1052,7 @@ body.is-dark .fr-thread-post .fr-vote, body.is-dark .fr-thread-post .fr-actions 
 body.is-dark .fr-thread-post .fr-actions .forum-report-button,
 body.is-dark .reddit-post .open-thread-button, body.is-dark .reddit-post .forum-report-button,
 body.is-dark .reddit-post .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
-body.is-dark.fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] {
+.fr-view-compact body.is-dark .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] {
     background: var(--fr-bg-hover) !important; color: var(--fr-text) !important;
 }
 body.is-dark .fr-expand-button:hover, body.is-dark .fr-crosspost-button:hover,

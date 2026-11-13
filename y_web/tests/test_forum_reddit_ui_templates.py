@@ -269,3 +269,11 @@ def test_night_mode_restyles_topic_chips():
 def test_night_mode_restyles_vote_boxes():
     css = (ROOT / "static/assets/css/reddit/forum-dark.css").read_text(encoding="utf-8")
     assert "body.is-dark .vote-button" in css and "background: #f8f9fa" in css
+
+
+def test_night_mode_compact_selectors_put_view_class_on_html_ancestor():
+    # `fr-view-compact` is set on <html>, an ancestor of <body>: `body.is-dark .fr-view-compact` can never match.
+    for name in ("forum-dark.css", "forum-reddit.css"):
+        css = (ROOT / "static/assets/css/reddit" / name).read_text(encoding="utf-8")
+        assert "body.is-dark .fr-view-compact" not in css
+        assert "body.is-dark.fr-view-compact" not in css

@@ -239,12 +239,12 @@ body.is-dark .reddit-comment[data-vote="dislike"] .vote-button[data-action="disl
 body.is-dark [data-role="score"] { color: var(--fr-text) !important; }
 
 /* Compact cards: the vote pill is styled by long selectors with !important in forum-reddit.css; match their specificity. */
-body.is-dark .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
+.fr-view-compact body.is-dark .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
 body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
-body.is-dark .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"][style*="background"] {
+.fr-view-compact body.is-dark .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"][style*="background"] {
     background: var(--fr-bg-hover) !important;
 }
-body.is-dark .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button,
+.fr-view-compact body.is-dark .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button,
 body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button {
     color: var(--fr-text) !important;
 }
@@ -252,6 +252,6 @@ body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[st
 
 /* Structure-independent fallback for the vote pill (inline `min-width: 40px` box that holds the vote buttons). */
 body.is-dark .reddit-post [style*="min-width: 40px"], body.is-dark .reddit-post:not(.fr-expanded) [data-role="score"]:not(#x) { background-color: transparent; }
-body.is-dark .reddit-post div[style*="min-width: 40px"], body.is-dark .fr-view-compact .reddit-post div[style*="flex-direction: column"]:has(.vote-button) {
+body.is-dark .reddit-post div[style*="min-width: 40px"], .fr-view-compact body.is-dark .reddit-post div[style*="flex-direction: column"]:has(.vote-button) {
     background: var(--fr-bg-hover) !important;
 }
