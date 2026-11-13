@@ -1026,3 +1026,48 @@ body.fr-modal-open { overflow: hidden; }
 .fr-directory-empty { padding: 24px 8px; color: var(--fr-muted); }
 .forum-community-more { display: block; margin: 6px 12px 2px; font-size: 13px; font-weight: 700; color: var(--fr-accent); text-decoration: none; }
 .forum-community-more:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ night mode
+ * The theme toggle puts `is-dark` on <body>. Re-point the palette instead of repeating every rule: everything that
+ * uses the --fr-* variables follows, and the few hard-coded light surfaces are overridden below. */
+body.is-dark {
+    --fr-bg: #0e1a22;
+    --fr-bg-soft: #16252f;
+    --fr-bg-hover: #1f313d;
+    --fr-line: #263a47;
+    --fr-text: #e6f0f3;
+    --fr-muted: #9db3bb;
+    --fr-accent-soft: #3a2218;
+    background: #07131b;
+    color: var(--fr-text);
+}
+body.is-dark .view-wrapper, body.is-dark #main-feed { background: transparent; }
+body.is-dark .pageloader, body.is-dark .infraloader { background: #07131b; }
+body.is-dark .card, body.is-dark .reddit-post.card, body.is-dark .fr-thread-post,
+body.is-dark .fr-menu-panel, body.is-dark .forum-search-panel, body.is-dark .fr-modal-card,
+body.is-dark .fr-directory { background: var(--fr-bg); color: var(--fr-text); border-color: var(--fr-line); }
+body.is-dark .fr-expand-button, body.is-dark .fr-crosspost-button, body.is-dark .fr-modal-search,
+body.is-dark .fr-modal-secondary, body.is-dark .forum-profile-tab.is-active,
+body.is-dark .fr-thread-post .fr-vote, body.is-dark .fr-thread-post .fr-actions .toggle-reply-button,
+body.is-dark .fr-thread-post .fr-actions .forum-report-button,
+body.is-dark .reddit-post .open-thread-button, body.is-dark .reddit-post .forum-report-button,
+body.is-dark .reddit-post .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
+body.is-dark.fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] {
+    background: var(--fr-bg-hover) !important; color: var(--fr-text) !important;
+}
+body.is-dark .fr-expand-button:hover, body.is-dark .fr-crosspost-button:hover,
+body.is-dark .reddit-post .open-thread-button:hover, body.is-dark .reddit-post .forum-report-button:hover,
+body.is-dark .reddit-back-link .mdi:hover { background: #2a4150 !important; }
+body.is-dark .reddit-post .feed-content { color: #c3d3d9; }
+body.is-dark .fr-branch:hover::before { background: #3b5565; }
+body.is-dark .fr-directory-tab.is-active { background: var(--fr-text); color: var(--fr-bg); }
+body.is-dark .fr-toast { background: #e6f0f3; color: #0f1a1c; }
+body.is-dark .fr-recent-clear, body.is-dark .forum-search-clear { color: #6cb6ff; }
+body.is-dark .fr-modal-error { color: #ff8a5c; }
+body.is-dark input, body.is-dark textarea, body.is-dark select {
+    background: var(--fr-bg-soft); color: var(--fr-text); border-color: var(--fr-line);
+}
+body.is-dark input::placeholder, body.is-dark textarea::placeholder { color: var(--fr-muted); }
+body.is-dark h1, body.is-dark h2, body.is-dark h3, body.is-dark h4, body.is-dark h5, body.is-dark .title,
+body.is-dark .reddit-post .post-title, body.is-dark .reddit-post a, body.is-dark .fr-thread-post a { color: var(--fr-text); }
+body.is-dark .fr-crosspost-origin, body.is-dark .fr-meta, body.is-dark small { color: var(--fr-muted); }

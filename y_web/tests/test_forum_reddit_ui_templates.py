@@ -239,3 +239,15 @@ def test_join_menu_groups_simulations_by_platform_type():
         Path(__file__).resolve().parents[1] / "templates/admin/dash_head.html"
     ).read_text()
     assert "group_experiments_by_platform(active_experiments)" in head
+
+
+def test_communities_page_loads_main_js_to_dismiss_the_page_loader():
+    html = (TPL / "communities.html").read_text(encoding="utf-8")
+    assert "assets/js/main.js" in html
+
+
+def test_forum_css_defines_a_night_mode_palette():
+    css = (ROOT / "static/assets/css/reddit/forum-reddit.css").read_text(
+        encoding="utf-8"
+    )
+    assert "body.is-dark {" in css and "--fr-bg:" in css.split("body.is-dark {", 1)[1]
