@@ -164,6 +164,9 @@ venv.bak/
 
 # External runtime repositories are managed as standalone clones
 /external/
+# separate clone of the plugin registry (its own repository) and generated agent images
+/plugin-registry/
+/media/
 
 # Runtime experiment artifacts
 /y_web/experiments/
