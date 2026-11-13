@@ -251,3 +251,10 @@ def test_forum_css_defines_a_night_mode_palette():
         encoding="utf-8"
     )
     assert "body.is-dark {" in css and "--fr-bg:" in css.split("body.is-dark {", 1)[1]
+
+
+def test_forum_header_loads_the_night_mode_stylesheet():
+    html = (TPL / "header.html").read_text(encoding="utf-8")
+    assert "css/reddit/forum-dark.css" in html
+    css = (ROOT / "static/assets/css/reddit/forum-dark.css").read_text(encoding="utf-8")
+    assert "body.is-dark .forum-community-meta strong" in css
