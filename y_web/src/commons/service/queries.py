@@ -9,18 +9,9 @@ from sqlalchemy import and_, case, func, or_, select, text
 from sqlalchemy.orm import aliased
 
 from y_web import db
-from y_web.src.content.text_utils import (
-    augment_text,
-    normalize_punctuation_spacing,
-    process_reddit_post,
-    strip_reproduced_article_content,
-)
-from y_web.src.data_access import get_elicited_emotions, get_topics
-from y_web.src.experiment.context import get_current_experiment_id
-from y_web.src.forum.hot_rank import rank_posts_longtail
-from y_web.src.forum.ids import opaque_id
-from y_web.src.forum.ordering import seq_or_id
-from y_web.src.forum.service.data_classes import (
+from y_web.src.commons.ids import opaque_id
+from y_web.src.commons.ordering import seq_or_id
+from y_web.src.commons.service.data_classes import (
     ArticlePreview,
     FeedPage,
     FeedPost,
@@ -28,7 +19,7 @@ from y_web.src.forum.service.data_classes import (
     _article_payload,
     _strip_article_title_from_body,
 )
-from y_web.src.forum.service.formatters import (
+from y_web.src.commons.service.formatters import (
     _article_summary_needs_enrichment,
     _format_display_time,
     _format_display_time_from_created_at,
@@ -40,6 +31,15 @@ from y_web.src.forum.service.formatters import (
     _resolve_image_post,
     _shared_from,
 )
+from y_web.src.content.text_utils import (
+    augment_text,
+    normalize_punctuation_spacing,
+    process_reddit_post,
+    strip_reproduced_article_content,
+)
+from y_web.src.data_access import get_elicited_emotions, get_topics
+from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.commons.hot_rank import rank_posts_longtail
 
 
 def _root_post_filter(column):
@@ -1060,7 +1060,7 @@ def fetch_feed_page(
             )
         )
     elif feed_type == "hot":
-        # Reddit-style hot with logarithmic scoring
+        # Hot ranking with logarithmic scoring
         # Base formula: log10(|score| + 1) + sign(score) * sim_time_index / round_decay
         # Every round_decay rounds, a post needs ~10x more votes to maintain position
         round_decay = 12.0

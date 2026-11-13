@@ -34,11 +34,11 @@ LEGACY_SYMBOL_RE = re.compile(
 
 def test_phase9_canonical_imports_work():
     from y_web.src.agents.population import generate_population_from_config
+    from y_web.src.commons.service import fetch_feed_page, serialize_feed_posts
     from y_web.src.data_access.posts import get_user_recent_posts
     from y_web.src.data_access.trends import get_trending_hashtags
     from y_web.src.experiment.context import setup_experiment_context
     from y_web.src.forum.actions import apply_vote, create_post_reddit
-    from y_web.src.forum.service import fetch_feed_page, serialize_feed_posts
     from y_web.src.hpc.log_metrics import update_client_log_metrics
     from y_web.src.llm import Annotator, ContentAnnotator
     from y_web.src.models.admin import Admin_users, Exps

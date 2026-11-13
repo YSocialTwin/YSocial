@@ -5,7 +5,7 @@ import math
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Tuple, TypeVar
 
-from y_web.src.forum.ids import opaque_id
+from y_web.src.commons.ids import opaque_id
 
 TPost = TypeVar("TPost")
 
@@ -27,7 +27,7 @@ def base_hot_score(
     net_score: int, post_time_index: int, *, round_decay: float = 12.0
 ) -> float:
     """
-    Match the current forum Hot base used in `reddit/service.py`:
+    Match the Hot base the discussion pages use:
       log10(abs(net)+1) + sign(net) * (post_time_index / round_decay)
     """
     if net_score > 0:

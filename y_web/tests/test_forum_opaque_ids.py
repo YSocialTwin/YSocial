@@ -6,8 +6,8 @@ import pytest
 from flask import Flask
 
 from y_web import db
-from y_web.src.forum.hot_rank import rank_posts_longtail
-from y_web.src.forum.ids import opaque_id
+from y_web.src.commons.ids import opaque_id
+from y_web.src.commons.hot_rank import rank_posts_longtail
 
 
 def test_opaque_id_keeps_ints_and_uuids():
@@ -51,7 +51,7 @@ def app(tmp_path):
 
 
 def test_feed_pages_with_uuid_ids(app):
-    from y_web.src.forum.service import queries as q
+    from y_web.src.commons.service import queries as q
     from y_web.src.models import Post, Rounds, User_mgmt
 
     uid = str(uuid.uuid4())
@@ -131,8 +131,8 @@ def test_reply_inbox_untouched_for_integer_users(tmp_path):
 def test_notifications_and_thread_order_follow_seq(app):
     from sqlalchemy import text
 
-    from y_web.src.forum import ordering
-    from y_web.src.forum.service import queries as q
+    from y_web.src.commons.service import queries as q
+    from y_web.src.commons import ordering
     from y_web.src.models import Post, Rounds, User_mgmt
 
     engine = db.engines["db_exp"]
@@ -182,7 +182,7 @@ def test_human_actions_get_uuid_ids_and_seq_in_a_yforum_database(app):
     """Inserts written like the forum actions do (no id, no seq) work on a database that numbers rows itself."""
     from sqlalchemy import text
 
-    from y_web.src.forum import ordering
+    from y_web.src.commons import ordering
     from y_web.src.models import Follow, Post, Reactions, Rounds, User_mgmt
 
     engine = db.engines["db_exp"]

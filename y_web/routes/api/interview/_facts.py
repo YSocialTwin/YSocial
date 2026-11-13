@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import case, desc, func, or_, select
 
 from y_web import db, prompt_store
-from y_web.src.forum.ordering import seq_or_id
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.models import (
     AdminInterviewMessage,
     Exps,

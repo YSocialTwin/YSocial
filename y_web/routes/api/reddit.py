@@ -15,9 +15,9 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
 from y_web import db, prompt_store
+from y_web.src.commons.ids import opaque_id
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.data_access import get_elicited_emotions, get_topics
-from y_web.src.forum.ids import opaque_id
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.system import prompt_packs
 
 try:
@@ -53,20 +53,20 @@ from y_web.routes.api.interview._server import (
     _memory_server_unavailable,
 )
 from y_web.routes.social.helpers import _experiment_memory_enabled
-from y_web.src.forum.actions import (
-    apply_vote,
-    create_comment_reddit,
-    create_community,
-    create_post_reddit,
-    crosspost_reddit,
-)
-from y_web.src.forum.service import (
+from y_web.src.commons.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     _get_profile_pic,
     build_user_feed_posts,
     fetch_feed_page,
     fetch_thread,
+)
+from y_web.src.forum.actions import (
+    apply_vote,
+    create_comment_reddit,
+    create_community,
+    create_post_reddit,
+    crosspost_reddit,
 )
 from y_web.src.models import (
     Admin_users,
@@ -1307,12 +1307,12 @@ def api_post(exp_id: int):
 @login_required
 def api_crosspost_targets(exp_id: int):
     """Destinations offered by the Repost dialog: the user's profile plus communities (filtered by ``q``)."""
-    from y_web.src.forum.community_icons import assign_icons, icon_for
-    from y_web.src.forum.service import (
+    from y_web.src.commons.service import (
         fetch_available_communities,
         fetch_community_stats,
         fetch_user_communities,
     )
+    from y_web.src.forum.community_icons import assign_icons, icon_for
 
     query = (request.args.get("q") or "").strip().lower().removeprefix("y/")
     exclude = (request.args.get("exclude") or "").strip().lower().removeprefix("y/")

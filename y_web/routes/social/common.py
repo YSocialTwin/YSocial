@@ -44,6 +44,7 @@ from y_web.src.agents.custom_features import (
     platform_agnostic_custom_features,
     summarize_agent_custom_features,
 )
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.content.cover_images import (
     DEFAULT_COVER_IMAGE_PATH,
     available_cover_image_urls,
@@ -61,7 +62,6 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.external_runtime.plugin_loader import active_modules_context
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -536,7 +536,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         )
         forum_context = dict(common_context)
         forum_context["mentions"] = forum_mentions
-        from y_web.src.forum.service import (
+        from y_web.src.commons.service import (
             fetch_recent_active_communities,
             fetch_user_communities,
         )

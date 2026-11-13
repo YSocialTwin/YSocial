@@ -1,6 +1,6 @@
-"""Chronological ordering key of forum rows, independent of the id type.
+"""Chronological ordering key of rows, independent of the id type.
 
-Rows of a YForum database carry a server-assigned, monotonic ``seq`` column while ids are UUIDs
+Rows of an HPC database carry a server-assigned, monotonic ``seq`` column while ids are UUIDs
 (random, so they say nothing about the order). Standard experiment databases have no ``seq`` and
 their integer ids are already monotonic: ``seq_or_id`` returns ``seq`` when the table has it and
 the ``id`` column otherwise, so the same query serves both.

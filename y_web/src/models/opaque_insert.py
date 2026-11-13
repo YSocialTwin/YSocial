@@ -87,7 +87,7 @@ def number_inserts(conn, clauseelement, multiparams, params, execution_options):
         or not table.c.seq.info.get("yweb_forum_seq")
     ):
         return clauseelement, multiparams, params
-    from y_web.src.forum.ordering import (  # lazy: the forum package imports the models
+    from y_web.src.commons.ordering import (  # lazy: the forum package imports the models
         table_layout,
     )
 
@@ -110,7 +110,7 @@ def fill_insert(mapper, connection, target) -> None:
     if getattr(cls, "__bind_key__", None) != "db_exp":
         return
     table = mapper.local_table.name
-    from y_web.src.forum.ordering import (  # lazy: the forum package imports the models
+    from y_web.src.commons.ordering import (  # lazy: the forum package imports the models
         table_layout,
     )
 

@@ -18,6 +18,8 @@ from flask_login import current_user
 from sqlalchemy import or_, select
 
 from y_web import db
+from y_web.src.commons.ids import opaque_id
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.content.avatars import (
     resolve_forum_profile_pic,
     resolve_forum_username_avatar,
@@ -31,8 +33,6 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.context import get_current_experiment_id
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
-from y_web.src.forum.ids import opaque_id
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -188,11 +188,11 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     is_forum = getattr(exp, "platform_type", "") == "forum"
 
-    from y_web.src.forum.service import (
+    from y_web.src.commons.service import (
         _format_display_time,
         _format_display_time_from_created_at,
     )
-    from y_web.src.forum.service.queries import _primary_community_payload
+    from y_web.src.commons.service.queries import _primary_community_payload
 
     # Get experiment user ID if not provided
     if exp_user_id is None:

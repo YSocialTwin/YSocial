@@ -15,6 +15,7 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
+from y_web.src.commons.service.data_classes import ArticlePreview
 from y_web.src.content.text_utils import strip_tags
 from y_web.src.experiment.clock import (
     DEFAULT_CLOCK_MODE,
@@ -24,7 +25,6 @@ from y_web.src.experiment.clock import (
     parse_anchor_date,
 )
 from y_web.src.experiment.context import get_current_experiment_id
-from y_web.src.forum.service.data_classes import ArticlePreview
 from y_web.src.models import (
     Agent,
     Articles,
@@ -56,7 +56,7 @@ def _get_experiment_dir(experiment: Exps) -> Path:
 
 
 def clean_reddit_formatting(text: str) -> str:
-    """Remove Reddit-specific formatting artifacts from text."""
+    """Remove the formatting artifacts of subreddit feed summaries from text."""
     if not text:
         return ""
     normalized = html.unescape(text)
@@ -72,7 +72,7 @@ def clean_reddit_formatting(text: str) -> str:
 
 
 def extract_reddit_summary_image(summary_html: str) -> Optional[Dict[str, str]]:
-    """Extract a preview image from Reddit summary HTML (no network)."""
+    """Extract a preview image from a subreddit feed summary (no network)."""
     if not summary_html:
         return None
     try:
@@ -299,7 +299,7 @@ def _media_type_from_url(url: str) -> str:
 
 
 def _upgrade_reddit_image_url(url: str) -> str:
-    """Normalize Reddit image URLs without rewriting them into broken preview variants."""
+    """Normalize subreddit image URLs without rewriting them into broken preview variants."""
     if not url:
         return url
 
@@ -319,7 +319,7 @@ def _normalize_forum_local_image_path(local_path: str) -> str:
     if value.startswith(("http://", "https://", "/static/", "/uploads/")):
         return value
     if value.startswith("uploads/"):
-        # Legacy forum feed bootstrap stores files under y_web/static/uploads/...
+        # Legacy feed bootstrap stores files under y_web/static/uploads/...
         return f"/static/{value}"
     return value
 
@@ -346,7 +346,7 @@ def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]
                 local_path = _normalize_forum_local_image_path(row[2] or "")
                 high_res_url = str(row[3] or "").strip()
                 base_url = str(row[0] or "").strip()
-                # Historical working behavior for forum feed images used locally
+                # Historical working behavior for feed images used locally
                 # downloaded files first. Fall back to high_res_url, then remote URL.
                 source_url = local_path or high_res_url or base_url
                 url = _upgrade_reddit_image_url(source_url)

@@ -14,8 +14,8 @@ from sqlalchemy.exc import OperationalError
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.experiment.helpers import open_experiment_session
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Follow,
     Mentions,

@@ -30,18 +30,9 @@ from y_web.routes.social.helpers import (
     build_thread_tree,
     is_admin,
 )
-from y_web.src.content.text_utils import process_reddit_post, strip_tags
-from y_web.src.data_access import (
-    augment_text,
-    get_elicited_emotions,
-    get_topics,
-    get_trending_hashtags,
-    get_unanswered_mentions,
-)
-from y_web.src.forum.community_icons import assign_icons, icon_for
-from y_web.src.forum.ids import opaque_id
-from y_web.src.forum.ordering import seq_or_id
-from y_web.src.forum.service import (
+from y_web.src.commons.ids import opaque_id
+from y_web.src.commons.ordering import seq_or_id
+from y_web.src.commons.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     fetch_available_communities,
@@ -51,6 +42,15 @@ from y_web.src.forum.service import (
     fetch_recent_active_communities,
     fetch_user_communities,
 )
+from y_web.src.content.text_utils import process_reddit_post, strip_tags
+from y_web.src.data_access import (
+    augment_text,
+    get_elicited_emotions,
+    get_topics,
+    get_trending_hashtags,
+    get_unanswered_mentions,
+)
+from y_web.src.forum.community_icons import assign_icons, icon_for
 from y_web.src.models import (
     Admin_users,
     Agent,

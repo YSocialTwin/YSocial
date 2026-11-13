@@ -9,8 +9,8 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.sql.expression import func
 
 from y_web import db
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.data_access.trends import _compute_last_round
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,

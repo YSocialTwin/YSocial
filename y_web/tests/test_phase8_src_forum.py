@@ -21,7 +21,7 @@ class TestCanonicalForumPackageImports:
         assert y_web.src.forum.__file__.endswith("__init__.py")
 
     def test_hot_rank_importable(self):
-        from y_web.src.forum.hot_rank import (
+        from y_web.src.commons.hot_rank import (
             RankedPost,
             base_hot_score,
             longtail_boost,
@@ -105,7 +105,7 @@ class TestCanonicalForumPackageImports:
         assert callable(_calculate_vote_tallies)
 
     def test_service_data_classes_importable(self):
-        from y_web.src.forum.service.data_classes import (
+        from y_web.src.commons.service.data_classes import (
             ArticlePreview,
             FeedPage,
             FeedPost,
@@ -118,7 +118,7 @@ class TestCanonicalForumPackageImports:
         assert callable(_strip_article_title_from_body)
 
     def test_service_formatters_importable(self):
-        from y_web.src.forum.service.formatters import (
+        from y_web.src.commons.service.formatters import (
             _article_summary_needs_enrichment,
             _author_agent_page_cache,
             _clock_config_cache,
@@ -154,7 +154,7 @@ class TestCanonicalForumPackageImports:
         assert isinstance(_author_agent_page_cache, dict)
 
     def test_service_queries_importable(self):
-        from y_web.src.forum.service.queries import (
+        from y_web.src.commons.service.queries import (
             _build_comment_payload,
             _build_feed_posts,
             _comment_count_subquery,
@@ -182,7 +182,7 @@ class TestCanonicalForumPackageImports:
         assert callable(_build_feed_posts)
 
     def test_service_package_importable(self):
-        from y_web.src.forum.service import (
+        from y_web.src.commons.service import (
             build_user_feed_posts,
             fetch_feed_page,
             fetch_thread,
@@ -291,7 +291,7 @@ class TestCanonicalForumFunctions:
         assert len(key) == 40  # SHA1 hex length
 
     def test_clean_reddit_formatting(self):
-        from y_web.src.forum.service.formatters import clean_reddit_formatting
+        from y_web.src.commons.service.formatters import clean_reddit_formatting
 
         text = "Some post submitted by /u/testuser [link] [comments]"
         result = clean_reddit_formatting(text)
@@ -300,7 +300,7 @@ class TestCanonicalForumFunctions:
         assert "[comments]" not in result
 
     def test_extract_youtube_thumbnail_watch_url(self):
-        from y_web.src.forum.service.formatters import extract_youtube_thumbnail
+        from y_web.src.commons.service.formatters import extract_youtube_thumbnail
 
         url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         thumb = extract_youtube_thumbnail(url)
@@ -308,7 +308,7 @@ class TestCanonicalForumFunctions:
         assert "dQw4w9WgXcQ" in thumb
 
     def test_extract_youtube_thumbnail_short_url(self):
-        from y_web.src.forum.service.formatters import extract_youtube_thumbnail
+        from y_web.src.commons.service.formatters import extract_youtube_thumbnail
 
         url = "https://youtu.be/dQw4w9WgXcQ"
         thumb = extract_youtube_thumbnail(url)
@@ -316,32 +316,32 @@ class TestCanonicalForumFunctions:
         assert "dQw4w9WgXcQ" in thumb
 
     def test_extract_youtube_thumbnail_none_for_non_yt(self):
-        from y_web.src.forum.service.formatters import extract_youtube_thumbnail
+        from y_web.src.commons.service.formatters import extract_youtube_thumbnail
 
         assert extract_youtube_thumbnail("https://example.com") is None
         assert extract_youtube_thumbnail("") is None
 
     def test_media_type_from_url_video(self):
-        from y_web.src.forum.service.formatters import _media_type_from_url
+        from y_web.src.commons.service.formatters import _media_type_from_url
 
         assert _media_type_from_url("http://example.com/video.mp4") == "video"
         assert _media_type_from_url("http://example.com/clip.webm") == "video"
 
     def test_media_type_from_url_image(self):
-        from y_web.src.forum.service.formatters import _media_type_from_url
+        from y_web.src.commons.service.formatters import _media_type_from_url
 
         assert _media_type_from_url("http://example.com/photo.jpg") == "image"
         assert _media_type_from_url("") == "image"
 
     def test_upgrade_reddit_image_url_preview(self):
-        from y_web.src.forum.service.formatters import _upgrade_reddit_image_url
+        from y_web.src.commons.service.formatters import _upgrade_reddit_image_url
 
         url = "https://preview.redd.it/image.jpg?width=320&format=pjpg"
         result = _upgrade_reddit_image_url(url)
         assert result == url
 
     def test_upgrade_reddit_image_url_unwraps_media_wrapper(self):
-        from y_web.src.forum.service.formatters import _upgrade_reddit_image_url
+        from y_web.src.commons.service.formatters import _upgrade_reddit_image_url
 
         wrapped = (
             "https://www.reddit.com/media?url="
@@ -351,13 +351,13 @@ class TestCanonicalForumFunctions:
         assert result == "https://preview.redd.it/image.jpg?width=960&crop=smart"
 
     def test_upgrade_reddit_image_url_passthrough(self):
-        from y_web.src.forum.service.formatters import _upgrade_reddit_image_url
+        from y_web.src.commons.service.formatters import _upgrade_reddit_image_url
 
         url = "https://i.redd.it/image.jpg"
         assert _upgrade_reddit_image_url(url) == url
 
     def test_normalize_forum_local_image_path_static_uploads(self):
-        from y_web.src.forum.service.formatters import (
+        from y_web.src.commons.service.formatters import (
             _normalize_forum_local_image_path,
         )
 
@@ -367,7 +367,7 @@ class TestCanonicalForumFunctions:
         )
 
     def test_normalize_forum_local_image_path_upload_passthrough(self):
-        from y_web.src.forum.service.formatters import (
+        from y_web.src.commons.service.formatters import (
             _normalize_forum_local_image_path,
         )
 
@@ -377,30 +377,38 @@ class TestCanonicalForumFunctions:
         )
 
     def test_article_summary_needs_enrichment_empty(self):
-        from y_web.src.forum.service.formatters import _article_summary_needs_enrichment
+        from y_web.src.commons.service.formatters import (
+            _article_summary_needs_enrichment,
+        )
 
         assert _article_summary_needs_enrichment("") is True
         assert _article_summary_needs_enrichment(None) is True
 
     def test_article_summary_needs_enrichment_placeholder(self):
-        from y_web.src.forum.service.formatters import _article_summary_needs_enrichment
+        from y_web.src.commons.service.formatters import (
+            _article_summary_needs_enrichment,
+        )
 
         assert _article_summary_needs_enrichment("User shared article") is True
         assert _article_summary_needs_enrichment("Shared link: example.com") is True
 
     def test_article_summary_needs_enrichment_short(self):
-        from y_web.src.forum.service.formatters import _article_summary_needs_enrichment
+        from y_web.src.commons.service.formatters import (
+            _article_summary_needs_enrichment,
+        )
 
         assert _article_summary_needs_enrichment("Short.") is True
 
     def test_article_summary_needs_enrichment_long(self):
-        from y_web.src.forum.service.formatters import _article_summary_needs_enrichment
+        from y_web.src.commons.service.formatters import (
+            _article_summary_needs_enrichment,
+        )
 
         long_summary = "A" * 100
         assert _article_summary_needs_enrichment(long_summary) is False
 
     def test_normalize_posts_deduplication(self):
-        from y_web.src.forum.service.queries import _normalize_posts
+        from y_web.src.commons.service.queries import _normalize_posts
         from y_web.src.models import Post
 
         # _normalize_posts only processes actual Post ORM instances;
@@ -432,26 +440,26 @@ class TestForumShimIdentity:
         assert shim is canonical
 
     def test_fetch_feed_page_identity(self):
-        from y_web.src.forum.service import fetch_feed_page as shim
-        from y_web.src.forum.service.queries import fetch_feed_page as canonical
+        from y_web.src.commons.service import fetch_feed_page as shim
+        from y_web.src.commons.service.queries import fetch_feed_page as canonical
 
         assert shim is canonical
 
     def test_serialize_feed_posts_identity(self):
-        from y_web.src.forum.service import serialize_feed_posts as shim
-        from y_web.src.forum.service.queries import serialize_feed_posts as canonical
+        from y_web.src.commons.service import serialize_feed_posts as shim
+        from y_web.src.commons.service.queries import serialize_feed_posts as canonical
 
         assert shim is canonical
 
     def test_rank_posts_longtail_identity(self):
-        from y_web.src.forum.hot_rank import rank_posts_longtail as canonical
-        from y_web.src.forum.hot_rank import rank_posts_longtail as shim
+        from y_web.src.commons.hot_rank import rank_posts_longtail as canonical
+        from y_web.src.commons.hot_rank import rank_posts_longtail as shim
 
         assert shim is canonical
 
     def test_base_hot_score_identity(self):
-        from y_web.src.forum.hot_rank import base_hot_score as canonical
-        from y_web.src.forum.hot_rank import base_hot_score as shim
+        from y_web.src.commons.hot_rank import base_hot_score as canonical
+        from y_web.src.commons.hot_rank import base_hot_score as shim
 
         assert shim is canonical
 
@@ -464,23 +472,23 @@ class TestForumShimIdentity:
         assert shim is canonical
 
     def test_clean_reddit_formatting_identity(self):
-        from y_web.src.forum.service import clean_reddit_formatting as shim
-        from y_web.src.forum.service.formatters import (
+        from y_web.src.commons.service import clean_reddit_formatting as shim
+        from y_web.src.commons.service.formatters import (
             clean_reddit_formatting as canonical,
         )
 
         assert shim is canonical
 
     def test_article_preview_identity(self):
-        from y_web.src.forum.service import ArticlePreview as shim
-        from y_web.src.forum.service.data_classes import ArticlePreview as canonical
+        from y_web.src.commons.service import ArticlePreview as shim
+        from y_web.src.commons.service.data_classes import ArticlePreview as canonical
 
         assert shim is canonical
 
 
 class TestForumDataClasses:
     def test_article_preview_instantiation(self):
-        from y_web.src.forum.service.data_classes import ArticlePreview
+        from y_web.src.commons.service.data_classes import ArticlePreview
 
         ap = ArticlePreview(
             title="T", summary="S", url="http://example.com", source="src"
@@ -492,14 +500,14 @@ class TestForumDataClasses:
         assert ap.image is None
 
     def test_article_preview_with_image(self):
-        from y_web.src.forum.service.data_classes import ArticlePreview
+        from y_web.src.commons.service.data_classes import ArticlePreview
 
         img = {"url": "http://example.com/img.jpg", "description": "photo"}
         ap = ArticlePreview(title="T", summary="S", url="u", source="s", image=img)
         assert ap.image == img
 
     def test_post_stats_instantiation(self):
-        from y_web.src.forum.service.data_classes import PostStats
+        from y_web.src.commons.service.data_classes import PostStats
 
         ps = PostStats(
             likes=5,
@@ -515,7 +523,7 @@ class TestForumDataClasses:
         assert ps.user_vote == "like"
 
     def test_post_stats_no_vote(self):
-        from y_web.src.forum.service.data_classes import PostStats
+        from y_web.src.commons.service.data_classes import PostStats
 
         ps = PostStats(
             likes=0, dislikes=0, score=0, comment_count=0, share_count=0, user_vote=None
@@ -523,7 +531,7 @@ class TestForumDataClasses:
         assert ps.user_vote is None
 
     def test_feed_page_instantiation(self):
-        from y_web.src.forum.service.data_classes import FeedPage
+        from y_web.src.commons.service.data_classes import FeedPage
 
         fp = FeedPage(posts=[], page=1, per_page=20, total=0)
         assert fp.page == 1
@@ -532,12 +540,12 @@ class TestForumDataClasses:
         assert fp.posts == []
 
     def test_article_payload_none(self):
-        from y_web.src.forum.service.data_classes import _article_payload
+        from y_web.src.commons.service.data_classes import _article_payload
 
         assert _article_payload(None) == 0
 
     def test_article_payload_filled(self):
-        from y_web.src.forum.service.data_classes import (
+        from y_web.src.commons.service.data_classes import (
             ArticlePreview,
             _article_payload,
         )
@@ -549,12 +557,14 @@ class TestForumDataClasses:
         assert payload["summary"] == "S"
 
     def test_strip_article_title_from_body_no_title(self):
-        from y_web.src.forum.service.data_classes import _strip_article_title_from_body
+        from y_web.src.commons.service.data_classes import (
+            _strip_article_title_from_body,
+        )
 
         assert _strip_article_title_from_body("body text", None) == "body text"
 
     def test_strip_article_title_from_body_strips_prefix(self):
-        from y_web.src.forum.service.data_classes import (
+        from y_web.src.commons.service.data_classes import (
             ArticlePreview,
             _strip_article_title_from_body,
         )
@@ -565,7 +575,7 @@ class TestForumDataClasses:
         assert not result.startswith("Big Story")
 
     def test_strip_article_title_with_prefix(self):
-        from y_web.src.forum.service.data_classes import (
+        from y_web.src.commons.service.data_classes import (
             ArticlePreview,
             _strip_article_title_from_body,
         )
@@ -578,61 +588,61 @@ class TestForumDataClasses:
 
 class TestHotRankFunctions:
     def test_stable_uniform_range(self):
-        from y_web.src.forum.hot_rank import stable_uniform_0_1
+        from y_web.src.commons.hot_rank import stable_uniform_0_1
 
         u = stable_uniform_0_1(1, 2, 3)
         assert 0.0 <= u < 1.0
         assert isinstance(u, float)
 
     def test_stable_uniform_deterministic(self):
-        from y_web.src.forum.hot_rank import stable_uniform_0_1
+        from y_web.src.commons.hot_rank import stable_uniform_0_1
 
         u1 = stable_uniform_0_1(1, 2, 3)
         u2 = stable_uniform_0_1(1, 2, 3)
         assert u1 == u2
 
     def test_stable_uniform_different_inputs(self):
-        from y_web.src.forum.hot_rank import stable_uniform_0_1
+        from y_web.src.commons.hot_rank import stable_uniform_0_1
 
         u1 = stable_uniform_0_1(1, 2, 3)
         u2 = stable_uniform_0_1(1, 2, 4)
         assert u1 != u2
 
     def test_base_hot_score_positive(self):
-        from y_web.src.forum.hot_rank import base_hot_score
+        from y_web.src.commons.hot_rank import base_hot_score
 
         score = base_hot_score(10, 5)
         assert isinstance(score, float)
         assert score > 0
 
     def test_base_hot_score_zero(self):
-        from y_web.src.forum.hot_rank import base_hot_score
+        from y_web.src.commons.hot_rank import base_hot_score
 
         score = base_hot_score(0, 1)
         assert score == 0.0
 
     def test_base_hot_score_negative(self):
-        from y_web.src.forum.hot_rank import base_hot_score
+        from y_web.src.commons.hot_rank import base_hot_score
 
         # With a net score of -1 and round 6, round_decay=12: log10(2) - 6/12 < 0
         score = base_hot_score(-1, 6)
         assert score < 0
 
     def test_longtail_boost_low_votes(self):
-        from y_web.src.forum.hot_rank import longtail_boost
+        from y_web.src.commons.hot_rank import longtail_boost
 
         boost = longtail_boost(1, 0, u01=0.5)
         assert boost > 0
         assert boost < 0.45
 
     def test_longtail_boost_high_votes(self):
-        from y_web.src.forum.hot_rank import longtail_boost
+        from y_web.src.commons.hot_rank import longtail_boost
 
         boost = longtail_boost(10, 10, u01=0.5)
         assert boost == 0.0
 
     def test_ranked_post_dataclass(self):
-        from y_web.src.forum.hot_rank import RankedPost
+        from y_web.src.commons.hot_rank import RankedPost
 
         class MockPost:
             pass
@@ -643,7 +653,7 @@ class TestHotRankFunctions:
         assert rp.post is p
 
     def test_rank_posts_longtail_ordering(self):
-        from y_web.src.forum.hot_rank import rank_posts_longtail
+        from y_web.src.commons.hot_rank import rank_posts_longtail
 
         class MockPost:
             def __init__(self, id_, round_):
@@ -660,7 +670,7 @@ class TestHotRankFunctions:
         assert result[0].id == 2  # 10 likes, 0 dislikes
 
     def test_rank_posts_longtail_empty(self):
-        from y_web.src.forum.hot_rank import rank_posts_longtail
+        from y_web.src.commons.hot_rank import rank_posts_longtail
 
         result = rank_posts_longtail([], {}, viewer_id=1, current_round_id=1)
         assert result == []

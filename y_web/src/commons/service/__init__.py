@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from y_web.src.forum.service.data_classes import (  # noqa: F401
+from y_web.src.commons.service.data_classes import (  # noqa: F401
     ArticlePreview,
     FeedPage,
     FeedPost,
@@ -8,7 +8,7 @@ from y_web.src.forum.service.data_classes import (  # noqa: F401
     _article_payload,
     _strip_article_title_from_body,
 )
-from y_web.src.forum.service.formatters import (  # noqa: F401
+from y_web.src.commons.service.formatters import (  # noqa: F401
     _article_summary_needs_enrichment,
     _author_agent_page_cache,
     _clock_config_cache,
@@ -31,7 +31,7 @@ from y_web.src.forum.service.formatters import (  # noqa: F401
     extract_reddit_summary_image,
     extract_youtube_thumbnail,
 )
-from y_web.src.forum.service.queries import (  # noqa: F401
+from y_web.src.commons.service.queries import (  # noqa: F401
     _build_comment_payload,
     _build_feed_posts,
     _comment_count_subquery,

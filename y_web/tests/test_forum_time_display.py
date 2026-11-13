@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-import y_web.src.forum.service.formatters as _formatters
-from y_web.src.forum import service
+import y_web.src.commons.service.formatters as _formatters
+from y_web.src.commons import service
 
 pytestmark = pytest.mark.unit
 

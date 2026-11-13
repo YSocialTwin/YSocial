@@ -11,7 +11,7 @@ from typing import Optional
 from sqlalchemy import desc, func, or_, select
 
 from y_web import db
-from y_web.src.forum.ordering import seq_or_id
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -97,7 +97,7 @@ def _origin_community(source_id) -> str:
     """Slug of the community a cross-posted thread was copied from ('' when unknown): resolved like the community of a
     feed post (subreddit of the article or image, else the topics of the post)."""
     try:
-        from y_web.src.forum.service.queries import _build_root_post_community_map
+        from y_web.src.commons.service.queries import _build_root_post_community_map
 
         entries = _build_root_post_community_map([source_id]).get(source_id) or []
         if entries:
@@ -449,15 +449,15 @@ def get_user_recent_posts(
     is_forum = getattr(exp, "platform_type", "") == "forum"
 
     if is_forum:
-        from y_web.src.content.text_utils import process_reddit_post  # noqa: PLC0415
-        from y_web.src.forum.service import (  # noqa: PLC0415
+        from y_web.src.commons.service import (  # noqa: PLC0415
             _format_display_time,
             _format_display_time_from_created_at,
             _resolve_article,
         )
-        from y_web.src.forum.service.queries import (  # noqa: PLC0415
+        from y_web.src.commons.service.queries import (  # noqa: PLC0415
             _primary_community_payload,
         )
+        from y_web.src.content.text_utils import process_reddit_post  # noqa: PLC0415
 
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     username = user.username if user else "Unknown"

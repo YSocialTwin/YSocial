@@ -1,18 +1,14 @@
 {
- "y_web/routes/admin/sub/clients/_crud.py": 5,
  "y_web/routes/admin/sub/experiments/_crud.py": 2,
  "y_web/routes/admin/sub/experiments/_data.py": 3,
  "y_web/routes/admin/sub/experiments/_external_runtimes.py": 5,
  "y_web/routes/admin/sub/experiments/_feeds.py": 5,
  "y_web/routes/admin/sub/experiments/_frontend_settings.py": 6,
- "y_web/routes/admin/sub/experiments/_helpers.py": 2,
- "y_web/routes/api/interview/_memory.py": 2,
+ "y_web/routes/admin/sub/experiments/_helpers.py": 1,
+ "y_web/routes/api/interview/_memory.py": 1,
  "y_web/routes/interactions/common.py": 2,
  "y_web/routes/social/forum.py": 4,
  "y_web/routes/social/helpers.py": 3,
- "y_web/routes/social/photo.py": 1,
- "y_web/src/dating/__init__.py": 1,
- "y_web/src/experiment/activation.py": 1,
  "y_web/src/federation/backlinks.py": 1,
  "y_web/src/federation/human_gateways.py": 5,
  "y_web/src/federation/human_outbox.py": 3,
@@ -20,6 +16,5 @@
  "y_web/src/federation/lifecycle.py": 1,
  "y_web/src/federation/service.py": 5,
  "y_web/src/hpc/platforms.py": 1,
- "y_web/src/im/__init__.py": 1,
  "y_web/src/system/template_context.py": 1
 }

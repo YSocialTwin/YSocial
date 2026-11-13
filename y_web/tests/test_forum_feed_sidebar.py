@@ -120,7 +120,7 @@ def test_forum_post_headers_render_primary_community_links():
         str(_REPO_ROOT / "y_web/static/assets/js/reddit/async_updates.js")
     ).read_text(encoding="utf-8")
     query_source = Path(
-        str(_REPO_ROOT / "y_web/src/forum/service/queries.py")
+        str(_REPO_ROOT / "y_web/src/commons/service/queries.py")
     ).read_text(encoding="utf-8")
 
     assert "primary_community" in template
@@ -131,10 +131,10 @@ def test_forum_post_headers_render_primary_community_links():
 
 def test_forum_queries_include_image_post_subreddit_communities():
     query_source = Path(
-        str(_REPO_ROOT / "y_web/src/forum/service/queries.py")
+        str(_REPO_ROOT / "y_web/src/commons/service/queries.py")
     ).read_text(encoding="utf-8")
     formatter_source = Path(
-        str(_REPO_ROOT / "y_web/src/forum/service/formatters.py")
+        str(_REPO_ROOT / "y_web/src/commons/service/formatters.py")
     ).read_text(encoding="utf-8")
 
     assert 'func.lower(ImagePosts.subreddit).label("image_subreddit")' in query_source

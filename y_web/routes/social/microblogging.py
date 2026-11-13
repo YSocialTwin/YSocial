@@ -33,6 +33,10 @@ from y_web.routes.social.helpers import (
     get_author_type_badge,
     is_admin,
 )
+from y_web.src.commons.service import (
+    _format_display_time,
+    _format_display_time_from_created_at,
+)
 from y_web.src.data_access import (
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
@@ -48,10 +52,6 @@ from y_web.src.data_access import (
 )
 from y_web.src.experiment.context import experiment_db_bind
 from y_web.src.external_runtime.plugin_loader import active_modules_context
-from y_web.src.forum.service import (
-    _format_display_time,
-    _format_display_time_from_created_at,
-)
 from y_web.src.models import (
     Admin_users,
     Agent,

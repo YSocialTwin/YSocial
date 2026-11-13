@@ -1,8 +1,8 @@
-"""Identifiers of forum entities treated as opaque values.
+"""Identifiers of discussion entities treated as opaque values.
 
-Standard experiments use integer ids, HPC (YForum) ones use UUID strings: ids are
+Standard experiments use integer ids, HPC ones use UUID strings: ids are
 never cast blindly with ``int()``, a clean integer-like value stays an ``int`` and
-anything else is kept as a string (same convention as the microblogging frontend).
+anything else is kept as a string (same convention in every frontend).
 """
 
 import re

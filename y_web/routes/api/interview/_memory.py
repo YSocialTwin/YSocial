@@ -12,8 +12,8 @@ from flask import current_app
 from sqlalchemy import desc, func, select, text
 
 from y_web import db, prompt_store
+from y_web.src.commons.ordering import seq_or_id
 from y_web.src.content.avatars import resolve_forum_profile_pic
-from y_web.src.forum.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
     Agent,

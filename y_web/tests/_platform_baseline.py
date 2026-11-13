@@ -59,6 +59,8 @@ PLATFORM_OWNED = (
     "y_web/src/dating/",
     "y_web/src/im/",
     "y_web/src/forum/",
+    # shared helpers that keep names fixed by data (a hash salt, the host of subreddit image links)
+    "y_web/src/commons/",
     "y_web/routes/social/",
     "y_web/routes/interactions/",
     "y_web/routes/api/",

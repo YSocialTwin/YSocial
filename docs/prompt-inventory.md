@@ -122,7 +122,7 @@ Still to confirm in step 2: the exact synonyms each parser accepts (for example 
 | `y_web/routes/api/reddit.py` | 155 |
 | `y_web/routes/api/social.py` | 233 |
 | `y_web/routes/social/common.py` | 356 |
-| `y_web/src/forum/service/formatters.py` | 501, 523 |
+| `y_web/src/commons/service/formatters.py` | 501, 523 |
 | `external/YClient/y_client/classes/base_agent.py` | 3129, 3255, 3314, 3333, 3354, 3356, 3502, 3502, 3572, 3572, 3583, 3583, 3596, 3596, 3607, 3607, 3620, 3620, 3626, 3626, 3653, 3653, 3664, 3664, 3675 |
 | `external/YClient/y_client/classes/fake_base_agent.py` | 418, 445, 568, 568, 608, 608, 619, 619, 630, 630, 641, 641, 654, 654, 660, 660 |
 | `external/YClient/y_client/stress_reward/update_system.py` | 290, 294, 298, 302, 305 |
