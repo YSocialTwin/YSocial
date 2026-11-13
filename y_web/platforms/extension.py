@@ -35,6 +35,20 @@ def _folder(provider, name: str) -> Path | None:
     return folder if folder is not None and folder.is_dir() else None
 
 
+def platform_slots(name: str) -> List[str]:
+    """Templates the installed platforms offer for the slot ``name`` of a core page (``slots/<name>.html``).
+
+    A core page renders them with ``{% for t in platform_slots('name') %}{% include t %}{% endfor %}``; an included
+    template sees the variables of the page. A platform without the file adds nothing.
+    """
+    found = []
+    for provider in registry.providers():
+        folder = _folder(provider, "templates")
+        if folder is not None and (folder / "slots" / f"{name}.html").is_file():
+            found.append(template_name(provider.key, f"slots/{name}.html"))
+    return found
+
+
 def _install_templates(app: Flask, folders: Dict[str, Path]) -> None:
     loaders = {
         f"{TEMPLATE_PREFIX}{key}": FileSystemLoader(str(folder))
@@ -68,6 +82,7 @@ def install_platform_extensions(app: Flask) -> Dict[str, List[str]]:
     Never raises: a platform that fails is reported and skipped, the others and the core are not affected.
     Returns ``{platform key: [problems]}`` for every platform that has a ``package_dir``.
     """
+    app.jinja_env.globals["platform_slots"] = platform_slots
     report: Dict[str, List[str]] = {}
     templates: Dict[str, Path] = {}
     for provider in registry.providers():

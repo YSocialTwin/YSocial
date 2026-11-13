@@ -31,14 +31,46 @@
     "StandardRuntime": {
       "kind": "class"
     },
+    "agents": {
+      "kind": "module",
+      "members": {
+        "delete_pictures_of": "(agent_ids: \"'Iterable[int]'\") -> \"'int'\""
+      }
+    },
+    "federation": {
+      "kind": "module",
+      "members": {
+        "confirm_account": "(fed, user_id, member) -> \"'bool'\"",
+        "population_added": "(exp_id, population_id) -> \"'list'\""
+      }
+    },
     "gettext": {
       "kind": "function",
       "signature": "(message, **variables)"
+    },
+    "models": {
+      "kind": "module",
+      "members": {}
     },
     "routes": {
       "kind": "module",
       "members": {
         "blueprint": "(name: 'str') -> 'Any'"
+      }
+    },
+    "runtime": {
+      "kind": "module",
+      "members": {
+        "build_subprocess_env": "(extra: 'Optional[Dict[str, str]]' = None) -> 'Dict[str, str]'",
+        "detect_env_handler": "()",
+        "get_external_repo_dir": "(repo_name)",
+        "get_hpc_platform": "(platform_type) -> \"'HpcPlatform'\"",
+        "get_writable_path": "(relative_path='')",
+        "python_command": "() -> 'list'",
+        "remaining_days": "(total_days: 'int', last_day: 'int', last_slot: 'int', slots_per_day: 'int') -> 'int'",
+        "rewrite_server_config": "(new_folder: 'str', new_exp_name: 'str', new_db_uri: 'str', new_data_path: 'str') -> 'None'",
+        "runtime_installed_and_visible": "(repo_key: \"'str'\", admin_user) -> \"'bool'\"",
+        "set_duration": "(config: 'Dict[str, Any]', days: 'int') -> 'Dict[str, Any]'"
       }
     },
     "services": {
@@ -62,6 +94,22 @@
     "template_name": {
       "kind": "function",
       "signature": "(platform_key: 'str', name: 'str') -> 'str'"
+    },
+    "web": {
+      "kind": "module",
+      "members": {
+        "build_client_creation_context": "(idexp, recsys_mode)",
+        "check_privileges": "(username)",
+        "current_admin_user_or_none": "()",
+        "experiment_configuration_update_required": "(experiment)",
+        "experiment_uses_llm_agents": "(experiment)",
+        "get_database_type": "()",
+        "get_experiment_folder": "(base_dir, experiment, db_type)",
+        "get_experiment_folder_name": "(experiment)",
+        "load_ui_settings": "(exp_id: 'int') -> 'dict'",
+        "user_can_manage_experiment": "(admin_user, experiment)",
+        "user_can_view_experiment": "(admin_user, experiment)"
+      }
     }
   },
   "platform_api": "1.0",

@@ -1,5 +1,6 @@
 """Dating fields of the admin agent form: custom features ``dating.*``, validation, availability (IR-D-05)."""
 
+from y_web.tests._platform_repos import platform_template
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -211,8 +212,11 @@ def test_without_the_runtime_the_dating_fields_are_ignored_and_the_agent_is_unch
 def test_the_agent_template_includes_the_dating_section_only_when_available(app):
     templates = ROOT / "y_web" / "templates" / "admin"
     page = (templates / "agents.html").read_text(encoding="utf-8")
-    assert "{% if dating_available %}" in page
-    part = (templates / "_dating_agent_fields.html").read_text(encoding="utf-8")
+    assert "platform_slots('agent_form_options')" in page
+    assert "{% if dating_available %}" in platform_template(
+        "YDating", "slots/agent_form_options.html"
+    )
+    part = platform_template("YDating", "admin/_dating_agent_fields.html")
     assert app.jinja_env.parse(part) is not None
     with app.test_request_context("/"):
         html = app.jinja_env.from_string(part).render(_=lambda t, **k: t % k)

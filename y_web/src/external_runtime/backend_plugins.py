@@ -486,10 +486,20 @@ def _namespace_root_name(repo_key: str) -> str:
     return f"_ysocial_ext__{repo_key}"
 
 
+def _same_paths(paths, repo_path: Path) -> bool:
+    """Whether the namespace root already points at ``repo_path`` (a link to the folder counts as the folder)."""
+    try:
+        return [Path(p).resolve() for p in paths or []] == [Path(repo_path).resolve()]
+    except OSError:
+        return list(paths or []) == [str(repo_path)]
+
+
 def _ensure_namespace_root(repo_key: str, repo_path: Path) -> str:
     root_name = _namespace_root_name(repo_key)
     existing = sys.modules.get(root_name)
-    if existing is not None and getattr(existing, "__path__", None) == [str(repo_path)]:
+    if existing is not None and _same_paths(
+        getattr(existing, "__path__", None), repo_path
+    ):
         return root_name
     module = types.ModuleType(root_name)
     module.__path__ = [str(repo_path)]

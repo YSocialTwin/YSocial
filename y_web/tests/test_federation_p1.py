@@ -106,9 +106,9 @@ def test_forum_post_carries_the_community_only_when_there_is_one():
 
 # -- (3) dating story ----------------------------------------------------------------------------------------------
 def test_the_dating_route_sends_the_story_only_with_the_explicit_choice():
-    text = pathlib.Path("y_web/routes/social/dating_participant.py").read_text(
-        encoding="utf-8"
-    )
+    text = pathlib.Path(
+        "external/YDating/ysocial_platform/routes/social_dating_participant.py"
+    ).read_text(encoding="utf-8")
     assert (
         "MESSAGE_ACTIONS" in text
         and "STORY_EVENTS" in text

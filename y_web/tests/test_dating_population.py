@@ -550,11 +550,15 @@ def test_the_form_composer_uses_percentages_and_proposed_defaults():
 
 def test_the_creation_form_is_offered_only_when_the_runtime_is_installed(app):
     templates = ROOT / "y_web" / "templates" / "admin"
-    form = (templates / "_dating_population_form.html").read_text(encoding="utf-8")
+    form = platform_template("YDating", "admin/_dating_population_form.html")
     assert app.jinja_env.parse(form) is not None
-    populations = (templates / "populations.html").read_text(encoding="utf-8")
+    page = (templates / "populations.html").read_text(encoding="utf-8")
+    assert "platform_slots('population_form_options')" in page
+    populations = page + platform_template(
+        "YDating", "slots/population_form_options.html"
+    )
     assert "{% if dating_available %}" in populations
-    assert '{% include "admin/_dating_population_form.html" %}' in populations
+    assert '{% include "@dating/admin/_dating_population_form.html" %}' in populations
     # one form for every platform: the Dating fields are an optional, advanced section of the standard form
     # (badge of the platform, a switch, shown only when the simulator is installed), which keeps posting to its
     # own route; there is no separate box or page any more

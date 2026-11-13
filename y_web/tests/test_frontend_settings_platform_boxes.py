@@ -11,6 +11,7 @@ import pytest
 from jinja2 import FileSystemLoader
 
 from y_web import db
+from y_web.tests import _platform_alias
 from y_web.tests.test_frontend_settings_generic_suite_panel import (
     _login,
     _make_admin_login_user,
@@ -19,7 +20,18 @@ from y_web.tests.test_frontend_settings_platforms import _exp
 
 pytestmark = pytest.mark.integration
 
-PLATFORMS = ["microblogging", "forum", "photo_sharing", "instant_messaging", "dating"]
+PLATFORMS = [
+    "microblogging",
+    "forum",
+    "photo_sharing",
+    "instant_messaging",
+    pytest.param(
+        "dating",
+        marks=pytest.mark.skipif(
+            not _platform_alias.installed(), reason="YDating is not installed"
+        ),
+    ),
+]
 
 
 @pytest.fixture
@@ -66,6 +78,9 @@ def _shown(data, keys):
 
 
 def _box_keys(page, box_id):
+    """Capabilities a box of the page is for (none when the page has no such box: its platform is not installed)."""
+    if f'id="{box_id}"' not in page:
+        return []
     start = page.index(f'id="{box_id}"')
     tag = page[page.rindex("<div", 0, start) : page.index(">", start)]
     return tag.split('data-cap-any="')[1].split('"')[0].split()

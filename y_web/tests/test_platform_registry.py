@@ -3,8 +3,15 @@
 import pytest
 
 from y_web.platforms import PlatformProvider, registry
+from y_web.tests import _platform_alias
+
+#: Dating is provided by its repository: what is said about it is checked where the repository is installed
+needs_dating = pytest.mark.skipif(
+    not _platform_alias.installed(), reason="YDating is not installed"
+)
 
 
+@needs_dating
 def test_the_built_in_platforms_are_registered_in_menu_order():
     assert registry.keys() == [
         "microblogging",
@@ -43,7 +50,7 @@ def test_a_provider_needs_a_key():
         ("forum", "/3/rfeed/7/feed/rf/1"),
         ("photo_sharing", "/3/photo/feed/all/feed/rf/1"),
         ("instant_messaging", None),
-        ("dating", None),
+        pytest.param("dating", None, marks=needs_dating),
     ],
 )
 def test_entry_url_of_each_built_in_platform(key, expected):
@@ -108,11 +115,15 @@ def _legacy_opinion_mode(platform, simulator):
 
 
 #: the platform/simulator pairs an experiment can have (photo sharing, instant messaging and dating run on HPC only)
-REACHABLE = [
-    (platform, simulator)
-    for platform in ("microblogging", "forum", "video_chat", None)
-    for simulator in ("Standard", "HPC")
-] + [(p, "HPC") for p in ("photo_sharing", "instant_messaging", "dating")]
+REACHABLE = (
+    [
+        (platform, simulator)
+        for platform in ("microblogging", "forum", "video_chat", None)
+        for simulator in ("Standard", "HPC")
+    ]
+    + [(p, "HPC") for p in ("photo_sharing", "instant_messaging")]
+    + [pytest.param("dating", "HPC", marks=needs_dating)]
+)
 
 
 @pytest.mark.parametrize("platform, simulator", REACHABLE)
@@ -133,7 +144,7 @@ def test_client_pages_and_modes_equal_the_previous_logic(platform, simulator):
         ("photo_sharing", True),
         ("forum", False),
         ("instant_messaging", False),
-        ("dating", False),
+        pytest.param("dating", False, marks=needs_dating),
     ],
 )
 def test_which_platforms_create_their_hpc_clients_with_the_generic_route(
@@ -142,6 +153,7 @@ def test_which_platforms_create_their_hpc_clients_with_the_generic_route(
     assert registry.resolve(platform).generic_hpc_client_creation is generic
 
 
+@needs_dating
 def test_client_files_and_execution_hooks_match_the_previous_platform_logic(tmp_path):
     from types import SimpleNamespace
 
@@ -254,6 +266,7 @@ def test_standard_runtime_hooks_match_the_previous_platform_logic(tmp_path):
     assert synced == {"microblogging", "forum", "hpc"}
 
 
+@needs_dating
 def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
     from types import SimpleNamespace as NS
 
@@ -291,6 +304,7 @@ def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
         assert found == owners, hook
 
 
+@needs_dating
 def test_hpc_server_hooks_are_overridden_by_the_expected_platforms():
     from y_web.platforms import registry
     from y_web.platforms.base import PlatformProvider
@@ -389,6 +403,7 @@ def test_resolve_simulator_matches_the_previous_creation_logic():
                     assert got == want, (platform, simulator, flags)
 
 
+@needs_dating
 def test_creation_rules_match_the_previous_creation_logic():
     from y_web.platforms import registry
 
@@ -480,12 +495,13 @@ def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypat
 @pytest.mark.parametrize(
     "key, module, error, generator, message",
     [
-        (
+        pytest.param(
             "dating",
             "y_web.src.dating.experiment_config",
             "DatingConfigError",
             "generate_dating_server_config",
             "Invalid dating settings: boom",
+            marks=needs_dating,
         ),
         (
             "forum",
@@ -522,6 +538,7 @@ def test_platform_config_errors_become_one_refusal(
             registry.get(key).hpc_server_config(_server_config_request())
 
 
+@needs_dating
 def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
     from types import SimpleNamespace as NS
 
@@ -561,6 +578,7 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
     } == {("microblogging", "Standard"), ("forum", "Standard")}
 
 
+@needs_dating
 def test_experiment_page_templates_and_variables_match_the_previous_logic():
     from y_web.platforms import registry
 
@@ -587,6 +605,7 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
             assert provider.details_context(None) == {}
 
 
+@needs_dating
 def test_frontend_capabilities_match_the_previous_tables():
     import json
     import pathlib

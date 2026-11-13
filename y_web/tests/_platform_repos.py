@@ -57,3 +57,22 @@ def platform_static_path(repo: str, relative: str) -> Path:
     if not path.is_file():
         pytest.skip(f"{repo} with its platform files is not installed")
     return path
+
+
+def core_and_platform_loader():
+    """A Jinja loader for the core templates and the ``@<platform>/`` ones of the installed platform repositories."""
+    import jinja2
+
+    prefixes = {
+        f"@{key}": jinja2.FileSystemLoader(
+            str(EXTERNAL / repo / "ysocial_platform" / "templates")
+        )
+        for key, repo in (("dating", "YDating"),)
+        if (EXTERNAL / repo / "ysocial_platform" / "templates").is_dir()
+    }
+    return jinja2.ChoiceLoader(
+        [
+            jinja2.PrefixLoader(prefixes, delimiter="/"),
+            jinja2.FileSystemLoader(str(EXTERNAL.parent / "y_web" / "templates")),
+        ]
+    )

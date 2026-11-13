@@ -1,104 +1,160 @@
 {
- "templates": {
-  "admin/client_details_dating.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/client_details_dating.html"
+  "templates": {
+    "admin/_dating_agent_fields.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/_dating_agent_fields.html"
+    },
+    "admin/_dating_fields.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/_dating_fields.html"
+    },
+    "admin/_dating_population_form.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/_dating_population_form.html"
+    },
+    "admin/client_details_dating.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/client_details_dating.html"
+    },
+    "admin/clients_dating.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/clients_dating.html"
+    },
+    "admin/dating_analytics.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/dating_analytics.html"
+    },
+    "admin/dating_analytics_compare.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/dating_analytics_compare.html"
+    },
+    "admin/dating_participants.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/dating_participants.html"
+    },
+    "admin/dating_settings.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/dating_settings.html"
+    },
+    "admin/experiment_details_dating.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/experiment_details_dating.html"
+    },
+    "admin/prompts_dating.html": {
+      "repo": "YDating",
+      "to": "@dating/admin/prompts_dating.html"
+    },
+    "dating/_avatar.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/_avatar.html"
+    },
+    "dating/_bar.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/_bar.html"
+    },
+    "dating/_card.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/_card.html"
+    },
+    "dating/_outcome.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/_outcome.html"
+    },
+    "dating/_search_results.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/_search_results.html"
+    },
+    "dating/base.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/base.html"
+    },
+    "dating/chat.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/chat.html"
+    },
+    "dating/home.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/home.html"
+    },
+    "dating/join.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/join.html"
+    },
+    "dating/matches.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/matches.html"
+    },
+    "dating/me.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/me.html"
+    },
+    "dating/notice.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/notice.html"
+    },
+    "dating/notifications.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/notifications.html"
+    },
+    "dating/play.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/play.html"
+    },
+    "dating/profile.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/profile.html"
+    },
+    "dating/search.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/search.html"
+    },
+    "dating/unavailable.html": {
+      "repo": "YDating",
+      "to": "@dating/participant/unavailable.html"
+    }
   },
-  "admin/clients_dating.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/clients_dating.html"
+  "url_map": {
+    "YDating": [
+      "/<int:exp_id>/dating -> main.dating_home",
+      "/<int:exp_id>/dating/api/accounts -> main.dating_api_accounts",
+      "/<int:exp_id>/dating/api/act -> main.dating_api_act",
+      "/<int:exp_id>/dating/api/deck -> main.dating_api_deck",
+      "/<int:exp_id>/dating/api/history -> main.dating_api_history",
+      "/<int:exp_id>/dating/api/inbox -> main.dating_api_inbox",
+      "/<int:exp_id>/dating/api/leave -> main.dating_api_leave",
+      "/<int:exp_id>/dating/api/photo -> main.dating_api_photo",
+      "/<int:exp_id>/dating/api/state -> main.dating_api_state",
+      "/<int:exp_id>/dating/api/status -> main.dating_api_status",
+      "/<int:exp_id>/dating/chat/<match_id> -> main.dating_chat",
+      "/<int:exp_id>/dating/join -> main.dating_join",
+      "/<int:exp_id>/dating/matches -> main.dating_matches",
+      "/<int:exp_id>/dating/me -> main.dating_me",
+      "/<int:exp_id>/dating/media/<path:name> -> main.dating_media",
+      "/<int:exp_id>/dating/notice -> main.dating_notice",
+      "/<int:exp_id>/dating/notifications -> main.dating_notifications",
+      "/<int:exp_id>/dating/profile/<account_id> -> main.dating_profile",
+      "/<int:exp_id>/dating/search -> main.dating_search",
+      "/admin/client_details_dating/<int:uid> -> clientsr.client_details_dating",
+      "/admin/clients_dating/<idexp> -> clientsr.clients_dating",
+      "/admin/create_dating_client -> clientsr.create_dating_client_route",
+      "/admin/dating_analytics/<int:idexp> -> experiments.dating_analytics",
+      "/admin/dating_analytics/<int:idexp>/export.zip -> experiments.dating_analytics_export_all",
+      "/admin/dating_analytics/<int:idexp>/export/<table>.csv -> experiments.dating_analytics_export",
+      "/admin/dating_analytics/<int:idexp>/rebuild -> experiments.dating_analytics_rebuild",
+      "/admin/dating_analytics/compare -> experiments.dating_analytics_compare",
+      "/admin/dating_participants/<int:idexp> -> experiments.dating_participants",
+      "/admin/dating_participants/<int:idexp>/reset_credits -> experiments.dating_participants_reset_credits",
+      "/admin/dating_settings/<int:uid> -> experiments.dating_settings",
+      "/admin/prompts_dating/<int:uid> -> experiments.prompts_dating",
+      "/admin/reset_prompts_dating/<int:uid> -> experiments.reset_prompts_dating",
+      "/admin/update_dating_client/<int:uid> -> clientsr.update_dating_client",
+      "/admin/update_dating_settings/<int:uid> -> experiments.update_dating_settings",
+      "/admin/update_prompts_dating/<int:uid> -> experiments.update_prompts_dating"
+    ]
   },
-  "admin/dating_analytics.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/dating_analytics.html"
-  },
-  "admin/dating_analytics_compare.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/dating_analytics_compare.html"
-  },
-  "admin/dating_participants.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/dating_participants.html"
-  },
-  "admin/dating_settings.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/dating_settings.html"
-  },
-  "admin/experiment_details_dating.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/experiment_details_dating.html"
-  },
-  "admin/prompts_dating.html": {
-   "repo": "YDating",
-   "to": "@dating/admin/prompts_dating.html"
-  },
-  "dating/_avatar.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/_avatar.html"
-  },
-  "dating/_bar.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/_bar.html"
-  },
-  "dating/_card.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/_card.html"
-  },
-  "dating/_outcome.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/_outcome.html"
-  },
-  "dating/_search_results.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/_search_results.html"
-  },
-  "dating/base.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/base.html"
-  },
-  "dating/chat.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/chat.html"
-  },
-  "dating/home.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/home.html"
-  },
-  "dating/join.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/join.html"
-  },
-  "dating/matches.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/matches.html"
-  },
-  "dating/me.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/me.html"
-  },
-  "dating/notice.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/notice.html"
-  },
-  "dating/notifications.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/notifications.html"
-  },
-  "dating/play.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/play.html"
-  },
-  "dating/profile.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/profile.html"
-  },
-  "dating/search.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/search.html"
-  },
-  "dating/unavailable.html": {
-   "repo": "YDating",
-   "to": "@dating/participant/unavailable.html"
+  "known_platforms": {
+    "YDating": [
+      "dating"
+    ]
   }
- }
 }

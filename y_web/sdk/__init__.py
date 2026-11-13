@@ -38,7 +38,24 @@ __all__ = [
     "ServerConfigRequest",
     "StandardRuntime",
     "gettext",
+    "agents",
+    "federation",
+    "models",
     "routes",
+    "runtime",
     "services",
+    "web",
     "template_name",
 ]
+
+
+_LAZY = ("agents", "federation", "models", "runtime", "web")
+
+
+def __getattr__(name):
+    """The groups that reach into the whole application load on first use (importing them at once would be circular)."""
+    if name in _LAZY:
+        import importlib
+
+        return importlib.import_module(f"y_web.sdk.{name}")
+    raise AttributeError(f"module 'y_web.sdk' has no attribute {name!r}")

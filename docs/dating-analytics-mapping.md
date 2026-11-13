@@ -1,6 +1,6 @@
 # Dating analytics: derived tables and their sources
 
-Generated from `y_web/src/dating/analytics_etl.py` (`FIELD_MAP`); do not edit by hand.
+Generated from `ysocial_platform/dating/analytics_etl.py` (`FIELD_MAP`); do not edit by hand.
 `analytics_dating.db` is rebuilt in full from `database_server.db` (opened read-only) and replaced atomically.
 
 ## `rounds`

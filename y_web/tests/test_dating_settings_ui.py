@@ -8,7 +8,7 @@ from y_web.src.dating import client_config as dcc
 from y_web.src.dating import server_settings as srv
 from y_web.src.dating import settings_ui as ui
 from y_web.src.system.path_utils import get_external_repo_dir
-from y_web.tests._platform_repos import platform_template
+from y_web.tests._platform_repos import core_and_platform_loader, platform_template
 
 REPO = get_external_repo_dir("YDating")
 pytestmark = [
@@ -101,9 +101,7 @@ def test_sections_render():
 
     from y_web.tests.test_dating_settings import ROOT
 
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
-    )
+    env = jinja2.Environment(loader=core_and_platform_loader())
     env.globals["_"] = lambda s, **kw: s
     layout = ui.layout(
         dcc.form_fields(REPO),
@@ -114,7 +112,7 @@ def test_sections_render():
     values = dcc.values_for_form(REPO, None, True, False)
     values["recsys_default"] = "hybrid"
     tpl = env.from_string(
-        "{% from 'admin/_dating_fields.html' import dating_sections %}"
+        "{% from '@dating/admin/_dating_fields.html' import dating_sections %}"
         "{{ dating_sections(sections, values, 7) }}"
     )
     html = tpl.render(sections=layout, values=values)
@@ -134,9 +132,7 @@ def _env():
 
     from y_web.tests.test_dating_settings import ROOT
 
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
-    )
+    env = jinja2.Environment(loader=core_and_platform_loader())
     env.globals["_"] = lambda s, **kw: s
     return env
 
@@ -192,7 +188,7 @@ def test_a_box_posts_only_its_own_settings():
     layout = ui.layout(dcc.form_fields(REPO), ui.CLIENT_SECTIONS)
     values = dcc.values_for_form(REPO)
     tpl = _env().from_string(
-        "{% from 'admin/_dating_fields.html' import dating_box %}"
+        "{% from '@dating/admin/_dating_fields.html' import dating_box %}"
         "{{ dating_box(s, values, 7, '/admin/update_dating_client/3', False) }}"
     )
     swipe = next(s for s in layout if s["id"] == "swipe")
@@ -351,9 +347,7 @@ def test_advanced_parameters_sit_in_a_closed_panel():
 
     from y_web.tests.test_dating_settings import ROOT
 
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
-    )
+    env = jinja2.Environment(loader=core_and_platform_loader())
     env.globals["_"] = lambda s, **kw: s
     layout = ui.layout(
         dcc.form_fields(REPO),
@@ -365,7 +359,7 @@ def test_advanced_parameters_sit_in_a_closed_panel():
     values = dcc.values_for_form(REPO, None, True, False)
     values["recsys_default"] = "random"
     tpl = env.from_string(
-        "{% from 'admin/_dating_fields.html' import dating_sections %}"
+        "{% from '@dating/admin/_dating_fields.html' import dating_sections %}"
         "{{ dating_sections(sections, values, 7) }}"
     )
     html = tpl.render(sections=layout, values=values)
@@ -392,12 +386,10 @@ def test_the_image_model_is_a_choice_of_small_models_or_any_id():
     assert item["widget"] == "diffusion_model" and not item["advanced"]
     ids = [m for m, _ in item["diffusion_models"]]
     assert ids[0] == "segmind/tiny-sd" and "stabilityai/sd-turbo" in ids
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(str(ROOT / "y_web" / "templates"))
-    )
+    env = jinja2.Environment(loader=core_and_platform_loader())
     env.globals["_"] = lambda s, **kw: s
     tpl = env.from_string(
-        "{% from 'admin/_dating_fields.html' import dating_control %}"
+        "{% from '@dating/admin/_dating_fields.html' import dating_control %}"
         "{{ dating_control(item, values) }}"
     )
     known = tpl.render(item=item, values={f.path: "segmind/tiny-sd"})

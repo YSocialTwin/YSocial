@@ -534,19 +534,7 @@
                                         </div>
                                     </div>
                                     {% endif %}
-                                    {% if dating_available %}
-                                    <div class="ys-opt-section" id="opt-dating">
-                                        <label class="ys-opt-head">
-                                            <input type="checkbox" name="include_dating" id="include_dating" value="1" onchange="togglePlatformFields()">
-                                            <span class="ys-plat-badge is-dating">{{ _('Dating') }}</span>
-                                            <span class="ys-opt-title">{{ _('Dating fields') }}</span>
-                                            <span class="ys-opt-tag">{{ _('Optional · Advanced') }}</span>
-                                        </label>
-                                        <div id="dating-config-wrapper" class="ys-opt-body d-none">
-                                            {% include "admin/_dating_population_form.html" %}
-                                        </div>
-                                    </div>
-                                    {% endif %}
+                                    {% for slot_template in platform_slots('population_form_options') %}{% include slot_template %}{% endfor %}
                                     </div><!-- End section-platform-fields -->
                                     {% endif %}
 

@@ -239,12 +239,45 @@ def moved_template_in_repository(spec: Dict[str, str]) -> Path:
     return repository_templates(spec) / spec["to"].split("/", 1)[1]
 
 
+def repository_installed(repo: str) -> bool:
+    """Whether the checkout of a platform repository (with its ``ysocial_platform/`` folder) is installed."""
+    return (
+        Path(__file__).resolve().parents[2] / "external" / repo / "ysocial_platform"
+    ).is_dir()
+
+
 def without_moved(name: str, baseline):
-    """The baseline minus what was deliberately moved out of the core (checked separately, in its repository)."""
-    if name != "templates":
+    """The baseline minus what was deliberately moved out of the core.
+
+    Templates are checked separately in their repository. What a repository adds at run time (endpoints, the known
+    platform) is expected only where that repository is installed.
+    """
+    moved = load_moved()
+    if name == "templates":
+        return [path for path in baseline if path not in moved["templates"]]
+    if name == "url_map":
+        absent = {
+            rule
+            for repo, rules in moved.get("url_map", {}).items()
+            if not repository_installed(repo)
+            for rule in rules
+        }
+        return {k: v for k, v in baseline.items() if k not in absent}
+    if name == "platform_tables":
+        absent = {
+            key
+            for repo, keys in moved.get("known_platforms", {}).items()
+            if not repository_installed(repo)
+            for key in keys
+        }
+        known = baseline.get("known_platforms")
+        if absent and isinstance(known, dict):
+            baseline = {
+                **baseline,
+                "known_platforms": {k: v for k, v in known.items() if k not in absent},
+            }
         return baseline
-    moved = load_moved()["templates"]
-    return [path for path in baseline if path not in moved]
+    return baseline
 
 
 def lost_or_changed(baseline, current, path: str = "") -> List[str]:

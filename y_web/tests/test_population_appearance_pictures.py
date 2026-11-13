@@ -5,6 +5,7 @@ import os
 
 import pytest
 
+from y_web.tests._platform_repos import platform_template
 from y_web.tests.test_dating_population import routes  # noqa: F401
 from y_web.tests.test_population_platform_fields import _standard_population
 
@@ -398,9 +399,8 @@ def test_the_page_offers_the_appearance_section_collapsed_and_the_toggle_off():
         not in part.split('name="generate_profile_pictures"')[1].split(">")[0]
     )
     assert "disabled>" in part.split("<fieldset")[1]
-    assert (
-        "dating-section-appearance"
-        not in (root / "_dating_population_form.html").read_text()
+    assert "dating-section-appearance" not in platform_template(
+        "YDating", "admin/_dating_population_form.html"
     )
 
 

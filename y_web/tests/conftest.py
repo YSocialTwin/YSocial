@@ -18,6 +18,13 @@ from y_web import db
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# the Dating modules live in their own repository: keep the old import names for the tests that drive them
+from y_web.tests import _platform_alias  # noqa: E402
+
+collect_ignore = (
+    [] if _platform_alias.install() else list(_platform_alias.NEEDS_REPOSITORY)
+)
+
 
 def pytest_collection_modifyitems(config, items):
     """
@@ -268,6 +275,11 @@ def app():
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 
+    # what create_app() does for the installed platforms: their templates, static files and page slots
+    from y_web.platforms import extension
+
+    extension.install_platform_extensions(app)
+
     with app.app_context():
         from y_web.src.models import Admin_users, User_mgmt
 
@@ -374,4 +386,12 @@ def _world_simulation_start_leaves_experiment_databases_alone(request, monkeypat
     monkeypatch.setattr(
         eb, "_activate_member_frontends", lambda fed, admin_user=None: None
     )
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _dating_provider_is_registered():
+    """The tests that build their own application still see Dating: its provider is registered like at startup."""
+    if _platform_alias.installed():
+        _platform_alias.register_provider()
     yield

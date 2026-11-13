@@ -1,5 +1,6 @@
 """Admin agent form: optional Appearance (with the profile picture) and platform-specific sections (as in populations)."""
 
+from y_web.tests._platform_repos import platform_template
 import json
 from pathlib import Path
 
@@ -176,24 +177,27 @@ def test_the_appearance_feeds_the_dating_fields(
         assert rows["appearance.eye_color"] == "green"
 
 
+def _part(name):
+    """Source of a form section: the core's, or the Dating repository's for the Dating one."""
+    if name.startswith("_dating"):
+        return platform_template("YDating", f"admin/{name}.html")
+    return (TEMPLATES / f"{name}.html").read_text()
+
+
 def test_the_template_offers_the_sections_as_the_population_form_does():
     page = (TEMPLATES / "agents.html").read_text()
     assert (
         'name="include_appearance"' in page
         and "{% if photo_available or dating_available %}" in page
     )
-    assert "{% if photo_available %}" in page and "{% if dating_available %}" in page
+    assert "{% if photo_available %}" in page
+    assert "{% if dating_available %}" in platform_template(
+        "YDating", "slots/agent_form_options.html"
+    )
     assert "checked" not in page.split('name="include_appearance"')[1].split(">")[0]
     assert 'id="appearance-config-wrapper" class="ys-opt-body d-none"' in page
     for part in ("_agent_appearance", "_agent_photo_sharing", "_dating_agent_fields"):
-        assert (
-            "disabled>"
-            in (TEMPLATES / f"{part}.html")
-            .read_text()
-            .split("<fieldset")[1]
-            .split(">")[0]
-            + ">"
-        )
+        assert "disabled>" in _part(part).split("<fieldset")[1].split(">")[0] + ">"
     assert (
         "checked"
         not in (TEMPLATES / "_agent_appearance.html")

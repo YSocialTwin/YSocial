@@ -451,7 +451,7 @@ def test_the_new_templates_compile(app):
     sources = [
         platform_template("YDating", "admin/clients_dating.html"),
         platform_template("YDating", "admin/dating_settings.html"),
-        (templates / "_dating_fields.html").read_text(encoding="utf-8"),
+        platform_template("YDating", "admin/_dating_fields.html"),
     ]
     for source in sources:
         assert app.jinja_env.parse(source) is not None
