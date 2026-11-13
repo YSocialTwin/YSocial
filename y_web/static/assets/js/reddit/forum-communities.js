@@ -68,9 +68,14 @@
         var q = search.value.trim();
         var params = new URLSearchParams({ q: q, scope: state.scope, kind: kind.value, sort: q && sort.value === "az" ? "relevance" : sort.value });
         fetch("/" + expId + "/api/forum_communities?" + params.toString(), { credentials: "same-origin", signal: ctrl.signal })
-            .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)); })
             .then(render)
-            .catch(function () { /* aborted or offline */ });
+            .catch(function (err) {
+                if (err && err.name === "AbortError") { return; }
+                list.textContent = "";
+                list.appendChild(el("p", "fr-directory-empty", L.error));
+                if (window.console) { window.console.error("communities:", err); }
+            });
         var url = new URL(window.location.href);
         url.searchParams.set("scope", state.scope);
         if (q) { url.searchParams.set("q", q); } else { url.searchParams.delete("q"); }

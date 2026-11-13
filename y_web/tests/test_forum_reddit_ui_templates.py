@@ -211,3 +211,31 @@ def test_community_match_score_is_smart():
     assert score("python", "pyth") > score("programming", "pyth")
     assert score("machine_learning", "learning") > 0
     assert score("linux", "windows") == 0
+
+
+def test_join_menu_groups_simulations_by_platform_type():
+    from types import SimpleNamespace as NS
+
+    from y_web.src.experiment.platform_labels import (
+        group_experiments_by_platform,
+        platform_label,
+    )
+
+    exps = [
+        NS(exp_name="Z", platform_type="video_chat"),
+        NS(exp_name="b", platform_type="forum"),
+        NS(exp_name="a", platform_type="forum"),
+        NS(exp_name="Y", platform_type="microblogging"),
+    ]
+    groups = group_experiments_by_platform(exps)
+    assert [g["type"] for g in groups] == ["microblogging", "forum", "video_chat"]
+    assert [e.exp_name for e in groups[1]["experiments"]] == ["a", "b"]
+    assert (
+        platform_label("video_chat") == "Video chat"
+    )  # a platform added later is labelled on its own
+    from pathlib import Path
+
+    head = (
+        Path(__file__).resolve().parents[1] / "templates/admin/dash_head.html"
+    ).read_text()
+    assert "group_experiments_by_platform(active_experiments)" in head

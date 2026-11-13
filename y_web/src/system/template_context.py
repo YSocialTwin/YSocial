@@ -96,6 +96,18 @@ def register_template_context(app: Flask) -> None:
         except Exception:
             return dict(experiment_memory_enabled=False)
 
+    from y_web.src.experiment.platform_labels import (
+        group_experiments_by_platform,
+        platform_icon,
+        platform_label,
+    )
+
+    app.jinja_env.globals["group_experiments_by_platform"] = (
+        group_experiments_by_platform
+    )
+    app.jinja_env.globals["platform_label"] = platform_label
+    app.jinja_env.globals["platform_icon"] = platform_icon
+
     @app.context_processor
     def inject_active_experiments():
         """Inject active experiments into all admin templates."""

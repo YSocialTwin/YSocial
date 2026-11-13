@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 07:42+0000\n"
+"POT-Creation-Date: 2026-11-13 07:49+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -16405,6 +16405,9 @@ msgstr ""
 msgid "Unable to create the community right now."
 msgstr "Impossibile creare la community in questo momento."
 
+msgid "Unable to load the communities right now."
+msgstr "Impossibile caricare le community in questo momento."
+
 msgid "Unable to prepare the experiment user."
 msgstr "Impossibile preparare l'utente dell'esperimento."
 
@@ -18417,6 +18420,9 @@ msgstr "entrato al tick"
 
 msgid "km"
 msgstr "km"
+
+msgid "label"
+msgstr ""
 
 msgid "left"
 msgstr "abbandonata"
