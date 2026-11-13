@@ -94,6 +94,7 @@ class Forum(PlatformProvider):
     prompt_pack = ("prompts_forum.json", "prompts.json")
     server_modules = ("news", "voting", "image", "image_post")
     details_template = "admin/experiment_details_forum.html"
+    inherits_client_llm_defaults = True
     frontend_capabilities = COMMON_FRONTEND_CAPABILITIES | {
         "interaction_dislike",  # downvote
         "notifications_menu",

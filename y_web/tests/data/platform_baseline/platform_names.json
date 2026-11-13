@@ -8,7 +8,7 @@
  "y_web/migrations/forum_chat_uuid_user_ids.py": 3,
  "y_web/routes/__init__.py": 2,
  "y_web/routes/admin/sub/agents.py": 43,
- "y_web/routes/admin/sub/clients/_crud.py": 34,
+ "y_web/routes/admin/sub/clients/_crud.py": 27,
  "y_web/routes/admin/sub/clients/_details.py": 3,
  "y_web/routes/admin/sub/clients/_execution.py": 2,
  "y_web/routes/admin/sub/clients/_helpers.py": 1,

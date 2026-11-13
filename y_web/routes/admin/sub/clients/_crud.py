@@ -1660,7 +1660,7 @@ def _build_client_creation_context(idexp, recsys_mode):
             agent_memory_plugin_installed()
         )
 
-    if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
+    if exp is not None and _provider_of(exp).inherits_client_llm_defaults:
         latest_client = db.session.scalars(
             select(Client).filter_by(id_exp=idexp).order_by(Client.id.desc())
         ).first()
@@ -3349,22 +3349,13 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     # Copy prompts file into the experiment folder.
     # Photo Sharing uses the YPhotoSharing prompt filename; other HPC paths keep prompts.json.
-    prompts_dest = (
-        f"{exp_dir}{os.sep}prompts_ygram.json"
-        if exp.platform_type == "photo_sharing"
-        else f"{exp_dir}{os.sep}prompts.json"
-    )
+    pack_name, prompts_file = _provider_of(exp).experiment_prompt_pack("HPC")
+    prompts_dest = f"{exp_dir}{os.sep}{prompts_file}"
 
     prompt_language = prompt_packs.resolve(
         request.form.get("prompt_language"), exp.prompt_language
     )
-    pack_name = {
-        "photo_sharing": "prompts_ygram.json",
-        "microblogging": "prompts_hpc.json",
-        "forum": "prompts_forum.json",
-    }.get(exp.platform_type)
-    if pack_name:
-        prompt_packs.write_pack(pack_name, prompts_dest, prompt_language)
+    prompt_packs.write_pack(pack_name, prompts_dest, prompt_language)
     prompt_packs.record_language(exp_dir, client=name, client_language=prompt_language)
 
     # Create population assignment if not exists
@@ -3732,12 +3723,14 @@ def _create_standard_client_internal():
             "error",
         )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
-    if exp.platform_type != "microblogging":
+    provider = _provider_of(exp)
+    mode = provider.client_mode("Standard")
+    if mode != "standard" or provider.standard_runtime is None:
         flash(
             _("Use the dedicated forum client creation route for this experiment."),
             "error",
         )
-        if exp.platform_type == "forum":
+        if mode == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
 
@@ -5064,7 +5057,7 @@ def _create_forum_client_internal():
             "error",
         )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
-    if exp.platform_type != "forum":
+    if _provider_of(exp).client_mode("Standard") != "forum":
         flash(
             _("Use the dedicated standard client creation route for this experiment."),
             "error",

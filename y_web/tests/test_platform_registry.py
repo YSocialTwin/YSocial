@@ -608,3 +608,31 @@ def test_frontend_capabilities_match_the_previous_tables():
         assert fs.excluded_capabilities_for(platform) == want["excluded"], platform
         if "label" in want:
             assert fs._localized_platform_label(platform) == want["label"]
+
+
+def test_client_creation_guards_follow_the_provider():
+    from y_web.platforms import registry
+
+    # the Standard routes of microblogging and of forum are the only ones that create their clients
+    standard = [
+        k
+        for k in registry.keys() + ["unknown"]
+        if registry.resolve(k).client_mode("Standard") == "standard"
+        and registry.resolve(k).standard_runtime is not None
+    ]
+    forum = [
+        k for k in registry.keys() if registry.get(k).client_mode("Standard") == "forum"
+    ]
+    assert (standard, forum) == (["microblogging"], ["forum"])
+    assert [
+        k for k in registry.keys() if registry.get(k).inherits_client_llm_defaults
+    ] == ["forum"]
+    # the pack a generic HPC client starts from: photo and forum have their own, the rest the HPC one
+    assert {
+        k: registry.get(k).experiment_prompt_pack("HPC")
+        for k in ("microblogging", "photo_sharing", "forum")
+    } == {
+        "microblogging": ("prompts_hpc.json", "prompts.json"),
+        "photo_sharing": ("prompts_ygram.json", "prompts_ygram.json"),
+        "forum": ("prompts_forum.json", "prompts.json"),
+    }

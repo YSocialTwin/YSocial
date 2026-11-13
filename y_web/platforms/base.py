@@ -303,3 +303,6 @@ class PlatformProvider:
     frontend_capabilities: Optional[FrozenSet[str]] = None
     #: setting keys only this platform's templates read: the platforms that offer everything hide them
     frontend_exclusive_settings: FrozenSet[str] = frozenset()
+
+    #: whether the LLM defaults of a new client start from the latest client of the experiment
+    inherits_client_llm_defaults: bool = False
