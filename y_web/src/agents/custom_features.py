@@ -303,16 +303,11 @@ def agent_ext_entries_from_population_agent_payload(agent_payload: dict) -> list
             }
         )
 
-    add_entry("bio", agent_payload.get("bio"))
-    add_entry("is_private", agent_payload.get("is_private"))
-    add_entry("is_verified", agent_payload.get("is_verified"))
-    add_entry("attention_budget", agent_payload.get("attention_budget"))
+    from y_web.platforms import registry
 
-    photo_sharing = agent_payload.get("photo_sharing") or {}
-    if isinstance(photo_sharing, dict):
-        add_entry("favorite_filters", photo_sharing.get("favorite_filters"))
-        add_entry("story_visibility", photo_sharing.get("story_visibility"))
-        add_entry("creator_tier", photo_sharing.get("creator_tier"))
+    for provider in registry.providers():
+        for feature_name, value in provider.agent_payload_ext(agent_payload):
+            add_entry(feature_name, value)
 
     return entries
 

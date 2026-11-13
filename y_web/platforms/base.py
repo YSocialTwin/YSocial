@@ -277,6 +277,14 @@ class PlatformProvider:
         """
         return None
 
+    def agent_payload_ext(self, agent_payload: Mapping[str, Any]) -> list:
+        """``(feature name, value)`` pairs this platform reads from an agent of a population file (``Agent_Ext``)."""
+        return []
+
+    def default_avatar_url(self, user: Any) -> Optional[str]:
+        """Picture a user of this platform gets when it has none of its own (``None``: the standard lookup applies)."""
+        return None
+
     def agent_form_context(self) -> dict:
         """Variables the agent-form section of this platform needs besides the page's own."""
         return {}

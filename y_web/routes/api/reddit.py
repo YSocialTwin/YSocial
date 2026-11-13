@@ -1273,7 +1273,9 @@ def api_post(exp_id: int):
         _plain = (
             f"{title}. {body}" if title and body else (title or body or legacy_content)
         )
-        from y_web.src.models import Exps as _Exps  # the community the person chose, as the topic name the forum server lists
+        from y_web.src.models import (
+            Exps as _Exps,
+        )  # the community the person chose, as the topic name the forum server lists
 
         _community = _ho.forum_community(
             db.session.get(_Exps, int(exp_id)), community_slug

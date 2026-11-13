@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -64,18 +63,13 @@ def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
         return direct_pic
 
     platform_type = str(getattr(exp, "platform_type", "") or "")
-    if platform_type == "photo_sharing":
-        user_key = str(
-            getattr(user, "id", "") or getattr(user, "username", "") or ""
-        ).strip()
-        if not user_key:
-            return ""
-        try:
-            image_id = str(int(user_key))
-        except (TypeError, ValueError):
-            hashed = int(hashlib.md5(user_key.encode("utf-8")).hexdigest(), 16)
-            image_id = str((hashed % 1000) + 1)
-        return f"/static/assets/img/users/{image_id}.png"
+    from y_web.platforms import registry
+
+    own_avatar = registry.resolve(platform_type.strip().lower()).default_avatar_url(
+        user
+    )
+    if own_avatar is not None:
+        return own_avatar
 
     if platform_type == "forum":
         return resolve_forum_profile_pic(user, int(getattr(exp, "idexp", 0) or 0))

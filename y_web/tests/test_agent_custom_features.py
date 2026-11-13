@@ -17,6 +17,7 @@ from y_web.src.models import (
     Population,
     Topic_List,
 )
+from y_web.tests._platform_repos import requires_platform
 
 
 def test_structured_agent_features_round_trip(app):
@@ -112,6 +113,7 @@ def test_feature_entries_from_population_agent_payload_supports_opinion_and_cust
         assert '"stubborn": true' in by_type[("opinion", "Climate")]
 
 
+@requires_platform("YPhotoSharing")
 def test_agent_ext_entries_from_population_agent_payload_supports_photo_sharing_fields():
     entries = agent_ext_entries_from_population_agent_payload(
         {
