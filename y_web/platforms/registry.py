@@ -22,6 +22,23 @@ def register(provider: PlatformProvider) -> PlatformProvider:
     return provider
 
 
+def replace_builtin(provider: PlatformProvider) -> Optional[PlatformProvider]:
+    """Register the provider of an installed repository in place of the built-in one of the same key.
+
+    While a platform is moving out of the core, its repository may already carry the provider (it declares
+    it in ``meta/registry.json``) and the core still has a built-in copy: the repository wins, so that the
+    code that is being moved is the code that runs. Returns the provider that was replaced (``None`` when
+    there was none). Two providers from repositories for one key are still an error.
+    """
+    existing = _PROVIDERS.get(provider.key)
+    if existing is not None and existing.package_dir is not None:
+        raise ValueError(
+            f"platform {provider.key!r} is already provided by {type(existing).__name__}"
+        )
+    _PROVIDERS[provider.key] = provider
+    return existing
+
+
 def get(platform_type: Any) -> Optional[PlatformProvider]:
     """The provider of a platform type, or ``None`` for a type nobody provides (e.g. a platform no longer installed)."""
     return _PROVIDERS.get(str(platform_type or "").strip())

@@ -84,10 +84,22 @@ def test_problems_are_reported_and_nothing_is_registered(tmp_path, world):
     assert registry.get("demo") is None
 
 
-def test_a_key_already_provided_is_refused(tmp_path, world):
+def test_a_repository_replaces_the_built_in_provider_of_its_key(tmp_path, world):
     _install(world, tmp_path, key="y1")
-    registry.register(type("Mine", (registry.PlatformProvider,), {"key": "demo"})())
-    assert "already provided" in discover_platforms()["y1"][0]
+    builtin = registry.register(
+        type("Mine", (registry.PlatformProvider,), {"key": "demo"})()
+    )
+    assert discover_platforms() == {"y1": []}
+    assert registry.get("demo") is not builtin
+    assert registry.get("demo").package_dir is not None
+
+
+def test_two_repositories_for_one_key_are_refused(tmp_path, world):
+    _install(world, tmp_path / "a", key="y1", name="Y1")
+    _install(world, tmp_path / "b", key="y2", name="Y2")
+    report = discover_platforms()
+    assert report["y1"] == []
+    assert "already provided" in report["y2"][0]
 
 
 def test_repository_without_declaration_is_ignored(tmp_path, world):
