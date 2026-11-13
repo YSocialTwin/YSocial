@@ -17,6 +17,7 @@ from y_web.platforms.base import (
     HPC,
     STANDARD,
     CreationRules,
+    HpcClientForm,
     PlatformConfigError,
     PlatformProvider,
     ServerConfigRequest,
@@ -30,6 +31,7 @@ __all__ = [
     "COMMON_FRONTEND_CAPABILITIES",
     "CreationRules",
     "HPC",
+    "HpcClientForm",
     "N_",
     "PLATFORM_API",
     "PlatformConfigError",
@@ -44,12 +46,13 @@ __all__ = [
     "routes",
     "runtime",
     "services",
+    "social",
     "web",
     "template_name",
 ]
 
 
-_LAZY = ("agents", "federation", "models", "runtime", "web")
+_LAZY = ("agents", "federation", "models", "runtime", "social", "web")
 
 
 def __getattr__(name):

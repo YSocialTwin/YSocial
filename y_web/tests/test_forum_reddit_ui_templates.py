@@ -116,12 +116,13 @@ def test_federated_repost_wiring():
         "def federation_repost(" in routes
         and "def federation_repost_targets(" in routes
     )
-    for rel in (
-        "microblogging/components/posts.html",
-        "photo/components/posts.html",
-    ):
+    for rel in ("microblogging/components/posts.html",):
         assert "ws_repost_button" in (root / "templates" / rel).read_text(), rel
     from y_web.tests._platform_repos import platform_template
+
+    assert "ws_repost_button" in platform_template(
+        "YPhotoSharing", "photo/components/posts.html"
+    )
 
     assert "ws_repost_button" in platform_template(
         "YInstantMessaging", "im/_message.html"

@@ -96,13 +96,17 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
 
     if base_uri.startswith("sqlite"):
         db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep)
-        if getattr(experiment, "platform_type", "") == "photo_sharing":
-            photo_folder = os.path.dirname(db_name)
-            photo_db_path = get_writable_path(
-                os.path.join("y_web", photo_folder, "yphotosharing.db")
+        from y_web.platforms import registry
+
+        own_file = registry.resolve(
+            getattr(experiment, "platform_type", "")
+        ).database_file_name
+        if own_file:
+            own_path = get_writable_path(
+                os.path.join("y_web", os.path.dirname(db_name), own_file)
             )
-            os.makedirs(os.path.dirname(photo_db_path), exist_ok=True)
-            return f"sqlite:///{photo_db_path}"
+            os.makedirs(os.path.dirname(own_path), exist_ok=True)
+            return f"sqlite:///{own_path}"
 
         db_path = get_writable_path(os.path.join("y_web", db_name))
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -136,10 +140,11 @@ def open_experiment_session(experiment: Exps):
     engine = create_engine(uri, pool_pre_ping=True)
     from y_web.platforms import registry
 
-    if registry.resolve(getattr(experiment, "platform_type", "")).marker_table:
+    provider = registry.resolve(getattr(experiment, "platform_type", ""))
+    if provider.marker_table:
         pass  # the runtime owns its schema: YWeb only reads it
-    elif getattr(experiment, "platform_type", "") == "photo_sharing":
-        _ensure_photo_sharing_orm_tables(engine, uri)
+    elif provider.ensure_database_schema(engine, uri):
+        pass  # the platform created it
     else:
         _ensure_experiment_orm_tables(engine)
         ensure_experiment_schema_for_uri(uri)
@@ -173,33 +178,6 @@ def _ensure_experiment_orm_tables(engine) -> None:
     )  # string user ids (YForum): before create_all makes it with INTEGER
     if tables:
         db.metadata.create_all(bind=engine, tables=tables)
-
-
-def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
-    """
-    Create the complete YPhotoSharing ORM schema on the target engine.
-
-    The external YPhotoSharing package ships with its own SQLAlchemy Base and
-    model graph, which includes the ``user_mgmt`` table required by photo
-    experiments. We import it lazily so a missing or partially initialised
-    photo database can be repaired on first use.
-    """
-    try:
-        from y_web.src.system.path_utils import get_external_repo_dir
-
-        external_root = Path(get_external_repo_dir("YPhotoSharing"))
-        external_root_str = str(external_root)
-        if external_root.exists() and external_root_str not in sys.path:
-            sys.path.insert(0, external_root_str)
-
-        from YPhotoSharing.YServer.classes.models import Base as PhotoBase
-
-        PhotoBase.metadata.create_all(bind=engine)
-        if uri:
-            ensure_experiment_schema_for_uri(uri)
-    except Exception:
-        if uri:
-            ensure_experiment_schema_for_uri(uri)
 
 
 def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
@@ -340,18 +318,22 @@ def _ensure_experiment_user(
     if db_session is None or engine is None:
         return None, False
 
+    from y_web.platforms import registry
+
     try:
         selected_user_id = ""
+        view_keys = registry.resolve(
+            getattr(experiment, "platform_type", "")
+        ).admin_view_session_keys
         if (
-            str(getattr(experiment, "platform_type", "") or "").strip().lower()
-            == "photo_sharing"
+            view_keys
             and str(getattr(current_user, "role", "") or "").strip().lower() == "admin"
         ):
-            selected_user_id = str(
-                session.get("photo_view_user_id")
-                or session.get("photo_switch_user_id")
-                or ""
-            ).strip()
+            selected_user_id = ""
+            for key in view_keys:
+                selected_user_id = str(session.get(key) or "").strip()
+                if selected_user_id:
+                    break
 
         if selected_user_id:
             selected_user = (

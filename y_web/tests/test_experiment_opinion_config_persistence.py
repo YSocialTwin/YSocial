@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+from y_web.tests._platform_repos import photo_file, platform_source
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = pytest.mark.unit
@@ -156,7 +158,7 @@ def test_stopped_experiments_allow_client_configuration_updates():
     template_paths = [
         str(_REPO_ROOT / "y_web/templates/admin/experiment_details.html"),
         str(_REPO_ROOT / "y_web/templates/admin/experiment_details_forum.html"),
-        str(_REPO_ROOT / "y_web/templates/admin/experiment_details_photo.html"),
+        str(photo_file("y_web/templates/admin/experiment_details_photo.html")),
     ]
 
     for template_path in template_paths:
@@ -212,10 +214,7 @@ def test_new_experiment_form_supports_photo_sharing_platform():
         str(_REPO_ROOT / "y_web/static/assets/js/admin-settings.js"),
         "r",
     ).read()
-    crud_source = open(
-        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py"),
-        "r",
-    ).read()
+    crud_source = platform_source("YPhotoSharing", "photo/server_config.py")
     data_source = open(
         str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
@@ -240,7 +239,10 @@ def test_new_experiment_form_supports_photo_sharing_platform():
         "prompts_ygram.json",
         "prompts_ygram.json",
     )
-    assert provider.details_template == "admin/experiment_details_photo.html"
+    assert (
+        provider.details_template
+        == "@photo_sharing/admin/experiment_details_photo.html"
+    )
 
 
 def test_client_details_pages_expose_editable_simulation_and_action_fields():

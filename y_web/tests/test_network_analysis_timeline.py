@@ -8,6 +8,7 @@ from y_web.routes.admin.sub.experiments._opinion import (
     _build_network_analytics_payload,
     _resolve_network_analysis_db_path,
 )
+from y_web.tests._platform_repos import requires_platform
 
 pytestmark = pytest.mark.unit
 
@@ -262,6 +263,7 @@ def test_photo_sharing_network_analysis_handles_empty_graph(tmp_path):
     assert stats["largest_component_size"] == 1
 
 
+@requires_platform("YPhotoSharing")
 def test_photo_sharing_network_analysis_prefers_yphotosharing_db(tmp_path, monkeypatch):
     opinion_mod = importlib.import_module("y_web.routes.admin.sub.experiments._opinion")
 

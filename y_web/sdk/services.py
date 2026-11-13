@@ -153,3 +153,10 @@ def experiment_bind_key(exp_id: int) -> str:
     from y_web.src.experiment.context import get_db_bind_key_for_exp
 
     return get_db_bind_key_for_exp(exp_id)
+
+
+def ensure_experiment_schema(uri: str) -> None:
+    """Bring the YSocial tables of the experiment database at ``uri`` up to date."""
+    from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+
+    ensure_experiment_schema_for_uri(uri)

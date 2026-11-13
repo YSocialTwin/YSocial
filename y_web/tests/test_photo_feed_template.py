@@ -23,6 +23,7 @@ from y_web.routes.social.photo import (
 )
 from y_web.src.experiment.helpers import get_experiment_engine_uri
 from y_web.src.models import Exps
+from y_web.tests._platform_repos import photo_file
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -40,10 +41,10 @@ def _photo_experiment():
 
 
 def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout():
-    template = Path(str(_REPO_ROOT / "y_web/templates/photo/feed.html")).read_text(
+    template = Path(str(photo_file("y_web/templates/photo/feed.html"))).read_text(
         encoding="utf-8"
     )
-    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+    base_template = Path(str(photo_file("y_web/templates/photo/base.html"))).read_text(
         encoding="utf-8"
     )
 
@@ -52,15 +53,15 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert (
         "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}"
         in Path(
-            str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
+            str(photo_file("y_web/templates/photo/components/sidebar.html"))
         ).read_text(encoding="utf-8")
     )
     assert "photo_home_url" in Path(
-        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
+        str(photo_file("y_web/templates/photo/components/sidebar.html"))
     ).read_text(encoding="utf-8")
     assert "photo-stories" in template
     sidebar_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
+        str(photo_file("y_web/templates/photo/components/sidebar.html"))
     ).read_text(encoding="utf-8")
     assert "YSocial_purple.png" in sidebar_template
     assert "YSocial_l_purple.png" in sidebar_template
@@ -85,7 +86,7 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "Suggestions for you" in template
     assert "microblog-chat.js" in base_template
     posts_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/components/posts.html")
+        str(photo_file("y_web/templates/photo/components/posts.html"))
     ).read_text(encoding="utf-8")
     assert "data-photo-open-post" in posts_template
     assert "data-photo-post-like" in posts_template
@@ -95,9 +96,9 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
 
 def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
     profile_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/profile.html")
+        str(photo_file("y_web/templates/photo/profile.html"))
     ).read_text(encoding="utf-8")
-    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+    base_template = Path(str(photo_file("y_web/templates/photo/base.html"))).read_text(
         encoding="utf-8"
     )
 
@@ -113,19 +114,19 @@ def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
     assert "data-photo-profile-edit-overlay" in base_template
     assert "photo-profile-edit-overlay__gallery-grid" in base_template
     assert "photo/messages.html" in Path(
-        str(_REPO_ROOT / "y_web/routes/social/photo.py")
+        str(photo_file("y_web/routes/social/photo.py"))
     ).read_text(encoding="utf-8")
     assert "photo-messages.js" in Path(
-        str(_REPO_ROOT / "y_web/templates/photo/messages.html")
+        str(photo_file("y_web/templates/photo/messages.html"))
     ).read_text(encoding="utf-8")
 
 
 def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
-    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+    route_source = Path(str(photo_file("y_web/routes/social/photo.py"))).read_text(
         encoding="utf-8"
     )
     template_source = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/feed.html")
+        str(photo_file("y_web/templates/photo/feed.html"))
     ).read_text(encoding="utf-8")
     common_source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
         encoding="utf-8"
@@ -167,7 +168,7 @@ def test_photo_infinite_scroll_uses_query_safe_page_urls_and_custom_end_message(
         str(_REPO_ROOT / "y_web/static/assets/js/infinite-scroll.js")
     ).read_text(encoding="utf-8")
     photo_feed_source = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/photo-feed.js")
+        str(photo_file("y_web/static/assets/js/photo-feed.js"))
     ).read_text(encoding="utf-8")
 
     assert "buildPageUrl" in infinite_scroll_source
@@ -217,7 +218,7 @@ def test_photo_latest_round_id_uses_active_experiment_rounds(monkeypatch):
 
 
 def test_photo_routes_order_by_round_chronology_for_visual_feeds():
-    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+    route_source = Path(str(photo_file("y_web/routes/social/photo.py"))).read_text(
         encoding="utf-8"
     )
     assert "LEFT JOIN rounds rd ON rd.id = p.round" in route_source
@@ -382,13 +383,13 @@ def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment(
 
 
 def test_photo_suggestions_page_is_wired_and_english():
-    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+    route_source = Path(str(photo_file("y_web/routes/social/photo.py"))).read_text(
         encoding="utf-8"
     )
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/suggestions.html")
+        str(photo_file("y_web/templates/photo/suggestions.html"))
     ).read_text(encoding="utf-8")
-    feed_template = Path(str(_REPO_ROOT / "y_web/templates/photo/feed.html")).read_text(
+    feed_template = Path(str(photo_file("y_web/templates/photo/feed.html"))).read_text(
         encoding="utf-8"
     )
 
@@ -400,13 +401,13 @@ def test_photo_suggestions_page_is_wired_and_english():
 
 
 def test_photo_profile_page_is_wired_and_uses_photo_shell():
-    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+    route_source = Path(str(photo_file("y_web/routes/social/photo.py"))).read_text(
         encoding="utf-8"
     )
-    template = Path(str(_REPO_ROOT / "y_web/templates/photo/profile.html")).read_text(
+    template = Path(str(photo_file("y_web/templates/photo/profile.html"))).read_text(
         encoding="utf-8"
     )
-    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+    base_template = Path(str(photo_file("y_web/templates/photo/base.html"))).read_text(
         encoding="utf-8"
     )
 
@@ -423,14 +424,14 @@ def test_photo_profile_page_is_wired_and_uses_photo_shell():
 
 @pytest.mark.integration
 def test_photo_search_page_is_wired_and_returns_all_search_domains():
-    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+    route_source = Path(str(photo_file("y_web/routes/social/photo.py"))).read_text(
         encoding="utf-8"
     )
-    template = Path(str(_REPO_ROOT / "y_web/templates/photo/search.html")).read_text(
+    template = Path(str(photo_file("y_web/templates/photo/search.html"))).read_text(
         encoding="utf-8"
     )
     sidebar_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
+        str(photo_file("y_web/templates/photo/components/sidebar.html"))
     ).read_text(encoding="utf-8")
 
     assert "photo/search" in route_source
@@ -439,10 +440,10 @@ def test_photo_search_page_is_wired_and_returns_all_search_domains():
     assert 'type="button" class="photo-search-page__tile"' in template
     assert "photo-search.js" in template
     assert "YSPhotoOpenPost" in Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/photo-search.js")
+        str(photo_file("y_web/static/assets/js/photo-search.js"))
     ).read_text(encoding="utf-8")
     assert "YS_DATA_PHOTO_SEARCH" in Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/photo-overlays.js")
+        str(photo_file("y_web/static/assets/js/photo-overlays.js"))
     ).read_text(encoding="utf-8")
     assert "data-photo-search-input" in template
     assert "data-photo-search-kind" in template

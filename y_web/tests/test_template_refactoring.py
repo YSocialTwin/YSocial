@@ -14,6 +14,8 @@ import re
 
 import pytest
 
+from y_web.tests._platform_repos import photo_file
+
 pytestmark = pytest.mark.integration
 
 
@@ -128,7 +130,12 @@ class TestNewFolderStructure:
 
     # -- photo/ --------------------------------------------------------------
     def test_photo_dir_exists(self):
-        assert os.path.isdir(_template_path("photo"))
+        photo_file(
+            "y_web/templates/photo/feed.html"
+        )  # skips where the platform is not installed
+        assert os.path.isdir(
+            os.path.dirname(photo_file("y_web/templates/photo/feed.html"))
+        )
 
     @pytest.mark.parametrize(
         "tpl",
@@ -137,7 +144,7 @@ class TestNewFolderStructure:
         ],
     )
     def test_photo_page_templates_exist(self, tpl):
-        assert _exists(tpl), f"{tpl} is missing"
+        assert photo_file(f"y_web/templates/{tpl}").is_file(), f"{tpl} is missing"
 
     # -- admin/ and error_pages/ (unchanged) ----------------------------------
     def test_admin_dir_unchanged(self):

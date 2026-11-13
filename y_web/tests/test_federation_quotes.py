@@ -159,15 +159,19 @@ def test_the_block_is_escaped_and_empty_without_a_quote():
         "microblogging/components/thread-post.html",
         "forum/components/posts.html",
         "forum/components/thread-post.html",
-        "photo/components/posts.html",
+        "@photo_sharing/photo/components/posts.html",
         "@instant_messaging/im/_message.html",
     ],
 )
 def test_the_views_call_the_helper(path):
-    if path.startswith("@instant_messaging/"):
+    if path.startswith("@"):
         from y_web.tests._platform_repos import platform_template
 
-        text = platform_template("YInstantMessaging", path.split("/", 1)[1])
+        repo = {
+            "@instant_messaging": "YInstantMessaging",
+            "@photo_sharing": "YPhotoSharing",
+        }[path.split("/", 1)[0]]
+        text = platform_template(repo, path.split("/", 1)[1])
     else:
         with open(os.path.join(TEMPLATES, path)) as fh:
             text = fh.read()

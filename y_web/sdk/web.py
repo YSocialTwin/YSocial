@@ -22,6 +22,13 @@ def check_privileges(username):
     return target(username)
 
 
+def redirect_to_clients_page(experiment, current_endpoint):
+    """Redirect to the creation page of the experiment when ``current_endpoint`` is not it; ``None`` when it is."""
+    from y_web.routes.admin.sub.clients._crud import _redirect_to_clients_page as target
+
+    return target(experiment, current_endpoint)
+
+
 def allocate_topics_by_percentage(topics, topic_percentages):
     """Allocate topics to an agent based on specified interest percentages."""
     from y_web.routes.admin.sub.clients._helpers import (
@@ -136,6 +143,7 @@ __all__ = [
     "get_experiment_folder_name",
     "load_feed_experiment_context",
     "load_ui_settings",
+    "redirect_to_clients_page",
     "user_can_manage_experiment",
     "user_can_view_experiment",
 ]

@@ -3,6 +3,8 @@
 import pytest
 
 import y_web.i18n as i18n
+from y_web.tests import _platform_alias
+from y_web.tests._platform_repos import template_file
 from y_web.tests.test_frontend_settings_generic_suite_panel import (  # noqa: F401  (fixtures + helpers)
     _login,
     _make_admin_login_user,
@@ -147,8 +149,8 @@ def test_simulation_pages_load_the_simulation_catalog():
         "photo/base.html",
         "login/scene_base.html",
     ):
-        assert 'data-domains="simulation"' in (
-            ROOT / "y_web" / "templates" / page
+        assert 'data-domains="simulation"' in template_file(
+            ROOT / "y_web" / "templates", page
         ).read_text(encoding="utf-8")
 
 
@@ -210,16 +212,16 @@ def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
     from flask import Blueprint, Flask, render_template
 
     for name in ("microblogging/header.html", "forum/header.html", "photo/base.html"):
-        assert "language_switcher" not in (
-            ROOT / "y_web" / "templates" / name
+        assert "language_switcher" not in template_file(
+            ROOT / "y_web" / "templates", name
         ).read_text(encoding="utf-8")
     for name in (
         "microblogging/edit_profile.html",
         "photo/base.html",
         "forum/edit_profile.html",
     ):
-        assert "shared/profile_language_field.html" in (
-            ROOT / "y_web" / "templates" / name
+        assert "shared/profile_language_field.html" in template_file(
+            ROOT / "y_web" / "templates", name
         ).read_text(encoding="utf-8")
 
     app = Flask("y_web")

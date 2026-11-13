@@ -295,17 +295,20 @@ def _experiment_sqlite_db_path(exp: Exps) -> Optional[Any]:
     if not db_name:
         return None
 
-    if str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing":
+    from y_web.platforms import registry
+
+    own_file = registry.resolve(
+        str(getattr(exp, "platform_type", "") or "").strip().lower()
+    ).database_file_name
+    if own_file:
         uid = _get_experiment_uid_from_db_name(db_name)
         if uid:
             photo_db = Path(
-                get_writable_path(
-                    os.path.join("y_web", "experiments", uid, "yphotosharing.db")
-                )
+                get_writable_path(os.path.join("y_web", "experiments", uid, own_file))
             )
             if photo_db.exists():
                 return photo_db
-        # Fall back to the experiment-local database name if the photo DB has
+        # Fall back to the experiment-local database name if the platform's DB has
         # not been materialized yet.
         candidate = Path(get_writable_path(os.path.join("y_web", db_name)))
         if candidate.exists():

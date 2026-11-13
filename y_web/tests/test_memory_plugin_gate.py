@@ -3,6 +3,7 @@
 import pytest
 
 from y_web.src.system import memory_plugin
+from y_web.tests._platform_repos import template_file
 
 pytestmark = pytest.mark.unit
 
@@ -26,7 +27,7 @@ def test_templates_gate_memory_sections():
 
     root = pathlib.Path(__file__).resolve().parents[1] / "templates" / "admin"
     for name in ("clients.html", "clients_hpc.html", "clients_photo.html"):
-        text = (root / name).read_text()
+        text = template_file(root, name).read_text()
         i = text.index('id="section-memory"')
         assert "{% if memory_configuration_supported %}" in text[max(0, i - 120) : i]
     for name in (

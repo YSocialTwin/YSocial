@@ -4,8 +4,13 @@ import pytest
 
 from y_web.platforms import PlatformProvider, registry
 from y_web.tests import _platform_alias
+from y_web.tests._platform_repos import requires_platform
 
 #: Dating is provided by its repository: what is said about it is checked where the repository is installed
+needs_photo = pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.PHOTO_SHARING),
+    reason="YPhotoSharing is not installed",
+)
 needs_im = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
     reason="YInstantMessaging is not installed",
@@ -15,8 +20,9 @@ needs_dating = pytest.mark.skipif(
     not (
         _platform_alias.installed(_platform_alias.DATING)
         and _platform_alias.installed(_platform_alias.INSTANT_MESSAGING)
+        and _platform_alias.installed(_platform_alias.PHOTO_SHARING)
     ),
-    reason="YDating and YInstantMessaging are not both installed",
+    reason="YDating, YInstantMessaging and YPhotoSharing are not all installed",
 )
 _needs_dating_only = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.DATING),
@@ -61,7 +67,7 @@ def test_a_provider_needs_a_key():
     [
         ("microblogging", "/3/feed/7/feed/rf/1"),
         ("forum", "/3/rfeed/7/feed/rf/1"),
-        ("photo_sharing", "/3/photo/feed/all/feed/rf/1"),
+        pytest.param("photo_sharing", "/3/photo/feed/all/feed/rf/1", marks=needs_photo),
         pytest.param("instant_messaging", None, marks=needs_im),
         pytest.param("dating", None, marks=_needs_dating_only),
     ],
@@ -134,7 +140,7 @@ REACHABLE = (
         for platform in ("microblogging", "forum", "video_chat", None)
         for simulator in ("Standard", "HPC")
     ]
-    + [("photo_sharing", "HPC")]
+    + [pytest.param("photo_sharing", "HPC", marks=needs_photo)]
     + [pytest.param("instant_messaging", "HPC", marks=needs_im)]
     + [pytest.param("dating", "HPC", marks=_needs_dating_only)]
 )
@@ -155,7 +161,7 @@ def test_client_pages_and_modes_equal_the_previous_logic(platform, simulator):
     "platform, generic",
     [
         ("microblogging", True),
-        ("photo_sharing", True),
+        pytest.param("photo_sharing", True, marks=needs_photo),
         ("forum", False),
         pytest.param("instant_messaging", False, marks=needs_im),
         pytest.param("dating", False, marks=_needs_dating_only),
@@ -604,7 +610,7 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
     assert {k: registry.get(k).details_template for k in registry.keys()} == {
         "microblogging": "admin/experiment_details.html",
         "forum": "admin/experiment_details_forum.html",
-        "photo_sharing": "admin/experiment_details_photo.html",
+        "photo_sharing": "@photo_sharing/admin/experiment_details_photo.html",
         "instant_messaging": "@instant_messaging/admin/experiment_details_im.html",
         "dating": "@dating/admin/experiment_details_dating.html",
     }
@@ -648,6 +654,7 @@ def test_frontend_capabilities_match_the_previous_tables():
             assert fs._localized_platform_label(platform) == want["label"]
 
 
+@requires_platform("YPhotoSharing")
 def test_client_creation_guards_follow_the_provider():
     from y_web.platforms import registry
 

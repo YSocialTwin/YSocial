@@ -18,6 +18,45 @@ def platform_template(repo: str, relative: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def platform_source(repo: str, relative: str) -> str:
+    """Text of a file under ``<repo>/ysocial_platform``; skips the test when it is not there."""
+    path = EXTERNAL / repo / "ysocial_platform" / relative
+    if not path.is_file():
+        pytest.skip(f"{repo} with its platform files is not installed")
+    return path.read_text(encoding="utf-8")
+
+
+def photo_file(old_relative: str) -> Path:
+    """File of the photo-sharing platform that used to be at ``old_relative`` in the core; skips the test when absent.
+
+    ``y_web/templates/photo/...`` and the admin pages of the platform are templates, ``y_web/static/assets/js/photo-*.js``
+    are static files, ``y_web/routes/social/photo.py`` is the observer routes module.
+    """
+    base = EXTERNAL / "YPhotoSharing" / "ysocial_platform"
+    if old_relative.startswith("y_web/templates/"):
+        path = base / "templates" / old_relative[len("y_web/templates/") :]
+    elif old_relative.startswith("y_web/static/assets/js/"):
+        path = base / "static" / "js" / old_relative[len("y_web/static/assets/js/") :]
+    elif old_relative == "y_web/routes/social/photo.py":
+        path = base / "routes" / "social_photo.py"
+    else:
+        raise ValueError(old_relative)
+    if not path.is_file():
+        pytest.skip("YPhotoSharing with its platform files is not installed")
+    return path
+
+
+def template_file(root: Path, relative: str) -> Path:
+    """File of a template that is in the core or, when it moved out, in the repository it moved to (skips when absent)."""
+    path = Path(root) / relative
+    if path.is_file():
+        return path
+    moved = moved_template_path(relative)
+    if moved is None:
+        pytest.skip(f"{relative} is in a platform repository that is not installed")
+    return moved
+
+
 def _moved():
     import json
 
@@ -70,6 +109,7 @@ def core_and_platform_loader():
         for key, repo in (
             ("dating", "YDating"),
             ("instant_messaging", "YInstantMessaging"),
+            ("photo_sharing", "YPhotoSharing"),
         )
         if (EXTERNAL / repo / "ysocial_platform" / "templates").is_dir()
     }
@@ -78,4 +118,12 @@ def core_and_platform_loader():
             jinja2.PrefixLoader(prefixes, delimiter="/"),
             jinja2.FileSystemLoader(str(EXTERNAL.parent / "y_web" / "templates")),
         ]
+    )
+
+
+def requires_platform(repo: str):
+    """Skip marker for a single test that needs ``repo`` (the tests that need it as a whole are in ``_platform_alias``)."""
+    return pytest.mark.skipif(
+        not (EXTERNAL / repo / "ysocial_platform").is_dir(),
+        reason=f"{repo} with its platform files is not installed",
     )

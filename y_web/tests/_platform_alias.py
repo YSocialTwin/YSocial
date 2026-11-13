@@ -82,7 +82,21 @@ INSTANT_MESSAGING = Platform(
     ),
 )
 
-PLATFORMS = (DATING, INSTANT_MESSAGING)
+PHOTO_SHARING = Platform(
+    repo="YPhotoSharing",
+    key="photo_sharing",
+    old_package="",  # its library is new: nothing was importable under an old name
+    library="photo",
+    provider_class="PhotoSharing",
+    views={
+        "y_web.routes.social.photo": "routes.social_photo",
+    },
+    needs=tuple(
+        sorted(path.name for path in Path(__file__).parent.glob("test_photo_*.py"))
+    ),
+)
+
+PLATFORMS = (DATING, INSTANT_MESSAGING, PHOTO_SHARING)
 
 _state: Dict[str, bool] = {}
 
@@ -119,16 +133,17 @@ def _install_one(platform: Platform) -> bool:
         return importlib.import_module(f"{root}.ysocial_platform.{name}")
 
     package = load(platform.library)
-    sys.modules[platform.old_package] = package
-    parent, _, leaf = platform.old_package.rpartition(".")
-    setattr(importlib.import_module(parent), leaf, package)
-    folder = EXTERNAL / platform.repo / "ysocial_platform" / platform.library
-    for path in sorted(folder.glob("*.py")):
-        if path.stem == "__init__":
-            continue
-        sys.modules[f"{platform.old_package}.{path.stem}"] = load(
-            f"{platform.library}.{path.stem}"
-        )
+    if platform.old_package:
+        sys.modules[platform.old_package] = package
+        parent, _, leaf = platform.old_package.rpartition(".")
+        setattr(importlib.import_module(parent), leaf, package)
+        folder = EXTERNAL / platform.repo / "ysocial_platform" / platform.library
+        for path in sorted(folder.glob("*.py")):
+            if path.stem == "__init__":
+                continue
+            sys.modules[f"{platform.old_package}.{path.stem}"] = load(
+                f"{platform.library}.{path.stem}"
+            )
     for old, new in platform.views.items():
         module = load(new)
         sys.modules[old] = module

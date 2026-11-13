@@ -12,6 +12,7 @@ from jinja2 import FileSystemLoader
 
 from y_web import db
 from y_web.tests import _platform_alias
+from y_web.tests._platform_repos import requires_platform
 from y_web.tests.test_frontend_settings_generic_suite_panel import (
     _login,
     _make_admin_login_user,
@@ -23,7 +24,7 @@ pytestmark = pytest.mark.integration
 PLATFORMS = [
     "microblogging",
     "forum",
-    "photo_sharing",
+    pytest.param("photo_sharing", marks=requires_platform("YPhotoSharing")),
     pytest.param(
         "instant_messaging",
         marks=pytest.mark.skipif(

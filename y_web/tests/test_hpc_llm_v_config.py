@@ -13,6 +13,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from y_web.tests._platform_repos import photo_file
+
 pytestmark = pytest.mark.integration
 
 
@@ -327,13 +329,13 @@ class TestHPCLLMVConfig:
         )
 
     def test_photo_client_source_contains_yphotosharing_fields(self):
-        crud_source = open(
-            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
-            "r",
-            encoding="utf-8",
-        ).read()
+        from y_web.tests._platform_repos import platform_source
+
+        crud_source = platform_source(
+            "YPhotoSharing", "photo/hpc.py"
+        ) + platform_source("YPhotoSharing", "photo/hpc_client.py")
         template_source = open(
-            str(_REPO_ROOT / "y_web/templates/admin/clients_photo.html"),
+            str(photo_file("y_web/templates/admin/clients_photo.html")),
             "r",
             encoding="utf-8",
         ).read()

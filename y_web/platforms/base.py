@@ -14,6 +14,7 @@ import importlib
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, FrozenSet, List, Mapping, Optional, Tuple
 
 from y_web.i18n import N_
@@ -66,6 +67,15 @@ class ServerConfigRequest:
     redis_port: Any
     redis_password: Any
     redis_sliding_window_days: int
+
+
+class HpcClientForm(SimpleNamespace):
+    """The values of the form that creates an HPC client, as the creation route holds them.
+
+    The attributes are the names the route gives them (``days``, ``profiles``, ``hourly_activity``,
+    ``memory_enabled``, ``probability_of_follow_back``, ...); ``form_data`` is the submitted form and ``exp`` the
+    experiment. A platform reads what it needs and never changes them.
+    """
 
 
 @dataclass(frozen=True)
@@ -210,6 +220,32 @@ class PlatformProvider:
     ) -> bool:
         """Align a client file with the runtime before it starts; ``True`` when the platform did it itself."""
         return False
+
+    def hpc_client_sections(
+        self, form: HpcClientForm
+    ) -> Optional[Tuple[dict, dict, dict]]:
+        """``(simulation, agents, logging)`` sections of a new HPC client; ``None``: the core builds them."""
+        return None
+
+    def finish_hpc_client_config(
+        self, config: dict, form: HpcClientForm, exp_dir: str, population_name: str
+    ) -> bool:
+        """Complete the client file before it is written; ``True`` when the platform did it, ``False``: the core's way."""
+        return False
+
+    def hpc_agent_payload(
+        self,
+        payload: dict,
+        agent: Any,
+        ext_map: Mapping[str, Any],
+        *,
+        is_page: bool = False,
+        normalize_recsys: bool = True,
+    ) -> None:
+        """Add what the runtime of this platform reads to an agent (or page) of a population file.
+
+        ``normalize_recsys`` is false for the callers that never rewrote the recommender id of the agent.
+        """
 
     def validate_hpc_client(
         self, exp_folder: str, runtime_dir: str, client_config: str
@@ -385,6 +421,12 @@ class PlatformProvider:
 
     #: whether the experiment page offers the memory settings without the Agent Memory plugin (the runtime has its own)
     configures_memory: bool = False
+    #: File name of the experiment database inside the experiment folder, when it is not the default one.
+    database_file_name: Optional[str] = None
+    #: The participant of an experiment is the account id itself (no separate participant id).
+    participant_is_account: bool = False
+    #: Session keys through which an admin picks the account whose pages they look at.
+    admin_view_session_keys: Tuple[str, ...] = ()
     #: Template of the opinion-configuration page, when the platform has its own (None: the core's page for the mode).
     opinion_template: Optional[str] = None
 
@@ -423,6 +465,10 @@ class PlatformProvider:
     ) -> Any:
         """Stand-in for a participant (``id``, ``username``, ``account_id``), or ``None`` when the user is unknown."""
         return None
+
+    def ensure_database_schema(self, engine: Any, uri: Optional[str] = None) -> bool:
+        """Create the schema of the experiment database on ``engine``; ``True`` when the platform did it itself."""
+        return False
 
     def bind_database(self, app: Any, exp_id: int, db_name: str) -> bool:
         """Bind (or deliberately leave unbound) the database of an experiment; ``False`` leaves it to the core."""

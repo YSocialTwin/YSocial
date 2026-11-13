@@ -73,9 +73,6 @@ def test_open_experiment_session_does_not_create_tables_for_im(tmp_path, monkeyp
         helpers, "_ensure_experiment_orm_tables", lambda e: called.append(1)
     )
     monkeypatch.setattr(
-        helpers, "_ensure_photo_sharing_orm_tables", lambda *a: called.append(2)
-    )
-    monkeypatch.setattr(
         helpers, "ensure_experiment_schema_for_uri", lambda u: called.append(3)
     )
     session, engine = helpers.open_experiment_session(

@@ -5,13 +5,15 @@ import re
 
 import pytest
 
+from y_web.tests._platform_repos import photo_file
+
 pytestmark = pytest.mark.unit
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_photo_profile_language_is_a_select_of_known_languages():
-    html = (ROOT / "templates" / "photo" / "base.html").read_text(encoding="utf-8")
+    html = photo_file("y_web/templates/photo/base.html").read_text(encoding="utf-8")
     assert not re.search(r'<input[^>]*name="language"', html)
     block = re.search(r'<select[^>]*name="language"[^>]*>(.*?)</select>', html, re.S)
     assert block, "language select missing"
@@ -20,7 +22,7 @@ def test_photo_profile_language_is_a_select_of_known_languages():
 
 
 def test_overlay_script_keeps_a_value_the_list_does_not_offer():
-    js = (ROOT / "static" / "assets" / "js" / "photo-overlays.js").read_text(
+    js = photo_file("y_web/static/assets/js/photo-overlays.js").read_text(
         encoding="utf-8"
     )
     assert "tagName === 'SELECT'" in js and "createElement('option')" in js

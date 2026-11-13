@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from y_web.tests._platform_repos import requires_platform
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
@@ -401,6 +402,7 @@ def test_start_hpc_client_syncs_duration_from_matrix_config(monkeypatch, tmp_pat
     assert added_objects and added_objects[0].expected_duration_rounds == 720
 
 
+@requires_platform("YPhotoSharing")
 def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
     monkeypatch, tmp_path
 ):

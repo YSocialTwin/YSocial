@@ -10,6 +10,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from y_web.tests._platform_repos import photo_file
+
 pytestmark = pytest.mark.integration
 
 
@@ -247,7 +249,7 @@ class TestClientFormFields:
     def test_hpc_and_photo_llm_backend_selector_is_fixed_to_llm_service(self):
         templates = [
             str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
-            str(_REPO_ROOT / "y_web/templates/admin/clients_photo.html"),
+            str(photo_file("y_web/templates/admin/clients_photo.html")),
         ]
 
         for template_path in templates:

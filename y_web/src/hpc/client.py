@@ -151,37 +151,6 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
     return f"{folder_name}:{str(client_name).strip()}"
 
 
-def _normalize_photo_sharing_client_config(
-    exp_folder: str, client_name: str, population_name: str, client_config_path: str
-) -> None:
-    """Align YPhotoSharing client config with the experiment server runtime."""
-    server_config_path = os.path.join(exp_folder, "server_config.json")
-    server_config = {}
-    if os.path.exists(server_config_path):
-        with open(server_config_path, "r", encoding="utf-8") as handle:
-            server_config = json.load(handle)
-
-    with open(client_config_path, "r", encoding="utf-8") as handle:
-        client_config = json.load(handle)
-
-    runtime_client_id = _build_hpc_runtime_client_id(exp_folder, client_name)
-    client_config["client_id"] = runtime_client_id
-    client_config["namespace"] = server_config.get("namespace", "yphotosharing")
-    client_config["server_name"] = server_config.get(
-        "server_name", "orchestrator_server"
-    )
-    client_config["address"] = "auto"
-    population_filename = f"{population_name}.json"
-    client_config["agents_file"] = population_filename
-    client_config["users_file"] = population_filename
-    client_config.setdefault("logging", {})
-    client_config["logging"]["log_dir"] = os.path.join(exp_folder, "logs")
-    client_config["logging"]["instance_name"] = runtime_client_id
-
-    with open(client_config_path, "w", encoding="utf-8") as handle:
-        json.dump(client_config, handle, indent=2)
-
-
 def _normalize_dating_client_config(
     exp_folder: str, client_name: str, population_name: str, client_config_path: str
 ) -> None:
@@ -231,27 +200,8 @@ def _normalize_forum_client_config(
 
 _CLIENT_NORMALIZERS = {
     "forum": _normalize_forum_client_config,
-    "photo_sharing": _normalize_photo_sharing_client_config,
     "dating": _normalize_dating_client_config,
 }
-
-
-def _migrate_legacy_photo_sharing_client_layout(
-    exp_folder: str, client_name: str, population_name: str, client_config_path: str
-) -> None:
-    """Promote legacy per-client photo-sharing config into the standard HPC layout."""
-    if os.path.exists(client_config_path):
-        return
-
-    legacy_dir = os.path.join(exp_folder, f"client_{client_name}-{population_name}")
-    legacy_config = os.path.join(legacy_dir, "client_config.json")
-    if not os.path.exists(legacy_config):
-        return
-
-    with open(legacy_config, "r", encoding="utf-8") as handle:
-        client_config = json.load(handle)
-    with open(client_config_path, "w", encoding="utf-8") as handle:
-        json.dump(client_config, handle, indent=2)
 
 
 def _resolve_hpc_client_file(exp, client_name, suffix, log_folder=None):

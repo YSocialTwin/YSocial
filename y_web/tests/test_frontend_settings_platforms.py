@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 
 from y_web import db
+from y_web.tests import _platform_alias
+from y_web.tests._platform_repos import photo_file, template_file
 from y_web.tests.test_frontend_settings_generic_suite_panel import (  # noqa: F401  (fixtures + helpers)
     _login,
     _make_admin_login_user,
@@ -161,7 +163,9 @@ def test_plugin_loader_included_in_forum_and_photo_templates():
         "forum/profile.html",
         "photo/base.html",
     ):
-        assert "plugin_loader.html" in (root / rel).read_text(encoding="utf-8"), rel
+        assert "plugin_loader.html" in template_file(root, rel).read_text(
+            encoding="utf-8"
+        ), rel
 
 
 def test_plugin_core_and_photo_overlay_expose_platform_hooks():
@@ -169,7 +173,9 @@ def test_plugin_core_and_photo_overlay_expose_platform_hooks():
 
     js = Path(__file__).resolve().parents[1] / "static" / "assets" / "js"
     assert "platform" in (js / "plugin-core.js").read_text(encoding="utf-8")
-    overlay = (js / "photo-overlays.js").read_text(encoding="utf-8")
+    overlay = photo_file("y_web/static/assets/js/photo-overlays.js").read_text(
+        encoding="utf-8"
+    )
     assert "data-photo-post-id" in overlay and "ys:photo-post-rendered" in overlay
 
 
@@ -228,7 +234,7 @@ def test_suggested_friends_templates_are_gated():
     assert "ui.show_suggested_friends" in (root / "microblogging/feed.html").read_text(
         encoding="utf-8"
     )
-    photo = (root / "photo/feed.html").read_text(encoding="utf-8")
+    photo = template_file(root, "photo/feed.html").read_text(encoding="utf-8")
     assert (
         "photo-feed-layout--no-rail" in photo and "ui.show_suggested_friends" in photo
     )
@@ -346,13 +352,15 @@ def test_feed_templates_with_side_boxes_compile(suites_app):
     suites_app.jinja_env.filters.setdefault(
         "user_image_id", lambda v: v
     )  # registered by the real app only
-    for name in (
-        "photo/feed.html",
+    names = [
         "microblogging/feed.html",
         "microblogging/hashtag.html",
         "microblogging/thread.html",
         "admin/frontend_settings.html",
-    ):
+    ]
+    if _platform_alias.installed(_platform_alias.PHOTO_SHARING):
+        names.insert(0, "@photo_sharing/photo/feed.html")
+    for name in names:
         assert suites_app.jinja_env.get_template(name) is not None
 
 

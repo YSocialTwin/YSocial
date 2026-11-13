@@ -3077,23 +3077,26 @@ def _resolve_experiment_db_path(experiment):
 def _resolve_network_analysis_db_path(experiment):
     """Return the experiment DB path used by network analytics.
 
-    Photo-sharing experiments keep their simulation state in yphotosharing.db,
+    Some platforms (photo sharing) keep their simulation state in a database of their own,
     while the dashboard metadata may still point to the legacy
     database_server.db file. Network analytics must therefore prefer the photo
     DB when it exists, otherwise they would inspect the wrong schema and report
     that the network-analysis tables are missing.
     """
-    if getattr(experiment, "platform_type", "") == "photo_sharing":
+    own_file = registry.resolve(
+        getattr(experiment, "platform_type", "")
+    ).database_file_name
+    if own_file:
         db_name = (
             str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
         )
         uid = get_experiment_uid_from_db_name(db_name)
         if uid:
-            photo_db_path = os.path.join(
-                get_writable_path(), "y_web", "experiments", uid, "yphotosharing.db"
+            own_db_path = os.path.join(
+                get_writable_path(), "y_web", "experiments", uid, own_file
             )
-            if os.path.exists(photo_db_path):
-                return photo_db_path
+            if os.path.exists(own_db_path):
+                return own_db_path
 
     return _resolve_experiment_db_path(experiment)
 

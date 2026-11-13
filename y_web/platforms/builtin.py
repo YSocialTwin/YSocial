@@ -225,90 +225,9 @@ class Forum(PlatformProvider):
         services.set_client_run_length(client_config, client, unlimited_value=0)
 
 
-class PhotoSharing(PlatformProvider):
-    key = "photo_sharing"
-    label = N_("Photo sharing")
-    icon = "camera"
-    order = 30
-
-    def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
-        return f"/{exp_id}/photo/feed/all/feed/rf/1"
-
-    def creation_rules(self, simulator_type: str) -> CreationRules:
-        return CreationRules(database="server")
-
-    def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
-        if not available["photo_sharing"]:
-            return HPC, _(
-                "Photo Sharing experiments are unavailable because YPhotoSharing is not present."
-            )
-        return HPC, None
-
-    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
-        from y_web.routes.admin.sub.experiments._crud import (
-            generate_photo_sharing_config,
-        )
-
-        return generate_photo_sharing_config(
-            exp_name=request.exp_name,
-            db_type=request.db_type,
-            db_uri=request.db_uri,
-            topics=request.topics,
-            data_path=request.data_path,
-            db_config_dict=request.db_config_dict,
-            is_remote=request.is_remote,
-        )
-
-    def write_new_experiment_files(self, exp_dir: str, prompt_language: str) -> None:
-        from y_web.sdk import services
-
-        services.write_prompt_pack(
-            "prompts_ygram.json",
-            os.path.join(exp_dir, "prompts_ygram.json"),
-            prompt_language,
-        )
-
-    details_template = "admin/experiment_details_photo.html"
-    frontend_capabilities = COMMON_FRONTEND_CAPABILITIES | {
-        "show_suggested_friends",  # "Suggestions for you" rail
-        "show_recsys_info",
-        "show_annotation_stats",
-        "interaction_share",
-        "annotation_agent_type",
-        "default_photo_feed_tab",
-    }
-    frontend_exclusive_settings = frozenset({"default_photo_feed_tab"})  # home tab
-    extra_prompt_files = ("prompts_ygram.json",)
-    prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
-
-    def experiment_prompt_pack(self, simulator_type: str) -> Tuple[str, str]:
-        return self.prompt_pack
-
-    def clients_page(self, simulator_type: str) -> str:
-        return "clientsr.clients_photo"
-
-    def hpc_client_files(self, exp_folder: str, client: Any, population: Any):
-        config, agents, _ = super().hpc_client_files(exp_folder, client, population)
-        return config, agents, os.path.join(exp_folder, "prompts_ygram.json")
-
-    def prepare_hpc_client_files(
-        self, exp_folder: str, client: Any, population: Any, client_config: str
-    ) -> None:
-        from y_web.src.hpc.client import _migrate_legacy_photo_sharing_client_layout
-
-        _migrate_legacy_photo_sharing_client_layout(
-            exp_folder, client.name, population.name, client_config
-        )
-
-    def client_state_files(self, exp_dir: Path, client: Any) -> List[Path]:
-        # the state of the client of a population, then any other population of the same client
-        return list(exp_dir.glob(f"client_{client.name}-*.state.json"))
-
-
 def register_builtin_platforms() -> None:
     for provider in (
         Microblogging(),
         Forum(),
-        PhotoSharing(),
     ):
         register(provider)

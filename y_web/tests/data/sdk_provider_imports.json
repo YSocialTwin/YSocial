@@ -1,8 +1,6 @@
 [
-  "y_web.routes.admin.sub.experiments._crud",
   "y_web.routes.admin.sub.experiments._helpers",
   "y_web.src.forum.experiment_config",
   "y_web.src.forum.roster",
-  "y_web.src.forum.validation",
-  "y_web.src.hpc.client"
+  "y_web.src.forum.validation"
 ]

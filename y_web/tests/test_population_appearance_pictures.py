@@ -6,7 +6,7 @@ import os
 import pytest
 
 from y_web.tests import _platform_alias
-from y_web.tests._platform_repos import platform_template
+from y_web.tests._platform_repos import platform_template, requires_platform
 from y_web.tests.test_dating_population import routes  # noqa: F401
 from y_web.tests.test_population_platform_fields import _standard_population
 
@@ -594,6 +594,7 @@ def test_dating_uses_the_pictures_the_agents_already_have(app, media, tmp_path):
         assert all("media_url" not in p for p in data["agents"][1]["photos"])
 
 
+@requires_platform("YPhotoSharing")
 def test_the_photo_and_forum_frontends_show_the_generated_picture(app, media):
     from types import SimpleNamespace
 

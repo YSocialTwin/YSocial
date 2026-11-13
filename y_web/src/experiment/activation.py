@@ -113,7 +113,7 @@ def activate_experiment(
 
     register_experiment_database(current_app, exp_id, exp.db_name)
 
-    if exp.platform_type == "photo_sharing":
+    if provider.participant_is_account:
         participant_id = admin_user_id
     elif exp.simulator_type == "HPC":
         participant_id = str(uuid.uuid4())

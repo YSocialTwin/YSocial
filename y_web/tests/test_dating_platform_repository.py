@@ -39,7 +39,6 @@ def test_without_the_repository_dating_is_not_a_platform_of_the_core():
         for p in (
             builtin.Microblogging(),
             builtin.Forum(),
-            builtin.PhotoSharing(),
         )
     }
     assert not hasattr(builtin, "Dating")

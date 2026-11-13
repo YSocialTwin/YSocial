@@ -112,15 +112,33 @@ def set_duration(config: Dict[str, Any], days: int) -> Dict[str, Any]:
     return target(config, days)
 
 
+def is_vllm_installed():
+    """Check if a supported embedded vLLM runtime is installed in the current environment."""
+    from y_web.src.llm.vllm_manager import is_vllm_installed as target
+
+    return target()
+
+
+def dispatch_platform_event(app, exp_id: "int", event: "str", payload: "dict") -> "int":
+    """Hand a platform event to every installed suite module that opts in."""
+    from y_web.src.external_runtime.plugin_loader import (
+        dispatch_platform_event as target,
+    )
+
+    return target(app, exp_id, event, payload)
+
+
 __all__ = [
     "build_hpc_runtime_client_id",
     "build_subprocess_env",
     "describe_client_failure",
     "detect_env_handler",
+    "dispatch_platform_event",
     "exit_messages",
     "get_external_repo_dir",
     "get_hpc_platform",
     "get_writable_path",
+    "is_vllm_installed",
     "prompt_packs",
     "python_command",
     "remaining_days",

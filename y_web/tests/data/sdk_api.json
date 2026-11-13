@@ -9,6 +9,9 @@
     "HPC": {
       "kind": "value"
     },
+    "HpcClientForm": {
+      "kind": "class"
+    },
     "N_": {
       "kind": "function",
       "signature": "(message)"
@@ -35,6 +38,8 @@
       "kind": "module",
       "members": {
         "delete_pictures_of": "(agent_ids: \"'Iterable[int]'\") -> \"'int'\"",
+        "picture_of_username": "(username: \"'Any'\") -> \"'str'\"",
+        "random_cover_image_url": "() -> 'str'",
         "summarize_agent_custom_features_bulk": "(agent_ids: \"'Iterable[int]'\") -> \"'dict[int, dict]'\""
       }
     },
@@ -66,10 +71,12 @@
         "build_subprocess_env": "(extra: 'Optional[Dict[str, str]]' = None) -> 'Dict[str, str]'",
         "describe_client_failure": "(execution_log_path: 'Optional[str]') -> 'Optional[Dict[str, Any]]'",
         "detect_env_handler": "()",
+        "dispatch_platform_event": "(app, exp_id: \"'int'\", event: \"'str'\", payload: \"'dict'\") -> \"'int'\"",
         "exit_messages": "()",
         "get_external_repo_dir": "(repo_name)",
         "get_hpc_platform": "(platform_type) -> \"'HpcPlatform'\"",
         "get_writable_path": "(relative_path='')",
+        "is_vllm_installed": "()",
         "python_command": "() -> 'list'",
         "remaining_days": "(total_days: 'int', last_day: 'int', last_slot: 'int', slots_per_day: 'int') -> 'int'",
         "rewrite_server_config": "(new_folder: 'str', new_exp_name: 'str', new_db_uri: 'str', new_data_path: 'str') -> 'None'",
@@ -84,6 +91,7 @@
         "client_execution": "(client: 'Any') -> 'Any'",
         "database_type": "() -> 'str'",
         "db_session": "() -> 'Any'",
+        "ensure_experiment_schema": "(uri: 'str') -> 'None'",
         "experiment_bind_key": "(exp_id: 'int') -> 'str'",
         "experiment_folder": "(experiment: 'Any') -> 'str'",
         "experiment_name_taken": "(name: 'str') -> 'bool'",
@@ -95,6 +103,21 @@
         "sync_client_duration": "(client_config: 'str', client: 'Any') -> 'Optional[int]'",
         "writable_path": "(relative_path: 'str' = '') -> 'str'",
         "write_prompt_pack": "(name: 'str', destination: 'Any', language: 'Optional[str]' = None) -> 'None'"
+      }
+    },
+    "social": {
+      "kind": "module",
+      "members": {
+        "content_recsys_info": "(recsys_type, ui=None)",
+        "ensure_experiment_user": "(experiment: \"'Exps'\", *, account_id=None, **kwargs)",
+        "experiment_memory_enabled": "(exp_id)",
+        "get_avatars_dir": "() -> 'str'",
+        "get_experiment_engine_uri": "(experiment: \"'Exps'\") -> \"'Optional[str]'\"",
+        "get_safe_profile_pic": "(username, is_page=0)",
+        "get_suggested_users": "(username, pages=False)",
+        "get_unanswered_mentions": "(username, exp_id=None)",
+        "is_admin": "(username)",
+        "open_experiment_session": "(experiment: \"'Exps'\")"
       }
     },
     "template_name": {
@@ -116,6 +139,7 @@
         "get_experiment_folder_name": "(experiment)",
         "load_feed_experiment_context": "(uid, require_manage=True)",
         "load_ui_settings": "(exp_id: 'int') -> 'dict'",
+        "redirect_to_clients_page": "(experiment, current_endpoint)",
         "user_can_manage_experiment": "(admin_user, experiment)",
         "user_can_view_experiment": "(admin_user, experiment)"
       }
@@ -139,13 +163,17 @@
     "clients_page": "(self, simulator_type: 'str') -> 'str'",
     "creation_rules": "(self, simulator_type: 'str') -> 'CreationRules'",
     "details_context": "(self, experiment: 'Any') -> 'dict'",
+    "ensure_database_schema": "(self, engine: 'Any', uri: 'Optional[str]' = None) -> 'bool'",
     "entry_url": "(self, exp_id: 'int', user_id: 'int') -> 'Optional[str]'",
     "experiment_prompt_pack": "(self, simulator_type: 'str') -> 'Tuple[str, str]'",
     "extend_server_run": "(self, exp: 'Any', total_days: 'int') -> 'bool'",
     "failure_reason": "(self, log_path: 'str') -> 'str'",
     "feeds_context": "(self, experiment: 'Any', experiment_dir: 'str') -> 'Optional[dict]'",
+    "finish_hpc_client_config": "(self, config: 'dict', form: 'HpcClientForm', exp_dir: 'str', population_name: 'str') -> 'bool'",
     "folder_clone": "(self) -> 'Optional[Tuple[Any, Any]]'",
+    "hpc_agent_payload": "(self, payload: 'dict', agent: 'Any', ext_map: 'Mapping[str, Any]', *, is_page: 'bool' = False, normalize_recsys: 'bool' = True) -> 'None'",
     "hpc_client_files": "(self, exp_folder: 'str', client: 'Any', population: 'Any') -> 'Tuple[str, str, str]'",
+    "hpc_client_sections": "(self, form: 'HpcClientForm') -> 'Optional[Tuple[dict, dict, dict]]'",
     "hpc_server_config": "(self, request: 'ServerConfigRequest') -> 'dict'",
     "import_uploaded_experiment": "(self, exp_dir: 'str', uid: 'str', exp_name_override: 'str', exp_group: 'str') -> 'Any'",
     "library": "(self, name: 'str') -> 'Any'",

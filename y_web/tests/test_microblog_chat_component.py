@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 from sqlalchemy import select
 
+from y_web.tests._platform_repos import requires_platform
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
@@ -103,6 +104,7 @@ def test_microblog_chat_reply_strips_hashtags():
     assert "schools" in cleaned
 
 
+@requires_platform("YPhotoSharing")
 def test_photo_sharing_experiment_db_path_prefers_yphotosharing(monkeypatch, tmp_path):
     from y_web.routes.api.interview import _memory
 

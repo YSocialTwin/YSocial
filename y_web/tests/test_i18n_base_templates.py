@@ -9,6 +9,7 @@ from flask_login import LoginManager
 
 import y_web.i18n as i18n
 from y_web.routes.i18n import i18n_bp
+from y_web.tests._platform_repos import template_file
 
 TEMPLATES = pathlib.Path(__file__).resolve().parents[1] / "templates"
 
@@ -44,7 +45,7 @@ def test_base_templates_set_lang_and_dir():
         "login/onboarding.html",
         "login/scene_base.html",
     ):
-        text = (TEMPLATES / name).read_text(encoding="utf-8")
+        text = template_file(TEMPLATES, name).read_text(encoding="utf-8")
         assert 'lang="{{ html_lang() }}"' in text, name
         assert 'dir="{{ text_direction() }}"' in text, name
 

@@ -13,6 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from y_web.tests._platform_repos import requires_platform
+
 pytestmark = pytest.mark.unit
 
 PLATFORMS = ("microblogging", "photo_sharing")
@@ -230,6 +232,7 @@ def test_microblogging_client_command(monkeypatch, layout):
     ]
 
 
+@requires_platform("YPhotoSharing")
 def test_photo_client_command_and_normalized_config(monkeypatch, layout):
     call = _start_client(monkeypatch, layout, "photo_sharing")
     f = layout.exp_folder
@@ -259,6 +262,7 @@ def test_frozen_client_commands(monkeypatch, layout):
     ]
 
 
+@requires_platform("YPhotoSharing")
 def test_frozen_photo_client_command(monkeypatch, layout):
     call = _start_client(monkeypatch, layout, "photo_sharing", frozen=True)
     script = str(layout.base / "external" / "YPhotoSharing" / "run_client.py")

@@ -187,6 +187,46 @@
     "admin/_im_analytics_note.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/slots/analytics_notes.html"
+    },
+    "admin/clients_photo.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/admin/clients_photo.html"
+    },
+    "admin/experiment_details_photo.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/admin/experiment_details_photo.html"
+    },
+    "photo/base.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/base.html"
+    },
+    "photo/components/posts.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/components/posts.html"
+    },
+    "photo/components/sidebar.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/components/sidebar.html"
+    },
+    "photo/feed.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/feed.html"
+    },
+    "photo/messages.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/messages.html"
+    },
+    "photo/profile.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/profile.html"
+    },
+    "photo/search.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/search.html"
+    },
+    "photo/suggestions.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/photo/suggestions.html"
     }
   },
   "url_map": {
@@ -255,6 +295,31 @@
       "/admin/reset_prompts_im/<int:uid> -> experiments.reset_prompts_im",
       "/admin/update_im_advanced_settings/<int:uid> -> experiments.update_im_advanced_settings",
       "/admin/update_prompts_im/<int:uid> -> experiments.update_prompts_im"
+    ],
+    "YPhotoSharing": [
+      "/<int:exp_id>/api/photo/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.api_photo_feed",
+      "/<int:exp_id>/api/photo/post/<photo_id> -> main.api_photo_post",
+      "/<int:exp_id>/api/photo/post/<photo_id>/bookmark -> main.api_photo_toggle_bookmark",
+      "/<int:exp_id>/api/photo/post/<photo_id>/comments -> main.api_photo_create_comment",
+      "/<int:exp_id>/api/photo/post/<photo_id>/delete -> main.api_photo_delete_post",
+      "/<int:exp_id>/api/photo/post/<photo_id>/like -> main.api_photo_toggle_like",
+      "/<int:exp_id>/api/photo/post/<photo_id>/share -> main.api_photo_share_post",
+      "/<int:exp_id>/api/photo/profile/<user_id>/connections/<kind> -> main.api_photo_profile_connections",
+      "/<int:exp_id>/api/photo/profile/update -> main.api_photo_profile_update",
+      "/<int:exp_id>/api/photo/search -> main.api_photo_search",
+      "/<int:exp_id>/api/photo/share -> main.api_photo_share",
+      "/<int:exp_id>/api/photo/story/<story_id>/view -> main.api_photo_story_view",
+      "/<int:exp_id>/api/photo/story/create -> main.api_photo_create_story",
+      "/<int:exp_id>/api/photo/switch/user -> main.api_photo_switch_user",
+      "/<int:exp_id>/api/photo/switch/users -> main.api_photo_switch_users",
+      "/<int:exp_id>/photo/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.photo_feed",
+      "/<int:exp_id>/photo/media/<path:filename> -> main.photo_media",
+      "/<int:exp_id>/photo/messages -> main.photo_messages",
+      "/<int:exp_id>/photo/profile/<user_id>/<string:mode>/<int:page> -> main.photo_profile",
+      "/<int:exp_id>/photo/search -> main.photo_search",
+      "/<int:exp_id>/photo/suggestions -> main.photo_suggestions",
+      "/admin/clients_photo/<idexp> -> clientsr.clients_photo",
+      "/photo/feed -> main.photo_feed_logged"
     ]
   },
   "known_platforms": {
@@ -263,6 +328,9 @@
     ],
     "YInstantMessaging": [
       "instant_messaging"
+    ],
+    "YPhotoSharing": [
+      "photo_sharing"
     ]
   }
 }
