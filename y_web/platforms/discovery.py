@@ -28,10 +28,9 @@ from typing import Dict, List, Optional, Tuple
 
 from y_web.platforms import registry
 from y_web.platforms.base import PlatformProvider
+from y_web.sdk.version import PLATFORM_API
 
-#: version of the contract between the core and a platform provider: a provider works when it was written for
-#: the same major version and a minor version not newer than this one
-PLATFORM_API = "1.0"
+# a provider works when it was written for the same major version of PLATFORM_API and a minor one not newer
 
 PACKAGE_FOLDER = "ysocial_platform"
 REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"

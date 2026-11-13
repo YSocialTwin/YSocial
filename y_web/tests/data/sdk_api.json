@@ -1,0 +1,83 @@
+{
+  "names": {
+    "COMMON_FRONTEND_CAPABILITIES": {
+      "kind": "value"
+    },
+    "CreationRules": {
+      "kind": "class"
+    },
+    "N_": {
+      "kind": "function",
+      "signature": "(message)"
+    },
+    "PLATFORM_API": {
+      "kind": "value"
+    },
+    "PlatformConfigError": {
+      "kind": "class"
+    },
+    "PlatformProvider": {
+      "kind": "class"
+    },
+    "ServerConfigRequest": {
+      "kind": "class"
+    },
+    "StandardRuntime": {
+      "kind": "class"
+    },
+    "gettext": {
+      "kind": "function",
+      "signature": "(message, **variables)"
+    },
+    "services": {
+      "kind": "module",
+      "members": {
+        "client_execution": "(client: 'Any') -> 'Any'",
+        "database_type": "() -> 'str'",
+        "db_session": "() -> 'Any'",
+        "experiment_folder": "(experiment: 'Any') -> 'str'",
+        "generate_hpc_server_config": "(**options: 'Any') -> 'dict'",
+        "hpc_experiment_folder": "(experiment: 'Any') -> 'str'",
+        "set_client_run_length": "(client_config: 'str', client: 'Any', unlimited_value: 'int' = -1) -> 'None'",
+        "sync_client_duration": "(client_config: 'str', client: 'Any') -> 'Optional[int]'",
+        "writable_path": "(relative_path: 'str' = '') -> 'str'",
+        "write_prompt_pack": "(name: 'str', destination: 'Any', language: 'Optional[str]' = None) -> 'None'"
+      }
+    },
+    "template_name": {
+      "kind": "function",
+      "signature": "(platform_key: 'str', name: 'str') -> 'str'"
+    }
+  },
+  "platform_api": "1.0",
+  "provider_hooks": {
+    "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
+    "blueprints": "(self) -> 'List[Any]'",
+    "client_details_page": "(self, simulator_type: 'str') -> 'str'",
+    "client_mode": "(self, simulator_type: 'str') -> 'str'",
+    "client_state_files": "(self, exp_dir: 'Path', client: 'Any') -> 'List[Path]'",
+    "clients_page": "(self, simulator_type: 'str') -> 'str'",
+    "creation_rules": "(self, simulator_type: 'str') -> 'CreationRules'",
+    "details_context": "(self, experiment: 'Any') -> 'dict'",
+    "entry_url": "(self, exp_id: 'int', user_id: 'int') -> 'Optional[str]'",
+    "experiment_prompt_pack": "(self, simulator_type: 'str') -> 'Tuple[str, str]'",
+    "folder_clone": "(self) -> 'Optional[Tuple[Any, Any]]'",
+    "hpc_client_files": "(self, exp_folder: 'str', client: 'Any', population: 'Any') -> 'Tuple[str, str, str]'",
+    "hpc_server_config": "(self, request: 'ServerConfigRequest') -> 'dict'",
+    "observer_url": "(self, exp_id: 'int') -> 'Optional[str]'",
+    "opinion_mode": "(self, simulator_type: 'str') -> 'str'",
+    "prepare_hpc_client_files": "(self, exp_folder: 'str', client: 'Any', population: 'Any', client_config: 'str') -> 'None'",
+    "prepare_hpc_client_start": "(self, client_config: 'str', client: 'Any') -> 'None'",
+    "prepare_hpc_server": "(self, exp_folder: 'str') -> 'None'",
+    "prompts_page": "(self, simulator_type: 'str') -> 'str'",
+    "resolve_simulator": "(self, simulator_type: 'str', available: 'Mapping[str, bool]') -> 'Tuple[str, Optional[str]]'",
+    "rounds_per_day": "(self, exp: 'Any') -> 'Optional[int]'",
+    "slots_per_day": "(self, exp_folder: 'str') -> 'int'",
+    "start_hpc_gateway": "(self, exp_folder: 'str') -> 'None'",
+    "stop_hpc_gateway": "(self, exp_folder: 'str') -> 'None'",
+    "sync_hpc_run_length": "(self, client_config: 'str', client: 'Any') -> 'None'",
+    "validate_before_start": "(self, exp: 'Any') -> 'Optional[str]'",
+    "validate_hpc_folder": "(self, exp_folder: 'str', runtime_dir: 'str') -> 'None'",
+    "write_new_experiment_files": "(self, exp_dir: 'str', prompt_language: 'str') -> 'None'"
+  }
+}

@@ -110,16 +110,12 @@ class Forum(PlatformProvider):
 
     def details_context(self, experiment: Any) -> dict:
         from y_web.routes.admin.sub.experiments._helpers import (
-            _get_database_type,
-            _get_experiment_folder,
             _read_forum_feed_health,
         )
-        from y_web.src.system.path_utils import get_writable_path
+        from y_web.sdk import services
 
         try:
-            exp_folder = _get_experiment_folder(
-                get_writable_path(), experiment, _get_database_type()
-            )
+            exp_folder = services.experiment_folder(experiment)
             return {
                 "forum_feed_health": _read_forum_feed_health(experiment, exp_folder)
             }
@@ -208,17 +204,12 @@ class Forum(PlatformProvider):
     def prepare_hpc_client_start(self, client_config: str, client: Any) -> None:
         # YForum resumes from the roster it saved: a client that never ran must read its population (and the
         # initial opinions in it) again, not an old roster left by an aborted start
-        from sqlalchemy import select
-
-        from y_web import db
-        from y_web.src.models import Client_Execution
+        from y_web.sdk import services
 
         try:
             from y_web.src.forum.roster import REMOVED, reset_unstarted_roster
 
-            execution = db.session.scalars(
-                select(Client_Execution).filter_by(client_id=client.id)
-            ).first()
+            execution = services.client_execution(client)
             if reset_unstarted_roster(client_config, client.name, execution) == REMOVED:
                 print(f"Removed the stale roster of forum client {client.name}")
         except Exception as exc:
@@ -229,9 +220,9 @@ class Forum(PlatformProvider):
     def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
         # the YForum client counts num_days from the day it registers, like the dating one: a restarted or
         # extended client gets what is left of Client.days, not the whole total again
-        from y_web.src.hpc.client import _set_dating_run_length
+        from y_web.sdk import services
 
-        _set_dating_run_length(client_config, client, unlimited_value=0)
+        services.set_client_run_length(client_config, client, unlimited_value=0)
 
 
 class PhotoSharing(PlatformProvider):
@@ -269,9 +260,9 @@ class PhotoSharing(PlatformProvider):
         )
 
     def write_new_experiment_files(self, exp_dir: str, prompt_language: str) -> None:
-        from y_web.src.system import prompt_packs
+        from y_web.sdk import services
 
-        prompt_packs.write_pack(
+        services.write_prompt_pack(
             "prompts_ygram.json",
             os.path.join(exp_dir, "prompts_ygram.json"),
             prompt_language,
@@ -373,12 +364,7 @@ class InstantMessaging(PlatformProvider):
     details_context_keys = ("im_analytics", "im_advanced", "im_switches")
 
     def details_context(self, experiment: Any) -> dict:
-        from y_web import db
-        from y_web.routes.admin.sub.experiments._helpers import (
-            _get_database_type,
-            _get_experiment_folder,
-        )
-        from y_web.src.system.path_utils import get_writable_path
+        from y_web.sdk import services
 
         context = {"im_analytics": None, "im_advanced": None, "im_switches": None}
         # the analytics cards follow the tables of the derived database, like every other platform's pages follow theirs
@@ -393,9 +379,7 @@ class InstantMessaging(PlatformProvider):
             from y_web.src.im.experiment_config import read_advanced_settings
 
             context["im_advanced"] = read_advanced_settings(
-                _get_experiment_folder(
-                    get_writable_path(), experiment, _get_database_type()
-                )
+                services.experiment_folder(experiment)
             )
         except Exception:
             context["im_advanced"] = None
@@ -404,7 +388,7 @@ class InstantMessaging(PlatformProvider):
 
             refresh_exp_stats(experiment)
         except Exception:
-            db.session.rollback()
+            services.db_session().rollback()
         try:
             from y_web.src.im.experiment_config import (
                 load_server_config,
@@ -424,11 +408,11 @@ class InstantMessaging(PlatformProvider):
         return f"/{exp_id}/im"
 
     def validate_before_start(self, exp: Any) -> Optional[str]:
-        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+        from y_web.sdk import services
         from y_web.src.im.validation import ImValidationError, validate_im_folder
 
         try:
-            validate_im_folder(_resolve_hpc_experiment_folder(exp))
+            validate_im_folder(services.hpc_experiment_folder(exp))
         except ImValidationError as exc:
             return _("The instant messaging configuration is not valid: %(why)s") % {
                 "why": "; ".join(exc.messages[:5])
@@ -557,10 +541,10 @@ class Dating(PlatformProvider):
             DatingValidationError,
             validate_dating_folder,
         )
-        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+        from y_web.sdk import services
 
         try:
-            validate_dating_folder(_resolve_hpc_experiment_folder(exp))
+            validate_dating_folder(services.hpc_experiment_folder(exp))
         except DatingValidationError as exc:
             return _("The dating configuration is not valid: %(why)s") % {
                 "why": "; ".join(exc.messages[:5])
@@ -607,9 +591,9 @@ class Dating(PlatformProvider):
         return HPC, None
 
     def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
-        from y_web.src.hpc.client import _set_dating_run_length
+        from y_web.sdk import services
 
-        _set_dating_run_length(client_config, client)
+        services.set_client_run_length(client_config, client)
 
     def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
         from y_web.src.dating.validation import validate_dating_folder

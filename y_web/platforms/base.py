@@ -200,9 +200,9 @@ class PlatformProvider:
 
     def sync_hpc_run_length(self, client_config: str, client: Any) -> None:
         """Make the client file say how long the client runs (``Client.days`` is the source of truth)."""
-        from y_web.src.hpc.client import _sync_hpc_client_duration_from_config
+        from y_web.sdk import services
 
-        _sync_hpc_client_duration_from_config(client_config, client)
+        services.sync_client_duration(client_config, client)
 
     def start_hpc_gateway(self, exp_folder: str) -> None:
         """Start what must run between the HPC server and its clients (the human gateway of a platform)."""
@@ -243,9 +243,9 @@ class PlatformProvider:
 
     def hpc_server_config(self, request: ServerConfigRequest) -> dict:
         """Server configuration of a new experiment on the HPC runtime (raise ``PlatformConfigError`` to refuse)."""
-        from y_web.routes.admin.sub.experiments._crud import generate_hpc_config
+        from y_web.sdk import services
 
-        return generate_hpc_config(
+        return services.generate_hpc_server_config(
             exp_name=request.exp_name,
             platform_type=self.key,
             db_type=request.db_type,
