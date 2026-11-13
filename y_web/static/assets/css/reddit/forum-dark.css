@@ -249,3 +249,9 @@ body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[st
     color: var(--fr-text) !important;
 }
 body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button svg { stroke: currentColor !important; }
+
+/* Structure-independent fallback for the vote pill (inline `min-width: 40px` box that holds the vote buttons). */
+body.is-dark .reddit-post [style*="min-width: 40px"], body.is-dark .reddit-post:not(.fr-expanded) [data-role="score"]:not(#x) { background-color: transparent; }
+body.is-dark .reddit-post div[style*="min-width: 40px"], body.is-dark .fr-view-compact .reddit-post div[style*="flex-direction: column"]:has(.vote-button) {
+    background: var(--fr-bg-hover) !important;
+}
