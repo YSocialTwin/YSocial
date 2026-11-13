@@ -23,7 +23,7 @@ from y_web.platforms.base import (
     StandardRuntime,
 )
 from y_web.platforms.extension import template_name
-from y_web.sdk import services
+from y_web.sdk import routes, services
 from y_web.sdk.version import PLATFORM_API
 
 __all__ = [
@@ -38,6 +38,7 @@ __all__ = [
     "ServerConfigRequest",
     "StandardRuntime",
     "gettext",
+    "routes",
     "services",
     "template_name",
 ]

@@ -313,6 +313,13 @@ class PlatformProvider:
     #: are reachable as ``@<key>/<name>`` and its ``static/`` as ``/platform-static/<key>/<name>``
     package_dir: Optional[Path] = None
 
+    def attach_routes(self) -> None:
+        """Import the modules that add views to the blueprints of the core (see :mod:`y_web.sdk.routes`).
+
+        Called once at startup, before the blueprints are registered; importing a module twice does nothing, so
+        a second application in the same process is fine.
+        """
+
     def blueprints(self) -> List[Any]:
         """Flask blueprints of the platform (participant pages, admin pages, APIs), registered at startup."""
         return []

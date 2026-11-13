@@ -144,10 +144,10 @@ def discover_platforms() -> Dict[str, List[str]]:
             continue
         if not problems:
             try:
-                registry.replace_builtin(
-                    _load_provider(repo_key, spec.path, declaration)
-                )
+                provider = _load_provider(repo_key, spec.path, declaration)
+                registry.replace_builtin(provider)
                 _DISCOVERED[repo_key] = declaration["key"]
+                provider.attach_routes()
                 problems = _register_i18n(repo_key, spec.path, declaration)
             except (
                 Exception

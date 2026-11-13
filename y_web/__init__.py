@@ -387,16 +387,19 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     app.jinja_env.globals["ws_origin"] = _ws_origin
     app.jinja_env.globals["ws_copies"] = _ws_copies
 
-    from y_web.routes import register_blueprints
-
-    register_blueprints(app)
-
+    # the platforms of installed repositories add their views to the blueprints of the core, so they are found
+    # first; their templates, static files and own blueprints follow the registration
     from y_web.platforms.discovery import discover_platforms
     from y_web.platforms.extension import install_platform_extensions
 
     for repo_key, problems in discover_platforms().items():
         for problem in problems:
             app.logger.warning("[platform repository %s] %s", repo_key, problem)
+
+    from y_web.routes import register_blueprints
+
+    register_blueprints(app)
+
     install_platform_extensions(app)
 
     from y_web.src.system.avatars_store import ensure_avatars, register_avatar_route

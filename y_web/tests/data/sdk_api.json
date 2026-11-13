@@ -35,6 +35,12 @@
       "kind": "function",
       "signature": "(message, **variables)"
     },
+    "routes": {
+      "kind": "module",
+      "members": {
+        "blueprint": "(name: 'str') -> 'Any'"
+      }
+    },
     "services": {
       "kind": "module",
       "members": {
@@ -58,6 +64,7 @@
   "platform_api": "1.0",
   "provider_hooks": {
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
+    "attach_routes": "(self) -> 'None'",
     "blueprints": "(self) -> 'List[Any]'",
     "client_details_page": "(self, simulator_type: 'str') -> 'str'",
     "client_mode": "(self, simulator_type: 'str') -> 'str'",
