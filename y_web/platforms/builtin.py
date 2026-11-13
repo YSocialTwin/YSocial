@@ -12,7 +12,9 @@ from y_web.platforms.base import (
     HPC,
     STANDARD,
     CreationRules,
+    PlatformConfigError,
     PlatformProvider,
+    ServerConfigRequest,
     StandardRuntime,
 )
 from y_web.platforms.registry import register
@@ -136,6 +138,31 @@ class Forum(PlatformProvider):
             )
         return STANDARD, None
 
+    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
+        from y_web.src.forum.experiment_config import (
+            ForumConfigError,
+            generate_forum_server_config,
+        )
+
+        try:
+            return generate_forum_server_config(
+                exp_name=request.exp_name,
+                db_uri=request.db_uri,
+                data_path=request.data_path,
+                is_remote=request.is_remote,
+                seed=request.seed,
+                topics=request.topics,
+                toxicity_annotation=request.toxicity_annotation,
+                sentiment_annotation=request.sentiment_annotation,
+                emotion_annotation=request.emotion_annotation,
+                opinion_dynamics_enabled=request.opinion_dynamics_enabled,
+                perspective_api=request.perspective_api,
+            )
+        except ForumConfigError as exc:
+            raise PlatformConfigError(
+                _("Invalid forum settings: %(why)s", why=str(exc))
+            ) from exc
+
     def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
         from y_web.src.forum.validation import validate_forum_folder
 
@@ -188,6 +215,21 @@ class PhotoSharing(PlatformProvider):
                 "Photo Sharing experiments are unavailable because YPhotoSharing is not present."
             )
         return HPC, None
+
+    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
+        from y_web.routes.admin.sub.experiments._crud import (
+            generate_photo_sharing_config,
+        )
+
+        return generate_photo_sharing_config(
+            exp_name=request.exp_name,
+            db_type=request.db_type,
+            db_uri=request.db_uri,
+            topics=request.topics,
+            data_path=request.data_path,
+            db_config_dict=request.db_config_dict,
+            is_remote=request.is_remote,
+        )
 
     extra_prompt_files = ("prompts_ygram.json",)
     prompt_pack = ("prompts_ygram.json", "prompts_ygram.json")
@@ -243,6 +285,30 @@ class InstantMessaging(PlatformProvider):
             database="own",
             sqlite_only_note="Instant messaging experiments use SQLite even if the platform uses PostgreSQL",
         )
+
+    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
+        from y_web.routes.admin.sub.experiments._im import (
+            ImConfigError,
+            generate_im_server_config,
+        )
+
+        try:
+            # run length, start date and round length come from the client form; humans can register
+            # at any time, so the gateway is always part of an IM experiment
+            return generate_im_server_config(
+                exp_name=request.exp_name,
+                db_uri=request.db_uri,
+                data_path=request.data_path,
+                is_remote=request.is_remote,
+                toxicity_annotation=request.toxicity_annotation,
+                sentiment_annotation=request.sentiment_annotation,
+                emotion_annotation=request.emotion_annotation,
+                opinion_dynamics_enabled=request.opinion_dynamics_enabled,
+            )
+        except ImConfigError as exc:
+            raise PlatformConfigError(
+                _("Invalid instant messaging settings: %(why)s", why=str(exc))
+            ) from exc
 
     def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
         if not available.get("instant_messaging"):
@@ -310,6 +376,28 @@ class Dating(PlatformProvider):
             database="own",
             sqlite_only_note="Dating experiments use SQLite even if the platform uses PostgreSQL",
         )
+
+    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
+        from y_web.src.dating.experiment_config import (
+            DatingConfigError,
+            generate_dating_server_config,
+        )
+
+        try:
+            return generate_dating_server_config(
+                exp_name=request.exp_name,
+                db_uri=request.db_uri,
+                data_path=request.data_path,
+                is_remote=request.is_remote,
+                seed=request.seed,
+                toxicity_annotation=request.toxicity_annotation,
+                sentiment_annotation=request.sentiment_annotation,
+                emotion_annotation=request.emotion_annotation,
+            )
+        except DatingConfigError as exc:
+            raise PlatformConfigError(
+                _("Invalid dating settings: %(why)s", why=str(exc))
+            ) from exc
 
     def resolve_simulator(self, simulator_type: str, available: Mapping[str, bool]):
         if not available.get("dating"):

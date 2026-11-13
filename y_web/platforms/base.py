@@ -37,6 +37,34 @@ class CreationRules:
     sqlite_only_note: Optional[str] = None
 
 
+class PlatformConfigError(ValueError):
+    """The settings of a new experiment are refused by its platform; the message is translated and shown as is."""
+
+
+@dataclass(frozen=True)
+class ServerConfigRequest:
+    """Everything a platform may need to write the server configuration of a new HPC experiment."""
+
+    exp_name: str
+    db_type: str
+    db_uri: str
+    data_path: str
+    db_config_dict: Optional[Mapping[str, Any]]
+    is_remote: int
+    seed: Optional[str]
+    topics: List[str]
+    toxicity_annotation: bool
+    sentiment_annotation: bool
+    emotion_annotation: bool
+    opinion_dynamics_enabled: bool
+    perspective_api: Optional[str]
+    redis_enabled: bool
+    redis_host: Any
+    redis_port: Any
+    redis_password: Any
+    redis_sliding_window_days: int
+
+
 @dataclass(frozen=True)
 class StandardRuntime:
     """The Flask server/client pair that runs a platform in ``Standard`` mode (outside the HPC runtime)."""
@@ -192,3 +220,30 @@ class PlatformProvider:
     def creation_rules(self, simulator_type: str) -> CreationRules:
         """The rules a new experiment of this platform on ``simulator_type`` must respect."""
         return CreationRules()
+
+    def hpc_server_config(self, request: ServerConfigRequest) -> dict:
+        """Server configuration of a new experiment on the HPC runtime (raise ``PlatformConfigError`` to refuse)."""
+        from y_web.routes.admin.sub.experiments._crud import generate_hpc_config
+
+        return generate_hpc_config(
+            exp_name=request.exp_name,
+            platform_type=self.key,
+            db_type=request.db_type,
+            db_uri=request.db_uri,
+            redis_enabled=request.redis_enabled,
+            redis_host=request.redis_host,
+            redis_port=request.redis_port,
+            redis_password=request.redis_password,
+            redis_sliding_window_days=request.redis_sliding_window_days,
+            perspective_api=(
+                request.perspective_api if request.perspective_api else None
+            ),
+            toxicity_annotation=request.toxicity_annotation,
+            sentiment_annotation=request.sentiment_annotation,
+            emotion_annotation=request.emotion_annotation,
+            opinion_dynamics_enabled=request.opinion_dynamics_enabled,
+            topics=request.topics,
+            data_path=request.data_path,
+            db_config_dict=request.db_config_dict,
+            is_remote=request.is_remote,
+        )

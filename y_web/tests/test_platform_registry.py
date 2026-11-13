@@ -431,3 +431,92 @@ def test_creation_rules_match_the_previous_creation_logic():
         None,
         "none",
     )
+
+
+def _server_config_request(**overrides):
+    from y_web.platforms.base import ServerConfigRequest
+
+    values = dict(
+        exp_name="e",
+        db_type="sqlite",
+        db_uri="/tmp/x.db",
+        data_path="/tmp/x/",
+        db_config_dict=None,
+        is_remote=0,
+        seed=None,
+        topics=["a"],
+        toxicity_annotation=False,
+        sentiment_annotation=True,
+        emotion_annotation=False,
+        opinion_dynamics_enabled=False,
+        perspective_api="",
+        redis_enabled=False,
+        redis_host="h",
+        redis_port=1,
+        redis_password=None,
+        redis_sliding_window_days=2,
+    )
+    values.update(overrides)
+    return ServerConfigRequest(**values)
+
+
+def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypatch):
+    from y_web.platforms import registry
+    from y_web.routes.admin.sub.experiments import _crud
+
+    seen = {}
+    monkeypatch.setattr(
+        _crud, "generate_hpc_config", lambda **kw: seen.update(kw) or {"ok": 1}
+    )
+    config = registry.get("microblogging").hpc_server_config(
+        _server_config_request(perspective_api="")
+    )
+    assert config == {"ok": 1}
+    assert seen["platform_type"] == "microblogging"
+    assert seen["perspective_api"] is None  # an empty key means none
+    assert seen["topics"] == ["a"] and seen["redis_host"] == "h"
+
+
+@pytest.mark.parametrize(
+    "key, module, error, generator, message",
+    [
+        (
+            "dating",
+            "y_web.src.dating.experiment_config",
+            "DatingConfigError",
+            "generate_dating_server_config",
+            "Invalid dating settings: boom",
+        ),
+        (
+            "forum",
+            "y_web.src.forum.experiment_config",
+            "ForumConfigError",
+            "generate_forum_server_config",
+            "Invalid forum settings: boom",
+        ),
+        (
+            "instant_messaging",
+            "y_web.routes.admin.sub.experiments._im",
+            "ImConfigError",
+            "generate_im_server_config",
+            "Invalid instant messaging settings: boom",
+        ),
+    ],
+)
+def test_platform_config_errors_become_one_refusal(
+    app, monkeypatch, key, module, error, generator, message
+):
+    import importlib
+
+    from y_web.platforms import registry
+    from y_web.platforms.base import PlatformConfigError
+
+    mod = importlib.import_module(module)
+
+    def refuse(**kwargs):
+        raise getattr(mod, error)("boom")
+
+    monkeypatch.setattr(mod, generator, refuse)
+    with app.test_request_context():
+        with pytest.raises(PlatformConfigError, match=message):
+            registry.get(key).hpc_server_config(_server_config_request())

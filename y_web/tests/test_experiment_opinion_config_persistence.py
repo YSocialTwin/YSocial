@@ -224,9 +224,15 @@ def test_new_experiment_form_supports_photo_sharing_platform():
     assert 'value="photo_sharing"' in settings_template
     assert "Photo Sharing (e.g., Instagram)" in settings_template
     assert "photoSharingAvailable" in settings_js
-    assert 'platform_type == "photo_sharing"' in crud_source
-    assert 'simulator_type = "HPC"' in crud_source
-    assert "generate_photo_sharing_config(" in crud_source
+    # the platform forces the HPC runtime and writes its own server configuration
+    from y_web.platforms import registry
+
+    provider = registry.get("photo_sharing")
+    assert provider.resolve_simulator("Standard", {"photo_sharing": True}) == (
+        "HPC",
+        None,
+    )
+    assert "def generate_photo_sharing_config(" in crud_source
     assert '"server_name": "orchestrator_server"' in crud_source
     assert '"namespace": "yphotosharing"' in crud_source
     assert '"min_to_start": 1' in crud_source

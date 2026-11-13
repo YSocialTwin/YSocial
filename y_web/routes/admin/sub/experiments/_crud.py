@@ -38,6 +38,7 @@ from flask_login import current_user, login_required, login_user
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
+from y_web.platforms.base import PlatformConfigError, ServerConfigRequest
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.dating import is_dating_experiment
@@ -2437,64 +2438,14 @@ def create_experiment():
                 "password": parsed_uri.password or "password",
             }
 
-        if platform_type == "instant_messaging":
-            from ._im import ImConfigError, generate_im_server_config
-
-            try:
-                # run length, start date and round length come from the client form; humans can register
-                # at any time, so the gateway is always part of an IM experiment
-                config = generate_im_server_config(
+        try:
+            config = registry.resolve(platform_type).hpc_server_config(
+                ServerConfigRequest(
                     exp_name=exp_name,
+                    db_type=db_type,
                     db_uri=db_uri,
                     data_path=data_path,
-                    is_remote=is_remote,
-                    toxicity_annotation=toxicity_annotation,
-                    sentiment_annotation=sentiment_annotation,
-                    emotion_annotation=emotion_annotation,
-                    opinion_dynamics_enabled=opinion_dynamics_enabled,
-                )
-            except ImConfigError as exc:
-                shutil.rmtree(data_path, ignore_errors=True)
-                flash(
-                    _("Invalid instant messaging settings: %(why)s", why=str(exc)),
-                    "error",
-                )
-                return redirect(url_for("admin.dashboard"))
-        elif platform_type == "dating":
-            from y_web.src.dating.experiment_config import (
-                DatingConfigError,
-                generate_dating_server_config,
-            )
-
-            try:
-                config = generate_dating_server_config(
-                    exp_name=exp_name,
-                    db_uri=db_uri,
-                    data_path=data_path,
-                    is_remote=is_remote,
-                    seed=request.form.get("seed"),
-                    toxicity_annotation=toxicity_annotation,
-                    sentiment_annotation=sentiment_annotation,
-                    emotion_annotation=emotion_annotation,
-                )
-            except DatingConfigError as exc:
-                shutil.rmtree(data_path, ignore_errors=True)
-                flash(
-                    _("Invalid dating settings: %(why)s", why=str(exc)),
-                    "error",
-                )
-                return redirect(url_for("admin.dashboard"))
-        elif forum_hpc:
-            from y_web.src.forum.experiment_config import (
-                ForumConfigError,
-                generate_forum_server_config,
-            )
-
-            try:
-                config = generate_forum_server_config(
-                    exp_name=exp_name,
-                    db_uri=db_uri,
-                    data_path=data_path,
+                    db_config_dict=db_config_dict,
                     is_remote=is_remote,
                     seed=request.form.get("seed"),
                     topics=topics,
@@ -2503,49 +2454,17 @@ def create_experiment():
                     emotion_annotation=emotion_annotation,
                     opinion_dynamics_enabled=opinion_dynamics_enabled,
                     perspective_api=perspective_api,
+                    redis_enabled=redis_enabled,
+                    redis_host=redis_host,
+                    redis_port=redis_port,
+                    redis_password=redis_password,
+                    redis_sliding_window_days=redis_sliding_window_days,
                 )
-            except ForumConfigError as exc:
-                shutil.rmtree(data_path, ignore_errors=True)
-                flash(
-                    _("Invalid forum settings: %(why)s", why=str(exc)),
-                    "error",
-                )
-                return redirect(url_for("admin.dashboard"))
-        elif platform_type == "photo_sharing":
-            config = generate_photo_sharing_config(
-                exp_name=exp_name,
-                db_type=db_type,
-                db_uri=db_uri,
-                topics=topics,
-                data_path=data_path,
-                db_config_dict=db_config_dict,
-                is_remote=is_remote,
             )
-        else:
-            config = generate_hpc_config(
-                exp_name=exp_name,
-                platform_type=platform_type,
-                db_type=db_type,
-                db_uri=db_uri,
-                redis_enabled=redis_enabled,
-                redis_host=redis_host,
-                redis_port=redis_port,
-                redis_password=redis_password,
-                redis_sliding_window_days=redis_sliding_window_days,
-                perspective_api=(
-                    perspective_api
-                    if perspective_api and len(perspective_api) > 0
-                    else None
-                ),
-                toxicity_annotation=toxicity_annotation,
-                sentiment_annotation=sentiment_annotation,
-                emotion_annotation=emotion_annotation,
-                opinion_dynamics_enabled=opinion_dynamics_enabled,
-                topics=topics,
-                data_path=data_path,
-                db_config_dict=db_config_dict,
-                is_remote=is_remote,
-            )
+        except PlatformConfigError as exc:
+            shutil.rmtree(data_path, ignore_errors=True)
+            flash(str(exc), "error")
+            return redirect(url_for("admin.dashboard"))
     else:
         # Standard simulator
         config = generate_standard_config(
