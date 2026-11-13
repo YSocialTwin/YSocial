@@ -237,3 +237,15 @@ body.is-dark .reddit-comment[data-vote="like"] .vote-button[data-action="like"] 
 body.is-dark .reddit-post[data-vote="dislike"] .vote-button[data-action="dislike"],
 body.is-dark .reddit-comment[data-vote="dislike"] .vote-button[data-action="dislike"] { color: #9a8fff !important; }
 body.is-dark [data-role="score"] { color: var(--fr-text) !important; }
+
+/* Compact cards: the vote pill is styled by long selectors with !important in forum-reddit.css; match their specificity. */
+body.is-dark .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
+body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"],
+body.is-dark .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"][style*="background"] {
+    background: var(--fr-bg-hover) !important;
+}
+body.is-dark .fr-view-compact .reddit-post.card.is-post:not(.fr-expanded) .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button,
+body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button {
+    color: var(--fr-text) !important;
+}
+body.is-dark .reddit-post.card .content-wrap > div[style*="border-top"] > div[style*="flex-direction: column"] .vote-button svg { stroke: currentColor !important; }
