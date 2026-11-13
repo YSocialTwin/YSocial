@@ -224,3 +224,16 @@ body.is-dark a.forum-topic-chip.is-neutral, body.is-dark .forum-topic-chip.is-ne
 body.is-dark .fr-pill, body.is-dark .fr-pill-soft { color: var(--fr-text) !important; }
 body.is-dark .tag.is-danger.is-light { background: #3b1a18 !important; color: #ff9d94 !important; }
 body.is-dark .tag:not(body) { color: var(--fr-text); }
+
+/* Vote boxes and other pale inline surfaces (templates + async_updates.js). */
+body.is-dark [style*="background: #f8f9fa"], body.is-dark [style*="background-color: #f8f9fa"],
+body.is-dark [style*="background: #fafafa"] { background: var(--fr-bg-hover) !important; }
+body.is-dark [style*="background: #fff4d6"] { background: #3d3216 !important; color: #ffe08a !important; }
+body.is-dark .vote-button { color: var(--fr-muted) !important; }
+body.is-dark .vote-button:hover { background: #2a4150 !important; color: var(--fr-text) !important; }
+body.is-dark .vote-button svg { stroke: currentColor; }
+body.is-dark .reddit-post[data-vote="like"] .vote-button[data-action="like"],
+body.is-dark .reddit-comment[data-vote="like"] .vote-button[data-action="like"] { color: #ff7a45 !important; }
+body.is-dark .reddit-post[data-vote="dislike"] .vote-button[data-action="dislike"],
+body.is-dark .reddit-comment[data-vote="dislike"] .vote-button[data-action="dislike"] { color: #9a8fff !important; }
+body.is-dark [data-role="score"] { color: var(--fr-text) !important; }

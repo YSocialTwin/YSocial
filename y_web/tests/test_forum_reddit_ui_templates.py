@@ -264,3 +264,8 @@ def test_night_mode_restyles_topic_chips():
     css = (ROOT / "static/assets/css/reddit/forum-dark.css").read_text(encoding="utf-8")
     for kind in ("positive", "negative", "neutral"):
         assert f"body.is-dark .forum-topic-chip.is-{kind}" in css
+
+
+def test_night_mode_restyles_vote_boxes():
+    css = (ROOT / "static/assets/css/reddit/forum-dark.css").read_text(encoding="utf-8")
+    assert "body.is-dark .vote-button" in css and "background: #f8f9fa" in css
