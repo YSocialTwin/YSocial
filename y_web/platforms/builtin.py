@@ -9,9 +9,9 @@ from typing import Any, List, Mapping, Optional, Tuple
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.platforms.base import (
+    COMMON_FRONTEND_CAPABILITIES,
     HPC,
     STANDARD,
-    COMMON_FRONTEND_CAPABILITIES,
     CreationRules,
     PlatformConfigError,
     PlatformProvider,
