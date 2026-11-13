@@ -127,3 +127,12 @@ def requires_platform(repo: str):
         not (EXTERNAL / repo / "ysocial_platform").is_dir(),
         reason=f"{repo} with its platform files is not installed",
     )
+
+
+def photo_available(monkeypatch, value):
+    """Make the Photo Sharing form sections (un)available to the administrator."""
+    from y_web.platforms import registry
+
+    monkeypatch.setattr(
+        registry.library("photo_sharing", "forms"), "available", lambda user=None: value
+    )

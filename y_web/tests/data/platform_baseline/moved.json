@@ -1,5 +1,9 @@
 {
   "templates": {
+    "admin/_agent_photo_sharing.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/admin/_agent_photo_sharing.html"
+    },
     "admin/_dating_agent_fields.html": {
       "repo": "YDating",
       "to": "@dating/admin/_dating_agent_fields.html"
@@ -12,6 +16,10 @@
       "repo": "YDating",
       "to": "@dating/admin/_dating_population_form.html"
     },
+    "admin/_im_analytics_note.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/slots/analytics_notes.html"
+    },
     "admin/client_details_dating.html": {
       "repo": "YDating",
       "to": "@dating/admin/client_details_dating.html"
@@ -19,6 +27,14 @@
     "admin/clients_dating.html": {
       "repo": "YDating",
       "to": "@dating/admin/clients_dating.html"
+    },
+    "admin/clients_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/clients_im.html"
+    },
+    "admin/clients_photo.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/admin/clients_photo.html"
     },
     "admin/dating_analytics.html": {
       "repo": "YDating",
@@ -40,9 +56,25 @@
       "repo": "YDating",
       "to": "@dating/admin/experiment_details_dating.html"
     },
+    "admin/experiment_details_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/experiment_details_im.html"
+    },
+    "admin/experiment_details_photo.html": {
+      "repo": "YPhotoSharing",
+      "to": "@photo_sharing/admin/experiment_details_photo.html"
+    },
+    "admin/opinion_configuration_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/opinion_configuration_im.html"
+    },
     "admin/prompts_dating.html": {
       "repo": "YDating",
       "to": "@dating/admin/prompts_dating.html"
+    },
+    "admin/prompts_im.html": {
+      "repo": "YInstantMessaging",
+      "to": "@instant_messaging/admin/prompts_im.html"
     },
     "dating/_avatar.html": {
       "repo": "YDating",
@@ -112,22 +144,6 @@
       "repo": "YDating",
       "to": "@dating/participant/unavailable.html"
     },
-    "admin/clients_im.html": {
-      "repo": "YInstantMessaging",
-      "to": "@instant_messaging/admin/clients_im.html"
-    },
-    "admin/experiment_details_im.html": {
-      "repo": "YInstantMessaging",
-      "to": "@instant_messaging/admin/experiment_details_im.html"
-    },
-    "admin/opinion_configuration_im.html": {
-      "repo": "YInstantMessaging",
-      "to": "@instant_messaging/admin/opinion_configuration_im.html"
-    },
-    "admin/prompts_im.html": {
-      "repo": "YInstantMessaging",
-      "to": "@instant_messaging/admin/prompts_im.html"
-    },
     "im/_avatar.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/im/_avatar.html"
@@ -183,18 +199,6 @@
     "im/unavailable.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/im/unavailable.html"
-    },
-    "admin/_im_analytics_note.html": {
-      "repo": "YInstantMessaging",
-      "to": "@instant_messaging/slots/analytics_notes.html"
-    },
-    "admin/clients_photo.html": {
-      "repo": "YPhotoSharing",
-      "to": "@photo_sharing/admin/clients_photo.html"
-    },
-    "admin/experiment_details_photo.html": {
-      "repo": "YPhotoSharing",
-      "to": "@photo_sharing/admin/experiment_details_photo.html"
     },
     "photo/base.html": {
       "repo": "YPhotoSharing",

@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.sql import func
 
 from y_web import db
+from y_web.platforms import registry
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.models import (
     AgeClass,
@@ -43,10 +44,10 @@ def __sample_round_actions(
     truncated to the integer support [min, max]. Falls back to uniform if invalid.
     """
 
-    return _sample_integer_from_distribution(min_v, max_v, param, dist)
+    return sample_integer_from_distribution(min_v, max_v, param, dist)
 
 
-def _sample_integer_from_distribution(
+def sample_integer_from_distribution(
     min_v: int,
     max_v: int,
     param: float,
@@ -269,7 +270,7 @@ def _generate_unique_name(
     return unique_name
 
 
-def _weighted_choice(distribution, default=None):
+def weighted_choice(distribution, default=None):
     if isinstance(distribution, dict) and distribution:
         items = []
         weights = []
@@ -289,82 +290,12 @@ def _weighted_choice(distribution, default=None):
     return default[0] if isinstance(default, (list, tuple)) and default else default
 
 
-def _build_photo_sharing_agent_ext_values(agent, photo_sharing_config):
-    config = photo_sharing_config or {}
-
-    def _percentage(name: str, fallback: float) -> float:
-        try:
-            value = float(config.get(name, fallback))
-        except (TypeError, ValueError):
-            return float(fallback)
-        return max(0.0, min(100.0, value))
-
-    favorite_filters = config.get("favorite_filters") or [
-        "warm",
-        "vintage",
-        "mono",
-        "grain",
-        "bright",
-        "clean",
-    ]
-    favorite_filters = [
-        str(tag).strip() for tag in favorite_filters if str(tag).strip()
-    ]
-    favorite_filters = list(dict.fromkeys(favorite_filters))
-    if favorite_filters:
-        max_pick = min(3, len(favorite_filters))
-        min_pick = 1 if max_pick > 0 else 0
-        selected_filters = random.sample(
-            favorite_filters,
-            k=random.randint(min_pick, max_pick),
-        )
-    else:
-        selected_filters = []
-
-    attention_budget_config = config.get("attention_budget") or {}
-    attention_budget = _sample_integer_from_distribution(
-        attention_budget_config.get("min", 50),
-        attention_budget_config.get("max", 150),
-        attention_budget_config.get("parameter"),
-        attention_budget_config.get("distribution", "Uniform"),
-    )
-
-    story_visibility = _weighted_choice(
-        config.get("story_visibility"),
-        default=["public", "followers", "private"],
-    )
-    creator_tier = _weighted_choice(
-        config.get("creator_tier"),
-        default=["standard", "pro", "influencer"],
-    )
-
-    bio_text = " | ".join(
-        part for part in [agent.profession, agent.nationality, agent.language] if part
-    )
-
-    return [
-        ("bio", bio_text),
-        (
-            "is_private",
-            random.random() < (_percentage("is_private_percentage", 20) / 100.0),
-        ),
-        (
-            "is_verified",
-            random.random() < (_percentage("is_verified_percentage", 10) / 100.0),
-        ),
-        ("attention_budget", attention_budget),
-        ("favorite_filters", selected_filters),
-        ("story_visibility", story_visibility),
-        ("creator_tier", creator_tier),
-    ]
-
-
 def generate_population(
     population_name,
     percentages=None,
     actions_config=None,
     profession_backgrounds=None,
-    photo_sharing_config=None,
+    platform_configs=None,
 ):
     """
     Generate a population of AI agents with realistic profiles.
@@ -557,19 +488,18 @@ def generate_population(
     # Now create Agent_Population relationships in bulk
     agent_populations_to_insert = []
     agent_exts_to_insert = []
+    platform_providers = registry.providers()
     for agent in agents_to_insert:
         agent_population = Agent_Population(
             agent_id=agent.id, population_id=population.id
         )
         agent_populations_to_insert.append(agent_population)
 
-        if photo_sharing_config is not None or (
-            getattr(population, "username_type", "microblogging") == "photo_sharing"
-        ):
-            ext_values = _build_photo_sharing_agent_ext_values(
-                agent, photo_sharing_config
+        for provider in platform_providers:
+            ext_values = provider.population_agent_ext(
+                agent, (platform_configs or {}).get(provider.key), population
             )
-            for feature_name, feature_value in ext_values:
+            for feature_name, feature_value in ext_values or []:
                 if feature_value in (None, "", []):
                     continue
                 agent_exts_to_insert.append(
@@ -596,7 +526,7 @@ def generate_population_from_config(
     percentages=None,
     actions_config=None,
     profession_backgrounds=None,
-    photo_sharing_config=None,
+    platform_configs=None,
 ):
     """Configuration-oriented entrypoint for population generation."""
     return generate_population(
@@ -604,7 +534,7 @@ def generate_population_from_config(
         percentages=percentages,
         actions_config=actions_config,
         profession_backgrounds=profession_backgrounds,
-        photo_sharing_config=photo_sharing_config,
+        platform_configs=platform_configs,
     )
 
 

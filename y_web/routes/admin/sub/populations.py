@@ -23,6 +23,7 @@ from sqlalchemy import delete, func, select
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
+from y_web.platforms.base import FormSectionError
 from y_web.src.agents import appearance_form as af
 from y_web.src.agents.custom_features import (
     agent_ext_entries_from_population_agent_payload,
@@ -151,44 +152,6 @@ def _distribution_total_is_valid(distribution):
     return abs(total - 100.0) < 0.01
 
 
-def _parse_json_array_form_value(raw_value, default=None):
-    if raw_value in (None, ""):
-        return list(default or [])
-    if isinstance(raw_value, list):
-        values = raw_value
-    else:
-        try:
-            values = json.loads(raw_value)
-        except (TypeError, ValueError, json.JSONDecodeError):
-            values = [item.strip() for item in str(raw_value).split(",")]
-    if not isinstance(values, list):
-        return list(default or [])
-    cleaned = []
-    for value in values:
-        text = str(value).strip()
-        if text and text not in cleaned:
-            cleaned.append(text)
-    return cleaned or list(default or [])
-
-
-def _parse_percentage_value(raw_value, default=0):
-    try:
-        return max(0, min(100, int(float(raw_value))))
-    except (TypeError, ValueError):
-        return int(default)
-
-
-def _parse_distribution_from_form(prefix):
-    distribution = request.form.get(f"{prefix}_distribution", "Uniform")
-    param_name = request.form.get(f"{prefix}_distribution_param", "")
-    return {
-        "min": request.form.get(f"{prefix}_min", "1"),
-        "max": request.form.get(f"{prefix}_max", "10"),
-        "distribution": distribution,
-        "parameter": param_name,
-    }
-
-
 @population.route("/admin/create_population_empty", methods=["POST", "GET"])
 @login_required
 def create_population_empty():
@@ -242,14 +205,32 @@ def _flag(name):
     return (request.form.get(name) or "").strip().lower() in {"1", "on", "true", "yes"}
 
 
-def _photo_sharing_available():
-    """Whether the Photo Sharing simulator is installed (and visible to this admin)."""
-    try:
-        from y_web.src.external_runtime import runtime_installed_and_visible
+def _platform_form_available():
+    """Which platforms offer optional sections in the population form to this admin: ``{key: bool}``."""
+    available = {}
+    for provider in registry.providers():
+        try:
+            available[provider.key] = bool(
+                provider.form_sections_available(current_user)
+            )
+        except Exception:
+            available[provider.key] = False
+    return available
 
-        return bool(runtime_installed_and_visible("photo_sharing", current_user))
-    except Exception:
-        return False
+
+def _platform_form_configs(username_type):
+    """What the optional platform sections of the form say, ``{key: config}`` for the ones that are on.
+
+    ``FormSectionError`` when a section is not valid (the caller shows its message).
+    """
+    configs = {}
+    for provider in registry.providers():
+        config = provider.population_form_config(
+            request.form, username_type, current_user
+        )
+        if config is not None:
+            configs[provider.key] = config
+    return configs
 
 
 def _discard_population(population):
@@ -359,15 +340,13 @@ def create_population():
     )
     # A population is not tied to a platform: the dedicated fields of a platform are optional sections of the
     # form (offered only when its simulator is installed), generated on the same agents.
-    include_photo_sharing = username_type == "photo_sharing" or _flag(
-        "include_photo_sharing"
-    )
     include_dating = _flag("include_dating")
     include_appearance = _flag("include_appearance")
-    if include_photo_sharing and username_type != "photo_sharing":
-        if not _photo_sharing_available():
-            flash(_("The Photo Sharing simulator is not installed."), "error")
-            return redirect(request.referrer)
+    try:
+        platform_configs = _platform_form_configs(username_type)
+    except FormSectionError as exc:
+        flash(str(exc), "error")
+        return redirect(request.referrer)
     if include_dating:
         dp = registry.library_or_none("dating", "population")
         if dp is None or not dp.runtime_available(current_user):
@@ -500,68 +479,6 @@ def create_population():
         "Zipf": zipf_s,
     }
 
-    photo_sharing_config = None
-    if include_photo_sharing:
-        photo_story_visibility = {
-            "public": _parse_percentage_value(
-                request.form.get("photo_story_public_percentage"), 20
-            ),
-            "followers": _parse_percentage_value(
-                request.form.get("photo_story_followers_percentage"), 65
-            ),
-            "private": _parse_percentage_value(
-                request.form.get("photo_story_private_percentage"), 15
-            ),
-        }
-        photo_creator_tier = {
-            "standard": _parse_percentage_value(
-                request.form.get("photo_creator_standard_percentage"), 60
-            ),
-            "pro": _parse_percentage_value(
-                request.form.get("photo_creator_pro_percentage"), 25
-            ),
-            "influencer": _parse_percentage_value(
-                request.form.get("photo_creator_influencer_percentage"), 15
-            ),
-        }
-        photo_sharing_config = {
-            "is_private_percentage": _parse_percentage_value(
-                request.form.get("photo_is_private_percentage"), 20
-            ),
-            "is_verified_percentage": _parse_percentage_value(
-                request.form.get("photo_is_verified_percentage"), 10
-            ),
-            "attention_budget": _parse_distribution_from_form("photo_attention_budget"),
-            "favorite_filters": _parse_json_array_form_value(
-                request.form.get("photo_favorite_filters"),
-                default=["warm", "vintage", "mono", "grain", "bright", "clean"],
-            ),
-            "story_visibility": photo_story_visibility,
-            "creator_tier": photo_creator_tier,
-        }
-
-        if not _distribution_total_is_valid(photo_story_visibility):
-            flash(_("Photo story visibility percentages must sum to 100%."), "error")
-            return redirect(request.referrer)
-        if not _distribution_total_is_valid(photo_creator_tier):
-            flash(_("Photo creator tier percentages must sum to 100%."), "error")
-            return redirect(request.referrer)
-
-        try:
-            photo_min = int(photo_sharing_config["attention_budget"]["min"])
-            photo_max = int(photo_sharing_config["attention_budget"]["max"])
-        except (TypeError, ValueError):
-            flash(_("Photo attention budget min/max must be valid integers."), "error")
-            return redirect(request.referrer)
-        if photo_min <= 0 or photo_max <= 0 or photo_min > photo_max:
-            flash(
-                _(
-                    "Photo attention budget must use positive min/max values with min <= max."
-                ),
-                "error",
-            )
-            return redirect(request.referrer)
-
     population = Population(
         name=name,
         descr=descr,
@@ -599,7 +516,7 @@ def create_population():
             percentages,
             actions_config,
             profession_backgrounds,
-            photo_sharing_config,
+            platform_configs,
         )
         if include_dating:
             _complete_with_dating_fields(population)
@@ -802,7 +719,8 @@ def populations():
         age_classes=age_classes,
         activity_profiles=activity_profiles,
         profession_backgrounds=profession_backgrounds,
-        photo_available=_photo_sharing_available(),
+        platform_form_available=_platform_form_available(),
+        any_platform_form=any(_platform_form_available().values()),
         **_appearance_form_context(),
         **_dating_form_context(),
     )

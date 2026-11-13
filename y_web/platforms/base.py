@@ -45,6 +45,13 @@ class PlatformConfigError(ValueError):
     """The settings of a new experiment are refused by its platform; the message is translated and shown as is."""
 
 
+class FormSectionError(ValueError):
+    """An optional platform section of a population or agent form holds a value that is not valid.
+
+    The message is shown to the administrator as it is (already translated).
+    """
+
+
 @dataclass(frozen=True)
 class ServerConfigRequest:
     """Everything a platform may need to write the server configuration of a new HPC experiment."""
@@ -246,6 +253,37 @@ class PlatformProvider:
 
         ``normalize_recsys`` is false for the callers that never rewrote the recommender id of the agent.
         """
+
+    def form_sections_available(self, admin_user: Any) -> bool:
+        """Whether the optional form sections of this platform are offered to ``admin_user``."""
+        return False
+
+    def population_form_config(
+        self, form: Mapping[str, Any], username_type: str, admin_user: Any
+    ) -> Optional[dict]:
+        """What the population-creation form says for this platform (``None`` when its section is off).
+
+        ``FormSectionError`` when a value is not valid or the platform is not installed.
+        """
+        return None
+
+    def population_agent_ext(
+        self, agent: Any, config: Optional[dict], population: Any
+    ) -> Optional[list]:
+        """The ``(feature name, value)`` pairs stored in ``Agent_Ext`` for an agent just generated.
+
+        ``config`` is what ``population_form_config`` returned (``None`` when the section was off); ``None`` means
+        this platform adds nothing to the agent.
+        """
+        return None
+
+    def agent_form_context(self) -> dict:
+        """Variables the agent-form section of this platform needs besides the page's own."""
+        return {}
+
+    def agent_form_ext(self, form: Mapping[str, Any], admin_user: Any) -> dict:
+        """``Agent_Ext`` values of the section of the single-agent form (empty when it is off)."""
+        return {}
 
     def validate_hpc_client(
         self, exp_folder: str, runtime_dir: str, client_config: str

@@ -2,6 +2,8 @@
 
 import pytest
 
+from y_web.tests._platform_repos import photo_available as _photo_available
+from y_web.tests._platform_repos import requires_platform
 from y_web.tests.test_dating_population import needs_runtime, routes  # noqa: F401
 
 pytestmark = pytest.mark.integration
@@ -92,6 +94,7 @@ def test_dating_fields_follow_the_gender_and_age_of_the_agent(app):
 
 
 @needs_runtime
+@requires_platform("YPhotoSharing")
 def test_optional_sections_create_a_standard_population_with_the_fields_asked_for(
     app, routes, monkeypatch  # noqa: F811
 ):
@@ -103,8 +106,8 @@ def test_optional_sections_create_a_standard_population_with_the_fields_asked_fo
 
     seen = {}
 
-    def fake_generate(name, percentages, actions, backgrounds, photo_config):
-        seen["photo"] = photo_config
+    def fake_generate(name, percentages, actions, backgrounds, platform_configs):
+        seen["photo"] = platform_configs.get("photo_sharing")
         pop = db.session.query(Population).filter_by(name=name).one()
         for i in range(6):
             a = Agent(
@@ -118,7 +121,7 @@ def test_optional_sections_create_a_standard_population_with_the_fields_asked_fo
         db.session.commit()
 
     monkeypatch.setattr(routes.mod, "generate_population", fake_generate)
-    monkeypatch.setattr(routes.mod, "_photo_sharing_available", lambda: True)
+    _photo_available(monkeypatch, True)
     monkeypatch.setattr(
         "y_web.src.dating.population.runtime_available", lambda user=None: True
     )
@@ -151,13 +154,14 @@ def test_optional_sections_create_a_standard_population_with_the_fields_asked_fo
 
 
 @needs_runtime
+@requires_platform("YPhotoSharing")
 def test_a_section_of_a_platform_that_is_not_installed_is_refused(
     app, routes, monkeypatch
 ):  # noqa: F811
     from y_web import db
     from y_web.src.models import Population
 
-    monkeypatch.setattr(routes.mod, "_photo_sharing_available", lambda: False)
+    _photo_available(monkeypatch, False)
     monkeypatch.setattr(routes.mod, "populations", lambda: "listed")
     with app.app_context():
         with app.test_request_context(

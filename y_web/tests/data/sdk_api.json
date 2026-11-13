@@ -6,6 +6,9 @@
     "CreationRules": {
       "kind": "class"
     },
+    "FormSectionError": {
+      "kind": "class"
+    },
     "HPC": {
       "kind": "value"
     },
@@ -148,6 +151,8 @@
   "platform_api": "1.0",
   "provider_hooks": {
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
+    "agent_form_context": "(self) -> 'dict'",
+    "agent_form_ext": "(self, form: 'Mapping[str, Any]', admin_user: 'Any') -> 'dict'",
     "annotation_problem": "(self, experiment: 'Any', label: 'str') -> 'str'",
     "apply_client_switches": "(self, client_config: 'dict', **switches: 'Any') -> 'bool'",
     "apply_experiment_switches": "(self, config: 'dict', original: 'Mapping[str, Any]', **switches: 'Any') -> 'bool'",
@@ -171,6 +176,7 @@
     "feeds_context": "(self, experiment: 'Any', experiment_dir: 'str') -> 'Optional[dict]'",
     "finish_hpc_client_config": "(self, config: 'dict', form: 'HpcClientForm', exp_dir: 'str', population_name: 'str') -> 'bool'",
     "folder_clone": "(self) -> 'Optional[Tuple[Any, Any]]'",
+    "form_sections_available": "(self, admin_user: 'Any') -> 'bool'",
     "hpc_agent_payload": "(self, payload: 'dict', agent: 'Any', ext_map: 'Mapping[str, Any]', *, is_page: 'bool' = False, normalize_recsys: 'bool' = True) -> 'None'",
     "hpc_client_files": "(self, exp_folder: 'str', client: 'Any', population: 'Any') -> 'Tuple[str, str, str]'",
     "hpc_client_sections": "(self, form: 'HpcClientForm') -> 'Optional[Tuple[dict, dict, dict]]'",
@@ -183,7 +189,9 @@
     "opinion_mode": "(self, simulator_type: 'str') -> 'str'",
     "owns_uploaded_folder": "(self, exp_dir: 'str') -> 'bool'",
     "participant_without_row": "(self, experiment: 'Any', user_id: 'Any', username: 'Any') -> 'Any'",
+    "population_agent_ext": "(self, agent: 'Any', config: 'Optional[dict]', population: 'Any') -> 'Optional[list]'",
     "population_file_name": "(self, population: 'Any') -> 'str'",
+    "population_form_config": "(self, form: 'Mapping[str, Any]', username_type: 'str', admin_user: 'Any') -> 'Optional[dict]'",
     "prepare_hpc_client_files": "(self, exp_folder: 'str', client: 'Any', population: 'Any', client_config: 'str') -> 'None'",
     "prepare_hpc_client_start": "(self, client_config: 'str', client: 'Any') -> 'None'",
     "prepare_hpc_server": "(self, exp_folder: 'str') -> 'None'",

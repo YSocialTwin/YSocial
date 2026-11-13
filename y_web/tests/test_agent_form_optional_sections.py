@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from y_web.tests._platform_repos import platform_template
+from y_web.tests._platform_repos import photo_available as _photo_available
+from y_web.tests._platform_repos import platform_template, requires_platform
 from y_web.tests.test_dating_agent_form import STANDARD, _post, agents_mod  # noqa: F401
 
 pytestmark = pytest.mark.integration
@@ -101,13 +102,14 @@ def test_the_picture_toggle_starts_one_background_job(
         assert started == []
 
 
+@requires_platform("YPhotoSharing")
 def test_photo_sharing_fields_are_stored_as_extensions(
     app, agents_mod, monkeypatch
 ):  # noqa: F811
     from y_web import db
     from y_web.src.models import Agent, Agent_Ext
 
-    monkeypatch.setattr(agents_mod.mod, "_photo_sharing_available", lambda: True)
+    _photo_available(monkeypatch, True)
     with app.app_context():
         _post(
             app, agents_mod,
@@ -125,13 +127,14 @@ def test_photo_sharing_fields_are_stored_as_extensions(
         }  # fmt: skip
 
 
+@requires_platform("YPhotoSharing")
 def test_photo_sharing_needs_the_simulator_and_valid_values(
     app, agents_mod, monkeypatch
 ):  # noqa: F811
     from y_web import db
     from y_web.src.models import Agent
 
-    monkeypatch.setattr(agents_mod.mod, "_photo_sharing_available", lambda: False)
+    _photo_available(monkeypatch, False)
     with app.app_context():
         _post(
             app,
@@ -139,7 +142,7 @@ def test_photo_sharing_needs_the_simulator_and_valid_values(
             {**STANDARD, "include_photo_sharing": "1", "photo_bio": "x"},
         )
         assert db.session.query(Agent).count() == 0
-        monkeypatch.setattr(agents_mod.mod, "_photo_sharing_available", lambda: True)
+        _photo_available(monkeypatch, True)
         _post(
             app,
             agents_mod,
@@ -181,16 +184,21 @@ def _part(name):
     """Source of a form section: the core's, or the Dating repository's for the Dating one."""
     if name.startswith("_dating"):
         return platform_template("YDating", f"admin/{name}.html")
+    if name.startswith("_agent_photo"):
+        return platform_template("YPhotoSharing", f"admin/{name}.html")
     return (TEMPLATES / f"{name}.html").read_text()
 
 
+@requires_platform("YPhotoSharing")
 def test_the_template_offers_the_sections_as_the_population_form_does():
     page = (TEMPLATES / "agents.html").read_text()
     assert (
         'name="include_appearance"' in page
-        and "{% if photo_available or dating_available %}" in page
+        and "{% if any_platform_form or dating_available %}" in page
     )
-    assert "{% if photo_available %}" in page
+    assert "{% if platform_form_available.photo_sharing %}" in platform_template(
+        "YPhotoSharing", "slots/agent_form_options.html"
+    )
     assert "{% if dating_available %}" in platform_template(
         "YDating", "slots/agent_form_options.html"
     )

@@ -1294,113 +1294,6 @@ var AdminPopulations = (function() {
       document.getElementById('activity_profiles_data').value = JSON.stringify(data);
   }
 
-  const PHOTO_FAVORITE_FILTER_DEFAULTS = [
-      'warm',
-      'vintage',
-      'mono',
-      'grain',
-      'bright',
-      'clean'
-  ];
-  const photoFavoriteFilters = new Set(PHOTO_FAVORITE_FILTER_DEFAULTS);
-  const photoSelectedFavoriteFilters = new Set(PHOTO_FAVORITE_FILTER_DEFAULTS);
-
-  function syncPhotoFavoriteFiltersField() {
-      const hidden = document.getElementById('photo_favorite_filters');
-      if (hidden) {
-          hidden.value = JSON.stringify(Array.from(photoSelectedFavoriteFilters));
-      }
-  }
-
-  function renderPhotoFavoriteFilters() {
-      const container = document.getElementById('photo_favorite_filters_tags');
-      if (!container) {
-          return;
-      }
-      container.innerHTML = Array.from(photoFavoriteFilters).map(tag => {
-          const active = photoSelectedFavoriteFilters.has(tag);
-          return `
-              <span class="profession-tag${active ? '' : ' inactive'}" data-filter-tag="${tag}" onclick="togglePhotoFavoriteFilterTag(this)">
-                  ${tag}
-              </span>
-          `;
-      }).join('');
-      syncPhotoFavoriteFiltersField();
-  }
-
-  function togglePhotoFavoriteFilterTag(tagElement) {
-      const tag = tagElement.dataset.filterTag;
-      if (!tag) {
-          return;
-      }
-      if (photoSelectedFavoriteFilters.has(tag)) {
-          photoSelectedFavoriteFilters.delete(tag);
-          tagElement.classList.add('inactive');
-      } else {
-          photoSelectedFavoriteFilters.add(tag);
-          photoFavoriteFilters.add(tag);
-          tagElement.classList.remove('inactive');
-      }
-      syncPhotoFavoriteFiltersField();
-      validatePhotoSharingDistributions();
-  }
-
-  function addPhotoFavoriteFilter() {
-      const input = document.getElementById('photo_favorite_filter_new');
-      if (!input) {
-          return;
-      }
-      const tag = input.value.trim().toLowerCase();
-      if (!tag) {
-          return;
-      }
-      photoFavoriteFilters.add(tag);
-      photoSelectedFavoriteFilters.add(tag);
-      input.value = '';
-      renderPhotoFavoriteFilters();
-      validatePhotoSharingDistributions();
-  }
-
-  function updatePhotoAttentionBudgetDistributionParams() {
-      const distribution = document.getElementById('photo_attention_budget_distribution');
-      const uniformParam = document.getElementById('photo_attention_budget_distribution_param');
-      const geometricParam = document.getElementById('photo_attention_budget_distribution_param_geometric');
-      const zipfParam = document.getElementById('photo_attention_budget_distribution_param_zipf');
-      const poissonParams = document.getElementById('photo_attention_budget_poisson_params');
-      const geometricParams = document.getElementById('photo_attention_budget_geometric_params');
-      const zipfParams = document.getElementById('photo_attention_budget_zipf_params');
-      if (!distribution || !uniformParam || !geometricParam || !zipfParam) {
-          return;
-      }
-
-      poissonParams.style.display = 'none';
-      geometricParams.style.display = 'none';
-      zipfParams.style.display = 'none';
-      uniformParam.disabled = true;
-      geometricParam.disabled = true;
-      zipfParam.disabled = true;
-
-      switch (distribution.value) {
-          case 'Poisson':
-              poissonParams.style.display = 'block';
-              uniformParam.disabled = false;
-              break;
-          case 'Geometric':
-              geometricParams.style.display = 'block';
-              geometricParam.disabled = false;
-              uniformParam.value = geometricParam.value;
-              break;
-          case 'Zipf':
-              zipfParams.style.display = 'block';
-              zipfParam.disabled = false;
-              uniformParam.value = zipfParam.value;
-              break;
-          default:
-              uniformParam.disabled = false;
-              break;
-      }
-  }
-
   // Optional platform fields (Photo Sharing, Dating): a section is shown, validated and submitted only when its
   // switch is on; the population itself is not tied to a platform.
   function isSwitchOn(id) {
@@ -1408,21 +1301,27 @@ var AdminPopulations = (function() {
       return !!box && box.checked;
   }
 
+  // The other platforms register their optional sections here, from the script of their own form slot:
+  // ``{toggle(), init(), isValid()}``, every member optional.
+  const platformSections = (window.YSocialPlatformSections = window.YSocialPlatformSections || []);
+
+  function eachPlatformSection(callback) {
+      platformSections.forEach(section => {
+          try {
+              callback(section);
+          } catch (error) {
+              console.error('Platform section failed', error);
+          }
+      });
+  }
+
   function isDatingPlatform() {
       return isSwitchOn('include_dating');
   }
 
   function togglePlatformFields() {
-      const photo = isSwitchOn('include_photo_sharing');
       const dating = isDatingPlatform();
-      const photoWrapper = document.getElementById('photo-sharing-config-wrapper');
-      if (photoWrapper) {
-          photoWrapper.classList.toggle('d-none', !photo);
-          if (photo) {
-              renderPhotoFavoriteFilters();
-              updatePhotoAttentionBudgetDistributionParams();
-          }
-      }
+      eachPlatformSection(section => section.toggle && section.toggle());
       const datingWrapper = document.getElementById('dating-config-wrapper');
       if (datingWrapper) {
           datingWrapper.classList.toggle('d-none', !dating);
@@ -1445,59 +1344,7 @@ var AdminPopulations = (function() {
       if (picturesBox) { picturesBox.classList.toggle('d-none', !pictures); }
       const picturesFields = document.getElementById('profile-pictures-fields');
       if (picturesFields) { picturesFields.disabled = !pictures; }
-      validatePhotoSharingDistributions();
       validateFormFields();
-  }
-
-  // kept for the pages and tests that still call the former name
-  function togglePhotoSharingConfigPanel() {
-      togglePlatformFields();
-  }
-
-  function validatePhotoSharingDistributions() {
-      const wrapper = document.getElementById('photo-sharing-config-wrapper');
-      if (!wrapper || wrapper.classList.contains('d-none')) {
-          return true;
-      }
-
-      const valuesFor = (ids) => ids.map(id => parseFloat((document.getElementById(id) || {}).value || '0') || 0);
-      const storyTotal = valuesFor([
-          'photo_story_public_percentage',
-          'photo_story_followers_percentage',
-          'photo_story_private_percentage'
-      ]).reduce((sum, value) => sum + value, 0);
-      const creatorTotal = valuesFor([
-          'photo_creator_standard_percentage',
-          'photo_creator_pro_percentage',
-          'photo_creator_influencer_percentage'
-      ]).reduce((sum, value) => sum + value, 0);
-
-      const storyValidation = document.getElementById('photo_story_visibility_validation');
-      const creatorValidation = document.getElementById('photo_creator_tier_validation');
-      if (storyValidation) {
-          storyValidation.style.display = Math.abs(storyTotal - 100) < 0.01 ? 'none' : 'block';
-      }
-      if (creatorValidation) {
-          creatorValidation.style.display = Math.abs(creatorTotal - 100) < 0.01 ? 'none' : 'block';
-      }
-
-      return Math.abs(storyTotal - 100) < 0.01 &&
-          Math.abs(creatorTotal - 100) < 0.01 &&
-          photoSelectedFavoriteFilters.size > 0;
-  }
-
-  function photoSharingFormIsValid() {
-      const wrapper = document.getElementById('photo-sharing-config-wrapper');
-      if (!wrapper || wrapper.classList.contains('d-none')) {
-          return true;
-      }
-
-      const minBudget = parseInt((document.getElementById('photo_attention_budget_min') || {}).value || '0', 10);
-      const maxBudget = parseInt((document.getElementById('photo_attention_budget_max') || {}).value || '0', 10);
-      if (Number.isNaN(minBudget) || Number.isNaN(maxBudget) || minBudget <= 0 || maxBudget <= 0 || minBudget > maxBudget) {
-          return false;
-      }
-      return validatePhotoSharingDistributions();
   }
 
   // Initialize on page load
@@ -1516,7 +1363,7 @@ var AdminPopulations = (function() {
                   validatePercentages();
                   updateHiddenField();
               }
-      renderPhotoFavoriteFilters();
+      eachPlatformSection(section => section.init && section.init());
       datingDefaults();
       appearanceDefaults();
       // image model: one of the YDating alternatives or any Hugging Face model id
@@ -1573,10 +1420,10 @@ var AdminPopulations = (function() {
       const hasEducation = Object.keys(multiSelectData.education_levels).length > 0;
       const hasPolitical = Object.keys(multiSelectData.political_leanings).length > 0;
       const hasToxicity = Object.keys(multiSelectData.toxicity_levels).length > 0;
-      const photoSharingValid = photoSharingFormIsValid();
+      const platformSectionsValid = platformSections.every(section => !section.isValid || section.isValid());
     
       const submitBtn = document.getElementById('create_population_btn');
-      const isValid = popName && nAgents && hasAgeClasses && hasEducation && hasPolitical && hasToxicity && photoSharingValid;
+      const isValid = popName && nAgents && hasAgeClasses && hasEducation && hasPolitical && hasToxicity && platformSectionsValid;
     
       submitBtn.disabled = !isValid;
     
@@ -1605,14 +1452,6 @@ var AdminPopulations = (function() {
           document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#ddd';
       }
 
-      const photoWrapper = document.getElementById('photo-sharing-config-wrapper');
-      if (photoWrapper && !photoWrapper.classList.contains('d-none')) {
-          const validPhoto = photoSharingValid;
-          const panel = document.getElementById('photo-sharing-config-panel');
-          if (panel) {
-              panel.style.borderColor = validPhoto ? '#ddd' : '#fcc';
-          }
-      }
     
       return isValid;
   }
@@ -1632,12 +1471,8 @@ var AdminPopulations = (function() {
       toggleActivityProfiles,
       toggleProfessionBackgrounds,
       toggleProfessionTag,
-      togglePhotoSharingConfigPanel,
       togglePlatformFields,
-      togglePhotoFavoriteFilterTag,
-      addPhotoFavoriteFilter,
-      updatePhotoAttentionBudgetDistributionParams,
-      validatePhotoSharingDistributions,
+      validateFormFields,
       updateFemalePercentage,
       updateMalePercentage,
       toggleDropdown,

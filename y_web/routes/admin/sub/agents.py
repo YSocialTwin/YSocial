@@ -333,16 +333,9 @@ def _discover_plugin_agent_types() -> list[dict]:
     return plugin_cards
 
 
-_STORY_VISIBILITY = ("public", "followers", "private")
-_CREATOR_TIERS = ("standard", "pro", "influencer")
-
-
-def _photo_sharing_available() -> bool:
-    """Whether the Photo Sharing simulator is installed (and visible to this admin)."""
+def _form_sections_available(provider) -> bool:
     try:
-        from y_web.src.external_runtime import runtime_installed_and_visible
-
-        return bool(runtime_installed_and_visible("photo_sharing", current_user))
+        return bool(provider.form_sections_available(current_user))
     except Exception:
         return False
 
@@ -351,13 +344,18 @@ def _agent_optional_context() -> dict:
     """Availability and defaults of the optional sections of the agent form (as in the population form)."""
     from y_web.src.agents import profile_pictures as pp
 
-    return {
+    context = {
         "appearance_defaults": pp.defaults(),
         "images_available": pp.available(),
-        "photo_available": _photo_sharing_available(),
-        "story_visibility_options": _STORY_VISIBILITY,
-        "creator_tier_options": _CREATOR_TIERS,
     }
+    available = {}
+    for provider in registry.providers():
+        available[provider.key] = _form_sections_available(provider)
+        if available[provider.key]:
+            context.update(provider.agent_form_context())
+    context["platform_form_available"] = available
+    context["any_platform_form"] = any(available.values())
+    return context
 
 
 def _appearance_features_from_form() -> list[dict]:
@@ -408,48 +406,11 @@ def _appearance_features_from_form() -> list[dict]:
     return entries
 
 
-def _photo_sharing_ext_from_form() -> dict:
-    """The Photo Sharing extensions of the optional section (none when it is off); ``ValueError`` when invalid."""
-    form = request.form
-    if not form.get("include_photo_sharing"):
-        return {}
-    if not _photo_sharing_available():
-        raise ValueError(_("The Photo Sharing simulator is not installed."))
+def _platform_ext_from_form() -> dict:
+    """The ``Agent_Ext`` values of the optional platform sections of the form; ``ValueError`` when one is invalid."""
     ext: dict = {}
-    bio = (form.get("photo_bio") or "").strip()
-    if bio:
-        ext["bio"] = bio
-    for name in ("is_private", "is_verified"):
-        value = (form.get("photo_" + name) or "").strip()
-        if value in ("yes", "no"):
-            ext[name] = json.dumps(value == "yes")
-    budget = (form.get("photo_attention_budget") or "").strip()
-    if budget:
-        try:
-            number = int(budget)
-        except ValueError:
-            number = 0
-        if number <= 0:
-            raise ValueError(_("Photo attention budget must be a positive integer."))
-        ext["attention_budget"] = str(number)
-    filters = [
-        t.strip()
-        for t in (form.get("photo_favorite_filters") or "").split(",")
-        if t.strip()
-    ]
-    if filters:
-        ext["favorite_filters"] = json.dumps(list(dict.fromkeys(filters)))
-    for name, allowed in (
-        ("story_visibility", _STORY_VISIBILITY),
-        ("creator_tier", _CREATOR_TIERS),
-    ):
-        value = (form.get("photo_" + name) or "").strip()
-        if value:
-            if value not in allowed:
-                raise ValueError(
-                    _("Photo Sharing: %(field)s has an unknown value.", field=name)
-                )
-            ext[name] = value
+    for provider in registry.providers():
+        ext.update(provider.agent_form_ext(request.form, current_user))
     return ext
 
 
@@ -1316,7 +1277,7 @@ def create_agent():
         _ensure_interest_topics_exist(structured_features)
         structured_features = structured_features + _appearance_features_from_form()
         structured_features = _with_dating_features(structured_features)
-        photo_ext = _photo_sharing_ext_from_form()
+        platform_ext = _platform_ext_from_form()
         picture_cfg = None
         if request.form.get("include_appearance") and request.form.get(
             "generate_profile_pictures"
@@ -1379,7 +1340,7 @@ def create_agent():
     db.session.flush()
     db.session.commit()
     replace_agent_custom_features(agent.id, structured_features)
-    for feature_name, feature_value in photo_ext.items():
+    for feature_name, feature_value in platform_ext.items():
         _upsert_agent_ext(agent.id, feature_name, feature_value)
     db.session.commit()
 
