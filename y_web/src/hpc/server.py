@@ -21,6 +21,7 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import db
+from y_web.platforms import registry
 from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Exps
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
@@ -228,30 +229,10 @@ def start_hpc_server(exp):
     server_dir = _external_repo_dir(spec.server_repo)
     script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_server.py")
 
+    provider = registry.resolve(exp.platform_type)
     if spec.validates_config:
-        if spec.key == "dating":
-            from y_web.src.dating.validation import validate_dating_folder
-
-            validate_dating_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
-        elif spec.key == "forum":
-            from y_web.src.forum.validation import validate_forum_folder
-
-            validate_forum_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
-        else:
-            from y_web.src.im.validation import validate_im_folder
-
-            validate_im_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
-    if spec.key == "dating":
-        # the settings that shape the run are fixed from the first start (S3 lock)
-        from y_web.src.dating import server_settings
-
-        _config_file = os.path.join(exp_folder, "server_config.json")
-        with open(_config_file, "r", encoding="utf-8") as handle:
-            _server_config = json.load(handle)
-        if server_settings.ensure_humans(_server_config):  # people are always welcome
-            with open(_config_file, "w", encoding="utf-8") as handle:
-                json.dump(_server_config, handle, indent=4)
-        server_settings.write_lock(exp_folder, _server_config)
+        provider.validate_hpc_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
+    provider.prepare_hpc_server(exp_folder)
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     # Check multiple PyInstaller indicators
@@ -556,8 +537,7 @@ def start_hpc_server(exp):
                 )
                 if attempt == max_retries - 1:
                     print("Warning: Server may not be fully started, proceeding anyway")
-    if getattr(exp, "platform_type", "") == "instant_messaging":
-        _start_im_gateway_when_ready(exp)
+    registry.resolve(getattr(exp, "platform_type", "")).after_hpc_server_started(exp)
     return process
 
 
@@ -623,23 +603,10 @@ def stop_hpc_server(exp_id):
             )
             return True
 
-        if exp.platform_type == "instant_messaging":
-            try:  # reverse of the start order: gateway first, then the server (plan 4.8)
-                from y_web.src.im.gateway_process import stop_gateway
-
-                stop_gateway(exp_folder)
-            except Exception as exc:  # noqa: BLE001
-                print(f"Warning: human gateway not stopped cleanly: {exc}")
-
-        if exp.platform_type == "dating":
-            try:  # reverse of the start order: gateway first, then the server
-                from y_web.src.dating.gateway import (
-                    stop_gateway as _stop_dating_gateway,
-                )
-
-                _stop_dating_gateway(exp_folder)
-            except Exception as exc:  # noqa: BLE001
-                print(f"Warning: human gateway not stopped cleanly: {exc}")
+        try:
+            registry.resolve(exp.platform_type).stop_hpc_gateway(exp_folder)
+        except Exception as exc:  # noqa: BLE001
+            print(f"Warning: human gateway not stopped cleanly: {exc}")
 
         pid = exp.server_pid
         print(f"Terminating HPC server process with PID {pid}...")
@@ -728,22 +695,14 @@ def start_server_screen(exp):
             f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
-    if exp.platform_type == "microblogging":
-        screen_command = build_screen_command(
-            script_path=f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py",
-            config_path=f"{config}",
-            screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
-        )
-
-    elif exp.platform_type == "forum":
-        screen_command = build_screen_command(
-            script_path=f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py",
-            config_path=f"{config}",
-            screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
-        )
-        # subprocess.run(cmd, shell=True, check=True)
-    else:
+    runtime = registry.resolve(exp.platform_type).standard_runtime
+    if runtime is None:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+    screen_command = build_screen_command(
+        script_path=f"{yserver_path}external{os.sep}{runtime.server_repo}{os.sep}y_server_run.py",
+        config_path=f"{config}",
+        screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
+    )
 
     # Command to run in the detached screen
     # screen_command = f"screen -dmS {exp_uid.replace(f'{os.sep}', '')} {flask_command}"

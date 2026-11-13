@@ -62,7 +62,6 @@
  "y_web/src/hpc/client.py": 24,
  "y_web/src/hpc/log_metrics.py": 4,
  "y_web/src/hpc/platforms.py": 22,
- "y_web/src/hpc/server.py": 12,
  "y_web/src/models/__init__.py": 1,
  "y_web/src/models/admin.py": 7,
  "y_web/src/models/experiment.py": 5,

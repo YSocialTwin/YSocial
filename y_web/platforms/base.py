@@ -146,3 +146,17 @@ class PlatformProvider:
 
     def start_hpc_gateway(self, exp_folder: str) -> None:
         """Start what must run between the HPC server and its clients (the human gateway of a platform)."""
+
+    # --- HPC runtime: the server ----------------------------------------------------------------------------------
+
+    def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
+        """Check the files of an experiment against what the HPC runtime of the platform needs (raise to refuse)."""
+
+    def prepare_hpc_server(self, exp_folder: str) -> None:
+        """Fix the settings of the run just before the HPC server starts."""
+
+    def after_hpc_server_started(self, exp: Any) -> None:
+        """What starts together with the HPC server (not with its clients)."""
+
+    def stop_hpc_gateway(self, exp_folder: str) -> None:
+        """Stop what ``start_hpc_gateway`` / ``after_hpc_server_started`` started, before the server is stopped."""

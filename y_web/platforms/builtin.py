@@ -77,6 +77,11 @@ class Forum(PlatformProvider):
             else "experiments.prompts_forum"
         )
 
+    def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
+        from y_web.src.forum.validation import validate_forum_folder
+
+        validate_forum_folder(exp_folder, runtime_dir)
+
     def prepare_hpc_client_start(self, client_config: str, client: Any) -> None:
         # YForum resumes from the roster it saved: a client that never ran must read its population (and the
         # initial opinions in it) again, not an old roster left by an aborted start
@@ -158,6 +163,22 @@ class InstantMessaging(PlatformProvider):
         config, agents, _ = super().hpc_client_files(exp_folder, client, population)
         return config, agents, os.path.join(exp_folder, "prompts_im.json")
 
+    def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
+        from y_web.src.im.validation import validate_im_folder
+
+        validate_im_folder(exp_folder, runtime_dir)
+
+    def after_hpc_server_started(self, exp: Any) -> None:
+        from y_web.src.hpc.server import _start_im_gateway_when_ready
+
+        _start_im_gateway_when_ready(exp)
+
+    def stop_hpc_gateway(self, exp_folder: str) -> None:
+        # reverse of the start order: gateway first, then the server (plan 4.8)
+        from y_web.src.im.gateway_process import stop_gateway
+
+        stop_gateway(exp_folder)
+
     def start_hpc_gateway(self, exp_folder: str) -> None:
         from y_web.src.hpc.client import _start_im_human_gateway
 
@@ -188,6 +209,31 @@ class Dating(PlatformProvider):
         from y_web.src.hpc.client import _set_dating_run_length
 
         _set_dating_run_length(client_config, client)
+
+    def validate_hpc_folder(self, exp_folder: str, runtime_dir: str) -> None:
+        from y_web.src.dating.validation import validate_dating_folder
+
+        validate_dating_folder(exp_folder, runtime_dir)
+
+    def prepare_hpc_server(self, exp_folder: str) -> None:
+        # the settings that shape the run are fixed from the first start (S3 lock)
+        import json
+
+        from y_web.src.dating import server_settings
+
+        config_file = os.path.join(exp_folder, "server_config.json")
+        with open(config_file, "r", encoding="utf-8") as handle:
+            server_config = json.load(handle)
+        if server_settings.ensure_humans(server_config):  # people are always welcome
+            with open(config_file, "w", encoding="utf-8") as handle:
+                json.dump(server_config, handle, indent=4)
+        server_settings.write_lock(exp_folder, server_config)
+
+    def stop_hpc_gateway(self, exp_folder: str) -> None:
+        # reverse of the start order: gateway first, then the server
+        from y_web.src.dating.gateway import stop_gateway
+
+        stop_gateway(exp_folder)
 
     def start_hpc_gateway(self, exp_folder: str) -> None:
         from y_web.src.dating.gateway import start_for_experiment

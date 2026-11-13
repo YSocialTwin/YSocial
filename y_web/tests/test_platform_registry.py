@@ -289,3 +289,29 @@ def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
             is not getattr(PlatformProvider, hook)
         }
         assert found == owners, hook
+
+
+def test_hpc_server_hooks_are_overridden_by_the_expected_platforms():
+    from y_web.platforms import registry
+    from y_web.platforms.base import PlatformProvider
+
+    expected = {
+        "validate_hpc_folder": {"forum", "instant_messaging", "dating"},
+        "prepare_hpc_server": {"dating"},
+        "after_hpc_server_started": {"instant_messaging"},
+        "stop_hpc_gateway": {"instant_messaging", "dating"},
+    }
+    for hook, owners in expected.items():
+        found = {
+            k
+            for k in registry.keys()
+            if getattr(type(registry.get(k)), hook)
+            is not getattr(PlatformProvider, hook)
+        }
+        assert found == owners, hook
+    # the platforms that validate their folder are exactly those the HPC table marks as validating
+    from y_web.src.hpc.platforms import HPC_PLATFORMS
+
+    assert {k for k, v in HPC_PLATFORMS.items() if v.validates_config} == expected[
+        "validate_hpc_folder"
+    ]
