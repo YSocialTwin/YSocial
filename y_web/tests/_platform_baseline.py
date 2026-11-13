@@ -15,9 +15,15 @@ record, before anything moves, the surface that has to survive:
 ``i18n_it``
     a digest of every Italian message (msgid -> translation), so that no translated string gets lost.
 
-The branch budget (``platform_branches``) works the other way round: it counts, per source file, the
-comparisons of ``platform_type`` with a platform name. The count may only go down (phase F1 replaces the
-branches with calls to the platform registry); the budget is lowered with ``--ratchet``.
+The budgets work the other way round: they count, per source file, how often the core names a platform. The
+counts may only go down (phases F1-F8 replace the names with calls to the platform registry); a budget is
+lowered with ``--ratchet``.
+
+``platform_branches``
+    comparisons of ``platform_type`` with a platform name.
+``platform_names``
+    every mention of a platform (``forum``, ``dating``, ``YForum``, ...) in the core code, not counting the
+    modules that belong to one platform and are the ones that will move to its repository.
 
 A snapshot only *forbids losing or changing* what it recorded: new routes, columns or templates are allowed.
 After an intended change, regenerate the files with::
@@ -42,8 +48,27 @@ TEMPLATES_DIR = ROOT / "y_web" / "templates"
 IT_CATALOG = ROOT / "y_web" / "translations" / "it" / "LC_MESSAGES" / "messages.po"
 
 _IGNORED_METHODS = {"HEAD", "OPTIONS"}
-BRANCHES_FILE = DATA_DIR / "platform_branches.json"
 _PLATFORM_BRANCH = re.compile(r"platform_type\s*(?:==|!=|\bnot\s+in\b|\bin\b)")
+_PLATFORM_NAME = re.compile(
+    r"\b(?:dating|instant_messaging|photo_sharing|forum|reddit|microblogging)\b"
+    r"|\bY(?:Dating|Forum|PhotoSharing|InstantMessaging)\b",
+    re.IGNORECASE,
+)
+# Modules that belong to a single platform: they move to its repository, so their own mentions do not count.
+PLATFORM_OWNED = (
+    "y_web/src/dating/",
+    "y_web/src/im/",
+    "y_web/src/forum/",
+    "y_web/routes/social/",
+    "y_web/routes/interactions/",
+    "y_web/routes/api/",
+    "y_web/routes/admin/sub/clients/_dating.py",
+    "y_web/routes/admin/sub/clients/_im.py",
+    "y_web/routes/admin/sub/clients/_forum_hpc.py",
+    "y_web/routes/admin/sub/experiments/_dating",
+    "y_web/routes/admin/sub/experiments/_im",
+    "y_web/platforms/",
+)
 
 
 def _digest(text: str, size: int) -> str:
@@ -124,23 +149,48 @@ def collect_i18n_it() -> Dict[str, str]:
     }
 
 
-def collect_platform_branches() -> Dict[str, int]:
-    """``{file: number of platform_type comparisons}`` for the application code (tests excluded)."""
+def _count_in_core(pattern, skip_owned: bool) -> Dict[str, int]:
     counts = {}
     for path in sorted((ROOT / "y_web").rglob("*.py")):
         relative = path.relative_to(ROOT).as_posix()
-        if "/tests/" in relative:
+        if "/tests/" in relative or (
+            skip_owned and relative.startswith(PLATFORM_OWNED)
+        ):
             continue
-        found = len(_PLATFORM_BRANCH.findall(path.read_text(encoding="utf-8")))
+        found = len(pattern.findall(path.read_text(encoding="utf-8")))
         if found:
             counts[relative] = found
     return counts
 
 
-def branch_budget_excess(budget: Dict[str, int], current: Dict[str, int]) -> List[str]:
-    """Files whose number of platform branches grew over the budget (a file not in the budget has budget 0)."""
+def collect_platform_branches() -> Dict[str, int]:
+    """``{file: number of platform_type comparisons}`` for the application code (tests excluded)."""
+    return _count_in_core(_PLATFORM_BRANCH, skip_owned=False)
+
+
+def collect_platform_names() -> Dict[str, int]:
+    """``{file: number of platform mentions}`` for the core code, platform-owned modules and tests excluded."""
+    return _count_in_core(_PLATFORM_NAME, skip_owned=True)
+
+
+BUDGETS: Dict[str, Callable[[], Dict[str, int]]] = {
+    "platform_branches": collect_platform_branches,
+    "platform_names": collect_platform_names,
+}
+
+
+def budget_path(name: str) -> Path:
+    return DATA_DIR / f"{name}.json"
+
+
+def load_budget(name: str) -> Dict[str, int]:
+    return json.loads(budget_path(name).read_text("utf-8"))
+
+
+def budget_excess(budget: Dict[str, int], current: Dict[str, int]) -> List[str]:
+    """Files whose count grew over the budget (a file not in the budget has budget 0)."""
     return [
-        f"{path}: {count} platform branches, budget {budget.get(path, 0)}"
+        f"{path}: {count} mentions, budget {budget.get(path, 0)}"
         for path, count in sorted(current.items())
         if count > budget.get(path, 0)
     ]
@@ -192,17 +242,22 @@ def lost_or_changed(baseline, current, path: str = "") -> List[str]:
     return [] if baseline == current else [f"{path}: {baseline!r} -> {current!r}"]
 
 
-def _ratchet() -> None:
-    """Lower the branch budget to the current counts; refuse to raise it."""
-    current = collect_platform_branches()
-    budget = json.loads(BRANCHES_FILE.read_text("utf-8"))
-    excess = branch_budget_excess(budget, current)
-    if excess:
-        sys.exit("the budget cannot grow:\n" + "\n".join(excess))
-    BRANCHES_FILE.write_text(
-        json.dumps(current, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+def _write_budget(name: str, counts: Dict[str, int]) -> None:
+    budget_path(name).write_text(
+        json.dumps(counts, indent=1, sort_keys=True) + "\n", encoding="utf-8"
     )
-    print(f"{sum(budget.values())} -> {sum(current.values())} platform branches")
+
+
+def _ratchet() -> None:
+    """Lower every budget to the current counts; refuse to raise one."""
+    for name, collector in BUDGETS.items():
+        current = collector()
+        budget = load_budget(name)
+        excess = budget_excess(budget, current)
+        if excess:
+            sys.exit(f"the {name} budget cannot grow:\n" + "\n".join(excess))
+        _write_budget(name, current)
+        print(f"{name}: {sum(budget.values())} -> {sum(current.values())}")
 
 
 def _update() -> None:
@@ -210,10 +265,8 @@ def _update() -> None:
 
     app = create_app(db_type="sqlite")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    BRANCHES_FILE.write_text(
-        json.dumps(collect_platform_branches(), indent=1, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    for name, collector in BUDGETS.items():
+        _write_budget(name, collector())
     for name in SNAPSHOT_NAMES:
         snapshot_path(name).write_text(
             json.dumps(collect(name, app), indent=1, sort_keys=True, ensure_ascii=False)
