@@ -54,3 +54,20 @@ def test_lost_or_changed_reports_removed_and_changed_entries():
         "/a/y: 2 removed",
         "/b: removed",
     ]
+
+
+def test_platform_branches_do_not_grow():
+    """New code asks the platform registry instead of comparing ``platform_type`` with a platform name."""
+    excess = baseline.branch_budget_excess(
+        baseline.json.loads(baseline.BRANCHES_FILE.read_text("utf-8")),
+        baseline.collect_platform_branches(),
+    )
+    assert not excess, "\n".join(excess)
+
+
+def test_branch_budget_flags_only_growth():
+    assert baseline.branch_budget_excess({"a.py": 2}, {"a.py": 1}) == []
+    assert baseline.branch_budget_excess({"a.py": 2}, {"a.py": 3, "b.py": 1}) == [
+        "a.py: 3 platform branches, budget 2",
+        "b.py: 1 platform branches, budget 0",
+    ]

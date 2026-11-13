@@ -15,6 +15,10 @@ record, before anything moves, the surface that has to survive:
 ``i18n_it``
     a digest of every Italian message (msgid -> translation), so that no translated string gets lost.
 
+The branch budget (``platform_branches``) works the other way round: it counts, per source file, the
+comparisons of ``platform_type`` with a platform name. The count may only go down (phase F1 replaces the
+branches with calls to the platform registry); the budget is lowered with ``--ratchet``.
+
 A snapshot only *forbids losing or changing* what it recorded: new routes, columns or templates are allowed.
 After an intended change, regenerate the files with::
 
@@ -26,6 +30,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Callable, Dict, List
@@ -37,6 +42,8 @@ TEMPLATES_DIR = ROOT / "y_web" / "templates"
 IT_CATALOG = ROOT / "y_web" / "translations" / "it" / "LC_MESSAGES" / "messages.po"
 
 _IGNORED_METHODS = {"HEAD", "OPTIONS"}
+BRANCHES_FILE = DATA_DIR / "platform_branches.json"
+_PLATFORM_BRANCH = re.compile(r"platform_type\s*(?:==|!=|\bnot\s+in\b|\bin\b)")
 
 
 def _digest(text: str, size: int) -> str:
@@ -117,6 +124,28 @@ def collect_i18n_it() -> Dict[str, str]:
     }
 
 
+def collect_platform_branches() -> Dict[str, int]:
+    """``{file: number of platform_type comparisons}`` for the application code (tests excluded)."""
+    counts = {}
+    for path in sorted((ROOT / "y_web").rglob("*.py")):
+        relative = path.relative_to(ROOT).as_posix()
+        if "/tests/" in relative:
+            continue
+        found = len(_PLATFORM_BRANCH.findall(path.read_text(encoding="utf-8")))
+        if found:
+            counts[relative] = found
+    return counts
+
+
+def branch_budget_excess(budget: Dict[str, int], current: Dict[str, int]) -> List[str]:
+    """Files whose number of platform branches grew over the budget (a file not in the budget has budget 0)."""
+    return [
+        f"{path}: {count} platform branches, budget {budget.get(path, 0)}"
+        for path, count in sorted(current.items())
+        if count > budget.get(path, 0)
+    ]
+
+
 def collect(name: str, app=None):
     collectors: Dict[str, Callable[[], object]] = {
         "url_map": lambda: collect_url_map(app),
@@ -163,11 +192,28 @@ def lost_or_changed(baseline, current, path: str = "") -> List[str]:
     return [] if baseline == current else [f"{path}: {baseline!r} -> {current!r}"]
 
 
+def _ratchet() -> None:
+    """Lower the branch budget to the current counts; refuse to raise it."""
+    current = collect_platform_branches()
+    budget = json.loads(BRANCHES_FILE.read_text("utf-8"))
+    excess = branch_budget_excess(budget, current)
+    if excess:
+        sys.exit("the budget cannot grow:\n" + "\n".join(excess))
+    BRANCHES_FILE.write_text(
+        json.dumps(current, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(f"{sum(budget.values())} -> {sum(current.values())} platform branches")
+
+
 def _update() -> None:
     from y_web import create_app
 
     app = create_app(db_type="sqlite")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    BRANCHES_FILE.write_text(
+        json.dumps(collect_platform_branches(), indent=1, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     for name in SNAPSHOT_NAMES:
         snapshot_path(name).write_text(
             json.dumps(collect(name, app), indent=1, sort_keys=True, ensure_ascii=False)
@@ -178,6 +224,10 @@ def _update() -> None:
 
 
 if __name__ == "__main__":
-    if "--update" not in sys.argv[1:]:
-        sys.exit("usage: python -m y_web.tests._platform_baseline --update")
-    _update()
+    option = sys.argv[1] if len(sys.argv) == 2 else ""
+    if option == "--update":
+        _update()
+    elif option == "--ratchet":
+        _ratchet()
+    else:
+        sys.exit("usage: python -m y_web.tests._platform_baseline --update | --ratchet")
