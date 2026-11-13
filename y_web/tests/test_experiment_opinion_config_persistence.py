@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from y_web.tests._platform_repos import photo_file, platform_source
+from y_web.tests._platform_repos import forum_file, photo_file, platform_source
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -157,7 +157,7 @@ def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
 def test_stopped_experiments_allow_client_configuration_updates():
     template_paths = [
         str(_REPO_ROOT / "y_web/templates/admin/experiment_details.html"),
-        str(_REPO_ROOT / "y_web/templates/admin/experiment_details_forum.html"),
+        forum_file("y_web/templates/admin/experiment_details_forum.html"),
         str(photo_file("y_web/templates/admin/experiment_details_photo.html")),
     ]
 
@@ -184,7 +184,7 @@ def test_stopped_experiments_allow_rename_form_and_route():
         "r",
     ).read()
     forum_template = open(
-        str(_REPO_ROOT / "y_web/templates/admin/experiment_details_forum.html"),
+        forum_file("y_web/templates/admin/experiment_details_forum.html"),
         "r",
     ).read()
 
@@ -251,7 +251,7 @@ def test_client_details_pages_expose_editable_simulation_and_action_fields():
         "r",
     ).read()
     forum_template = open(
-        str(_REPO_ROOT / "y_web/templates/admin/client_details_forum.html"),
+        forum_file("y_web/templates/admin/client_details_forum.html"),
         "r",
     ).read()
 
@@ -381,7 +381,7 @@ def test_population_recsys_sync_rewrites_all_agents_in_place(tmp_path):
 def test_client_details_pages_expose_memory_and_archetype_editors():
     for template_path in [
         str(_REPO_ROOT / "y_web/templates/admin/client_details.html"),
-        str(_REPO_ROOT / "y_web/templates/admin/client_details_forum.html"),
+        forum_file("y_web/templates/admin/client_details_forum.html"),
         str(_REPO_ROOT / "y_web/templates/admin/client_details_hpc.html"),
     ]:
         content = open(template_path, "r").read()

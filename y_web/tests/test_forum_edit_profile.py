@@ -10,6 +10,7 @@ import y_web.i18n as i18n
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 TEMPLATES = ROOT / "y_web" / "templates"
+FORUM_TEMPLATES = ROOT / "external" / "YForum" / "ysocial_platform" / "templates"
 
 
 def _app():
@@ -18,9 +19,17 @@ def _app():
     app.register_blueprint(Blueprint("main", __name__))
     app.jinja_loader = jinja2.ChoiceLoader(
         [
-            jinja2.DictLoader({"forum/header.html": "<!--header-->"}),
+            jinja2.DictLoader({"@forum/forum/header.html": "<!--header-->"}),
+            jinja2.PrefixLoader(
+                {"@forum": jinja2.FileSystemLoader(str(FORUM_TEMPLATES))}, delimiter="/"
+            ),
             jinja2.FileSystemLoader(str(TEMPLATES)),
         ]
+    )
+    app.add_url_rule(
+        "/platform-static/forum/<path:filename>",
+        endpoint="platform_static_forum",
+        view_func=lambda filename: "",
     )
     app.jinja_env.filters["user_image_id"] = lambda value: "1"
     i18n.init_i18n(app)
@@ -45,7 +54,7 @@ def _render(app, lang):
         "/1/edit_profile/7", headers={"Accept-Language": lang}
     ):
         return render_template(
-            "forum/edit_profile.html",
+            "@forum/forum/edit_profile.html",
             user=user,
             profile_pic="",
             available_profile_pics=["a.png"],
@@ -79,5 +88,5 @@ def test_forum_edit_profile_is_translated():
 
 
 def test_forum_menu_points_to_the_edit_profile_page():
-    source = (TEMPLATES / "forum" / "header.html").read_text(encoding="utf-8")
+    source = (FORUM_TEMPLATES / "forum" / "header.html").read_text(encoding="utf-8")
     assert source.count("/edit_profile/{{ logged_id }}") == 2

@@ -20,6 +20,6 @@ def test_fuzzy_match_tolerates_typos():
 def test_search_assets_wired_in_header():
     from pathlib import Path
 
-    root = Path(forum_routes.__file__).resolve().parents[2]
+    root = Path(forum_routes.__file__).resolve().parents[1]
     header = (root / "templates/forum/header.html").read_text()
     assert "forum-search-suggest.js" in header and "data-i18n" in header

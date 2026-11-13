@@ -215,7 +215,7 @@ def client_details_forum(uid):
     }
 
     return render_template(
-        "admin/client_details_forum.html",
+        "@forum/admin/client_details_forum.html",
         data=data,
         idx=idx,
         activity=activity,

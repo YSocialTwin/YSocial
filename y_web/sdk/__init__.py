@@ -43,7 +43,10 @@ __all__ = [
     "StandardRuntime",
     "gettext",
     "agents",
+    "commons",
+    "content",
     "federation",
+    "interview",
     "models",
     "routes",
     "runtime",
@@ -54,7 +57,17 @@ __all__ = [
 ]
 
 
-_LAZY = ("agents", "federation", "models", "runtime", "social", "web")
+_LAZY = (
+    "agents",
+    "commons",
+    "content",
+    "federation",
+    "interview",
+    "models",
+    "runtime",
+    "social",
+    "web",
+)
 
 
 def __getattr__(name):

@@ -18,6 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from y_web.tests._platform_repos import requires_platform
+
 pytestmark = pytest.mark.unit
 
 
@@ -34,6 +36,7 @@ def test_resolve_client_package_dir_microblogging():
     assert result.replace("\\", "/").endswith("external/YClient")
 
 
+@requires_platform("YForum")
 def test_resolve_client_package_dir_forum():
     """`_resolve_client_package_dir` returns …/external/YClientReddit for forum."""
     from y_web.src.simulation.process_runner import _resolve_client_package_dir

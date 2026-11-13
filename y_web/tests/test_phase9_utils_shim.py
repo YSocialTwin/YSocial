@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+from y_web.tests._platform_repos import requires_platform
+
 pytestmark = pytest.mark.unit
 
 
@@ -32,13 +34,19 @@ LEGACY_SYMBOL_RE = re.compile(
 )
 
 
+@requires_platform("YForum")
+def test_phase9_forum_actions_import():
+    from y_web.src.forum.actions import apply_vote, create_post_reddit
+
+    assert callable(apply_vote) and callable(create_post_reddit)
+
+
 def test_phase9_canonical_imports_work():
     from y_web.src.agents.population import generate_population_from_config
     from y_web.src.commons.service import fetch_feed_page, serialize_feed_posts
     from y_web.src.data_access.posts import get_user_recent_posts
     from y_web.src.data_access.trends import get_trending_hashtags
     from y_web.src.experiment.context import setup_experiment_context
-    from y_web.src.forum.actions import apply_vote, create_post_reddit
     from y_web.src.hpc.log_metrics import update_client_log_metrics
     from y_web.src.llm import Annotator, ContentAnnotator
     from y_web.src.models.admin import Admin_users, Exps
@@ -55,8 +63,6 @@ def test_phase9_canonical_imports_work():
     assert callable(start_server)
     assert callable(start_client)
     assert callable(update_client_log_metrics)
-    assert callable(create_post_reddit)
-    assert callable(apply_vote)
     assert callable(fetch_feed_page)
     assert callable(serialize_feed_posts)
     assert callable(get_suggested_posts)

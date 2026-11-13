@@ -157,8 +157,8 @@ def test_the_block_is_escaped_and_empty_without_a_quote():
     [
         "microblogging/components/posts.html",
         "microblogging/components/thread-post.html",
-        "forum/components/posts.html",
-        "forum/components/thread-post.html",
+        "@forum/forum/components/posts.html",
+        "@forum/forum/components/thread-post.html",
         "@photo_sharing/photo/components/posts.html",
         "@instant_messaging/im/_message.html",
     ],
@@ -168,6 +168,7 @@ def test_the_views_call_the_helper(path):
         from y_web.tests._platform_repos import platform_template
 
         repo = {
+            "@forum": "YForum",
             "@instant_messaging": "YInstantMessaging",
             "@photo_sharing": "YPhotoSharing",
         }[path.split("/", 1)[0]]

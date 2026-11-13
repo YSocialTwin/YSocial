@@ -17,17 +17,32 @@ import subprocess
 
 import pytest
 
+from y_web.tests._platform_repos import EXTERNAL, requires_platform, template_path
+
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
+_FORUM = requires_platform("YForum")
 CSS_FILES = {
     "admin": os.path.join(CSS_DIR, "admin-components.css"),
     "social": os.path.join(CSS_DIR, "social-components.css"),
-    "forum": os.path.join(CSS_DIR, "reddit", "forum-components.css"),
+    "forum": str(
+        EXTERNAL
+        / "YForum"
+        / "ysocial_platform"
+        / "static"
+        / "css"
+        / "forum-components.css"
+    ),
 }
+
+CSS_PARAMS = [
+    pytest.param(name, path, marks=_FORUM) if name == "forum" else (name, path)
+    for name, path in CSS_FILES.items()
+]
 
 # Target: style= count must not exceed this value
 STYLE_ATTR_TOTAL_LIMIT = 566
@@ -37,7 +52,7 @@ STYLE_ATTR_TOTAL_LIMIT = 566
 SECTION_LIMITS = {
     "admin (all)": (os.path.join(TEMPLATES_DIR, "admin"), 380),
     "admin/tutorials": (os.path.join(TEMPLATES_DIR, "admin", "tutorials"), 100),
-    "forum/components": (os.path.join(TEMPLATES_DIR, "forum", "components"), 60),
+    "forum/components": (template_path(TEMPLATES_DIR, "forum", "components"), 60),
     "microblogging/components": (
         os.path.join(TEMPLATES_DIR, "microblogging", "components"),
         20,
@@ -120,12 +135,12 @@ def _count_style_attrs(directory, recurse=True):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("css_name,css_path", CSS_FILES.items())
+@pytest.mark.parametrize("css_name,css_path", CSS_PARAMS)
 def test_css_file_exists(css_name, css_path):
     assert os.path.isfile(css_path), f"CSS file not found: {css_path}"
 
 
-@pytest.mark.parametrize("css_name,css_path", CSS_FILES.items())
+@pytest.mark.parametrize("css_name,css_path", CSS_PARAMS)
 def test_css_file_non_empty(css_name, css_path):
     assert os.path.getsize(css_path) > 0, f"CSS file is empty: {css_path}"
 
@@ -152,6 +167,7 @@ def test_social_css_has_class(class_name):
     ), f"Class '{class_name}' not found in social-components.css"
 
 
+@_FORUM
 @pytest.mark.parametrize("class_name", REQUIRED_YS_CLASSES_FORUM)
 def test_forum_css_has_class(class_name):
     """Required ys-* class must be in reddit/forum-components.css."""

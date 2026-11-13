@@ -14,7 +14,11 @@ import re
 
 import pytest
 
-from y_web.tests._platform_repos import photo_file
+from y_web.tests._platform_repos import (
+    core_and_platform_loader,
+    photo_file,
+    template_path,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -30,8 +34,8 @@ Y_WEB_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _template_path(*parts):
-    """Return the absolute path of a template given its relative parts."""
-    return os.path.join(TEMPLATES_DIR, *parts)
+    """Return the absolute path of a template given its relative parts (in the core or in its platform repository)."""
+    return template_path(TEMPLATES_DIR, *parts)
 
 
 def _exists(relative_path):
@@ -381,7 +385,7 @@ class TestIncludePathsValid:
         """Microblogging templates may include local or shared partials only."""
         wrong = []
         mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
-        pattern = re.compile(r"""{%-?\s+include\s+["']([\w/.-]+\.html)["']""")
+        pattern = re.compile(r"""{%-?\s+include\s+["']([\w/.@-]+\.html)["']""")
         for root, _dirs, files in os.walk(mb_dir):
             for fname in files:
                 if not fname.endswith(".html"):
@@ -403,8 +407,8 @@ class TestIncludePathsValid:
     def test_forum_includes_use_new_paths(self):
         """Forum templates may include local or shared partials only."""
         wrong = []
-        forum_dir = os.path.join(TEMPLATES_DIR, "forum")
-        pattern = re.compile(r"""{%-?\s+include\s+["']([\w/.-]+\.html)["']""")
+        forum_dir = _template_path("forum")
+        pattern = re.compile(r"""{%-?\s+include\s+["']([\w/.@-]+\.html)["']""")
         for root, _dirs, files in os.walk(forum_dir):
             for fname in files:
                 if not fname.endswith(".html"):
@@ -414,7 +418,9 @@ class TestIncludePathsValid:
                 with open(fpath) as fh:
                     content = fh.read()
                 for ref in pattern.findall(content):
-                    if not (ref.startswith("forum/") or ref.startswith("shared/")):
+                    if not (
+                        ref.startswith("@forum/forum/") or ref.startswith("shared/")
+                    ):
                         wrong.append((rel, ref))
         assert wrong == [], (
             "Forum templates contain includes outside 'forum/' or 'shared/':\n"
@@ -446,6 +452,7 @@ def flask_app():
         SECRET_KEY="test-secret",
         WTF_CSRF_ENABLED=False,
     )
+    app.jinja_loader = core_and_platform_loader()
 
     # Templates use gettext (_), so the minimal app needs Flask-Babel too.
     from y_web.i18n import init_i18n
@@ -522,7 +529,7 @@ class TestRouteIntegration:
             from jinja2 import TemplateNotFound
 
             try:
-                flask_app.jinja_env.get_template("forum/feed.html")
+                flask_app.jinja_env.get_template("@forum/forum/feed.html")
             except TemplateNotFound as e:
                 pytest.fail(f"Jinja2 could not find forum/feed.html: {e}")
 
@@ -549,13 +556,13 @@ class TestRouteIntegration:
             "microblogging/thread.html",
             "microblogging/components/posts.html",
             "microblogging/components/list.html",
-            "forum/profile.html",
-            "forum/thread.html",
-            "forum/interview.html",
-            "forum/notifications.html",
-            "forum/components/posts.html",
-            "forum/components/list.html",
-            "forum/components/comment.html",
+            "@forum/forum/profile.html",
+            "@forum/forum/thread.html",
+            "@forum/forum/interview.html",
+            "@forum/forum/notifications.html",
+            "@forum/forum/components/posts.html",
+            "@forum/forum/components/list.html",
+            "@forum/forum/components/comment.html",
             "login/register.html",
         ],
     )
@@ -580,7 +587,7 @@ class TestForumHeaderInterviewLink:
 
     def test_forum_header_has_interview_link(self):
         """forum/header.html must contain an interview link href."""
-        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        header_path = _template_path("forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
@@ -590,7 +597,7 @@ class TestForumHeaderInterviewLink:
 
     def test_forum_header_interview_gated_on_memory_enabled(self):
         """Interview link must be guarded by forum_memory_enabled (not always shown)."""
-        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        header_path = _template_path("forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
@@ -600,7 +607,7 @@ class TestForumHeaderInterviewLink:
 
     def test_forum_header_interview_in_desktop_dropdown(self):
         """Interview link must be present inside the desktop nav-drop account-items dropdown."""
-        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        header_path = _template_path("forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
@@ -619,17 +626,17 @@ class TestForumFeedSidebarComponent:
     """Verify the forum feed delegates the sidebar to a reusable component."""
 
     def test_forum_feed_uses_sidebar_component(self):
-        feed_path = os.path.join(TEMPLATES_DIR, "forum", "feed.html")
+        feed_path = _template_path("forum", "feed.html")
         with open(feed_path) as fh:
             content = fh.read()
 
         assert (
-            '{% include "forum/components/sidebar.html" %}' in content
+            '{% include "@forum/forum/components/sidebar.html" %}' in content
         ), "forum/feed.html must include the reusable sidebar component"
 
     def test_forum_header_interview_in_mobile_hamburger_menu(self):
         """Interview link must also be present inside the mobile hamburger navbar-menu."""
-        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        header_path = _template_path("forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
@@ -649,7 +656,7 @@ class TestForumFeedSidebarComponent:
 
     def test_forum_header_interview_not_in_top_navbar(self):
         """Interview link must NOT appear in the top (desktop) navbar before the dropdown."""
-        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        header_path = _template_path("forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 

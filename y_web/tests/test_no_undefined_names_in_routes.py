@@ -8,12 +8,16 @@ import pathlib  # noqa: E402
 
 from pyflakes.reporter import Reporter  # noqa: E402
 
+from y_web.tests._platform_repos import requires_platform  # noqa: E402
+
 pytestmark = pytest.mark.unit
 
-FILES = ["y_web/routes/interactions/forum.py"]
+FILES = ["external/YForum/ysocial_platform/routes/interactions_forum.py"]
 
 
-@pytest.mark.parametrize("rel", FILES)
+@pytest.mark.parametrize(
+    "rel", [pytest.param(f, marks=requires_platform("YForum")) for f in FILES]
+)
 def test_no_undefined_names(rel):
     path = pathlib.Path(__file__).resolve().parents[2] / rel
     out = io.StringIO()

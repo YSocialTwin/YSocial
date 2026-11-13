@@ -1,7 +1,0 @@
-{#- Origin line of a cross-post: "Crossposted from y/<community> by <author>". `origin` is item["shared_from"] = (post_id, author, community) or -1. -#}
-{% macro crosspost_origin(origin, exp_id) -%}
-{%- if origin and origin != -1 -%}
-<p class="fr-crosspost-origin"><i class="mdi mdi-repeat" aria-hidden="true"></i> {{ _('Crossposted from') }}
-  {% if origin[2] %}<a href="/{{ exp_id }}/subforum/{{ origin[2]|urlencode }}" class="fr-crosspost-origin-community">y/{{ origin[2] }}</a> {{ _('by') }} {% endif %}<a href="/{{ exp_id }}/rthread/{{ origin[0] }}" class="fr-crosspost-origin-link">{{ origin[1] }}</a></p>
-{%- endif -%}
-{%- endmacro %}

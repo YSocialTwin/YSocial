@@ -8,7 +8,7 @@ pytestmark = pytest.mark.unit
 def test_api_reddit_blueprint_prefix():
     from flask import Blueprint
 
-    from y_web.routes.api import api_reddit
+    from y_web.routes.api.reddit import api_reddit
 
     assert isinstance(api_reddit, Blueprint)
     assert api_reddit.name == "api_reddit"

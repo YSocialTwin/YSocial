@@ -23,7 +23,7 @@ pytestmark = pytest.mark.integration
 
 PLATFORMS = [
     "microblogging",
-    "forum",
+    pytest.param("forum", marks=requires_platform("YForum")),
     pytest.param("photo_sharing", marks=requires_platform("YPhotoSharing")),
     pytest.param(
         "instant_messaging",

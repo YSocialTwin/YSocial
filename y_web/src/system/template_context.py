@@ -108,11 +108,27 @@ def register_template_context(app: Flask) -> None:
     app.jinja_env.globals["platform_label"] = platform_label
 
     def asset_v(filename: str) -> int:
-        """Modification time of a static file, used as ``?v=`` so edited CSS/JS is never served stale from cache."""
+        """Modification time of a static file, used as ``?v=`` so edited CSS/JS is never served stale from cache.
+
+        ``@<platform key>/<path>`` names a static file of a platform repository.
+        """
         import os
 
+        from y_web.platforms import registry
+
+        root = app.static_folder
+        if filename.startswith("@"):
+            key, _sep, filename = filename[1:].partition("/")
+            provider = registry.get(key)
+            root = (
+                str(provider.package_dir / "static")
+                if provider is not None and provider.package_dir
+                else None
+            )
+            if root is None:
+                return 0
         try:
-            return int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+            return int(os.path.getmtime(os.path.join(root, filename)))
         except OSError:
             return 0
 

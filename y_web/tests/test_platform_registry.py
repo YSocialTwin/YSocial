@@ -15,14 +15,19 @@ needs_im = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
     reason="YInstantMessaging is not installed",
 )
-#: the tests that compare the tables of every platform need both repositories (a test of one platform alone uses its mark)
+needs_forum = pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.FORUM),
+    reason="YForum is not installed",
+)
+#: the tests that compare the tables of every platform need every repository (a test of one platform alone uses its mark)
 needs_dating = pytest.mark.skipif(
     not (
         _platform_alias.installed(_platform_alias.DATING)
+        and _platform_alias.installed(_platform_alias.FORUM)
         and _platform_alias.installed(_platform_alias.INSTANT_MESSAGING)
         and _platform_alias.installed(_platform_alias.PHOTO_SHARING)
     ),
-    reason="YDating, YInstantMessaging and YPhotoSharing are not all installed",
+    reason="YDating, YForum, YInstantMessaging and YPhotoSharing are not all installed",
 )
 _needs_dating_only = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.DATING),
@@ -47,6 +52,7 @@ def test_an_unknown_or_empty_platform_has_no_provider():
     assert registry.get("") is None
 
 
+@needs_dating
 def test_a_platform_key_cannot_be_registered_twice(monkeypatch):
     monkeypatch.setattr(registry, "_PROVIDERS", dict(registry._PROVIDERS))
 
@@ -66,7 +72,7 @@ def test_a_provider_needs_a_key():
     "key, expected",
     [
         ("microblogging", "/3/feed/7/feed/rf/1"),
-        ("forum", "/3/rfeed/7/feed/rf/1"),
+        pytest.param("forum", "/3/rfeed/7/feed/rf/1", marks=needs_forum),
         pytest.param("photo_sharing", "/3/photo/feed/all/feed/rf/1", marks=needs_photo),
         pytest.param("instant_messaging", None, marks=needs_im),
         pytest.param("dating", None, marks=_needs_dating_only),
@@ -76,6 +82,7 @@ def test_entry_url_of_each_built_in_platform(key, expected):
     assert registry.get(key).entry_url(3, 7) == expected
 
 
+@needs_dating
 def test_landing_redirect_follows_the_platform_of_the_experiment(app):
     from types import SimpleNamespace as NS
 
@@ -137,7 +144,11 @@ def _legacy_opinion_mode(platform, simulator):
 REACHABLE = (
     [
         (platform, simulator)
-        for platform in ("microblogging", "forum", "video_chat", None)
+        for platform in ("microblogging", "video_chat", None)
+        for simulator in ("Standard", "HPC")
+    ]
+    + [
+        pytest.param("forum", simulator, marks=needs_forum)
         for simulator in ("Standard", "HPC")
     ]
     + [pytest.param("photo_sharing", "HPC", marks=needs_photo)]
@@ -162,7 +173,7 @@ def test_client_pages_and_modes_equal_the_previous_logic(platform, simulator):
     [
         ("microblogging", True),
         pytest.param("photo_sharing", True, marks=needs_photo),
-        ("forum", False),
+        pytest.param("forum", False, marks=needs_forum),
         pytest.param("instant_messaging", False, marks=needs_im),
         pytest.param("dating", False, marks=_needs_dating_only),
     ],
@@ -248,6 +259,7 @@ def test_experiment_prompt_hooks_match_the_previous_platform_logic():
         assert list(provider.server_modules) == modules
 
 
+@needs_dating
 def test_standard_runtime_hooks_match_the_previous_platform_logic(tmp_path):
     from y_web.platforms import registry
     from y_web.src.simulation import process_runner, server
@@ -523,12 +535,13 @@ def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypat
             "Invalid dating settings: boom",
             marks=_needs_dating_only,
         ),
-        (
+        pytest.param(
             "forum",
             "y_web.src.forum.experiment_config",
             "ForumConfigError",
             "generate_forum_server_config",
             "Invalid forum settings: boom",
+            marks=needs_forum,
         ),
         pytest.param(
             "instant_messaging",
@@ -604,12 +617,13 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
     not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
     reason="needs the YInstantMessaging repository",
 )
+@needs_dating
 def test_experiment_page_templates_and_variables_match_the_previous_logic():
     from y_web.platforms import registry
 
     assert {k: registry.get(k).details_template for k in registry.keys()} == {
         "microblogging": "admin/experiment_details.html",
-        "forum": "admin/experiment_details_forum.html",
+        "forum": "@forum/admin/experiment_details_forum.html",
         "photo_sharing": "@photo_sharing/admin/experiment_details_photo.html",
         "instant_messaging": "@instant_messaging/admin/experiment_details_im.html",
         "dating": "@dating/admin/experiment_details_dating.html",
@@ -654,6 +668,7 @@ def test_frontend_capabilities_match_the_previous_tables():
             assert fs._localized_platform_label(platform) == want["label"]
 
 
+@needs_dating
 @requires_platform("YPhotoSharing")
 def test_client_creation_guards_follow_the_provider():
     from y_web.platforms import registry

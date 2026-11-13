@@ -231,6 +231,114 @@
     "photo/suggestions.html": {
       "repo": "YPhotoSharing",
       "to": "@photo_sharing/photo/suggestions.html"
+    },
+    "forum/header.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/header.html"
+    },
+    "forum/profile.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/profile.html"
+    },
+    "forum/feed.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/feed.html"
+    },
+    "forum/interview.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/interview.html"
+    },
+    "forum/notifications.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/notifications.html"
+    },
+    "forum/edit_profile.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/edit_profile.html"
+    },
+    "forum/communities.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/communities.html"
+    },
+    "forum/thread.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/thread.html"
+    },
+    "forum/components/posts.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/posts.html"
+    },
+    "forum/components/list.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/list.html"
+    },
+    "forum/components/sidebar.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/sidebar.html"
+    },
+    "forum/components/recent_posts.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/recent_posts.html"
+    },
+    "forum/components/comment.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/comment.html"
+    },
+    "forum/components/chat_panel.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/chat_panel.html"
+    },
+    "forum/components/crosspost_origin.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/crosspost_origin.html"
+    },
+    "forum/components/crosspost_modal.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/crosspost_modal.html"
+    },
+    "forum/components/community_card.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/community_card.html"
+    },
+    "forum/components/thread-post.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/thread-post.html"
+    },
+    "admin/_forum_communities.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/_forum_communities.html"
+    },
+    "admin/client_details_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/client_details_forum.html"
+    },
+    "admin/clients_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/clients_forum.html"
+    },
+    "admin/clients_forum_hpc.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/clients_forum_hpc.html"
+    },
+    "admin/experiment_details_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/experiment_details_forum.html"
+    },
+    "admin/forum_image_resources.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/forum_image_resources.html"
+    },
+    "admin/forum_rss_resources.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/forum_rss_resources.html"
+    },
+    "admin/opinion_configuration_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/opinion_configuration_forum.html"
+    },
+    "admin/prompts_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/prompts_forum.html"
     }
   },
   "url_map": {
@@ -324,6 +432,44 @@
       "/<int:exp_id>/photo/suggestions -> main.photo_suggestions",
       "/admin/clients_photo/<idexp> -> clientsr.clients_photo",
       "/photo/feed -> main.photo_feed_logged"
+    ],
+    "YForum": [
+      "/<int:exp_id>/api/forum_communities -> main.api_forum_communities",
+      "/<int:exp_id>/api/forum_search -> main.api_forum_search",
+      "/<int:exp_id>/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.api_feed_reddit",
+      "/<int:exp_id>/communities -> main.communities_reddit",
+      "/<int:exp_id>/interview -> main.interview",
+      "/<int:exp_id>/publish_comment -> user_actions.publish_comment",
+      "/<int:exp_id>/publish_reddit -> user_actions.publish_post_reddit",
+      "/<int:exp_id>/rfeed -> main.rfeed_redirect",
+      "/<int:exp_id>/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.feed_reddit",
+      "/<int:exp_id>/rnotifications -> main.rnotifications",
+      "/<int:exp_id>/rsearch -> main.search_reddit",
+      "/<int:exp_id>/rthread/<post_id> -> main.get_thread_reddit",
+      "/<int:exp_id>/subforum/<string:community_slug> -> main.subforum_reddit",
+      "/admin/clients_forum_hpc/<idexp> -> clientsr.clients_forum_hpc",
+      "/admin/create_forum_hpc_client -> clientsr.create_forum_hpc_client_route",
+      "/api/reddit/<int:exp_id>/chat/bootstrap -> api_reddit.api_forum_chat_bootstrap",
+      "/api/reddit/<int:exp_id>/chat/session -> api_reddit.api_forum_chat_open_session",
+      "/api/reddit/<int:exp_id>/chat/session/<int:session_id> -> api_reddit.api_forum_chat_get_session",
+      "/api/reddit/<int:exp_id>/chat/session/<int:session_id>/message -> api_reddit.api_forum_chat_send_message",
+      "/api/reddit/<int:exp_id>/comment -> api_reddit.api_comment",
+      "/api/reddit/<int:exp_id>/communities -> api_reddit.api_create_community",
+      "/api/reddit/<int:exp_id>/crosspost -> api_reddit.api_crosspost",
+      "/api/reddit/<int:exp_id>/crosspost/targets -> api_reddit.api_crosspost_targets",
+      "/api/reddit/<int:exp_id>/enrich/article/<article_id> -> api_reddit.api_enrich_article",
+      "/api/reddit/<int:exp_id>/enrich/image/<image_id> -> api_reddit.api_enrich_image",
+      "/api/reddit/<int:exp_id>/enrich/pending -> api_reddit.api_enrich_pending",
+      "/api/reddit/<int:exp_id>/feed -> api_reddit.api_feed",
+      "/api/reddit/<int:exp_id>/post -> api_reddit.api_post",
+      "/api/reddit/<int:exp_id>/post/<post_id>/delete -> api_reddit.api_delete_post",
+      "/api/reddit/<int:exp_id>/search -> api_reddit.api_search",
+      "/api/reddit/<int:exp_id>/thread/<post_id> -> api_reddit.api_thread",
+      "/api/reddit/<int:exp_id>/upload_image -> api_reddit.api_upload_image",
+      "/api/reddit/<int:exp_id>/upload_media -> api_reddit.api_upload_media",
+      "/api/reddit/<int:exp_id>/vote -> api_reddit.api_vote",
+      "/rfeed -> main.feeed_logged_reddit",
+      "/rnotifications -> main.rnotifications_logged"
     ]
   },
   "known_platforms": {
@@ -335,6 +481,9 @@
     ],
     "YPhotoSharing": [
       "photo_sharing"
+    ],
+    "YForum": [
+      "forum"
     ]
   }
 }

@@ -626,7 +626,7 @@ def forum_rss_resources():
         )
     ).all()
     return render_template(
-        "admin/forum_rss_resources.html",
+        "@forum/admin/forum_rss_resources.html",
         resources=resources,
     )
 
@@ -853,7 +853,7 @@ def forum_image_resources():
         )
     ).all()
     return render_template(
-        "admin/forum_image_resources.html",
+        "@forum/admin/forum_image_resources.html",
         resources=[_forum_image_resource_payload(resource) for resource in resources],
         available_interests=FORUM_IMAGE_FEED_INTERESTS,
     )

@@ -12,7 +12,7 @@ auth/           Blueprint "auth"         – login / logout / experiment select
 errors/         Blueprint "errors"       – 400 / 403 / 404 / 500 handlers
 admin/          Blueprint "admin"        – admin dashboard
 admin/sub/      (re-exports routes_admin blueprints)
-api/            Blueprints "api_reddit", "api_social", "api_interview"
+api/            Blueprints "api_social", "api_interview"
 """
 
 
@@ -31,7 +31,7 @@ def register_blueprints(app):
         users,
         world_simulation,
     )
-    from .api import api_interview, api_reddit, api_social
+    from .api import api_interview, api_social
     from .auth import auth
     from .errors import errors
     from .i18n import i18n_bp
@@ -65,7 +65,6 @@ def register_blueprints(app):
     app.register_blueprint(lab)
     app.register_blueprint(tutorial)
     app.register_blueprint(world_simulation)
-    app.register_blueprint(api_reddit)
     app.register_blueprint(api_social)
     app.register_blueprint(api_interview)
 

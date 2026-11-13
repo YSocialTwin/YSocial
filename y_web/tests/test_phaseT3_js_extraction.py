@@ -17,6 +17,8 @@ import os
 
 import pytest
 
+from y_web.tests._platform_repos import EXTERNAL, requires_platform, template_path
+
 pytestmark = pytest.mark.unit
 
 
@@ -38,7 +40,7 @@ ADMIN_NAV_JS = os.path.join(STATIC_JS_DIR, "admin-nav.js")
 # The 5 templates that previously had the inline BrowserSync block
 BROWSERSYNC_TEMPLATE_FILES = [
     os.path.join(TEMPLATES_DIR, "admin", "head.html"),
-    os.path.join(TEMPLATES_DIR, "forum", "header.html"),
+    template_path(TEMPLATES_DIR, "forum", "header.html"),
     os.path.join(TEMPLATES_DIR, "microblogging", "header.html"),
     os.path.join(TEMPLATES_DIR, "login", "login.html"),
     os.path.join(TEMPLATES_DIR, "login", "register.html"),
@@ -263,7 +265,7 @@ class TestBrowserSyncPartial:
         """All 5 templates that had BrowserSync must now include the shared partial."""
         include_directive = "{% include 'shared/browser_sync.html' %}"
         missing = []
-        for fpath in BROWSERSYNC_TEMPLATE_FILES:
+        for fpath in filter(os.path.exists, BROWSERSYNC_TEMPLATE_FILES):
             rel = os.path.relpath(fpath, TEMPLATES_DIR)
             content = open(fpath, encoding="utf-8").read()
             if include_directive not in content:

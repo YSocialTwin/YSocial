@@ -11,6 +11,7 @@ from y_web.src.federation.service import (
     WorldSimulationError,
     validate_members,
 )
+from y_web.tests._platform_repos import template_file
 
 POP = frozenset({1})
 
@@ -405,7 +406,7 @@ def test_the_experiment_pages_show_the_badge_and_disable_the_member_commands():
 
     root = Path(__file__).resolve().parents[1]
     for name in ("experiment_details.html", "experiment_details_forum.html"):
-        text = (root / "templates" / "admin" / name).read_text()
+        text = template_file(root / "templates" / "admin", name).read_text()
         assert (
             "world_simulation_of(experiment.idexp)" in text
             and text.count("ws and ws.locked") == 2

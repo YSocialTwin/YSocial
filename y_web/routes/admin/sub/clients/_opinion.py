@@ -249,7 +249,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
 
     template_name = {
         "standard": "admin/opinion_configuration.html",
-        "forum": "admin/opinion_configuration_forum.html",
+        "forum": "@forum/admin/opinion_configuration_forum.html",
         "hpc": "admin/opinion_configuration_hpc.html",
     }.get(expected_mode) or platforms.resolve(exp.platform_type).opinion_template
 

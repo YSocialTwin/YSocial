@@ -1,6 +1,7 @@
 """The roster file of a forum client: dropped for a client that never ran, kept for one with progress."""
 
 import json
+import sys
 from types import SimpleNamespace
 
 from y_web.src.forum.roster import (
@@ -59,15 +60,20 @@ def test_started_client_keeps_its_roster(tmp_path):
 def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(
     tmp_path, monkeypatch
 ):
-    from y_web.platforms import builtin
+    from y_web.platforms import registry
     from y_web.sdk import services
 
     cfg = _config(tmp_path)
     roster = tmp_path / "agents_c1.json"
     roster.write_text("{}", encoding="utf-8")
     flashed = []
-    monkeypatch.setattr("flask.flash", lambda msg, cat="message": flashed.append(cat))
-    monkeypatch.setattr(builtin, "_", lambda s, **k: s)
+
+    provider = registry.get("forum")
+    provider_module = sys.modules[type(provider).__module__]
+    monkeypatch.setattr(provider_module, "_", lambda s, **k: s)
+    monkeypatch.setattr(
+        provider_module, "flash", lambda msg, cat="message": flashed.append(cat)
+    )
     execution = SimpleNamespace(last_active_day=-1, last_active_hour=-1)
     monkeypatch.setattr(services, "client_execution", lambda client: execution)
     ctx = {
@@ -75,10 +81,10 @@ def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(
         "client": SimpleNamespace(id=1, name="c1"),
         "client_config_file": cfg,
     }
-    builtin.Forum().after_opinion_distribution_saved(ctx)
+    provider.after_opinion_distribution_saved(ctx)
     assert not roster.exists() and flashed == ["info"]
 
     roster.write_text("{}", encoding="utf-8")
     execution.last_active_day = 1
-    builtin.Forum().after_opinion_distribution_saved(ctx)
+    provider.after_opinion_distribution_saved(ctx)
     assert roster.exists() and flashed == ["info", "warning"]

@@ -13,6 +13,8 @@ import re
 
 import pytest
 
+from y_web.tests._platform_repos import EXTERNAL, requires_platform, template_path
+
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -62,23 +64,23 @@ class TestAdminClientDetailsJs:
 class TestClientDetailsTemplates:
     TEMPLATES = [
         os.path.join(ADMIN_DIR, "client_details.html"),
-        os.path.join(ADMIN_DIR, "client_details_forum.html"),
+        template_path(TEMPLATES_DIR, "admin", "client_details_forum.html"),
         os.path.join(ADMIN_DIR, "client_details_hpc.html"),
     ]
 
     def test_no_inline_function_scripts(self):
-        for t in self.TEMPLATES:
+        for t in filter(os.path.exists, self.TEMPLATES):
             funcs = _inline_function_scripts(t)
             assert not funcs, f"{t} still has inline function scripts: {funcs}"
 
     def test_has_script_src(self):
-        for t in self.TEMPLATES:
+        for t in filter(os.path.exists, self.TEMPLATES):
             assert _has_script_src(
                 t, "admin-client-details.js"
             ), f"{t} missing <script src> for admin-client-details.js"
 
     def test_data_bridge_present(self):
-        for t in self.TEMPLATES:
+        for t in filter(os.path.exists, self.TEMPLATES):
             content = open(t).read()
             assert "YS_DATA_CLIENT" in content, f"{t} missing YS_DATA_CLIENT bridge"
 
@@ -102,22 +104,22 @@ class TestAdminOpinionJs:
 class TestOpinionTemplates:
     OPINION_TEMPLATES = [
         os.path.join(ADMIN_DIR, "opinion_configuration.html"),
-        os.path.join(ADMIN_DIR, "opinion_configuration_forum.html"),
+        template_path(TEMPLATES_DIR, "admin", "opinion_configuration_forum.html"),
         os.path.join(ADMIN_DIR, "opinion_configuration_hpc.html"),
     ]
     EVOLUTION_TEMPLATE = os.path.join(ADMIN_DIR, "opinion_evolution.html")
 
     def test_opinion_config_no_inline_function_scripts(self):
-        for t in self.OPINION_TEMPLATES:
+        for t in filter(os.path.exists, self.OPINION_TEMPLATES):
             funcs = _inline_function_scripts(t)
             assert not funcs, f"{t} still has inline function scripts"
 
     def test_opinion_config_has_script_src(self):
-        for t in self.OPINION_TEMPLATES:
+        for t in filter(os.path.exists, self.OPINION_TEMPLATES):
             assert _has_script_src(t, "admin-opinion.js")
 
     def test_opinion_config_data_bridge(self):
-        for t in self.OPINION_TEMPLATES:
+        for t in filter(os.path.exists, self.OPINION_TEMPLATES):
             content = open(t).read()
             assert "YS_DATA_OPINION" in content
 

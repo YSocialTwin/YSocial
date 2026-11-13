@@ -7,6 +7,7 @@ from y_web.src.simulation.process_runner import (
     _sync_experiment_stress_reward_into_client_config,
     process_agent,
 )
+from y_web.tests._platform_repos import requires_platform
 
 pytestmark = pytest.mark.unit
 
@@ -125,7 +126,10 @@ def test_process_agent_validator_keeps_forum_share_aliases():
     assert "POST" not in selected_actions
 
 
-@pytest.mark.parametrize("platform_type", ["microblogging", "forum", "hpc"])
+@pytest.mark.parametrize(
+    "platform_type",
+    ["microblogging", pytest.param("forum", marks=requires_platform("YForum")), "hpc"],
+)
 def test_stress_reward_sync_applies_to_supported_platforms(platform_type):
     client_config = {"simulation": {}}
     server_config = {

@@ -35,7 +35,6 @@ from y_web.src.agents.platform import (
 )
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
-from y_web.src.forum import communities as forum_communities
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,
@@ -1642,7 +1641,7 @@ def clients_forum(idexp):
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    return render_template("admin/clients_forum.html", **context)
+    return render_template("@forum/admin/clients_forum.html", **context)
 
 
 @clientsr.route("/admin/clients_hpc/<idexp>")
@@ -4682,6 +4681,7 @@ def _create_standard_client_internal():
 
 def _create_forum_client_internal():
     """Create a forum client with its dedicated configuration pipeline."""
+    forum_communities = platforms.library("forum", "communities")
     check_privileges(current_user.username)
 
     name = request.form.get("name")

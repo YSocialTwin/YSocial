@@ -5,7 +5,6 @@ from . import (
     _crud,
     _details,
     _execution,
-    _forum_hpc,
     _opinion,
     _recsys,
 )

@@ -46,6 +46,21 @@
         "summarize_agent_custom_features_bulk": "(agent_ids: \"'Iterable[int]'\") -> \"'dict[int, dict]'\""
       }
     },
+    "commons": {
+      "kind": "module",
+      "members": {}
+    },
+    "content": {
+      "kind": "module",
+      "members": {
+        "extract_article_info": "(url)",
+        "normalize_hashtag": "(tag)",
+        "process_reddit_post": "(text, allow_legacy_blankline_title=True)",
+        "strip_tags": "(html)",
+        "toxicity": "(text, username, post_id, db)",
+        "vader_sentiment": "(text)"
+      }
+    },
     "federation": {
       "kind": "module",
       "members": {
@@ -56,6 +71,25 @@
     "gettext": {
       "kind": "function",
       "signature": "(message, **variables)"
+    },
+    "interview": {
+      "kind": "module",
+      "members": {
+        "build_facts_snapshot": "(*, exp: \"'Optional[Exps]'\" = None, agent_user_id: \"'Any'\", admin_text: \"'str'\", top_posts_limit: \"'int'\" = 3, recent_comments_limit: \"'int'\" = 5, query_hits_limit: \"'int'\" = 5) -> \"'Dict[str, Any]'\"",
+        "build_memory_snapshot": "(exp: \"'Exps'\", *, run_id: \"'Optional[str]'\", agent_user_id: \"'int'\", memory_mode: \"'Optional[str]'\" = None, query_text: \"'Optional[str]'\" = None) -> \"'Dict[str, Any]'\"",
+        "build_persona_snapshot": "(user: \"'User_mgmt'\", interests: \"'List[str]'\", exp: \"'Exps'\") -> \"'str'\"",
+        "detect_run_id_from_server_log": "(exp: \"'Exps'\", *, agent_user_id: \"'Optional[int]'\" = None, probe_memory_coverage: \"'bool'\" = True) -> \"'Dict[str, Any]'\"",
+        "ensure_experiment_db_bind": "(exp: \"'Exps'\") -> \"'bool'\"",
+        "ensure_experiment_server_db_binding": "(exp: \"'Exps'\") -> \"'Dict[str, Any]'\"",
+        "format_facts_pack": "(snapshot: \"'Dict[str, Any]'\", *, max_chars: \"'int'\" = 3500) -> \"'str'\"",
+        "format_memory_pack": "(snapshot: \"'Dict[str, Any]'\", *, max_chars: \"'int'\" = 4500, language: \"'Optional[str]'\" = None) -> \"'str'\"",
+        "generate_reply": "(*, model: \"'str'\", base_url: \"'str'\", api_key: \"'str'\", temperature: \"'float'\", max_tokens: \"'int'\", system_message: \"'str'\", user_message: \"'str'\") -> \"'str'\"",
+        "get_top_interests_for_user": "(user_id: \"'Any'\", *, window_rounds: \"'int'\" = 50, limit: \"'int'\" = 10) -> \"'List[str]'\"",
+        "memory_server_unavailable": "(db_binding: \"'Optional[Dict[str, Any]]'\") -> \"'bool'\"",
+        "resolve_interview_profile_pic": "(user: \"'User_mgmt'\", exp: \"'Exps'\") -> \"'str'\"",
+        "resolve_llm_backend": "(*, backend_mode: \"'str'\", exp: \"'Exps'\", agent_user: \"'User_mgmt'\", admin_user: \"'Admin_users'\") -> \"'Tuple[str, str, str, str, float, int]'\"",
+        "sanitize_interview_reply": "(reply: \"'str'\", *, facts_snapshot: \"'Dict[str, Any]'\", memory_snapshot: \"'Dict[str, Any]'\", strict_no_inference: \"'bool'\", language: \"'Optional[str]'\" = None) -> \"'Tuple[str, Dict[str, Any]]'\""
+      }
     },
     "models": {
       "kind": "module",
@@ -111,16 +145,33 @@
     "social": {
       "kind": "module",
       "members": {
+        "augment_text": "(text, exp_id)",
+        "build_thread_tree": "(root_id, post_to_data, parent_lookup)",
         "content_recsys_info": "(recsys_type, ui=None)",
+        "current_profile_pic": "(exp_id, forum_user=None)",
         "ensure_experiment_user": "(experiment: \"'Exps'\", *, account_id=None, **kwargs)",
         "experiment_memory_enabled": "(exp_id)",
+        "feed_memory_enabled": "(exp_id)",
         "get_avatars_dir": "() -> 'str'",
+        "get_db_bind_key_for_exp": "(exp_id)",
+        "get_discussions": "(posts, username, page, exp_id, exp_user_id=None)",
+        "get_elicited_emotions": "(post_id)",
         "get_experiment_engine_uri": "(experiment: \"'Exps'\") -> \"'Optional[str]'\"",
         "get_safe_profile_pic": "(username, is_page=0)",
         "get_suggested_users": "(username, pages=False)",
+        "get_topics": "(post_id, user_id)",
+        "get_trending_hashtags": "(limit=10, window=120)",
         "get_unanswered_mentions": "(username, exp_id=None)",
+        "hidden_author_ids_for_viewer": "(exp_id, viewer_user_id)",
+        "hidden_post_ids_in_thread": "(post_records, hidden_author_ids)",
         "is_admin": "(username)",
-        "open_experiment_session": "(experiment: \"'Exps'\")"
+        "logged_user": "()",
+        "maybe_update_fb_interests": "(exp_id, exp_user, post_id, interaction_type)",
+        "open_experiment_session": "(experiment: \"'Exps'\")",
+        "origin_community": "(source_id) -> 'str'",
+        "profile_pic_of": "(user)",
+        "register_experiment_database": "(app, exp_id, db_name)",
+        "resolve_back_url": "(exp_id)"
       }
     },
     "template_name": {
@@ -131,9 +182,11 @@
       "kind": "module",
       "members": {
         "allocate_topics_by_percentage": "(topics, topic_percentages)",
+        "apply_structured_features_to_agent_payload": "(agent_payload: \"'dict'\", structured: \"'dict'\")",
         "build_client_creation_context": "(idexp, recsys_mode)",
         "check_privileges": "(username)",
         "client_config_path_for_platform": "(exp_dir: \"'str'\", exp, client_name: \"'str'\", population_name: \"'str'\") -> \"'str'\"",
+        "collect_population_agent_attributes": "(population_id)",
         "current_admin_user_or_none": "()",
         "experiment_configuration_update_required": "(experiment)",
         "experiment_uses_llm_agents": "(experiment)",
@@ -142,6 +195,7 @@
         "get_experiment_folder_name": "(experiment)",
         "load_feed_experiment_context": "(uid, require_manage=True)",
         "load_ui_settings": "(exp_id: 'int') -> 'dict'",
+        "read_feed_health": "(experiment, experiment_dir)",
         "redirect_to_clients_page": "(experiment, current_endpoint)",
         "user_can_manage_experiment": "(admin_user, experiment)",
         "user_can_view_experiment": "(admin_user, experiment)"

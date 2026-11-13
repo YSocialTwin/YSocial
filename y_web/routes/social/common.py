@@ -546,7 +546,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             fetch_user_communities(forum_logged_user.id) if forum_logged_user else []
         )
         return render_template(
-            "forum/profile.html",
+            "@forum/forum/profile.html",
             profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),
             viewed_profile_pic=profile_pic,
             profile_pic_feed=_forum_current_profile_pic(exp_id, forum_logged_user),
@@ -640,7 +640,7 @@ def edit_profile(exp_id, user_id):
                 )
             )
         return render_template(
-            "forum/edit_profile.html",
+            "@forum/forum/edit_profile.html",
             user=user,
             profile_pic=profile_pic,
             available_profile_pics=available_profile_pics,

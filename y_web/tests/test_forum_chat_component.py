@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from y_web.tests._platform_repos import forum_file
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 from types import SimpleNamespace
 
@@ -128,19 +130,15 @@ def test_forum_chat_routes_are_exposed():
 
 def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
     panel_template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/components/chat_panel.html")
+        forum_file("y_web/templates/forum/components/chat_panel.html")
     ).read_text()
-    feed_template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/feed.html")
-    ).read_text()
-    thread_template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/thread.html")
-    ).read_text()
+    feed_template = Path(forum_file("y_web/templates/forum/feed.html")).read_text()
+    thread_template = Path(forum_file("y_web/templates/forum/thread.html")).read_text()
     profile_template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/profile.html")
+        forum_file("y_web/templates/forum/profile.html")
     ).read_text()
     notifications_template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/notifications.html")
+        forum_file("y_web/templates/forum/notifications.html")
     ).read_text()
 
     assert 'id="forum-chat-panel"' in panel_template
@@ -151,14 +149,17 @@ def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
     assert "{% if forum_memory_enabled %}" in thread_template
     assert "{% if forum_memory_enabled %}" in profile_template
     assert "{% if forum_memory_enabled %}" in notifications_template
-    assert '{% include "forum/components/chat_panel.html" %}' in feed_template
-    assert '{% include "forum/components/chat_panel.html" %}' in thread_template
-    assert '{% include "forum/components/chat_panel.html" %}' in profile_template
-    assert '{% include "forum/components/chat_panel.html" %}' in notifications_template
-    assert "assets/js/reddit/forum-chat.js" in feed_template
-    assert "assets/js/reddit/forum-chat.js" in thread_template
-    assert "assets/js/reddit/forum-chat.js" in profile_template
-    assert "assets/js/reddit/forum-chat.js" in notifications_template
+    assert '{% include "@forum/forum/components/chat_panel.html" %}' in feed_template
+    assert '{% include "@forum/forum/components/chat_panel.html" %}' in thread_template
+    assert '{% include "@forum/forum/components/chat_panel.html" %}' in profile_template
+    assert (
+        '{% include "@forum/forum/components/chat_panel.html" %}'
+        in notifications_template
+    )
+    assert "js/forum-chat.js" in feed_template
+    assert "js/forum-chat.js" in thread_template
+    assert "js/forum-chat.js" in profile_template
+    assert "js/forum-chat.js" in notifications_template
     assert "forum-profile-follow-btn" in profile_template
     assert (
         "/{{ exp_id }}/follow/{{ user['user_data']['id'] }}/{{ logged_id }}"
@@ -168,7 +169,7 @@ def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
 
 def test_forum_chat_js_escapes_rendered_content():
     js_source = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/reddit/forum-chat.js")
+        forum_file("y_web/static/assets/js/reddit/forum-chat.js")
     ).read_text()
 
     assert "function escapeHtml" in js_source

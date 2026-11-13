@@ -16,21 +16,26 @@ import subprocess
 
 import pytest
 
+from y_web.tests._platform_repos import EXTERNAL, requires_platform, template_path
+
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-TEMPLATES_FORUM = os.path.join(REPO_ROOT, "y_web", "templates", "forum")
+TEMPLATES_FORUM = template_path(os.path.join(REPO_ROOT, "y_web", "templates"), "forum")
+FORUM_CSS = str(
+    EXTERNAL / "YForum" / "ysocial_platform" / "static" / "css" / "forum-components.css"
+)
 TEMPLATES_MB = os.path.join(REPO_ROOT, "y_web", "templates", "microblogging")
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
 NEW_CSS_FILES = [
-    os.path.join(CSS_DIR, "reddit", "forum-components.css"),
+    FORUM_CSS,
     os.path.join(CSS_DIR, "social-components.css"),
 ]
 
 # CSS rules that must appear in each new file
 CSS_SPOT_CHECKS = {
-    os.path.join(CSS_DIR, "reddit", "forum-components.css"): [
+    FORUM_CSS: [
         ".sim-clock-pill",
         ".reply-notif-bell",
         ".forum-profile-shell",
@@ -56,12 +61,19 @@ CSS_SPOT_CHECKS = {
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("css_path", NEW_CSS_FILES)
+_FORUM = requires_platform("YForum")
+NEW_CSS_PARAMS = [
+    pytest.param(path, marks=_FORUM) if path == FORUM_CSS else path
+    for path in NEW_CSS_FILES
+]
+
+
+@pytest.mark.parametrize("css_path", NEW_CSS_PARAMS)
 def test_css_file_exists(css_path):
     assert os.path.isfile(css_path), f"Expected CSS file not found: {css_path}"
 
 
-@pytest.mark.parametrize("css_path", NEW_CSS_FILES)
+@pytest.mark.parametrize("css_path", NEW_CSS_PARAMS)
 def test_css_file_non_empty(css_path):
     assert os.path.getsize(css_path) > 0, f"CSS file is empty: {css_path}"
 
@@ -71,6 +83,7 @@ def test_css_file_non_empty(css_path):
 # ---------------------------------------------------------------------------
 
 
+@_FORUM
 def test_no_style_blocks_in_forum_templates():
     result = subprocess.run(
         ["grep", "-r", "<style>", TEMPLATES_FORUM, "--include=*.html"],
@@ -98,6 +111,7 @@ def test_no_style_blocks_in_microblogging_templates():
 # ---------------------------------------------------------------------------
 
 
+@_FORUM
 def test_forum_header_links_forum_components_css():
     path = os.path.join(TEMPLATES_FORUM, "header.html")
     content = open(path).read()
@@ -106,10 +120,11 @@ def test_forum_header_links_forum_components_css():
     ), "forum/header.html is missing <link> to forum-components.css"
 
 
+@_FORUM
 def test_forum_header_link_uses_url_for():
     path = os.path.join(TEMPLATES_FORUM, "header.html")
     content = open(path).read()
-    expected = "url_for('static', filename='assets/css/reddit/forum-components.css')"
+    expected = "url_for('platform_static_forum', filename='css/forum-components.css')"
     assert (
         expected in content
     ), f"forum/header.html link tag does not use url_for pattern: {expected!r}"
@@ -144,7 +159,11 @@ def test_microblogging_header_link_uses_url_for():
 
 @pytest.mark.parametrize(
     "css_path,expected",
-    [(css, rule) for css, rules in CSS_SPOT_CHECKS.items() for rule in rules],
+    [
+        pytest.param(css, rule, marks=_FORUM) if css == FORUM_CSS else (css, rule)
+        for css, rules in CSS_SPOT_CHECKS.items()
+        for rule in rules
+    ],
 )
 def test_css_spot_check(css_path, expected):
     content = open(css_path).read()
@@ -168,6 +187,7 @@ FORUM_TEMPLATES_WITHOUT_STYLE = [
 ]
 
 
+@_FORUM
 @pytest.mark.parametrize("rel_path", FORUM_TEMPLATES_WITHOUT_STYLE)
 def test_forum_template_has_no_style_block(rel_path):
     path = os.path.join(TEMPLATES_FORUM, rel_path)

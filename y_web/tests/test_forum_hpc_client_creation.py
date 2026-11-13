@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from y_web.tests._platform_repos import forum_file
 from y_web.tests.test_forum_hpc_experiment_creation import (
     FORM,
     YFORUM,
@@ -111,12 +112,7 @@ def _confirm(tmp_path, folder):
 
 @pytest.mark.integration
 def test_the_standard_forum_page_has_no_archetypes_either():
-    html = (
-        Path(__file__).resolve().parents[1]
-        / "templates"
-        / "admin"
-        / "clients_forum.html"
-    ).read_text()
+    html = Path(forum_file("y_web/templates/admin/clients_forum.html")).read_text()
     assert "archetype" not in html.lower()  # YClientReddit does not implement them
 
 
@@ -124,7 +120,7 @@ def test_the_page_offers_every_field_of_the_standard_forum_page():
     """Every field of clients_forum.html is on the forum-HPC page, except the three YForum does not implement."""
     import re
 
-    templates = Path(__file__).resolve().parents[1] / "templates" / "admin"
+    templates = Path(forum_file("y_web/templates/admin/clients_forum.html")).parent
     names = lambda f: set(
         re.findall(r'name="([a-z_0-9]+)"', (templates / f).read_text())
     )

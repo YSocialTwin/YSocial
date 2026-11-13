@@ -116,6 +116,34 @@ def load_feed_experiment_context(uid, require_manage=True):
     return target(uid, require_manage)
 
 
+def read_feed_health(experiment, experiment_dir):
+    """Return configured and loaded forum feed counts for the experiment."""
+    from y_web.routes.admin.sub.experiments._helpers import (
+        _read_forum_feed_health as target,
+    )
+
+    return target(experiment, experiment_dir)
+
+
+def apply_structured_features_to_agent_payload(
+    agent_payload: "dict", structured: "dict"
+):
+    from y_web.routes.admin.sub.clients._crud import (
+        _apply_structured_features_to_agent_payload as target,
+    )
+
+    return target(agent_payload, structured)
+
+
+def collect_population_agent_attributes(population_id):
+    """Return normalized per-agent attributes for a population, skipping broken rows."""
+    from y_web.routes.admin.sub.clients._crud import (
+        _collect_population_agent_attributes as target,
+    )
+
+    return target(population_id)
+
+
 def user_can_manage_experiment(admin_user, experiment):
     """Check if user can stop/delete an experiment."""
     from y_web.src.experiment.access import user_can_manage_experiment as target
@@ -132,9 +160,11 @@ def user_can_view_experiment(admin_user, experiment):
 
 __all__ = [
     "allocate_topics_by_percentage",
+    "apply_structured_features_to_agent_payload",
     "build_client_creation_context",
     "check_privileges",
     "client_config_path_for_platform",
+    "collect_population_agent_attributes",
     "current_admin_user_or_none",
     "experiment_configuration_update_required",
     "experiment_uses_llm_agents",
@@ -143,6 +173,7 @@ __all__ = [
     "get_experiment_folder_name",
     "load_feed_experiment_context",
     "load_ui_settings",
+    "read_feed_health",
     "redirect_to_clients_page",
     "user_can_manage_experiment",
     "user_can_view_experiment",

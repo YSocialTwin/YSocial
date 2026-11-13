@@ -46,6 +46,36 @@ def photo_file(old_relative: str) -> Path:
     return path
 
 
+def forum_file(old_relative: str) -> str:
+    """File of the forum platform that used to be at ``old_relative`` in the core; skips the test when absent.
+
+    ``y_web/templates/forum/...`` and the admin pages of the platform are templates, ``y_web/static/assets/js/reddit/``,
+    ``y_web/static/assets/css/reddit/`` and the ``forum-profile`` scripts are static files.
+    """
+    base = EXTERNAL / "YForum" / "ysocial_platform"
+    for prefix, target in (
+        ("y_web/routes/api/reddit.py", "routes/api_reddit.py"),
+        ("y_web/routes/social/forum.py", "routes/social_forum.py"),
+        ("y_web/routes/interactions/forum.py", "routes/interactions_forum.py"),
+        ("y_web/routes/admin/sub/clients/_forum_hpc.py", "routes/clients_forum_hpc.py"),
+        ("y_web/src/forum/", "forum/"),
+        ("y_web/templates/", "templates/"),
+        ("y_web/static/assets/js/reddit/", "static/js/"),
+        ("y_web/static/assets/css/reddit/", "static/css/"),
+        ("y_web/static/assets/js/", "static/js/"),
+    ):
+        if old_relative.startswith(prefix):
+            path = base / (target + old_relative[len(prefix) :])
+            if not target.endswith("/"):
+                path = base / target
+            break
+    else:
+        raise ValueError(old_relative)
+    if not path.is_file():
+        pytest.skip("YForum with its platform files is not installed")
+    return str(path)
+
+
 def template_file(root: Path, relative: str) -> Path:
     """File of a template that is in the core or, when it moved out, in the repository it moved to (skips when absent)."""
     path = Path(root) / relative
@@ -55,6 +85,24 @@ def template_file(root: Path, relative: str) -> Path:
     if moved is None:
         pytest.skip(f"{relative} is in a platform repository that is not installed")
     return moved
+
+
+def template_path(root, *parts) -> str:
+    """Path of a template (or template folder) that is in the core or, when it moved out, in its repository.
+
+    Where the repository is absent the core path is returned (it does not exist): the tests that need it are not run.
+    """
+    path = Path(root).joinpath(*parts)
+    if path.exists():
+        return str(path)
+    relative = "/".join(parts)
+    for old, spec in _moved().items():
+        target = spec["to"].split("/", 1)[1]
+        if old == relative or old.startswith(relative + "/"):
+            return str(
+                EXTERNAL / spec["repo"] / "ysocial_platform" / "templates" / relative
+            )
+    return str(path)
 
 
 def _moved():
@@ -110,6 +158,7 @@ def core_and_platform_loader():
             ("dating", "YDating"),
             ("instant_messaging", "YInstantMessaging"),
             ("photo_sharing", "YPhotoSharing"),
+            ("forum", "YForum"),
         )
         if (EXTERNAL / repo / "ysocial_platform" / "templates").is_dir()
     }

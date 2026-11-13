@@ -8,7 +8,11 @@ from y_web.src.dating import client_config as dcc
 from y_web.src.dating import server_settings as srv
 from y_web.src.dating import settings_ui as ui
 from y_web.src.system.path_utils import get_external_repo_dir
-from y_web.tests._platform_repos import core_and_platform_loader, platform_template
+from y_web.tests._platform_repos import (
+    core_and_platform_loader,
+    platform_template,
+    requires_platform,
+)
 
 REPO = get_external_repo_dir("YDating")
 pytestmark = [
@@ -332,6 +336,7 @@ def test_extending_a_completed_client_reopens_it():
     assert _reopen_completed_execution(ex, -1)
 
 
+@requires_platform("YForum")
 def test_extension_adds_no_duration_keys_to_a_forum_client_file():
     from y_web.routes.admin.sub.clients._execution import (
         _sync_duration_fields_in_client_config,

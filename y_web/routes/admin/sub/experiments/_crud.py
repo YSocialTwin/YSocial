@@ -2772,7 +2772,7 @@ def prompts_forum(uid):
         prompts = json.load(f)
 
     return render_template(
-        "admin/prompts_forum.html", experiment=experiment, prompts=prompts
+        "@forum/admin/prompts_forum.html", experiment=experiment, prompts=prompts
     )
 
 

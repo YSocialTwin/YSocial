@@ -5,6 +5,7 @@ The functions look the core up when called, so what the core (or a test) replace
 
 from __future__ import annotations
 
+from y_web import prompt_store  # noqa: F401
 from y_web.src.system import prompt_packs  # noqa: F401
 
 
@@ -140,6 +141,7 @@ __all__ = [
     "get_writable_path",
     "is_vllm_installed",
     "prompt_packs",
+    "prompt_store",
     "python_command",
     "remaining_days",
     "rewrite_server_config",

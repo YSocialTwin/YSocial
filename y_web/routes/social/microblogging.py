@@ -1352,7 +1352,7 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
     if getattr(exp, "platform_type", "") == "forum":
         logged_user = _forum_logged_user()
         html = render_template(
-            "forum/components/posts.html",
+            "@forum/forum/components/posts.html",
             items=rp,
             enumerate=enumerate,
             user_id=(logged_user.id if logged_user else current_user.id),

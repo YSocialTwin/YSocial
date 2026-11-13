@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from y_web.tests._platform_repos import photo_file
+from y_web.tests._platform_repos import forum_file, photo_file
 
 pytestmark = pytest.mark.integration
 
@@ -190,7 +190,7 @@ class TestClientFormFields:
     def test_follow_back_field_is_wired_in_all_client_forms(self):
         templates = [
             str(_REPO_ROOT / "y_web/templates/admin/clients.html"),
-            str(_REPO_ROOT / "y_web/templates/admin/clients_forum.html"),
+            forum_file("y_web/templates/admin/clients_forum.html"),
             str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
         ]
         crud_source = open(

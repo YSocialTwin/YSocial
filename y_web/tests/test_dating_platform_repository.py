@@ -34,13 +34,7 @@ def provider():
 def test_without_the_repository_dating_is_not_a_platform_of_the_core():
     from y_web.platforms import builtin
 
-    assert "dating" not in {
-        p.key
-        for p in (
-            builtin.Microblogging(),
-            builtin.Forum(),
-        )
-    }
+    assert "dating" not in {p.key for p in (builtin.Microblogging(),)}
     assert not hasattr(builtin, "Dating")
 
 

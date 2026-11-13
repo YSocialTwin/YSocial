@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from y_web.routes.social.forum import _build_forum_sidebar_communities
+from y_web.tests._platform_repos import forum_file
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -64,7 +65,7 @@ def test_sidebar_can_recover_subreddit_from_url_when_field_missing():
 
 
 def test_forum_compose_template_exposes_community_selector():
-    template = Path(str(_REPO_ROOT / "y_web/templates/forum/feed.html")).read_text(
+    template = Path(forum_file("y_web/templates/forum/feed.html")).read_text(
         encoding="utf-8"
     )
 
@@ -77,14 +78,14 @@ def test_forum_compose_template_exposes_community_selector():
 
 def test_forum_compose_and_api_forward_selected_community_slug():
     js_source = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/reddit/async_updates.js")
+        forum_file("y_web/static/assets/js/reddit/async_updates.js")
     ).read_text(encoding="utf-8")
-    api_source = Path(str(_REPO_ROOT / "y_web/routes/api/reddit.py")).read_text(
+    api_source = Path(forum_file("y_web/routes/api/reddit.py")).read_text(
         encoding="utf-8"
     )
-    action_source = Path(
-        str(_REPO_ROOT / "y_web/src/forum/actions/posts.py")
-    ).read_text(encoding="utf-8")
+    action_source = Path(forum_file("y_web/src/forum/actions/posts.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert 'communitySelect: "#post-community"' in js_source
     assert "community_slug: payload.communitySlug" in js_source
@@ -103,7 +104,7 @@ def test_forum_compose_and_api_forward_selected_community_slug():
 
 def test_forum_sidebar_template_contains_recent_and_user_sections():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/components/sidebar.html")
+        forum_file("y_web/templates/forum/components/sidebar.html")
     ).read_text(encoding="utf-8")
 
     assert "Most recently active communities" in template
@@ -114,10 +115,10 @@ def test_forum_sidebar_template_contains_recent_and_user_sections():
 
 def test_forum_post_headers_render_primary_community_links():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/components/posts.html")
+        forum_file("y_web/templates/forum/components/posts.html")
     ).read_text(encoding="utf-8")
     js_source = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/reddit/async_updates.js")
+        forum_file("y_web/static/assets/js/reddit/async_updates.js")
     ).read_text(encoding="utf-8")
     query_source = Path(
         str(_REPO_ROOT / "y_web/src/commons/service/queries.py")
@@ -145,17 +146,17 @@ def test_forum_queries_include_image_post_subreddit_communities():
 
 
 def test_forum_manual_posts_do_not_auto_extract_topics():
-    action_source = Path(
-        str(_REPO_ROOT / "y_web/src/forum/actions/posts.py")
-    ).read_text(encoding="utf-8")
+    action_source = Path(forum_file("y_web/src/forum/actions/posts.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert "topics = annotator.annotate_topics(content)" not in action_source
     assert "topics = []" in action_source
 
 
 def test_forum_comments_inherit_topics_from_thread_root():
-    action_source = Path(
-        str(_REPO_ROOT / "y_web/src/forum/actions/posts.py")
-    ).read_text(encoding="utf-8")
+    action_source = Path(forum_file("y_web/src/forum/actions/posts.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert "Post_topics(post_id=comment.id, topic_id=topic_id)" in action_source

@@ -10,6 +10,8 @@ Verifies:
 
 import pytest
 
+from y_web.tests._platform_repos import requires_platform
+
 pytestmark = pytest.mark.unit
 
 
@@ -172,6 +174,7 @@ class TestServerRuntimePaths:
         assert script_path.endswith("external/YServer/y_server_run.py")
         assert script_path.startswith(server_dir)
 
+    @requires_platform("YForum")
     def test_resolve_forum_path(self):
         from y_web.src.simulation.server import _resolve_server_runtime_paths
 
@@ -193,6 +196,7 @@ class TestClientProcessRunner:
         pkg_dir = _resolve_client_package_dir("/repo", "microblogging")
         assert pkg_dir.endswith("external/YClient")
 
+    @requires_platform("YForum")
     def test_resolve_client_package_forum(self):
         from y_web.src.simulation.process_runner import _resolve_client_package_dir
 

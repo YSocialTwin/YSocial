@@ -4,7 +4,7 @@ import pytest
 
 import y_web.i18n as i18n
 from y_web.tests import _platform_alias
-from y_web.tests._platform_repos import template_file
+from y_web.tests._platform_repos import platform_template, template_file
 from y_web.tests.test_frontend_settings_generic_suite_panel import (  # noqa: F401  (fixtures + helpers)
     _login,
     _make_admin_login_user,
@@ -102,7 +102,12 @@ def test_user_generated_text_never_goes_through_the_catalogs():
     )
     offenders = []
     for folder in SIM_DIRS:
-        for path in (ROOT / "y_web" / "templates" / folder).rglob("*.html"):
+        folders = [ROOT / "y_web" / "templates" / folder]
+        if folder == "forum":  # the forum pages live in their repository
+            folders.append(
+                ROOT / "external" / "YForum" / "ysocial_platform" / "templates" / folder
+            )
+        for path in (p for f in folders for p in f.rglob("*.html")):
             for field in pattern.findall(path.read_text(encoding="utf-8")):
                 if field not in LABEL_FIELDS:
                     offenders.append((path.name, field))
@@ -202,9 +207,9 @@ def test_participant_language_selector_follows_the_experiment_switch():
 
 
 def test_forum_profile_view_has_no_language_selector():
-    assert "profile_language_field" not in (
-        ROOT / "y_web" / "templates" / "forum" / "profile.html"
-    ).read_text(encoding="utf-8")
+    assert "profile_language_field" not in platform_template(
+        "YForum", "forum/profile.html"
+    )
 
 
 def test_language_is_chosen_in_the_profile_not_in_the_feed_header():

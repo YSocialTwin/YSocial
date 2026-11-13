@@ -96,7 +96,30 @@ PHOTO_SHARING = Platform(
     ),
 )
 
-PLATFORMS = (DATING, INSTANT_MESSAGING, PHOTO_SHARING)
+FORUM = Platform(
+    repo="YForum",
+    key="forum",
+    old_package="y_web.src.forum",
+    library="forum",
+    provider_class="Forum",
+    views={
+        "y_web.routes.social.forum": "routes.social_forum",
+        "y_web.routes.interactions.forum": "routes.interactions_forum",
+        "y_web.routes.api.reddit": "routes.api_reddit",
+        "y_web.routes.admin.sub.clients._forum_hpc": "routes.clients_forum_hpc",
+    },
+    needs=tuple(
+        sorted(path.name for path in Path(__file__).parent.glob("test_forum_*.py"))
+    )
+    + (
+        "test_api_reddit_blueprint.py",
+        "test_hpc_client_failure_alert.py",
+        "test_phase8_src_forum.py",
+        "test_template_refactoring.py",
+    ),
+)
+
+PLATFORMS = (DATING, INSTANT_MESSAGING, PHOTO_SHARING, FORUM)
 
 _state: Dict[str, bool] = {}
 
@@ -144,6 +167,15 @@ def _install_one(platform: Platform) -> bool:
             sys.modules[f"{platform.old_package}.{path.stem}"] = load(
                 f"{platform.library}.{path.stem}"
             )
+        for sub in sorted(p for p in folder.iterdir() if (p / "__init__.py").is_file()):
+            sys.modules[f"{platform.old_package}.{sub.name}"] = load(
+                f"{platform.library}.{sub.name}"
+            )
+            for path in sorted(sub.glob("*.py")):
+                if path.stem != "__init__":
+                    sys.modules[f"{platform.old_package}.{sub.name}.{path.stem}"] = (
+                        load(f"{platform.library}.{sub.name}.{path.stem}")
+                    )
     for old, new in platform.views.items():
         module = load(new)
         sys.modules[old] = module
