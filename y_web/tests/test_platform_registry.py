@@ -48,3 +48,18 @@ def test_a_provider_needs_a_key():
 )
 def test_entry_url_of_each_built_in_platform(key, expected):
     assert registry.get(key).entry_url(3, 7) == expected
+
+
+def test_landing_redirect_follows_the_platform_of_the_experiment(app):
+    from types import SimpleNamespace as NS
+
+    from y_web.routes.social.common import _landing_redirect
+
+    with app.test_request_context():
+        forum = _landing_redirect(NS(platform_type="forum", idexp=3), 7)
+        assert forum.status_code == 302
+        assert forum.location == "/3/rfeed/7/rfeed/rf/1"
+        for without_landing in ("instant_messaging", "dating", "video_chat", None):
+            assert (
+                _landing_redirect(NS(platform_type=without_landing, idexp=3), 7) is None
+            )

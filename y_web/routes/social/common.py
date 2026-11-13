@@ -28,6 +28,7 @@ from werkzeug.security import generate_password_hash
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.platforms import registry as platforms
 from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
@@ -90,6 +91,13 @@ from y_web.src.recsys.content_recsys import (
 )
 from y_web.src.system.avatars_store import get_avatars_dir
 from y_web.src.system.path_utils import get_writable_path
+
+
+def _landing_redirect(exp, user_id):
+    """Redirect to the page a participant lands on in this experiment, or ``None`` when its platform has none."""
+    provider = platforms.get(exp.platform_type)
+    url = provider.entry_url(exp.idexp, user_id) if provider is not None else None
+    return redirect(url) if url else None
 
 
 def _latest_follow_action(*, follower_id, user_id):
@@ -289,12 +297,9 @@ def index():
             except Exception:
                 pass  # Use fallback admin ID if query fails
 
-            if exp.platform_type == "microblogging":
-                return redirect(f"/{exp.idexp}/feed/{exp_user_id}/feed/rf/1")
-            elif exp.platform_type == "forum":
-                return redirect(f"/{exp.idexp}/rfeed/{exp_user_id}/rfeed/rf/1")
-            elif exp.platform_type == "photo_sharing":
-                return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
+            landing = _landing_redirect(exp, exp_user_id)
+            if landing is not None:
+                return landing
     return render_template("login/login.html")
 
 
@@ -1112,12 +1117,9 @@ def onboarding(exp_id, user_id):
     ):
         exp_obj = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp_obj is not None:
-            if exp_obj.platform_type == "microblogging":
-                return redirect(f"/{exp_id}/feed/{user_id}/feed/rf/1")
-            elif exp_obj.platform_type == "forum":
-                return redirect(f"/{exp_id}/rfeed/{user_id}/rfeed/rf/1")
-            elif exp_obj.platform_type == "photo_sharing":
-                return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
+            landing = _landing_redirect(exp_obj, user_id)
+            if landing is not None:
+                return landing
 
     # Profile picture
     profile_pic = ""
@@ -1514,11 +1516,4 @@ def save_onboarding(exp_id, user_id):
     if exp is None:
         return redirect("/")
 
-    if exp.platform_type == "microblogging":
-        return redirect(f"/{exp.idexp}/feed/{user_id_val}/feed/rf/1")
-    elif exp.platform_type == "forum":
-        return redirect(f"/{exp.idexp}/rfeed/{user_id_val}/rfeed/rf/1")
-    elif exp.platform_type == "photo_sharing":
-        return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
-    else:
-        return redirect("/")
+    return _landing_redirect(exp, user_id_val) or redirect("/")

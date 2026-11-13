@@ -12,7 +12,6 @@
  "y_web/routes/admin/sub/experiments/_helpers.py": 2,
  "y_web/routes/api/interview/_memory.py": 2,
  "y_web/routes/interactions/common.py": 2,
- "y_web/routes/social/common.py": 9,
  "y_web/routes/social/forum.py": 4,
  "y_web/routes/social/helpers.py": 3,
  "y_web/routes/social/photo.py": 1,
