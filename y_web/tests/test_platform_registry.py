@@ -40,7 +40,7 @@ def test_a_provider_needs_a_key():
     "key, expected",
     [
         ("microblogging", "/3/feed/7/feed/rf/1"),
-        ("forum", "/3/rfeed/7/rfeed/rf/1"),
+        ("forum", "/3/rfeed/7/feed/rf/1"),
         ("photo_sharing", "/3/photo/feed/all/feed/rf/1"),
         ("instant_messaging", None),
         ("dating", None),
@@ -58,7 +58,7 @@ def test_landing_redirect_follows_the_platform_of_the_experiment(app):
     with app.test_request_context():
         forum = _landing_redirect(NS(platform_type="forum", idexp=3), 7)
         assert forum.status_code == 302
-        assert forum.location == "/3/rfeed/7/rfeed/rf/1"
+        assert forum.location == "/3/rfeed/7/feed/rf/1"
         for without_landing in ("instant_messaging", "dating", "video_chat", None):
             assert (
                 _landing_redirect(NS(platform_type=without_landing, idexp=3), 7) is None

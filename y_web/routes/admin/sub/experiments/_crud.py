@@ -719,15 +719,11 @@ def join_experiment(exp_id):
     user_id = user_record.id
 
     # Route to the appropriate feed based on platform type
-    if exp.platform_type == "microblogging":
-        return redirect(f"/{exp_id}/feed/{user_id}/feed/rf/1")
-    elif exp.platform_type == "forum":
-        return redirect(f"/{exp_id}/rfeed/{user_id}/feed/rf/1")
-    elif exp.platform_type == "photo_sharing":
-        return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
-    else:
-        flash(_("Unknown platform type for this experiment."))
-        return redirect("/admin/experiments")
+    entry_url = registry.resolve(exp.platform_type).entry_url(exp_id, user_id)
+    if entry_url:
+        return redirect(entry_url)
+    flash(_("Unknown platform type for this experiment."))
+    return redirect("/admin/experiments")
 
 
 @experiments.route("/admin/select_experiment/<int:exp_id>")

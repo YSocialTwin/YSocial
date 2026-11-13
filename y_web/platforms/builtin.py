@@ -29,7 +29,7 @@ class Forum(PlatformProvider):
     order = 20
 
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
-        return f"/{exp_id}/rfeed/{user_id}/rfeed/rf/1"
+        return f"/{exp_id}/rfeed/{user_id}/feed/rf/1"
 
     # The Flask pair (YServerReddit/YClientReddit) and the Ray runtime (YForum) have their own pages.
     def client_mode(self, simulator_type: str) -> str:
