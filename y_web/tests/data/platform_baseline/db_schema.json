@@ -1,0 +1,819 @@
+{
+ "None": {},
+ "db_admin": {
+  "activity_profiles": {
+   "hours": "VARCHAR(100) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(120) NOT NULL"
+  },
+  "admin_interview_messages": {
+   "content": "TEXT NOT NULL",
+   "created_at": "DATETIME NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "meta_json": "TEXT",
+   "role": "VARCHAR(12) NOT NULL",
+   "session_id": "INTEGER NOT NULL"
+  },
+  "admin_interview_sessions": {
+   "admin_username": "VARCHAR(50) NOT NULL",
+   "agent_user_id": "VARCHAR(64) NOT NULL",
+   "agent_username": "VARCHAR(50) NOT NULL",
+   "backend_mode": "VARCHAR(20) NOT NULL",
+   "created_at": "DATETIME NOT NULL",
+   "exp_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "interests_snapshot_json": "TEXT",
+   "llm_base_url": "VARCHAR(300)",
+   "llm_model": "VARCHAR(200)",
+   "memory_snapshot_json": "TEXT",
+   "persona_snapshot": "TEXT",
+   "run_id": "TEXT",
+   "updated_at": "DATETIME NOT NULL"
+  },
+  "admin_users": {
+   "email": "VARCHAR(50) NOT NULL",
+   "exp_details_tutorial_shown": "BOOLEAN",
+   "id": "INTEGER NOT NULL PK",
+   "lang": "VARCHAR(10)",
+   "last_seen": "VARCHAR(30) NOT NULL",
+   "llm": "VARCHAR(50)",
+   "llm_api_key": "VARCHAR(300)",
+   "llm_url": "VARCHAR(200)",
+   "password": "VARCHAR(80) NOT NULL",
+   "perspective_api": "VARCHAR(300)",
+   "profile_pic": "VARCHAR(400)",
+   "role": "VARCHAR(10) NOT NULL",
+   "telemetry_enabled": "BOOLEAN",
+   "telemetry_notice_shown": "BOOLEAN",
+   "tutorial_shown": "BOOLEAN",
+   "username": "VARCHAR(15) NOT NULL"
+  },
+  "age_classes": {
+   "age_end": "INTEGER NOT NULL",
+   "age_start": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(50) NOT NULL"
+  },
+  "agent_ext": {
+   "agent_id": "INTEGER NOT NULL PK",
+   "feature_name": "VARCHAR(100) NOT NULL PK",
+   "feature_value": "TEXT"
+  },
+  "agent_population": {
+   "agent_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "population_id": "INTEGER NOT NULL"
+  },
+  "agent_profile": {
+   "agent_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "profile": "VARCHAR(300)"
+  },
+  "agents": {
+   "activity_profile": "INTEGER",
+   "ag": "VARCHAR(50)",
+   "ag_type": "VARCHAR(50)",
+   "age": "INTEGER",
+   "archetype": "VARCHAR(50)",
+   "co": "VARCHAR(50)",
+   "cover_image": "VARCHAR(400)",
+   "crecsys": "VARCHAR(50)",
+   "daily_activity_level": "INTEGER",
+   "education_level": "VARCHAR(50)",
+   "ex": "VARCHAR(50)",
+   "frecsys": "VARCHAR(50)",
+   "gender": "VARCHAR(10)",
+   "id": "INTEGER NOT NULL PK",
+   "language": "VARCHAR(10)",
+   "leaning": "VARCHAR(50)",
+   "name": "VARCHAR(50) NOT NULL",
+   "nationality": "VARCHAR(50)",
+   "ne": "VARCHAR(50)",
+   "oe": "VARCHAR(50)",
+   "profession": "VARCHAR(50)",
+   "profile_pic": "VARCHAR(400)",
+   "round_actions": "VARCHAR(50)",
+   "toxicity": "VARCHAR(50)"
+  },
+  "agents_custom_features": {
+   "agent_id": "INTEGER NOT NULL",
+   "feature_type": "VARCHAR(20) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "key": "VARCHAR(200) NOT NULL",
+   "value": "TEXT"
+  },
+  "blog_posts": {
+   "id": "INTEGER NOT NULL PK",
+   "is_read": "BOOLEAN",
+   "latest_check_on": "VARCHAR(50)",
+   "link": "VARCHAR(500)",
+   "published_at": "VARCHAR(50)",
+   "title": "VARCHAR(500)"
+  },
+  "client": {
+   "archetype_broadcaster": "REAL",
+   "archetype_explorer": "REAL",
+   "archetype_validator": "REAL",
+   "attention_window": "INTEGER",
+   "comment": "REAL",
+   "crecsys": "VARCHAR(50)",
+   "days": "INTEGER",
+   "descr": "VARCHAR(200)",
+   "follow": "REAL",
+   "frecsys": "VARCHAR(50)",
+   "id": "INTEGER NOT NULL PK",
+   "id_exp": "INTEGER NOT NULL",
+   "image": "REAL",
+   "llm": "VARCHAR(100)",
+   "llm_api_key": "VARCHAR(300)",
+   "llm_max_tokens": "INTEGER",
+   "llm_temperature": "REAL",
+   "llm_v": "VARCHAR(100)",
+   "llm_v_agent": "VARCHAR(100)",
+   "llm_v_api_key": "VARCHAR(300)",
+   "llm_v_max_tokens": "INTEGER",
+   "llm_v_temperature": "REAL",
+   "max_length_thread_reading": "INTEGER",
+   "name": "VARCHAR(50) NOT NULL",
+   "network_type": "VARCHAR(50)",
+   "news": "REAL",
+   "percentage_new_agents_iteration": "REAL",
+   "percentage_removed_agents_iteration": "REAL",
+   "pid": "INTEGER",
+   "population_id": "INTEGER NOT NULL",
+   "post": "REAL",
+   "probability_of_daily_follow": "REAL",
+   "probability_of_secondary_follow": "REAL",
+   "prompt_language": "VARCHAR(10) NOT NULL",
+   "read": "REAL",
+   "reading_from_follower_ratio": "REAL",
+   "search": "REAL",
+   "share": "REAL",
+   "share_link": "REAL",
+   "status": "INTEGER NOT NULL",
+   "trans_broad_broad": "REAL",
+   "trans_broad_expl": "REAL",
+   "trans_broad_val": "REAL",
+   "trans_expl_broad": "REAL",
+   "trans_expl_expl": "REAL",
+   "trans_expl_val": "REAL",
+   "trans_val_broad": "REAL",
+   "trans_val_expl": "REAL",
+   "trans_val_val": "REAL",
+   "visibility_rounds": "INTEGER",
+   "vote": "REAL"
+  },
+  "client_execution": {
+   "client_id": "INTEGER NOT NULL",
+   "elapsed_time": "INTEGER",
+   "expected_duration_rounds": "INTEGER",
+   "id": "INTEGER NOT NULL PK",
+   "last_active_day": "INTEGER",
+   "last_active_hour": "INTEGER",
+   "terminal_state": "VARCHAR(20) NOT NULL"
+  },
+  "client_log_metrics": {
+   "aggregation_level": "VARCHAR(10) NOT NULL",
+   "call_count": "INTEGER NOT NULL",
+   "client_id": "INTEGER NOT NULL",
+   "day": "INTEGER NOT NULL",
+   "exp_id": "INTEGER NOT NULL",
+   "hour": "INTEGER",
+   "id": "INTEGER NOT NULL PK",
+   "method_name": "VARCHAR(200) NOT NULL",
+   "total_execution_time": "FLOAT NOT NULL"
+  },
+  "content_recsys": {
+   "category": "VARCHAR(100)",
+   "enabled": "VARCHAR(100)",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(50) NOT NULL",
+   "value": "VARCHAR(500) NOT NULL"
+  },
+  "download_notifications": {
+   "created_at": "DATETIME NOT NULL",
+   "error_message": "VARCHAR(500)",
+   "id": "INTEGER NOT NULL PK",
+   "is_read": "BOOLEAN NOT NULL",
+   "message": "VARCHAR(500) NOT NULL",
+   "resource_name": "VARCHAR(255)",
+   "resource_path": "VARCHAR(500)",
+   "status": "VARCHAR(20) NOT NULL",
+   "title": "VARCHAR(200) NOT NULL",
+   "updated_at": "DATETIME NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "education": {
+   "education_level": "VARCHAR(50) NOT NULL",
+   "id": "INTEGER NOT NULL PK"
+  },
+  "exp_frontend_settings": {
+   "exp_id": "INTEGER NOT NULL PK",
+   "settings_json": "TEXT NOT NULL",
+   "updated_at": "DATETIME NOT NULL"
+  },
+  "exp_stats": {
+   "agents": "INTEGER NOT NULL",
+   "exp_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "mentions": "INTEGER NOT NULL",
+   "posts": "INTEGER NOT NULL",
+   "reactions": "INTEGER NOT NULL",
+   "rounds": "INTEGER NOT NULL"
+  },
+  "exp_topic": {
+   "exp_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "topic_id": "INTEGER NOT NULL"
+  },
+  "experiment_schedule_groups": {
+   "created_at": "DATETIME NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "is_completed": "INTEGER NOT NULL",
+   "name": "VARCHAR(100) NOT NULL",
+   "order_index": "INTEGER NOT NULL"
+  },
+  "experiment_schedule_items": {
+   "experiment_id": "INTEGER NOT NULL",
+   "group_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "order_index": "INTEGER NOT NULL"
+  },
+  "experiment_schedule_logs": {
+   "created_at": "DATETIME NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "log_type": "VARCHAR(20) NOT NULL",
+   "message": "TEXT NOT NULL"
+  },
+  "experiment_schedule_status": {
+   "current_group_capacity": "INTEGER",
+   "current_group_id": "INTEGER",
+   "dynamic_filling_enabled": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "is_running": "INTEGER NOT NULL",
+   "launch_in_progress": "INTEGER NOT NULL",
+   "started_at": "DATETIME"
+  },
+  "exps": {
+   "annotations": "VARCHAR(500) NOT NULL",
+   "db_name": "VARCHAR(50) NOT NULL",
+   "exp_descr": "VARCHAR(200) NOT NULL",
+   "exp_group": "VARCHAR(100)",
+   "exp_name": "VARCHAR(50) NOT NULL",
+   "exp_status": "VARCHAR(20) NOT NULL",
+   "idexp": "INTEGER NOT NULL PK",
+   "is_remote": "INTEGER NOT NULL",
+   "llm_agents_enabled": "INTEGER NOT NULL",
+   "owner": "VARCHAR(50) NOT NULL",
+   "platform_type": "VARCHAR(50) NOT NULL",
+   "port": "INTEGER NOT NULL",
+   "prompt_language": "VARCHAR(10) NOT NULL",
+   "running": "INTEGER NOT NULL",
+   "server": "VARCHAR(50) NOT NULL",
+   "server_pid": "INTEGER",
+   "simulator_type": "VARCHAR(20) NOT NULL",
+   "status": "INTEGER NOT NULL"
+  },
+  "federation": {
+   "config_json": "TEXT NOT NULL",
+   "coordinator_pid": "INTEGER",
+   "created_at": "DATETIME NOT NULL",
+   "description": "VARCHAR(500) NOT NULL",
+   "federation_id": "VARCHAR(64) NOT NULL",
+   "folder": "VARCHAR(255) NOT NULL",
+   "granularity": "VARCHAR(10) NOT NULL",
+   "host": "VARCHAR(50) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(100) NOT NULL",
+   "owner": "VARCHAR(50) NOT NULL",
+   "port": "INTEGER",
+   "seed": "INTEGER NOT NULL",
+   "status": "VARCHAR(20) NOT NULL",
+   "token": "VARCHAR(128) NOT NULL"
+  },
+  "federation_human": {
+   "created_at": "DATETIME NOT NULL",
+   "federation_pk": "INTEGER NOT NULL",
+   "human_id": "VARCHAR(64) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "members_json": "TEXT NOT NULL",
+   "status": "VARCHAR(10) NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "federation_identity_link": {
+   "federation_pk": "INTEGER NOT NULL",
+   "global_agent_id": "VARCHAR(64) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "local_account_id": "VARCHAR(64) NOT NULL",
+   "member": "VARCHAR(50) NOT NULL",
+   "username": "VARCHAR(120)"
+  },
+  "federation_member": {
+   "exp_id": "INTEGER NOT NULL",
+   "federation_pk": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "member": "VARCHAR(50) NOT NULL",
+   "platform_type": "VARCHAR(50) NOT NULL",
+   "position": "INTEGER NOT NULL"
+  },
+  "federation_schedule_queue": {
+   "enqueued_at": "DATETIME NOT NULL",
+   "federation_id": "INTEGER NOT NULL",
+   "finished_at": "DATETIME",
+   "id": "INTEGER NOT NULL PK",
+   "position": "INTEGER NOT NULL",
+   "started_at": "DATETIME",
+   "status": "VARCHAR(20) NOT NULL"
+  },
+  "follow_recsys": {
+   "category": "VARCHAR(100)",
+   "enabled": "VARCHAR(100)",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(50) NOT NULL",
+   "value": "VARCHAR(500) NOT NULL"
+  },
+  "forum_image_feed_resources": {
+   "created_at": "DATETIME NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "interests": "TEXT NOT NULL",
+   "subreddit": "VARCHAR(200) NOT NULL",
+   "updated_at": "DATETIME NOT NULL"
+  },
+  "forum_rss_feed_resources": {
+   "created_at": "DATETIME NOT NULL",
+   "description": "TEXT NOT NULL",
+   "feed_url": "VARCHAR(500) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(200) NOT NULL",
+   "updated_at": "DATETIME NOT NULL",
+   "url_site": "VARCHAR(500) NOT NULL"
+  },
+  "frontend_adds_on_exp_module_settings": {
+   "config_json": "TEXT NOT NULL",
+   "enabled": "BOOLEAN NOT NULL",
+   "exp_id": "INTEGER NOT NULL PK",
+   "module_id": "VARCHAR(100) NOT NULL PK",
+   "updated_at": "DATETIME NOT NULL"
+  },
+  "hpc_monitor_settings": {
+   "check_interval_seconds": "INTEGER NOT NULL",
+   "enabled": "BOOLEAN NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "last_check": "DATETIME",
+   "max_hpc_per_group": "INTEGER",
+   "max_hpc_simulations_per_vllm_worker": "INTEGER NOT NULL"
+  },
+  "jupyter_instances": {
+   "exp_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "notebook_dir": "VARCHAR(300) NOT NULL",
+   "port": "INTEGER NOT NULL",
+   "process": "INTEGER",
+   "status": "VARCHAR(10) NOT NULL"
+  },
+  "languages": {
+   "id": "INTEGER NOT NULL PK",
+   "language": "VARCHAR(50) NOT NULL"
+  },
+  "leanings": {
+   "id": "INTEGER NOT NULL PK",
+   "leaning": "VARCHAR(50) NOT NULL"
+  },
+  "log_file_offsets": {
+   "client_id": "INTEGER",
+   "exp_id": "INTEGER NOT NULL",
+   "file_path": "VARCHAR(500) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "last_offset": "BIGINT NOT NULL",
+   "last_updated": "DATETIME NOT NULL",
+   "log_file_type": "VARCHAR(50) NOT NULL"
+  },
+  "nationalities": {
+   "id": "INTEGER NOT NULL PK",
+   "nationality": "VARCHAR(50) NOT NULL"
+  },
+  "ollama_pull": {
+   "id": "INTEGER NOT NULL PK",
+   "model_name": "VARCHAR(50) NOT NULL",
+   "status": "REAL NOT NULL"
+  },
+  "opinion_distributions": {
+   "distribution_type": "VARCHAR(50) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(100) NOT NULL",
+   "parameters": "TEXT NOT NULL"
+  },
+  "opinion_evolution_cache": {
+   "binned_data": "TEXT NOT NULL",
+   "created_at": "DATETIME NOT NULL",
+   "day": "INTEGER NOT NULL",
+   "exp_id": "INTEGER NOT NULL",
+   "hour": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "latest_opinions_state": "TEXT",
+   "social_interactions": "INTEGER NOT NULL",
+   "topic_id": "INTEGER",
+   "total_opinions": "INTEGER NOT NULL",
+   "unique_agents": "INTEGER NOT NULL"
+  },
+  "opinion_evolution_sampled_agents": {
+   "created_at": "DATETIME NOT NULL",
+   "exp_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "sample_percentage": "INTEGER NOT NULL",
+   "sampled_agent_ids": "TEXT NOT NULL",
+   "topic_id": "VARCHAR(50)"
+  },
+  "opinion_groups": {
+   "id": "INTEGER NOT NULL PK",
+   "lower_bound": "FLOAT NOT NULL",
+   "name": "VARCHAR(100) NOT NULL",
+   "upper_bound": "FLOAT NOT NULL"
+  },
+  "page_population": {
+   "id": "INTEGER NOT NULL PK",
+   "page_id": "INTEGER NOT NULL",
+   "population_id": "INTEGER NOT NULL"
+  },
+  "page_topic": {
+   "id": "INTEGER NOT NULL PK",
+   "page_id": "INTEGER NOT NULL",
+   "topic_id": "INTEGER NOT NULL"
+  },
+  "pages": {
+   "activity_profile": "INTEGER",
+   "descr": "VARCHAR(200)",
+   "feed": "VARCHAR(200)",
+   "id": "INTEGER NOT NULL PK",
+   "keywords": "VARCHAR(200)",
+   "leaning": "VARCHAR(50)",
+   "logo": "VARCHAR(300)",
+   "name": "VARCHAR(50) NOT NULL",
+   "page_type": "VARCHAR(50) NOT NULL",
+   "pg_type": "VARCHAR(100)"
+  },
+  "plugin_state": {
+   "enabled": "BOOLEAN NOT NULL",
+   "repo_key": "VARCHAR(64) NOT NULL PK",
+   "updated_at": "DATETIME NOT NULL",
+   "updated_by": "VARCHAR(255)"
+  },
+  "population": {
+   "age_max": "INTEGER",
+   "age_min": "INTEGER",
+   "crecsys": "VARCHAR(50)",
+   "descr": "VARCHAR(200) NOT NULL",
+   "education": "VARCHAR(100)",
+   "frecsys": "VARCHAR(50)",
+   "id": "INTEGER NOT NULL PK",
+   "interests": "VARCHAR(300)",
+   "languages": "VARCHAR(100)",
+   "leanings": "VARCHAR(200)",
+   "llm": "VARCHAR(50)",
+   "llm_url": "VARCHAR(100)",
+   "name": "VARCHAR(50) NOT NULL",
+   "nationalities": "VARCHAR(200)",
+   "pop_type": "VARCHAR(50)",
+   "size": "INTEGER",
+   "toxicity": "VARCHAR(50)",
+   "username_type": "VARCHAR(50) NOT NULL"
+  },
+  "population_activity_profile": {
+   "activity_profile": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "percentage": "FLOAT NOT NULL",
+   "population": "INTEGER NOT NULL"
+  },
+  "population_experiment": {
+   "id": "INTEGER NOT NULL PK",
+   "id_exp": "INTEGER NOT NULL",
+   "id_population": "INTEGER NOT NULL"
+  },
+  "professions": {
+   "background": "VARCHAR(200) NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "profession": "VARCHAR(50) NOT NULL"
+  },
+  "release_info": {
+   "download_url": "VARCHAR(500)",
+   "id": "INTEGER NOT NULL PK",
+   "latest_check_on": "VARCHAR(50)",
+   "latest_version_tag": "VARCHAR(50)",
+   "published_at": "VARCHAR(50)",
+   "release_name": "VARCHAR(200)",
+   "sha256": "VARCHAR(100)",
+   "size": "VARCHAR(50)"
+  },
+  "server_log_metrics": {
+   "aggregation_level": "VARCHAR(10) NOT NULL",
+   "call_count": "INTEGER NOT NULL",
+   "day": "INTEGER NOT NULL",
+   "exp_id": "INTEGER NOT NULL",
+   "hour": "INTEGER",
+   "id": "INTEGER NOT NULL PK",
+   "max_time": "DATETIME",
+   "min_time": "DATETIME",
+   "path": "VARCHAR(200) NOT NULL",
+   "total_duration": "FLOAT NOT NULL"
+  },
+  "signup_settings": {
+   "enabled": "BOOLEAN NOT NULL",
+   "id": "INTEGER NOT NULL PK"
+  },
+  "signup_target": {
+   "id": "INTEGER NOT NULL PK",
+   "kind": "VARCHAR(16) NOT NULL",
+   "ref": "VARCHAR(64) NOT NULL"
+  },
+  "topic_list": {
+   "id": "INTEGER NOT NULL PK",
+   "name": "VARCHAR(50) NOT NULL"
+  },
+  "toxicity_levels": {
+   "id": "INTEGER NOT NULL PK",
+   "toxicity_level": "VARCHAR(50) NOT NULL"
+  },
+  "user_experiment": {
+   "exp_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "watchdog_settings": {
+   "enabled": "BOOLEAN NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "last_run": "DATETIME",
+   "run_interval_minutes": "INTEGER NOT NULL"
+  }
+ },
+ "db_exp": {
+  "agent_opinion": {
+   "agent_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "id_interacted_with": "INTEGER NOT NULL",
+   "id_post": "INTEGER NOT NULL",
+   "opinion": "REAL NOT NULL",
+   "seq": "INTEGER",
+   "tid": "INTEGER NOT NULL",
+   "topic_id": "INTEGER NOT NULL"
+  },
+  "article_topics": {
+   "article_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "topic_id": "INTEGER NOT NULL"
+  },
+  "articles": {
+   "fetched_on": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "link": "VARCHAR(200) NOT NULL",
+   "seq": "INTEGER",
+   "summary": "VARCHAR(500) NOT NULL",
+   "title": "VARCHAR(200) NOT NULL",
+   "website_id": "INTEGER NOT NULL"
+  },
+  "emotions": {
+   "emotion": "VARCHAR(20) NOT NULL",
+   "icon": "VARCHAR(20) NOT NULL",
+   "id": "INTEGER NOT NULL PK"
+  },
+  "follow": {
+   "action": "VARCHAR(10) NOT NULL",
+   "follower_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "round": "INTEGER NOT NULL",
+   "seq": "INTEGER",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "forum_chat_messages": {
+   "content": "TEXT NOT NULL",
+   "created_at": "DATETIME NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "meta_json": "TEXT",
+   "role": "VARCHAR(12) NOT NULL",
+   "session_id": "INTEGER NOT NULL"
+  },
+  "forum_chat_sessions": {
+   "created_at": "DATETIME NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "last_message_at": "DATETIME",
+   "last_message_preview": "TEXT",
+   "llm_base_url": "VARCHAR(300)",
+   "llm_model": "VARCHAR(200)",
+   "memory_snapshot_json": "TEXT",
+   "owner_user_id": "VARCHAR(64) NOT NULL",
+   "owner_username": "VARCHAR(50) NOT NULL",
+   "persona_snapshot": "TEXT",
+   "run_id": "TEXT",
+   "target_profile_pic": "VARCHAR(400)",
+   "target_user_id": "VARCHAR(64) NOT NULL",
+   "target_username": "VARCHAR(50) NOT NULL",
+   "updated_at": "DATETIME NOT NULL"
+  },
+  "hashtags": {
+   "hashtag": "VARCHAR(20) NOT NULL",
+   "id": "INTEGER NOT NULL PK"
+  },
+  "image_posts": {
+   "description": "TEXT",
+   "fetched_on": "VARCHAR(20)",
+   "high_res_url": "VARCHAR(500)",
+   "id": "INTEGER NOT NULL PK",
+   "local_path": "VARCHAR(500)",
+   "source_url": "VARCHAR(500)",
+   "subreddit": "VARCHAR(100)",
+   "title": "VARCHAR(300)",
+   "url": "VARCHAR(500) NOT NULL",
+   "used": "BOOLEAN"
+  },
+  "images": {
+   "article_id": "INTEGER",
+   "description": "VARCHAR(400)",
+   "id": "INTEGER NOT NULL PK",
+   "remote_article_id": "INTEGER",
+   "seq": "INTEGER",
+   "url": "VARCHAR(200)"
+  },
+  "interests": {
+   "iid": "INTEGER NOT NULL PK",
+   "interest": "VARCHAR(20) NOT NULL",
+   "seq": "INTEGER"
+  },
+  "mentions": {
+   "answered": "INTEGER",
+   "id": "INTEGER NOT NULL PK",
+   "post_id": "INTEGER NOT NULL",
+   "round": "INTEGER NOT NULL",
+   "seq": "INTEGER",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "post": {
+   "client_action_id": "VARCHAR(96)",
+   "comment_to": "INTEGER",
+   "created_at": "DATETIME",
+   "dedupe_key": "VARCHAR(64)",
+   "id": "INTEGER NOT NULL PK",
+   "image_id": "INTEGER",
+   "image_post_id": "INTEGER",
+   "is_moderation_comment": "INTEGER NOT NULL",
+   "moderated": "INTEGER NOT NULL",
+   "news_id": "VARCHAR(50)",
+   "post_img": "VARCHAR(20)",
+   "reaction_count": "INTEGER",
+   "round": "INTEGER NOT NULL",
+   "seq": "INTEGER",
+   "shared_from": "INTEGER",
+   "thread_id": "INTEGER",
+   "tweet": "TEXT NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "post_emotions": {
+   "emotion_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "post_id": "INTEGER NOT NULL"
+  },
+  "post_hashtags": {
+   "hashtag_id": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "post_id": "INTEGER NOT NULL"
+  },
+  "post_sentiment": {
+   "compound": "REAL",
+   "id": "INTEGER NOT NULL PK",
+   "is_comment": "INTEGER",
+   "is_post": "INTEGER",
+   "is_reaction": "INTEGER",
+   "neg": "REAL",
+   "neu": "REAL",
+   "pos": "REAL",
+   "post_id": "INTEGER NOT NULL",
+   "round": "INTEGER NOT NULL",
+   "sentiment_parent": "VARCHAR(5)",
+   "seq": "INTEGER",
+   "topic_id": "INTEGER NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "post_topics": {
+   "id": "INTEGER NOT NULL PK",
+   "post_id": "INTEGER NOT NULL",
+   "topic_id": "INTEGER NOT NULL"
+  },
+  "post_toxicity": {
+   "flirtation": "REAL",
+   "id": "INTEGER NOT NULL PK",
+   "identity_attack": "REAL",
+   "insult": "REAL",
+   "post_id": "INTEGER NOT NULL",
+   "profanity": "REAL",
+   "severe_toxicity": "REAL",
+   "sexually_explicit": "REAL",
+   "threat": "REAL",
+   "toxicity": "REAL"
+  },
+  "reactions": {
+   "id": "INTEGER NOT NULL PK",
+   "post_id": "INTEGER NOT NULL",
+   "round": "INTEGER NOT NULL",
+   "seq": "INTEGER",
+   "type": "VARCHAR(10) NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "recommendations": {
+   "id": "INTEGER NOT NULL PK",
+   "post_ids": "VARCHAR(500) NOT NULL",
+   "round": "INTEGER NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "reply_inbox_state": {
+   "last_seen_reply_id": "INTEGER NOT NULL",
+   "user_id": "INTEGER NOT NULL PK"
+  },
+  "reported": {
+   "from_uid": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "tid": "INTEGER NOT NULL",
+   "to_post": "INTEGER",
+   "to_uid": "INTEGER",
+   "type": "VARCHAR(50) NOT NULL"
+  },
+  "rounds": {
+   "day": "INTEGER NOT NULL",
+   "hour": "INTEGER NOT NULL",
+   "id": "INTEGER NOT NULL PK",
+   "seq": "INTEGER"
+  },
+  "stress_reward": {
+   "action": "VARCHAR(64)",
+   "id": "VARCHAR(36) NOT NULL PK",
+   "tid": "INTEGER NOT NULL",
+   "type": "VARCHAR(16) NOT NULL",
+   "uid": "INTEGER NOT NULL",
+   "value": "FLOAT NOT NULL",
+   "variable": "VARCHAR(16) NOT NULL"
+  },
+  "sys_messages": {
+   "duration": "INTEGER",
+   "from_round": "INTEGER",
+   "id": "INTEGER NOT NULL PK",
+   "message": "TEXT NOT NULL",
+   "to_uid": "INTEGER",
+   "type": "VARCHAR(50) NOT NULL"
+  },
+  "user_interest": {
+   "id": "INTEGER NOT NULL PK",
+   "interest_id": "INTEGER NOT NULL",
+   "round_id": "INTEGER NOT NULL",
+   "user_id": "INTEGER NOT NULL"
+  },
+  "user_mgmt": {
+   "activity_profile": "VARCHAR(50)",
+   "ag": "VARCHAR(50)",
+   "age": "INTEGER",
+   "archetype": "VARCHAR(50)",
+   "co": "VARCHAR(50)",
+   "cover_image": "VARCHAR(400) NOT NULL",
+   "daily_activity_level": "INTEGER",
+   "education_level": "VARCHAR(10)",
+   "email": "VARCHAR(50)",
+   "ex": "VARCHAR(50)",
+   "frecsys_type": "VARCHAR(50)",
+   "gender": "VARCHAR(10)",
+   "id": "INTEGER NOT NULL PK",
+   "is_page": "INTEGER",
+   "joined_on": "INTEGER NOT NULL",
+   "language": "VARCHAR(10)",
+   "leaning": "VARCHAR(10)",
+   "left_on": "INTEGER",
+   "nationality": "VARCHAR(15)",
+   "ne": "VARCHAR(50)",
+   "oe": "VARCHAR(50)",
+   "owner": "VARCHAR(10)",
+   "password": "VARCHAR(80) NOT NULL",
+   "profession": "VARCHAR(50)",
+   "recsys_type": "VARCHAR(50)",
+   "round_actions": "INTEGER",
+   "seq": "INTEGER",
+   "toxicity": "VARCHAR(10)",
+   "user_type": "VARCHAR(10) NOT NULL",
+   "username": "VARCHAR(15) NOT NULL"
+  },
+  "voting": {
+   "content_id": "INTEGER NOT NULL",
+   "content_type": "VARCHAR(10) NOT NULL",
+   "preference": "VARCHAR(10) NOT NULL",
+   "round": "INTEGER NOT NULL",
+   "user_id": "INTEGER NOT NULL",
+   "vid": "INTEGER NOT NULL PK"
+  },
+  "websites": {
+   "category": "VARCHAR(20) NOT NULL",
+   "country": "VARCHAR(10) NOT NULL",
+   "fetch_images_from_url": "BOOLEAN",
+   "fetch_images_timeout": "INTEGER",
+   "id": "INTEGER NOT NULL PK",
+   "language": "VARCHAR(10) NOT NULL",
+   "last_fetched": "INTEGER NOT NULL",
+   "leaning": "VARCHAR(10) NOT NULL",
+   "name": "VARCHAR(50) NOT NULL",
+   "rss": "VARCHAR(200) NOT NULL"
+  }
+ }
+}

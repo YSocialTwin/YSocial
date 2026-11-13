@@ -1,0 +1,1545 @@
+{
+ "/ -> main.index": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/emotion/<emotion_id>/<int:page> -> main.api_emotion_posts": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.api_feed": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/forum_communities -> main.api_forum_communities": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/forum_search -> main.api_forum_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/friends/<user_id>/<int:page> -> main.api_friends": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/hashtag_posts/<hashtag_id>/<int:page> -> main.api_hashtag_posts": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/header_search -> main.api_header_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/interest/<interest_id>/<int:page> -> main.api_interest_posts": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/photo/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.api_photo_feed": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/photo/post/<photo_id> -> main.api_photo_post": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/photo/post/<photo_id>/bookmark -> main.api_photo_toggle_bookmark": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/post/<photo_id>/comments -> main.api_photo_create_comment": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/post/<photo_id>/delete -> main.api_photo_delete_post": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/post/<photo_id>/like -> main.api_photo_toggle_like": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/post/<photo_id>/share -> main.api_photo_share_post": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/profile/<user_id>/connections/<kind> -> main.api_photo_profile_connections": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/photo/profile/update -> main.api_photo_profile_update": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/search -> main.api_photo_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/photo/share -> main.api_photo_share": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/story/<story_id>/view -> main.api_photo_story_view": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/story/create -> main.api_photo_create_story": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/switch/user -> main.api_photo_switch_user": [
+  "POST"
+ ],
+ "/<int:exp_id>/api/photo/switch/users -> main.api_photo_switch_users": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/profile/<user_id>/<string:mode>/<int:page> -> main.api_profile_posts": [
+  "GET"
+ ],
+ "/<int:exp_id>/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.api_feed_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/cancel_notification -> user_actions.cancel_notification": [
+  "GET"
+ ],
+ "/<int:exp_id>/communities -> main.communities_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating -> main.dating_home": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/api/accounts -> main.dating_api_accounts": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/api/act -> main.dating_api_act": [
+  "POST"
+ ],
+ "/<int:exp_id>/dating/api/deck -> main.dating_api_deck": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/api/history -> main.dating_api_history": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/api/inbox -> main.dating_api_inbox": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/api/leave -> main.dating_api_leave": [
+  "POST"
+ ],
+ "/<int:exp_id>/dating/api/photo -> main.dating_api_photo": [
+  "POST"
+ ],
+ "/<int:exp_id>/dating/api/state -> main.dating_api_state": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/api/status -> main.dating_api_status": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/chat/<match_id> -> main.dating_chat": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/join -> main.dating_join": [
+  "GET",
+  "POST"
+ ],
+ "/<int:exp_id>/dating/matches -> main.dating_matches": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/me -> main.dating_me": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/media/<path:name> -> main.dating_media": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/notice -> main.dating_notice": [
+  "GET",
+  "POST"
+ ],
+ "/<int:exp_id>/dating/notifications -> main.dating_notifications": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/profile/<account_id> -> main.dating_profile": [
+  "GET"
+ ],
+ "/<int:exp_id>/dating/search -> main.dating_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/delete_post -> user_actions.delete_post": [
+  "GET"
+ ],
+ "/<int:exp_id>/edit_profile/<user_id> -> main.edit_profile": [
+  "GET"
+ ],
+ "/<int:exp_id>/emotion/<emotion_id>/<int:page> -> main.get_post_emotion": [
+  "GET"
+ ],
+ "/<int:exp_id>/federation/crosspost_suggest -> user_actions.federation_crosspost_suggest": [
+  "GET"
+ ],
+ "/<int:exp_id>/federation/repost -> user_actions.federation_repost": [
+  "POST"
+ ],
+ "/<int:exp_id>/federation/repost_targets -> user_actions.federation_repost_targets": [
+  "GET"
+ ],
+ "/<int:exp_id>/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.feed": [
+  "GET"
+ ],
+ "/<int:exp_id>/follow/<user_id>/<follower_id> -> user_actions.follow": [
+  "GET",
+  "POST"
+ ],
+ "/<int:exp_id>/friends/<user_id>/<int:page> -> main.get_friends": [
+  "GET"
+ ],
+ "/<int:exp_id>/hashtag_posts/<hashtag_id>/<int:page> -> main.get_post_hashtags": [
+  "GET"
+ ],
+ "/<int:exp_id>/im -> main.im_index": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/act -> main.im_act": [
+  "POST"
+ ],
+ "/<int:exp_id>/im/api/chat/<chat_id>/history -> main.im_api_history": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/api/gateway -> main.im_api_gateway": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/api/link-preview -> main.im_api_link_preview": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/api/search -> main.im_api_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/api/status -> main.im_api_status": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/chat/<chat_id> -> main.im_chat": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/chat/<chat_id>/members -> main.im_members": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/chat/<chat_id>/topic/<int:topic_id> -> main.im_chat_topic": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/invite -> main.im_invite": [
+  "POST"
+ ],
+ "/<int:exp_id>/im/notice -> main.im_notice": [
+  "GET",
+  "POST"
+ ],
+ "/<int:exp_id>/im/notifications -> main.im_notifications": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/profile/<account_id> -> main.im_profile": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/search -> main.im_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/im/thread/<message_id> -> main.im_thread": [
+  "GET"
+ ],
+ "/<int:exp_id>/interest/<interest_id>/<int:page> -> main.get_post_interest": [
+  "GET"
+ ],
+ "/<int:exp_id>/interview -> main.interview": [
+  "GET"
+ ],
+ "/<int:exp_id>/onboarding/<user_id> -> main.onboarding": [
+  "GET"
+ ],
+ "/<int:exp_id>/photo/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.photo_feed": [
+  "GET"
+ ],
+ "/<int:exp_id>/photo/media/<path:filename> -> main.photo_media": [
+  "GET"
+ ],
+ "/<int:exp_id>/photo/messages -> main.photo_messages": [
+  "GET"
+ ],
+ "/<int:exp_id>/photo/profile/<user_id>/<string:mode>/<int:page> -> main.photo_profile": [
+  "GET"
+ ],
+ "/<int:exp_id>/photo/search -> main.photo_search": [
+  "GET"
+ ],
+ "/<int:exp_id>/photo/suggestions -> main.photo_suggestions": [
+  "GET"
+ ],
+ "/<int:exp_id>/profile/<user_id>/<string:mode>/<int:page> -> main.profile_logged": [
+  "GET"
+ ],
+ "/<int:exp_id>/publish -> user_actions.publish_post": [
+  "GET"
+ ],
+ "/<int:exp_id>/publish_comment -> user_actions.publish_comment": [
+  "GET"
+ ],
+ "/<int:exp_id>/publish_reddit -> user_actions.publish_post_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/react_to_content -> user_actions.react": [
+  "GET"
+ ],
+ "/<int:exp_id>/report_content -> user_actions.report_content": [
+  "GET"
+ ],
+ "/<int:exp_id>/rfeed -> main.rfeed_redirect": [
+  "GET"
+ ],
+ "/<int:exp_id>/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.feed_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/rnotifications -> main.rnotifications": [
+  "GET"
+ ],
+ "/<int:exp_id>/rsearch -> main.search_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/rthread/<post_id> -> main.get_thread_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/save_onboarding/<user_id> -> main.save_onboarding": [
+  "POST"
+ ],
+ "/<int:exp_id>/share_content -> user_actions.share_content": [
+  "GET"
+ ],
+ "/<int:exp_id>/subforum/<string:community_slug> -> main.subforum_reddit": [
+  "GET"
+ ],
+ "/<int:exp_id>/thread/<post_id> -> main.get_thread": [
+  "GET"
+ ],
+ "/<int:exp_id>/update_password/<user_id> -> main.update_password": [
+  "POST"
+ ],
+ "/<int:exp_id>/update_profile_data/<user_id> -> main.update_profile_data": [
+  "POST"
+ ],
+ "/<int:exp_id>/update_topic_preferences/<user_id> -> main.update_topic_preferences": [
+  "POST"
+ ],
+ "/admin/about -> admin.about": [
+  "GET"
+ ],
+ "/admin/activity_profiles_data -> experiments.activity_profiles_data": [
+  "GET",
+  "POST"
+ ],
+ "/admin/add_page_to_population -> pages.add_page_to_population": [
+  "POST"
+ ],
+ "/admin/add_to_experiment -> population.add_to_experiment": [
+  "POST"
+ ],
+ "/admin/add_to_population -> agents.add_to_population": [
+  "POST"
+ ],
+ "/admin/add_topic_to_page -> pages.add_topic_to_page": [
+  "POST"
+ ],
+ "/admin/add_user -> users.add_user": [
+  "POST"
+ ],
+ "/admin/add_user_to_experiment -> users.add_user_to_experiment": [
+  "POST"
+ ],
+ "/admin/age_classes_data -> experiments.age_classes_data": [
+  "GET",
+  "POST"
+ ],
+ "/admin/agent_details/<int:uid> -> agents.agent_details": [
+  "GET"
+ ],
+ "/admin/agents -> agents.agent_data": [
+  "GET"
+ ],
+ "/admin/agents_dashboard -> agents.agents_dashboard": [
+  "GET"
+ ],
+ "/admin/agents_data -> agents.agents_data": [
+  "GET"
+ ],
+ "/admin/api/fetch_embedding_models -> admin.fetch_embedding_models": [
+  "GET"
+ ],
+ "/admin/api/fetch_models -> admin.fetch_models": [
+  "GET"
+ ],
+ "/admin/api/parse_image_feed -> experiments.parse_image_feed": [
+  "POST"
+ ],
+ "/admin/api/parse_rss_feed -> experiments.parse_rss_feed": [
+  "POST"
+ ],
+ "/admin/avatars/<action> -> experiments.avatars_download_control": [
+  "POST"
+ ],
+ "/admin/avatars/status -> experiments.avatars_download_status": [
+  "GET"
+ ],
+ "/admin/bulk_assign_users -> users.bulk_assign_users": [
+  "POST"
+ ],
+ "/admin/bulk_create_users -> users.bulk_create_users": [
+  "POST"
+ ],
+ "/admin/check_for_updates -> users.check_for_updates_route": [
+  "POST"
+ ],
+ "/admin/clear_experiment_logs/<int:uid> -> experiments.clear_experiment_logs": [
+  "POST"
+ ],
+ "/admin/client_details/<int:uid> -> clientsr.client_details": [
+  "GET"
+ ],
+ "/admin/client_details_dating/<int:uid> -> clientsr.client_details_dating": [
+  "GET"
+ ],
+ "/admin/client_details_forum/<int:uid> -> clientsr.client_details_forum": [
+  "GET"
+ ],
+ "/admin/client_details_hpc/<int:uid> -> clientsr.client_details_hpc": [
+  "GET"
+ ],
+ "/admin/client_logs/<int:client_id> -> experiments.client_logs": [
+  "GET"
+ ],
+ "/admin/clients/<idexp> -> clientsr.clients": [
+  "GET"
+ ],
+ "/admin/clients_adhoc/<idexp> -> clientsr.clients_adhoc": [
+  "GET"
+ ],
+ "/admin/clients_dating/<idexp> -> clientsr.clients_dating": [
+  "GET"
+ ],
+ "/admin/clients_forum/<idexp> -> clientsr.clients_forum": [
+  "GET"
+ ],
+ "/admin/clients_forum_hpc/<idexp> -> clientsr.clients_forum_hpc": [
+  "GET"
+ ],
+ "/admin/clients_hpc/<idexp> -> clientsr.clients_hpc": [
+  "GET"
+ ],
+ "/admin/clients_im/<idexp> -> clientsr.clients_im": [
+  "GET"
+ ],
+ "/admin/clients_photo/<idexp> -> clientsr.clients_photo": [
+  "GET"
+ ],
+ "/admin/clients_standard/<idexp> -> clientsr.clients_standard": [
+  "GET"
+ ],
+ "/admin/copy_experiment -> experiments.copy_experiment": [
+  "POST"
+ ],
+ "/admin/copy_experiment_group -> experiments.copy_experiment_group": [
+  "POST"
+ ],
+ "/admin/create_activity_profile -> experiments.create_activity_profile": [
+  "POST"
+ ],
+ "/admin/create_adhoc_client -> clientsr.create_adhoc_client": [
+  "POST"
+ ],
+ "/admin/create_age_class -> experiments.create_age_class": [
+  "POST"
+ ],
+ "/admin/create_agent -> agents.create_agent": [
+  "POST"
+ ],
+ "/admin/create_client -> clientsr.create_client": [
+  "POST"
+ ],
+ "/admin/create_custom_agent/<agent_slug> -> agents.create_custom_agent": [
+  "POST"
+ ],
+ "/admin/create_dating_client -> clientsr.create_dating_client_route": [
+  "POST"
+ ],
+ "/admin/create_education -> experiments.create_education": [
+  "POST"
+ ],
+ "/admin/create_experiment -> experiments.create_experiment": [
+  "GET",
+  "POST"
+ ],
+ "/admin/create_forum_client -> clientsr.create_forum_client": [
+  "POST"
+ ],
+ "/admin/create_forum_hpc_client -> clientsr.create_forum_hpc_client_route": [
+  "POST"
+ ],
+ "/admin/create_forum_image_resource -> experiments.create_forum_image_resource": [
+  "POST"
+ ],
+ "/admin/create_forum_rss_resource -> experiments.create_forum_rss_resource": [
+  "POST"
+ ],
+ "/admin/create_hello_agent -> agents.create_hello_agent": [
+  "POST"
+ ],
+ "/admin/create_hpc_client -> clientsr.create_hpc_client_route": [
+  "POST"
+ ],
+ "/admin/create_im_client -> clientsr.create_im_client_route": [
+  "POST"
+ ],
+ "/admin/create_language -> experiments.create_language": [
+  "POST"
+ ],
+ "/admin/create_leaning -> experiments.create_leaning": [
+  "POST"
+ ],
+ "/admin/create_nationality -> experiments.create_nationality": [
+  "POST"
+ ],
+ "/admin/create_opinion_distribution -> experiments.create_opinion_distribution": [
+  "POST"
+ ],
+ "/admin/create_opinion_group -> experiments.create_opinion_group": [
+  "POST"
+ ],
+ "/admin/create_page -> pages.create_page": [
+  "POST"
+ ],
+ "/admin/create_population -> population.create_population": [
+  "POST"
+ ],
+ "/admin/create_population_empty -> population.create_population_empty": [
+  "GET",
+  "POST"
+ ],
+ "/admin/create_profession -> experiments.create_profession": [
+  "POST"
+ ],
+ "/admin/create_standard_client -> clientsr.create_standard_client": [
+  "POST"
+ ],
+ "/admin/create_topic -> experiments.create_topic": [
+  "POST"
+ ],
+ "/admin/create_toxicity_level -> experiments.create_toxicity_level": [
+  "POST"
+ ],
+ "/admin/custom_agent -> agents.custom_agent_data": [
+  "GET"
+ ],
+ "/admin/custom_agent/<agent_slug> -> agents.custom_agent_data": [
+  "GET"
+ ],
+ "/admin/dashboard -> admin.dashboard": [
+  "GET"
+ ],
+ "/admin/dashboard/experiments/<status> -> admin.dashboard_experiments_by_status": [
+  "GET"
+ ],
+ "/admin/dashboard/status -> admin.dashboard_status": [
+  "GET"
+ ],
+ "/admin/dashboard/world_simulations -> admin.dashboard_world_simulations": [
+  "GET"
+ ],
+ "/admin/dating_analytics/<int:idexp> -> experiments.dating_analytics": [
+  "GET"
+ ],
+ "/admin/dating_analytics/<int:idexp>/export.zip -> experiments.dating_analytics_export_all": [
+  "GET"
+ ],
+ "/admin/dating_analytics/<int:idexp>/export/<table>.csv -> experiments.dating_analytics_export": [
+  "GET"
+ ],
+ "/admin/dating_analytics/<int:idexp>/rebuild -> experiments.dating_analytics_rebuild": [
+  "POST"
+ ],
+ "/admin/dating_analytics/compare -> experiments.dating_analytics_compare": [
+  "GET"
+ ],
+ "/admin/dating_participants/<int:idexp> -> experiments.dating_participants": [
+  "GET"
+ ],
+ "/admin/dating_participants/<int:idexp>/reset_credits -> experiments.dating_participants_reset_credits": [
+  "POST"
+ ],
+ "/admin/dating_population/<int:uid>/download -> population.download_dating_population": [
+  "GET"
+ ],
+ "/admin/dating_populations -> population.dating_populations": [
+  "GET"
+ ],
+ "/admin/dating_settings/<int:uid> -> experiments.dating_settings": [
+  "GET"
+ ],
+ "/admin/delete_activity_profile/<int:profile_id> -> experiments.delete_activity_profile": [
+  "DELETE"
+ ],
+ "/admin/delete_adhoc_client/<int:idexp>/<path:client_key> -> clientsr.delete_adhoc_client_route": [
+  "GET"
+ ],
+ "/admin/delete_age_class/<int:age_class_id> -> experiments.delete_age_class": [
+  "DELETE"
+ ],
+ "/admin/delete_agent/<int:uid> -> agents.delete_agent": [
+  "GET"
+ ],
+ "/admin/delete_client/<int:uid> -> clientsr.delete_client": [
+  "GET"
+ ],
+ "/admin/delete_education/<int:education_level_id> -> experiments.delete_education_level": [
+  "DELETE"
+ ],
+ "/admin/delete_forum_image_resource/<int:resource_id> -> experiments.delete_forum_image_resource": [
+  "POST"
+ ],
+ "/admin/delete_forum_rss_resource/<int:resource_id> -> experiments.delete_forum_rss_resource": [
+  "POST"
+ ],
+ "/admin/delete_language/<int:language_id> -> experiments.delete_language": [
+  "DELETE"
+ ],
+ "/admin/delete_leaning/<int:leaning_id> -> experiments.delete_leaning": [
+  "DELETE"
+ ],
+ "/admin/delete_model/<string:model_name> -> ollama.delete_model": [
+  "GET"
+ ],
+ "/admin/delete_nationality/<int:nationality_id> -> experiments.delete_nationality": [
+  "DELETE"
+ ],
+ "/admin/delete_opinion_distribution/<int:dist_id> -> experiments.delete_opinion_distribution": [
+  "DELETE"
+ ],
+ "/admin/delete_opinion_group/<int:group_id> -> experiments.delete_opinion_group": [
+  "DELETE"
+ ],
+ "/admin/delete_orphaned_agents -> agents.delete_orphaned_agents": [
+  "POST"
+ ],
+ "/admin/delete_page/<int:uid> -> pages.delete_page": [
+  "GET"
+ ],
+ "/admin/delete_population/<int:uid> -> population.delete_population": [
+  "GET"
+ ],
+ "/admin/delete_profession/<int:profession_id> -> experiments.delete_profession": [
+  "DELETE"
+ ],
+ "/admin/delete_simulation/<int:exp_id> -> experiments.delete_simulation": [
+  "GET"
+ ],
+ "/admin/delete_simulations_bulk -> experiments.delete_simulations_bulk": [
+  "POST"
+ ],
+ "/admin/delete_topic/<int:topic_id> -> experiments.delete_topic": [
+  "DELETE"
+ ],
+ "/admin/delete_toxicity_level/<int:toxicity_level_id> -> experiments.delete_toxicity_level": [
+  "DELETE"
+ ],
+ "/admin/delete_user/<int:uid> -> users.delete_user": [
+  "GET"
+ ],
+ "/admin/detoxify_download/start -> experiments.detoxify_download_start": [
+  "POST"
+ ],
+ "/admin/detoxify_download/status -> experiments.detoxify_download_status": [
+  "GET"
+ ],
+ "/admin/dismiss_telemetry_notice -> admin.dismiss_telemetry_notice": [
+  "POST"
+ ],
+ "/admin/download_agent_list/<int:uid> -> clientsr.download_agent_list": [
+  "GET"
+ ],
+ "/admin/download_experiment/<int:eid> -> experiments.download_experiment_file": [
+  "GET",
+  "POST"
+ ],
+ "/admin/download_experiments_bulk -> experiments.download_experiments_bulk": [
+  "POST"
+ ],
+ "/admin/download_notifications -> experiments.download_notifications_page": [
+  "GET"
+ ],
+ "/admin/download_notifications/<int:notification_id>/cancel -> experiments.cancel_download_notification": [
+  "POST"
+ ],
+ "/admin/download_notifications/<int:notification_id>/delete -> experiments.delete_notification": [
+  "POST"
+ ],
+ "/admin/download_notifications/<int:notification_id>/download -> experiments.download_notification_resource": [
+  "GET"
+ ],
+ "/admin/download_notifications/<int:notification_id>/read -> experiments.mark_download_notification_read": [
+  "POST"
+ ],
+ "/admin/download_notifications/data -> experiments.download_notifications_data": [
+  "GET"
+ ],
+ "/admin/download_pages -> pages.download_pages": [
+  "GET"
+ ],
+ "/admin/download_population/<int:uid> -> population.download_population": [
+  "GET"
+ ],
+ "/admin/edit_adhoc_client/<int:idexp>/<path:client_key> -> clientsr.edit_adhoc_client": [
+  "GET"
+ ],
+ "/admin/educations_data -> experiments.educations_data": [
+  "GET"
+ ],
+ "/admin/embedding_settings/<int:uid> -> experiments.embedding_settings": [
+  "GET"
+ ],
+ "/admin/emotion_statistics/<int:expid> -> experiments.emotion_statistics": [
+  "GET"
+ ],
+ "/admin/emotion_statistics_data/<int:expid> -> experiments.emotion_analytics_data": [
+  "GET"
+ ],
+ "/admin/experiment_clients/<int:exp_id> -> experiments.experiment_clients": [
+  "GET"
+ ],
+ "/admin/experiment_details/<int:uid> -> experiments.experiment_details": [
+  "GET"
+ ],
+ "/admin/experiment_logs/<int:exp_id> -> experiments.experiment_logs": [
+  "GET"
+ ],
+ "/admin/experiment_matrix -> experiments.experiment_matrix": [
+  "GET",
+  "POST"
+ ],
+ "/admin/experiment_trends/<int:exp_id> -> experiments.experiment_trends": [
+  "GET"
+ ],
+ "/admin/experiments -> experiments.settings": [
+  "GET"
+ ],
+ "/admin/experiments_data -> experiments.experiments_data": [
+  "GET"
+ ],
+ "/admin/extend_simulation/<int:id_client> -> clientsr.extend_simulation": [
+  "GET",
+  "POST"
+ ],
+ "/admin/external_runtimes -> experiments.external_runtimes": [
+  "GET"
+ ],
+ "/admin/external_runtimes/<entry_key> -> experiments.external_runtime_detail": [
+  "GET"
+ ],
+ "/admin/external_runtimes/<repo_key>/<action> -> experiments.external_runtime_action": [
+  "POST"
+ ],
+ "/admin/external_runtimes/<repo_key>/banner -> experiments.external_runtime_banner": [
+  "GET"
+ ],
+ "/admin/external_runtimes/<repo_key>/logs -> experiments.external_runtime_logs": [
+  "GET"
+ ],
+ "/admin/external_runtimes/github_session -> experiments.external_runtime_github_session": [
+  "POST"
+ ],
+ "/admin/feed_limits/<int:uid> -> experiments.feed_limits": [
+  "GET"
+ ],
+ "/admin/forum_image_resources -> experiments.forum_image_resources": [
+  "GET"
+ ],
+ "/admin/forum_rss_resources -> experiments.forum_rss_resources": [
+  "GET"
+ ],
+ "/admin/frontend_settings -> experiments.frontend_settings": [
+  "GET"
+ ],
+ "/admin/frontend_settings/get_settings -> experiments.frontend_settings_get": [
+  "GET"
+ ],
+ "/admin/frontend_settings/save -> experiments.frontend_settings_save": [
+  "POST"
+ ],
+ "/admin/frontend_settings/suite/<repo_key>/get -> experiments.frontend_plugin_suite_settings_get": [
+  "GET"
+ ],
+ "/admin/frontend_settings/suite/<repo_key>/save -> experiments.frontend_plugin_suite_settings_save": [
+  "POST"
+ ],
+ "/admin/hashtag_evolution/<int:expid> -> experiments.hashtag_evolution": [
+  "GET"
+ ],
+ "/admin/hashtag_evolution_data/<int:expid> -> experiments.hashtag_evolution_data": [
+  "GET"
+ ],
+ "/admin/hello_agent -> agents.hello_agent_data": [
+  "GET"
+ ],
+ "/admin/hello_agents_data -> agents.hello_agents_data": [
+  "GET"
+ ],
+ "/admin/hpc_monitor_settings -> experiments.get_hpc_monitor_settings": [
+  "GET"
+ ],
+ "/admin/hpc_monitor_settings -> experiments.update_hpc_monitor_settings": [
+  "POST"
+ ],
+ "/admin/im/analytics/<int:idexp>/refresh -> experiments.im_analytics_refresh": [
+  "POST"
+ ],
+ "/admin/im_artifact/<int:idexp>/<kind>/<path:name> -> experiments.im_artifact": [
+  "GET"
+ ],
+ "/admin/im_export/<int:idexp> -> experiments.im_export": [
+  "POST"
+ ],
+ "/admin/im_news_snapshot/<int:uid> -> experiments.im_news_snapshot": [
+  "POST"
+ ],
+ "/admin/im_report/<int:idexp> -> experiments.im_report": [
+  "POST"
+ ],
+ "/admin/image_feeds/<int:uid> -> experiments.image_feeds": [
+  "GET"
+ ],
+ "/admin/join_experiment/<int:exp_id> -> experiments.join_experiment": [
+  "GET"
+ ],
+ "/admin/join_simulation -> experiments.join_simulation": [
+  "GET"
+ ],
+ "/admin/jupyter_data -> admin.jupyter_data": [
+  "GET"
+ ],
+ "/admin/lab/<int:exp_id> -> lab.jupyter_page": [
+  "GET"
+ ],
+ "/admin/lab_create/<expid> -> lab.api_create_notebook": [
+  "POST"
+ ],
+ "/admin/lab_instances -> lab.api_jupyter_instances": [
+  "GET"
+ ],
+ "/admin/lab_start/<experiment_id> -> lab.api_start_jupyter": [
+  "GET"
+ ],
+ "/admin/lab_stop/<instance_id> -> lab.api_stop_jupyter": [
+  "GET"
+ ],
+ "/admin/languages_data -> experiments.languages_data": [
+  "GET"
+ ],
+ "/admin/leanings_data -> experiments.leanings_data": [
+  "GET"
+ ],
+ "/admin/mark_blog_post_read/<int:post_id> -> users.mark_blog_post_read": [
+  "POST"
+ ],
+ "/admin/merge_populations -> population.merge_populations": [
+  "POST"
+ ],
+ "/admin/miscellanea/ -> experiments.miscellanea": [
+  "GET"
+ ],
+ "/admin/models_data -> admin.models_data": [
+  "GET"
+ ],
+ "/admin/nationalities_data -> experiments.nationalities_data": [
+  "GET"
+ ],
+ "/admin/network_analysis/<int:expid> -> experiments.network_analysis": [
+  "GET"
+ ],
+ "/admin/network_analysis_data/<int:expid> -> experiments.network_analysis_data": [
+  "GET"
+ ],
+ "/admin/notifications -> experiments.download_notifications_page": [
+  "GET"
+ ],
+ "/admin/notifications/<int:notification_id>/cancel -> experiments.cancel_download_notification": [
+  "POST"
+ ],
+ "/admin/notifications/<int:notification_id>/delete -> experiments.delete_notification": [
+  "POST"
+ ],
+ "/admin/notifications/<int:notification_id>/download -> experiments.download_notification_resource": [
+  "GET"
+ ],
+ "/admin/notifications/<int:notification_id>/read -> experiments.mark_download_notification_read": [
+  "POST"
+ ],
+ "/admin/notifications/data -> experiments.download_notifications_data": [
+  "GET"
+ ],
+ "/admin/ollama_cancel_pull/<string:model_name> -> ollama.ollama_cancel_pull": [
+  "POST"
+ ],
+ "/admin/ollama_pull/ -> ollama.ollama_pull": [
+  "POST"
+ ],
+ "/admin/open_external_url -> users.open_external_url": [
+  "POST"
+ ],
+ "/admin/opinion_configuration/<int:idexp> -> clientsr.opinion_configuration": [
+  "GET"
+ ],
+ "/admin/opinion_configuration_forum/<int:idexp> -> clientsr.opinion_configuration_forum": [
+  "GET"
+ ],
+ "/admin/opinion_configuration_hpc/<int:idexp> -> clientsr.opinion_configuration_hpc": [
+  "GET"
+ ],
+ "/admin/opinion_configuration_im/<int:idexp> -> clientsr.opinion_configuration_im": [
+  "GET"
+ ],
+ "/admin/opinion_configuration_standard/<int:idexp> -> clientsr.opinion_configuration_standard": [
+  "GET"
+ ],
+ "/admin/opinion_distributions_data -> experiments.opinion_distributions_data": [
+  "GET"
+ ],
+ "/admin/opinion_distributions_data -> experiments.update_opinion_distribution": [
+  "POST"
+ ],
+ "/admin/opinion_evolution/<int:expid> -> experiments.opinion_evolution": [
+  "GET"
+ ],
+ "/admin/opinion_evolution_data/<int:expid> -> experiments.opinion_evolution_data": [
+  "GET"
+ ],
+ "/admin/opinion_groups_data -> experiments.opinion_groups_data": [
+  "GET"
+ ],
+ "/admin/opinion_groups_data -> experiments.update_opinion_group": [
+  "POST"
+ ],
+ "/admin/page_details/<int:uid> -> pages.page_details": [
+  "GET"
+ ],
+ "/admin/pages -> pages.page_data": [
+  "GET"
+ ],
+ "/admin/pages_data -> pages.pages_data": [
+  "GET"
+ ],
+ "/admin/pause_adhoc_client/<int:idexp>/<path:client_key> -> clientsr.pause_adhoc_client": [
+  "GET"
+ ],
+ "/admin/pause_client/<int:uid>/<int:idexp> -> clientsr.pause_client": [
+  "GET"
+ ],
+ "/admin/population_details/<int:uid> -> population.population_details": [
+  "GET"
+ ],
+ "/admin/populations -> population.populations": [
+  "GET"
+ ],
+ "/admin/populations_data -> population.populations_data": [
+  "GET"
+ ],
+ "/admin/professions_data -> experiments.professions_data": [
+  "GET"
+ ],
+ "/admin/progress/<int:client_id> -> clientsr.get_progress": [
+  "GET"
+ ],
+ "/admin/progress_adhoc/<int:idexp>/<path:client_key> -> clientsr.get_adhoc_progress": [
+  "GET"
+ ],
+ "/admin/prompts/<int:uid> -> experiments.prompts": [
+  "GET"
+ ],
+ "/admin/prompts_dating/<int:uid> -> experiments.prompts_dating": [
+  "GET"
+ ],
+ "/admin/prompts_forum/<int:uid> -> experiments.prompts_forum": [
+  "GET"
+ ],
+ "/admin/prompts_hpc/<int:uid> -> experiments.prompts_hpc": [
+  "GET"
+ ],
+ "/admin/prompts_im/<int:uid> -> experiments.prompts_im": [
+  "GET"
+ ],
+ "/admin/prompts_language/<int:uid> -> experiments.set_prompt_language": [
+  "POST"
+ ],
+ "/admin/pull_progress/<string:model_name> -> ollama.get_pull_progress": [
+  "GET"
+ ],
+ "/admin/recsys_evolution/<int:expid> -> experiments.recsys_evolution": [
+  "GET"
+ ],
+ "/admin/recsys_evolution_data/<int:expid> -> experiments.recsys_evolution_data": [
+  "GET"
+ ],
+ "/admin/reset_agent_archetypes/<int:uid> -> clientsr.reset_agent_archetypes": [
+  "GET"
+ ],
+ "/admin/reset_agents_activity/<int:uid> -> clientsr.reset_agents_activity": [
+  "GET"
+ ],
+ "/admin/reset_client/<int:uid> -> clientsr.reset_client": [
+  "GET"
+ ],
+ "/admin/reset_hpc_experiment/<int:uid> -> experiments.reset_hpc_experiment": [
+  "POST"
+ ],
+ "/admin/reset_prompts_dating/<int:uid> -> experiments.reset_prompts_dating": [
+  "POST"
+ ],
+ "/admin/reset_prompts_im/<int:uid> -> experiments.reset_prompts_im": [
+  "POST"
+ ],
+ "/admin/resume_client/<int:uid>/<int:idexp> -> clientsr.resume_client": [
+  "GET"
+ ],
+ "/admin/rss_feeds/<int:uid> -> experiments.rss_feeds": [
+  "GET"
+ ],
+ "/admin/run_adhoc_client/<int:idexp>/<path:client_key> -> clientsr.run_adhoc_client": [
+  "GET"
+ ],
+ "/admin/run_client/<int:uid>/<int:idexp> -> clientsr.run_client": [
+  "GET"
+ ],
+ "/admin/schedule/auto_create_groups -> experiments.auto_create_groups": [
+  "POST"
+ ],
+ "/admin/schedule/available_experiments -> experiments.get_available_experiments_for_schedule": [
+  "GET"
+ ],
+ "/admin/schedule/check_progress -> experiments.check_schedule_progress": [
+  "POST"
+ ],
+ "/admin/schedule/cleanup_completed -> experiments.cleanup_completed_groups": [
+  "POST"
+ ],
+ "/admin/schedule/groups -> experiments.create_schedule_group": [
+  "POST"
+ ],
+ "/admin/schedule/groups -> experiments.get_schedule_groups": [
+  "GET"
+ ],
+ "/admin/schedule/groups/<int:group_id> -> experiments.delete_schedule_group": [
+  "DELETE"
+ ],
+ "/admin/schedule/groups/<int:group_id>/experiments -> experiments.add_experiment_to_group": [
+  "POST"
+ ],
+ "/admin/schedule/groups/reorder -> experiments.reorder_schedule_groups": [
+  "POST"
+ ],
+ "/admin/schedule/items/<int:item_id> -> experiments.remove_experiment_from_group": [
+  "DELETE"
+ ],
+ "/admin/schedule/logs -> experiments.get_schedule_logs": [
+  "GET"
+ ],
+ "/admin/schedule/logs/clear -> experiments.clear_schedule_logs": [
+  "POST"
+ ],
+ "/admin/schedule/start -> experiments.start_schedule": [
+  "POST"
+ ],
+ "/admin/schedule/status -> experiments.get_schedule_status": [
+  "GET"
+ ],
+ "/admin/schedule/stop -> experiments.stop_schedule": [
+  "POST"
+ ],
+ "/admin/select_experiment/<int:exp_id> -> experiments.change_active_experiment": [
+  "GET"
+ ],
+ "/admin/sentiment_evolution/<int:expid> -> experiments.sentiment_evolution": [
+  "GET"
+ ],
+ "/admin/sentiment_evolution_data/<int:expid> -> experiments.sentiment_analytics_data": [
+  "GET"
+ ],
+ "/admin/set_forum_opinion_distributions -> clientsr.set_forum_opinion_distributions": [
+  "POST"
+ ],
+ "/admin/set_hpc_opinion_distributions -> clientsr.set_hpc_opinion_distributions": [
+  "POST"
+ ],
+ "/admin/set_im_opinion_distributions -> clientsr.set_im_opinion_distributions": [
+  "POST"
+ ],
+ "/admin/set_network/<int:uid> -> clientsr.set_network": [
+  "POST"
+ ],
+ "/admin/set_opinion_distributions -> clientsr.set_opinion_distributions": [
+  "POST"
+ ],
+ "/admin/set_perspective_api_user -> users.set_perspective_api_user": [
+  "POST"
+ ],
+ "/admin/set_standard_opinion_distributions -> clientsr.set_standard_opinion_distributions": [
+  "POST"
+ ],
+ "/admin/signup_settings -> users.update_signup_settings": [
+  "POST"
+ ],
+ "/admin/start_experiment/<int:uid> -> experiments.start_experiment": [
+  "GET"
+ ],
+ "/admin/start_ollama/ -> ollama.start_ollama": [
+  "GET",
+  "POST"
+ ],
+ "/admin/stop_client/<int:uid>/<int:idexp> -> clientsr.stop_client": [
+  "GET"
+ ],
+ "/admin/stop_experiment/<int:uid> -> experiments.stop_experiment": [
+  "GET"
+ ],
+ "/admin/stress_reward_evolution/<int:expid> -> experiments.stress_reward_evolution": [
+  "GET"
+ ],
+ "/admin/stress_reward_evolution_data/<int:expid> -> experiments.stress_reward_evolution_data": [
+  "GET"
+ ],
+ "/admin/stress_reward_settings/<int:uid> -> experiments.stress_reward_settings": [
+  "GET"
+ ],
+ "/admin/submit_experiment_logs/<int:exp_id> -> experiments.submit_experiment_logs": [
+  "POST"
+ ],
+ "/admin/test_remote_server/<int:exp_id> -> experiments.test_remote_server": [
+  "POST"
+ ],
+ "/admin/topic_data -> experiments.topic_data": [
+  "GET"
+ ],
+ "/admin/topic_evolution/<int:expid> -> experiments.topic_evolution": [
+  "GET"
+ ],
+ "/admin/topic_evolution_data/<int:expid> -> experiments.topic_evolution_data": [
+  "GET"
+ ],
+ "/admin/toxicity_evolution/<int:expid> -> experiments.toxicity_evolution": [
+  "GET"
+ ],
+ "/admin/toxicity_evolution_data/<int:expid> -> experiments.toxicity_analytics_data": [
+  "GET"
+ ],
+ "/admin/toxicity_levels_data -> experiments.toxicity_levels_data": [
+  "GET"
+ ],
+ "/admin/tutorial/check_status -> tutorial.check_tutorial_status": [
+  "GET"
+ ],
+ "/admin/tutorial/create_all -> tutorial.create_tutorial_experiment": [
+  "POST"
+ ],
+ "/admin/tutorial/data -> tutorial.get_tutorial_data": [
+  "GET"
+ ],
+ "/admin/tutorial/dismiss -> tutorial.dismiss_tutorial": [
+  "POST"
+ ],
+ "/admin/tutorial/exp_details/check_status -> tutorial.check_exp_details_tutorial_status": [
+  "GET"
+ ],
+ "/admin/tutorial/exp_details/dismiss -> tutorial.dismiss_exp_details_tutorial": [
+  "POST"
+ ],
+ "/admin/tutorial/exp_details/reset -> tutorial.reset_exp_details_tutorial": [
+  "POST"
+ ],
+ "/admin/tutorial/reset -> tutorial.reset_tutorial": [
+  "POST"
+ ],
+ "/admin/tutorial/run_simulation -> tutorial.run_tutorial_simulation": [
+  "POST"
+ ],
+ "/admin/update_adhoc_client/<int:idexp>/<path:client_key> -> clientsr.update_adhoc_client": [
+  "POST"
+ ],
+ "/admin/update_agent_archetypes/<int:uid> -> clientsr.update_agent_archetypes": [
+  "POST"
+ ],
+ "/admin/update_agents_activity/<int:uid> -> clientsr.update_agents_activity": [
+  "POST"
+ ],
+ "/admin/update_client_llm/<int:uid> -> clientsr.update_llm": [
+  "POST"
+ ],
+ "/admin/update_dating_client/<int:uid> -> clientsr.update_dating_client": [
+  "POST"
+ ],
+ "/admin/update_dating_settings/<int:uid> -> experiments.update_dating_settings": [
+  "POST"
+ ],
+ "/admin/update_embedding_settings/<int:uid> -> experiments.update_embedding_settings": [
+  "POST"
+ ],
+ "/admin/update_experiment_config/<int:uid> -> experiments.update_experiment_config": [
+  "POST"
+ ],
+ "/admin/update_experiment_descr/<int:uid> -> experiments.update_experiment_descr": [
+  "POST"
+ ],
+ "/admin/update_experiment_name/<int:uid> -> experiments.update_experiment_name": [
+  "POST"
+ ],
+ "/admin/update_experiment_topics/<int:uid> -> experiments.update_experiment_topics": [
+  "POST"
+ ],
+ "/admin/update_feed_limits/<int:uid> -> experiments.update_feed_limits": [
+  "POST"
+ ],
+ "/admin/update_forum_avatar_mode/<int:uid> -> experiments.update_forum_avatar_mode": [
+  "POST"
+ ],
+ "/admin/update_forum_client_llm/<int:uid> -> clientsr.update_forum_client_llm": [
+  "POST"
+ ],
+ "/admin/update_forum_client_settings/<int:uid> -> clientsr.update_forum_client_settings": [
+  "POST"
+ ],
+ "/admin/update_forum_recsys/<int:uid> -> clientsr.update_forum_recsys": [
+  "POST"
+ ],
+ "/admin/update_hpc_client_llm/<int:uid> -> clientsr.update_hpc_client_llm": [
+  "POST"
+ ],
+ "/admin/update_hpc_client_settings/<int:uid> -> clientsr.update_hpc_client_settings": [
+  "POST"
+ ],
+ "/admin/update_hpc_recsys/<int:uid> -> clientsr.update_hpc_recsys": [
+  "POST"
+ ],
+ "/admin/update_im_advanced_settings/<int:uid> -> experiments.update_im_advanced_settings": [
+  "POST"
+ ],
+ "/admin/update_image_feeds/<int:uid> -> experiments.update_image_feeds": [
+  "POST"
+ ],
+ "/admin/update_population_llm/<int:uid> -> population.update_llm": [
+  "POST"
+ ],
+ "/admin/update_population_recsys/<int:uid> -> population.update_recsys": [
+  "POST"
+ ],
+ "/admin/update_prompts/<int:uid> -> experiments.update_prompts": [
+  "POST"
+ ],
+ "/admin/update_prompts_dating/<int:uid> -> experiments.update_prompts_dating": [
+  "POST"
+ ],
+ "/admin/update_prompts_hpc/<int:uid> -> experiments.update_prompts_hpc": [
+  "POST"
+ ],
+ "/admin/update_prompts_im/<int:uid> -> experiments.update_prompts_im": [
+  "POST"
+ ],
+ "/admin/update_recsys/<int:uid> -> clientsr.update_recsys": [
+  "POST"
+ ],
+ "/admin/update_remote_server/<int:exp_id> -> experiments.update_remote_server": [
+  "POST"
+ ],
+ "/admin/update_rss_feeds/<int:uid> -> experiments.update_rss_feeds": [
+  "POST"
+ ],
+ "/admin/update_standard_client_llm/<int:uid> -> clientsr.update_standard_client_llm": [
+  "POST"
+ ],
+ "/admin/update_standard_client_settings/<int:uid> -> clientsr.update_standard_client_settings": [
+  "POST"
+ ],
+ "/admin/update_standard_recsys/<int:uid> -> clientsr.update_standard_recsys": [
+  "POST"
+ ],
+ "/admin/update_stress_reward_settings/<int:uid> -> experiments.update_stress_reward_settings": [
+  "POST"
+ ],
+ "/admin/update_telemetry_preference -> users.update_telemetry_preference": [
+  "POST"
+ ],
+ "/admin/update_telemetry_preference_ajax -> users.update_telemetry_preference_ajax": [
+  "POST"
+ ],
+ "/admin/update_user_email -> users.update_user_email": [
+  "POST"
+ ],
+ "/admin/update_user_language -> users.update_user_language": [
+  "POST"
+ ],
+ "/admin/update_user_llm -> users.update_user_llm": [
+  "POST"
+ ],
+ "/admin/update_user_password -> users.update_user_password": [
+  "POST"
+ ],
+ "/admin/upload_database -> experiments.upload_database": [
+  "POST"
+ ],
+ "/admin/upload_experiment -> experiments.upload_experiment": [
+  "POST"
+ ],
+ "/admin/upload_image_feeds/<int:uid> -> experiments.upload_image_feeds": [
+  "POST"
+ ],
+ "/admin/upload_network/<int:uid> -> clientsr.upload_network": [
+  "POST"
+ ],
+ "/admin/upload_page_collection -> pages.upload_page_collection": [
+  "POST"
+ ],
+ "/admin/upload_population -> population.upload_population": [
+  "POST"
+ ],
+ "/admin/upload_rss_feeds/<int:uid> -> experiments.upload_rss_feeds": [
+  "POST"
+ ],
+ "/admin/upload_url_feeds/<int:uid> -> experiments.upload_url_feeds": [
+  "POST"
+ ],
+ "/admin/user_data -> users.update": [
+  "POST"
+ ],
+ "/admin/user_data -> users.users_data": [
+  "GET"
+ ],
+ "/admin/user_details/<int:uid> -> users.user_details": [
+  "GET"
+ ],
+ "/admin/users -> users.user_data": [
+  "GET"
+ ],
+ "/admin/visibility_settings -> experiments.visibility_settings": [
+  "GET"
+ ],
+ "/admin/visibility_settings/experiment -> experiments.visibility_settings_add_experiment": [
+  "POST"
+ ],
+ "/admin/visibility_settings/group -> experiments.visibility_settings_add_group": [
+  "POST"
+ ],
+ "/admin/visibility_settings/revoke_assignment -> experiments.visibility_settings_revoke_assignment": [
+  "POST"
+ ],
+ "/admin/watchdog_run_now -> users.watchdog_run_now": [
+  "POST"
+ ],
+ "/admin/watchdog_set_interval -> users.watchdog_set_interval": [
+  "POST"
+ ],
+ "/admin/watchdog_status -> users.watchdog_status": [
+  "GET"
+ ],
+ "/admin/watchdog_toggle -> users.watchdog_toggle": [
+  "POST"
+ ],
+ "/admin/world_simulation -> world_simulation.simulations": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id> -> world_simulation.detail": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/agents -> world_simulation.agents": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/agents.csv -> world_simulation.agents_csv": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/analytics.json -> world_simulation.analytics_data": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/analytics/<table>.csv -> world_simulation.analytics_csv": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/analytics/rebuild -> world_simulation.analytics_rebuild": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/clone -> world_simulation.clone": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/configuration -> world_simulation.configure": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/crossposts -> world_simulation.crossposts": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/crossposts.csv -> world_simulation.crossposts_csv": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/delete -> world_simulation.delete": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/export -> world_simulation.export": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/frontends/activate -> world_simulation.frontends_activate": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/frontends/deactivate -> world_simulation.frontends_deactivate": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/humans/<int:user_id>/unenrol -> world_simulation.humans_unenrol": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/humans/enrol -> world_simulation.humans_enrol": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/pause -> world_simulation.command_pause": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/reset -> world_simulation.reset": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/resume -> world_simulation.command_resume": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/start -> world_simulation.command_start": [
+  "POST"
+ ],
+ "/admin/world_simulation/<int:fed_id>/status.json -> world_simulation.status": [
+  "GET"
+ ],
+ "/admin/world_simulation/<int:fed_id>/stop -> world_simulation.command_stop": [
+  "POST"
+ ],
+ "/admin/world_simulation/analytics -> world_simulation.analytics": [
+  "GET"
+ ],
+ "/admin/world_simulation/import -> world_simulation.import_bundle": [
+  "POST"
+ ],
+ "/admin/world_simulation/new -> world_simulation.new": [
+  "GET",
+  "POST"
+ ],
+ "/admin/world_simulation/schedule -> world_simulation.schedule": [
+  "GET"
+ ],
+ "/admin/world_simulation/schedule/<int:item_id>/cancel -> world_simulation.schedule_cancel": [
+  "POST"
+ ],
+ "/admin/world_simulation/schedule/enqueue -> world_simulation.schedule_enqueue": [
+  "POST"
+ ],
+ "/api/interview/<int:exp_id>/agents -> api_interview.api_interview_agents": [
+  "GET"
+ ],
+ "/api/interview/<int:exp_id>/session -> api_interview.api_interview_create_session": [
+  "POST"
+ ],
+ "/api/interview/<int:exp_id>/session/<int:session_id> -> api_interview.api_interview_get_session": [
+  "GET"
+ ],
+ "/api/interview/<int:exp_id>/session/<int:session_id>/message -> api_interview.api_interview_send_message": [
+  "POST"
+ ],
+ "/api/interview/<int:exp_id>/session/<int:session_id>/refresh_context -> api_interview.api_interview_refresh_context": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/chat/bootstrap -> api_reddit.api_forum_chat_bootstrap": [
+  "GET"
+ ],
+ "/api/reddit/<int:exp_id>/chat/session -> api_reddit.api_forum_chat_open_session": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/chat/session/<int:session_id> -> api_reddit.api_forum_chat_get_session": [
+  "GET"
+ ],
+ "/api/reddit/<int:exp_id>/chat/session/<int:session_id>/message -> api_reddit.api_forum_chat_send_message": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/comment -> api_reddit.api_comment": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/communities -> api_reddit.api_create_community": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/crosspost -> api_reddit.api_crosspost": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/crosspost/targets -> api_reddit.api_crosspost_targets": [
+  "GET"
+ ],
+ "/api/reddit/<int:exp_id>/enrich/article/<article_id> -> api_reddit.api_enrich_article": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/enrich/image/<image_id> -> api_reddit.api_enrich_image": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/enrich/pending -> api_reddit.api_enrich_pending": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/feed -> api_reddit.api_feed": [
+  "GET"
+ ],
+ "/api/reddit/<int:exp_id>/post -> api_reddit.api_post": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/post/<post_id>/delete -> api_reddit.api_delete_post": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/search -> api_reddit.api_search": [
+  "GET"
+ ],
+ "/api/reddit/<int:exp_id>/thread/<post_id> -> api_reddit.api_thread": [
+  "GET"
+ ],
+ "/api/reddit/<int:exp_id>/upload_image -> api_reddit.api_upload_image": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/upload_media -> api_reddit.api_upload_media": [
+  "POST"
+ ],
+ "/api/reddit/<int:exp_id>/vote -> api_reddit.api_vote": [
+  "POST"
+ ],
+ "/api/social/<int:exp_id>/chat/bootstrap -> api_social.api_social_chat_bootstrap": [
+  "GET"
+ ],
+ "/api/social/<int:exp_id>/chat/session -> api_social.api_social_chat_open_session": [
+  "POST"
+ ],
+ "/api/social/<int:exp_id>/chat/session/<int:session_id> -> api_social.api_social_chat_get_session": [
+  "GET"
+ ],
+ "/api/social/<int:exp_id>/chat/session/<int:session_id>/message -> api_social.api_social_chat_send_message": [
+  "POST"
+ ],
+ "/feed -> main.feeed_logged": [
+  "GET"
+ ],
+ "/i18n/<domain>/<lang>.json -> i18n.js_catalog": [
+  "GET"
+ ],
+ "/login -> auth.login": [
+  "GET"
+ ],
+ "/login -> auth.login_post": [
+  "POST"
+ ],
+ "/logout -> auth.logout": [
+  "GET"
+ ],
+ "/media/agents/<path:filename> -> population.agent_media": [
+  "GET"
+ ],
+ "/photo/feed -> main.photo_feed_logged": [
+  "GET"
+ ],
+ "/profile -> main.profile": [
+  "GET"
+ ],
+ "/rfeed -> main.feeed_logged_reddit": [
+  "GET"
+ ],
+ "/rnotifications -> main.rnotifications_logged": [
+  "GET"
+ ],
+ "/select_experiment -> auth.select_experiment": [
+  "POST"
+ ],
+ "/set-language -> i18n.set_language": [
+  "POST"
+ ],
+ "/signup -> auth.signup": [
+  "GET"
+ ],
+ "/signup -> auth.signup_post": [
+  "POST"
+ ],
+ "/static/<path:filename> -> static": [
+  "GET"
+ ],
+ "/static/assets/img/users/<path:filename> -> avatar_files": [
+  "GET"
+ ],
+ "/uploads/<path:relative_path> -> main.serve_upload": [
+  "GET"
+ ]
+}

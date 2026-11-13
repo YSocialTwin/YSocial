@@ -1,0 +1,111 @@
+{
+ "hpc_platforms": {
+  "dating": {
+   "client_actor_prefix": "",
+   "client_config_file_arg": true,
+   "client_config_only": true,
+   "frozen_server_runs_script": true,
+   "key": "dating",
+   "normalizes_client_config": true,
+   "orchestrator_actor": "Orchestrator",
+   "prompts_filename": "prompts_dating.json",
+   "requires_prompts_file": false,
+   "runtime_repo": "YDating",
+   "server_dir_repo": null,
+   "supports_federation": true,
+   "supports_gunicorn": false,
+   "syncs_client_config": false,
+   "validates_config": true
+  },
+  "forum": {
+   "client_actor_prefix": "",
+   "client_config_file_arg": true,
+   "client_config_only": true,
+   "frozen_server_runs_script": true,
+   "key": "forum",
+   "normalizes_client_config": true,
+   "orchestrator_actor": "Orchestrator",
+   "prompts_filename": "prompts.json",
+   "requires_prompts_file": false,
+   "runtime_repo": "YForum",
+   "server_dir_repo": null,
+   "supports_federation": true,
+   "supports_gunicorn": false,
+   "syncs_client_config": false,
+   "validates_config": true
+  },
+  "instant_messaging": {
+   "client_actor_prefix": "",
+   "client_config_file_arg": false,
+   "client_config_only": true,
+   "frozen_server_runs_script": true,
+   "key": "instant_messaging",
+   "normalizes_client_config": true,
+   "orchestrator_actor": "orchestrator_server",
+   "prompts_filename": "prompts_im.json",
+   "requires_prompts_file": false,
+   "runtime_repo": "YInstantMessaging",
+   "server_dir_repo": null,
+   "supports_federation": true,
+   "supports_gunicorn": false,
+   "syncs_client_config": false,
+   "validates_config": true
+  },
+  "microblogging": {
+   "client_actor_prefix": "",
+   "client_config_file_arg": false,
+   "client_config_only": false,
+   "frozen_server_runs_script": false,
+   "key": "microblogging",
+   "normalizes_client_config": false,
+   "orchestrator_actor": "Orchestrator",
+   "prompts_filename": "prompts.json",
+   "requires_prompts_file": true,
+   "runtime_repo": "YSimulator",
+   "server_dir_repo": "YServer",
+   "supports_federation": true,
+   "supports_gunicorn": true,
+   "syncs_client_config": true,
+   "validates_config": false
+  },
+  "photo_sharing": {
+   "client_actor_prefix": "Client_",
+   "client_config_file_arg": false,
+   "client_config_only": true,
+   "frozen_server_runs_script": true,
+   "key": "photo_sharing",
+   "normalizes_client_config": true,
+   "orchestrator_actor": "orchestrator_server",
+   "prompts_filename": "prompts_ygram.json",
+   "requires_prompts_file": true,
+   "runtime_repo": "YPhotoSharing",
+   "server_dir_repo": null,
+   "supports_federation": true,
+   "supports_gunicorn": false,
+   "syncs_client_config": true,
+   "validates_config": false
+  }
+ },
+ "known_platforms": {
+  "dating": {
+   "icon": "heart",
+   "label": "Dating"
+  },
+  "forum": {
+   "icon": "message-square",
+   "label": "Forum"
+  },
+  "instant_messaging": {
+   "icon": "send",
+   "label": "Instant messaging"
+  },
+  "microblogging": {
+   "icon": "message-circle",
+   "label": "Microblogging"
+  },
+  "photo_sharing": {
+   "icon": "camera",
+   "label": "Photo sharing"
+  }
+ }
+}
