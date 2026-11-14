@@ -194,7 +194,8 @@ def start_hpc_server(exp):
         return os.path.join(resource_external, repo_name)
 
     _spec = find_hpc_platform(exp.platform_type)
-    sys.path.append(_external_repo_dir(_spec.runtime_repo if _spec else "YSimulator"))
+    if _spec:
+        sys.path.append(_external_repo_dir(_spec.runtime_repo))
 
     exp_folder = _resolve_hpc_experiment_folder(exp)
     _clear_hpc_runtime_markers(exp_folder)

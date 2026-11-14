@@ -82,11 +82,9 @@ def _runtime_installed(repo_key: str) -> bool:
 def _page_resources_available() -> bool:
     return any(
         _runtime_installed(repo_key)
-        for repo_key in (
-            "microblogging_client",
-            "microblogging_server",
-            "hpc_simulator",
-        )
+        for provider in registry.all_providers()
+        if provider.page_resources
+        for repo_key in provider.runtime_keys
     )
 
 

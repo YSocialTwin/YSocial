@@ -134,6 +134,70 @@ def _register_i18n(repo_key: str, repo_path: Path, declaration: dict) -> List[st
     return problems
 
 
+def provider_of_repo(spec) -> Optional[PlatformProvider]:
+    """The provider that a repository (its catalog spec, or its folder) registered, or ``None``."""
+    path = Path(getattr(spec, "path", spec)).resolve()
+    for provider in registry.all_providers():
+        package_dir = getattr(provider, "package_dir", None)
+        if package_dir and Path(package_dir).resolve().parent == path:
+            return provider
+    return None
+
+
+def _slug(value: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in value.lower()).strip("_")
+
+
+def _scan_local_repositories() -> None:
+    """List the repositories in the external folder that declare a platform and that no catalog knows.
+
+    A platform dropped into the folder needs nothing else: it is found by what it declares, shown in the plugin
+    list as a community plugin and registered like the others.
+    """
+    from y_web.src.external_runtime import registry as runtime_registry
+
+    runtime_registry.remove_local_specs()
+    root = Path(runtime_registry.EXTERNAL_DIR)
+    if not root.is_dir():
+        return
+    known = {
+        Path(s.path).resolve() for s in runtime_registry.supported_repos().values()
+    }
+    for path in sorted(root.iterdir()):
+        if (
+            not path.is_dir()
+            or path.name.startswith((".", "_"))
+            or path.resolve() in known
+        ):
+            continue
+        declaration, _problems = read_declaration(path)
+        if declaration is None:
+            continue
+        key = _slug(path.name)
+        runtime_registry.add_local_spec(
+            runtime_registry.ExternalRuntimeSpec(
+                key=key,
+                group=declaration["key"],
+                group_label=str(
+                    declaration.get("label")
+                    or declaration["key"].replace("_", " ").title()
+                ),
+                category="simulation_runtimes",
+                category_label="Simulation Runtime Stack",
+                label=path.name,
+                path=path,
+                github_repo="",
+                repo_url="",
+                default_branch="main",
+                install_commands=(),
+                validate_entrypoints=(),
+                is_private=False,
+                trust="community",
+                source="local",
+            )
+        )
+
+
 def discover_platforms() -> Dict[str, List[str]]:
     """Register the platform of every installed repository that declares one.
 
@@ -143,6 +207,7 @@ def discover_platforms() -> Dict[str, List[str]]:
     from y_web.src.external_runtime.registry import supported_repos
 
     report: Dict[str, List[str]] = {}
+    _scan_local_repositories()
     # the routes of every provider are registered together, so that two repositories serving one address are
     # dispatched instead of colliding (see y_web.platforms.dispatch)
     with dispatch.collecting():

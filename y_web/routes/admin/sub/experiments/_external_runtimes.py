@@ -14,6 +14,8 @@ from sqlalchemy import select
 from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
+from y_web.platforms.discovery import provider_of_repo
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
@@ -33,6 +35,7 @@ from y_web.src.external_runtime import (
     resolve_python_executable,
     runtime_spec,
     runtime_visible_to_user,
+    supported_repos,
     update_runtime_repo,
     validate_runtime_repo,
 )
@@ -57,41 +60,50 @@ _MUTATING_ACTIONS = {
     "sync",
 }
 
+
 # Plugins shown as ONE entry in the plugin list: a server and a client, each installed/updated/removed independently
 # from the entry's page. Acting on the entry key itself (the list's Remove) applies to both (server first).
-_PAIRED_ENTRIES = {
-    "microblogging": {
-        "label": N_("Microblogging"),
-        "members": ("microblogging_server", "microblogging_client"),
-        "description": N_(
-            "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
-        ),
-    },
-    "forum": {
-        "label": N_("Forum"),
-        "members": ("forum_server", "forum_client"),
-        "description": N_(
-            "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
-        ),
-    },
-}
+# A platform asks for it by declaring more than one runtime (``runtime_keys``): the members are those runtimes.
+def _paired_entries() -> dict:
+    out = {}
+    # a catalog group that lists both a server and a client is a pair, even when the repositories are not installed yet
+    # (the page is where they get installed); the platform's provider, when present, refines label and description
+    groups: dict = {}
+    for spec in supported_repos().values():
+        groups.setdefault(spec.group, []).append(spec)
+    for group, specs in groups.items():
+        servers = [s.key for s in specs if s.key.endswith("_server")]
+        clients = [s.key for s in specs if s.key.endswith("_client")]
+        if servers and clients:
+            out[group] = {
+                "label": specs[0].group_label,
+                "members": tuple(servers + clients),
+                "description": "",
+            }
+    for provider in registry.all_providers():
+        members = tuple(
+            key for key in provider.runtime_keys if key in supported_repos()
+        )
+        if len(members) > 1:
+            out[provider.key] = {
+                "label": provider.label,
+                "members": members,
+                "description": provider.runtime_pair_description,
+            }
+    return out
+
+
+def _pair_of_member() -> dict:
+    return {m: k for k, v in _paired_entries().items() for m in v["members"]}
+
+
 # The sections of the plugin list (presentation only: the groups of the specs keep driving the active-experiment checks).
-# Each section lists the entry keys it shows, in this order; a plugin that is in none (a community plugin, say) goes to
-# "Other plugins", which is shown only when it has something in it.
+# A platform goes to "Platforms" (to "Platforms (Legacy)" when it is a server+client pair); the other plugins are
+# listed by key. A plugin that is in none (a community plugin, say) goes to "Other plugins", which is shown only when
+# it has something in it.
 _LIST_SECTIONS = (
-    (
-        "platforms",
-        N_("Platforms"),
-        (
-            "hpc_simulator",
-            "forum_hpc",
-            "photo_sharing",
-            "instant_messaging",
-            "dating",
-            "federation",
-        ),
-    ),
-    ("platforms_legacy", N_("Platforms (Legacy)"), ("microblogging", "forum")),
+    ("platforms", N_("Platforms"), ()),
+    ("platforms_legacy", N_("Platforms (Legacy)"), ()),
     (
         "agent_plugins",
         N_("Agent Plugins"),
@@ -104,7 +116,6 @@ _LIST_SECTIONS = (
     ),
 )
 _OTHER_SECTION = ("other", N_("Other plugins"))
-_PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
 # actions that fetch or run a community plugin's code (need ``confirm_community=1``)
 _COMMUNITY_CONFIRM_ACTIONS = frozenset(
     {"acquire", "download_release", "clone", "update", "install", "sync"}
@@ -125,32 +136,41 @@ def _require_admin_user():
     return admin_user
 
 
+def _providers_of_group(group_key: str) -> list:
+    """The platforms whose repositories are in the plugin group ``group_key``."""
+    found = []
+    for spec in supported_repos().values():
+        if spec.group != group_key:
+            continue
+        provider = provider_of_repo(spec)
+        if provider is not None and provider not in found:
+            found.append(provider)
+    return found
+
+
+def _group_runs(provider, exp) -> bool:
+    """Whether an experiment runs on the runtime of ``provider``: its platform on a runtime it serves, or any
+    experiment of the HPC runtime when ``provider`` is one (the HPC runtime hosts the others too).
+    """
+    simulator = getattr(exp, "simulator_type", None)
+    if provider.key == exp.platform_type and provider.serves(simulator):
+        return True
+    return "HPC" in (provider.simulator_types or ()) and simulator == "HPC"
+
+
 def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
-    base_query = Exps.query.filter(Exps.is_remote == 0)
-    if group_key == "microblogging":
-        query = base_query.filter(
-            Exps.platform_type == "microblogging", Exps.simulator_type != "HPC"
-        )
-    elif group_key == "photo_sharing":
-        query = base_query.filter(Exps.platform_type == "photo_sharing")
-    elif group_key == "instant_messaging":
-        query = base_query.filter(Exps.platform_type == "instant_messaging")
-    elif group_key == "dating":
-        query = base_query.filter(Exps.platform_type == "dating")
-    elif group_key == "forum":
-        query = base_query.filter(Exps.platform_type == "forum")
-    elif group_key == "hpc":
-        query = base_query.filter(Exps.simulator_type == "HPC")
-    elif group_key == "agent_plugins":
+    """The running experiments that depend on the runtimes of a plugin group.
+
+    Plugins that are not platforms (agent or frontend plugins) are UI or agent extensions, never tied to a running
+    simulation, so mutating actions on them are never blocked by "active experiment" checks.
+    """
+    providers = _providers_of_group(group_key)
+    if not providers:
         return []
-    elif group_key == "frontend_plugins":
-        # Frontend plugin suites (e.g. Frontend Adds-on) are UI-only extensions; they
-        # are never tied to a running simulation, so mutating actions on them
-        # are never blocked by "active experiment" checks.
-        return []
-    else:
-        return []
-    return query.filter((Exps.running == 1) | (Exps.exp_status == "active")).all()
+    query = Exps.query.filter(Exps.is_remote == 0).filter(
+        (Exps.running == 1) | (Exps.exp_status == "active")
+    )
+    return [e for e in query.all() if any(_group_runs(p, e) for p in providers)]
 
 
 def _run_suite_schema_migration(repo_key: str) -> None:
@@ -217,7 +237,7 @@ def _external_runtimes_response(
 ):
     refresh_url = "/admin/external_runtimes"
     if repo_key and preserve_repo_key:
-        refresh_url = f"{refresh_url}/{_PAIR_OF_MEMBER.get(repo_key, repo_key)}"
+        refresh_url = f"{refresh_url}/{_pair_of_member().get(repo_key, repo_key)}"
     if _wants_json_response():
         payload = {
             "status": status,
@@ -234,15 +254,20 @@ def _slugify(value: str) -> str:
     return slug or "group"
 
 
-# Built-in plugins that YSocial names itself: the name and the description of the spec are shown even when the
-# installed repository still carries the old ones in its meta/info.json (YSimulator is presented as YMicroblogging).
-_NAMED_BY_YSOCIAL = frozenset({"hpc_simulator"})
+def _named_by_catalog(spec) -> bool:
+    """The name and the description of the spec are shown even when the installed repository still carries the old
+    ones in its meta/info.json (a platform asks for it with ``catalog_names_win``)."""
+    provider = provider_of_repo(spec)
+    if provider is None:
+        # the repository is not installed yet: no provider to ask, YSocial's own catalog names the built-in ones
+        return spec.source == "builtin"
+    return bool(provider.catalog_names_win)
 
 
 def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
     repo = dict(repo)
     plugin_metadata = plugin_metadata_for_runtime(spec, plugins_index)
-    if plugin_metadata and spec.key in _NAMED_BY_YSOCIAL:
+    if plugin_metadata and _named_by_catalog(spec):
         plugin_metadata = {
             **plugin_metadata,
             "plugin_name": spec.label,
@@ -328,7 +353,7 @@ def _visible_runtime_groups(
 
 def _make_entry(key: str, repos: list[dict]) -> dict:
     """One row of the plugin list: a single repository, or a server+client pair."""
-    paired = _PAIRED_ENTRIES.get(key)
+    paired = _paired_entries().get(key)
     installed = [bool(r.get("installed")) for r in repos]
     if all(installed):
         state, state_label = "installed", "Installed"
@@ -388,14 +413,14 @@ def _plugin_entries(grouped_status) -> list[dict]:
     entries, seen = [], set()
     for group_info in grouped_status:
         for repo in group_info["repos"]:
-            pair_key = _PAIR_OF_MEMBER.get(repo["key"])
+            pair_key = _pair_of_member().get(repo["key"])
             if pair_key:
                 if pair_key in seen:
                     continue
                 seen.add(pair_key)
                 members = [
                     by_key[m]
-                    for m in _PAIRED_ENTRIES[pair_key]["members"]
+                    for m in _paired_entries()[pair_key]["members"]
                     if m in by_key
                 ]
                 entries.append(_make_entry(pair_key, members))
@@ -409,7 +434,22 @@ def _plugin_sections(entries: list[dict]) -> list[dict]:
     by_key = {e["key"]: e for e in entries}
     placed: set[str] = set()
     sections = []
+    platform_rows = {"platforms": [], "platforms_legacy": []}
+    for entry in entries:
+        if entry.get("paired"):
+            platform_rows["platforms_legacy"].append(entry["key"])
+            continue
+        members = entry.get("members") or [{"key": entry["key"]}]
+        category = members[0].get("category")
+        if category is None:
+            try:
+                category = runtime_spec(members[0]["key"]).category
+            except KeyError:
+                continue
+        if category == "simulation_runtimes":
+            platform_rows["platforms"].append(entry["key"])
     for key, label, members in _LIST_SECTIONS:
+        members = tuple(platform_rows.get(key, ())) + tuple(members)
         rows = [by_key[m] for m in members if m in by_key]
         placed.update(e["key"] for e in rows)
         if rows:
@@ -449,8 +489,8 @@ def external_runtime_detail(entry_key: str):
         return redirect(url_for("experiments.settings"))
 
     member_keys = (
-        _PAIRED_ENTRIES[entry_key]["members"]
-        if entry_key in _PAIRED_ENTRIES
+        _paired_entries()[entry_key]["members"]
+        if entry_key in _paired_entries()
         else (entry_key,)
     )
     github_token = _session_github_token()
@@ -606,7 +646,7 @@ def external_runtime_github_session():
 @login_required
 def external_runtime_action(repo_key: str, action: str):
     """Run an action on one repository, or on every member of a paired entry (server first)."""
-    pair = _PAIRED_ENTRIES.get(repo_key)
+    pair = _paired_entries().get(repo_key)
     if not pair:
         return _external_runtime_action_single(repo_key, action)
     if action in {"enable", "disable"}:

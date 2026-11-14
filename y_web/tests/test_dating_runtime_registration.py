@@ -90,7 +90,9 @@ def test_active_dating_experiments_block_runtime_mutation(monkeypatch):
     fake.query = _Query()
     monkeypatch.setattr(er, "Exps", fake)
     assert er._runtime_group_active_experiments("dating") == []
-    assert len(seen["filters"]) == 3  # not remote, platform, running or active
+    assert (
+        len(seen["filters"]) == 2
+    )  # not remote, running or active (the platform is matched per provider)
 
 
 def test_the_builtin_copy_lists_dating():

@@ -24,6 +24,12 @@ RUNTIME_TEXTS = (
     N_("Agent Extensions"),
     N_("Frontend Extensions"),
     N_("Backend Extensions"),
+    N_(
+        "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
+    ),
+    N_(
+        "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
+    ),
     N_("Runs the agents of a microblogging simulation (client side)."),
     N_("Hosts the microblogging platform the agents interact with (server side)."),
     N_("Runs the agents of a forum simulation (client side)."),
@@ -206,6 +212,25 @@ _CATALOG_SPECS: dict[str, ExternalRuntimeSpec] = {}
 _CATALOG_LOCK = threading.Lock()
 
 
+# Repositories found in the external folder that no catalog lists (a platform dropped in by hand): they are
+# community plugins, found by what they declare (see ``y_web.platforms.discovery``).
+_LOCAL_SPECS: dict[str, ExternalRuntimeSpec] = {}
+
+
+def add_local_spec(spec: ExternalRuntimeSpec) -> None:
+    """Add a repository found on disk; a built-in or catalog key is never shadowed."""
+    if spec.key in SUPPORTED_EXTERNAL_REPOS:
+        return
+    with _CATALOG_LOCK:
+        if spec.key not in _CATALOG_SPECS:
+            _LOCAL_SPECS[spec.key] = spec
+
+
+def remove_local_specs() -> None:
+    with _CATALOG_LOCK:
+        _LOCAL_SPECS.clear()
+
+
 def set_catalog_specs(specs: dict[str, ExternalRuntimeSpec]) -> None:
     """Replace the registry-provided specs (built-in keys are never shadowed)."""
     clean = {k: v for k, v in specs.items() if k not in SUPPORTED_EXTERNAL_REPOS}
@@ -217,7 +242,7 @@ def set_catalog_specs(specs: dict[str, ExternalRuntimeSpec]) -> None:
 def supported_repos() -> dict[str, ExternalRuntimeSpec]:
     """Snapshot of the built-in repositories plus the registry-provided ones."""
     with _CATALOG_LOCK:
-        extra = dict(_CATALOG_SPECS)
+        extra = {**_LOCAL_SPECS, **_CATALOG_SPECS}
     merged = dict(SUPPORTED_EXTERNAL_REPOS)
     merged.update(extra)
     return merged
@@ -246,6 +271,8 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         "frontend_plugins",
         "backend_settings",
     ]
+    # the groups of platforms this list does not know follow the known ones (nothing is left out)
+    ordered_groups += [key for key in groups if key not in ordered_groups]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups

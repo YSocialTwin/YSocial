@@ -62,6 +62,9 @@ RECIPE_ENTRYPOINTS: dict[str, tuple[str, ...]] = {
 
 # registry category -> (group, group_label, category_label); these are the groups
 # the rest of the app already knows how to handle.
+#: category of the entries that add a simulation platform (``"platform": "<key>"`` names it)
+PLATFORM_CATEGORY = "simulation_runtimes"
+
 CATEGORIES: dict[str, tuple[str, str, str]] = {
     "agent_extensions": ("frontend_plugins", "Frontend Plugins", "Agent Extensions"),
     "frontend_extensions": (
@@ -186,7 +189,14 @@ def parse_registry(
             problems.append(f"{where}: unknown recipe {recipe!r}")
             continue
         category = _text(entry.get("category"), 40)
-        if category not in CATEGORIES:
+        platform = _text(entry.get("platform"), 64)
+        if category == PLATFORM_CATEGORY:
+            # a simulation platform: its group is the platform it declares (``platform``), so that it is listed
+            # with the platforms, found by discovery and checked against the experiments that run on it
+            if not _ID_RE.match(platform):
+                problems.append(f"{where}: a platform needs a 'platform' key")
+                continue
+        elif category not in CATEGORIES:
             problems.append(f"{where}: unknown category {category!r}")
             continue
         label = _text(entry.get("name"), 80)
@@ -224,7 +234,12 @@ def parse_registry(
         authors = entry.get("authors") or []
         if not isinstance(authors, list):
             authors = []
-        group, group_label, category_label = CATEGORIES[category]
+        if category == PLATFORM_CATEGORY:
+            group = platform
+            group_label = _text(entry.get("platform_label") or entry.get("name"), 80)
+            category_label = "Simulation Runtime Stack"
+        else:
+            group, group_label, category_label = CATEGORIES[category]
         used_dirs.add(directory.lower())
         used_repos.add(repo.lower())
         specs[key] = ExternalRuntimeSpec(

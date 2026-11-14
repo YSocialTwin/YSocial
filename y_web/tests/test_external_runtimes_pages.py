@@ -331,7 +331,9 @@ def test_the_plugin_list_is_split_in_the_four_sections():
         "training_modules",
         "some_community_plugin",
     ]
-    sections = route_mod._plugin_sections([{"key": k} for k in keys])
+    sections = route_mod._plugin_sections(
+        [{"key": k, "paired": k in ("microblogging", "forum")} for k in keys]
+    )
     assert [(s["key"], [e["key"] for e in s["entries"]]) for s in sections] == [
         (
             "platforms",

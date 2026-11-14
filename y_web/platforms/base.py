@@ -262,6 +262,15 @@ class PlatformProvider:
     tag_runtime_sets: Tuple[Tuple[str, ...], ...] = ()
     #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
     runtime_keys: Tuple[str, ...] = ()
+    #: name under which ``runtime_keys`` are reported in the ``available`` mapping (default: the platform key)
+    availability_key: str = ""
+    #: a platform whose runtime is one server and one client lists them as ONE plugin entry (``runtime_keys`` are the
+    #: members, in order); this is the text of that entry, declared with N_()
+    runtime_pair_description: str = ""
+    #: the pages of the agents dashboard (page builder) work with this platform's runtime
+    page_resources: bool = False
+    #: the plugin list shows the name and description of the catalog entry, not those of the repository's own metadata
+    catalog_names_win: bool = False
     #: the experiment page shows the memory embedding settings of the platform
     embedding_in_details: bool = False
     #: the experiment page shows the avatar mode and the forum-style embedding settings

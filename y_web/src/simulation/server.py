@@ -55,6 +55,12 @@ from y_web.src.system.path_utils import (
 _local_terminate_process = _terminate_process
 
 
+def _server_repo_of(exp) -> str:
+    """Folder of the repository whose y_server serves the experiment (declared by its platform)."""
+    provider = registry.for_experiment(exp)
+    return provider.server_label if provider else ""
+
+
 def _resolve_server_runtime_paths(base_path, platform_type):
     """Resolve the server package directory and entry script for a platform."""
     runtime = registry.resolve(platform_type, STANDARD).standard_runtime
@@ -688,6 +694,8 @@ def start_server(exp):
                 config,
                 "--platform",
                 exp.platform_type,
+                "--server-repo",
+                _server_repo_of(exp),
             ]
         elif (
             isinstance(python_cmd, str)
@@ -822,6 +830,8 @@ def start_server(exp):
                 config,
                 "--platform",
                 exp.platform_type,
+                "--server-repo",
+                _server_repo_of(exp),
             ]
         elif (
             isinstance(python_cmd, str)

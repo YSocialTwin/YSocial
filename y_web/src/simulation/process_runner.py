@@ -37,29 +37,30 @@ def run_server_main():
     parser.add_argument(
         "--platform",
         required=True,
-        choices=["microblogging", "forum"],
-        help="Platform type (microblogging or forum)",
+        help="Platform type of the experiment",
+    )
+    parser.add_argument(
+        "--server-repo",
+        default="",
+        help="Folder of the repository that provides y_server (default: declared by the platform)",
     )
 
     args = parser.parse_args()
 
     # Determine the correct server module based on platform
-    if args.platform == "microblogging":
-        # Add YServer to sys.path for imports
-        from y_web.src.system.path_utils import get_base_path, resolve_external_repo
+    server_repo = args.server_repo
+    if not server_repo:
+        from y_web.platforms import registry
+        from y_web.platforms.base import STANDARD
 
-        base_path = get_base_path()
-        yserver_path = resolve_external_repo(base_path, "YServer")
-        sys.path.insert(0, yserver_path)
-    elif args.platform == "forum":
-        # Add YServerReddit to sys.path for imports
-        from y_web.src.system.path_utils import get_base_path, resolve_external_repo
-
-        base_path = get_base_path()
-        yserver_path = resolve_external_repo(base_path, "YServerReddit")
-        sys.path.insert(0, yserver_path)
-    else:
+        provider = registry.get(args.platform, STANDARD)
+        server_repo = provider.server_label if provider else ""
+    if not server_repo:
         raise NotImplementedError(f"Unsupported platform {args.platform}")
+    # Add the server repository to sys.path for imports
+    from y_web.src.system.path_utils import get_base_path, resolve_external_repo
+
+    sys.path.insert(0, resolve_external_repo(get_base_path(), server_repo))
 
     # Load configuration
     config = json.load(open(args.config, "r", encoding="utf-8"))

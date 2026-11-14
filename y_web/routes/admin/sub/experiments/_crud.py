@@ -156,10 +156,10 @@ def _external_repo_availability():
         except Exception:
             return False
 
-    availability = {"hpc": _installed("hpc_simulator"), "forum_hpc": False}
-    for provider in registry.providers():
+    availability = {}
+    for provider in registry.all_providers():
         if provider.runtime_keys:
-            availability[provider.key] = all(
+            availability[provider.availability_key or provider.key] = all(
                 _installed(key) for key in provider.runtime_keys
             )
     # runtimes a platform checks on disk, like the launcher's own check
