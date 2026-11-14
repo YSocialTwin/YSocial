@@ -173,3 +173,58 @@ def test_the_http_method_shortcuts_are_recorded_too(world):
     assert client.get("/2/g").data == b"d_std:g"
     assert client.post("/2/p").data == b"d_std:p"
     assert client.get("/2/p").status_code == 405
+
+
+def test_an_address_without_an_experiment_follows_the_request_then_the_preferred_provider(
+    world, monkeypatch
+):
+    bp = Blueprint("noarg", __name__)
+    with dispatch.collecting():
+        _attach(bp, "d_hpc", [("/home", "home", ["GET"])])
+        _attach(bp, "d_std", [("/home", "home", ["GET"])])
+    client, _ = _app(bp)
+    experiments = {
+        "1": types.SimpleNamespace(platform_type="ddemo", simulator_type=HPC),
+        "2": types.SimpleNamespace(platform_type="ddemo", simulator_type=STANDARD),
+    }
+
+    def from_query(arguments):
+        from flask import request
+
+        return experiments.get(request.args.get("exp_id"))
+
+    monkeypatch.setattr(dispatch, "REQUEST_RESOLVERS", [from_query])
+    assert client.get("/home?exp_id=1").data == b"d_hpc:home"
+    assert client.get("/home?exp_id=2").data == b"d_std:home"
+    # nothing tells the experiment: the Standard repository, which is the preferred one, answers
+    assert client.get("/home").data == b"d_std:home"
+    assert client.get("/home?exp_id=7").data == b"d_std:home"
+
+
+def test_the_only_active_experiment_answers_for_a_request_that_names_none(
+    world, monkeypatch
+):
+    only = types.SimpleNamespace(platform_type="ddemo", simulator_type=HPC)
+    monkeypatch.setattr(dispatch, "REQUEST_RESOLVERS", [lambda arguments: only])
+    assert dispatch.resolve_experiment({}) is only
+    # an address that names its experiment is never answered by another one
+    assert dispatch.resolve_experiment({"exp_id": 99}) is None
+
+
+def test_the_legacy_feed_address_of_microblogging_is_dispatched_between_the_repositories():
+    from y_web.tests import _platform_alias
+
+    if not (
+        _platform_alias.installed(_platform_alias.MICROBLOGGING)
+        and _platform_alias.installed(_platform_alias.MICROBLOGGING_HPC)
+    ):
+        pytest.skip("needs YServer and YSimulator")
+    from y_web import create_app
+
+    app = create_app(db_type="sqlite")
+    view = app.view_functions["main.feeed_logged"]
+    assert view.__qualname__.startswith("dispatch[")
+    preferred = dispatch._preferred_view(
+        {"microblogging": object, "ysocial_server": view}
+    )
+    assert preferred is view  # the Standard provider is the preferred one

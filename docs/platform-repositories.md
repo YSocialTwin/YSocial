@@ -43,7 +43,8 @@ is regenerated with `UPDATE_SDK_API=1`.
   `get(key)` and `providers()` still give one provider per key. An address (rule and methods) that one provider serves is
   registered as it wrote it; one that several serve is registered once with a dispatcher that runs the view of the
   provider of the experiment in the address (`exp_id`, `idexp` or `experiment_id`) and answers 404 when that provider does
-  not have it (`y_web/platforms/dispatch.py`). Two addresses that claim one endpoint name keep the first and register the
+  not have it (`y_web/platforms/dispatch.py`). An address that names no experiment (the legacy `/feed`) follows the
+  `exp_id` of the query string or form, else the only active experiment, else the preferred repository (Standard) answers. Two addresses that claim one endpoint name keep the first and register the
   other as `<id>__<endpoint>`.
 * **Client modes.** The core looks the views of a mode up by name on the `clients` blueprint: `create_<mode>_client`,
   `update_<mode>_recsys`, `update_<mode>_client_llm`, `update_<mode>_client_settings`, `clients_<mode>`,

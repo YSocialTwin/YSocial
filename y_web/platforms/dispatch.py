@@ -9,7 +9,9 @@ when every provider has attached, :meth:`RouteCollector.commit` registers them i
 * an address (rule and methods) served by **one** provider is registered as the provider wrote it, endpoint name
   included: nothing changes for the platforms that have a single repository;
 * an address served by **several** providers is registered once, with a dispatcher that runs the view of the provider
-  that runs the current experiment (see :func:`resolve_experiment`) and answers 404 when that provider does not serve
+  that runs the current experiment (see :func:`resolve_experiment`: the id in the address, else the values of the
+  request, else the only active experiment; with none, the preferred repository answers) and answers 404 when that
+  provider does not serve
   the address;
 * two different addresses that claim the same endpoint name keep the first one's name; the other is registered as
   ``<provider id>__<endpoint>``, so repositories cannot collide by construction.
@@ -34,9 +36,12 @@ _COLLECTOR: ContextVar[Optional["RouteCollector"]] = ContextVar(
 )
 _CURRENT: ContextVar[Optional[str]] = ContextVar("platform_route_owner", default=None)
 
-#: ways to find the experiment a request is about, tried in order; each takes the view arguments of the request
-#: (``{"exp_id": 3}``) and returns the experiment or ``None``
+#: ways to find the experiment of an address that names it, tried in order; each takes the view arguments of the
+#: request (``{"exp_id": 3}``) and returns the experiment or ``None``
 EXPERIMENT_RESOLVERS: List[Callable[[Dict[str, Any]], Any]] = []
+
+#: ways to find the experiment of a request whose address names none (``/feed``), tried in order; same signature
+REQUEST_RESOLVERS: List[Callable[[Dict[str, Any]], Any]] = []
 
 #: names the experiment id has in the addresses of the platforms
 EXPERIMENT_ARGUMENTS = ("exp_id", "idexp", "experiment_id")
@@ -57,9 +62,52 @@ def _experiment_from_view_arguments(arguments: Dict[str, Any]) -> Any:
 EXPERIMENT_RESOLVERS.append(_experiment_from_view_arguments)
 
 
+def _experiment_from_request_values(arguments: Dict[str, Any]) -> Any:
+    """The experiment named in the query string or the form of the request (``?exp_id=3``)."""
+    from flask import has_request_context, request
+
+    from y_web.src.models import Exps
+
+    if not has_request_context():
+        return None
+    for source in (request.args, request.form):
+        for name in EXPERIMENT_ARGUMENTS:
+            value = source.get(name)
+            if value is not None:
+                try:
+                    return Exps.query.filter_by(idexp=int(value)).first()
+                except (TypeError, ValueError):
+                    return None
+    return None
+
+
+def _only_active_experiment(arguments: Dict[str, Any]) -> Any:
+    """The experiment of a request that names none, when the application runs exactly one (what the legacy pages
+    of a platform, such as ``/feed``, assume)."""
+    from y_web.src.models import Exps
+
+    active = Exps.query.filter(Exps.status != 0).limit(2).all()
+    return active[0] if len(active) == 1 else None
+
+
+REQUEST_RESOLVERS.extend([_experiment_from_request_values, _only_active_experiment])
+
+
+def names_experiment(arguments: Dict[str, Any]) -> bool:
+    """Whether the address of the request carries an experiment id."""
+    return any(arguments.get(name) is not None for name in EXPERIMENT_ARGUMENTS)
+
+
 def resolve_experiment(arguments: Dict[str, Any]) -> Any:
-    """The experiment a request is about, or ``None`` when no resolver can tell."""
-    for resolver in EXPERIMENT_RESOLVERS:
+    """The experiment a request is about, or ``None`` when no resolver can tell.
+
+    An address that names its experiment (``/<exp_id>/...``) is about that one: an unknown id is not replaced by
+    another experiment. Otherwise the request resolvers are tried in order.
+    """
+    resolvers = (
+        EXPERIMENT_RESOLVERS if names_experiment(arguments) else REQUEST_RESOLVERS
+    )
+    for resolver in resolvers:
         experiment = resolver(arguments)
         if experiment is not None:
             return experiment
@@ -174,6 +222,16 @@ class RouteCollector:
         return problems
 
 
+def _preferred_view(views: Dict[str, Callable]) -> Optional[Callable]:
+    """The view of the preferred provider (the Standard runtime first) among those that serve an address."""
+    from y_web.platforms import registry
+
+    for provider in [*registry.providers(), *registry.all_providers()]:
+        if provider.provider_id in views:
+            return views[provider.provider_id]
+    return next(iter(views.values()), None)
+
+
 def _dispatcher(endpoint: str, views: Dict[str, Callable]) -> Callable:
     """A view that runs the view of the provider of the current experiment."""
 
@@ -182,9 +240,17 @@ def _dispatcher(endpoint: str, views: Dict[str, Callable]) -> Callable:
 
         from y_web.platforms import registry
 
-        experiment = resolve_experiment(dict(request.view_args or kwargs))
-        provider = registry.for_experiment(experiment) if experiment else None
-        view = views.get(provider.provider_id) if provider else None
+        arguments = dict(request.view_args or kwargs)
+        experiment = resolve_experiment(arguments)
+        if experiment is not None:
+            provider = registry.for_experiment(experiment)
+            view = views.get(provider.provider_id) if provider else None
+        elif names_experiment(arguments):
+            view = None  # an experiment that does not exist
+        else:
+            view = _preferred_view(
+                views
+            )  # nothing tells the experiment: the preferred repository answers
         if view is None:
             abort(404)
         return view(*args, **kwargs)
