@@ -24,5 +24,7 @@ _BLUEPRINTS = {
 
 def blueprint(name: str) -> Any:
     """The blueprint of the core called ``name`` (``main``, ``population``, ``agents``, ``experiments``, ``clients``)."""
+    from y_web.platforms import dispatch
+
     module, attribute = _BLUEPRINTS[name]
-    return getattr(importlib.import_module(module), attribute)
+    return dispatch.wrap(getattr(importlib.import_module(module), attribute))

@@ -27,7 +27,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from y_web.platforms import registry
+from y_web.platforms import dispatch, registry
 from y_web.platforms.base import PlatformProvider
 from y_web.sdk.version import PLATFORM_API
 
@@ -143,24 +143,28 @@ def discover_platforms() -> Dict[str, List[str]]:
     from y_web.src.external_runtime.registry import supported_repos
 
     report: Dict[str, List[str]] = {}
-    for repo_key, spec in supported_repos().items():
-        if not spec.path.exists():
-            continue
-        declaration, problems = read_declaration(spec.path)
-        if declaration is None and not problems:
-            continue
-        if not problems:
-            try:
-                provider = _load_provider(repo_key, spec.path, declaration)
-                registry.replace_builtin(provider)
-                _DISCOVERED[repo_key] = declaration["key"]
-                provider.attach_routes()
-                problems = _register_i18n(repo_key, spec.path, declaration)
-            except (
-                Exception
-            ) as exc:  # noqa: BLE001 - a bad repository must not stop the application
-                problems = [str(exc)]
-        report[repo_key] = problems
+    # the routes of every provider are registered together, so that two repositories serving one address are
+    # dispatched instead of colliding (see y_web.platforms.dispatch)
+    with dispatch.collecting():
+        for repo_key, spec in supported_repos().items():
+            if not spec.path.exists():
+                continue
+            declaration, problems = read_declaration(spec.path)
+            if declaration is None and not problems:
+                continue
+            if not problems:
+                try:
+                    provider = _load_provider(repo_key, spec.path, declaration)
+                    registry.replace_builtin(provider)
+                    _DISCOVERED[repo_key] = declaration["key"]
+                    with dispatch.attaching(provider.provider_id):
+                        provider.attach_routes()
+                    problems = _register_i18n(repo_key, spec.path, declaration)
+                except (
+                    Exception
+                ) as exc:  # noqa: BLE001 - a bad repository must not stop the application
+                    problems = [str(exc)]
+            report[repo_key] = problems
     return report
 
 
