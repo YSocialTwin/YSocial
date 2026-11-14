@@ -104,9 +104,9 @@ YSocial is a core application (`y_web`) plus optional plugins that live in `exte
 
 | Plugin | What it provides |
 | --- | --- |
-| [YClient](https://github.com/YSocialTwin/YClient), [YServer](https://github.com/YSocialTwin/YServer) | Microblogging runtime: the agents and the platform |
-| [YClientReddit](https://github.com/YSocialTwin/YClientReddit), [YServerReddit](https://github.com/YSocialTwin/YServerReddit) | Forum runtime: the agents and the platform |
-| [YSimulator](https://github.com/YSocialTwin/YSimulator) | Large-scale (HPC) simulations, distributed with Ray |
+| [YClient](https://github.com/YSocialTwin/YClient), [YServer](https://github.com/YSocialTwin/YServer) | Microblogging, Standard runtime: the agents, the platform and its pages and administration |
+| [YClientReddit](https://github.com/YSocialTwin/YClientReddit), [YServerReddit](https://github.com/YSocialTwin/YServerReddit) | Forum, Standard runtime: the agents, the platform and its pages and administration |
+| [YSimulator](https://github.com/YSocialTwin/YSimulator), [YForum](https://github.com/YSocialTwin/YForum) | Microblogging and forum on the HPC runtime: large-scale simulations, distributed with Ray |
 | [YPhotoSharing](https://github.com/YSocialTwin/YPhotoSharing) | Photo-sharing runtime with an Instagram-like platform |
 | [Frontend Adds-on](https://github.com/YSocialTwin/frontend_adds-on) | Optional add-ons for the participant interface, enabled per experiment |
 | [Reactive Agents](https://github.com/YSocialTwin/reactive_agents) | Agents that react to humans even when the simulation is not running |

@@ -4,10 +4,10 @@ Every simulation platform (microblogging, forum, photo sharing, instant messagin
 plugs into YSocial at start-up. YSocial itself has no platform built in: a platform that is not installed is simply not
 offered, and installing its repository adds it at the next start (there is no hot install).
 
-| Platform | Repository | Runtimes it declares |
+| Platform | Repositories | Runtime of each |
 | --- | --- | --- |
-| Microblogging | `YSimulator` (plugin *YMicroblogging*) | Standard: `YServer`/`YClient`; HPC: `YSimulator` |
-| Forum | `YForum` | Standard: `YServerReddit`/`YClientReddit`; HPC: `YForum` |
+| Microblogging | `YServer` (with `YClient`) and `YSimulator` (plugin *YMicroblogging*) | Standard and HPC |
+| Forum | `YServerReddit` (with `YClientReddit`) and `YForum` | Standard and HPC |
 | Photo sharing | `YPhotoSharing` | HPC |
 | Instant messaging | `YInstantMessaging` | HPC |
 | Dating | `YDating` | HPC |

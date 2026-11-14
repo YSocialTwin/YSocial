@@ -33,9 +33,17 @@ Plugins are organized into two top-level categories:
     - `YPhotoSharing`
   - `HPC`
     - `YSimulator`
+    - `YForum`
   - `Agent Plugins`
     - `y_agents_plugins`
     - `Agent Memory` (`y_memory_subsystem`)
+
+### Microblogging and forum: one repository per runtime
+
+The microblogging and forum platforms each have a Standard runtime (`YServer`, `YServerReddit`, with their clients) and an
+HPC runtime (`YSimulator`, `YForum`). Every one of the four provides its own pages, administration and templates, so they
+are installed and updated independently: with only the Standard repository the platform offers Standard experiments, with
+only the HPC one it offers HPC experiments, with both the experiment chooses. See `docs/platform-repositories.md`.
 
 ### Agent Memory
 

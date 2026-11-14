@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forum clients can use the Reddit-style content recommenders `HotRanking`, `TopRanking` and `MostCommented`
   (new `content_recsys` rows reserved to forums: template database, PostgreSQL seed and Alembic `0011`).
 
+### Changed
+
+- Microblogging and forum: each runtime repository (`YServer`, `YServerReddit`, `YSimulator`, `YForum`) provides its own platform pages, administration and templates, so any subset of them can be installed; the Standard client pages left the core for `YServer` and `YServerReddit`, and the HPC repositories no longer refer to the Standard runtime. `scripts/dev/run_install_matrix.sh` runs the tests with each subset (`docs/platform-repositories.md`).
+
 ### Fixed
 
 - HPC (YMicroblogging) clients: the *API Key* of the main model typed in the creation form was dropped (`"NULL"` was always written); it is now written to the client configuration, so hosted providers (OpenAI, DeepSeek, ...) work.

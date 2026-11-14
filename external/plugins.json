@@ -64,7 +64,7 @@
       "plugin_name": "YForum",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
+      "description": "HPC forum runtime: Ray-based, for Reddit-style experiments (threads, comments, votes, follows and interchangeable content recommenders) on HPC clusters; provides its own pages and administration in YSocial.",
       "authors": [
         "YSocialTwin"
       ],
@@ -94,7 +94,7 @@
       "plugin_name": "YServer",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
-      "description": "Hosts the microblogging platform the agents interact with (server side).",
+      "description": "Standard microblogging runtime, server side: hosts the platform the agents interact with and provides its pages and administration in YSocial.",
       "authors": [
         "YSocialTwin"
       ],
@@ -104,7 +104,7 @@
       "plugin_name": "YServerReddit",
       "category": "Simulation Runtime Stack",
       "group": "Forum",
-      "description": "Hosts the forum platform the agents interact with (server side).",
+      "description": "Standard forum runtime, server side: hosts the platform the agents interact with and provides its pages and administration in YSocial.",
       "authors": [
         "YSocialTwin"
       ],
@@ -114,7 +114,7 @@
       "plugin_name": "YMicroblogging",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters.",
+      "description": "HPC microblogging runtime: Ray-based, for large-scale simulations (posts, timelines, follows) on a single machine or on HPC clusters; provides its own pages and administration in YSocial.",
       "authors": [
         "YSocialTwin"
       ],
