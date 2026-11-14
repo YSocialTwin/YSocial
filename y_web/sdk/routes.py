@@ -19,6 +19,7 @@ _BLUEPRINTS = {
     "experiments": ("y_web.routes.admin.sub.experiments._blueprint", "experiments"),
     "clients": ("y_web.routes.admin.sub.clients._blueprint", "clientsr"),
     "user": ("y_web.routes.interactions._blueprint", "user"),
+    "api_reddit": ("y_web.routes.api._platform_blueprints", "api_reddit"),
 }
 
 

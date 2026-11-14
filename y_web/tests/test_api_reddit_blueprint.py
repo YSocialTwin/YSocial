@@ -10,6 +10,8 @@ def test_api_reddit_blueprint_prefix():
 
     from y_web.routes.api.reddit import api_reddit
 
+    # the platform sees the blueprint of the core through the route collector while it is attached
+    api_reddit = getattr(api_reddit, "_blueprint", api_reddit)
     assert isinstance(api_reddit, Blueprint)
     assert api_reddit.name == "api_reddit"
     assert api_reddit.url_prefix == "/api/reddit"
