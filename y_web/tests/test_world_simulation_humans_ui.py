@@ -24,7 +24,7 @@ def fake_gateways(monkeypatch):
         calls.append((platform_type, user.username, hid))
         return str(500 + len(calls)), True
 
-    monkeypatch.setattr(humans, "ENSURERS", {k: ensurer for k in humans.ENSURERS})
+    monkeypatch.setattr(humans, "_ensure_account", ensurer)
     return calls
 
 

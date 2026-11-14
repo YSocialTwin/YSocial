@@ -330,6 +330,7 @@ def share_content(exp_id):
 
     # World Simulation (F8): an enrolled person who picked other platforms shares through the runtime gateway
     from y_web.src.federation import human_outbox as _ho
+    from y_web.src.models import Exps
 
     _requested = _ho.requested_members(request.args.getlist("crosspost"))
     if _requested and post_id:
@@ -339,7 +340,13 @@ def share_content(exp_id):
             current_user,
             _requested,
             _comment,
-            lambda t: _ho.micro_share(post_id, _comment, t),
+            lambda t: _ho.build_action(
+                db.session.get(Exps, int(exp_id)),
+                "microblogging",
+                _comment,
+                t,
+                post_id=post_id,
+            ),
             only="microblogging",
         )
         if _sent is not None:
@@ -656,6 +663,7 @@ def federation_repost(exp_id):
     on the person's profile here. The destinations are recomputed server side (never trusted from the page).
     """
     from y_web.src.federation import human_outbox as _ho
+    from y_web.src.federation import traits
     from y_web.src.models import Exps
 
     payload = request.get_json(silent=True) or {}
@@ -666,7 +674,7 @@ def federation_repost(exp_id):
 
     text = str(payload.get("text") or "").strip()
     post_id = payload.get("post_id")
-    if post_id is not None and ctx.platform_type in ("forum", "microblogging"):
+    if post_id is not None and traits.local_kind(ctx.platform_type) == "post":
         try:
             source = db.session.get(Post, int(post_id))
         except (TypeError, ValueError):
@@ -680,21 +688,14 @@ def federation_repost(exp_id):
 
     platform = ctx.platform_type
     exp = db.session.get(Exps, int(exp_id))
-    if platform == "forum":
-        community = _ho.forum_community(exp, payload.get("community"))
-        build = lambda t: _ho.forum_post(text, t, community)  # noqa: E731
-    elif platform == "microblogging":
-        build = (  # noqa: E731
-            (lambda t: _ho.micro_share(post_id, text, t))
-            if post_id
-            else (lambda t: _ho.micro_post(text, t))
-        )
-    elif platform == "photo_sharing" and post_id:
-        build = lambda t: _ho.photo_share(post_id, text, t)  # noqa: E731
-    elif platform == "instant_messaging":
-        build = lambda t: _ho.im_action("post", t, text=text)  # noqa: E731
-    else:
+    community = _ho.community_of(exp, platform, payload.get("community"))
+    if _ho.build_action(exp, platform, text, [], post_id=post_id) is None:
         return jsonify({"ok": False, "code": "unsupported"}), 400
+
+    def build(t):
+        return _ho.build_action(
+            exp, platform, text, t, post_id=post_id, community=community
+        )
 
     sent = _ho.try_deliver(exp_id, current_user, members, text, build)
     if sent is None:

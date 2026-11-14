@@ -232,3 +232,12 @@ def photo_available(monkeypatch, value):
     monkeypatch.setattr(
         registry.library("photo_sharing", "forms"), "available", lambda user=None: value
     )
+
+
+def gateway_action(platform, text, targets, *, post_id=None, community=None):
+    """The action the human composer sends for ``platform`` (what the platform's gateway traits build)."""
+    from y_web.src.federation import traits
+
+    return traits.human_gateway(platform, "Standard").build_action(
+        text, targets, post_id=post_id, community=community
+    )

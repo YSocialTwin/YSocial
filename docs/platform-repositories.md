@@ -92,6 +92,8 @@ it ends. `MATRIX_SELECT='forum|platform'` limits it to the tests whose file name
 
 A platform that takes part in world simulations declares `federation_traits = FederationTraits(...)` on its provider (`PLATFORM_API` 1.2): `mdi_icon`, `local_kind`, `author_sql`, `content_path`, `profile_path`, `account_sql`, `text_limit`, `title_line`, `decision_triggers` and `simulators`. The core reads them through `y_web.src.federation.traits`; a provider without traits is simply not offered for federation.
 
+A platform that enrols people also declares `human_gateway = HumanGatewayTraits(...)` (`PLATFORM_API` 1.3): the repository and routes of its gateway, the token header, the body of the account and action requests, the offline script request, how to start a gateway process, and `build_action` / `community_of` for the composer; a platform whose accounts are made another way gives `enrol` instead. YSocial owns the transport (loopback HTTP with a token, the runtime script when no server runs); the conventional place for these declarations is `ysocial_platform/gateway.py`.
+
 ## What still names a platform in the core
 
 The shared feed administration (`experiments/_feeds.py`, used by forum, instant messaging and photo sharing), the

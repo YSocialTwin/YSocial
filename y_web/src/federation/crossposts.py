@@ -38,10 +38,7 @@ STATUSES = ("delivered", "pending")
 MODES = ("agent_action", "coordinator_rule")
 SORTS = ("tick_desc", "tick_asc")
 COORDINATOR = "coordinator"  # source_member of the cross-posts the coordinator materialises (crosspost.mode = coordinator_rule)
-# where to read the username behind an account id, per platform type
-USER_SQL = {
-    "instant_messaging": "SELECT id FROM accounts WHERE username LIKE ? ESCAPE '\\' LIMIT ?",
-}
+# where to find the accounts behind a name, unless the platform's traits say otherwise
 DEFAULT_USER_SQL = "SELECT id FROM user_mgmt WHERE username LIKE ? ESCAPE '\\' LIMIT ?"
 _TICK = re.compile(r"^\d{1,9}$")
 
@@ -146,7 +143,7 @@ def _gids_matching(conn, text: str, members: Dict[str, dict]) -> List[str]:
             str(r[0])
             for r in backlinks._query(
                 backlinks._db_path(member["exp"]),
-                USER_SQL.get(member["platform_type"], DEFAULT_USER_SQL),
+                traits.account_search_sql(member["platform_type"]) or DEFAULT_USER_SQL,
                 (like, 200),
             )
         ]

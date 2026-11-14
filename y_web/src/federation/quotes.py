@@ -14,8 +14,7 @@ import sqlite3
 
 from y_web.src.federation import traits
 
-# Local id column of federation_quoted in each runtime (YServer/YServerReddit: post_id, YPhotoSharing: photo_id,
-# YInstantMessaging: message_id, YDating: local_id).
+# Local id column of federation_quoted in each runtime (post_id, photo_id, message_id or local_id).
 ID_COLUMNS = ("post_id", "photo_id", "message_id", "local_id")
 MAX_ROWS = 5000
 

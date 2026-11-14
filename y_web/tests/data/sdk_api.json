@@ -12,10 +12,22 @@
     "FormSectionError": {
       "kind": "class"
     },
+    "GatewayLaunch": {
+      "kind": "class"
+    },
+    "GatewayPaths": {
+      "kind": "class"
+    },
     "HPC": {
       "kind": "value"
     },
     "HpcClientForm": {
+      "kind": "class"
+    },
+    "HumanGatewayError": {
+      "kind": "class"
+    },
+    "HumanGatewayTraits": {
       "kind": "class"
     },
     "N_": {
@@ -245,7 +257,7 @@
       }
     }
   },
-  "platform_api": "1.2",
+  "platform_api": "1.3",
   "provider_hooks": {
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
     "after_opinion_distribution_saved": "(self, context: 'dict') -> 'None'",

@@ -5,9 +5,9 @@ explicitly, platform by platform (D2), also while the federation runs (D3: the c
 through ``POST /v1/identity``). Humans are outside attention, discovery, leave and the affective report (D7, INV-15):
 that is the coordinator's and the runtimes' business, YWeb only records who is enrolled and where.
 
-The accounts are created through the gateways of the runtimes, never by YWeb (instant messaging, dating and, since
-H5, microblogging, forum and photo sharing). Dating asks the person for a profile, so its account exists only after
-the person joined: the enrolment there is *pending* (``created`` false) and its id is the derived one.
+The accounts are created through the gateways of the runtimes, never by YWeb (each platform declares its gateway,
+``human_gateway``). A platform whose account needs the person (a profile, say) has it only after the person joined: the
+enrolment there is *pending* (``created`` false) and its id is the derived one.
 Unenrolling never deletes an account: it only marks the person inactive in YWeb.
 """
 
@@ -22,13 +22,6 @@ from y_web.src.federation import service
 from y_web.src.federation.service import WorldSimulationError
 
 HUMAN_PREFIX = "human:"
-GATEWAY_PLATFORMS = (
-    "microblogging",
-    "forum",
-    "photo_sharing",
-    "instant_messaging",
-    "dating",
-)
 RUNNING_STATES = ("running", "paused", "starting")
 
 
@@ -50,27 +43,47 @@ def _err(code: str, message: str):
 
 
 # -- the account of a person on each platform ----------------------------------------------------------
-def _ensure_micro_like(platform_type, exp, user, hid, session=None, offline=None):
+def _gateway(platform_type, exp):
+    from y_web.src.federation import traits
+
+    return traits.human_gateway(platform_type, getattr(exp, "simulator_type", None))
+
+
+def _ensure_account(platform_type, exp, user, hid, session=None, offline=None):
+    """``(account id, created)`` of the person on the member; the platform's own ``enrol`` when it has one, otherwise
+    the account request of its gateway."""
+    from y_web.platforms.base import GatewayPaths, HumanGatewayError
     from y_web.src.federation import human_gateways as hg
     from y_web.src.federation.human_gateways import GatewayUnavailable, RuntimeGateway
 
+    spec = _gateway(platform_type, exp)
     folder = service.experiment_dir(exp)
     config = service.server_config_path(exp)
-    # photo sharing derives the identity from the key (``human:<key>``): the key is the user id
-    key = str(int(user.id)) if platform_type == "photo_sharing" else f"u{int(user.id)}"
-    gateway = RuntimeGateway(
-        platform_type,
-        folder,
-        server_config=config,
-        database=folder / "database_server.db",
-        session=session,
-        offline=offline,
-        hpc=hg.is_hpc(exp) and platform_type == "microblogging",
-    )
     try:
+        if spec is not None and spec.enrol is not None:
+            return spec.enrol(
+                exp,
+                user,
+                hid,
+                GatewayPaths(folder, config, folder / "database_server.db"),
+                session,
+                offline,
+            )
+        key = spec.key_template.format(user_id=int(user.id))
+        gateway = RuntimeGateway(
+            platform_type,
+            folder,
+            server_config=config,
+            database=folder / "database_server.db",
+            session=session,
+            offline=offline,
+            hpc=hg.is_hpc(exp),
+        )
         status, payload = gateway.ensure(
             key, str(user.username)[:15], hid, getattr(exp, "prompt_language", None)
         )
+    except HumanGatewayError as exc:
+        _err(exc.code, f"{platform_type}: {exc}")
     except GatewayUnavailable as exc:
         _err("gateway_unavailable", f"{platform_type}: {exc}")
     if status not in (200, 201) or "account_id" not in (payload or {}):
@@ -78,50 +91,9 @@ def _ensure_micro_like(platform_type, exp, user, hid, session=None, offline=None
     return str(payload["account_id"]), True
 
 
-def _ensure_im(platform_type, exp, user, hid, session=None, offline=None):
-    provider = registry.resolve(platform_type)
-    human_identity = provider.library("human_identity")
-    gateway_client = provider.library("gateway_client")
-    GatewayClient, GatewayUnavailable = (
-        gateway_client.GatewayClient,
-        gateway_client.GatewayUnavailable,
-    )
-
-    folder = str(service.experiment_dir(exp))
-    uid = human_identity.experiment_uid(exp)
-    key = human_identity.human_key(uid, user.id)
-    try:
-        status, _payload = GatewayClient(folder, session=session).ensure_with_identity(
-            key, str(user.username)[:15], getattr(exp, "prompt_language", None), hid
-        )
-    except GatewayUnavailable as exc:
-        _err("gateway_unavailable", f"{platform_type}: {exc}")
-    if status not in (200, 201):
-        _err("gateway_refused", f"{platform_type}: the gateway answered {status}")
-    return human_identity.human_account_id(uid, user.id), True
-
-
-def _ensure_dating(platform_type, exp, user, hid, session=None, offline=None):
-    dating_human = registry.library("dating", "human")
-    # the profile is filled by the person when they join (photos, preferences): the account is pending until then
-    return (
-        dating_human.human_account_id(dating_human.experiment_uid(exp), user.id),
-        False,
-    )
-
-
-ENSURERS = {
-    "microblogging": _ensure_micro_like,
-    "forum": _ensure_micro_like,
-    "photo_sharing": _ensure_micro_like,
-    "instant_messaging": _ensure_im,
-    "dating": _ensure_dating,
-}
-
-
 def supported(row, exp) -> bool:
-    """Every platform of a World Simulation has a human gateway (microblogging on HPC through the YSimulator script)."""
-    return row.platform_type in ENSURERS
+    """Every platform of a World Simulation has a human gateway (a platform without one cannot enrol people)."""
+    return _gateway(row.platform_type, exp) is not None
 
 
 # -- records -------------------------------------------------------------------------------------------
@@ -209,7 +181,7 @@ def enrol(
     offline=None,
     write_files: bool = True,
 ):
-    """Enrol ``user`` in the given members of ``fed`` (names of members, e.g. ``["forum", "dating"]``).
+    """Enrol ``user`` in the given members of ``fed`` (names of members, the names the federation gives them).
 
     Idempotent: a member already enrolled keeps its account. All the gateways are asked before anything is recorded,
     so a failure leaves nothing half-way (an account already created stays: asking again finds it).
@@ -243,7 +215,7 @@ def enrol(
             )
             continue
         row, exp = rows[name]
-        results[name] = ENSURERS[row.platform_type](
+        results[name] = _ensure_account(
             row.platform_type, exp, user, hid, session=session, offline=offline
         )
     if human is None:
@@ -341,42 +313,35 @@ def _member_name(fed, exp):
 
 
 def prepare_member(fed, exp) -> None:
-    """Before the server of a member starts: the token of the microblogging gateway goes in its server configuration
-    (the forum and photo sharing gateways are separate processes with their own token, written when they start).
+    """Before the server of a member starts: the token of a gateway that is part of the server goes in its server
+    configuration (the gateways that are processes have their own token, written when they start).
     """
-    from y_web.src.federation.human_gateways import set_microblogging_token
+    from y_web.src.federation.human_gateways import set_server_token
 
     member = _member_name(fed, exp)
     row = next((r for r, e in service.members_of(fed) if e.idexp == exp.idexp), None)
-    if (
-        member is None
-        or row is None
-        or row.platform_type != "microblogging"
-        or not _has_humans(fed, member)
-    ):
+    if member is None or row is None or not _has_humans(fed, member):
+        return
+    spec = _gateway(row.platform_type, exp)
+    if spec is None or not spec.token_in_server_config or not spec.http:
         return
     path = service.server_config_path(exp)
-    if (
-        path is not None
-        and (getattr(exp, "simulator_type", None) or "Standard") != "HPC"
-    ):
-        set_microblogging_token(path)
+    if path is not None:
+        set_server_token(path)
 
 
 def after_server_started(fed, exp):
-    """After the server of a member is up: start the human gateway of the forum or of photo sharing (a failure is only a
+    """After the server of a member is up: start its human gateway when that is a process of its own (a failure is only a
     warning in the log: the person can still act offline through the runtime script when the server is stopped).
     """
     from y_web.src.federation import human_gateways as hg
 
     member = _member_name(fed, exp)
     row = next((r for r, e in service.members_of(fed) if e.idexp == exp.idexp), None)
-    if (
-        member is None
-        or row is None
-        or row.platform_type not in ("forum", "photo_sharing")
-        or not _has_humans(fed, member)
-    ):
+    if member is None or row is None or not _has_humans(fed, member):
+        return None
+    spec = _gateway(row.platform_type, exp)
+    if spec is None or spec.start_process is None:
         return None
     from y_web.src.simulation.server import detect_env_handler
     from y_web.src.system.path_utils import get_external_repo_dir
@@ -390,7 +355,7 @@ def after_server_started(fed, exp):
     return hg.start_gateway(
         row.platform_type,
         service.experiment_dir(exp),
-        get_external_repo_dir(hg.SPECS[row.platform_type].repo),
+        get_external_repo_dir(spec.repo),
         python_cmd=detect_env_handler() or None,
         server_url=url,
     )

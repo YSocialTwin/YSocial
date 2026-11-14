@@ -15,7 +15,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, FrozenSet, List, Mapping, Optional, Tuple
+from typing import Any, Callable, FrozenSet, List, Mapping, Optional, Tuple
 
 from y_web.i18n import N_
 
@@ -105,6 +105,9 @@ class FederationTraits:
     profile_path: Optional[str] = None
     #: query ``(id, username)`` of one account (``?`` is its id)
     account_sql: Optional[str] = None
+    #: query ``(id)`` of the accounts whose name matches ``LIKE ?`` (``ESCAPE '\\'``, ``LIMIT ?``); ``None``: the usual
+    #: ``user_mgmt`` table
+    account_search_sql: Optional[str] = None
     #: longest text the platform accepts (characters)
     text_limit: int = 280
     #: a content needs a title: a text written as a single line gets its first sentence as the title line
@@ -113,6 +116,85 @@ class FederationTraits:
     decision_triggers: Tuple[str, ...] = ()
     #: runtimes the platform can federate on
     simulators: Tuple[str, ...] = (STANDARD, HPC)
+    #: key of the member section of ``federation.json`` that switches topic migration in this runtime (``None``: the
+    #: runtime migrates topics by default and has no switch)
+    topic_migration_key: Optional[str] = None
+    #: the key is written even when migration is on (the runtime's default is off, or it does not say)
+    topic_migration_always: bool = True
+
+
+class HumanGatewayError(RuntimeError):
+    """A human gateway refused or could not be reached; ``code`` is ``gateway_unavailable`` or ``gateway_refused``."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
+@dataclass(frozen=True)
+class GatewayPaths:
+    """Where the experiment of a platform keeps what its runtime script needs (offline gateway requests)."""
+
+    folder: Any
+    server_config: Any = None
+    database: Any = None
+
+
+@dataclass(frozen=True)
+class GatewayLaunch:
+    """What a runtime needs to start its human gateway process (``HumanGatewayTraits.start_process``)."""
+
+    folder: Any
+    repo_dir: str
+    python: str
+    token: str
+    server_url: str
+    token_file: Any
+    port: int
+    popen_kwargs: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class HumanGatewayTraits:
+    """How a person of a World Simulation gets an account on a platform and acts there (the runtime's human gateway).
+
+    The core owns the transport (loopback HTTP with a token, the runtime script when no server answers, the gateway
+    process); the platform says what its gateway looks like. ``enrol`` replaces all of it for a platform whose
+    accounts are made by its own library (instant messaging) or by the person later (dating).
+    """
+
+    #: repository (under ``external/``) that holds the runtime and its gateway script
+    repo: str = ""
+    #: header that carries the token, and the routes of the gateway
+    token_header: str = ""
+    ensure_path: str = ""
+    actions_path: str = ""
+    #: the runtime's script for a request when no gateway answers
+    script: str = "run_offline_gateway.py"
+    #: ``False``: the runtime has no HTTP surface, every request goes through ``script``
+    http: bool = True
+    #: the token lives in the server configuration (the gateway is part of the server) instead of a process of its own
+    token_in_server_config: bool = False
+    #: the key of the person in the runtime (``{user_id}``)
+    key_template: str = "u{user_id}"
+    #: ``(key, username, human_id, language) -> body`` of the account request
+    ensure_body: Optional[Callable[..., dict]] = None
+    #: ``(account_id, username, key, actions) -> (path, body)`` of the request that carries actions
+    actions_request: Optional[Callable[..., Any]] = None
+    #: ``(GatewayPaths, body) -> (argv, request)`` of the runtime script, for the account and for the actions
+    offline_ensure: Optional[Callable[..., Any]] = None
+    offline_actions: Optional[Callable[..., Any]] = None
+    #: ``(folder, repo_dir, python, token, server_url, token_file) -> (process, state or None)``: starts the gateway
+    #: process of a runtime that has one; ``state`` is written to ``human_gateway.json`` when the process does not
+    start_process: Optional[Callable[..., Any]] = None
+    #: ``(exp, user, human_id, paths, session, offline) -> (account id, created)``: the platform makes the account itself;
+    #: raises ``HumanGatewayError``
+    enrol: Optional[Callable[..., Any]] = None
+    #: ``(text, targets, post_id=None, community=None) -> action`` of a post or share of the person with ``crosspost_to``
+    #: (``None``: the platform takes no action from the composer)
+    build_action: Optional[Callable[..., Optional[dict]]] = None
+    #: ``(exp, slug, session) -> community name or None``: the community the composer chose, as the server knows it
+    community_of: Optional[Callable[..., Optional[str]]] = None
 
 
 @dataclass(frozen=True)
@@ -155,6 +237,8 @@ class PlatformProvider:
     id: str = ""
     #: World Simulation traits (``None``: the platform does not take part in one)
     federation_traits: Optional[FederationTraits] = None
+    #: human gateway of the platform's runtime (``None``: a person cannot be enrolled in it)
+    human_gateway: Optional[HumanGatewayTraits] = None
     #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``
     #: must serve disjoint sets
     simulator_types: Optional[Tuple[str, ...]] = None

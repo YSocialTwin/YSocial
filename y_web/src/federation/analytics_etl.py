@@ -1,4 +1,4 @@
-"""Derived analytics database of a World Simulation (F7.1, pattern of the dating and IM ``analytics_etl.py``).
+"""Derived analytics database of a World Simulation (F7.1, pattern of the platforms' own ``analytics_etl.py``).
 
 ``analytics_federation.db`` lives in the folder of the World Simulation, is owned by YWeb and holds tables shaped for
 analysis. It is rebuilt in full from ``federation.db`` (the database of the coordinator), which is only ever opened
@@ -416,7 +416,7 @@ def _member_topics(path: str) -> List[Tuple[str, Any, str, str]]:
                     "SELECT full_name, resolved_name FROM federation_topic_origin"
                 )
             }
-        elif {"original", "name"} <= ocols:  # forum
+        elif {"original", "name"} <= ocols:  # threaded content
             origin = {
                 str(r[1]).lower(): str(r[0])
                 for r in conn.execute(

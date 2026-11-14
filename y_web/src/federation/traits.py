@@ -58,6 +58,7 @@ author_sql = _attr("author_sql")
 content_path = _attr("content_path")
 profile_path = _attr("profile_path")
 account_sql = _attr("account_sql")
+account_search_sql = _attr("account_search_sql")
 
 
 def text_limit(platform_type) -> int:
@@ -110,3 +111,10 @@ class _PlatformMap(Mapping):
 
 LABELS = _PlatformMap(label)
 MDI_ICONS = _PlatformMap(mdi_icon)
+
+
+def human_gateway(platform_type, simulator_type=None):
+    """The ``HumanGatewayTraits`` of the provider that serves ``platform_type`` on ``simulator_type``, or ``None`` when that
+    provider has no human gateway (or is not installed)."""
+    provider = registry.get(platform_type, simulator_type)
+    return getattr(provider, "human_gateway", None) if provider else None

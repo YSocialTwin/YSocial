@@ -231,7 +231,7 @@ def _runtime_gateway(exp, platform_type, session=None, offline=None):
         database=folder / "database_server.db",
         session=session,
         offline=offline,
-        hpc=is_hpc(exp) and platform_type == "microblogging",
+        hpc=is_hpc(exp),
     )
 
 
@@ -239,110 +239,33 @@ def _ok(status, payload) -> bool:
     return status in (200, 201) and (payload or {}).get("ok", True) is not False
 
 
-def publish_micro_like(
+def publish_through_gateway(
     exp, ctx: HumanContext, action: dict, *, username: str, session=None, offline=None
 ):
-    """One action of the person on microblogging, forum or photo sharing through the runtime gateway."""
-    key = (
-        str(ctx.user_id) if ctx.platform_type == "photo_sharing" else f"u{ctx.user_id}"
-    )
+    """One action of the person on a platform through the gateway of its runtime."""
+    spec = traits.human_gateway(ctx.platform_type, getattr(exp, "simulator_type", None))
+    key = (spec.key_template if spec else "u{user_id}").format(user_id=ctx.user_id)
     gateway = _runtime_gateway(exp, ctx.platform_type, session, offline)
     status, payload = gateway.actions(ctx.account_id, username, key, [action])
     return _ok(status, payload), status, payload
 
 
-def micro_post(text: str, targets: list) -> dict:
-    return {"type": "post", "text": text, "crosspost_to": targets}
-
-
-def micro_share(post_id, text: str, targets: list) -> dict:
-    return {"type": "share", "post_id": post_id, "text": text, "crosspost_to": targets}
-
-
-def forum_post(text: str, targets: list, community: Optional[str] = None) -> dict:
-    action = {"action": "post", "text": text, "crosspost_to": targets}
-    if community:
-        action["community"] = (
-            community  # a topic name as the forum server lists it (GET /get_topics)
-        )
-    return action
-
-
-def _community_slug(value) -> str:
-    """The slug the forum composer uses for a community (same rule as the forum pages)."""
-    raw = str(value or "").strip().lower().replace("\\", "/")
-    if not raw:
-        return ""
-    match = re.search(r"(?:^|/)r/([a-z0-9_]+)", raw)
-    if match:
-        return match.group(1)
-    raw = re.sub(r"[^a-z0-9_/-]+", "-", raw.removeprefix("r/").strip("/")).strip("-_/")
-    return raw.split("/")[0] if raw else ""
-
-
-def forum_topics(exp, session=None) -> list:
-    """``[{id, name}]`` the forum server lists at ``GET /get_topics`` (read-only, no token); ``[]`` when it cannot be reached
-    (a stopped server: the thread then goes to the default board, as before)."""
-    try:
-        cfg = json.loads(
-            Path(service.server_config_path(exp)).read_text(encoding="utf-8")
-        )
-        host, port = cfg.get("host") or "127.0.0.1", int(cfg["port"])
-        resp = (session or requests).get(f"http://{host}:{port}/get_topics", timeout=5)
-        data = resp.json()
-        return (
-            [t for t in data if isinstance(t, dict) and t.get("name")]
-            if resp.status_code == 200 and isinstance(data, list)
-            else []
-        )
-    except Exception:  # noqa: BLE001 - no community known: the default one
-        return []
-
-
-def forum_community(exp, slug, session=None) -> Optional[str]:
-    """The forum topic name behind the community the person chose in the composer (its slug), or ``None`` (default board:
-    a community that is not a topic, an empty choice, or a server that cannot be reached).
+def build_action(exp, platform_type, text, targets, *, post_id=None, community=None):
+    """The action of a post (or share of ``post_id``) of the person with ``crosspost_to`` ``targets``, as the gateway of
+    the platform takes it; ``None`` when the platform takes no action from the composer.
     """
-    wanted = _community_slug(slug)
-    if not wanted:
+    spec = traits.human_gateway(platform_type, getattr(exp, "simulator_type", None))
+    if spec is None or spec.build_action is None:
         return None
-    for topic in forum_topics(exp, session):
-        if _community_slug(topic["name"]) == wanted:
-            return str(topic["name"])
-    return None
+    return spec.build_action(text, targets, post_id=post_id, community=community)
 
 
-def photo_post(
-    caption: str,
-    targets: list,
-    *,
-    image_base64: str = "",
-    extension: str = "",
-    image_url: str = "",
-) -> dict:
-    action = {"type": "post_photo", "caption": caption, "crosspost_to": targets}
-    if image_url:
-        action["image_url"] = image_url
-    else:
-        action.update(image_base64=image_base64, extension=extension)
-    return action
-
-
-def photo_share(photo_id, caption: str, targets: list) -> dict:
-    return {
-        "type": "share",
-        "photo_id": photo_id,
-        "caption": caption,
-        "crosspost_to": targets,
-    }
-
-
-def im_action(kind: str, targets: list, **fields) -> dict:
-    """An instant messaging action (``post`` or ``forward``) with ``crosspost_to``; the rest as the IM gateway takes it."""
-    action = {"type": kind, **fields}
-    if targets:
-        action["crosspost_to"] = targets[:MAX_TARGETS]
-    return action
+def community_of(exp, platform_type, slug, session=None) -> Optional[str]:
+    """The community the person chose in the composer, as the platform's server names it, or ``None``."""
+    spec = traits.human_gateway(platform_type, getattr(exp, "simulator_type", None))
+    if spec is None or spec.community_of is None:
+        return None
+    return spec.community_of(exp, slug, session)
 
 
 def try_deliver(
@@ -363,7 +286,7 @@ def try_deliver(
 
     exp = db.session.get(Exps, int(exp_id))
     try:
-        ok, _status, _payload = publish_micro_like(
+        ok, _status, _payload = publish_through_gateway(
             exp,
             ctx,
             build(targets),
@@ -379,7 +302,7 @@ def try_deliver(
 
 
 def targets_for_request(exp_id, user, requested, text) -> list:
-    """``crosspost_to`` of an action sent through an existing gateway client (instant messaging, dating); ``[]`` when the
+    """``crosspost_to`` of an action sent through an existing gateway client of a platform; ``[]`` when the
     person is not enrolled or picked nothing. A client-sent ``crosspost_to`` is never trusted: only this is.
     """
     ctx = context_for(exp_id, getattr(user, "id", None))
@@ -388,7 +311,8 @@ def targets_for_request(exp_id, user, requested, text) -> list:
 
 def enrolment_of(exp_id, user_id):
     """``(federation, member, human)`` when the person is enrolled (active) on this member, created or still pending
-    (dating: the account exists only after the person joined); ``None`` otherwise."""
+    (a platform whose account exists only after the person joined); ``None`` otherwise.
+    """
     from y_web.src.models.admin import Federation, FederationHuman, FederationMember
 
     if user_id is None:

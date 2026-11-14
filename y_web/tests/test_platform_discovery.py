@@ -62,10 +62,11 @@ def test_api_compatibility():
     assert api_problem("1.0") is None
     assert api_problem("1") is None
     assert api_problem("1.1") is None
+    assert api_problem("1.2") is None
     assert (
-        api_problem("1.2") is None
-    )  # older providers (1.0, 1.1) and current ones (1.2) run
-    assert api_problem("1.3") is not None  # newer than the core knows
+        api_problem("1.3") is None
+    )  # older providers (1.0 to 1.2) and current ones (1.3) run
+    assert api_problem("1.4") is not None  # newer than the core knows
     assert api_problem("2.0") is not None
     assert api_problem("x") is not None
 

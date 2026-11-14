@@ -276,10 +276,10 @@ class Session:
 def test_microblogging_gateway_uses_the_token_of_the_server_configuration(tmp_path):
     cfg = tmp_path / "config_server.json"
     cfg.write_text(json.dumps({"host": "127.0.0.1", "port": 5010}))
-    token = human_gateways.set_microblogging_token(cfg)
+    token = human_gateways.set_server_token(cfg)
     assert (
         json.loads(cfg.read_text())["human_gateway"]["token"] == token
-        and human_gateways.set_microblogging_token(cfg) == token
+        and human_gateways.set_server_token(cfg) == token
     )
     (tmp_path / "ray_ready.temp").write_text("")
     s = Session()

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from y_web.tests._platform_repos import platform_static_path
+from y_web.tests._platform_repos import gateway_action, platform_static_path
 
 pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
 
@@ -76,33 +76,37 @@ def test_the_community_slug_becomes_the_topic_name_the_forum_server_lists(
     session = _Session(
         [{"id": 1, "name": "Climate Change"}, {"id": 2, "name": "music"}]
     )
-    assert ho.forum_community(exp, "climate-change", session) == "Climate Change"
-    assert ho.forum_community(exp, "r/music", session) == "music"
+    assert ho.community_of(exp, "forum", "climate-change", session) == "Climate Change"
+    assert ho.community_of(exp, "forum", "r/music", session) == "music"
     assert session.urls[0] == "http://127.0.0.1:5099/get_topics"
-    assert ho.forum_community(exp, "", session) is None
+    assert ho.community_of(exp, "forum", "", session) is None
     assert (
-        ho.forum_community(exp, "not-a-topic", session) is None
+        ho.community_of(exp, "forum", "not-a-topic", session) is None
     )  # a community that is not a topic: the default board
 
 
 def test_an_unreachable_forum_server_means_the_default_community(tmp_path, monkeypatch):
     exp = _exp(tmp_path, monkeypatch)
-    assert ho.forum_community(exp, "music", _Session([], status=500)) is None
+    assert ho.community_of(exp, "forum", "music", _Session([], status=500)) is None
 
     class Down:
         def get(self, *a, **k):
             raise OSError("down")
 
-    assert ho.forum_community(exp, "music", Down()) is None
+    assert ho.community_of(exp, "forum", "music", Down()) is None
 
 
 def test_forum_post_carries_the_community_only_when_there_is_one():
     assert (
-        ho.forum_post("t", [{"member": "m", "text": "x"}], "Music")["community"]
+        gateway_action("forum", "t", [{"member": "m", "text": "x"}], community="Music")[
+            "community"
+        ]
         == "Music"
     )
-    assert "community" not in ho.forum_post("t", [{"member": "m", "text": "x"}])
-    assert "community" not in ho.forum_post("t", [], None)
+    assert "community" not in gateway_action(
+        "forum", "t", [{"member": "m", "text": "x"}]
+    )
+    assert "community" not in gateway_action("forum", "t", [])
 
 
 # -- (3) dating story ----------------------------------------------------------------------------------------------

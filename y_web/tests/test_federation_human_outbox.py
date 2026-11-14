@@ -9,6 +9,7 @@ pytest.importorskip("ysocial_federation", reason="the federation SDK is not inst
 
 from y_web.src.federation import human_outbox as ho  # noqa: E402
 from y_web.src.federation import humans
+from y_web.tests._platform_repos import gateway_action  # noqa: E402
 from y_web.tests.test_federation_humans import Offline, make, user  # noqa: E402,F401
 from y_web.tests.test_federation_service import world  # noqa: E402,F401  (fixture)
 
@@ -126,7 +127,7 @@ def test_try_deliver_sends_the_action_with_crosspost_to_through_the_gateway(worl
         user(),
         ["microblogging"],
         "A title. And a body.",
-        lambda t: ho.forum_post("A title. And a body.", t),
+        lambda t: gateway_action("forum", "A title. And a body.", t),
         only="forum",
         offline=rec,
     )
@@ -147,7 +148,7 @@ def test_try_deliver_sends_the_action_with_crosspost_to_through_the_gateway(worl
             user(),
             ["forum"],
             "hi there",
-            lambda t: ho.micro_post("hi there", t),
+            lambda t: gateway_action("microblogging", "hi there", t),
             only="microblogging",
             offline=rec2,
         )
@@ -165,7 +166,7 @@ def test_try_deliver_sends_the_action_with_crosspost_to_through_the_gateway(worl
 def test_nothing_changes_for_a_person_who_is_not_enrolled_or_picked_nothing(world):
     _, exps = enrolled(world)
     rec = Recorder()
-    build = lambda t: ho.forum_post("x", t)  # noqa: E731
+    build = lambda t: gateway_action("forum", "x", t)  # noqa: E731
     assert (
         ho.try_deliver(
             exps["forum"], user(8, "ann"), ["microblogging"], "x", build, offline=rec
@@ -198,7 +199,7 @@ def test_nothing_changes_for_a_person_who_is_not_enrolled_or_picked_nothing(worl
 
 def test_a_refusal_or_an_unreachable_gateway_is_false_never_a_second_write(world):
     _, exps = enrolled(world)
-    build = lambda t: ho.forum_post("x", t)  # noqa: E731
+    build = lambda t: gateway_action("forum", "x", t)  # noqa: E731
     assert (
         ho.try_deliver(
             exps["forum"],
@@ -222,31 +223,29 @@ def test_a_refusal_or_an_unreachable_gateway_is_false_never_a_second_write(world
     )
 
 
-def test_photo_and_im_actions_have_the_gateway_shape():
-    assert ho.photo_post(
-        "cap", [{"member": "x", "text": "t"}], image_base64="AA==", extension="png"
-    ) == {
-        "type": "post_photo",
-        "caption": "cap",
-        "crosspost_to": [{"member": "x", "text": "t"}],
-        "image_base64": "AA==",
-        "extension": "png",
-    }
-    assert (
-        ho.photo_share("p1", "", [])["type"] == "share"
-        and ho.micro_share(3, "", [])["post_id"] == 3
-    )
-    assert ho.im_action("post", [], chat_id="c", text="hi") == {
+def test_the_actions_of_each_platform_have_the_gateway_shape():
+    from y_web.src.federation import traits
+
+    def build(platform, simulator="Standard", **kw):
+        spec = traits.human_gateway(platform, simulator)
+        return spec.build_action("cap", [{"member": "x", "text": "t"}], **kw)
+
+    assert build("microblogging") == {
         "type": "post",
-        "chat_id": "c",
-        "text": "hi",
+        "text": "cap",
+        "crosspost_to": [{"member": "x", "text": "t"}],
     }
+    assert build("microblogging", post_id=3)["post_id"] == 3
+    assert build("photo_sharing", "HPC", post_id="p1")["type"] == "share"
     assert (
-        ho.im_action(
-            "forward", [{"member": "m", "text": "t"}], forward_of_message_id="9"
-        )["crosspost_to"][0]["member"]
-        == "m"
-    )
+        build("photo_sharing", "HPC") is None
+    )  # the composer makes no photo from words
+    assert build("instant_messaging", "HPC") == {
+        "type": "post",
+        "text": "cap",
+        "crosspost_to": [{"member": "x", "text": "t"}],
+    }
+    assert build("forum", community="python")["community"] == "python"
 
 
 def test_integrated_a_human_post_reaches_the_destination_exactly_once(world):
@@ -272,7 +271,7 @@ def test_integrated_a_human_post_reaches_the_destination_exactly_once(world):
             user(),
             ["microblogging"],
             text,
-            lambda t: ho.forum_post(text, t),
+            lambda t: gateway_action("forum", text, t),
             only="forum",
             offline=gateway,
         )

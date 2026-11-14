@@ -1,7 +1,7 @@
 """World Simulation service (guide F5.2): creation, validation and configuration files of a federation.
 
 A World Simulation groups two to eight stopped experiments that run on one simulated 24-slot clock. Several experiments may
-have the same platform type (two microblogging experiments and a forum, say): every experiment is one *member* with a unique
+have the same platform type (two experiments of one type and one of another, say): every experiment is one *member* with a unique
 member name (see :func:`member_names`) and keeps its platform type in ``platform``. In the interface the feature is always called "World Simulation"; in code and files it is
 "federation" (guide 6, F5).
 
@@ -11,7 +11,7 @@ Rules checked at creation (each one has its own error code):
     remote              no remote experiment
     population          every experiment uses the same, non-empty set of populations
     platform            the platform supports federation
-    simulator_type      forum runs on Standard, photo sharing / instant messaging / dating on HPC, microblogging on either (D-06)
+    simulator_type      each platform runs on the runtimes its traits list (D-06)
     clock               clock mode "simulated" with hourly feed refresh (24 slots a day)
     already_member      the experiment is not a member of another World Simulation
 """
@@ -47,7 +47,7 @@ OPTION_BLOCKS = (
     "provisioning",
     "frontends",
 )
-# Blocks read by YWeb only (not part of federation.json): ``provisioning = {"members": ["microblogging"]}`` lets the agents
+# Blocks read by YWeb only (not part of federation.json): ``provisioning = {"members": [<member>]}`` lets the agents
 # of the other members discover those platforms and get an account there on the fly (INV-19);
 # ``frontends = {"activate_on_start": false}`` switches off the activation of the web interface of the members at start
 # (absent = on). The activation is not undone at stop (y_web.src.federation.frontends).
@@ -174,8 +174,8 @@ def member_names(exps) -> dict:
 
     The member name is the key of everything that belongs to a member: identities, ``bindings_<member>.db``, the sections of the
     configuration files, the pairs of ``crosspost.probability`` and the URLs. A platform type that appears once keeps the
-    type as the member name (``microblogging``, ``forum``): a world with one member per type is named exactly as before. A type
-    that appears more than once names every member of that type ``<platform_type>-<experiment id>`` (``microblogging-3``): unique,
+    type as the member name (the member name is the type itself): a world with one member per type is named exactly as before. A type
+    that appears more than once names every member of that type ``<platform_type>-<experiment id>`` (``<type>-3``): unique,
     stable (the experiment id never changes, unlike its name), made of letters, digits, ``_`` and ``-`` only (safe in a file name,
     a form field and a URL) and free of ``:``, ``/`` and ``__`` (used as separators by the coordinator and the forms).
     """
@@ -653,20 +653,13 @@ def member_section(fed, row, exp, enabled=True) -> dict:
         "crosspost_mode": str(crosspost.get("mode") or "coordinator_rule"),
     }
     # Topic migration: content that crosses platforms brings its topics and a missing one is created (default on).
-    # Written only under the key each runtime reads: the forum server `topic_migration`, YSimulator `create_topics`;
-    # the other runtimes migrate topics by default and have no switch.
+    # Written only under the key the runtime reads (``topic_migration_key`` of its traits); a runtime without a key
+    # migrates topics by default and has no switch.
     migrate = bool((options.get("topics") or {}).get("migration", True))
-    if row.platform_type == "forum":
-        section["topic_migration"] = migrate
-    elif (
-        row.platform_type == "microblogging"
-        and (getattr(exp, "simulator_type", None) or "Standard") == "HPC"
-    ):
-        section["create_topics"] = migrate
-    elif row.platform_type == "microblogging" and not migrate:
-        section["topic_migration"] = (
-            False  # YServer reads it; absent means on (its default)
-        )
+    found = traits.traits(row.platform_type, getattr(exp, "simulator_type", None))
+    if found is not None and found.topic_migration_key:
+        if found.topic_migration_always or not migrate:
+            section[found.topic_migration_key] = migrate
     # INV-17: the runtime keeps who is who in a file of its own (accounts are reported by username, the coordinator answers)
     section["bindings_file"] = str(folder / f"bindings_{row.member}.db")
     if provisions(fed, row, exp):

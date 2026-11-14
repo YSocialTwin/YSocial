@@ -18,7 +18,7 @@ tested with fixtures; ``collect`` gathers the values. Definitions:
 
 A hint, not a problem (``silent_members``): the member advances its ticks but its server has received no content action
 (post, comment, reaction written by its own clients; content imported by the federation does not count) for
-``SILENT_TICKS`` ticks. It means the clock runs while no agent acts (World Simulation 1: a resumed microblogging client
+``SILENT_TICKS`` ticks. It means the clock runs while no agent acts (World Simulation 1: a resumed client
 that sampled nobody).
 """
 
