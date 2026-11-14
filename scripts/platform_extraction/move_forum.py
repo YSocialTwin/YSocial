@@ -1,4 +1,7 @@
-import os, re, shutil, sys
+import os
+import re
+import shutil
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rewrite_imports import convert

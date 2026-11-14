@@ -1,6 +1,8 @@
 """Rewrite the core imports of moved platform modules into SDK imports (AST-spliced)."""
 
-import ast, sys, re
+import ast
+import re
+import sys
 
 MODELS = "y_web.sdk.models"
 

@@ -33,13 +33,13 @@ from y_web.platforms import registry as platforms
 from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _experiment_memory_enabled,
     _forum_current_profile_pic,
     _forum_logged_user,
     _forum_memory_enabled,
     _forum_profile_pic,
     _load_ui_settings,
     get_safe_profile_pic,
-    _experiment_memory_enabled,
     is_admin,
 )
 from y_web.src.agents.custom_features import (

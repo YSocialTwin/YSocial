@@ -1,6 +1,10 @@
 """Cut named top-level functions (with decorators) out of a module; report what they need."""
 
-import ast, sys, io, re
+import ast
+import io
+import re
+import sys
+
 from pyflakes import api as pf
 from pyflakes.reporter import Reporter
 

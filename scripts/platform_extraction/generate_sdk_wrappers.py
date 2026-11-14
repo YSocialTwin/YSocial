@@ -1,4 +1,6 @@
-import inspect, importlib, textwrap
+import importlib
+import inspect
+import textwrap
 
 SPECS = {
     "runtime": (

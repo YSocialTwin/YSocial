@@ -9,6 +9,7 @@ from sqlalchemy import and_, case, func, or_, select, text
 from sqlalchemy.orm import aliased
 
 from y_web import db
+from y_web.src.commons.hot_rank import rank_posts_longtail
 from y_web.src.commons.ids import opaque_id
 from y_web.src.commons.ordering import seq_or_id
 from y_web.src.commons.service.data_classes import (
@@ -39,7 +40,6 @@ from y_web.src.content.text_utils import (
 )
 from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.experiment.context import get_current_experiment_id
-from y_web.src.commons.hot_rank import rank_posts_longtail
 
 
 def _root_post_filter(column):
