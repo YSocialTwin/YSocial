@@ -26,7 +26,7 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
 from ._crud import _get_experiment_folder_name, _get_experiment_mode
-from ._dispatch import mode_view
+from ._dispatch import missing_view_response, mode_view
 
 
 def _update_client_simulation_internal(uid, expected_mode):
@@ -494,13 +494,6 @@ def _update_recsys_internal(uid, expected_mode):
     return redirect(request.referrer)
 
 
-@clientsr.route("/admin/update_standard_recsys/<int:uid>", methods=["POST"])
-@login_required
-def update_standard_recsys(uid):
-    """Update recommenders for a standard microblogging client."""
-    return _update_recsys_internal(uid, "standard")
-
-
 @clientsr.route("/admin/update_hpc_recsys/<int:uid>", methods=["POST"])
 @login_required
 def update_hpc_recsys(uid):
@@ -530,7 +523,7 @@ def update_recsys(uid):
     view = mode_view("update_{mode}_recsys", mode)
     if view is not None:
         return view(uid)
-    return update_standard_recsys(uid)
+    return missing_view_response()
 
 
 def _update_client_llm_internal(uid, expected_mode):
@@ -583,19 +576,6 @@ def _update_client_llm_internal(uid, expected_mode):
     return redirect(request.referrer)
 
 
-@clientsr.route("/admin/update_standard_client_llm/<int:uid>", methods=["POST"])
-@login_required
-def update_standard_client_llm(uid):
-    """Update LLM for a standard microblogging client."""
-    return _update_client_llm_internal(uid, "standard")
-
-
-@clientsr.route("/admin/update_standard_client_settings/<int:uid>", methods=["POST"])
-@login_required
-def update_standard_client_settings(uid):
-    return _update_client_simulation_internal(uid, "standard")
-
-
 @clientsr.route("/admin/update_hpc_client_settings/<int:uid>", methods=["POST"])
 @login_required
 def update_hpc_client_settings(uid):
@@ -631,4 +611,4 @@ def update_llm(uid):
     view = mode_view("update_{mode}_client_llm", mode)
     if view is not None:
         return view(uid)
-    return update_standard_client_llm(uid)
+    return missing_view_response()

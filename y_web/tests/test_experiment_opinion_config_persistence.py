@@ -333,7 +333,7 @@ def test_hpc_recsys_updates_do_not_require_activation_when_config_exists():
     ).read()
 
     start = source.index("def _update_recsys_internal(uid, expected_mode):")
-    end = source.index('@clientsr.route("/admin/update_standard_recsys/<int:uid>"')
+    end = source.index('@clientsr.route("/admin/update_hpc_recsys/<int:uid>"')
     internal_source = source[start:end]
 
     assert "The experiment needs to be activated first." not in internal_source
