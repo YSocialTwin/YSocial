@@ -156,25 +156,13 @@ def _external_repo_availability():
         except Exception:
             return False
 
-    microblogging = _installed("microblogging_server") and _installed(
-        "microblogging_client"
-    )
-    hpc = _installed("hpc_simulator")
-    forum = _installed("forum_server") and _installed("forum_client")
-    photo_sharing = _installed("photo_sharing")
-    instant_messaging = _installed("instant_messaging")
-    dating = _installed("dating")
-
-    availability = {
-        "microblogging": microblogging,
-        "hpc": hpc,
-        "forum": forum,
-        "forum_hpc": False,
-        "photo_sharing": photo_sharing,
-        "instant_messaging": instant_messaging,
-        "dating": dating,
-    }
-    # runtimes a platform checks on disk, like the launcher's own check (YForum, the Ray runtime of the forum)
+    availability = {"hpc": _installed("hpc_simulator"), "forum_hpc": False}
+    for provider in registry.providers():
+        if provider.runtime_keys:
+            availability[provider.key] = all(
+                _installed(key) for key in provider.runtime_keys
+            )
+    # runtimes a platform checks on disk, like the launcher's own check
     for provider in registry.providers():
         try:
             availability.update(provider.extra_runtime_availability())
@@ -1133,7 +1121,9 @@ def upload_experiment():
             status=0,
             port=suggested_port,
             server=experiment_config.get("host", "127.0.0.1"),
-            platform_type=experiment_config.get("platform_type", "microblogging"),
+            platform_type=experiment_config.get(
+                "platform_type", registry.default_key()
+            ),
             llm_agents_enabled=llm_agents_enabled,
             simulator_type="HPC" if is_hpc_experiment else "Standard",
             exp_group=exp_group,
@@ -1997,7 +1987,7 @@ def create_experiment():
     ].startswith("postgresql"):
         current_app.logger.info(rules.sqlite_only_note)
 
-    # the dating platform has no topics (the field is hidden in the form)
+    # a platform without topics hides the field in the form
     topics = (request.form.get("tags") or "").split(",")
 
     # identify db type
@@ -3755,7 +3745,7 @@ def _matrix_get_experiment_mode(experiment):
     """Return the matrix catalog mode for the given experiment."""
     simulator_type = getattr(experiment, "simulator_type", "Standard")
     return registry.resolve(
-        getattr(experiment, "platform_type", "microblogging"), simulator_type
+        getattr(experiment, "platform_type", registry.default_key()), simulator_type
     ).client_mode(simulator_type)
 
 
@@ -3763,8 +3753,12 @@ def _matrix_recsys_catalog(experiment):
     """Return mode-filtered content and follow recsys choices."""
     mode = _matrix_get_experiment_mode(experiment)
     mode_lower = mode.lower()
-    # forum experiments use the "Standard" catalogue plus the forum-only recommenders
-    mode_tokens = ("standard", "forum") if mode_lower == "forum" else (mode_lower,)
+    # some platforms use the "Standard" catalogue plus the recommenders of their own mode
+    mode_tokens = (
+        ("standard", mode_lower)
+        if registry.resolve(experiment).recsys_includes_standard
+        else (mode_lower,)
+    )
     content_recsys = [
         {
             "name": recsys.name,
@@ -5051,14 +5045,14 @@ def _matrix_describe_experiment_copy_failure(source_exp):
 
 
 def _slots_per_day_of(folder, experiment):
-    """Rounds per day: 24 for instant messaging, the configured slots for dating."""
+    """Rounds per day: the platform's slots."""
     return registry.resolve(experiment).slots_per_day(folder)
 
 
 def _create_im_experiment_copy(
     source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
-    """Clone an instant messaging or dating experiment: inputs only, no database, state or logs (plan, 5.6)."""
+    """Clone an experiment of a platform with its own folder: inputs only, no database, state or logs (plan, 5.6)."""
     from y_web.sdk.runtime import rewrite_server_config
     from y_web.src.system.path_utils import get_writable_path
 

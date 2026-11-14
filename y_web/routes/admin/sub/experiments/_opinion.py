@@ -4231,14 +4231,14 @@ def _analytics_content_schema(conn):
         row["name"] if isinstance(row, sqlite3.Row) else row[0]
         for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     }
-    # A true "photo-sharing" experiment is one built on the YPhotoSharing
-    # plugin's own Photo model. photo_hashtags/photo_topics/photo_emotions
+    # A true photo experiment is one built on the photo platform's own
+    # Photo model. photo_hashtags/photo_topics/photo_emotions
     # are junction tables created ONLY by that plugin's schema, so any one
     # of them existing is unambiguous signal -- but a bare "photos" table
-    # is NOT: a microblogging/HPC experiment can carry an unrelated table
+    # is NOT: a post-based experiment can carry an unrelated table
     # of that same name (e.g. for embedded image posts) with a completely
     # different column set. Requiring both a junction table AND "photos"
-    # itself keeps a microblogging experiment that merely happens to have
+    # itself keeps a post-based experiment that merely happens to have
     # its own "photos" table (no matching junction tables) correctly
     # classified as post-based, instead of the whole schema below --
     # content_table, content_id_column, content_text_column -- being

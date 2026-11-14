@@ -744,11 +744,7 @@ def experiment_details(uid):
             memory_cfg = config.get("memory")
             if isinstance(memory_cfg, dict):
                 memory_module_enabled = bool(memory_cfg.get("enabled"))
-            if experiment.platform_type in {
-                "forum",
-                "microblogging",
-                "instant_messaging",
-            }:
+            if registry.resolve(experiment).embedding_in_details:
                 persisted_embedding = config.get("memory_embeddings")
                 if isinstance(persisted_embedding, dict):
                     embedding_settings = {
@@ -760,7 +756,7 @@ def experiment_details(uid):
                         ),
                         "model": str(persisted_embedding.get("model") or "").strip(),
                     }
-            if experiment.platform_type == "forum":
+            if registry.resolve(experiment).avatar_settings_page:
                 persisted_embedding = config.get("memory_embeddings")
                 if isinstance(persisted_embedding, dict):
                     forum_embedding_settings = {
@@ -785,8 +781,8 @@ def experiment_details(uid):
 
     has_agent_plugins_installed = (
         bool(installed_agent_plugin_names)
-        # plugin agents write to the YServer-layout tables (post, user_mgmt): microblogging and forum only
-        and experiment.platform_type in ("microblogging", "forum")
+        # plugin agents write to the Standard-server tables (post, user_mgmt): only some platforms have them
+        and registry.resolve(experiment).plugin_agents
         and experiment.is_remote == 0
         and bool(llm_agents_enabled_effective)
         and not bool(configuration_update_required)
@@ -845,7 +841,7 @@ def experiment_details(uid):
 @experiments.route("/admin/update_experiment_descr/<int:uid>", methods=["POST"])
 @login_required
 def update_experiment_descr(uid):
-    """Update a forum experiment description shown to forum agents."""
+    """Update an experiment description shown to its agents."""
     check_privileges(current_user.username)
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
@@ -1028,13 +1024,10 @@ def update_experiment_config(uid):
     else:
         memory_enabled = False
 
-    if getattr(exp, "platform_type", "") in {
-        "microblogging",
-        "forum",
-        "hpc",
-        "instant_messaging",
-        "dating",
-    }:
+    if (
+        getattr(exp, "platform_type", "") == "hpc"
+        or registry.resolve(exp).stress_reward_in_form
+    ):
         stress_reward_enabled = _is_checked("stress_reward_enabled")
 
     existing = [a.strip() for a in (exp.annotations or "").split(",") if a.strip()]
@@ -1184,11 +1177,7 @@ def update_experiment_config(uid):
                     client_config["simulation"]["opinion_dynamics"][
                         "enabled"
                     ] = opinion_dynamics_enabled
-                    if getattr(exp, "platform_type", "") in {
-                        "microblogging",
-                        "forum",
-                        "hpc",
-                    }:
+                    if registry.syncs_stress_reward(getattr(exp, "platform_type", "")):
                         client_config = sync_stress_reward_client_config(
                             client_config, stress_reward_config
                         )
@@ -1213,7 +1202,7 @@ def update_experiment_config(uid):
 @experiments.route("/admin/stress_reward_settings/<int:uid>", methods=["GET"])
 @login_required
 def stress_reward_settings(uid):
-    """Display stress/reward configuration for a microblogging experiment."""
+    """Display stress/reward configuration for an experiment."""
     experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(
         uid
     )
@@ -1548,7 +1537,7 @@ def clear_experiment_logs(uid):
 
 
 def _reset_slots_per_day(exp, folder):
-    """Rounds per day used for the expected duration of a client: 24, or the dating slots."""
+    """Rounds per day used for the expected duration of a client (the platform's slots, 24 by default)."""
     return registry.resolve(exp).slots_per_day(folder)
 
 
@@ -2185,11 +2174,11 @@ def client_logs(client_id):
             experiment, client.name, log_folder=exp_folder
         )
 
-        # Forum regressions previously wrote structured metrics into a shared
+        # Some runs previously wrote structured metrics into a shared
         # agent_execution.log file instead of the per-client log file.
         # Preserve compatibility for those experiments while new runs use the
         # restored per-client sink again.
-        if getattr(experiment, "platform_type", "") == "forum" and (
+        if registry.resolve(experiment).legacy_shared_client_log and (
             not log_file
             or not os.path.exists(log_file)
             or os.path.getsize(log_file) == 0

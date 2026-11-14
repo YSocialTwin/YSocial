@@ -13010,9 +13010,7 @@ msgstr ""
 msgid "Stress/reward analytics not available"
 msgstr ""
 
-msgid ""
-"Stress/reward settings are available only for microblogging, forum, and "
-"HPC experiments."
+msgid "Stress/reward settings are available only for the platforms that support them."
 msgstr ""
 
 msgid "Stress/reward settings updated."

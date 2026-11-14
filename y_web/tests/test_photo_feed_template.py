@@ -150,7 +150,6 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     # knows the user has already completed onboarding. common_source below
     # already covers that relocated branch.
     assert "photo_sharing" in common_source
-    assert "photo_sharing" in admin_source
     assert "ensure_experiment_user" in route_source
     assert "photo/profile" in route_source
     assert "photo/messages" in route_source

@@ -770,15 +770,13 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
         flash(_("You do not have permission to manage this experiment."), "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
-    if getattr(experiment, "platform_type", "") not in {
-        "microblogging",
-        "forum",
-        "hpc",
-        "instant_messaging",
-    }:
+    if (
+        getattr(experiment, "platform_type", "") != "hpc"
+        and not registry.resolve(experiment).stress_reward_page
+    ):
         flash(
             _(
-                "Stress/reward settings are available only for microblogging, forum, and HPC experiments."
+                "Stress/reward settings are available only for the platforms that support them."
             ),
             "error",
         )

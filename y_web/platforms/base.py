@@ -246,6 +246,21 @@ class PlatformProvider:
     embedding_label: Optional[str] = None
     #: the clients read the feed assignment when they start: a running experiment must restart them to use a new one
     feeds_read_at_client_start: bool = False
+    #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
+    runtime_keys: Tuple[str, ...] = ()
+    #: the experiment page shows the memory embedding settings of the platform
+    embedding_in_details: bool = False
+    #: the experiment page shows the avatar mode and the forum-style embedding settings
+    avatar_settings_page: bool = False
+    #: plugin agents can act on the platform (they write to the Standard server's ``post`` and ``user_mgmt`` tables)
+    plugin_agents: bool = False
+    #: the platform has the stress/reward settings page, and its experiment form carries the setting
+    stress_reward_page: bool = False
+    stress_reward_in_form: bool = False
+    #: old runs wrote client metrics to a shared ``agent_execution.log``: the log pages fall back to it
+    legacy_shared_client_log: bool = False
+    #: the recommender catalogue of the platform's clients adds the Standard one to its own
+    recsys_includes_standard: bool = False
     #: human gateway of the platform's runtime (``None``: a person cannot be enrolled in it)
     human_gateway: Optional[HumanGatewayTraits] = None
     #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``

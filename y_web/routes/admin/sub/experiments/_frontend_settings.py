@@ -2,7 +2,7 @@
 Frontend Settings admin route.
 
 Allows administrators to configure UI parameters per experiment of any
-supported platform (microblogging, forum, photo sharing); the panel shows only
+supported platform; the panel shows only
 the settings that exist in the chosen platform's templates (see
 ``frontend_capabilities`` of each platform provider).
 Settings are stored in ExpFrontendSettings (one JSON row per experiment).
@@ -39,7 +39,7 @@ def supported_platforms():
     return tuple(registry.keys())
 
 
-# Platform-specific feed orderings that replace the microblogging recommenders.
+# Platform-specific feed orderings that replace the default recommenders.
 FORUM_FEED_TYPES = [
     {"name": "new", "label": N_("New")},
     {"name": "hot", "label": N_("Hot")},
@@ -544,10 +544,10 @@ def frontend_plugin_suite_settings_get(repo_key):
                 "status": _frontend_plugin_module_status(manifest, row),
                 "manifest_errors": manifest.get("errors") or [],
                 # Modules declare the platforms they work on; one that says
-                # nothing is a microblogging-only module (its original scope).
-                "platforms": manifest.get("platforms") or ["microblogging"],
+                # nothing is a default-platform-only module (its original scope).
+                "platforms": manifest.get("platforms") or [registry.default_key()],
                 "supported": exp.platform_type
-                in (manifest.get("platforms") or ["microblogging"]),
+                in (manifest.get("platforms") or [registry.default_key()]),
             }
         )
 
@@ -630,7 +630,7 @@ def frontend_plugin_suite_settings_save(repo_key):
             break
     if manifest is None:
         return jsonify({"ok": False, "error": _("Unknown module")}), 404
-    if exp.platform_type not in (manifest.get("platforms") or ["microblogging"]):
+    if exp.platform_type not in (manifest.get("platforms") or [registry.default_key()]):
         return (
             jsonify(
                 {
