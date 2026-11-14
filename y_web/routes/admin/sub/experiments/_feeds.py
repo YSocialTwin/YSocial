@@ -38,6 +38,7 @@ from sqlalchemy import select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
+from y_web.platforms.extension import provider_template
 from y_web.src.content.avatars import (
     normalize_force_placeholder,
     normalize_forum_avatar_mode,
@@ -626,7 +627,7 @@ def forum_rss_resources():
         )
     ).all()
     return render_template(
-        "@forum/admin/forum_rss_resources.html",
+        provider_template("forum", "admin/forum_rss_resources.html"),
         resources=resources,
     )
 
@@ -853,7 +854,7 @@ def forum_image_resources():
         )
     ).all()
     return render_template(
-        "@forum/admin/forum_image_resources.html",
+        provider_template("forum", "admin/forum_image_resources.html"),
         resources=[_forum_image_resource_payload(resource) for resource in resources],
         available_interests=FORUM_IMAGE_FEED_INTERESTS,
     )

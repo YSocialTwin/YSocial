@@ -30,6 +30,7 @@ from werkzeug.security import generate_password_hash
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.platforms import registry as platforms
+from y_web.platforms.extension import provider_template
 from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
@@ -548,7 +549,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             fetch_user_communities(forum_logged_user.id) if forum_logged_user else []
         )
         return render_template(
-            "@forum/forum/profile.html",
+            provider_template(exp, "forum/profile.html"),
             profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),
             viewed_profile_pic=profile_pic,
             profile_pic_feed=_forum_current_profile_pic(exp_id, forum_logged_user),
@@ -563,7 +564,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             **forum_context,
         )
 
-    provider = platforms.resolve(exp.platform_type)
+    provider = platforms.resolve(exp)
     fallback = platforms.default()
     template = provider.profile_template or (fallback and fallback.profile_template)
     if not template:
@@ -647,7 +648,7 @@ def edit_profile(exp_id, user_id):
                 )
             )
         return render_template(
-            "@forum/forum/edit_profile.html",
+            provider_template(_exp_for_page, "forum/edit_profile.html"),
             user=user,
             profile_pic=profile_pic,
             available_profile_pics=available_profile_pics,

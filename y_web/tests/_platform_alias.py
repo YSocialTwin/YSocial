@@ -102,27 +102,41 @@ PHOTO_SHARING = Platform(
     ),
 )
 
-FORUM = Platform(
-    repo="YForum",
-    key="forum",
-    old_package="y_web.src.forum",
-    library="forum",
-    provider_class="Forum",
+FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
+    repo="YServerReddit",
+    key="forum_server",
+    old_package="",
+    library="",
+    provider_class="ForumStandard",
+    provider_id="ysocial_server_reddit",
     views={
         "y_web.routes.social.forum": "routes.social_forum",
         "y_web.routes.interactions.forum": "routes.interactions_forum",
         "y_web.routes.api.reddit": "routes.api_reddit",
-        "y_web.routes.admin.sub.clients._forum_hpc": "routes.clients_forum_hpc",
     },
     needs=tuple(
         sorted(path.name for path in Path(__file__).parent.glob("test_forum_*.py"))
     )
     + (
         "test_api_reddit_blueprint.py",
-        "test_hpc_client_failure_alert.py",
         "test_phase8_src_forum.py",
         "test_template_refactoring.py",
     ),
+)
+
+FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next to YServerReddit's
+    repo="YForum",
+    key="forum_hpc",
+    old_package="y_web.src.forum",
+    library="forum",
+    provider_class="Forum",
+    provider_id="forum",
+    views={"y_web.routes.admin.sub.clients._forum_hpc": "routes.clients_forum_hpc"},
+    routes=("routes.social_forum", "routes.interactions_forum", "routes.api_reddit"),
+    needs=tuple(
+        sorted(path.name for path in Path(__file__).parent.glob("test_forum_hpc*.py"))
+    )
+    + ("test_hpc_client_failure_alert.py",),
 )
 
 MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer
@@ -163,6 +177,7 @@ PLATFORMS = (
     INSTANT_MESSAGING,
     PHOTO_SHARING,
     FORUM,
+    FORUM_HPC,
     MICROBLOGGING,
     MICROBLOGGING_HPC,
 )

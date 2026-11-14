@@ -160,14 +160,14 @@ def choose_simulator(
     """``(simulator type, problem)`` an experiment of ``platform_type`` is created with, given the one asked for.
 
     A platform with one provider decides itself (:meth:`PlatformProvider.resolve_simulator`: it knows which
-    repositories it needs). With several the repositories are the installed providers: the requested runtime when
-    one serves it, else another one, and a problem only when nothing serves the platform.
+    repositories it needs). With several, the provider that serves the requested runtime decides; when none does,
+    another one answers, and a problem only when nothing serves the platform.
     """
     found = variants(platform_type)
     if len(found) > 1:
         provider = for_simulator(platform_type, requested)
         if provider is not None:
-            return requested, None
+            return provider.resolve_simulator(requested, available)
         runtimes = [t for p in found for t in (p.simulator_types or ())]
         if runtimes:
             return runtimes[0], None

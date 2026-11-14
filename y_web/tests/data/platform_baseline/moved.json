@@ -29,16 +29,16 @@
       "to": "@dating/admin/client_details_dating.html"
     },
     "admin/client_details_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/client_details_forum.html"
+      "repo": "YServerReddit",
+      "to": "@ysocial_server_reddit/admin/client_details_forum.html"
     },
     "admin/clients_dating.html": {
       "repo": "YDating",
       "to": "@dating/admin/clients_dating.html"
     },
     "admin/clients_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/clients_forum.html"
+      "repo": "YServerReddit",
+      "to": "@ysocial_server_reddit/admin/clients_forum.html"
     },
     "admin/clients_forum_hpc.html": {
       "repo": "YForum",
@@ -93,8 +93,8 @@
       "to": "@forum/admin/forum_rss_resources.html"
     },
     "admin/opinion_configuration_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/opinion_configuration_forum.html"
+      "repo": "YServerReddit",
+      "to": "@ysocial_server_reddit/admin/opinion_configuration_forum.html"
     },
     "admin/opinion_configuration_im.html": {
       "repo": "YInstantMessaging",
@@ -105,8 +105,8 @@
       "to": "@dating/admin/prompts_dating.html"
     },
     "admin/prompts_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/prompts_forum.html"
+      "repo": "YServerReddit",
+      "to": "@ysocial_server_reddit/admin/prompts_forum.html"
     },
     "admin/prompts_im.html": {
       "repo": "YInstantMessaging",

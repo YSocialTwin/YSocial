@@ -21,6 +21,7 @@ from sqlalchemy import (
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.platforms import registry as platforms
+from y_web.platforms.extension import provider_template
 from y_web.src.models import (
     AgeClass,
     Client,
@@ -46,7 +47,7 @@ from ._dispatch import missing_view_response, mode_view
 
 def _opinion_mode(exp):
     """The opinion page family of an experiment: instant messaging has its own, the others follow their modality."""
-    return platforms.resolve(exp.platform_type).opinion_mode(
+    return platforms.resolve(exp).opinion_mode(
         getattr(exp, "simulator_type", "Standard")
     )
 
@@ -57,7 +58,7 @@ def _opinion_route(mode):
 
 def _population_file_name(exp, population):
     """The population file of a client, named as the platform of the experiment names it."""
-    return platforms.resolve(exp.platform_type).population_file_name(population)
+    return platforms.resolve(exp).population_file_name(population)
 
 
 def _opinion_configuration_internal(idexp, expected_mode):
@@ -250,9 +251,11 @@ def _opinion_configuration_internal(idexp, expected_mode):
 
     template_name = {
         "standard": "admin/opinion_configuration.html",
-        "forum": "@forum/admin/opinion_configuration_forum.html",
         "hpc": "admin/opinion_configuration_hpc.html",
-    }.get(expected_mode) or platforms.resolve(exp.platform_type).opinion_template
+    }.get(expected_mode)
+    if template_name is None and expected_mode == "forum":
+        template_name = provider_template(exp, "admin/opinion_configuration_forum.html")
+    template_name = template_name or platforms.resolve(exp).opinion_template
 
     return render_template(
         template_name,

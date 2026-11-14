@@ -68,7 +68,7 @@ def test_opinion_page_hook_discards_roster_of_unstarted_forum_client(
     roster.write_text("{}", encoding="utf-8")
     flashed = []
 
-    provider = registry.get("forum")
+    provider = registry.get("forum", "HPC")
     provider_module = sys.modules[type(provider).__module__]
     monkeypatch.setattr(provider_module, "_", lambda s, **k: s)
     monkeypatch.setattr(

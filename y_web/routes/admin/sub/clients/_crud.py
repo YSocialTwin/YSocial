@@ -3318,7 +3318,7 @@ def create_hpc_client_route():
             "error",
         )
         return redirect(url_for(_clients_page(exp), idexp=exp_id))
-    provider = platforms.resolve(exp.platform_type)
+    provider = platforms.resolve(exp)
     own_page = provider.clients_page("HPC")
     if not provider.generic_hpc_client_creation:
         return redirect(url_for(own_page, idexp=exp_id))
@@ -3426,7 +3426,7 @@ def delete_adhoc_client_route(idexp, client_key):
 
 
 def _provider_of(experiment):
-    return platforms.resolve(getattr(experiment, "platform_type", None))
+    return platforms.resolve(experiment)
 
 
 def _simulator_of(experiment):

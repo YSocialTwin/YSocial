@@ -72,7 +72,12 @@ def forum_file(old_relative: str) -> str:
             break
     else:
         raise ValueError(old_relative)
-    if not path.is_file():
+    if not path.is_file():  # what only the Standard runtime has lives in YServerReddit
+        standard = (
+            EXTERNAL / "YServerReddit" / "ysocial_platform" / path.relative_to(base)
+        )
+        if standard.is_file():
+            return str(standard)
         pytest.skip("YForum with its platform files is not installed")
     return str(path)
 
@@ -198,6 +203,7 @@ def core_and_platform_loader():
             ("instant_messaging", "YInstantMessaging"),
             ("photo_sharing", "YPhotoSharing"),
             ("forum", "YForum"),
+            ("ysocial_server_reddit", "YServerReddit"),
             ("microblogging", "YSimulator"),
             ("ysocial_server", "YServer"),
         )

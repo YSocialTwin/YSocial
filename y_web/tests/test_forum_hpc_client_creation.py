@@ -120,9 +120,11 @@ def test_the_page_offers_every_field_of_the_standard_forum_page():
     """Every field of clients_forum.html is on the forum-HPC page, except the three YForum does not implement."""
     import re
 
-    templates = Path(forum_file("y_web/templates/admin/clients_forum.html")).parent
     names = lambda f: set(
-        re.findall(r'name="([a-z_0-9]+)"', (templates / f).read_text())
+        re.findall(
+            r'name="([a-z_0-9]+)"',
+            Path(forum_file(f"y_web/templates/admin/{f}")).read_text(),
+        )
     )
     standard, hpc = names("clients_forum.html"), names("clients_forum_hpc.html")
     not_implemented = {

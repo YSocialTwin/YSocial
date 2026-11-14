@@ -164,7 +164,7 @@ REACHABLE = (
 
 @pytest.mark.parametrize("platform, simulator", REACHABLE)
 def test_client_pages_and_modes_equal_the_previous_logic(platform, simulator):
-    provider = registry.resolve(platform)
+    provider = registry.resolve(platform, simulator)
     assert provider.clients_page(simulator) == _legacy_clients_page(platform, simulator)
     assert provider.client_mode(simulator) == _legacy_client_mode(platform, simulator)
     assert provider.client_details_page(simulator) == _legacy_client_details_page(
@@ -250,8 +250,8 @@ def test_experiment_prompt_hooks_match_the_previous_platform_logic():
     from y_web.platforms import registry
 
     for platform in registry.keys() + ["unknown"]:
-        provider = registry.resolve(platform)
         for simulator in ("Standard", "HPC"):
+            provider = registry.resolve(platform, simulator)
             assert provider.prompts_page(simulator) == _legacy_prompts_page(
                 platform, simulator
             ), (platform, simulator)
@@ -261,7 +261,7 @@ def test_experiment_prompt_hooks_match_the_previous_platform_logic():
         modules = ["news", "voting", "image"] + (
             ["image_post"] if platform == "forum" else []
         )
-        assert list(provider.server_modules) == modules
+        assert list(registry.resolve(platform, "Standard").server_modules) == modules
 
 
 @needs_dating
@@ -335,8 +335,10 @@ def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
         found = {
             k
             for k in registry.keys()
-            if getattr(type(registry.get(k)), hook)
-            is not getattr(PlatformProvider, hook)
+            if any(
+                getattr(type(p), hook) is not getattr(PlatformProvider, hook)
+                for p in registry.variants(k)
+            )
         }
         assert found == owners, hook
 
@@ -356,8 +358,10 @@ def test_hpc_server_hooks_are_overridden_by_the_expected_platforms():
         found = {
             k
             for k in registry.keys()
-            if getattr(type(registry.get(k)), hook)
-            is not getattr(PlatformProvider, hook)
+            if any(
+                getattr(type(p), hook) is not getattr(PlatformProvider, hook)
+                for p in registry.variants(k)
+            )
         }
         assert found == owners, hook
     # the platforms that validate their folder are exactly those the HPC table marks as validating
@@ -426,14 +430,22 @@ def test_resolve_simulator_matches_the_previous_creation_logic():
     for flags in itertools.product((False, True), repeat=len(names)):
         available = dict(zip(names, flags))
         for platform in registry.keys() + ["unknown"]:
-            if platform == "microblogging":
+            if platform in ("microblogging", "forum"):
                 # one repository per runtime (phase F9.2): the runtime asked for is the one that answers, and
                 # a platform whose only repository serves the other runtime decides itself
                 if len(registry.variants(platform)) > 1:
+                    flag = {
+                        ("microblogging", "Standard"): "microblogging",
+                        ("microblogging", "HPC"): "hpc",
+                        ("forum", "Standard"): "forum",
+                        ("forum", "HPC"): "forum_hpc",
+                    }
                     for simulator in ("Standard", "HPC"):
-                        assert registry.choose_simulator(
+                        got, error = registry.choose_simulator(
                             platform, simulator, available
-                        ) == (simulator, None)
+                        )
+                        assert got == simulator, (platform, simulator, flags)
+                        assert bool(error) != available[flag[(platform, simulator)]]
                 continue
             for simulator in ("Standard", "HPC", "other"):
                 got, error = registry.resolve(platform).resolve_simulator(
@@ -479,7 +491,7 @@ def test_creation_rules_match_the_previous_creation_logic():
     }
     own_database = {("forum", "HPC"), ("instant_messaging", "HPC"), ("dating", "HPC")}
     for (platform, simulator), want in forced.items():
-        rules = registry.get(platform).creation_rules(simulator)
+        rules = registry.resolve(platform, simulator).creation_rules(simulator)
         assert dict(rules.forced) == want, (platform, simulator)
         assert (rules.database == "own") == ((platform, simulator) in own_database)
         assert (rules.database == "server") != ((platform, simulator) in own_database)
@@ -584,7 +596,7 @@ def test_platform_config_errors_become_one_refusal(
     monkeypatch.setattr(mod, generator, refuse)
     with app.test_request_context():
         with pytest.raises(PlatformConfigError, match=message):
-            registry.get(key).hpc_server_config(_server_config_request())
+            registry.resolve(key, "HPC").hpc_server_config(_server_config_request())
 
 
 @needs_dating
@@ -638,7 +650,7 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
 
     assert {k: registry.get(k).details_template for k in registry.keys()} == {
         "microblogging": "admin/experiment_details.html",
-        "forum": "@forum/admin/experiment_details_forum.html",
+        "forum": "@ysocial_server_reddit/admin/experiment_details_forum.html",
         "photo_sharing": "@photo_sharing/admin/experiment_details_photo.html",
         "instant_messaging": "@instant_messaging/admin/experiment_details_im.html",
         "dating": "@dating/admin/experiment_details_dating.html",

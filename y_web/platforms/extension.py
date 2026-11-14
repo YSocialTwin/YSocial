@@ -39,6 +39,12 @@ def template_name(platform_key: str, name: str) -> str:
     return f"{TEMPLATE_PREFIX}{platform_key}/{name}"
 
 
+def provider_template(platform_or_experiment, name: str) -> str:
+    """Name of a template of the repository that serves an experiment (or, given a platform key, the preferred one)."""
+    provider = registry.resolve(platform_or_experiment)
+    return template_name(provider.provider_id, name)
+
+
 def namespaces(provider) -> List[str]:
     """The namespaces a provider answers to: its id, and its key when no other repository provides that key."""
     names = [provider.provider_id]
