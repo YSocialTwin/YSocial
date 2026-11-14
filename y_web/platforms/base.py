@@ -420,7 +420,8 @@ class PlatformProvider:
     # --- extension: what an installed platform adds to the application --------------------------------------------------
 
     #: folder ``ysocial_platform/`` of the platform repository; ``None`` for a built-in platform. Its ``templates/``
-    #: are reachable as ``@<key>/<name>`` and its ``static/`` as ``/platform-static/<key>/<name>``
+    #: are reachable as ``@<id>/<name>`` and its ``static/`` as ``/platform-static/<id>/<name>`` (``<id>`` is
+    #: :attr:`provider_id`; the platform key works too when a single repository provides it)
     package_dir: Optional[Path] = None
 
     #: dotted name of the package with the platform's own modules (``<package>.population``, ``<package>.human``...);

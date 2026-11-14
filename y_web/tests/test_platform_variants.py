@@ -157,3 +157,96 @@ def test_a_wrong_id_is_reported(tmp_path):
     path.write_text(json.dumps(payload))
     declaration, problems = discovery.read_declaration(repo)
     assert declaration is None and any("platform.id" in p for p in problems)
+
+
+# --- namespaces of the templates and static files: the id of the repository ----------------------------------------
+
+
+def _with_package(tmp_path, name, **attrs):
+    from flask import Flask  # noqa: F401
+
+    package = tmp_path / name / "ysocial_platform"
+    (package / "templates" / "slots").mkdir(parents=True)
+    (package / "static").mkdir()
+    (package / "templates" / "hello.html").write_text(f"{name} says hi")
+    (package / "templates" / "slots" / "top.html").write_text(name)
+    (package / "static" / "app.js").write_text(f"/* {name} */")
+    provider = _provider(**attrs)
+    provider.package_dir = package
+    return provider
+
+
+def _namespaced_app(tmp_path):
+    from flask import Flask
+
+    from y_web.platforms.extension import install_platform_extensions
+
+    app = Flask(__name__, template_folder=str(tmp_path))
+    install_platform_extensions(app)
+    return app
+
+
+@pytest.fixture
+def only_these(clean_registry):
+    """The platforms of repositories found by an application started earlier are not part of these tests."""
+    for key, provider in list(registry._PROVIDERS.items()):
+        if provider.package_dir is not None:
+            del registry._PROVIDERS[key]
+    yield
+
+
+def test_a_single_repository_answers_to_its_id_and_to_its_key(tmp_path, only_these):
+    from flask import render_template
+
+    registry.register(_with_package(tmp_path, "solo", key="vsolo", id="ysolo"))
+    app = _namespaced_app(tmp_path)
+    client = app.test_client()
+    with app.test_request_context():
+        assert render_template("@ysolo/hello.html") == "solo says hi"
+        assert render_template("@vsolo/hello.html") == "solo says hi"
+    assert client.get("/platform-static/ysolo/app.js").status_code == 200
+    assert client.get("/platform-static/vsolo/app.js").status_code == 200
+
+
+def test_with_several_repositories_for_a_key_only_the_ids_are_namespaces(
+    tmp_path, only_these
+):
+    from flask import render_template
+    from jinja2 import TemplateNotFound
+
+    from y_web.platforms.extension import platform_slots
+
+    registry.register(
+        _with_package(tmp_path, "hpc", key="vmulti", id="yhpc", simulator_types=(HPC,))
+    )
+    registry.register(
+        _with_package(
+            tmp_path, "std", key="vmulti", id="ystd", simulator_types=(STANDARD,)
+        )
+    )
+    app = _namespaced_app(tmp_path)
+    client = app.test_client()
+    with app.test_request_context():
+        assert render_template("@yhpc/hello.html") == "hpc says hi"
+        assert render_template("@ystd/hello.html") == "std says hi"
+        with pytest.raises(TemplateNotFound):
+            render_template("@vmulti/hello.html")  # which repository would that be?
+        assert platform_slots("top") == ["@yhpc/slots/top.html", "@ystd/slots/top.html"]
+    assert client.get("/platform-static/yhpc/app.js").data == b"/* hpc */"
+    assert client.get("/platform-static/ystd/app.js").data == b"/* std */"
+    assert client.get("/platform-static/vmulti/app.js").status_code == 404
+
+
+def test_asset_v_finds_the_static_file_of_a_repository_by_id_or_key(
+    tmp_path, only_these
+):
+    from flask import Flask
+
+    from y_web.src.system.template_context import register_template_context
+
+    registry.register(_with_package(tmp_path, "av", key="vav", id="yav"))
+    app = Flask(__name__)
+    register_template_context(app)
+    asset_v = app.jinja_env.globals["asset_v"]
+    assert asset_v("@yav/app.js") > 0 and asset_v("@vav/app.js") > 0
+    assert asset_v("@nobody/app.js") == 0 and asset_v("@yav/missing.js") == 0

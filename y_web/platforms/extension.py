@@ -3,9 +3,14 @@
 A platform repository keeps its own pages in ``ysocial_platform/`` (see :attr:`PlatformProvider.package_dir`). They
 never mix with the core ones:
 
-* templates are named ``@<platform key>/<template>`` (the ``@`` keeps the namespace apart from the core folders);
-* static files are served at ``/platform-static/<platform key>/<path>``;
+* templates are named ``@<provider id>/<template>`` (the ``@`` keeps the namespace apart from the core folders);
+* static files are served at ``/platform-static/<provider id>/<path>``;
 * blueprints are registered as they are.
+
+The provider id is the identity of the repository (:attr:`PlatformProvider.provider_id`): the platform key unless the
+repository declares another one. When a platform key has a single provider the key also works as a namespace
+(``@dating/...`` for a provider whose id is ``ydating``); with several repositories for one key (a Standard and an HPC
+runtime) only the ids do, because a key would not say which repository is meant.
 
 A built-in platform has no ``package_dir`` and adds nothing: installing the extensions is a no-op for it.
 Registration happens once at startup; a platform installed later is picked up at the next start (decision D-5).
@@ -26,8 +31,23 @@ STATIC_URL = "/platform-static"
 
 
 def template_name(platform_key: str, name: str) -> str:
-    """Name under which a template of a platform repository is rendered."""
+    """Name under which a template of a platform repository is rendered.
+
+    ``platform_key`` is the namespace of the repository: its provider id, or its platform key while a single
+    repository provides that key (the parameter keeps its name for providers written against PLATFORM_API 1.0).
+    """
     return f"{TEMPLATE_PREFIX}{platform_key}/{name}"
+
+
+def namespaces(provider) -> List[str]:
+    """The namespaces a provider answers to: its id, and its key when no other repository provides that key."""
+    names = [provider.provider_id]
+    if (
+        provider.key != provider.provider_id
+        and len(registry.variants(provider.key)) == 1
+    ):
+        names.append(provider.key)
+    return names
 
 
 def _folder(provider, name: str) -> Path | None:
@@ -42,10 +62,10 @@ def platform_slots(name: str) -> List[str]:
     template sees the variables of the page. A platform without the file adds nothing.
     """
     found = []
-    for provider in registry.providers():
+    for provider in registry.all_providers():
         folder = _folder(provider, "templates")
         if folder is not None and (folder / "slots" / f"{name}.html").is_file():
-            found.append(template_name(provider.key, f"slots/{name}.html"))
+            found.append(template_name(provider.provider_id, f"slots/{name}.html"))
     return found
 
 
@@ -85,20 +105,22 @@ def install_platform_extensions(app: Flask) -> Dict[str, List[str]]:
     app.jinja_env.globals["platform_slots"] = platform_slots
     report: Dict[str, List[str]] = {}
     templates: Dict[str, Path] = {}
-    for provider in registry.providers():
+    for provider in registry.all_providers():
         if provider.package_dir is None:
             continue
-        key = provider.key
+        key = provider.provider_id
         problems = report.setdefault(key, [])
         folder = _folder(provider, "templates")
         if folder is not None:
-            templates[key] = folder
+            for namespace in namespaces(provider):
+                templates[namespace] = folder
         folder = _folder(provider, "static")
         if folder is not None:
-            try:
-                _install_static(app, key, folder)
-            except Exception as exc:  # noqa: BLE001
-                problems.append(f"static files not served: {exc}")
+            for namespace in namespaces(provider):
+                try:
+                    _install_static(app, namespace, folder)
+                except Exception as exc:  # noqa: BLE001
+                    problems.append(f"static files not served: {exc}")
         try:
             for blueprint in provider.blueprints():
                 app.register_blueprint(blueprint)
