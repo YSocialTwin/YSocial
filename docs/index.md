@@ -50,6 +50,7 @@ There are four operational layers worth separating:
 5. [Desktop installer and launcher](launcher.md), and [Release and distribution](packaging.md) for maintainers
 6. [Adding a language](i18n/adding-a-language.md) - interface and prompt languages (English, Italian)
 7. [Multi-Platform Simulations](multi-platform-simulations.md) - design package (proposal, not implemented)
+8. [Platform repositories](platform-repositories.md) - how a platform plugs into YSocial and how to add one
 
 ## Scope of this documentation
 
