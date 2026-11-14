@@ -354,12 +354,11 @@ def test_feed_templates_with_side_boxes_compile(suites_app):
     suites_app.jinja_env.filters.setdefault(
         "user_image_id", lambda v: v
     )  # registered by the real app only
-    names = [
-        "microblogging/feed.html",
-        "microblogging/hashtag.html",
-        "microblogging/thread.html",
-        "admin/frontend_settings.html",
-    ]
+    names = ["admin/frontend_settings.html"]
+    for page in ("feed", "hashtag", "thread"):
+        # skips the test when YSimulator is not installed
+        microblogging_file(f"y_web/templates/microblogging/{page}.html")
+        names.insert(0, f"@microblogging/microblogging/{page}.html")
     if _platform_alias.installed(_platform_alias.PHOTO_SHARING):
         names.insert(0, "@photo_sharing/photo/feed.html")
     for name in names:
@@ -384,11 +383,9 @@ def test_show_trending_hashtags_setting(suites_app, logged):
         json={"exp_id": micro, "settings": {"show_trending_hashtags": False}},
     )
     assert g(micro)["settings"]["show_trending_hashtags"] is False
-    from pathlib import Path
-
-    root = Path(__file__).resolve().parents[1] / "templates" / "microblogging"
     for name in ("feed.html", "hashtag.html", "thread.html"):
-        assert "ui.show_trending_hashtags is not false" in (root / name).read_text(
+        source = Path(microblogging_file(f"y_web/templates/microblogging/{name}"))
+        assert "ui.show_trending_hashtags is not false" in source.read_text(
             encoding="utf-8"
         )
 
