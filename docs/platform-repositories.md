@@ -15,12 +15,12 @@ offered, and installing its repository adds it at the next start (there is no ho
 ## What a repository contains
 
 ```
-meta/registry.json            {"platform": {"key", "api_version", "provider": "ysocial_platform.provider:Class"}}
+meta/registry.json            {"platform": {"key", "id" (optional), "api_version", "provider": "ysocial_platform.provider:Class"}}
 ysocial_platform/
     provider.py               the PlatformProvider: what the core asks of the platform
     routes/                   views, registered on the blueprints of the core (main, user, experiments, clients, ...)
-    templates/                pages, addressed as @<key>/<path>
-    static/                   files, served at /platform-static/<key>/...
+    templates/                pages, addressed as @<id>/<path>
+    static/                   files, served at /platform-static/<id>/...
     <library>/                the platform's own code (optional; provider.library_package)
 ```
 
@@ -33,8 +33,18 @@ is regenerated with `UPDATE_SDK_API=1`.
 
 * **Pages and actions.** `provider.attach_routes()` imports the `routes` package, whose modules decorate the core
   blueprints (`routes.blueprint("main")`) before they are registered; endpoint names do not change.
-* **Templates and static files.** `render_template("@<key>/...")` and `url_for("platform_static_<key>", filename=...)`.
-  `asset_v("@<key>/css/x.css")` versions a platform's own file.
+* **Templates and static files.** `render_template("@<id>/...")` and `url_for("platform_static_<id>", filename=...)`.
+  `asset_v("@<id>/css/x.css")` versions a platform's own file. `<id>` is the identity of the repository
+  (`PlatformProvider.provider_id`, declared as `platform.id`): the platform key unless the repository says otherwise. While
+  one repository provides a key, the key is a namespace too.
+* **Several repositories for one platform (PLATFORM_API 1.1).** A Standard and an HPC repository can provide the same
+  `key` if they have different ids and serve different runtimes (`simulator_types`); each is an independent silo. The
+  registry answers `variants(key)`, `by_id(id)`, `for_simulator(key, simulator_type)` and `for_experiment(experiment)`;
+  `get(key)` and `providers()` still give one provider per key. An address (rule and methods) that one provider serves is
+  registered as it wrote it; one that several serve is registered once with a dispatcher that runs the view of the
+  provider of the experiment in the address (`exp_id`, `idexp` or `experiment_id`) and answers 404 when that provider does
+  not have it (`y_web/platforms/dispatch.py`). Two addresses that claim one endpoint name keep the first and register the
+  other as `<id>__<endpoint>`.
 * **Client modes.** The core looks the views of a mode up by name on the `clients` blueprint: `create_<mode>_client`,
   `update_<mode>_recsys`, `update_<mode>_client_llm`, `update_<mode>_client_settings`, `clients_<mode>`,
   `set_<mode>_opinion_distributions`.
