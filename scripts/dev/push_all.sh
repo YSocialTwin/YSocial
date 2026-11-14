@@ -12,8 +12,9 @@
 #   scripts/dev/push_all.sh --tags                # also push tags
 #   scripts/dev/push_all.sh --no-fetch            # do not contact the remotes to refresh ahead/behind (status only)
 #
-# Names: YSocial (this repository, also accepted as "root" or ".") and the folder names under external/.
-# Order: the repositories under external/ first, YSocial last, so that its plugin pointers never run ahead of the plugins.
+# Names: YSocial (this repository, also accepted as "root" or "."), plugin-registry (the clone in ./plugin-registry, when present)
+# and the folder names under external/.
+# Order: the repositories under external/ first, then plugin-registry, YSocial last, so that its plugin pointers never run ahead of the plugins.
 # What it does for each repository:
 #   - pushes the current branch to its upstream; a branch without upstream is published with "git push -u origin <branch>"
 #   - skips a detached HEAD, a repository with nothing to push, and a diverged branch (pull or rebase it first)
@@ -35,7 +36,7 @@ INTERACTIVE=0
 TAGS=0
 FETCH=1
 
-usage() { sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -70,6 +71,11 @@ for d in "$ROOT"/external/*/; do
   NAMES+=("$(basename "$d")")
   PATHS+=("$d")
 done
+# plugin-registry is a separate clone in the YSocial folder (not under external/); it goes after the plugins it lists
+if [ -e "$ROOT/plugin-registry/.git" ]; then
+  NAMES+=("plugin-registry")
+  PATHS+=("$ROOT/plugin-registry")
+fi
 NAMES+=("YSocial")
 PATHS+=("$ROOT")
 TOTAL=${#NAMES[@]}
