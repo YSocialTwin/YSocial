@@ -16,7 +16,12 @@ import subprocess
 
 import pytest
 
-from y_web.tests._platform_repos import EXTERNAL, requires_platform, template_path
+from y_web.tests._platform_repos import (
+    EXTERNAL,
+    microblogging_file,
+    requires_platform,
+    template_path,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -25,7 +30,7 @@ TEMPLATES_FORUM = template_path(os.path.join(REPO_ROOT, "y_web", "templates"), "
 FORUM_CSS = str(
     EXTERNAL / "YForum" / "ysocial_platform" / "static" / "css" / "forum-components.css"
 )
-TEMPLATES_MB = os.path.join(REPO_ROOT, "y_web", "templates", "microblogging")
+TEMPLATES_MB = os.path.join(REPO_ROOT, "y_web", "templates", "social")
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
 NEW_CSS_FILES = [
@@ -197,7 +202,7 @@ def test_forum_template_has_no_style_block(rel_path):
 
 
 def test_microblogging_interview_has_no_style_block():
-    path = os.path.join(TEMPLATES_MB, "interview.html")
+    path = microblogging_file("y_web/templates/microblogging/interview.html")
     content = open(path).read()
     assert (
         "<style>" not in content

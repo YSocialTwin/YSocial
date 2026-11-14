@@ -1,3 +1,5 @@
+from y_web.tests._platform_repos import microblogging_file
+
 """/admin/frontend_settings for forum and photo-sharing experiments.
 
 Covers the Type -> Group -> Name selector data, the per-platform capability list, the platform-specific
@@ -231,9 +233,9 @@ def test_suggested_friends_templates_are_gated():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[1] / "templates"
-    assert "ui.show_suggested_friends" in (root / "microblogging/feed.html").read_text(
-        encoding="utf-8"
-    )
+    assert "ui.show_suggested_friends" in Path(
+        microblogging_file("y_web/templates/microblogging/feed.html")
+    ).read_text(encoding="utf-8")
     photo = template_file(root, "photo/feed.html").read_text(encoding="utf-8")
     assert (
         "photo-feed-layout--no-rail" in photo and "ui.show_suggested_friends" in photo

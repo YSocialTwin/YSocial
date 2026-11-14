@@ -525,6 +525,23 @@ class PlatformProvider:
         return f"{population.name.replace(' ', '')}.json"
 
     #: whether the runtime keeps no per-user row for the experiment: :meth:`participant_without_row` stands for it
+    # the page of a participant's profile, when the platform shows one of its own on the shared profile route
+    profile_template: Optional[str] = None
+    # the platform that answers for a type nobody provides is the one marked default (shared pages fall back on it)
+    default_platform: bool = False
+
+    # The interview page (``/<exp_id>/interview``): the shared route checks who may open it and whether the
+    # experiment keeps memory, the platform says where to go when it does not and renders the page.
+    has_interview: bool = False
+
+    def interview_redirect(self, exp_id: int) -> str:
+        """Where to send a visitor when the experiment's memory is disabled."""
+        return f"/{exp_id}/feed/all/feed/rf/1"
+
+    def render_interview(self, exp_id: int, context: dict) -> Any:
+        """The interview page; ``context`` carries the logged user, mentions and admin flag."""
+        raise NotImplementedError
+
     has_participant_standin: bool = False
 
     def participant_without_row(

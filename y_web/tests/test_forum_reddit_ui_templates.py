@@ -3,7 +3,11 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-from y_web.tests._platform_repos import EXTERNAL
+from y_web.tests._platform_repos import (
+    EXTERNAL,
+    microblogging_file,
+    requires_platform,
+)
 
 FORUM = EXTERNAL / "YForum" / "ysocial_platform"
 TPL = FORUM / "templates" / "forum"
@@ -120,7 +124,10 @@ def test_federated_repost_wiring():
         and "def federation_repost_targets(" in routes
     )
     for rel in ("microblogging/components/posts.html",):
-        assert "ws_repost_button" in (root / "templates" / rel).read_text(), rel
+        assert (
+            "ws_repost_button"
+            in Path(microblogging_file("y_web/templates/" + rel)).read_text()
+        ), rel
     from y_web.tests._platform_repos import platform_template
 
     assert "ws_repost_button" in platform_template(
@@ -214,6 +221,7 @@ def test_community_match_score_is_smart():
     assert score("linux", "windows") == 0
 
 
+@requires_platform("YSimulator")
 def test_join_menu_groups_simulations_by_platform_type():
     from types import SimpleNamespace as NS
 

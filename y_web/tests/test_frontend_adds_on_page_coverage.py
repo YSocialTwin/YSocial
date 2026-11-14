@@ -37,15 +37,16 @@ from pathlib import Path
 import pytest
 
 from y_web.src.external_runtime import registry
+from y_web.tests._platform_repos import microblogging_file
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 COMMON_PY = _REPO_ROOT / "y_web" / "routes" / "social" / "common.py"
-MICROBLOGGING_PY = _REPO_ROOT / "y_web" / "routes" / "social" / "microblogging.py"
-PROFILE_HTML = _REPO_ROOT / "y_web" / "templates" / "microblogging" / "profile.html"
-HASHTAG_HTML = _REPO_ROOT / "y_web" / "templates" / "microblogging" / "hashtag.html"
-FEED_HTML = _REPO_ROOT / "y_web" / "templates" / "microblogging" / "feed.html"
-THREAD_HTML = _REPO_ROOT / "y_web" / "templates" / "microblogging" / "thread.html"
+MICROBLOGGING_PY = "y_web/routes/social/microblogging.py"
+PROFILE_HTML = "y_web/templates/microblogging/profile.html"
+HASHTAG_HTML = "y_web/templates/microblogging/hashtag.html"
+FEED_HTML = "y_web/templates/microblogging/feed.html"
+THREAD_HTML = "y_web/templates/microblogging/thread.html"
 PLUGIN_LOADER_INCLUDE = '{% include "shared/plugin_loader.html" %}'
 
 PLUGIN_JS = (
@@ -61,29 +62,21 @@ PLUGIN_JS = (
 
 def test_profile_route_imports_and_passes_active_modules_context():
     source = COMMON_PY.read_text(encoding="utf-8")
-    assert (
-        "from y_web.src.external_runtime.plugin_loader import active_modules_context"
-        in source
-    )
-    assert 'render_template(\n        "microblogging/profile.html"' in source
+    assert "active_modules_context" in source
+    assert "render_template(\n        template," in source
     # The microblogging profile render must pass frontend_adds_on_modules, not just
     # import the helper -- otherwise shared/plugin_loader.html's `{% if
     # frontend_adds_on_modules %}` guard always renders nothing on this page.
-    render_call_start = source.index(
-        'render_template(\n        "microblogging/profile.html"'
-    )
+    render_call_start = source.index("render_template(\n        template,")
     render_call = source[render_call_start : render_call_start + 400]
     assert "frontend_adds_on_modules=active_modules_context(exp_id)" in render_call
 
 
 def test_hashtag_route_passes_active_modules_context():
-    source = MICROBLOGGING_PY.read_text(encoding="utf-8")
-    assert (
-        "from y_web.src.external_runtime.plugin_loader import active_modules_context"
-        in source
-    )
+    source = Path(microblogging_file(MICROBLOGGING_PY)).read_text(encoding="utf-8")
+    assert "active_modules_context" in source
     render_call_start = source.index(
-        'render_template(\n        "microblogging/hashtag.html"'
+        'render_template(\n        "@microblogging/microblogging/hashtag.html"'
     )
     render_call = source[render_call_start : render_call_start + 700]
     assert "frontend_adds_on_modules=active_modules_context(exp_id)" in render_call
@@ -91,7 +84,7 @@ def test_hashtag_route_passes_active_modules_context():
 
 def test_profile_and_hashtag_templates_include_plugin_loader():
     for template_path in (PROFILE_HTML, HASHTAG_HTML):
-        template = template_path.read_text(encoding="utf-8")
+        template = Path(microblogging_file(template_path)).read_text(encoding="utf-8")
         assert PLUGIN_LOADER_INCLUDE in template
         # Must be near the end of body, same placement convention as
         # feed.html/thread.html -- after it, only the closing tags.
@@ -102,8 +95,12 @@ def test_profile_and_hashtag_templates_include_plugin_loader():
 def test_feed_and_thread_templates_still_include_plugin_loader():
     # Guard against ever losing the original two working call sites while
     # editing this area of the templates.
-    assert PLUGIN_LOADER_INCLUDE in FEED_HTML.read_text(encoding="utf-8")
-    assert PLUGIN_LOADER_INCLUDE in THREAD_HTML.read_text(encoding="utf-8")
+    assert PLUGIN_LOADER_INCLUDE in Path(microblogging_file(FEED_HTML)).read_text(
+        encoding="utf-8"
+    )
+    assert PLUGIN_LOADER_INCLUDE in Path(microblogging_file(THREAD_HTML)).read_text(
+        encoding="utf-8"
+    )
 
 
 def _frontend_adds_on_installed():

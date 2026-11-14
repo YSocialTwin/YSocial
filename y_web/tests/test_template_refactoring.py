@@ -70,10 +70,10 @@ class TestNewFolderStructure:
     @pytest.mark.parametrize(
         "tpl",
         [
-            "microblogging/header.html",
+            "social/header.html",
             "microblogging/feed.html",
             "microblogging/profile.html",
-            "microblogging/edit_profile.html",
+            "social/edit_profile.html",
             "microblogging/friends.html",
             "microblogging/hashtag.html",
             "microblogging/emotions.html",
@@ -519,7 +519,7 @@ class TestRouteIntegration:
 
             try:
                 env = flask_app.jinja_env
-                env.get_template("microblogging/feed.html")
+                env.get_template("@microblogging/microblogging/feed.html")
             except TemplateNotFound as e:
                 pytest.fail(f"Jinja2 could not find microblogging/feed.html: {e}")
 
@@ -546,16 +546,16 @@ class TestRouteIntegration:
     @pytest.mark.parametrize(
         "template",
         [
-            "microblogging/profile.html",
-            "microblogging/edit_profile.html",
-            "microblogging/friends.html",
-            "microblogging/hashtag.html",
-            "microblogging/emotions.html",
-            "microblogging/interest.html",
-            "microblogging/interview.html",
-            "microblogging/thread.html",
-            "microblogging/components/posts.html",
-            "microblogging/components/list.html",
+            "@microblogging/microblogging/profile.html",
+            "social/edit_profile.html",
+            "@microblogging/microblogging/friends.html",
+            "@microblogging/microblogging/hashtag.html",
+            "@microblogging/microblogging/emotions.html",
+            "@microblogging/microblogging/interest.html",
+            "@microblogging/microblogging/interview.html",
+            "@microblogging/microblogging/thread.html",
+            "@microblogging/microblogging/components/posts.html",
+            "@microblogging/microblogging/components/list.html",
             "@forum/forum/profile.html",
             "@forum/forum/thread.html",
             "@forum/forum/interview.html",

@@ -258,7 +258,12 @@ def without_moved(name: str, baseline):
     """
     moved = load_moved()
     if name == "templates":
-        return [path for path in baseline if path not in moved["templates"]]
+        renamed = moved.get("renamed_templates", {})
+        return [
+            path
+            for path in baseline
+            if path not in moved["templates"] and path not in renamed
+        ]
     if name == "url_map":
         absent = {
             rule

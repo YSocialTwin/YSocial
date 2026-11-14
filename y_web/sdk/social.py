@@ -175,6 +175,114 @@ def origin_community(source_id) -> str:
     return target(source_id)
 
 
+def get_adhoc_agent_badge(user) -> Optional[str]:
+    from y_web.routes.social.helpers import get_adhoc_agent_badge as target
+
+    return target(user)
+
+
+def get_author_type_badge(user) -> str:
+    """Return a badge label identifying whether the author is an AI agent or a human."""
+    from y_web.routes.social.helpers import get_author_type_badge as target
+
+    return target(user)
+
+
+def get_posts_associated_to_emotion(
+    emotion_id, page, per_page=10, current_user=None, exp_id=None
+):
+    """Get the posts associated to the given emotion."""
+    from y_web.src.data_access import get_posts_associated_to_emotion as target
+
+    return target(emotion_id, page, per_page, current_user, exp_id)
+
+
+def get_posts_associated_to_hashtags(
+    hashtag_id, page, per_page=10, current_user=None, exp_id=None
+):
+    """Get the posts associated to the given hashtag."""
+    from y_web.src.data_access import get_posts_associated_to_hashtags as target
+
+    return target(hashtag_id, page, per_page, current_user, exp_id)
+
+
+def get_posts_associated_to_interest(
+    interest_id, page, per_page=10, current_user=None, exp_id=None
+):
+    """Get the posts associated to the given interest/topic."""
+    from y_web.src.data_access import get_posts_associated_to_interest as target
+
+    return target(interest_id, page, per_page, current_user, exp_id)
+
+
+def get_report_count(post_id):
+    """Return how many report records exist for a given post or comment."""
+    from y_web.src.data_access import get_report_count as target
+
+    return target(post_id)
+
+
+def get_trending_emotions(limit=10, window=120):
+    """Get the trending emotions."""
+    from y_web.src.data_access import get_trending_emotions as target
+
+    return target(limit, window)
+
+
+def get_trending_topics(limit=10, window=120):
+    """Get currently trending topics based on recent post activity."""
+    from y_web.src.data_access import get_trending_topics as target
+
+    return target(limit, window)
+
+
+def get_user_friends(user_id, limit=12, page=1):
+    """Get the followers and followees of the user with pagination."""
+    from y_web.src.data_access import get_user_friends as target
+
+    return target(user_id, limit, page)
+
+
+def get_user_recent_posts(
+    user_id, page, per_page=10, mode="rf", current_user=None, exp_id=None
+):
+    """Retrieve paginated posts for a specific user based on filter mode."""
+    from y_web.src.data_access import get_user_recent_posts as target
+
+    return target(user_id, page, per_page, mode, current_user, exp_id)
+
+
+def experiment_db_bind(exp_id):
+    """Temporarily point ``db_exp`` at the database for ``exp_id``."""
+    from y_web.src.experiment.context import experiment_db_bind as target
+
+    return target(exp_id)
+
+
+def active_modules_context(exp_id: "int") -> "list[dict]":
+    """Build the per-request context consumed by the frontend loader template."""
+    from y_web.src.external_runtime.plugin_loader import (
+        active_modules_context as target,
+    )
+
+    return target(exp_id)
+
+
+def get_suggested_posts(
+    uid,
+    mode,
+    page=1,
+    per_page=10,
+    follower_ratio=0.6,
+    exp_engine=None,
+    fb_settings=None,
+):
+    """Get recommended posts for a user based on specified algorithm."""
+    from y_web.src.recsys import get_suggested_posts as target
+
+    return target(uid, mode, page, per_page, follower_ratio, exp_engine, fb_settings)
+
+
 def get_db_bind_key_for_exp(exp_id):
     """Get the database bind key for a specific experiment."""
     from y_web.src.experiment.context import get_db_bind_key_for_exp as target
@@ -190,23 +298,36 @@ def register_experiment_database(app, exp_id, db_name):
 
 
 __all__ = [
+    "active_modules_context",
     "augment_text",
     "build_thread_tree",
     "content_recsys_info",
     "current_profile_pic",
     "ensure_experiment_user",
+    "experiment_db_bind",
     "experiment_memory_enabled",
     "feed_memory_enabled",
+    "get_adhoc_agent_badge",
+    "get_author_type_badge",
     "get_avatars_dir",
     "get_db_bind_key_for_exp",
     "get_discussions",
     "get_elicited_emotions",
     "get_experiment_engine_uri",
+    "get_posts_associated_to_emotion",
+    "get_posts_associated_to_hashtags",
+    "get_posts_associated_to_interest",
+    "get_report_count",
     "get_safe_profile_pic",
+    "get_suggested_posts",
     "get_suggested_users",
     "get_topics",
+    "get_trending_emotions",
     "get_trending_hashtags",
+    "get_trending_topics",
     "get_unanswered_mentions",
+    "get_user_friends",
+    "get_user_recent_posts",
     "hidden_author_ids_for_viewer",
     "hidden_post_ids_in_thread",
     "is_admin",

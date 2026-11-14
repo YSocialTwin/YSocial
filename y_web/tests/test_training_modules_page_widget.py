@@ -76,9 +76,6 @@ def test_the_microblogging_header_calls_it():
     from pathlib import Path
 
     header = (
-        Path(__file__).resolve().parents[1]
-        / "templates"
-        / "microblogging"
-        / "header.html"
+        Path(__file__).resolve().parents[1] / "templates" / "social" / "header.html"
     ).read_text()
     assert header.rstrip().endswith("{{ plugin_experiment_widgets(exp_id) }}")

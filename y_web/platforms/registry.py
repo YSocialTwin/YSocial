@@ -64,6 +64,11 @@ def resolve_hooks(experiment: Any) -> PlatformProvider:
     return provider
 
 
+def default() -> Optional[PlatformProvider]:
+    """The provider marked ``default_platform`` (``None`` when the platform that is the default is not installed)."""
+    return next((p for p in providers() if p.default_platform), None)
+
+
 def providers() -> List[PlatformProvider]:
     """All providers, in menu order."""
     return sorted(_PROVIDERS.values(), key=lambda p: (p.order, p.key))

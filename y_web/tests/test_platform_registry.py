@@ -15,6 +15,10 @@ needs_im = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.INSTANT_MESSAGING),
     reason="YInstantMessaging is not installed",
 )
+needs_micro = pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.MICROBLOGGING),
+    reason="YSimulator is not installed",
+)
 needs_forum = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.FORUM),
     reason="YForum is not installed",
@@ -26,8 +30,9 @@ needs_dating = pytest.mark.skipif(
         and _platform_alias.installed(_platform_alias.FORUM)
         and _platform_alias.installed(_platform_alias.INSTANT_MESSAGING)
         and _platform_alias.installed(_platform_alias.PHOTO_SHARING)
+        and _platform_alias.installed(_platform_alias.MICROBLOGGING)
     ),
-    reason="YDating, YForum, YInstantMessaging and YPhotoSharing are not all installed",
+    reason="YDating, YForum, YInstantMessaging, YPhotoSharing and YSimulator are not all installed",
 )
 _needs_dating_only = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.DATING),
@@ -71,7 +76,7 @@ def test_a_provider_needs_a_key():
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("microblogging", "/3/feed/7/feed/rf/1"),
+        pytest.param("microblogging", "/3/feed/7/feed/rf/1", marks=needs_micro),
         pytest.param("forum", "/3/rfeed/7/feed/rf/1", marks=needs_forum),
         pytest.param("photo_sharing", "/3/photo/feed/all/feed/rf/1", marks=needs_photo),
         pytest.param("instant_messaging", None, marks=needs_im),
@@ -507,6 +512,7 @@ def _server_config_request(**overrides):
     return ServerConfigRequest(**values)
 
 
+@needs_micro
 def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypatch):
     from y_web.platforms import registry
     from y_web.routes.admin.sub.experiments import _crud

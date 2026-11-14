@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from y_web.src.system.display_names import display_name
+from y_web.tests._platform_repos import microblogging_file
 
 
 @pytest.mark.parametrize(
@@ -36,12 +37,12 @@ def test_filter_is_registered_on_the_app():
     assert app.jinja_env.filters["display_name"]("MariaRossi") == "Maria Rossi"
 
 
-TEMPLATES = Path(__file__).resolve().parents[1] / "templates" / "microblogging"
-
-
 def test_mention_prefilled_replies_keep_the_username():
     """The reply boxes start with ``@username``: a tag, never split."""
-    for path in TEMPLATES.rglob("*.html"):
+    templates = Path(
+        microblogging_file("y_web/templates/microblogging/feed.html")
+    ).parent
+    for path in templates.rglob("*.html"):
         for line in path.read_text(encoding="utf-8").splitlines():
             if "reply_comment" in line and "@{{" in line:
                 assert (
@@ -50,6 +51,8 @@ def test_mention_prefilled_replies_keep_the_username():
 
 
 def test_displayed_author_names_use_the_filter():
-    text = (TEMPLATES / "components" / "posts.html").read_text(encoding="utf-8")
+    text = Path(
+        microblogging_file("y_web/templates/microblogging/components/posts.html")
+    ).read_text(encoding="utf-8")
     assert re.search(r'item\["author"\]\|display_name', text)
     assert re.search(r'cm\["author"\]\|display_name', text)

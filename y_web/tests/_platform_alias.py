@@ -19,8 +19,8 @@ EXTERNAL = Path(__file__).resolve().parents[2] / "external"
 class Platform:
     repo: str  # folder under external/
     key: str  # key of the repository in the runtime registry: it names the module namespace
-    old_package: str  # where the platform's own modules used to live in the core
-    library: str  # their package inside ``ysocial_platform``
+    old_package: str  # where the platform's own modules used to live in the core ("" when it had none)
+    library: str  # their package inside ``ysocial_platform`` ("" when the platform has no library)
     provider_class: str
     #: old module name -> module in the repository package ``ysocial_platform``
     views: Dict[str, str] = field(default_factory=dict)
@@ -119,7 +119,29 @@ FORUM = Platform(
     ),
 )
 
-PLATFORMS = (DATING, INSTANT_MESSAGING, PHOTO_SHARING, FORUM)
+MICROBLOGGING = Platform(
+    repo="YSimulator",
+    key="microblogging",
+    old_package="",
+    library="",
+    provider_class="Microblogging",
+    views={
+        "y_web.routes.social.microblogging": "routes.social_microblogging",
+        "y_web.routes.interactions.microblogging": "routes.interactions_microblogging",
+    },
+    needs=(
+        "test_microblog_follow_links.py",
+        "test_microblog_chat_component.py",
+        "test_phaseT5_css_extraction.py",
+        "test_template_refactoring.py",
+        "test_trending_hashtag_prefix.py",
+        "test_phase7_src_simulation.py",
+        "test_simulation_process_runner_logic.py",
+        "test_training_modules_baseline_access.py",
+    ),
+)
+
+PLATFORMS = (DATING, INSTANT_MESSAGING, PHOTO_SHARING, FORUM, MICROBLOGGING)
 
 _state: Dict[str, bool] = {}
 
@@ -132,8 +154,11 @@ def installed(platform: Platform = None) -> bool:
 
 
 def _present(platform: Platform) -> bool:
+    base = EXTERNAL / platform.repo / "ysocial_platform"
     return (
-        EXTERNAL / platform.repo / "ysocial_platform" / platform.library / "__init__.py"
+        (base / platform.library / "__init__.py")
+        if platform.library
+        else base / "provider.py"
     ).is_file()
 
 
@@ -155,7 +180,7 @@ def _install_one(platform: Platform) -> bool:
     def load(name):
         return importlib.import_module(f"{root}.ysocial_platform.{name}")
 
-    package = load(platform.library)
+    package = load(platform.library) if platform.library else None
     if platform.old_package:
         sys.modules[platform.old_package] = package
         parent, _, leaf = platform.old_package.rpartition(".")

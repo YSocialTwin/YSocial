@@ -5,6 +5,8 @@ core (see ``y_web/tests/_platform_baseline.py``). Whatever they recorded must st
 anything new is allowed.
 """
 
+from pathlib import Path
+
 import pytest
 
 from y_web.tests import _platform_baseline as baseline
@@ -78,6 +80,17 @@ def test_budget_flags_only_growth():
         "a.py: 3 mentions, budget 2",
         "b.py: 1 mentions, budget 0",
     ]
+
+
+def test_renamed_templates_are_in_the_core():
+    """A template that stayed in the core under a neutral name (it is shared by several platforms)."""
+    core = Path(__file__).resolve().parents[1] / "templates"
+    missing = [
+        new
+        for new in baseline.load_moved().get("renamed_templates", {}).values()
+        if not (core / new).is_file()
+    ]
+    assert not missing, missing
 
 
 def test_moved_templates_are_in_their_repository():

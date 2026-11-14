@@ -22,7 +22,7 @@ from y_web.tests.test_frontend_settings_platforms import _exp
 pytestmark = pytest.mark.integration
 
 PLATFORMS = [
-    "microblogging",
+    pytest.param("microblogging", marks=requires_platform("YSimulator")),
     pytest.param("forum", marks=requires_platform("YForum")),
     pytest.param("photo_sharing", marks=requires_platform("YPhotoSharing")),
     pytest.param(

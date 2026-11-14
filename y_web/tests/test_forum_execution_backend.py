@@ -12,6 +12,7 @@ from y_web.src.simulation.execution_backend import (
 )
 from y_web.src.simulation.process_runner import _resolve_client_package_dir
 from y_web.src.simulation.server import _resolve_server_runtime_paths
+from y_web.tests._platform_repos import requires_platform
 
 pytestmark = pytest.mark.unit
 
@@ -19,7 +20,11 @@ pytestmark = pytest.mark.unit
 @pytest.mark.parametrize(
     ("platform_type", "expected_suffix"),
     [
-        ("microblogging", "external/YServer/y_server_run.py"),
+        pytest.param(
+            "microblogging",
+            "external/YServer/y_server_run.py",
+            marks=requires_platform("YSimulator"),
+        ),
         ("forum", "external/YServerReddit/y_server_run.py"),
     ],
 )
@@ -35,7 +40,9 @@ def test_resolve_server_runtime_paths_separates_standard_and_forum(
 @pytest.mark.parametrize(
     ("platform_type", "expected_suffix"),
     [
-        ("microblogging", "external/YClient"),
+        pytest.param(
+            "microblogging", "external/YClient", marks=requires_platform("YSimulator")
+        ),
         ("forum", "external/YClientReddit"),
     ],
 )

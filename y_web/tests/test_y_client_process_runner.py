@@ -128,7 +128,11 @@ def test_process_agent_validator_keeps_forum_share_aliases():
 
 @pytest.mark.parametrize(
     "platform_type",
-    ["microblogging", pytest.param("forum", marks=requires_platform("YForum")), "hpc"],
+    [
+        pytest.param("microblogging", marks=requires_platform("YSimulator")),
+        pytest.param("forum", marks=requires_platform("YForum")),
+        "hpc",
+    ],
 )
 def test_stress_reward_sync_applies_to_supported_platforms(platform_type):
     client_config = {"simulation": {}}

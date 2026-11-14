@@ -51,8 +51,12 @@ def test_forum_profile_route_allows_stress_reward_context():
 
 
 def test_forum_interview_route_supports_uuid_backed_users():
-    source = Path(forum_file("y_web/routes/social/forum.py")).read_text(
-        encoding="utf-8"
+    source = (
+        Path(__file__)
+        .resolve()
+        .parents[1]
+        .joinpath("routes/social/common.py")
+        .read_text(encoding="utf-8")
     )
 
     assert (

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 from sqlalchemy import select
 
-from y_web.tests._platform_repos import requires_platform
+from y_web.tests._platform_repos import microblogging_file, requires_platform
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
@@ -470,28 +470,28 @@ def test_microblog_chat_routes_are_exposed():
 
 def test_microblog_chat_component_is_reusable_and_mounted():
     panel_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/chat_panel.html")
+        microblogging_file("y_web/templates/microblogging/components/chat_panel.html")
     ).read_text()
     feed_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
+        microblogging_file("y_web/templates/microblogging/feed.html")
     ).read_text()
     thread_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
+        microblogging_file("y_web/templates/microblogging/thread.html")
     ).read_text()
     profile_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
+        microblogging_file("y_web/templates/microblogging/profile.html")
     ).read_text()
     friends_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/friends.html")
+        microblogging_file("y_web/templates/microblogging/friends.html")
     ).read_text()
     hashtag_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/hashtag.html")
+        microblogging_file("y_web/templates/microblogging/hashtag.html")
     ).read_text()
     interest_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/interest.html")
+        microblogging_file("y_web/templates/microblogging/interest.html")
     ).read_text()
     emotions_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/emotions.html")
+        microblogging_file("y_web/templates/microblogging/emotions.html")
     ).read_text()
 
     assert 'id="microblog-chat-panel"' in panel_template
@@ -509,7 +509,7 @@ def test_microblog_chat_component_is_reusable_and_mounted():
         emotions_template,
     ):
         assert "{% if experiment_memory_enabled %}" in template
-        assert '{% include "microblogging/components/chat_panel.html" %}' in template
+        assert '{% include "shared/chat_panel.html" %}' in template
         assert "assets/js/microblog-chat.js" in template
 
 

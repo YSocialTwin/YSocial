@@ -77,6 +77,42 @@ def forum_file(old_relative: str) -> str:
     return str(path)
 
 
+def microblogging_file(old_relative: str) -> str:
+    """File of the microblogging platform that used to be at ``old_relative`` in the core; skips the test when absent.
+
+    The pages shared with the other platforms (header, edit profile, chat panel) stayed in the core under a neutral name.
+    """
+    core = EXTERNAL.parent / "y_web"
+    base = EXTERNAL / "YSimulator" / "ysocial_platform"
+    if old_relative.startswith("y_web/templates/"):
+        relative = old_relative[len("y_web/templates/") :]
+        renamed = _renamed()
+        if relative in renamed:
+            return str(core / "templates" / renamed[relative])
+        path = base / "templates" / relative
+    elif old_relative.startswith("y_web/static/assets/js/"):
+        path = base / "static" / "js" / old_relative.rsplit("/", 1)[1]
+    elif old_relative == "y_web/routes/social/microblogging.py":
+        path = base / "routes" / "social_microblogging.py"
+    elif old_relative == "y_web/routes/interactions/microblogging.py":
+        path = base / "routes" / "interactions_microblogging.py"
+    else:
+        raise ValueError(old_relative)
+    if not path.is_file():
+        pytest.skip("YSimulator with its platform files is not installed")
+    return str(path)
+
+
+def _renamed():
+    import json
+
+    return json.loads(
+        (Path(__file__).parent / "data" / "platform_baseline" / "moved.json").read_text(
+            "utf-8"
+        )
+    )["renamed_templates"]
+
+
 def template_file(root: Path, relative: str) -> Path:
     """File of a template that is in the core or, when it moved out, in the repository it moved to (skips when absent)."""
     path = Path(root) / relative
@@ -160,6 +196,7 @@ def core_and_platform_loader():
             ("instant_messaging", "YInstantMessaging"),
             ("photo_sharing", "YPhotoSharing"),
             ("forum", "YForum"),
+            ("microblogging", "YSimulator"),
         )
         if (EXTERNAL / repo / "ysocial_platform" / "templates").is_dir()
     }

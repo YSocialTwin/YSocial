@@ -5,20 +5,22 @@ import pathlib
 import jinja2
 import pytest
 
+from y_web.tests._platform_repos import microblogging_file
+
 pytestmark = pytest.mark.unit
 
-TPL = (
-    pathlib.Path(__file__).resolve().parents[1]
-    / "templates"
-    / "microblogging"
-    / "components"
-    / "sidebar_ranked_list_card.html"
-)
+
+def _template():
+    return pathlib.Path(
+        microblogging_file(
+            "y_web/templates/microblogging/components/sidebar_ranked_list_card.html"
+        )
+    )
 
 
 def _render(items, prefix="#"):
     env = jinja2.Environment(autoescape=True)
-    return env.from_string(TPL.read_text(encoding="utf-8")).render(
+    return env.from_string(_template().read_text(encoding="utf-8")).render(
         exp_id=1,
         ranked_card_items=items,
         ranked_card_href_prefix="hashtag_posts",

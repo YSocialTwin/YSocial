@@ -16,6 +16,10 @@
       "repo": "YDating",
       "to": "@dating/admin/_dating_population_form.html"
     },
+    "admin/_forum_communities.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/_forum_communities.html"
+    },
     "admin/_im_analytics_note.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/slots/analytics_notes.html"
@@ -24,9 +28,21 @@
       "repo": "YDating",
       "to": "@dating/admin/client_details_dating.html"
     },
+    "admin/client_details_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/client_details_forum.html"
+    },
     "admin/clients_dating.html": {
       "repo": "YDating",
       "to": "@dating/admin/clients_dating.html"
+    },
+    "admin/clients_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/clients_forum.html"
+    },
+    "admin/clients_forum_hpc.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/clients_forum_hpc.html"
     },
     "admin/clients_im.html": {
       "repo": "YInstantMessaging",
@@ -56,6 +72,10 @@
       "repo": "YDating",
       "to": "@dating/admin/experiment_details_dating.html"
     },
+    "admin/experiment_details_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/experiment_details_forum.html"
+    },
     "admin/experiment_details_im.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/admin/experiment_details_im.html"
@@ -64,6 +84,18 @@
       "repo": "YPhotoSharing",
       "to": "@photo_sharing/admin/experiment_details_photo.html"
     },
+    "admin/forum_image_resources.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/forum_image_resources.html"
+    },
+    "admin/forum_rss_resources.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/forum_rss_resources.html"
+    },
+    "admin/opinion_configuration_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/opinion_configuration_forum.html"
+    },
     "admin/opinion_configuration_im.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/admin/opinion_configuration_im.html"
@@ -71,6 +103,10 @@
     "admin/prompts_dating.html": {
       "repo": "YDating",
       "to": "@dating/admin/prompts_dating.html"
+    },
+    "admin/prompts_forum.html": {
+      "repo": "YForum",
+      "to": "@forum/admin/prompts_forum.html"
     },
     "admin/prompts_im.html": {
       "repo": "YInstantMessaging",
@@ -144,6 +180,78 @@
       "repo": "YDating",
       "to": "@dating/participant/unavailable.html"
     },
+    "forum/communities.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/communities.html"
+    },
+    "forum/components/chat_panel.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/chat_panel.html"
+    },
+    "forum/components/comment.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/comment.html"
+    },
+    "forum/components/community_card.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/community_card.html"
+    },
+    "forum/components/crosspost_modal.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/crosspost_modal.html"
+    },
+    "forum/components/crosspost_origin.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/crosspost_origin.html"
+    },
+    "forum/components/list.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/list.html"
+    },
+    "forum/components/posts.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/posts.html"
+    },
+    "forum/components/recent_posts.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/recent_posts.html"
+    },
+    "forum/components/sidebar.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/sidebar.html"
+    },
+    "forum/components/thread-post.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/components/thread-post.html"
+    },
+    "forum/edit_profile.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/edit_profile.html"
+    },
+    "forum/feed.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/feed.html"
+    },
+    "forum/header.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/header.html"
+    },
+    "forum/interview.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/interview.html"
+    },
+    "forum/notifications.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/notifications.html"
+    },
+    "forum/profile.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/profile.html"
+    },
+    "forum/thread.html": {
+      "repo": "YForum",
+      "to": "@forum/forum/thread.html"
+    },
     "im/_avatar.html": {
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/im/_avatar.html"
@@ -200,6 +308,78 @@
       "repo": "YInstantMessaging",
       "to": "@instant_messaging/im/unavailable.html"
     },
+    "microblogging/components/context_hero_card.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/context_hero_card.html"
+    },
+    "microblogging/components/friends_panel.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/friends_panel.html"
+    },
+    "microblogging/components/list.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/list.html"
+    },
+    "microblogging/components/posts.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/posts.html"
+    },
+    "microblogging/components/sidebar_ranked_list_card.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/sidebar_ranked_list_card.html"
+    },
+    "microblogging/components/sidebar_user_card.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/sidebar_user_card.html"
+    },
+    "microblogging/components/suggested_friends.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/suggested_friends.html"
+    },
+    "microblogging/components/suggested_pages.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/suggested_pages.html"
+    },
+    "microblogging/components/thread-post.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/components/thread-post.html"
+    },
+    "microblogging/emotions.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/emotions.html"
+    },
+    "microblogging/feed.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/feed.html"
+    },
+    "microblogging/friends.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/friends.html"
+    },
+    "microblogging/hashtag.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/hashtag.html"
+    },
+    "microblogging/index.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/index.html"
+    },
+    "microblogging/interest.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/interest.html"
+    },
+    "microblogging/interview.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/interview.html"
+    },
+    "microblogging/profile.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/profile.html"
+    },
+    "microblogging/thread.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/thread.html"
+    },
     "photo/base.html": {
       "repo": "YPhotoSharing",
       "to": "@photo_sharing/photo/base.html"
@@ -231,114 +411,6 @@
     "photo/suggestions.html": {
       "repo": "YPhotoSharing",
       "to": "@photo_sharing/photo/suggestions.html"
-    },
-    "forum/header.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/header.html"
-    },
-    "forum/profile.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/profile.html"
-    },
-    "forum/feed.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/feed.html"
-    },
-    "forum/interview.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/interview.html"
-    },
-    "forum/notifications.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/notifications.html"
-    },
-    "forum/edit_profile.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/edit_profile.html"
-    },
-    "forum/communities.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/communities.html"
-    },
-    "forum/thread.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/thread.html"
-    },
-    "forum/components/posts.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/posts.html"
-    },
-    "forum/components/list.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/list.html"
-    },
-    "forum/components/sidebar.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/sidebar.html"
-    },
-    "forum/components/recent_posts.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/recent_posts.html"
-    },
-    "forum/components/comment.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/comment.html"
-    },
-    "forum/components/chat_panel.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/chat_panel.html"
-    },
-    "forum/components/crosspost_origin.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/crosspost_origin.html"
-    },
-    "forum/components/crosspost_modal.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/crosspost_modal.html"
-    },
-    "forum/components/community_card.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/community_card.html"
-    },
-    "forum/components/thread-post.html": {
-      "repo": "YForum",
-      "to": "@forum/forum/components/thread-post.html"
-    },
-    "admin/_forum_communities.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/_forum_communities.html"
-    },
-    "admin/client_details_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/client_details_forum.html"
-    },
-    "admin/clients_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/clients_forum.html"
-    },
-    "admin/clients_forum_hpc.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/clients_forum_hpc.html"
-    },
-    "admin/experiment_details_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/experiment_details_forum.html"
-    },
-    "admin/forum_image_resources.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/forum_image_resources.html"
-    },
-    "admin/forum_rss_resources.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/forum_rss_resources.html"
-    },
-    "admin/opinion_configuration_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/opinion_configuration_forum.html"
-    },
-    "admin/prompts_forum.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/prompts_forum.html"
     }
   },
   "url_map": {
@@ -479,6 +551,23 @@
       "/api/reddit/<int:exp_id>/vote -> api_reddit.api_vote",
       "/rfeed -> main.feeed_logged_reddit",
       "/rnotifications -> main.rnotifications_logged"
+    ],
+    "YSimulator": [
+      "/<int:exp_id>/api/emotion/<emotion_id>/<int:page> -> main.api_emotion_posts",
+      "/<int:exp_id>/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.api_feed",
+      "/<int:exp_id>/api/friends/<user_id>/<int:page> -> main.api_friends",
+      "/<int:exp_id>/api/hashtag_posts/<hashtag_id>/<int:page> -> main.api_hashtag_posts",
+      "/<int:exp_id>/api/header_search -> main.api_header_search",
+      "/<int:exp_id>/api/interest/<interest_id>/<int:page> -> main.api_interest_posts",
+      "/<int:exp_id>/api/profile/<user_id>/<string:mode>/<int:page> -> main.api_profile_posts",
+      "/<int:exp_id>/emotion/<emotion_id>/<int:page> -> main.get_post_emotion",
+      "/<int:exp_id>/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page> -> main.feed",
+      "/<int:exp_id>/friends/<user_id>/<int:page> -> main.get_friends",
+      "/<int:exp_id>/hashtag_posts/<hashtag_id>/<int:page> -> main.get_post_hashtags",
+      "/<int:exp_id>/interest/<interest_id>/<int:page> -> main.get_post_interest",
+      "/<int:exp_id>/publish -> user_actions.publish_post",
+      "/<int:exp_id>/thread/<post_id> -> main.get_thread",
+      "/feed -> main.feeed_logged"
     ]
   },
   "known_platforms": {
@@ -493,6 +582,14 @@
     ],
     "YForum": [
       "forum"
+    ],
+    "YSimulator": [
+      "microblogging"
     ]
+  },
+  "renamed_templates": {
+    "microblogging/header.html": "social/header.html",
+    "microblogging/edit_profile.html": "social/edit_profile.html",
+    "microblogging/components/chat_panel.html": "shared/chat_panel.html"
   }
 }

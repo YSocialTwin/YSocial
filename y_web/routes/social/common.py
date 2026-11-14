@@ -11,6 +11,7 @@ import os
 import uuid as _uuid
 
 from flask import (
+    abort,
     current_app,
     flash,
     jsonify,
@@ -38,6 +39,7 @@ from y_web.routes.social.helpers import (
     _forum_profile_pic,
     _load_ui_settings,
     get_safe_profile_pic,
+    _experiment_memory_enabled,
     is_admin,
 )
 from y_web.src.agents.custom_features import (
@@ -561,8 +563,13 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             **forum_context,
         )
 
+    provider = platforms.resolve(exp.platform_type)
+    fallback = platforms.default()
+    template = provider.profile_template or (fallback and fallback.profile_template)
+    if not template:
+        abort(404)
     return render_template(
-        "microblogging/profile.html",
+        template,
         profile_pic=profile_pic,
         ui=_load_ui_settings(exp_id),
         frontend_adds_on_modules=active_modules_context(exp_id),
@@ -761,7 +768,7 @@ def edit_profile(exp_id, user_id):
     ) and not getattr(user, "is_page", 0)
     _recsys_opts = _load_recsys_options(_sim_type, include_human_only=_is_human_profile)
     return render_template(
-        "microblogging/edit_profile.html",
+        "social/edit_profile.html",
         profile_topics_box=bool(
             _load_ui_settings(exp_id).get("profile_topics_box", True)
         ),
@@ -1517,3 +1524,51 @@ def save_onboarding(exp_id, user_id):
         return redirect("/")
 
     return _landing_redirect(exp, user_id_val) or redirect("/")
+
+
+@main.get("/<int:exp_id>/interview")
+@login_required
+def interview(exp_id):
+    """Interview page of an experiment; what it looks like is up to the platform of the experiment."""
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if not admin_user or admin_user.role not in {"admin", "researcher"}:
+        abort(403)
+
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
+    if not exp:
+        abort(404)
+    provider = platforms.get(exp.platform_type)
+    if provider is None or not provider.has_interview:
+        abort(404)
+    if not _experiment_memory_enabled(exp_id):
+        flash(
+            _(
+                "Interview is unavailable because memory is disabled for this experiment."
+            )
+        )
+        return redirect(provider.interview_redirect(exp_id))
+
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
+    logged_id = exp_user.id if exp_user else (getattr(current_user, "id", 0) or 0)
+
+    mentions = []
+    try:
+        mention_username = exp_user.username if exp_user else current_user.username
+        mentions = get_unanswered_mentions(mention_username)
+    except Exception:
+        mentions = []
+
+    return provider.render_interview(
+        exp_id,
+        {
+            "logged_username": current_user.username,
+            "logged_id": logged_id,
+            "mentions": mentions,
+            "is_admin": is_admin(current_user.username),
+            "exp_id": exp_id,
+        },
+    )

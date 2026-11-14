@@ -66,7 +66,7 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "YSocial_purple.png" in sidebar_template
     assert "YSocial_l_purple.png" in sidebar_template
     assert "photo-feed-layout" in template
-    assert "microblogging/components/chat_panel.html" in base_template
+    assert "shared/chat_panel.html" in base_template
     assert "photo/feed" in template
     assert "photo/components/sidebar.html" in base_template
     assert "photo-overlays.js" in base_template

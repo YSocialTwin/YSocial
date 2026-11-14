@@ -1,13 +1,14 @@
 from pathlib import Path
 
+from y_web.tests._platform_repos import microblogging_file
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_suggested_friend_follow_link_targets_profile_owner():
     template = Path(
-        str(
-            _REPO_ROOT
-            / "y_web/templates/microblogging/components/suggested_friends.html"
+        microblogging_file(
+            "y_web/templates/microblogging/components/suggested_friends.html"
         )
     ).read_text(encoding="utf-8")
     assert "/follow/{{ friend['id'] }}/{{ user_id }}" in template
@@ -17,8 +18,8 @@ def test_suggested_friend_follow_link_targets_profile_owner():
 
 def test_suggested_page_follow_link_targets_page_owner():
     template = Path(
-        str(
-            _REPO_ROOT / "y_web/templates/microblogging/components/suggested_pages.html"
+        microblogging_file(
+            "y_web/templates/microblogging/components/suggested_pages.html"
         )
     ).read_text(encoding="utf-8")
     assert "/follow/{{ page['id'] }}/{{ user_id }}" in template
@@ -28,7 +29,7 @@ def test_suggested_page_follow_link_targets_page_owner():
 
 def test_profile_follow_button_targets_viewed_user():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
+        microblogging_file("y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
@@ -55,9 +56,9 @@ def test_profile_follow_button_targets_viewed_user():
 
 def test_profile_activity_tabs_are_single_row_async_controls():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
+        microblogging_file("y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
-    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/mb-profile.js")).read_text(
+    js = Path(microblogging_file("y_web/static/assets/js/mb-profile.js")).read_text(
         encoding="utf-8"
     )
     css = Path(
@@ -76,14 +77,14 @@ def test_profile_activity_tabs_are_single_row_async_controls():
 
 def test_microblog_header_search_wires_profiles_hashtags_and_topics():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/header.html")
+        microblogging_file("y_web/templates/microblogging/header.html")
     ).read_text(encoding="utf-8")
-    source = Path(str(_REPO_ROOT / "y_web/routes/social/microblogging.py")).read_text(
+    source = Path(microblogging_file("y_web/routes/social/microblogging.py")).read_text(
         encoding="utf-8"
     )
-    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/mb-header-search.js")).read_text(
-        encoding="utf-8"
-    )
+    js = Path(
+        microblogging_file("y_web/static/assets/js/mb-header-search.js")
+    ).read_text(encoding="utf-8")
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
@@ -109,7 +110,7 @@ def test_microblog_header_search_wires_profiles_hashtags_and_topics():
 
 def test_profile_template_renders_stress_reward_indicators():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
+        microblogging_file("y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
 
     assert "Stress / Reward" in template
@@ -124,7 +125,7 @@ def test_profile_template_renders_stress_reward_indicators():
 
 def test_profile_about_me_supports_agent_custom_feature_rows():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
+        microblogging_file("y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
     source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
         encoding="utf-8"
@@ -141,14 +142,14 @@ def test_profile_about_me_supports_agent_custom_feature_rows():
 
 def test_profile_template_uses_shared_ranked_card_and_profile_panels():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
+        microblogging_file("y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
         in template
     )
     assert "ranked_card_title = _('Frequently Used Hashtags')" in template
@@ -162,7 +163,7 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
 
 def test_edit_profile_template_uses_shared_profile_style_sections():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/edit_profile.html")
+        microblogging_file("y_web/templates/microblogging/edit_profile.html")
     ).read_text(encoding="utf-8")
     source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
         encoding="utf-8"
@@ -198,10 +199,10 @@ def test_edit_profile_template_uses_shared_profile_style_sections():
 
 def test_microblog_templates_render_adhoc_agent_badges():
     posts_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/posts.html")
+        microblogging_file("y_web/templates/microblogging/components/posts.html")
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/thread-post.html")
+        microblogging_file("y_web/templates/microblogging/components/thread-post.html")
     ).read_text(encoding="utf-8")
 
     assert "item.get('adhoc_agent_badge')" in posts_template
@@ -220,7 +221,7 @@ def test_microblog_helper_wires_adhoc_agent_badges():
         encoding="utf-8"
     )
     thread_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/microblogging.py")
+        microblogging_file("y_web/routes/social/microblogging.py")
     ).read_text(encoding="utf-8")
     posts_source = Path(str(_REPO_ROOT / "y_web/src/data_access/posts.py")).read_text(
         encoding="utf-8"
@@ -239,48 +240,47 @@ def test_microblog_helper_wires_adhoc_agent_badges():
 
 def test_sidebar_ranked_list_card_is_shared_and_styled():
     component = Path(
-        str(
-            _REPO_ROOT
-            / "y_web/templates/microblogging/components/sidebar_ranked_list_card.html"
+        microblogging_file(
+            "y_web/templates/microblogging/components/sidebar_ranked_list_card.html"
         )
     ).read_text(encoding="utf-8")
     feed_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
+        microblogging_file("y_web/templates/microblogging/feed.html")
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
+        microblogging_file("y_web/templates/microblogging/thread.html")
     ).read_text(encoding="utf-8")
     hashtag_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/hashtag.html")
+        microblogging_file("y_web/templates/microblogging/hashtag.html")
     ).read_text(encoding="utf-8")
     interest_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/interest.html")
+        microblogging_file("y_web/templates/microblogging/interest.html")
     ).read_text(encoding="utf-8")
     emotions_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/emotions.html")
+        microblogging_file("y_web/templates/microblogging/emotions.html")
     ).read_text(encoding="utf-8")
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
         in feed_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
         in thread_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
         in hashtag_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
         in interest_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
         in emotions_template
     )
     assert "ranked_card_title" in component
@@ -291,48 +291,47 @@ def test_sidebar_ranked_list_card_is_shared_and_styled():
 
 def test_sidebar_user_card_is_shared_and_styled():
     component = Path(
-        str(
-            _REPO_ROOT
-            / "y_web/templates/microblogging/components/sidebar_user_card.html"
+        microblogging_file(
+            "y_web/templates/microblogging/components/sidebar_user_card.html"
         )
     ).read_text(encoding="utf-8")
     feed_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
+        microblogging_file("y_web/templates/microblogging/feed.html")
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
+        microblogging_file("y_web/templates/microblogging/thread.html")
     ).read_text(encoding="utf-8")
     hashtag_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/hashtag.html")
+        microblogging_file("y_web/templates/microblogging/hashtag.html")
     ).read_text(encoding="utf-8")
     interest_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/interest.html")
+        microblogging_file("y_web/templates/microblogging/interest.html")
     ).read_text(encoding="utf-8")
     emotions_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/emotions.html")
+        microblogging_file("y_web/templates/microblogging/emotions.html")
     ).read_text(encoding="utf-8")
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
         in feed_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
         in thread_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
         in hashtag_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
         in interest_template
     )
     assert (
-        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
         in emotions_template
     )
     assert "Your Profile" in component
@@ -343,41 +342,40 @@ def test_sidebar_user_card_is_shared_and_styled():
 
 def test_context_hero_is_shared_and_styled():
     component = Path(
-        str(
-            _REPO_ROOT
-            / "y_web/templates/microblogging/components/context_hero_card.html"
+        microblogging_file(
+            "y_web/templates/microblogging/components/context_hero_card.html"
         )
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
+        microblogging_file("y_web/templates/microblogging/thread.html")
     ).read_text(encoding="utf-8")
     hashtag_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/hashtag.html")
+        microblogging_file("y_web/templates/microblogging/hashtag.html")
     ).read_text(encoding="utf-8")
     interest_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/interest.html")
+        microblogging_file("y_web/templates/microblogging/interest.html")
     ).read_text(encoding="utf-8")
     emotions_template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/emotions.html")
+        microblogging_file("y_web/templates/microblogging/emotions.html")
     ).read_text(encoding="utf-8")
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "microblogging/components/context_hero_card.html" %}'
+        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
         in thread_template
     )
     assert (
-        '{% include "microblogging/components/context_hero_card.html" %}'
+        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
         in hashtag_template
     )
     assert (
-        '{% include "microblogging/components/context_hero_card.html" %}'
+        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
         in interest_template
     )
     assert (
-        '{% include "microblogging/components/context_hero_card.html" %}'
+        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
         in emotions_template
     )
     assert "ys-context-hero__eyebrow" in component
@@ -397,7 +395,7 @@ def test_infinite_scroll_supports_profile_mode_reset():
 
 
 def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
-    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/mb-feed.js")).read_text(
+    js = Path(microblogging_file("y_web/static/assets/js/mb-feed.js")).read_text(
         encoding="utf-8"
     )
     css = Path(
