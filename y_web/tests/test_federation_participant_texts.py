@@ -8,7 +8,7 @@ import pytest
 pytest.importorskip("ysocial_federation", reason="the federation SDK is not installed")
 
 from y_web.src.federation import human_outbox as ho  # noqa: E402
-from y_web.src.federation import humans, pending_notice
+from y_web.src.federation import humans, pending_notice, traits
 from y_web.tests.test_federation_humans import Offline, make, user  # noqa: E402,F401
 from y_web.tests.test_federation_service import world  # noqa: E402,F401  (fixture)
 
@@ -49,11 +49,11 @@ def test_an_edited_text_replaces_the_rule_text_and_is_cut_to_the_limit_of_each_p
         )
     }
     assert (
-        len(out["dating"]) <= ho.LIMITS["dating"]
+        len(out["dating"]) <= traits.text_limit("dating")
         and out["photo_sharing"] == "my caption"
     )
     assert (
-        len(out["forum"]) <= ho.LIMITS["forum"] and "\n" in out["forum"]
+        len(out["forum"]) <= traits.text_limit("forum") and "\n" in out["forum"]
     )  # a title line is added to a one-line edit
 
 

@@ -32,7 +32,7 @@ from y_web.src.federation import coordinator_process as cp
 from y_web.src.federation import frontends
 from y_web.src.federation import member_health as mh
 from y_web.src.federation import options_schema as schema
-from y_web.src.federation import service
+from y_web.src.federation import service, traits
 from y_web.src.models import Admin_users, Exps
 from y_web.src.models.admin import Federation
 
@@ -40,20 +40,8 @@ world_simulation = Blueprint(
     "world_simulation", __name__, url_prefix="/admin/world_simulation"
 )
 
-PLATFORM_LABELS = {
-    "microblogging": "Microblogging",
-    "forum": "Forum",
-    "photo_sharing": "Photo sharing",
-    "instant_messaging": "Instant messaging",
-    "dating": "Dating",
-}
-PLATFORM_ICONS = {
-    "microblogging": "mdi-message-text-outline",
-    "forum": "mdi-forum-outline",
-    "photo_sharing": "mdi-image-multiple-outline",
-    "instant_messaging": "mdi-chat-processing-outline",
-    "dating": "mdi-heart-outline",
-}
+PLATFORM_LABELS = traits.LABELS
+PLATFORM_ICONS = traits.MDI_ICONS
 STATE_BADGES = {
     "stopped": "badge-secondary",
     "starting": "badge-info",
@@ -506,7 +494,7 @@ def _candidates(user):
 def _grouped_candidates(candidates):
     """Candidates by platform, in the order of the platforms (one card for each)."""
     groups = []
-    for platform in schema.PLATFORMS:
+    for platform in schema.platform_types():
         items = [c for c in candidates if c["platform_type"] == platform]
         groups.append(
             {
@@ -535,7 +523,7 @@ def _form_context(values, members=None, labels=None):
     ``members`` are member names (or, in the creation form, the keys of the candidate experiments), in order; ``labels`` maps each to
     what a person reads (the name of its experiment). Without them every platform type is offered, as before P15.
     """
-    keys = [m for m in schema.PLATFORMS] if members is None else list(members)
+    keys = [m for m in schema.platform_types()] if members is None else list(members)
     return {
         "schema": schema,
         "values": values,
@@ -544,7 +532,7 @@ def _form_context(values, members=None, labels=None):
             k: (labels or {}).get(k) or PLATFORM_LABELS.get(k, k) for k in keys
         },
         "ws_platform_types": [
-            t for t in schema.PLATFORMS if t in set(_types_of(keys).values())
+            t for t in schema.platform_types() if t in set(_types_of(keys).values())
         ],
         "platform_labels": PLATFORM_LABELS,
         "platform_icons": PLATFORM_ICONS,

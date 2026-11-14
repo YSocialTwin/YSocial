@@ -26,6 +26,7 @@ from typing import Any, Optional
 
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
+from y_web.src.federation import traits
 
 MISSING = object()
 
@@ -36,28 +37,22 @@ CROSSPOST_CONTENT_ALIASES = {"own_posts": "own_content"}
 DEFAULT_PAIR_PROBABILITY = (
     0.3  # YWeb default of every ordered pair of member platforms (the SDK default is 0)
 )
-PLATFORMS = ("microblogging", "forum", "photo_sharing", "instant_messaging", "dating")
-# Platforms whose runtime creates an account on request: all of them (service.PROVISIONABLE, repeated here to stay import free).
-PROVISIONABLE = PLATFORMS
+
+
+def platform_types() -> list:
+    """Platform types that can be members of a World Simulation: those whose repository is installed, in menu order."""
+    return traits.platforms()
+
+
+def provisionable() -> list:
+    """Platforms whose runtime creates an account on request (every one that can be a member)."""
+    return traits.platforms()
+
+
 MEMBERSHIP_CHOICES = ("all", "one_random", "custom")
 # P14: crosspost.decision_triggers (the events decided by the agent's LLM) and the clients that support them. A platform that is
 # not listed (or a trigger not listed for it) keeps the random draw: the option is documented as supported by these clients only.
 DECISION_TRIGGERS = ("publish", "interaction")
-LLM_DECISION_SUPPORT = {  # platform type -> triggers its client supports
-    "microblogging": (
-        "publish",
-        "interaction",
-    ),  # YClient (Standard); the HPC simulator below
-    "forum": ("publish", "interaction"),
-    "photo_sharing": ("publish", "interaction"),
-    "instant_messaging": ("publish", "interaction"),
-    "dating": (
-        "publish",
-    ),  # profile updates only: match stories are not content of others
-}
-LLM_DECISION_SUPPORT_HPC = {
-    "microblogging": ("publish",)
-}  # YSimulator: shares are not exported
 
 
 @dataclass(frozen=True)
@@ -600,7 +595,7 @@ def values_from_options(options, members=None) -> dict:
     out["crosspost_decision_triggers"] = decision_triggers_of(options)
     probability = (options.get("crosspost") or {}).get("probability") or {}
     names = (
-        list(members) if members is not None else list(PLATFORMS)
+        list(members) if members is not None else platform_types()
     )  # member names (P15); every platform type by default
     for src in names:
         for dst in names:
@@ -620,7 +615,7 @@ def values_from_options(options, members=None) -> dict:
         out[f"membership_p__{m}"] = "" if v is None else fmt(v)
     out["provisioning_members"] = [
         m
-        for m in PROVISIONABLE
+        for m in provisionable()
         if m in ((options.get("provisioning") or {}).get("members") or [])
     ]
     return out
@@ -660,7 +655,7 @@ def values_from_form(form) -> dict:
         out["membership_initial"] = form.get("membership_initial")
     if form.get("provisioning_present"):
         out["provisioning_members"] = [
-            m for m in form.getlist("provisioning_members") if m in PROVISIONABLE
+            m for m in form.getlist("provisioning_members") if m in provisionable()
         ]
     return out
 
@@ -840,12 +835,12 @@ def _apply_membership(form, base, options, members, errors):
 def _apply_provisioning(form, base, options):
     if not form.get("provisioning_present"):
         return
-    chosen = [m for m in form.getlist("provisioning_members") if m in PROVISIONABLE]
+    chosen = [m for m in form.getlist("provisioning_members") if m in provisionable()]
     stored = _get(base, ("provisioning", "members"), []) or []
     kept = [
-        m for m in stored if isinstance(m, str) and m not in PROVISIONABLE
+        m for m in stored if isinstance(m, str) and m not in provisionable()
     ]  # members this page cannot show stay
-    members = [m for m in PROVISIONABLE if m in chosen] + kept
+    members = [m for m in provisionable() if m in chosen] + kept
     if members == stored:
         return
     if members:
@@ -1072,9 +1067,7 @@ def _positive(value) -> bool:
 
 def llm_decision_support(platform, simulator_type=None) -> tuple:
     """The triggers the client of ``platform`` supports when the agent decides with its LLM (empty: it keeps the random draw)."""
-    if (simulator_type or "") == "HPC" and platform in LLM_DECISION_SUPPORT_HPC:
-        return LLM_DECISION_SUPPORT_HPC[platform]
-    return LLM_DECISION_SUPPORT.get(platform, ())
+    return traits.decision_triggers(platform, simulator_type)
 
 
 def llm_decision_notes(platforms=None) -> list:
@@ -1083,11 +1076,11 @@ def llm_decision_notes(platforms=None) -> list:
     The note of a platform names what is not supported (an empty note: both events are).
     """
     rows = []
-    for platform in (platforms if platforms is not None else PLATFORMS):
+    for platform in (platforms if platforms is not None else platform_types()):
         triggers = llm_decision_support(platform)
-        hpc = LLM_DECISION_SUPPORT_HPC.get(platform)
+        hpc = traits.decision_triggers(platform, "HPC")
         missing = [t for t in DECISION_TRIGGERS if t not in triggers]
-        if hpc is not None and any(t not in hpc for t in triggers):
+        if hpc and any(t not in hpc for t in triggers):
             note = _("with the HPC simulator only when publishing")
         elif not triggers:
             note = _("not supported: the random draw is used")
@@ -1123,7 +1116,7 @@ def effective_crosspost(options, members=None) -> dict:
     crosspost = crosspost if isinstance(crosspost, dict) else {}
     stored = crosspost.get("probability") or {}
     stored = stored if isinstance(stored, dict) else {}
-    names = list(members) if members is not None else list(PLATFORMS)
+    names = list(members) if members is not None else platform_types()
     probability = {
         f"{s}->{d}": DEFAULT_PAIR_PROBABILITY for s in names for d in names if s != d
     }

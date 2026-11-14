@@ -86,6 +86,36 @@ class HpcClientForm(SimpleNamespace):
 
 
 @dataclass(frozen=True)
+class FederationTraits:
+    """What the World Simulation (federation) needs to know about a platform; a platform that has none cannot be a member.
+
+    The paths and queries are those of the platform's own pages and server database. ``simulators`` lists the runtimes
+    the platform can federate on; a provider that does not serve a runtime leaves it out.
+    """
+
+    #: name of the icon of the platform in the Material Design Icons set (``mdi-...``)
+    mdi_icon: str = "mdi-web"
+    #: kind of content in ``federation_ref`` / ``source_ref`` (``post``, ``photo``, ``message``); ``None``: no content card
+    local_kind: Optional[str] = None
+    #: query ``(id, author name, author id)`` of the contents whose ids replace ``{q}``
+    author_sql: Optional[str] = None
+    #: page of a content (``{exp}``, ``{id}``, ``{author}``); ``None``: the content has no page of its own
+    content_path: Optional[str] = None
+    #: page of an account (``{exp}``, ``{account}``)
+    profile_path: Optional[str] = None
+    #: query ``(id, username)`` of one account (``?`` is its id)
+    account_sql: Optional[str] = None
+    #: longest text the platform accepts (characters)
+    text_limit: int = 280
+    #: a content needs a title: a text written as a single line gets its first sentence as the title line
+    title_line: bool = False
+    #: events the agent can decide with its LLM when it cross-posts (``publish``, ``interaction``)
+    decision_triggers: Tuple[str, ...] = ()
+    #: runtimes the platform can federate on
+    simulators: Tuple[str, ...] = (STANDARD, HPC)
+
+
+@dataclass(frozen=True)
 class StandardRuntime:
     """The Flask server/client pair that runs a platform in ``Standard`` mode (outside the HPC runtime)."""
 
@@ -123,6 +153,8 @@ class PlatformProvider:
     #: identity of the repository the provider comes from; empty means the same as ``key``. Several repositories can
     #: provide one platform ``key`` (a Standard and an HPC runtime of microblogging, say), each under its own ``id``
     id: str = ""
+    #: World Simulation traits (``None``: the platform does not take part in one)
+    federation_traits: Optional[FederationTraits] = None
     #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``
     #: must serve disjoint sets
     simulator_types: Optional[Tuple[str, ...]] = None

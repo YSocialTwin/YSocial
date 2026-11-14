@@ -28,6 +28,8 @@ from pathlib import Path
 from typing import Optional
 
 from y_web import db
+from y_web.platforms.base import STANDARD
+from y_web.src.federation import traits
 from y_web.src.hpc.platforms import find_hpc_platform
 
 MIN_MEMBERS, MAX_MEMBERS = 2, 8
@@ -56,21 +58,24 @@ CROSSPOST_CONTENT = ("own_content", "news", "images")
 CROSSPOST_CONTENT_ALIASES = {
     "own_posts": "own_content"
 }  # legacy name, accepted and normalised
-# platform_type -> simulator types allowed (D-06); None = decided by supports_federation of the HPC table
-ALLOWED_SIMULATORS = {
-    "microblogging": ("Standard", "HPC"),
-    "forum": ("Standard",),
-    "photo_sharing": ("HPC",),
-    "instant_messaging": ("HPC",),
-    "dating": ("HPC",),
-}
-# Every runtime can create an account on request (``provision_accounts``, contract-tested in each repository) and every client
-# adopts it (``adopt_federated_account``): any platform can be discovered by the agents that meet its cross-posted content.
-PROVISIONABLE = tuple(
-    (platform, simulator)
-    for platform, simulators in ALLOWED_SIMULATORS.items()
-    for simulator in simulators
-)
+
+
+def allowed_simulators() -> dict:
+    """``{platform type: runtimes it can federate on}`` (D-06), declared by the providers of the installed platforms."""
+    return traits.allowed_simulators()
+
+
+def provisionable() -> tuple:
+    """Every runtime can create an account on request (``provision_accounts``, contract-tested in each repository) and every
+    client adopts it (``adopt_federated_account``): any platform can be discovered by the agents that meet its content.
+    """
+    return tuple(
+        (platform, simulator)
+        for platform, simulators in allowed_simulators().items()
+        for simulator in simulators
+    )
+
+
 SERVER_CONFIG_NAMES = ("config_server.json", "server_config.json")
 FEDERATION_FOLDER_NAME = "federations"
 
@@ -108,10 +113,7 @@ def supports_federation(platform_type: str, simulator_type: str) -> bool:
     spec = find_hpc_platform(platform_type)
     if simulator_type == "HPC":
         return bool(spec and spec.supports_federation)
-    return platform_type in (
-        "microblogging",
-        "forum",
-    )  # Standard path: YServer and YServerReddit
+    return STANDARD in allowed_simulators().get(platform_type, ())
 
 
 def validate_members(infos) -> list:
@@ -134,7 +136,7 @@ def validate_members(infos) -> list:
             err("experiment_running", f"'{i.exp_name}' is running: stop it first.")
         if i.is_remote:
             err("remote", f"'{i.exp_name}' is a remote experiment.")
-        allowed = ALLOWED_SIMULATORS.get(i.platform_type)
+        allowed = allowed_simulators().get(i.platform_type)
         if allowed is None:
             err(
                 "platform",
@@ -615,7 +617,7 @@ def provisions(fed, row, exp) -> bool:
     return (row.member in wanted or row.platform_type in wanted) and (
         row.platform_type,
         getattr(exp, "simulator_type", None) or "Standard",
-    ) in PROVISIONABLE
+    ) in provisionable()
 
 
 def write_federation_files(fed) -> None:

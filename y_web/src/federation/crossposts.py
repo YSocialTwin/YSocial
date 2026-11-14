@@ -24,7 +24,7 @@ import re
 import sqlite3
 from typing import Dict, List, Optional
 
-from y_web.src.federation import backlinks
+from y_web.src.federation import backlinks, traits
 from y_web.src.federation.analytics_etl import SLOTS_PER_DAY
 from y_web.src.federation.profile_badges import profile_href
 
@@ -242,7 +242,7 @@ def _icon(member: Optional[dict], name: str) -> dict:
     return {
         "member": name,
         "platform_type": member["platform_type"],
-        "icon": backlinks.ICONS.get(member["platform_type"], "link"),
+        "icon": traits.icon(member["platform_type"]),
         "exp_name": member["exp_name"] or name,
         "exp_id": member["exp_id"],
         "active": member["active"],
@@ -291,7 +291,7 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
         if (
             p
             and p[0] in members
-            and backlinks.LOCAL_KIND.get(members[p[0]]["platform_type"]) == p[1]
+            and traits.local_kind(members[p[0]]["platform_type"]) == p[1]
         ):
             wanted.setdefault(p[0], set()).add(p[2])
     found = {
@@ -308,7 +308,7 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
     copies = {m: _copies(members[m], rows) for m, rows in asked.items()}
     copy_authors = {}
     for m, by in copies.items():
-        known = backlinks.LOCAL_KIND.get(members[m]["platform_type"])
+        known = traits.local_kind(members[m]["platform_type"])
         ids = [lid for kind, lid in by.values() if kind == known]
         copy_authors[m] = (
             backlinks._contents(
@@ -364,7 +364,7 @@ def _resolve(conn, raw: list, members: Dict[str, dict]) -> List[dict]:
         origin_info = members.get(origin_member)
         origin = _icon(origin_info, origin_member)
         author, author_id, href = "", "", None
-        origin_known = origin_info is not None and backlinks.LOCAL_KIND.get(
+        origin_known = origin_info is not None and traits.local_kind(
             origin_info["platform_type"]
         ) == (p[1] if p else None)
         hit = found.get(origin_member, {}).get(p[2]) if p and origin_known else None

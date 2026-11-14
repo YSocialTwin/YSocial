@@ -107,6 +107,40 @@ PHOTO_SHARING = Platform(
     ),
 )
 
+#: World Simulation tests: they put members of every runtime (Standard and HPC) of the platforms in one group
+_WORLD_SIMULATION_TESTS = (
+    "test_dashboard_world_simulation.py",
+    "test_federation_backlinks.py",
+    "test_federation_human_outbox.py",
+    "test_federation_humans.py",
+    "test_federation_lifecycle.py",
+    "test_federation_notifications.py",
+    "test_federation_optional_plugin.py",
+    "test_federation_p1.py",
+    "test_federation_participant_texts.py",
+    "test_federation_profile_badges.py",
+    "test_federation_quoted_flag.py",
+    "test_federation_quotes.py",
+    "test_federation_service.py",
+    "test_world_simulation_agents.py",
+    "test_world_simulation_analytics.py",
+    "test_world_simulation_crosspost_agent_action.py",
+    "test_world_simulation_crosspost_content.py",
+    "test_world_simulation_crosspost_warning.py",
+    "test_world_simulation_crossposts.py",
+    "test_world_simulation_frontends.py",
+    "test_world_simulation_humans_lifecycle.py",
+    "test_world_simulation_humans_ui.py",
+    "test_world_simulation_import.py",
+    "test_world_simulation_lifecycle.py",
+    "test_world_simulation_member_health.py",
+    "test_world_simulation_options_form.py",
+    "test_world_simulation_pseudonyms.py",
+    "test_world_simulation_same_platform.py",
+    "test_world_simulation_schedule.py",
+    "test_world_simulation_ui.py",
+)
+
 #: tests of the part of the forum library that both forum repositories carry (``y_web.src.forum``)
 _FORUM_LIBRARY_TESTS = (
     "test_forum_community_icons.py",
@@ -142,7 +176,8 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
         "test_api_reddit_blueprint.py",
         "test_forum_feed_sidebar.py",
         "test_forum_search_suggest.py",
-    ),
+    )
+    + _WORLD_SIMULATION_TESTS,
     needs_any=_FORUM_LIBRARY_TESTS,
 )
 
@@ -159,6 +194,7 @@ FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next
         sorted(path.name for path in Path(__file__).parent.glob("test_forum_hpc*.py"))
     )
     + (
+        "test_forum_plugin_listing.py",
         "test_hpc_client_failure_alert.py",
         "test_forum_client_config.py",
         "test_forum_communities_config.py",
@@ -166,7 +202,8 @@ FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next
         "test_forum_experiment_config.py",
         "test_forum_reddit_ui_templates.py",
         "test_forum_roster.py",
-    ),
+    )
+    + _WORLD_SIMULATION_TESTS,
     needs_any=_FORUM_LIBRARY_TESTS,
 )
 
@@ -187,7 +224,8 @@ MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer
         "test_phaseT5_css_extraction.py",
         "test_trending_hashtag_prefix.py",
         "test_training_modules_baseline_access.py",
-    ),
+    )
+    + _WORLD_SIMULATION_TESTS,
     needs_any=_MICROBLOGGING_TESTS,
 )
 
@@ -199,6 +237,7 @@ MICROBLOGGING_HPC = Platform(  # the HPC runtime of the same platform: its route
     provider_class="Microblogging",
     provider_id="microblogging",
     routes=("routes.social_microblogging", "routes.interactions_microblogging"),
+    needs=_WORLD_SIMULATION_TESTS,
     needs_any=_MICROBLOGGING_TESTS,
 )
 

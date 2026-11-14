@@ -269,7 +269,14 @@ def test_the_handle_lookup_is_read_only_and_tolerates_a_missing_database(
         pb._handle(None, "forum", "1") is None
         and pb._handle(Exps.query.get(exps["forum"]), "unknown", "1") is None
     )
-    assert set(pb.USERNAME_SQL) == set(pb.PROFILE_PATHS)
+    from y_web.src.federation import traits
+
+    for (
+        key
+    ) in (
+        traits.platforms()
+    ):  # every platform that can be a member says where its accounts are
+        assert traits.account_sql(key) and traits.profile_path(key), key
 
 
 def test_a_person_is_shown_only_where_the_account_exists(world):
@@ -433,7 +440,13 @@ def test_each_variant_reuses_the_components_of_its_frontend():
 
 @pytest.mark.parametrize("name", ["microblogging", "forum", "photo", "dating", "im"])
 def test_every_profile_page_includes_the_badges(name):
-    text = open(os.path.join(TEMPLATES, name, "profile.html"), encoding="utf-8").read()
+    from pathlib import Path
+
+    from y_web.tests._platform_repos import template_file
+
+    text = template_file(Path(TEMPLATES), f"{name}/profile.html").read_text(
+        encoding="utf-8"
+    )
     assert "shared/world_simulation_profile_badges.html" in text
     variant = {
         "microblogging": "microblogging",
@@ -462,6 +475,34 @@ def test_every_variant_has_its_style_in_the_stylesheet_of_its_frontend(name):
         text = platform_static_path("YDating", "css/dating.css").read_text(
             encoding="utf-8"
         )
+    elif (
+        name == "im"
+    ):  # the instant messaging frontend is in the YInstantMessaging repository
+        from y_web.tests._platform_repos import platform_static_path
+
+        text = platform_static_path("YInstantMessaging", "css/im.css").read_text(
+            encoding="utf-8"
+        )
+    elif (
+        name == "forum"
+    ):  # the forum frontend is in the forum repositories (either carries the stylesheet)
+        import pytest
+
+        from y_web.tests._platform_repos import EXTERNAL
+
+        found = [
+            EXTERNAL
+            / repo
+            / "ysocial_platform"
+            / "static"
+            / "css"
+            / "forum-components.css"
+            for repo in ("YForum", "YServerReddit")
+        ]
+        found = [path for path in found if path.is_file()]
+        if not found:
+            pytest.skip("neither YForum nor YServerReddit is installed")
+        text = found[0].read_text(encoding="utf-8")
     else:
         text = open(
             os.path.join(TEMPLATES, "..", "static", "assets", "css", css),

@@ -253,9 +253,11 @@ def test_link_and_image_link_posts_hide_the_also_post_on_box():
         and "#image-url" in js
         and "data-ws-crosspost" in js
     )
+    from y_web.tests._platform_repos import forum_file, microblogging_file
+
     for route in (
-        "y_web/routes/interactions/forum.py",
-        "y_web/routes/interactions/microblogging.py",
+        forum_file("y_web/routes/interactions/forum.py"),
+        microblogging_file("y_web/routes/interactions/microblogging.py"),
     ):
         assert "if not url" in pathlib.Path(route).read_text(
             encoding="utf-8"

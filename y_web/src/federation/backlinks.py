@@ -24,48 +24,12 @@ import sqlite3
 from typing import Dict, List, Optional
 
 from y_web import db
+from y_web.src.federation import traits
 
 MAX_ROWS = 2000  # cross-posted contents of one experiment that are resolved per request
 MAX_COPIES = 10  # copies listed for one origin content
 SQL_CHUNK = 400
 
-PLATFORM_LABELS = {
-    "microblogging": "Microblogging",
-    "forum": "Forum",
-    "photo_sharing": "Photo sharing",
-    "instant_messaging": "Instant messaging",
-    "dating": "Dating",
-}
-# name of the icon of the platform (drawn by the partial)
-ICONS = {
-    "microblogging": "message-circle",
-    "forum": "message-square",
-    "photo_sharing": "camera",
-    "instant_messaging": "send",
-    "dating": "heart",
-}
-# kind of content of each platform in ``federation_ref`` / in the ``source_ref`` (dating has no post card)
-LOCAL_KIND = {
-    "microblogging": "post",
-    "forum": "post",
-    "photo_sharing": "photo",
-    "instant_messaging": "message",
-}
-# where to read the author of a content: (id, author name, author id) of the contents asked
-AUTHOR_SQL = {
-    "microblogging": "SELECT p.id, u.username, p.user_id FROM post p LEFT JOIN user_mgmt u ON u.id = p.user_id WHERE p.id IN ({q})",
-    "forum": "SELECT p.id, u.username, p.user_id FROM post p LEFT JOIN user_mgmt u ON u.id = p.user_id WHERE p.id IN ({q})",
-    "photo_sharing": "SELECT p.id, u.username, p.user_id FROM photos p LEFT JOIN user_mgmt u ON u.id = p.user_id WHERE p.id IN ({q})",
-    "instant_messaging": "SELECT m.id, a.username, m.sender_account_id FROM messages m LEFT JOIN accounts a ON a.id = m.sender_account_id WHERE m.id IN ({q})",
-}
-# the page of a content in the web interface (same conventions as ``profile_badges.PROFILE_PATHS``)
-CONTENT_PATHS = {
-    "microblogging": "/{exp}/thread/{id}",
-    "forum": "/{exp}/rthread/{id}",
-    "instant_messaging": "/{exp}/im/thread/{id}",
-    # a photo has no page of its own: the profile of the author shows it, the anchor is the card of the photo
-    "photo_sharing": "/{exp}/photo/profile/{author}/recent/1#feed-post-{id}",
-}
 _REF = re.compile(r"^ysocial://[^/]+/([^/]+)/([a-z_]+)/(.+)$")
 
 
@@ -76,8 +40,8 @@ def parse_ref(source_ref) -> Optional[tuple]:
 
 
 def content_href(platform_type: str, exp_id, local_id, author_id=None) -> Optional[str]:
-    path = CONTENT_PATHS.get(platform_type)
-    if not path or (platform_type == "photo_sharing" and author_id in (None, "")):
+    path = traits.content_path(platform_type)
+    if not path or ("{author}" in path and author_id in (None, "")):
         return None
     return path.format(exp=int(exp_id), id=local_id, author=author_id)
 
@@ -105,7 +69,7 @@ def _query(path, sql, params=()) -> list:
 
 def _contents(path, platform_type, ids) -> Dict[str, tuple]:
     """``{id (str): (author name, author id)}`` of the contents that exist among ``ids`` (removed ones are absent)."""
-    sql = AUTHOR_SQL.get(platform_type)
+    sql = traits.author_sql(platform_type)
     ids = sorted({str(i) for i in ids})
     out: Dict[str, tuple] = {}
     if not sql:
@@ -161,10 +125,10 @@ def _info(member, kind, found, local_id) -> dict:
         "member": member["member"],
         "platform_type": ptype,
         "label": member["exp_name"] or member["member"].replace("_", " ").capitalize(),
-        "type_label": PLATFORM_LABELS.get(
+        "type_label": traits.label(
             ptype, member["member"].replace("_", " ").capitalize()
         ),
-        "icon": ICONS.get(ptype, "link"),
+        "icon": traits.icon(ptype),
         "exp_id": member["exp_id"],
         "exp_name": member["exp_name"],
         "kind": kind,
@@ -178,7 +142,7 @@ def _info(member, kind, found, local_id) -> dict:
 def _origins(world) -> Dict[str, dict]:
     """``{local id: origin}`` for every cross-posted content of the experiment (one read of its ``federation_ref``)."""
     me = world["members"][world["own"]]
-    kind = LOCAL_KIND.get(me["platform_type"])
+    kind = traits.local_kind(me["platform_type"])
     if kind is None:
         return {}
     rows = _query(
@@ -198,7 +162,7 @@ def _origins(world) -> Dict[str, dict]:
     out: Dict[str, dict] = {}
     for name, items in wanted.items():
         member = world["members"][name]
-        known = LOCAL_KIND.get(member["platform_type"])
+        known = traits.local_kind(member["platform_type"])
         found = _contents(
             _db_path(member["exp"]),
             member["platform_type"],
@@ -214,7 +178,7 @@ def _origins(world) -> Dict[str, dict]:
 def _copies(world) -> Dict[str, List[dict]]:
     """``{origin content id: [copy, ...]}``: where the contents of the experiment were cross-posted on the other platforms."""
     me = world["members"][world["own"]]
-    kind = LOCAL_KIND.get(me["platform_type"])
+    kind = traits.local_kind(me["platform_type"])
     if kind is None:
         return {}
     out: Dict[str, List[dict]] = {}
@@ -234,7 +198,7 @@ def _copies(world) -> Dict[str, List[dict]]:
         mine = [
             (lid, p) for lid, p in mine if p and p[0] == world["own"] and p[1] == kind
         ]
-        known = LOCAL_KIND.get(member["platform_type"])
+        known = traits.local_kind(member["platform_type"])
         found = (
             _contents(path, member["platform_type"], [lid for lid, _p in mine])
             if known

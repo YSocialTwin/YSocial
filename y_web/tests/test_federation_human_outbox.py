@@ -38,8 +38,11 @@ def test_rule_text_is_the_rule_of_the_agents_clients():
     spec = importlib.util.spec_from_file_location("client_federation", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    assert mod.LIMITS == ho.LIMITS
-    for dest in ho.LIMITS:
+    from y_web.src.federation import traits
+
+    limits = {key: traits.text_limit(key) for key in traits.platforms()}
+    assert mod.LIMITS == limits
+    for dest in limits:
         for text in (
             "hello world",
             "A title here. Then the body, long " * 20,

@@ -608,7 +608,7 @@ def test_the_decision_keys_are_covered_and_not_listed_as_unknown():
 
 
 def test_the_registry_of_the_platforms_that_support_the_llm_decision():
-    for platform in schema.PLATFORMS:
+    for platform in schema.platform_types():
         assert schema.llm_decision_support(
             platform
         )  # every client supports at least the publish trigger
@@ -638,7 +638,7 @@ def test_with_the_agent_deciding_a_zero_propensity_is_not_a_silent_failure():
         {"crosspost": {"propensity": 0, "mode": "agent_action"}}
     ) == ["propensity"]
     values = schema.values_from_options(options)
-    assert schema.crosspost_causes_from_values(values, schema.PLATFORMS) == []
+    assert schema.crosspost_causes_from_values(values, schema.platform_types()) == []
 
 
 def test_the_pages_show_the_decision_controls_and_the_support_note(site):

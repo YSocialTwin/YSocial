@@ -19,17 +19,9 @@ from typing import Dict, List, Optional
 import requests
 
 from y_web import db
-from y_web.src.federation import service
+from y_web.src.federation import service, traits
 from y_web.src.federation.humans import members_state
 
-# Longest text each destination accepts (characters); keep in step with YClient/y_client/federation.py
-LIMITS = {
-    "microblogging": 280,
-    "forum": 2000,
-    "photo_sharing": 300,
-    "instant_messaging": 400,
-    "dating": 200,
-}
 MAX_TARGETS = 8
 
 
@@ -42,16 +34,13 @@ def _cut(text: str, limit: int) -> str:
 
 
 def rule_text(dest_platform: str, text) -> str:
-    """The person's words for the destination: the same words, shaped and cut for the platform (a forum gets a title)."""
-    text = (
-        " ".join(str(text or "").split())
-        if dest_platform != "forum"
-        else str(text or "").strip()
-    )
-    if dest_platform == "forum" and "\n" not in text:
+    """The person's words for the destination: the same words, shaped and cut for the platform (some get a title line)."""
+    titled = traits.title_line(dest_platform)
+    text = str(text or "").strip() if titled else " ".join(str(text or "").split())
+    if titled and "\n" not in text:
         title = _cut(re.split(r"(?<=[.!?])\s", text, maxsplit=1)[0], 80)
-        return f"{title}\n{text}"[: LIMITS["forum"]]
-    return _cut(text, LIMITS.get(dest_platform, 280))
+        return f"{title}\n{text}"[: traits.text_limit(dest_platform)]
+    return _cut(text, traits.text_limit(dest_platform))
 
 
 @dataclass
@@ -167,11 +156,11 @@ def edited_text(dest_platform: str, text) -> str:
     text = str(text or "").strip()
     if not text:
         return ""
-    if dest_platform == "forum":
+    if traits.title_line(dest_platform):
         return rule_text(
-            "forum", text
+            dest_platform, text
         )  # a title line is added when the person wrote a single line
-    return _cut(" ".join(text.split()), LIMITS.get(dest_platform, 280))
+    return _cut(" ".join(text.split()), traits.text_limit(dest_platform))
 
 
 def suggested_texts(ctx: HumanContext, text, members=None) -> Dict[str, str]:
@@ -191,7 +180,7 @@ def suggestions_for(exp_id, user_id, text, members=None) -> dict:
     if ctx is None:
         return {}
     return {
-        m: {"text": t, "limit": LIMITS.get(ctx.destinations[m], 280)}
+        m: {"text": t, "limit": traits.text_limit(ctx.destinations[m])}
         for m, t in suggested_texts(ctx, text, members).items()
     }
 

@@ -88,6 +88,10 @@ The tests follow the same rule:
 `hpc-only`, `microblogging-only`, `forum-only`, one repository left out each, `none`) and puts the repositories back when
 it ends. `MATRIX_SELECT='forum|platform'` limits it to the tests whose file name matches.
 
+## Federation traits
+
+A platform that takes part in world simulations declares `federation_traits = FederationTraits(...)` on its provider (`PLATFORM_API` 1.2): `mdi_icon`, `local_kind`, `author_sql`, `content_path`, `profile_path`, `account_sql`, `text_limit`, `title_line`, `decision_triggers` and `simulators`. The core reads them through `y_web.src.federation.traits`; a provider without traits is simply not offered for federation.
+
 ## What still names a platform in the core
 
 The shared feed administration (`experiments/_feeds.py`, used by forum, instant messaging and photo sharing), the

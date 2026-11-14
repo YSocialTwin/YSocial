@@ -390,7 +390,11 @@ def test_the_partial_is_empty_for_other_content():
     ],
 )
 def test_every_post_card_includes_the_back_link(name, key):
-    text = open(os.path.join(TEMPLATES, name), encoding="utf-8").read()
+    from pathlib import Path
+
+    from y_web.tests._platform_repos import template_file
+
+    text = template_file(Path(TEMPLATES), name).read_text(encoding="utf-8")
     assert (
         "{% set ws_id = "
         + key

@@ -6,6 +6,9 @@
     "CreationRules": {
       "kind": "class"
     },
+    "FederationTraits": {
+      "kind": "class"
+    },
     "FormSectionError": {
       "kind": "class"
     },
@@ -242,7 +245,7 @@
       }
     }
   },
-  "platform_api": "1.1",
+  "platform_api": "1.2",
   "provider_hooks": {
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
     "after_opinion_distribution_saved": "(self, context: 'dict') -> 'None'",

@@ -50,30 +50,35 @@ def test_the_also_post_on_box_shows_only_enrolled_destinations(world):
 def test_the_composers_include_the_box_and_the_scripts_send_the_selection():
     import pathlib
 
+    from y_web.tests._platform_repos import template_file
+
     for template, anchor in (
         ("microblogging/feed.html", "ws_exp = exp_id"),
         ("forum/feed.html", "ws_exp = exp_id"),
         ("photo/base.html", "ws_exp = exp_id"),
         ("im/_menu.html", "ws_exp = exp.idexp"),
     ):
-        assert anchor in pathlib.Path("y_web/templates", template).read_text(
-            encoding="utf-8"
-        ), template
+        assert anchor in template_file(
+            pathlib.Path("y_web/templates"), template
+        ).read_text(encoding="utf-8"), template
     dating = pathlib.Path(
         "external/YDating/ysocial_platform/templates/participant/base.html"
     )
     if dating.exists():  # the page belongs to the YDating repository
         assert "ws_exp = exp.idexp" in dating.read_text(encoding="utf-8")
-    for script in (
-        "async_updates.js",
-        "photo-overlays.js",
-        "im-participant.js",
-        "reddit/api_client.js",
-    ):
-        assert "wsCrosspost" in pathlib.Path(
-            "y_web/static/assets/js", script
-        ).read_text(encoding="utf-8"), script
+    assert "wsCrosspost" in pathlib.Path(
+        "y_web/static/assets/js/async_updates.js"
+    ).read_text(encoding="utf-8")
     from y_web.tests._platform_repos import platform_static_path
+
+    for repo, script in (
+        ("YPhotoSharing", "js/photo-overlays.js"),
+        ("YInstantMessaging", "js/im-participant.js"),
+        ("YForum", "js/api_client.js"),
+    ):
+        assert "wsCrosspost" in platform_static_path(repo, script).read_text(
+            encoding="utf-8"
+        ), script
 
     assert "wsCrosspost" in platform_static_path(
         "YDating", "js/dating-participant.js"

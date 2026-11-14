@@ -17,6 +17,7 @@ from y_web.platforms.base import (
     HPC,
     STANDARD,
     CreationRules,
+    FederationTraits,
     FormSectionError,
     HpcClientForm,
     PlatformConfigError,
@@ -31,6 +32,7 @@ from y_web.sdk.version import PLATFORM_API
 __all__ = [
     "COMMON_FRONTEND_CAPABILITIES",
     "CreationRules",
+    "FederationTraits",
     "FormSectionError",
     "HPC",
     "HpcClientForm",

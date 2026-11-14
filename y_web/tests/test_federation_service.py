@@ -788,10 +788,10 @@ def test_member_sections_carry_the_decision_only_when_the_agent_decides(world):
 
 
 def test_a_platform_without_support_does_not_get_the_decision(world, monkeypatch):
-    from y_web.src.federation import options_schema as schema
+    from y_web.src.federation import traits
 
     app, exps, tmp = world
-    monkeypatch.setattr(schema, "LLM_DECISION_SUPPORT", {})
+    monkeypatch.setattr(traits, "decision_triggers", lambda *args, **kwargs: ())
     fed = service.create_federation(
         "nosupport",
         list(exps.values()),

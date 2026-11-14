@@ -12,16 +12,11 @@ from __future__ import annotations
 
 import sqlite3
 
+from y_web.src.federation import traits
+
 # Local id column of federation_quoted in each runtime (YServer/YServerReddit: post_id, YPhotoSharing: photo_id,
 # YInstantMessaging: message_id, YDating: local_id).
 ID_COLUMNS = ("post_id", "photo_id", "message_id", "local_id")
-PLATFORM_LABELS = {
-    "microblogging": "Microblogging",
-    "forum": "Forum",
-    "photo_sharing": "Photo sharing",
-    "instant_messaging": "Instant messaging",
-    "dating": "Dating",
-}
 MAX_ROWS = 5000
 
 
@@ -30,7 +25,7 @@ def platform_label(member, names=None) -> str:
     member, otherwise the member name (spelled as a platform type when it is one)."""
     if names and names.get(str(member)):
         return names[str(member)]
-    return PLATFORM_LABELS.get(str(member), str(member))
+    return traits.label(str(member))
 
 
 def read_quotes(path, names=None) -> dict:

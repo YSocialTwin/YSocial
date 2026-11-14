@@ -157,7 +157,7 @@
             <span class="ws-default">{{ _('Default') }}: {{ _('None') }}</span></span>
         <span class="right ws-checks">
             <input type="hidden" name="provisioning_present" value="1">
-            {% for m in schema.PROVISIONABLE %}
+            {% for m in schema.provisionable() %}
             <label class="ws-check"><input type="checkbox" name="provisioning_members" value="{{ m }}" {{ 'checked' if m in values['provisioning_members'] }}> {{ _(platform_labels[m]) }}</label>
             {% endfor %}
         </span>

@@ -19,23 +19,12 @@ import sqlite3
 from typing import Dict, List, Optional
 
 from y_web import db
-from y_web.src.federation.backlinks import (
-    ICONS,  # icon of each platform type (``shared/world_simulation_icon.html``)
-)
+from y_web.src.federation import traits
 from y_web.src.federation.names import label_of, names_of
-
-# the profile page of an account on each platform (see the routes of ``y_web/routes/social``)
-PROFILE_PATHS = {
-    "microblogging": "/{exp}/profile/{account}/recent/1",
-    "forum": "/{exp}/profile/{account}/recent/1",
-    "photo_sharing": "/{exp}/photo/profile/{account}/recent/1",
-    "instant_messaging": "/{exp}/im/profile/{account}",
-    "dating": "/{exp}/dating/profile/{account}",
-}
 
 
 def profile_href(platform_type: str, exp_id, account_id) -> Optional[str]:
-    path = PROFILE_PATHS.get(platform_type)
+    path = traits.profile_path(platform_type)
     return path.format(exp=int(exp_id), account=str(account_id)) if path else None
 
 
@@ -64,19 +53,11 @@ def _rows(folder) -> Optional[List[tuple]]:
 
 
 MAX_BADGES = 24  # chips of one profile page
-# where each platform keeps the username of an account (read to show the handle of the other platforms)
-USERNAME_SQL = {
-    "microblogging": "SELECT id, username FROM user_mgmt WHERE id = ?",
-    "forum": "SELECT id, username FROM user_mgmt WHERE id = ?",
-    "photo_sharing": "SELECT id, username FROM user_mgmt WHERE id = ?",
-    "dating": "SELECT id, username FROM user_mgmt WHERE id = ?",
-    "instant_messaging": "SELECT id, username FROM accounts WHERE id = ?",
-}
 
 
 def _handle(exp, platform_type, account) -> Optional[str]:
     """The username of ``account`` on the experiment ``exp`` (read-only), or ``None`` when it cannot be read."""
-    sql = USERNAME_SQL.get(platform_type)
+    sql = traits.account_sql(platform_type)
     if not sql or exp is None:
         return None
     from y_web.src.federation.backlinks import _db_path, _query
@@ -211,7 +192,7 @@ def badges_for(exp_id, account_id) -> List[dict]:
                 "platform_type": member.platform_type,
                 "exp_id": member.exp_id,
                 "label": label_of(names, name),
-                "icon": ICONS.get(member.platform_type, "link"),
+                "icon": traits.icon(member.platform_type),
                 "href": path if exp is not None and exp.status == 1 else None,
                 "state": state,
                 "active": state == "active",
