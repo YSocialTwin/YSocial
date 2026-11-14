@@ -46,7 +46,23 @@ def test_language_defaults_to_unset_and_fixed(suites_app, logged):
     assert _resolve(suites_app, exp) == (None, False)
 
 
-@pytest.mark.parametrize("platform", ["microblogging", "forum", "photo_sharing"])
+needs_forum_repository = pytest.mark.skipif(
+    not (
+        _platform_alias.installed(_platform_alias.FORUM)
+        or _platform_alias.installed(_platform_alias.FORUM_HPC)
+    ),
+    reason="neither YServerReddit nor YForum is installed",
+)
+
+
+@pytest.mark.parametrize(
+    "platform",
+    [
+        "microblogging",
+        pytest.param("forum", marks=needs_forum_repository),
+        "photo_sharing",
+    ],
+)
 def test_saved_language_reaches_the_resolver(suites_app, logged, platform):
     exp = _exp(suites_app, platform, f"lang-{platform}")
     _save(logged, exp, language="it", language_switch_allowed=True)
@@ -55,6 +71,7 @@ def test_saved_language_reaches_the_resolver(suites_app, logged, platform):
     assert _resolve(suites_app, exp) == ("it", False)
 
 
+@needs_forum_repository
 def test_unsupported_language_is_discarded(suites_app, logged):
     exp = _exp(suites_app, "forum", "lang-bad")
     _save(logged, exp, language="xx")

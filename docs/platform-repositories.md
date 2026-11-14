@@ -67,6 +67,27 @@ is regenerated with `UPDATE_SDK_API=1`.
 4. In the tests, add the repository to `y_web/tests/_platform_alias.py` (`needs` lists the tests that cannot run without
    it) so that the suite runs with and without it.
 
+## Several repositories for one platform
+
+Microblogging and the forum each have two repositories, one per runtime: YServer / YServerReddit (the Standard
+runtime, a Flask pair with YClient / YClientReddit) and YSimulator / YForum (the HPC runtime). Each carries the pages,
+library and templates it needs, so any subset of them can be installed: the providers are variants of one platform
+(`simulator_types` tells which runtime each serves), the addresses both serve go through the route dispatcher, and the
+experiment decides which provider answers. A platform with no repository for the runtime of an experiment does not offer
+that runtime.
+
+The tests follow the same rule:
+
+* a test that reads or imports one repository is skipped (single test: `requires_platform("YServer")`) or not collected
+  (whole file: `needs` in `y_web/tests/_platform_alias.py`) where it is absent;
+* a file that works with either repository of a platform is listed in `needs_any`;
+* `y_web/tests/data/platform_baseline/moved.json` says which repository serves each route and template that left the
+  core, so the baseline is checked only for the repositories that are installed.
+
+`scripts/dev/run_install_matrix.sh` runs the suite with a repository subset at a time (`all`, `standard-only`,
+`hpc-only`, `microblogging-only`, `forum-only`, one repository left out each, `none`) and puts the repositories back when
+it ends. `MATRIX_SELECT='forum|platform'` limits it to the tests whose file name matches.
+
 ## What still names a platform in the core
 
 The shared feed administration (`experiments/_feeds.py`, used by forum, instant messaging and photo sharing), the

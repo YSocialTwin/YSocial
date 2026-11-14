@@ -6,6 +6,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from y_web.tests._platform_repos import requires_platform
+
 EXT = Path(__file__).resolve().parents[2] / "external"
 A = EXT / "YClient/y_client/topic_sampling.py"
 B = EXT / "YClientReddit/y_client/topic_sampling.py"
@@ -53,19 +55,26 @@ def test_missing_count_is_uniform():
     assert 0.4 < picks.count(0) / 2000 < 0.6
 
 
+def _servers():
+    return [r for r in ("YServer", "YServerReddit") if (EXT / r).is_dir()] or [
+        pytest.skip("neither YServer nor YServerReddit is installed")
+    ]
+
+
 def test_servers_return_count_and_window_is_moving():
-    for rel in ("YServer", "YServerReddit"):
+    for rel in _servers():
         src = (EXT / rel / "y_server/routes/user_managment.py").read_text()
         assert '"count": int(interest[2])' in src
         assert "base_rounds = max(0, round_id - time_window)" in src
 
 
 def test_servers_do_not_truncate_to_n_interests():
-    for rel in ("YServer", "YServerReddit"):
+    for rel in _servers():
         src = (EXT / rel / "y_server/routes/user_managment.py").read_text()
         assert ".limit(n_interests)" not in src
 
 
+@requires_platform("YSimulator")
 def test_hpc_selectors_use_counts():
     base = EXT / "YSimulator/YSimulator/YClient"
     for rel in ("agent_management/agent_selector.py", "agent_manager.py"):

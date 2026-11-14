@@ -196,7 +196,7 @@ def test_ensure_image_post_module_in_config_keeps_microblogging_without_image_po
     assert config["modules"] == ["news", "voting", "image"]
 
 
-@requires_platform("YForum")
+@requires_platform("YServerReddit")
 def test_ensure_image_post_module_in_config_backfills_forum_config():
     """Forum configs still need image_post because YServerReddit exposes that module."""
     with tempfile.TemporaryDirectory() as tmpdir:

@@ -210,6 +210,7 @@ def test_communities_directory_wiring():
     )
 
 
+@requires_platform("YServerReddit")
 def test_community_match_score_is_smart():
     from y_web.routes.social.forum import _community_match_score, _search_tokens
 

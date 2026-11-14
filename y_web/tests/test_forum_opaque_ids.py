@@ -8,6 +8,7 @@ from flask import Flask
 from y_web import db
 from y_web.src.commons.hot_rank import rank_posts_longtail
 from y_web.src.commons.ids import opaque_id
+from y_web.tests._platform_repos import requires_platform
 
 
 def test_opaque_id_keeps_ints_and_uuids():
@@ -259,6 +260,7 @@ def test_forum_templates_never_write_ids_unquoted_into_javascript():
     assert not bad, bad
 
 
+@requires_platform("YServerReddit")
 def test_api_routes_accept_uuid_ids():
     from y_web.routes.api.reddit import _opaque_payload_id
 

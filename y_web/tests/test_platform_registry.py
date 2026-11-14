@@ -17,10 +17,14 @@ needs_im = pytest.mark.skipif(
 )
 needs_micro = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.MICROBLOGGING),
-    reason="YSimulator is not installed",
+    reason="YServer is not installed",
 )
 needs_forum = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.FORUM),
+    reason="YServerReddit is not installed",
+)
+needs_forum_hpc = pytest.mark.skipif(
+    not _platform_alias.installed(_platform_alias.FORUM_HPC),
     reason="YForum is not installed",
 )
 #: the tests that compare the tables of every platform need every repository (a test of one platform alone uses its mark)
@@ -28,11 +32,13 @@ needs_dating = pytest.mark.skipif(
     not (
         _platform_alias.installed(_platform_alias.DATING)
         and _platform_alias.installed(_platform_alias.FORUM)
+        and _platform_alias.installed(_platform_alias.FORUM_HPC)
+        and _platform_alias.installed(_platform_alias.MICROBLOGGING_HPC)
         and _platform_alias.installed(_platform_alias.INSTANT_MESSAGING)
         and _platform_alias.installed(_platform_alias.PHOTO_SHARING)
         and _platform_alias.installed(_platform_alias.MICROBLOGGING)
     ),
-    reason="YDating, YForum, YInstantMessaging, YPhotoSharing and YSimulator are not all installed",
+    reason="YDating, YForum, YInstantMessaging, YPhotoSharing, YServer, YServerReddit and YSimulator are not all installed",
 )
 _needs_dating_only = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.DATING),
@@ -153,7 +159,11 @@ REACHABLE = (
         for simulator in ("Standard", "HPC")
     ]
     + [
-        pytest.param("forum", simulator, marks=needs_forum)
+        pytest.param(
+            "forum",
+            simulator,
+            marks=needs_forum if simulator == "Standard" else needs_forum_hpc,
+        )
         for simulator in ("Standard", "HPC")
     ]
     + [pytest.param("photo_sharing", "HPC", marks=needs_photo)]
@@ -252,6 +262,9 @@ def test_experiment_prompt_hooks_match_the_previous_platform_logic():
     for platform in registry.keys() + ["unknown"]:
         for simulator in ("Standard", "HPC"):
             provider = registry.resolve(platform, simulator)
+            types = provider.simulator_types
+            if types is not None and simulator not in types:
+                continue  # no repository installed for that runtime: the platform has no pages for it
             assert provider.prompts_page(simulator) == _legacy_prompts_page(
                 platform, simulator
             ), (platform, simulator)
@@ -261,7 +274,9 @@ def test_experiment_prompt_hooks_match_the_previous_platform_logic():
         modules = ["news", "voting", "image"] + (
             ["image_post"] if platform == "forum" else []
         )
-        assert list(registry.resolve(platform, "Standard").server_modules) == modules
+        provider = registry.resolve(platform, "Standard")
+        if provider.simulator_types is None or "Standard" in provider.simulator_types:
+            assert list(provider.server_modules) == modules
 
 
 @needs_dating
@@ -568,7 +583,7 @@ def test_generic_hpc_server_config_passes_the_request_to_the_generator(monkeypat
             "ForumConfigError",
             "generate_forum_server_config",
             "Invalid forum settings: boom",
-            marks=needs_forum,
+            marks=needs_forum_hpc,
         ),
         pytest.param(
             "instant_messaging",

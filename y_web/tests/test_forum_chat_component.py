@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from y_web.tests._platform_repos import forum_file
+from y_web.tests._platform_repos import forum_file, requires_platform
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 from types import SimpleNamespace
@@ -30,6 +30,7 @@ def test_forum_chat_schema_tables_registered():
     assert "forum_chat_messages" in schema._POSTGRES_TABLES
 
 
+@requires_platform("YServerReddit")
 def test_forum_chat_payload_helpers_include_expected_fields():
     from y_web.routes.api import reddit
 
@@ -60,6 +61,7 @@ def test_forum_chat_payload_helpers_include_expected_fields():
     assert payload["messages"][0]["content"] == "Hello"
 
 
+@requires_platform("YServerReddit")
 def test_forum_chat_memory_query_uses_latest_message_and_recent_history():
     from y_web.routes.api import reddit
 
@@ -87,6 +89,7 @@ def test_forum_chat_memory_query_uses_latest_message_and_recent_history():
     assert "library vote" in query
 
 
+@requires_platform("YServerReddit")
 def test_forum_chat_reply_strips_hashtags():
     from y_web.routes.api import reddit
 
@@ -99,6 +102,7 @@ def test_forum_chat_reply_strips_hashtags():
     assert "war" in cleaned
 
 
+@requires_platform("YServerReddit")
 def test_forum_chat_routes_are_exposed():
     from y_web.routes.api import reddit
 
@@ -128,6 +132,7 @@ def test_forum_chat_routes_are_exposed():
     assert "memory_query_text" in route_source
 
 
+@requires_platform("YForum")
 def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
     panel_template = Path(
         forum_file("y_web/templates/forum/components/chat_panel.html")

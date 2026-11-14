@@ -28,6 +28,7 @@ pytestmark = pytest.mark.unit
 # ---------------------------------------------------------------------------
 
 
+@requires_platform("YServer")
 def test_resolve_client_package_dir_microblogging():
     """`_resolve_client_package_dir` returns …/external/YClient for microblogging."""
     from y_web.src.simulation.process_runner import _resolve_client_package_dir
@@ -36,7 +37,7 @@ def test_resolve_client_package_dir_microblogging():
     assert result.replace("\\", "/").endswith("external/YClient")
 
 
-@requires_platform("YForum")
+@requires_platform("YServerReddit")
 def test_resolve_client_package_dir_forum():
     """`_resolve_client_package_dir` returns …/external/YClientReddit for forum."""
     from y_web.src.simulation.process_runner import _resolve_client_package_dir
@@ -163,6 +164,7 @@ def test_ensure_agents_have_archetype_noop_when_disabled():
 # ---------------------------------------------------------------------------
 
 
+@requires_platform("YServer")
 def test_repair_legacy_agent_file_fills_missing_keys(tmp_path):
     """`_repair_legacy_agent_file` back-fills missing fields on agents that lack them."""
     from y_web.src.simulation.process_runner import _repair_legacy_agent_file

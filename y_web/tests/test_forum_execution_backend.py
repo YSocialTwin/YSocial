@@ -23,9 +23,13 @@ pytestmark = pytest.mark.unit
         pytest.param(
             "microblogging",
             "external/YServer/y_server_run.py",
-            marks=requires_platform("YSimulator"),
+            marks=requires_platform("YServer"),
         ),
-        ("forum", "external/YServerReddit/y_server_run.py"),
+        pytest.param(
+            "forum",
+            "external/YServerReddit/y_server_run.py",
+            marks=requires_platform("YServerReddit"),
+        ),
     ],
 )
 def test_resolve_server_runtime_paths_separates_standard_and_forum(
@@ -41,9 +45,11 @@ def test_resolve_server_runtime_paths_separates_standard_and_forum(
     ("platform_type", "expected_suffix"),
     [
         pytest.param(
-            "microblogging", "external/YClient", marks=requires_platform("YSimulator")
+            "microblogging", "external/YClient", marks=requires_platform("YServer")
         ),
-        ("forum", "external/YClientReddit"),
+        pytest.param(
+            "forum", "external/YClientReddit", marks=requires_platform("YServerReddit")
+        ),
     ],
 )
 def test_resolve_client_package_dir_separates_standard_and_forum(

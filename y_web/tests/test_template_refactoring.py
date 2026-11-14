@@ -23,6 +23,17 @@ from y_web.tests._platform_repos import (
 pytestmark = pytest.mark.integration
 
 
+@pytest.fixture(autouse=True)
+def _templates_of_the_installed_repositories(request):
+    """The forum and microblogging templates live in the HPC repositories: their tests need them."""
+    from y_web.tests._platform_repos import EXTERNAL
+
+    name = request.node.nodeid.lower()
+    for word, repo in (("forum", "YForum"), ("microblogging", "YSimulator")):
+        if word in name and not (EXTERNAL / repo / "ysocial_platform").is_dir():
+            pytest.skip(f"{repo} with its platform pages is not installed")
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

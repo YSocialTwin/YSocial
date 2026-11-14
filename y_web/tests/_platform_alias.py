@@ -31,6 +31,11 @@ class Platform:
     routes: Tuple[
         str, ...
     ] = ()  # modules that only register routes (no old name to alias)
+    #: package of the repository that stands in for ``old_package`` when no other repository provides it
+    fallback_library: str = ""
+    #: tests that run with any of the repositories that list them (they need one of them, not each)
+    needs_any: Tuple[str, ...] = ()
+    fallback_package: str = ""
 
 
 DATING = Platform(
@@ -102,6 +107,23 @@ PHOTO_SHARING = Platform(
     ),
 )
 
+#: tests of the part of the forum library that both forum repositories carry (``y_web.src.forum``)
+_FORUM_LIBRARY_TESTS = (
+    "test_forum_community_icons.py",
+    "test_frontend_settings_platforms.py",
+    "test_phase8_src_forum.py",
+)
+
+#: tests that use the microblogging platform's settings page, offered by either of its repositories
+_MICROBLOGGING_TESTS = (
+    "test_frontend_settings_generic_suite_panel.py",
+    "test_i18n_experiment_language.py",
+    "test_im_frontend_settings.py",
+    "test_training_modules_advance_integration.py",
+    "test_training_modules_preview_integration.py",
+    "test_training_modules_teacher_integration.py",
+)
+
 FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
     repo="YServerReddit",
     key="forum_server",
@@ -109,19 +131,19 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
     library="",
     provider_class="ForumStandard",
     provider_id="ysocial_server_reddit",
+    fallback_package="y_web.src.forum",  # its own copy of the shared part of the library, used when YForum is absent
+    fallback_library="forum",
     views={
         "y_web.routes.social.forum": "routes.social_forum",
         "y_web.routes.interactions.forum": "routes.interactions_forum",
         "y_web.routes.api.reddit": "routes.api_reddit",
     },
-    needs=tuple(
-        sorted(path.name for path in Path(__file__).parent.glob("test_forum_*.py"))
-    )
-    + (
+    needs=(
         "test_api_reddit_blueprint.py",
-        "test_phase8_src_forum.py",
-        "test_template_refactoring.py",
+        "test_forum_feed_sidebar.py",
+        "test_forum_search_suggest.py",
     ),
+    needs_any=_FORUM_LIBRARY_TESTS,
 )
 
 FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next to YServerReddit's
@@ -136,7 +158,16 @@ FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next
     needs=tuple(
         sorted(path.name for path in Path(__file__).parent.glob("test_forum_hpc*.py"))
     )
-    + ("test_hpc_client_failure_alert.py",),
+    + (
+        "test_hpc_client_failure_alert.py",
+        "test_forum_client_config.py",
+        "test_forum_communities_config.py",
+        "test_forum_edit_profile.py",
+        "test_forum_experiment_config.py",
+        "test_forum_reddit_ui_templates.py",
+        "test_forum_roster.py",
+    ),
+    needs_any=_FORUM_LIBRARY_TESTS,
 )
 
 MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer
@@ -154,12 +185,10 @@ MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer
         "test_microblog_follow_links.py",
         "test_microblog_chat_component.py",
         "test_phaseT5_css_extraction.py",
-        "test_template_refactoring.py",
         "test_trending_hashtag_prefix.py",
-        "test_phase7_src_simulation.py",
-        "test_simulation_process_runner_logic.py",
         "test_training_modules_baseline_access.py",
     ),
+    needs_any=_MICROBLOGGING_TESTS,
 )
 
 MICROBLOGGING_HPC = Platform(  # the HPC runtime of the same platform: its routes are served next to YServer's
@@ -170,6 +199,7 @@ MICROBLOGGING_HPC = Platform(  # the HPC runtime of the same platform: its route
     provider_class="Microblogging",
     provider_id="microblogging",
     routes=("routes.social_microblogging", "routes.interactions_microblogging"),
+    needs_any=_MICROBLOGGING_TESTS,
 )
 
 PLATFORMS = (
@@ -207,6 +237,33 @@ def _root(platform: Platform) -> str:
     return _ensure_namespace_root(platform.key, EXTERNAL / platform.repo)
 
 
+def _alias_package(
+    platform: Platform, old_package: str, library: str, package=None
+) -> None:
+    """Install ``old_package`` and its modules as aliases of the ``library`` package of the repository."""
+    root = _root(platform)
+
+    def load(name):
+        return importlib.import_module(f"{root}.ysocial_platform.{name}")
+
+    package = package or load(library)
+    sys.modules[old_package] = package
+    parent, _, leaf = old_package.rpartition(".")
+    setattr(importlib.import_module(parent), leaf, package)
+    folder = EXTERNAL / platform.repo / "ysocial_platform" / library
+    for path in sorted(folder.glob("*.py")):
+        if path.stem == "__init__":
+            continue
+        sys.modules[f"{old_package}.{path.stem}"] = load(f"{library}.{path.stem}")
+    for sub in sorted(p for p in folder.iterdir() if (p / "__init__.py").is_file()):
+        sys.modules[f"{old_package}.{sub.name}"] = load(f"{library}.{sub.name}")
+        for path in sorted(sub.glob("*.py")):
+            if path.stem != "__init__":
+                sys.modules[f"{old_package}.{sub.name}.{path.stem}"] = load(
+                    f"{library}.{sub.name}.{path.stem}"
+                )
+
+
 def _install_one(platform: Platform) -> bool:
     if _state.get(platform.key):
         return True
@@ -221,25 +278,7 @@ def _install_one(platform: Platform) -> bool:
 
     package = load(platform.library) if platform.library else None
     if platform.old_package:
-        sys.modules[platform.old_package] = package
-        parent, _, leaf = platform.old_package.rpartition(".")
-        setattr(importlib.import_module(parent), leaf, package)
-        folder = EXTERNAL / platform.repo / "ysocial_platform" / platform.library
-        for path in sorted(folder.glob("*.py")):
-            if path.stem == "__init__":
-                continue
-            sys.modules[f"{platform.old_package}.{path.stem}"] = load(
-                f"{platform.library}.{path.stem}"
-            )
-        for sub in sorted(p for p in folder.iterdir() if (p / "__init__.py").is_file()):
-            sys.modules[f"{platform.old_package}.{sub.name}"] = load(
-                f"{platform.library}.{sub.name}"
-            )
-            for path in sorted(sub.glob("*.py")):
-                if path.stem != "__init__":
-                    sys.modules[f"{platform.old_package}.{sub.name}.{path.stem}"] = (
-                        load(f"{platform.library}.{sub.name}.{path.stem}")
-                    )
+        _alias_package(platform, platform.old_package, platform.library, package)
     for name in platform.routes:
         load(name)
     for old, new in platform.views.items():
@@ -262,6 +301,16 @@ def install() -> bool:
         for platform in PLATFORMS:
             with dispatch.attaching(platform.provider_id or platform.key):
                 results.append(_install_one(platform))
+        for platform in PLATFORMS:
+            if (
+                platform.fallback_package
+                and _state.get(platform.key)
+                and platform.fallback_package not in sys.modules
+            ):
+                with dispatch.attaching(platform.provider_id or platform.key):
+                    _alias_package(
+                        platform, platform.fallback_package, platform.fallback_library
+                    )
     return all(results)
 
 
@@ -290,6 +339,9 @@ def absent_tests() -> list:
     for platform in PLATFORMS:
         if not _state.get(platform.key):
             out.extend(platform.needs)
+    for name in sorted({n for p in PLATFORMS for n in p.needs_any}):
+        if not any(_state.get(p.key) for p in PLATFORMS if name in p.needs_any):
+            out.append(name)
     return out
 
 

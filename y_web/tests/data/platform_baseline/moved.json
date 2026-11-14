@@ -519,17 +519,8 @@
       "/<int:exp_id>/rsearch -> main.search_reddit",
       "/<int:exp_id>/rthread/<post_id> -> main.get_thread_reddit",
       "/<int:exp_id>/subforum/<string:community_slug> -> main.subforum_reddit",
-      "/admin/client_details_forum/<int:uid> -> clientsr.client_details_forum",
-      "/admin/clients_forum/<idexp> -> clientsr.clients_forum",
       "/admin/clients_forum_hpc/<idexp> -> clientsr.clients_forum_hpc",
-      "/admin/create_forum_client -> clientsr.create_forum_client",
       "/admin/create_forum_hpc_client -> clientsr.create_forum_hpc_client_route",
-      "/admin/opinion_configuration_forum/<int:idexp> -> clientsr.opinion_configuration_forum",
-      "/admin/prompts_forum/<int:uid> -> experiments.prompts_forum",
-      "/admin/set_forum_opinion_distributions -> clientsr.set_forum_opinion_distributions",
-      "/admin/update_forum_client_llm/<int:uid> -> clientsr.update_forum_client_llm",
-      "/admin/update_forum_client_settings/<int:uid> -> clientsr.update_forum_client_settings",
-      "/admin/update_forum_recsys/<int:uid> -> clientsr.update_forum_recsys",
       "/api/reddit/<int:exp_id>/chat/bootstrap -> api_reddit.api_forum_chat_bootstrap",
       "/api/reddit/<int:exp_id>/chat/session -> api_reddit.api_forum_chat_open_session",
       "/api/reddit/<int:exp_id>/chat/session/<int:session_id> -> api_reddit.api_forum_chat_get_session",
@@ -568,6 +559,26 @@
       "/<int:exp_id>/publish -> user_actions.publish_post",
       "/<int:exp_id>/thread/<post_id> -> main.get_thread",
       "/feed -> main.feeed_logged"
+    ],
+    "YServer": [
+      "/admin/clients_standard/<idexp> -> clientsr.clients_standard",
+      "/admin/create_standard_client -> clientsr.create_standard_client",
+      "/admin/opinion_configuration_standard/<int:idexp> -> clientsr.opinion_configuration_standard",
+      "/admin/set_standard_opinion_distributions -> clientsr.set_standard_opinion_distributions",
+      "/admin/update_standard_client_llm/<int:uid> -> clientsr.update_standard_client_llm",
+      "/admin/update_standard_client_settings/<int:uid> -> clientsr.update_standard_client_settings",
+      "/admin/update_standard_recsys/<int:uid> -> clientsr.update_standard_recsys"
+    ],
+    "YServerReddit": [
+      "/admin/client_details_forum/<int:uid> -> clientsr.client_details_forum",
+      "/admin/clients_forum/<idexp> -> clientsr.clients_forum",
+      "/admin/create_forum_client -> clientsr.create_forum_client",
+      "/admin/opinion_configuration_forum/<int:idexp> -> clientsr.opinion_configuration_forum",
+      "/admin/prompts_forum/<int:uid> -> experiments.prompts_forum",
+      "/admin/set_forum_opinion_distributions -> clientsr.set_forum_opinion_distributions",
+      "/admin/update_forum_client_llm/<int:uid> -> clientsr.update_forum_client_llm",
+      "/admin/update_forum_client_settings/<int:uid> -> clientsr.update_forum_client_settings",
+      "/admin/update_forum_recsys/<int:uid> -> clientsr.update_forum_recsys"
     ]
   },
   "known_platforms": {
