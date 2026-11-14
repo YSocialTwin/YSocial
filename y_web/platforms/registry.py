@@ -7,19 +7,45 @@ from typing import Any, Dict, List, Optional
 from y_web.platforms.base import PlatformProvider
 
 _PROVIDERS: Dict[str, PlatformProvider] = {}
+#: further providers of a key that more than one repository provides (see :func:`variants`)
+_EXTRA: Dict[str, List[PlatformProvider]] = {}
+
+
+def _compatible_variant(existing: PlatformProvider, provider: PlatformProvider) -> bool:
+    """Whether two providers of one key can live side by side: distinct repositories serving distinct runtimes."""
+    if existing.provider_id == provider.provider_id:
+        return False
+    if existing.simulator_types is None or provider.simulator_types is None:
+        return False
+    return not set(existing.simulator_types) & set(provider.simulator_types)
+
+
+def _add(provider: PlatformProvider) -> PlatformProvider:
+    """Register ``provider`` as the first provider of its key or as a variant of the ones already there."""
+    key = provider.key
+    existing = variants(key)
+    if not existing:
+        _PROVIDERS[key] = provider
+        return provider
+    if all(_compatible_variant(other, provider) for other in existing):
+        _EXTRA.setdefault(key, []).append(provider)
+        return provider
+    clash = next(
+        (o for o in existing if not _compatible_variant(o, provider)), existing[0]
+    )
+    raise ValueError(f"platform {key!r} is already provided by {type(clash).__name__}")
 
 
 def register(provider: PlatformProvider) -> PlatformProvider:
-    """Make a platform known. A key can be registered once: a second provider for it is an error, never a replacement."""
-    key = provider.key
-    if not key:
+    """Make a platform known. A key can be registered once, unless the providers are variants of it.
+
+    A second provider for a key is an error, never a replacement, except when it comes from another repository
+    (another ``id``) and serves other runtimes (``simulator_types``): then it is a variant, chosen per experiment
+    by :func:`for_experiment`.
+    """
+    if not provider.key:
         raise ValueError(f"{type(provider).__name__} has no platform key")
-    if key in _PROVIDERS:
-        raise ValueError(
-            f"platform {key!r} is already provided by {type(_PROVIDERS[key]).__name__}"
-        )
-    _PROVIDERS[key] = provider
-    return provider
+    return _add(provider)
 
 
 def replace_builtin(provider: PlatformProvider) -> Optional[PlatformProvider]:
@@ -28,15 +54,50 @@ def replace_builtin(provider: PlatformProvider) -> Optional[PlatformProvider]:
     While a platform is moving out of the core, its repository may already carry the provider (it declares
     it in ``meta/registry.json``) and the core still has a built-in copy: the repository wins, so that the
     code that is being moved is the code that runs. Returns the provider that was replaced (``None`` when
-    there was none). Two providers from repositories for one key are still an error.
+    there was none). Two providers from repositories for one key are an error unless they are variants of it.
     """
     existing = _PROVIDERS.get(provider.key)
     if existing is not None and existing.package_dir is not None:
-        raise ValueError(
-            f"platform {provider.key!r} is already provided by {type(existing).__name__}"
-        )
+        _add(provider)
+        return None
     _PROVIDERS[provider.key] = provider
     return existing
+
+
+def variants(platform_type: Any) -> List[PlatformProvider]:
+    """Every provider of a platform type (one per repository), the preferred one first; empty when nobody provides it."""
+    key = str(platform_type or "").strip()
+    primary = _PROVIDERS.get(key)
+    if primary is None:
+        return []
+    return [primary, *_EXTRA.get(key, [])]
+
+
+def by_id(provider_id: Any) -> Optional[PlatformProvider]:
+    """The provider of the repository ``provider_id`` (for a provider that declares no ``id``, its platform key)."""
+    return next((p for p in all_providers() if p.provider_id == provider_id), None)
+
+
+def for_simulator(
+    platform_type: Any, simulator_type: Any
+) -> Optional[PlatformProvider]:
+    """The provider that runs ``platform_type`` experiments on ``simulator_type``, or ``None`` when none does.
+
+    With one provider for the key this is that provider whatever the runtime (nothing changes for the platforms
+    that have a single repository); with variants it is the one that serves the runtime.
+    """
+    found = variants(platform_type)
+    if len(found) <= 1:
+        return found[0] if found else None
+    return next((p for p in found if p.serves(simulator_type)), None)
+
+
+def for_experiment(experiment: Any) -> Optional[PlatformProvider]:
+    """The provider of an experiment: its ``platform_type`` run by its ``simulator_type``."""
+    return for_simulator(
+        getattr(experiment, "platform_type", None),
+        getattr(experiment, "simulator_type", None),
+    )
 
 
 def get(platform_type: Any) -> Optional[PlatformProvider]:
@@ -70,8 +131,16 @@ def default() -> Optional[PlatformProvider]:
 
 
 def providers() -> List[PlatformProvider]:
-    """All providers, in menu order."""
+    """The preferred provider of every platform key, in menu order (variants: :func:`all_providers`)."""
     return sorted(_PROVIDERS.values(), key=lambda p: (p.order, p.key))
+
+
+def all_providers() -> List[PlatformProvider]:
+    """Every provider, variants included, in menu order."""
+    return sorted(
+        [*_PROVIDERS.values(), *(p for v in _EXTRA.values() for p in v)],
+        key=lambda p: (p.order, p.key, p.provider_id),
+    )
 
 
 def keys() -> List[str]:

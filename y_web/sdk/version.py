@@ -5,4 +5,4 @@ deprecated for one minor version first. ``y_web/tests/data/sdk_api.json`` record
 ``y_web/tests/test_sdk_contract.py`` refuses a change to it that is not a recorded one.
 """
 
-PLATFORM_API = "1.0"
+PLATFORM_API = "1.1"

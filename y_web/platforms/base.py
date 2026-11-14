@@ -120,6 +120,12 @@ class PlatformProvider:
 
     #: value of ``Exps.platform_type``
     key: str = ""
+    #: identity of the repository the provider comes from; empty means the same as ``key``. Several repositories can
+    #: provide one platform ``key`` (a Standard and an HPC runtime of microblogging, say), each under its own ``id``
+    id: str = ""
+    #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``
+    #: must serve disjoint sets
+    simulator_types: Optional[Tuple[str, ...]] = None
     #: display name (marked for translation, shown through ``gettext``)
     label: str = N_("Other")
     #: icon name of the feather set used by the menus
@@ -128,6 +134,15 @@ class PlatformProvider:
     order: int = 1000
     #: whether the clients are created by the generic HPC route (the platform page only posts to it)
     generic_hpc_client_creation: bool = True
+
+    @property
+    def provider_id(self) -> str:
+        """Identity of the provider: its repository ``id``, the platform ``key`` when it declares none."""
+        return self.id or self.key
+
+    def serves(self, simulator_type: Any) -> bool:
+        """Whether the provider serves experiments run by ``simulator_type`` (``Standard`` or ``HPC``)."""
+        return self.simulator_types is None or simulator_type in self.simulator_types
 
     def entry_url(self, exp_id: int, user_id: int) -> Optional[str]:
         """Page a participant lands on after logging into the experiment, or ``None`` when the platform has none."""

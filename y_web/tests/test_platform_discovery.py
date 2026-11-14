@@ -61,7 +61,10 @@ def _install(specs, tmp_path, key="ydemo", **kwargs):
 def test_api_compatibility():
     assert api_problem("1.0") is None
     assert api_problem("1") is None
-    assert api_problem("1.1") is not None  # newer than the core knows
+    assert (
+        api_problem("1.1") is None
+    )  # older providers (1.0) and current ones (1.1) run
+    assert api_problem("1.2") is not None  # newer than the core knows
     assert api_problem("2.0") is not None
     assert api_problem("x") is not None
 

@@ -237,7 +237,7 @@
       }
     }
   },
-  "platform_api": "1.0",
+  "platform_api": "1.1",
   "provider_hooks": {
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
     "after_opinion_distribution_saved": "(self, context: 'dict') -> 'None'",
@@ -295,6 +295,7 @@
     "render_interview": "(self, exp_id: 'int', context: 'dict') -> 'Any'",
     "resolve_simulator": "(self, simulator_type: 'str', available: 'Mapping[str, bool]') -> 'Tuple[str, Optional[str]]'",
     "rounds_per_day": "(self, exp: 'Any') -> 'Optional[int]'",
+    "serves": "(self, simulator_type: 'Any') -> 'bool'",
     "slots_per_day": "(self, exp_folder: 'str') -> 'int'",
     "snapshot_for_download": "(self, folder: 'str', staging_dir: 'str') -> 'bool'",
     "start_hpc_gateway": "(self, exp_folder: 'str') -> 'None'",

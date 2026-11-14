@@ -4,6 +4,7 @@ A simulation repository declares a platform in the ``"platform"`` section of its
 
     "platform": {
         "key": "dating",                       # platform type stored in the experiments
+        "id": "ydating",                       # optional: identity of the repository (default: the key)
         "api_version": "1.0",                  # PLATFORM_API the provider was written for
         "provider": "ysocial_platform.provider:DatingPlatform"   # PlatformProvider subclass
     }
@@ -79,6 +80,10 @@ def read_declaration(repo_path: Path) -> Tuple[Optional[dict], List[str]]:
         if not isinstance(declaration.get(name), str) or not declaration[name].strip()
     ]
     if not problems:
+        if "id" in declaration and (
+            not isinstance(declaration["id"], str) or not declaration["id"].strip()
+        ):
+            problems.append("'platform.id' must be a non-empty string")
         if ":" not in declaration["provider"]:
             problems.append("'platform.provider' must look like 'module.path:Class'")
         problem = api_problem(declaration["api_version"])
@@ -107,6 +112,8 @@ def _load_provider(
             f"provider key {provider.key!r} differs from declared key {declaration['key']!r}"
         )
     provider.package_dir = Path(repo_path) / PACKAGE_FOLDER
+    if declaration.get("id"):
+        provider.id = declaration["id"].strip()
     return provider
 
 
@@ -168,7 +175,7 @@ def platform_restart_required(repo_key: str) -> bool:
     return (
         declaration is not None
         and not problems
-        and registry.get(declaration["key"]) is None
+        and registry.by_id(declaration.get("id") or declaration["key"]) is None
     )
 
 
