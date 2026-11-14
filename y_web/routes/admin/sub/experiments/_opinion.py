@@ -979,9 +979,7 @@ def _build_mop_target_panel(
 
 def _resolve_opinion_experiment_db_name(experiment):
     """Resolve the sqlite database path that should back opinion evolution."""
-    derived = registry.resolve(
-        getattr(experiment, "platform_type", "")
-    ).opinion_database_name(experiment)
+    derived = registry.resolve(experiment).opinion_database_name(experiment)
     if derived:
         return derived
     db_name = (
@@ -1119,7 +1117,7 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
     """
     from y_web.src.models import Agent_Opinion, Interests, Rounds, User_mgmt
 
-    if registry.resolve(experiment.platform_type).derived_analytics:
+    if registry.resolve(experiment).derived_analytics:
         # the derived analytics database is read only: never seed opinions that the run did not produce
         return 0
 
@@ -3083,9 +3081,7 @@ def _resolve_network_analysis_db_path(experiment):
     DB when it exists, otherwise they would inspect the wrong schema and report
     that the network-analysis tables are missing.
     """
-    own_file = registry.resolve(
-        getattr(experiment, "platform_type", "")
-    ).database_file_name
+    own_file = registry.resolve(experiment).database_file_name
     if own_file:
         db_name = (
             str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
@@ -7577,9 +7573,7 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
 def _platform_annotation_problem(experiment, label):
     """The error the annotator of the platform's runtime stored (a missing library, say), else ''."""
     try:
-        return registry.resolve(experiment.platform_type).annotation_problem(
-            experiment, label
-        )
+        return registry.resolve(experiment).annotation_problem(experiment, label)
     except Exception:  # noqa: BLE001 - an explanation is a convenience
         return ""
 

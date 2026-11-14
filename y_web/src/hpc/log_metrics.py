@@ -1441,9 +1441,9 @@ def monitor_hpc_client_execution_logs():
                             )
                             from y_web.platforms import registry
 
-                            logged = registry.resolve(
-                                getattr(exp, "platform_type", None)
-                            ).failure_reason(execution_log_path)
+                            logged = registry.resolve(exp).failure_reason(
+                                execution_log_path
+                            )
                             if logged:
                                 reason = f"{reason}; {logged}"
                             print(f"[HPC Monitor] {reason}")

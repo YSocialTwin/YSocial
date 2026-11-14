@@ -98,9 +98,7 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
         db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep)
         from y_web.platforms import registry
 
-        own_file = registry.resolve(
-            getattr(experiment, "platform_type", "")
-        ).database_file_name
+        own_file = registry.resolve(experiment).database_file_name
         if own_file:
             own_path = get_writable_path(
                 os.path.join("y_web", os.path.dirname(db_name), own_file)
@@ -140,7 +138,7 @@ def open_experiment_session(experiment: Exps):
     engine = create_engine(uri, pool_pre_ping=True)
     from y_web.platforms import registry
 
-    provider = registry.resolve(getattr(experiment, "platform_type", ""))
+    provider = registry.resolve(experiment)
     if provider.marker_table:
         pass  # the runtime owns its schema: YWeb only reads it
     elif provider.ensure_database_schema(engine, uri):
@@ -192,7 +190,7 @@ def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
     """
     from y_web.platforms import registry
 
-    provider = registry.resolve(experiment.platform_type)
+    provider = registry.resolve(experiment)
     if provider.has_participant_standin:
         # the runtime owns its database and keeps no YWeb participant row (no ``user_mgmt``): the participant is its
         # own account, derived from the experiment and the user, registered when the person first acts
@@ -322,9 +320,7 @@ def _ensure_experiment_user(
 
     try:
         selected_user_id = ""
-        view_keys = registry.resolve(
-            getattr(experiment, "platform_type", "")
-        ).admin_view_session_keys
+        view_keys = registry.resolve(experiment).admin_view_session_keys
         if (
             view_keys
             and str(getattr(current_user, "role", "") or "").strip().lower() == "admin"

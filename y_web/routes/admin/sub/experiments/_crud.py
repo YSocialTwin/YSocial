@@ -38,7 +38,7 @@ from flask_login import current_user, login_required, login_user
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
-from y_web.platforms.base import PlatformConfigError, ServerConfigRequest
+from y_web.platforms.base import STANDARD, PlatformConfigError, ServerConfigRequest
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.access import (
@@ -683,9 +683,7 @@ def join_experiment(exp_id):
             flash(_("You are not allowed to access this experiment."), "error")
             return redirect("/admin/experiments")
 
-    observer_url = registry.resolve(getattr(exp, "platform_type", None)).observer_url(
-        exp.idexp
-    )
+    observer_url = registry.resolve(exp).observer_url(exp.idexp)
     if observer_url:
         return redirect(observer_url)
 
@@ -718,7 +716,7 @@ def join_experiment(exp_id):
     user_id = user_record.id
 
     # Route to the appropriate feed based on platform type
-    entry_url = registry.resolve(exp.platform_type).entry_url(exp_id, user_id)
+    entry_url = registry.resolve(exp).entry_url(exp_id, user_id)
     if entry_url:
         return redirect(entry_url)
     flash(_("Unknown platform type for this experiment."))
@@ -1734,7 +1732,7 @@ def generate_standard_config(
         "port": port,
         "debug": "False",
         "reset_db": "False",
-        "modules": list(registry.resolve(platform_type).server_modules),
+        "modules": list(registry.resolve(platform_type, STANDARD).server_modules),
         "perspective_api": (
             perspective_api if perspective_api and len(perspective_api) > 0 else None
         ),
@@ -1888,8 +1886,8 @@ def create_experiment():
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
     repo_availability = _external_repo_availability()
 
-    simulator_type, unavailable = registry.resolve(platform_type).resolve_simulator(
-        simulator_type, repo_availability
+    simulator_type, unavailable = registry.choose_simulator(
+        platform_type, simulator_type, repo_availability
     )
     if unavailable:
         flash(unavailable, "error")
@@ -1978,7 +1976,9 @@ def create_experiment():
     sentiment_annotation = request.form.get("sentiment_annotation") == "true"
     emotion_annotation = request.form.get("emotion_annotation") == "true"
 
-    rules = registry.resolve(platform_type).creation_rules(simulator_type)
+    rules = registry.resolve(platform_type, simulator_type).creation_rules(
+        simulator_type
+    )
     opinion_dynamics_enabled = rules.forced.get(
         "opinion_dynamics_enabled", opinion_dynamics_enabled
     )
@@ -2157,7 +2157,7 @@ def create_experiment():
             }
 
         try:
-            config = registry.resolve(platform_type).hpc_server_config(
+            config = registry.resolve(platform_type, simulator_type).hpc_server_config(
                 ServerConfigRequest(
                     exp_name=exp_name,
                     db_type=db_type,
@@ -2211,7 +2211,7 @@ def create_experiment():
             "w",
         ) as f:
             json.dump(config, f, indent=4)
-        registry.resolve(platform_type).write_new_experiment_files(
+        registry.resolve(platform_type, simulator_type).write_new_experiment_files(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", prompt_language
         )
     else:
@@ -2565,9 +2565,7 @@ def start_experiment(uid):
     if exp.running == 1:
         return experiment_details(uid)
 
-    invalid = registry.resolve(
-        getattr(exp, "platform_type", None)
-    ).validate_before_start(exp)
+    invalid = registry.resolve(exp).validate_before_start(exp)
     if invalid:
         flash(invalid, "error")
         return experiment_details(uid)
@@ -2724,9 +2722,7 @@ def prompts(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
 
     # Route to the configuration page matching the experiment type.
-    page = registry.resolve(experiment.platform_type).prompts_page(
-        experiment.simulator_type
-    )
+    page = registry.resolve(experiment).prompts_page(experiment.simulator_type)
     if page != "experiments.prompts":
         return redirect(url_for(page, uid=uid))
 
@@ -2786,7 +2782,7 @@ def prompts_hpc(uid):
 
 def _experiment_prompt_pack(experiment):
     """(pack file, file name in the experiment folder) holding the prompts of an experiment."""
-    return registry.resolve(experiment.platform_type).experiment_prompt_pack(
+    return registry.resolve(experiment).experiment_prompt_pack(
         experiment.simulator_type
     )
 
@@ -3757,9 +3753,10 @@ def _matrix_format_value(value):
 
 def _matrix_get_experiment_mode(experiment):
     """Return the matrix catalog mode for the given experiment."""
+    simulator_type = getattr(experiment, "simulator_type", "Standard")
     return registry.resolve(
-        getattr(experiment, "platform_type", "microblogging")
-    ).client_mode(getattr(experiment, "simulator_type", "Standard"))
+        getattr(experiment, "platform_type", "microblogging"), simulator_type
+    ).client_mode(simulator_type)
 
 
 def _matrix_recsys_catalog(experiment):
@@ -5055,7 +5052,7 @@ def _matrix_describe_experiment_copy_failure(source_exp):
 
 def _slots_per_day_of(folder, experiment):
     """Rounds per day: 24 for instant messaging, the configured slots for dating."""
-    return registry.resolve(experiment.platform_type).slots_per_day(folder)
+    return registry.resolve(experiment).slots_per_day(folder)
 
 
 def _create_im_experiment_copy(
@@ -5065,7 +5062,7 @@ def _create_im_experiment_copy(
     from y_web.sdk.runtime import rewrite_server_config
     from y_web.src.system.path_utils import get_writable_path
 
-    copy_im_folder, new_uid = registry.resolve(source_exp.platform_type).folder_clone()
+    copy_im_folder, new_uid = registry.resolve(source_exp).folder_clone()
 
     if config_variations:
         current_app.logger.warning(
@@ -5184,7 +5181,7 @@ def _create_single_experiment_copy(
     Returns:
         bool: True if successful, False otherwise
     """
-    if registry.resolve(source_exp.platform_type).folder_clone() is not None:
+    if registry.resolve(source_exp).folder_clone() is not None:
         return _create_im_experiment_copy(
             source_exp, new_exp_name, exp_group, config_variations, exp_descr
         )

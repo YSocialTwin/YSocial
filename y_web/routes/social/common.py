@@ -97,7 +97,7 @@ from y_web.src.system.path_utils import get_writable_path
 
 def _landing_redirect(exp, user_id):
     """Redirect to the page a participant lands on in this experiment, or ``None`` when its platform has none."""
-    provider = platforms.get(exp.platform_type)
+    provider = platforms.get(exp)
     url = provider.entry_url(exp.idexp, user_id) if provider is not None else None
     return redirect(url) if url else None
 
@@ -1539,7 +1539,7 @@ def interview(exp_id):
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
         abort(404)
-    provider = platforms.get(exp.platform_type)
+    provider = platforms.get(exp)
     if provider is None or not provider.has_interview:
         abort(404)
     if not _experiment_memory_enabled(exp_id):

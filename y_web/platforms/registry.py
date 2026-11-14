@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from y_web.platforms.base import PlatformProvider
 
@@ -84,33 +84,46 @@ def for_simulator(
     """The provider that runs ``platform_type`` experiments on ``simulator_type``, or ``None`` when none does.
 
     With one provider for the key this is that provider whatever the runtime (nothing changes for the platforms
-    that have a single repository); with variants it is the one that serves the runtime.
+    that have a single repository); with variants it is the one that serves the runtime. Without a runtime to go
+    by (``None``) it is the preferred provider of the key.
     """
     found = variants(platform_type)
-    if len(found) <= 1:
+    if len(found) <= 1 or not simulator_type:
         return found[0] if found else None
     return next((p for p in found if p.serves(simulator_type)), None)
 
 
+def _split(platform_type: Any, simulator_type: Any = None) -> Tuple[Any, Any]:
+    """``(key, runtime)`` of a platform key and an optional runtime, or of an experiment-like object."""
+    if hasattr(platform_type, "platform_type"):
+        return platform_type.platform_type, getattr(
+            platform_type, "simulator_type", simulator_type
+        )
+    return platform_type, simulator_type
+
+
 def for_experiment(experiment: Any) -> Optional[PlatformProvider]:
     """The provider of an experiment: its ``platform_type`` run by its ``simulator_type``."""
-    return for_simulator(
-        getattr(experiment, "platform_type", None),
-        getattr(experiment, "simulator_type", None),
-    )
+    return for_simulator(*_split(experiment))
 
 
-def get(platform_type: Any) -> Optional[PlatformProvider]:
-    """The provider of a platform type, or ``None`` for a type nobody provides (e.g. a platform no longer installed)."""
-    return _PROVIDERS.get(str(platform_type or "").strip())
+def get(platform_type: Any, simulator_type: Any = None) -> Optional[PlatformProvider]:
+    """The provider of a platform type, or ``None`` for a type nobody provides (e.g. a platform no longer installed).
+
+    ``platform_type`` can also be an experiment (anything with ``platform_type`` and ``simulator_type``): the
+    provider of its runtime answers. A key with several repositories needs the runtime to say which one is meant;
+    without it the preferred one answers (fine for what every variant says the same, like labels and icons).
+    """
+    key, runtime = _split(platform_type, simulator_type)
+    return for_simulator(str(key or "").strip(), runtime)
 
 
 _GENERIC = PlatformProvider()
 
 
-def resolve(platform_type: Any) -> PlatformProvider:
-    """The provider of a platform type; a type nobody provides behaves like the generic platform."""
-    return get(platform_type) or _GENERIC
+def resolve(platform_type: Any, simulator_type: Any = None) -> PlatformProvider:
+    """The provider of a platform type (or experiment); a type nobody provides behaves like the generic platform."""
+    return get(platform_type, simulator_type) or _GENERIC
 
 
 def resolve_hooks(experiment: Any) -> PlatformProvider:
@@ -119,10 +132,30 @@ def resolve_hooks(experiment: Any) -> PlatformProvider:
     A platform that marks them ``hpc_only_hooks`` answers only for its HPC experiments; for the others the
     generic platform answers (every hook a no-op), which is what they always got.
     """
-    provider = resolve(getattr(experiment, "platform_type", None))
+    provider = resolve(experiment)
     if provider.hpc_only_hooks and getattr(experiment, "simulator_type", None) != "HPC":
         return _GENERIC
     return provider
+
+
+def choose_simulator(
+    platform_type: Any, requested: Any, available: Dict[str, bool]
+) -> Tuple[str, Optional[str]]:
+    """``(simulator type, problem)`` an experiment of ``platform_type`` is created with, given the one asked for.
+
+    A platform with one provider decides itself (:meth:`PlatformProvider.resolve_simulator`: it knows which
+    repositories it needs). With several the repositories are the installed providers: the requested runtime when
+    one serves it, else another one, and a problem only when nothing serves the platform.
+    """
+    found = variants(platform_type)
+    if len(found) > 1:
+        provider = for_simulator(platform_type, requested)
+        if provider is not None:
+            return requested, None
+        runtimes = [t for p in found for t in (p.simulator_types or ())]
+        if runtimes:
+            return runtimes[0], None
+    return resolve(platform_type).resolve_simulator(requested, available)
 
 
 def default() -> Optional[PlatformProvider]:

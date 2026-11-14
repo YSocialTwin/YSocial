@@ -36,10 +36,12 @@ def _provider_of_experiment_id(exp_id):
     try:
         from y_web.src.models import Exps
 
-        platform = db.session.scalar(select(Exps.platform_type).filter_by(idexp=exp_id))
+        platform, simulator = db.session.execute(
+            select(Exps.platform_type, Exps.simulator_type).filter_by(idexp=exp_id)
+        ).one()
     except Exception:
-        platform = None
-    return registry.resolve(platform)
+        platform, simulator = None, None
+    return registry.resolve(platform, simulator)
 
 
 def _owns_database_experiment_id(exp_id) -> bool:

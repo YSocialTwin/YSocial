@@ -229,7 +229,7 @@ def start_hpc_server(exp):
     server_dir = _external_repo_dir(spec.server_repo)
     script_path = os.path.join(_external_repo_dir(spec.runtime_repo), "run_server.py")
 
-    provider = registry.resolve(exp.platform_type)
+    provider = registry.resolve(exp)
     if spec.validates_config:
         provider.validate_hpc_folder(exp_folder, _external_repo_dir(spec.runtime_repo))
     provider.prepare_hpc_server(exp_folder)
@@ -537,7 +537,7 @@ def start_hpc_server(exp):
                 )
                 if attempt == max_retries - 1:
                     print("Warning: Server may not be fully started, proceeding anyway")
-    registry.resolve(getattr(exp, "platform_type", "")).after_hpc_server_started(exp)
+    registry.resolve(exp).after_hpc_server_started(exp)
     return process
 
 
@@ -580,7 +580,7 @@ def stop_hpc_server(exp_id):
             return True
 
         try:
-            registry.resolve(exp.platform_type).stop_hpc_gateway(exp_folder)
+            registry.resolve(exp).stop_hpc_gateway(exp_folder)
         except Exception as exc:  # noqa: BLE001
             print(f"Warning: human gateway not stopped cleanly: {exc}")
 
@@ -671,7 +671,7 @@ def start_server_screen(exp):
             f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
-    runtime = registry.resolve(exp.platform_type).standard_runtime
+    runtime = registry.resolve(exp).standard_runtime
     if runtime is None:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
     screen_command = build_screen_command(

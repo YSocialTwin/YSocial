@@ -116,6 +116,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from y_web.platforms import registry
+from y_web.platforms.base import STANDARD
 from y_web.src.simulation import federation_hooks
 from y_web.src.simulation.agent_sampler import (
     archetype_of,
@@ -179,7 +180,7 @@ def _resolve_client_package_dir(base_path, platform_type):
     """Resolve the external client package directory for a platform."""
     from y_web.src.system.path_utils import resolve_external_repo
 
-    runtime = registry.resolve(platform_type).standard_runtime
+    runtime = registry.resolve(platform_type, STANDARD).standard_runtime
     if runtime is None:
         raise NotImplementedError(f"Unsupported platform {platform_type}")
     return resolve_external_repo(base_path, runtime.client_repo)
@@ -205,7 +206,7 @@ def _candidate_memory_package_dirs(base_path, client_package_dir):
 
 
 def _has_activity_profiles(platform_type) -> bool:
-    runtime = registry.resolve(platform_type).standard_runtime
+    runtime = registry.resolve(platform_type, STANDARD).standard_runtime
     return bool(runtime and runtime.activity_profiles)
 
 
@@ -585,7 +586,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             "data_base_path": data_base_path,
             "first_run": first_run,
         }
-        runtime = registry.resolve(exp.platform_type).standard_runtime
+        runtime = registry.resolve(exp).standard_runtime
         if runtime is not None and runtime.client_takes_log_file:
             client_kwargs["log_file"] = log_file
 
@@ -687,7 +688,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
     base_path = get_base_path()
     FakeAgent = None
-    runtime = registry.resolve(exp.platform_type).standard_runtime
+    runtime = registry.resolve(exp).standard_runtime
     if runtime is not None:
         sys.path.append(resolve_external_repo(base_path, runtime.client_repo))
         FakeAgent = importlib.import_module(runtime.fake_agent_module).FakeAgent

@@ -105,7 +105,7 @@ def activate_experiment(
     done = ActivationResult(
         "activated", _("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name)
     )
-    provider = registry.resolve(exp.platform_type)
+    provider = registry.resolve(exp)
     if provider.owns_database or provider.has_participant_standin:
         # these runtimes own their database and have no YWeb participant row: nothing to bind or provision here
         _ensure_user_experiment(admin_user_id, exp_id)

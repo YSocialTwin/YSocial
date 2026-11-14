@@ -691,7 +691,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
     if (
         experiment.platform_type != "forum"
-        and not registry.resolve(experiment.platform_type).news_page_feeds
+        and not registry.resolve(experiment).news_page_feeds
     ):
         flash(
             _(
@@ -736,7 +736,7 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if experiment and not (
         agent_memory_plugin_installed()
-        or registry.resolve(experiment.platform_type).configures_memory
+        or registry.resolve(experiment).configures_memory
     ):
         flash(_("The Agent Memory plugin is not installed."), "error")
         return (
@@ -834,7 +834,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
 
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
     stress_enabled = bool(stress_reward_cfg.get("enabled", False))
-    platform_enabled = registry.resolve(experiment.platform_type).stress_reward_enabled(
+    platform_enabled = registry.resolve(experiment).stress_reward_enabled(
         experiment, experiment_dir, for_settings
     )
     if platform_enabled is not None:

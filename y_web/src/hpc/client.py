@@ -606,7 +606,7 @@ def start_hpc_client(exp, cli, population):
         )
 
     # Construct paths for config, agents, and prompts files
-    provider = registry.resolve(exp.platform_type)
+    provider = registry.resolve(exp)
     client_config, agents_file, prompts_file = provider.hpc_client_files(
         exp_folder, cli, population
     )
@@ -726,7 +726,7 @@ def start_hpc_client(exp, cli, population):
         if not spec.client_config_file_arg:
             runtime_config_dir = client_config
 
-        provider = registry.resolve(exp.platform_type)
+        provider = registry.resolve(exp)
         # a platform that aligns its own client file must not start with one that could not be aligned
         if not provider.normalize_hpc_client_config(
             exp_folder, cli.name, population.name, client_config
@@ -740,7 +740,7 @@ def start_hpc_client(exp, cli, population):
                     raise  # these must not start with a client config that could not be aligned
 
     if spec.validates_config:
-        provider = registry.resolve(exp.platform_type)
+        provider = registry.resolve(exp)
         runtime_dir = _external_repo_dir(spec.runtime_repo)
         if not provider.validate_hpc_client(
             exp_folder, runtime_dir, os.path.basename(client_config)

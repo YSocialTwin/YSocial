@@ -128,7 +128,7 @@ def reset_experiment(exp, *, logger=None) -> Dict[str, object]:
     exp_folder = _get_experiment_folder(get_writable_path(), exp, db_type)
     failed: List[str] = []
     removed = 0
-    cleared = registry.resolve(exp.platform_type).clear_run_artifacts(exp_folder)
+    cleared = registry.resolve(exp).clear_run_artifacts(exp_folder)
     removed, failed = (
         cleared if cleared is not None else clear_experiment_log_files(exp_folder)
     )

@@ -301,7 +301,7 @@ def select_experiment():
 
     from y_web.platforms import registry
 
-    provider = registry.resolve(exp.platform_type)
+    provider = registry.resolve(exp)
     landing = (
         provider.observer_url(exp.idexp)
         if provider.owns_database or provider.has_participant_standin

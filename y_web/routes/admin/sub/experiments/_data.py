@@ -795,7 +795,7 @@ def experiment_details(uid):
         list_adhoc_clients(experiment) if has_agent_plugins_installed else []
     )
 
-    provider = registry.resolve(experiment.platform_type)
+    provider = registry.resolve(experiment)
     page_context = {
         **registry.details_context_defaults(),
         **provider.details_context(experiment),
@@ -1134,7 +1134,7 @@ def update_experiment_config(uid):
                     break
             if not client_config_file:
                 continue
-            if registry.resolve(exp.platform_type).maps_client_switches:
+            if registry.resolve(exp).maps_client_switches:
                 continue  # the platform maps them with its own client forms
 
             try:
@@ -1360,7 +1360,7 @@ def update_stress_reward_settings(uid):
             )
 
         config["stress_reward"] = stress_reward_config
-        registry.resolve(experiment.platform_type).apply_stress_reward_settings(
+        registry.resolve(experiment).apply_stress_reward_settings(
             config, stress_reward_config
         )
         with open(config_path, "w", encoding="utf-8") as handle:
@@ -1391,7 +1391,7 @@ def update_stress_reward_settings(uid):
             try:
                 with open(client_config_file, "r", encoding="utf-8") as handle:
                     client_config = json.load(handle) or {}
-                if not registry.resolve(experiment.platform_type).apply_client_switches(
+                if not registry.resolve(experiment).apply_client_switches(
                     client_config,
                     stress_reward=bool(stress_reward_config.get("enabled")),
                 ):
@@ -1549,7 +1549,7 @@ def clear_experiment_logs(uid):
 
 def _reset_slots_per_day(exp, folder):
     """Rounds per day used for the expected duration of a client: 24, or the dating slots."""
-    return registry.resolve(exp.platform_type).slots_per_day(folder)
+    return registry.resolve(exp).slots_per_day(folder)
 
 
 @experiments.route("/admin/reset_hpc_experiment/<int:uid>", methods=["POST"])
@@ -1615,7 +1615,7 @@ def reset_hpc_experiment(uid):
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
 
-        cleared = registry.resolve(exp.platform_type).clear_run_artifacts(exp_folder)
+        cleared = registry.resolve(exp).clear_run_artifacts(exp_folder)
         deleted_count, failed_paths = (
             cleared if cleared is not None else clear_experiment_log_files(exp_folder)
         )

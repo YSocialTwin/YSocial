@@ -132,7 +132,7 @@ def reset_client(uid):
     if path.exists():
         path.unlink()
 
-    provider = registry.resolve(exp.platform_type)
+    provider = registry.resolve(exp)
     for prompt_file in (*provider.extra_prompt_files, "prompts.json"):
         prompt_path = exp_dir / prompt_file
         if prompt_path.exists():
@@ -201,7 +201,7 @@ def extend_simulation(id_client):
             "info",
         )
 
-    slots = registry.resolve(exp.platform_type).rounds_per_day(exp) if exp else None
+    slots = registry.resolve(exp).rounds_per_day(exp) if exp else None
     if slots is not None:
         # the runtime reads how many days to run from the client file at every start (see
         # hpc.client._set_dating_run_length): the new total is all that has to be recorded
@@ -216,16 +216,12 @@ def extend_simulation(id_client):
             ),
             "success",
         )
-        details = registry.resolve(exp.platform_type).client_details_page(
-            exp.simulator_type
-        )
+        details = registry.resolve(exp).client_details_page(exp.simulator_type)
         return redirect(request.referrer or url_for(details, uid=id_client))
 
     if exp:
         try:
-            if registry.resolve(exp.platform_type).extend_server_run(
-                exp, new_total_days
-            ):
+            if registry.resolve(exp).extend_server_run(exp, new_total_days):
                 slots = 24
                 client_execution.expected_duration_rounds = (
                     -1 if new_total_days == -1 else new_total_days * slots

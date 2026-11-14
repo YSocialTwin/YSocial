@@ -200,9 +200,7 @@ def _zip_experiment_folder(experiment, folder, output_base):
     """Write ``<output_base>.zip`` with an experiment folder; platforms that keep a live database zip a snapshot."""
     staging = f"{output_base}_im_snapshot"
     try:
-        if not registry.resolve(experiment.platform_type).snapshot_for_download(
-            folder, staging
-        ):
+        if not registry.resolve(experiment).snapshot_for_download(folder, staging):
             shutil.make_archive(output_base, "zip", folder)
             return
         shutil.make_archive(output_base, "zip", staging)

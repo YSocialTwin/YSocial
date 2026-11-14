@@ -359,7 +359,7 @@ def rss_feeds(uid):
         except IOError:
             url_feeds_data = []
 
-    provider = registry.resolve(experiment.platform_type)
+    provider = registry.resolve(experiment)
     is_im = provider.news_page_feeds
     snapshot = provider.feeds_context(experiment, experiment_dir) if is_im else None
     return render_template(
@@ -408,7 +408,7 @@ def update_rss_feeds(uid):
     _write_experiment_rss_feed_file(experiment_dir, resources)
 
     if not registry.resolve(
-        experiment.platform_type
+        experiment
     ).news_page_feeds:  # direct article URLs are a forum notion: news pages read feeds
         urls_text = request.form.get("url_feeds_text", "")
         urls = [line.strip() for line in urls_text.splitlines() if line.strip()]
@@ -425,7 +425,7 @@ def update_rss_feeds(uid):
             ),
             "info",
         )
-    if registry.resolve(experiment.platform_type).news_page_feeds:
+    if registry.resolve(experiment).news_page_feeds:
         flash(
             _(
                 "News feeds updated. Clients created from now on get a news page for each feed."
