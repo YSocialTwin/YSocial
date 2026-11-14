@@ -1,10 +1,11 @@
 """Spec table of the platforms launched through the HPC/Ray path.
 
 Everything that differs between platforms at launch time lives here, so that adding a platform
-means adding one row instead of another ``if exp.platform_type == ...`` branch (plan, DEC-03).
-The rows for ``microblogging`` and ``photo_sharing`` reproduce the previous inline behaviour exactly.
+means declaring ``hpc_launch`` on its provider instead of another ``if exp.platform_type == ...`` branch (plan, DEC-03).
+The rows are declared by the providers (``PlatformProvider.hpc_launch``).
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Optional
 
@@ -47,78 +48,38 @@ class HpcPlatform:
         return f"{self.client_actor_prefix}{runtime_client_id}"
 
 
-HPC_PLATFORMS = {
-    "microblogging": HpcPlatform(
-        key="microblogging",
-        runtime_repo="YSimulator",
-        server_dir_repo="YServer",
-        supports_federation=True,
-    ),
-    "photo_sharing": HpcPlatform(
-        key="photo_sharing",
-        runtime_repo="YPhotoSharing",
-        supports_gunicorn=False,
-        frozen_server_runs_script=True,
-        client_config_only=True,
-        normalizes_client_config=True,
-        prompts_filename="prompts_ygram.json",
-        orchestrator_actor="orchestrator_server",
-        client_actor_prefix="Client_",
-        supports_federation=True,
-    ),
-    "instant_messaging": HpcPlatform(
-        key="instant_messaging",
-        runtime_repo="YInstantMessaging",
-        supports_gunicorn=False,
-        frozen_server_runs_script=True,
-        client_config_only=True,
-        normalizes_client_config=True,
-        prompts_filename="prompts_im.json",
-        orchestrator_actor="orchestrator_server",
-        validates_config=True,
-        syncs_client_config=False,
-        requires_prompts_file=False,
-        supports_federation=True,
-    ),
-    "dating": HpcPlatform(
-        key="dating",
-        runtime_repo="YDating",
-        supports_gunicorn=False,
-        frozen_server_runs_script=True,
-        client_config_only=True,
-        normalizes_client_config=True,
-        prompts_filename="prompts_dating.json",
-        orchestrator_actor="Orchestrator",
-        client_config_file_arg=True,
-        # the offline validator is YDating.cli.validate; the prompt files arrive with S5
-        validates_config=True,
-        syncs_client_config=False,
-        requires_prompts_file=False,
-        supports_federation=True,
-    ),
-    "forum": HpcPlatform(
-        key="forum",
-        runtime_repo="YForum",
-        supports_gunicorn=False,
-        frozen_server_runs_script=True,
-        client_config_only=True,
-        normalizes_client_config=True,
-        # the experiment folder is --config and the per-client JSON is --client-config (as YDating)
-        client_config_file_arg=True,
-        prompts_filename="prompts.json",
-        orchestrator_actor="Orchestrator",
-        # YForum clients are plain processes registered through the orchestrator, not named Ray actors,
-        # so the client lookup on stop finds nothing and falls back to the process kill
-        client_actor_prefix="",
-        # the offline validator is python -m YForum.cli.validate (y_web/src/forum/validation.py)
-        validates_config=True,
-        # YForum has its own client schema (stress/reward, network, duration come from the translation of the
-        # client form) and ships its prompt packs: no YSimulator-style sync and no prompts file in the folder
-        syncs_client_config=False,
-        requires_prompts_file=False,
-        supports_federation=True,
-    ),
-}
+class _Table(Mapping):
+    """``platform key -> HpcPlatform``, read from the providers that declare ``hpc_launch`` (as installed now)."""
+
+    _specs: dict = {}
+
+    def _rows(self) -> dict:
+        from y_web.platforms import registry
+
+        declared = {}
+        for provider in registry.providers():
+            for variant in registry.variants(provider.key):
+                if variant.hpc_launch and provider.key not in declared:
+                    declared[provider.key] = variant
+        # one spec object per declaring provider, so that lookups return the same instance
+        return {
+            key: self._specs.setdefault(
+                id(variant), HpcPlatform(key=key, **variant.hpc_launch)
+            )
+            for key, variant in declared.items()
+        }
+
+    def __getitem__(self, key):
+        return self._rows()[key]
+
+    def __iter__(self):
+        return iter(self._rows())
+
+    def __len__(self):
+        return len(self._rows())
+
+
+HPC_PLATFORMS = _Table()
 
 
 def get_hpc_platform(platform_type) -> HpcPlatform:

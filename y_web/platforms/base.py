@@ -15,7 +15,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Callable, FrozenSet, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, FrozenSet, List, Mapping, Optional, Tuple
 
 from y_web.i18n import N_
 
@@ -248,6 +248,9 @@ class PlatformProvider:
     feeds_read_at_client_start: bool = False
     #: sets of repository keys (``external_runtime``), any one of which makes the platform count as installed on the agent
     #: resources page (``()``: the platform has no tag there)
+    #: how the platform is launched on the HPC/Ray path: the fields of ``y_web.src.hpc.platforms.HpcPlatform``
+    #: (``runtime_repo`` is required); ``None`` = the platform has no HPC runtime
+    hpc_launch: Optional[Dict[str, Any]] = None
     tag_runtime_sets: Tuple[Tuple[str, ...], ...] = ()
     #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
     runtime_keys: Tuple[str, ...] = ()

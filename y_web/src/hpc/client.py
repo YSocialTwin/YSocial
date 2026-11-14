@@ -21,6 +21,11 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.platforms import registry
+from y_web.src.hpc._client_checks import (  # noqa: F401
+    _normalize_dating_client_config,
+    _normalize_forum_client_config,
+    _set_dating_run_length,
+)
 from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
@@ -149,59 +154,6 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
     except Exception:
         folder_name = Path(str(exp_folder)).name
     return f"{folder_name}:{str(client_name).strip()}"
-
-
-def _normalize_dating_client_config(
-    exp_folder: str, client_name: str, population_name: str, client_config_path: str
-) -> None:
-    """Check that a dating client file still matches its client and its population file.
-
-    Nothing is rewritten (the file is the one the form wrote, and its content is part of what a resumed
-    run is compared with); a mismatch stops the start with a clear message.
-    """
-    with open(client_config_path, "r", encoding="utf-8") as handle:
-        client_config = json.load(handle)
-    if client_config.get("client_name") != client_name:
-        raise ValueError(
-            f"{os.path.basename(client_config_path)} is for client "
-            f"{client_config.get('client_name')!r}, not {client_name!r}"
-        )
-    population_file = client_config.get("population_file") or ""
-    if not population_file or not os.path.isfile(
-        os.path.join(exp_folder, population_file)
-    ):
-        raise FileNotFoundError(
-            f"population file {population_file!r} of client {client_name!r} not found"
-        )
-
-
-def _normalize_forum_client_config(
-    exp_folder: str, client_name: str, population_name: str, client_config_path: str
-) -> None:
-    """Check that a forum client file still matches its client and its population file.
-
-    Nothing is rewritten (the file is the one the form wrote); a mismatch stops the start with a clear message.
-    """
-    with open(client_config_path, "r", encoding="utf-8") as handle:
-        client_config = json.load(handle)
-    if client_config.get("client_name") != client_name:
-        raise ValueError(
-            f"{os.path.basename(client_config_path)} is for client "
-            f"{client_config.get('client_name')!r}, not {client_name!r}"
-        )
-    population_file = (client_config.get("population") or {}).get("file") or ""
-    if not population_file or not os.path.isfile(
-        os.path.join(exp_folder, population_file)
-    ):
-        raise FileNotFoundError(
-            f"population file {population_file!r} of client {client_name!r} not found"
-        )
-
-
-_CLIENT_NORMALIZERS = {
-    "forum": _normalize_forum_client_config,
-    "dating": _normalize_dating_client_config,
-}
 
 
 def _resolve_hpc_client_file(exp, client_name, suffix, log_folder=None):
@@ -345,42 +297,6 @@ def _resolve_hpc_client_days_from_config(client_config_path: str) -> Optional[in
         return -1 if parsed == 0 else parsed
 
     return None
-
-
-def _set_dating_run_length(
-    client_config_path: str, cli, unlimited_value: int = -1
-) -> None:
-    """Write in the client file how many days the dating or forum runtime runs from this start.
-
-    The database holds the total length of the client (``Client.days``); the runtime counts the days from the
-    moment it registers, so a restarted client gets what is left of the total.
-    """
-    from y_web.src.hpc.run_length import remaining_days, set_duration
-    from y_web.src.models import Client_Execution
-
-    with open(client_config_path, "r", encoding="utf-8") as handle:
-        config = json.load(handle)
-    slots = int(config.get("num_slots_per_day") or 24)
-    execution = db.session.scalars(
-        select(Client_Execution).filter_by(client_id=cli.id)
-    ).first()
-    last_day = getattr(execution, "last_active_day", -1) if execution else -1
-    last_slot = getattr(execution, "last_active_hour", -1) if execution else -1
-    days = remaining_days(cli.days, last_day or -1, last_slot or -1, slots)
-    if days == 0:
-        raise RuntimeError(
-            f"Client '{cli.name}' has already run all its days: extend the simulation to run it further."
-        )
-    if days == -1:
-        days = unlimited_value  # YForum reads 0 as "until stopped"
-    stale = False
-    if unlimited_value == 0 and isinstance(config.get("simulation"), dict):
-        # forum schema is strict: drop the duration keys an older extension wrote under "simulation"
-        for key in ("days", "num_days"):
-            stale = config["simulation"].pop(key, None) is not None or stale
-    if stale or config.get("num_days") != days:
-        with open(client_config_path, "w", encoding="utf-8") as handle:
-            json.dump(set_duration(config, days), handle, indent=2)
 
 
 def _sync_hpc_client_duration_from_config(
@@ -728,28 +644,16 @@ def start_hpc_client(exp, cli, population):
 
         provider = registry.resolve(exp)
         # a platform that aligns its own client file must not start with one that could not be aligned
-        if not provider.normalize_hpc_client_config(
+        provider.normalize_hpc_client_config(
             exp_folder, cli.name, population.name, client_config
-        ):
-            try:
-                _CLIENT_NORMALIZERS[spec.key](
-                    exp_folder, cli.name, population.name, client_config
-                )
-            except Exception:
-                if spec.key in ("dating", "forum"):
-                    raise  # these must not start with a client config that could not be aligned
+        )
 
     if spec.validates_config:
         provider = registry.resolve(exp)
         runtime_dir = _external_repo_dir(spec.runtime_repo)
-        if not provider.validate_hpc_client(
+        provider.validate_hpc_client(
             exp_folder, runtime_dir, os.path.basename(client_config)
-        ):
-            registry.library("dating", "validation").validate_dating_folder(
-                exp_folder,
-                runtime_dir,
-                client_config=os.path.basename(client_config),
-            )
+        )
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     is_frozen = getattr(sys, "frozen", False)
@@ -969,7 +873,7 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                             )
                             actor_spec = find_hpc_platform(
                                 getattr(exp, "platform_type", None)
-                            ) or get_hpc_platform("microblogging")
+                            ) or get_hpc_platform(registry.default_key())
                             orchestrator_name = actor_spec.orchestrator_actor
                             runtime_actor_name = actor_spec.client_actor_name(
                                 runtime_client_id

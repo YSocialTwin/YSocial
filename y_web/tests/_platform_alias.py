@@ -195,6 +195,7 @@ FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next
     )
     + (
         "test_forum_plugin_listing.py",
+        "test_dating_runtime_registration.py",
         "test_hpc_client_failure_alert.py",
         "test_forum_client_config.py",
         "test_forum_communities_config.py",
@@ -237,7 +238,12 @@ MICROBLOGGING_HPC = Platform(  # the HPC runtime of the same platform: its route
     provider_class="Microblogging",
     provider_id="microblogging",
     routes=("routes.social_microblogging", "routes.interactions_microblogging"),
-    needs=_WORLD_SIMULATION_TESTS,
+    needs=_WORLD_SIMULATION_TESTS
+    + (  # the launch table row of the HPC runtime
+        "test_hpc_platform_characterization.py",
+        "test_hpc_progress_tracking.py",
+        "test_hpc_server_pid_lifecycle.py",
+    ),
     needs_any=_MICROBLOGGING_TESTS,
 )
 

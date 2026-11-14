@@ -71,6 +71,9 @@ PLATFORM_OWNED = (
     "y_web/routes/admin/sub/clients/_forum_hpc.py",
     "y_web/routes/admin/sub/_populations_dating.py",
     "y_web/routes/admin/sub/_agents_dating.py",
+    "y_web/src/hpc/_client_checks.py",
+    "y_web/src/external_runtime/registry.py",
+    "y_web/routes/admin/sub/experiments/_external_runtimes.py",
     "y_web/src/content/avatars.py",
     "y_web/src/agents/custom_field_stats.py",
     "y_web/src/agents/profile_pictures.py",
@@ -290,6 +293,16 @@ def without_moved(name: str, baseline):
             baseline = {
                 **baseline,
                 "known_platforms": {k: v for k, v in known.items() if k not in absent},
+            }
+        hpc = baseline.get("hpc_platforms")
+        if isinstance(hpc, dict):  # a row is declared by its runtime's repository
+            baseline = {
+                **baseline,
+                "hpc_platforms": {
+                    k: v
+                    for k, v in hpc.items()
+                    if repository_installed(v.get("runtime_repo"))
+                },
             }
         return baseline
     return baseline
