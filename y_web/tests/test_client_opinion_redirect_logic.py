@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from y_web.tests._platform_repos import forum_file
+from y_web.tests._platform_repos import forum_file, microblogging_file
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -84,11 +84,20 @@ def test_client_creation_opinion_toggle_falls_back_to_annotations():
         assert _opinion_dynamics_enabled_for_client_creation(experiment) is True
 
 
+def _standard_source():
+    return Path(
+        microblogging_file("y_web/routes/admin/sub/clients/_standard_create.py")
+    ).read_text(encoding="utf-8")
+
+
 def test_client_creation_routes_persist_and_redirect_opinion_configuration():
-    source = open(
-        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
-        "r",
-    ).read()
+    source = (
+        open(
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
+            "r",
+        ).read()
+        + _standard_source()
+    )
     assert '"opinion_dynamics": {' in source
     assert '"clientsr.opinion_configuration_standard"' in source
     assert '"clientsr.opinion_configuration_hpc"' in source
@@ -107,10 +116,7 @@ def test_client_creation_context_uses_shared_opinion_resolver():
 
 
 def test_standard_redirect_is_implemented_in_standard_create_function():
-    source = open(
-        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
-        "r",
-    ).read()
+    source = _standard_source()
 
     standard_start = source.index("def _create_standard_client_internal():")
     next_def = source.find("\ndef ", standard_start + 1)

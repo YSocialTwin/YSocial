@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from y_web.tests._platform_repos import forum_file, photo_file
+from y_web.tests._platform_repos import forum_file, microblogging_file, photo_file
 
 pytestmark = pytest.mark.integration
 
@@ -193,10 +193,18 @@ class TestClientFormFields:
             forum_file("y_web/templates/admin/clients_forum.html"),
             str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
         ]
-        crud_source = open(
-            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
-            "r",
-        ).read()
+        crud_source = (
+            open(
+                str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
+                "r",
+            ).read()
+            + open(
+                microblogging_file(
+                    "y_web/routes/admin/sub/clients/_standard_create.py"
+                ),
+                "r",
+            ).read()
+        )
 
         for template_path in templates:
             template_source = open(template_path, "r").read()

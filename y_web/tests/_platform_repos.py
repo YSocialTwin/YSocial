@@ -92,6 +92,8 @@ def microblogging_file(old_relative: str) -> str:
         path = base / "templates" / relative
     elif old_relative.startswith("y_web/static/assets/js/"):
         path = base / "static" / "js" / old_relative.rsplit("/", 1)[1]
+    elif old_relative == "y_web/routes/admin/sub/clients/_standard_create.py":
+        path = base / "routes" / "clients_standard.py"
     elif old_relative == "y_web/routes/social/microblogging.py":
         path = base / "routes" / "social_microblogging.py"
     elif old_relative == "y_web/routes/interactions/microblogging.py":

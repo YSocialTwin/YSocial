@@ -339,7 +339,31 @@ def user_can_view_experiment(admin_user, experiment):
     return target(admin_user, experiment)
 
 
+def mode_view(pattern, mode):
+    """The view ``pattern.format(mode=mode)`` registered on the ``clients`` blueprint, or ``None``."""
+    from y_web.routes.admin.sub.clients._dispatch import mode_view as target
+
+    return target(pattern, mode)
+
+
+def experiment_details_page(exp_id):
+    """The experiment details page of ``exp_id`` (what a creation flow answers with when it is done)."""
+    from y_web.routes.admin.sub.experiments import experiment_details as target
+
+    return target(int(exp_id))
+
+
+def log_telemetry_event(user, data):
+    """Record an event of the platform in the telemetry of the application."""
+    from y_web.src.telemetry import Telemetry
+
+    return Telemetry(user=user).log_event(data=data)
+
+
 __all__ = [
+    "experiment_details_page",
+    "log_telemetry_event",
+    "mode_view",
     "allocate_topics_by_percentage",
     "apply_opinion_distributions_to_population",
     "apply_population_attributes_to_client_config",
