@@ -10,6 +10,24 @@ import y_web.i18n as i18n
 module = importlib.import_module("y_web.routes.admin.sub.agents")
 
 
+@pytest.fixture(autouse=True)
+def _standard_platform_table(monkeypatch):
+    """The providers' runtime sets, pinned: the tests do not depend on which repositories are installed."""
+    monkeypatch.setattr(
+        module,
+        "_platforms",
+        lambda: {
+            "microblogging": (
+                "Microblogging",
+                (("microblogging_server", "microblogging_client"), ("hpc_simulator",)),
+            ),
+            "forum": ("Forum", (("forum_server", "forum_client"),)),
+            "photo_sharing": ("Photo sharing", (("photo_sharing",),)),
+            "instant_messaging": ("Instant messaging", (("instant_messaging",),)),
+        },
+    )
+
+
 @pytest.fixture
 def app():
     flask_app = Flask("y_web")
@@ -53,7 +71,7 @@ def tags(app, installed):
 def test_a_resource_for_every_installed_platform_is_tagged_all(app):
     result = tags(app, ["microblogging", "forum", "instant_messaging"])
     assert result["Agents"] == ["All"]
-    assert result["RSS"] == ["Forum", "Instant Messaging"]
+    assert result["RSS"] == ["Forum", "Instant messaging"]
     assert result["Images"] == ["Forum"]
     assert result["Pages"] == ["All"]
 
@@ -65,7 +83,7 @@ def test_tags_only_name_installed_platforms_and_hide_unusable_resources(app):
     result = tags(app, ["microblogging", "instant_messaging"])
     assert (
         "Images" not in result
-        and result["RSS"] == ["Instant Messaging"]
+        and result["RSS"] == ["Instant messaging"]
         and result["Pages"] == ["All"]
     )
 

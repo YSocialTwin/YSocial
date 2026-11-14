@@ -125,7 +125,7 @@ def test_optional_sections_create_a_standard_population_with_the_fields_asked_fo
     monkeypatch.setattr(
         "y_web.src.dating.population.runtime_available", lambda user=None: True
     )
-    monkeypatch.setattr(routes.mod, "_dating_generator_config", lambda: {})
+    monkeypatch.setattr(routes.dating, "_dating_generator_config", lambda: {})
     monkeypatch.setattr(routes.mod, "populations", lambda: "listed")
     one = json.dumps({"1": 100})
     form = {

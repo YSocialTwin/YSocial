@@ -246,6 +246,9 @@ class PlatformProvider:
     embedding_label: Optional[str] = None
     #: the clients read the feed assignment when they start: a running experiment must restart them to use a new one
     feeds_read_at_client_start: bool = False
+    #: sets of repository keys (``external_runtime``), any one of which makes the platform count as installed on the agent
+    #: resources page (``()``: the platform has no tag there)
+    tag_runtime_sets: Tuple[Tuple[str, ...], ...] = ()
     #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
     runtime_keys: Tuple[str, ...] = ()
     #: the experiment page shows the memory embedding settings of the platform
@@ -443,6 +446,10 @@ class PlatformProvider:
     def agent_form_context(self) -> dict:
         """Variables the agent-form section of this platform needs besides the page's own."""
         return {}
+
+    def agent_resource_cards(self) -> List[dict]:
+        """Cards this platform adds to the agent resources page (same shape as the built-in ones); empty by default."""
+        return []
 
     def agent_form_ext(self, form: Mapping[str, Any], admin_user: Any) -> dict:
         """``Agent_Ext`` values of the section of the single-agent form (empty when it is off)."""

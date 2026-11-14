@@ -225,16 +225,22 @@ def test_a_dating_population_can_be_deployed_on_any_platform_and_the_reverse():
 # -- routes ------------------------------------------------------------------------------------------
 @pytest.fixture
 def routes(app, monkeypatch, tmp_path):
+    from y_web.routes.admin.sub import _populations_dating as dating
     from y_web.routes.admin.sub import populations as mod
 
-    monkeypatch.setattr(mod, "check_privileges", lambda *_: None)
-    monkeypatch.setattr(mod, "current_user", SimpleNamespace(username="admin", id=1))
-    monkeypatch.setattr(mod, "ensure_population_username_type_column", lambda: None)
     flashes = []
-    monkeypatch.setattr(
-        mod, "flash", lambda msg, cat="message": flashes.append((cat, str(msg)))
-    )
-    return SimpleNamespace(mod=mod, flashes=flashes, tmp=tmp_path)
+    for module in (mod, dating):  # the dating pages are a module of their own
+        monkeypatch.setattr(module, "check_privileges", lambda *_: None)
+        monkeypatch.setattr(
+            module, "current_user", SimpleNamespace(username="admin", id=1)
+        )
+        monkeypatch.setattr(
+            module,
+            "flash",
+            lambda msg, cat="message": flashes.append((cat, str(msg))),
+        )
+    monkeypatch.setattr(mod, "ensure_population_username_type_column", lambda: None)
+    return SimpleNamespace(mod=mod, dating=dating, flashes=flashes, tmp=tmp_path)
 
 
 def _upload(app, routes, payload: bytes, name="pop.json", **form):
@@ -296,7 +302,7 @@ def test_details_download_and_delete(app, routes, monkeypatch):
         _upload(app, routes, EXAMPLE.read_bytes(), pop_name="P")
         row = db.session.query(Population).one()
         with app.test_request_context(f"/admin/dating_population/{row.id}/download"):
-            resp = routes.mod.download_dating_population.__wrapped__(row.id)
+            resp = routes.dating.download_dating_population.__wrapped__(row.id)
             assert json.loads(resp.get_data())["agents"][0]["username"] == "user_01"
         # the generic download and details routes hand dating populations over
         with app.test_request_context(f"/admin/download_population/{row.id}"):

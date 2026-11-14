@@ -264,6 +264,7 @@
     "agent_form_context": "(self) -> 'dict'",
     "agent_form_ext": "(self, form: 'Mapping[str, Any]', admin_user: 'Any') -> 'dict'",
     "agent_payload_ext": "(self, agent_payload: 'Mapping[str, Any]') -> 'list'",
+    "agent_resource_cards": "(self) -> 'List[dict]'",
     "annotation_problem": "(self, experiment: 'Any', label: 'str') -> 'str'",
     "apply_client_switches": "(self, client_config: 'dict', **switches: 'Any') -> 'bool'",
     "apply_experiment_switches": "(self, config: 'dict', original: 'Mapping[str, Any]', **switches: 'Any') -> 'bool'",

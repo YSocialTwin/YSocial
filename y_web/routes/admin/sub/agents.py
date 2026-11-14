@@ -18,7 +18,6 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
 from y_web import db
-from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
 from y_web.src.agents import appearance_form as af
@@ -29,13 +28,11 @@ from y_web.src.agents.custom_features import (
     replace_agent_custom_features,
     summarize_agent_custom_features,
 )
-from y_web.src.agents.platform import normalize_population_username_type
 from y_web.src.content.cover_images import available_cover_image_urls
 from y_web.src.external_runtime.registry import (
     EXTERNAL_DIR,
     runtime_installed_and_visible,
 )
-from y_web.src.llm.ollama_manager import get_ollama_models
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     ActivityProfile,
@@ -43,10 +40,7 @@ from y_web.src.models import (
     Agent_Ext,
     Agent_Population,
     Agent_Profile,
-    Content_Recsys,
     Education,
-    Follow_Recsys,
-    ForumImageFeedResource,
     ForumRssFeedResource,
     Languages,
     Leanings,
@@ -60,11 +54,7 @@ from y_web.src.models import (
     Toxicity_Levels,
 )
 from y_web.src.system.avatars_store import get_avatars_dir
-from y_web.src.system.miscellanea import (
-    check_privileges,
-    llm_backend_status,
-    ollama_status,
-)
+from y_web.src.system.miscellanea import check_privileges, llm_backend_status
 
 agents = Blueprint("agents", __name__)
 
@@ -100,31 +90,33 @@ def _page_resources_available() -> bool:
     )
 
 
-# platform key -> (short tag label, repositories that must all be installed for the platform to count as installed;
-# a tuple of alternatives means any one of those sets is enough)
-_PLATFORMS = {
-    "microblogging": (
-        N_("Microblogging"),
-        (("microblogging_server", "microblogging_client"), ("hpc_simulator",)),
-    ),
-    "forum": (N_("Forum"), (("forum_server", "forum_client"),)),
-    "photo_sharing": (N_("Photo sharing"), (("photo_sharing",),)),
-    "instant_messaging": (N_("Instant Messaging"), (("instant_messaging",),)),
-}
+def _platforms() -> dict:
+    """platform key -> (short tag label, sets of repositories any one of which makes the platform count as installed);
+    the platforms that declare ``tag_runtime_sets``, in menu order."""
+    out = {}
+    for provider in registry.providers():
+        sets = tuple(
+            runtime_set
+            for variant in registry.variants(provider.key)
+            for runtime_set in variant.tag_runtime_sets
+        )
+        if sets:
+            out[provider.key] = (provider.label, sets)
+    return out
 
 
-# Ad hoc (plugin) agents write straight into the experiment database in the YServer layout: ``post``, ``user_mgmt``,
-# ``rounds``, ``reactions``, ``follow``, ``mentions``, hashtags/topics, plus ``stress_reward``, ``agent_opinion``,
-# ``reported`` and ``sys_messages`` (created on demand). Only the microblogging and forum servers have that layout;
-# photo sharing stores ``photos`` instead of ``post`` and instant messaging owns a different schema.
-_PLUGIN_AGENT_PLATFORMS = ("microblogging", "forum")
+def _plugin_agent_platforms() -> list:
+    """Ad hoc (plugin) agents write straight into the experiment database in the Standard server layout (``post``,
+    ``user_mgmt``, ``rounds``, ...): only the platforms that have it (``plugin_agents``).
+    """
+    return [p.key for p in registry.providers() if p.plugin_agents]
 
 
 def _installed_platforms() -> list[str]:
     """The platforms whose runtime is installed (and visible to this admin), in a fixed order."""
     return [
         key
-        for key, (_label, alternatives) in _PLATFORMS.items()
+        for key, (_label, alternatives) in _platforms().items()
         if any(
             all(_runtime_installed(repo) for repo in repos) for repos in alternatives
         )
@@ -140,14 +132,16 @@ def _tag_agent_resource_cards(cards: list[dict], installed: list[str]) -> list[d
     out = []
     for card in cards:
         supported = [
-            p for p in installed if p in set(card.get("deployment_tags") or _PLATFORMS)
+            p
+            for p in installed
+            if p in set(card.get("deployment_tags") or _platforms())
         ]
         if not supported:
             continue
         if len(installed) > 1 and supported == installed:
             tags = [{"key": "all", "label": _("All")}]
         else:
-            tags = [{"key": p, "label": _(_PLATFORMS[p][0])} for p in supported]
+            tags = [{"key": p, "label": _(_platforms()[p][0])} for p in supported]
         out.append({**card, "platform_tags": tags, "platforms": supported})
     return out
 
@@ -224,11 +218,11 @@ def _plugin_agent_specs() -> list[dict]:
                     "repo_name": repo_name,
                     "manifest_path": str(manifest_path),
                     # where the agent type can be deployed: the manifest's "platforms", else the platforms whose
-                    # database has the tables plugin agents write to (``post``, ``user_mgmt``: microblogging, forum)
+                    # database has the tables plugin agents write to (``post``, ``user_mgmt``)
                     "platforms": [
-                        p for p in (entry.get("platforms") or []) if p in _PLATFORMS
+                        p for p in (entry.get("platforms") or []) if p in _platforms()
                     ]
-                    or list(_PLUGIN_AGENT_PLATFORMS),
+                    or _plugin_agent_platforms(),
                 }
             )
     return specs
@@ -414,11 +408,6 @@ def _platform_ext_from_form() -> dict:
     return ext
 
 
-def _dating_runtime_available() -> bool:
-    dp = registry.library_or_none("dating", "population")
-    return dp is not None and dp.runtime_available(current_user)
-
-
 def _agent_builder_context(**overrides):
     available_profile_pics = []
     available_cover_images = []
@@ -488,7 +477,7 @@ def _agent_builder_context(**overrides):
         "hello_populations": [],
         "available_profile_pics": available_profile_pics,
         "available_cover_images": available_cover_images,
-        "dating_available": _dating_runtime_available(),
+        "dating_available": dating_runtime_available(),
         **_agent_optional_context(),
     }
     context.update(overrides)
@@ -636,7 +625,7 @@ def _resolve_custom_population_assignment(spec: dict):
         pop = Population(
             name=new_population_name,
             descr=new_population_descr,
-            username_type="microblogging",
+            username_type=registry.default_key(),
             pop_type=spec["slug"],
             size=0,
         )
@@ -830,66 +819,6 @@ def _parse_structured_agent_features_from_form() -> list[dict]:
     return entries
 
 
-def _with_dating_features(feature_entries: list[dict]) -> list[dict]:
-    """Add the ``dating.*`` custom features described by the dating fields of the form (none when YDating is absent).
-
-    The fields are ignored by every other platform; they let an ad hoc agent take part in a dating simulation.
-    Raises ``ValueError`` (shown to the admin) when the filled fields do not satisfy the YDating agent schema.
-    """
-    agent_form = registry.library_or_none("dating", "agent_form")
-    dp = registry.library_or_none("dating", "population")
-    form = request.form
-    if (
-        dp is None
-        or not dp.runtime_available(current_user)
-        or not agent_form.has_dating_fields(form)
-    ):
-        return feature_entries
-    if form.get(
-        "include_appearance"
-    ):  # the Appearance section feeds the Dating appearance too
-        from werkzeug.datastructures import MultiDict
-
-        form = MultiDict(form)
-        for key in list(af.APPEARANCE_LABELS) + ["height_cm", "glasses"]:
-            if form.get("appearance_" + key) and not form.get(
-                "dating_appearance_" + key
-            ):
-                form["dating_appearance_" + key] = form.get("appearance_" + key)
-    try:
-        age = int(str(form.get("age") or "").strip())
-    except ValueError:
-        raise ValueError(_("A dating agent needs a numeric age.")) from None
-    personality = {
-        trait: form.get(trait)
-        for trait in ("oe", "co", "ex", "ag", "ne")
-        if form.get(trait)
-    }
-    base = {
-        "username": (form.get("name") or "").strip(),
-        "age": age,
-        "gender": form.get("gender"),
-        "language": form.get("language"),
-        "nationality": form.get("nationality"),
-        "education_level": form.get("education_level"),
-        "profession": form.get("profession"),
-        "leaning": form.get("leaning"),
-        "personality": personality or None,
-    }
-    entries, problems = agent_form.entries_from_form(form, base)
-    if problems:
-        raise ValueError(
-            _("The dating fields are not valid: %(why)s", why=" | ".join(problems[:5]))
-        )
-    taken = {entry["key"] for entry in entries}
-    kept = [
-        entry
-        for entry in feature_entries
-        if not (entry.get("feature_type") == "custom" and entry.get("key") in taken)
-    ]
-    return kept + entries
-
-
 def _ensure_interest_topics_exist(feature_entries: list[dict]) -> None:
     seen: set[str] = set()
     for entry in feature_entries:
@@ -1008,9 +937,6 @@ def agents_dashboard():
     forum_rss_feed_count = db.session.scalar(
         select(func.count()).select_from(ForumRssFeedResource)
     )
-    forum_image_feed_count = db.session.scalar(
-        select(func.count()).select_from(ForumImageFeedResource)
-    )
     population_count = db.session.scalar(select(func.count()).select_from(Population))
     activity_profile_count = db.session.scalar(
         select(func.count()).select_from(ActivityProfile)
@@ -1051,12 +977,7 @@ def agents_dashboard():
                 "Manage existing agents, remove orphaned entries, and create fully custom profiles."
             ),
             "meta": {},
-            "deployment_tags": [
-                "microblogging",
-                "forum",
-                "photo_sharing",
-                "instant_messaging",
-            ],
+            "deployment_tags": list(_platforms()),
             "is_plugin": False,
         }
     ]
@@ -1088,12 +1009,7 @@ def agents_dashboard():
                     "Configure page identity, leaning, feed sources, and upload page collections in bulk."
                 ),
                 "meta": {},
-                "deployment_tags": [
-                    "microblogging",
-                    "forum",
-                    "photo_sharing",
-                    "instant_messaging",
-                ],
+                "deployment_tags": list(_platforms()),
                 "is_plugin": False,
             }
         )
@@ -1122,36 +1038,24 @@ def agents_dashboard():
                     "Create feed entries centrally, then reuse them across simulations without revalidating the same source each time."
                 ),
                 "meta": {},
-                "deployment_tags": ["forum", "instant_messaging"],
-                "is_plugin": False,
-            },
-            {
-                "title": _("Forum Image Feeds"),
-                "subtitle": _("Built-in resource"),
-                "icon": "mdi-image-multiple-outline",
-                "tone": "is-info",
-                "description": _(
-                    "Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion."
-                ),
-                "highlights": [
-                    _(
-                        "%(count)s reusable image feeds available",
-                        count=forum_image_feed_count,
-                    ),
-                    _("Subreddit validation is done before assignment"),
-                    _("The same subreddit definition can be reused safely"),
+                "deployment_tags": [
+                    p.key
+                    for p in registry.providers()
+                    if p.feeds_read_at_client_start or p.news_page_feeds
                 ],
-                "cta_label": _("Manage Image Resources"),
-                "cta_href": "/admin/forum_image_resources",
-                "secondary_label": _(
-                    "Maintain the canonical image-feed catalog here and assign only the feeds needed by each forum simulation."
-                ),
-                "meta": {},
-                "deployment_tags": ["forum"],
                 "is_plugin": False,
             },
         ]
     )
+
+    seen = {card["title"] for card in agent_resource_cards}
+    for provider in registry.providers():
+        for card in provider.agent_resource_cards():
+            if (
+                card["title"] not in seen
+            ):  # a platform with several repositories shows its card once
+                seen.add(card["title"])
+                agent_resource_cards.append(card)
 
     agent_resource_cards.extend(plugin_agent_cards)
     installed_platforms = _installed_platforms()
@@ -1161,7 +1065,7 @@ def agents_dashboard():
     platform_filters = [
         {
             "key": key,
-            "label": _(_PLATFORMS[key][0]),
+            "label": _(_platforms()[key][0]),
             "count": sum(1 for c in agent_resource_cards if key in c["platforms"]),
         }
         for key in installed_platforms
@@ -1175,7 +1079,14 @@ def agents_dashboard():
             "total_agents": synthetic_agent_count,
             "total_pages": page_count,
             "forum_rss_feeds": forum_rss_feed_count,
-            "forum_image_feeds": forum_image_feed_count,
+            "forum_image_feeds": next(
+                (
+                    c["image_feed_count"]
+                    for c in agent_resource_cards
+                    if "image_feed_count" in c
+                ),
+                0,
+            ),
             "total_populations": population_count,
             "activity_profiles": activity_profile_count,
             "plugin_agent_types": len(plugin_agent_cards),
@@ -1276,7 +1187,7 @@ def create_agent():
         structured_features = _parse_structured_agent_features_from_form()
         _ensure_interest_topics_exist(structured_features)
         structured_features = structured_features + _appearance_features_from_form()
-        structured_features = _with_dating_features(structured_features)
+        structured_features = with_dating_features(structured_features)
         platform_ext = _platform_ext_from_form()
         picture_cfg = None
         if request.form.get("include_appearance") and request.form.get(
@@ -1677,3 +1588,9 @@ def delete_orphaned_agents():
         )
     )
     return agent_data()
+
+
+from ._agents_dating import (
+    _dating_runtime_available as dating_runtime_available,
+)  # noqa: E402
+from ._agents_dating import _with_dating_features as with_dating_features
