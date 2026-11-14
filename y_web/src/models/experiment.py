@@ -141,7 +141,7 @@ class ReplyInboxState(db.Model):
     """
     Tracks the last seen reply notification for a user.
 
-    This provides Reddit-style unread notifications without storing one row per
+    This provides threaded-community unread notifications without storing one row per
     reply event inside the experiment database.
     """
 
@@ -156,7 +156,7 @@ class ReplyInboxState(db.Model):
 
 class ForumChatSession(db.Model):
     """
-    Persistent private chat thread between a forum user and a simulation agent.
+    Persistent private chat thread between a user and a simulation agent.
 
     Stored inside the experiment database so chat history follows the experiment.
     """
@@ -198,7 +198,7 @@ class ForumChatSession(db.Model):
 
 
 class ForumChatMessage(db.Model):
-    """One message inside a forum chat session."""
+    """One message inside a chat session."""
 
     __bind_key__ = "db_exp"
     __tablename__ = "forum_chat_messages"
@@ -344,7 +344,7 @@ class Voting(db.Model):
     Voting/preference tracking for content.
 
     Records user voting preferences (upvote/downvote) on different content types
-    for Reddit-style voting mechanisms.
+    for threaded-community voting mechanisms.
     """
 
     __bind_key__ = "db_exp"
@@ -401,7 +401,7 @@ class Images(db.Model):
 
 class ImagePosts(db.Model):
     """
-    Pre-fetched standalone images that forum agents can share.
+    Pre-fetched standalone images that agents can share.
     """
 
     __tablename__ = "image_posts"

@@ -196,13 +196,22 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
+def _slug_fallback(username_type):
+    """Name of an empty slug when the platform wants slug usernames, else ``None`` (full name without spaces)."""
+    from y_web.platforms import registry
+
+    provider = registry.get(username_type)
+    return provider.slug_username_fallback if provider else None
+
+
 def _normalize_generated_username(raw_name: str, username_type: str) -> str:
     value = str(raw_name or "").strip()
-    if username_type == "forum":
+    fallback = _slug_fallback(username_type)
+    if fallback is not None:
         lowered = value.lower()
         lowered = re.sub(r"[^a-z0-9_]+", "_", lowered)
         lowered = re.sub(r"_+", "_", lowered).strip("_")
-        return lowered or "forum_user"
+        return lowered or fallback
     return value.replace(" ", "")
 
 
@@ -210,18 +219,19 @@ def _generate_unique_name(
     fake,
     gender,
     used_names,
-    username_type="microblogging",
+    username_type=None,
     max_attempts=100,
 ):
     """
     Generate a unique name that hasn't been used yet.
 
     Username creation is platform-aware:
-    - microblogging keeps the legacy full-name-without-spaces behavior
-    - forum uses a dedicated forum-safe username path
+    - by default the legacy full-name-without-spaces behavior is kept
+    - a platform that wants slug usernames says so (``slug_username_fallback``)
     """
+    from y_web.platforms import registry
 
-    username_type = (username_type or "microblogging").strip().lower()
+    username_type = (username_type or registry.default_key()).strip().lower()
 
     def _fake_attr(preferred, fallback):
         if hasattr(fake, preferred):
@@ -229,7 +239,7 @@ def _generate_unique_name(
         return getattr(fake, fallback)()
 
     def generate_name(gender_type):
-        if username_type == "forum":
+        if _slug_fallback(username_type) is not None:
             if hasattr(fake, "user_name"):
                 return _normalize_generated_username(fake.user_name(), username_type)
 
@@ -411,7 +421,7 @@ def generate_population(
             fake,
             gender,
             used_names,
-            getattr(population, "username_type", "microblogging"),
+            getattr(population, "username_type", None),
         )
         # Add the name to used_names to prevent duplicates within this population
         used_names.add(name)

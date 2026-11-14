@@ -15140,7 +15140,7 @@ msgid "Use the dedicated standard client creation route for this experiment."
 msgstr ""
 
 msgid ""
-"Use the dedicated standard or forum client creation route for this "
+"Use the dedicated client creation route for this "
 "experiment."
 msgstr ""
 

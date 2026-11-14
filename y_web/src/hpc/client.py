@@ -213,7 +213,7 @@ def resolve_hpc_client_execution_log_path(
 ) -> Optional[str]:
     """Same lookup as :func:`resolve_hpc_client_log_path` for ``*_execution.log``.
 
-    The YInstantMessaging client names its files after the runtime client id
+    Some runtime clients name its files after the runtime client id
     (``<experiment-folder>:<client-name>_execution.log``).
     """
     if not client_name:

@@ -287,6 +287,7 @@
     "extend_server_run": "(self, exp: 'Any', total_days: 'int') -> 'bool'",
     "extra_runtime_availability": "(self) -> 'Mapping[str, bool]'",
     "failure_reason": "(self, log_path: 'str') -> 'str'",
+    "feed_home_url": "(self, exp_id: 'int') -> 'Optional[str]'",
     "feeds_context": "(self, experiment: 'Any', experiment_dir: 'str') -> 'Optional[dict]'",
     "finish_hpc_client_config": "(self, config: 'dict', form: 'HpcClientForm', exp_dir: 'str', population_name: 'str') -> 'bool'",
     "folder_clone": "(self) -> 'Optional[Tuple[Any, Any]]'",

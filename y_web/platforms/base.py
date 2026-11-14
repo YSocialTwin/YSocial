@@ -251,6 +251,14 @@ class PlatformProvider:
     #: how the platform is launched on the HPC/Ray path: the fields of ``y_web.src.hpc.platforms.HpcPlatform``
     #: (``runtime_repo`` is required); ``None`` = the platform has no HPC runtime
     hpc_launch: Optional[Dict[str, Any]] = None
+    #: the client writes its progress records to ``<client>_execution.log`` (no ``<client>`` log of its own)
+    progress_in_execution_log: bool = False
+    #: a population may carry dedicated custom fields of this platform (``carries_population_fields``)
+    has_population_fields: bool = False
+    #: usernames of generated agents are lower-case slugs (``[a-z0-9_]``); the value is the name used when nothing is left
+    slug_username_fallback: Optional[str] = None
+    #: posts are titled, timed threads (the profile post lists carry a title, display time and community)
+    threaded_posts: bool = False
     tag_runtime_sets: Tuple[Tuple[str, ...], ...] = ()
     #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
     runtime_keys: Tuple[str, ...] = ()
@@ -529,6 +537,10 @@ class PlatformProvider:
         )
 
     # --- admin: opening, starting and copying an experiment ----------------------------------------------------------
+
+    def feed_home_url(self, exp_id: int) -> Optional[str]:
+        """Page of the platform the "home" link of the site goes to for this experiment, or ``None`` (the default)."""
+        return None
 
     def observer_url(self, exp_id: int) -> Optional[str]:
         """Page an administrator opens an experiment on when the platform has no per-user feed, else ``None``."""

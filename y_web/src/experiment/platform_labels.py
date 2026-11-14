@@ -34,7 +34,10 @@ def group_experiments_by_platform(experiments: Iterable[Any]) -> List[Dict[str, 
     order = {key: i for i, key in enumerate(registry.keys())}
 
     def type_of(exp):
-        return str(getattr(exp, "platform_type", "") or "").strip() or "microblogging"
+        return (
+            str(getattr(exp, "platform_type", "") or "").strip()
+            or registry.default_key()
+        )
 
     def group_key(exp):
         t = type_of(exp)

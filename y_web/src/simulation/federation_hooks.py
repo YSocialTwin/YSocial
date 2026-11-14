@@ -1,7 +1,7 @@
 """Federation hooks of the YWeb client loop (World Simulation).
 
 YWeb does not run `YClient.run_simulation`: `process_runner.run_simulation` and `agent_sampler.process_agent` drive the
-slots of the microblogging and forum clients. The federation hooks that `run_simulation` of the client packages applies
+slots of the Standard clients. The federation hooks that `run_simulation` of the client packages applies
 (adopt_provisioned, filter_pool, scale_actions) are applied here, with the same functions of `y_client.federation`.
 
 Everything is a no-op, with no request and no random draw, when the client package has no `y_client.federation`, when

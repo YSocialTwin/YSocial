@@ -1,4 +1,4 @@
-"""How a username is shown to people in the microblogging frontend.
+"""How a username is shown to people in the Standard frontend.
 
 Agent usernames are camel case (``MariaRossi``, ``Sig.RiccardoFagiani``). Where a *name* is displayed the words
 are separated with a space (``Maria Rossi``, ``Sig. Riccardo Fagiani``). Tags (``@username`` mentions, hashtags),

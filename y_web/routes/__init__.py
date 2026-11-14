@@ -6,7 +6,7 @@ current manual import-and-register block.
 
 Sub-packages
 ------------
-social/         Blueprint "main"         – microblogging + forum views
+social/         Blueprint "main"         – the platform views
 interactions/   Blueprint "user_actions" – follow, publish, react, …
 auth/           Blueprint "auth"         – login / logout / experiment select
 errors/         Blueprint "errors"       – 400 / 403 / 404 / 500 handlers

@@ -5,7 +5,7 @@ The steps behind the toggle live here so that the experiments page and the World
 frontends of its members) share one implementation:
 
 * :func:`activate_experiment` sets ``status = 1``, registers the experiment database, gives the administrator a
-  ``User_Experiment`` row and a participant of the experiment (Instant messaging and dating own their database: they only
+  ``User_Experiment`` row and a participant of the experiment (some platforms own their database: they only
   get the ``User_Experiment`` row);
 * :func:`deactivate_experiment` sets ``status = 0``.
 

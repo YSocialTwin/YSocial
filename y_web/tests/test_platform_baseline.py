@@ -108,3 +108,13 @@ def test_moved_templates_are_in_their_repository():
     assert not missing, "moved templates not found in their repository:\n" + "\n".join(
         missing
     )
+
+
+def test_no_platform_is_named_outside_the_declared_exceptions():
+    """Gate G8: the core asks the registry; only the declared exceptions (and platform-owned modules) name a platform."""
+    named = [
+        f"{path}: {count}"
+        for path, count in baseline.collect_platform_names().items()
+        if not path.startswith(baseline.DECLARED_EXCEPTIONS)
+    ]
+    assert not named, "\n".join(named)

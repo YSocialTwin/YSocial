@@ -3,7 +3,7 @@ Text processing utilities for social media content.
 
 Provides functions for sentiment analysis, toxicity detection, text augmentation
 with hyperlinks, component extraction (hashtags, mentions), HTML tag stripping,
-and Reddit-style post formatting.
+and threaded-community post formatting.
 """
 
 import re
@@ -358,7 +358,7 @@ def normalize_punctuation_spacing(text):
 
 def process_reddit_post(text, allow_legacy_blankline_title=True):
     """
-    Process and format Reddit-style post text.
+    Process and format threaded-community post text.
 
     Handles TITLE prefix variants and strips markdown artifacts from the body.
     """

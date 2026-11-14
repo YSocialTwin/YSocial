@@ -1424,7 +1424,7 @@ def _build_client_creation_context(idexp, recsys_mode):
 
     crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
-    # ``recsys_mode`` is one simulator name or several (forum clients get the "Standard"
+    # ``recsys_mode`` is one simulator name or several (clients of some platforms get the "Standard"
     # catalogue plus the recommenders reserved to forums, e.g. HotRanking).
     if isinstance(recsys_mode, str) or recsys_mode is None:
         recsys_mode = (recsys_mode,)
@@ -2939,7 +2939,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         json.dump(population_data, f, indent=4)
 
     # Copy prompts file into the experiment folder.
-    # Photo Sharing uses the YPhotoSharing prompt filename; other HPC paths keep prompts.json.
+    # The prompt filename is the one of the platform's HPC spec (``prompts.json`` by default).
     pack_name, prompts_file = _provider_of(exp).experiment_prompt_pack("HPC")
     prompts_dest = f"{exp_dir}{os.sep}{prompts_file}"
 
@@ -3312,9 +3312,7 @@ def create_hpc_client_route():
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         flash(
-            _(
-                "Use the dedicated standard or forum client creation route for this experiment."
-            ),
+            _("Use the dedicated client creation route for this experiment."),
             "error",
         )
         return redirect(url_for(_clients_page(exp), idexp=exp_id))
@@ -3572,7 +3570,7 @@ def _normalize_hourly_activity(activity):
     """Return ``{"0": value, ..., "23": value}`` from the shapes configs use.
 
     A dict maps hour -> weight (YClient); a comma-separated string or a list names the active
-    hours (activity profiles of YInstantMessaging, e.g. ``"0,1,2"``), each counted as 1.
+    hours (activity profiles of some platforms, e.g. ``"0,1,2"``), each counted as 1.
     Anything else gives no activity.
     """
     if isinstance(activity, dict):

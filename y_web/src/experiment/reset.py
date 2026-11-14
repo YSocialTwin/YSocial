@@ -4,7 +4,7 @@ Used by the reset of a World Simulation, which must bring *every* member back, w
 
 * HPC (Ray) experiments: the population files are restored from their backups, the run artifacts and the database the
   server creates at start are removed;
-* Standard experiments (microblogging, forum): the database is replaced by the clean schema a new experiment starts
+* Standard experiments (the Standard runtime of each platform): the database is replaced by the clean schema a new experiment starts
   from, the logs, the run-state snapshots and the client's own content database are removed.
 
 In both cases the clients are marked stopped with no elapsed time, the counters, the log offsets and the metrics

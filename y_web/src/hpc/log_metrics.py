@@ -1332,11 +1332,16 @@ def monitor_hpc_client_execution_logs():
 
                     print(f"[HPC Monitor] Looking for client log: {client_log_path}")
 
-                    if (
-                        not (client_log_path and os.path.exists(client_log_path))
-                        and getattr(exp, "platform_type", None) == "dating"
+                    from y_web.platforms import registry as _registry
+
+                    if not (
+                        client_log_path and os.path.exists(client_log_path)
+                    ) and getattr(
+                        _registry.for_experiment(exp),
+                        "progress_in_execution_log",
+                        False,
                     ):
-                        # the dating client writes its progress records to the execution log
+                        # these clients write their progress records to the execution log
                         client_log_path = os.path.join(
                             exp_folder, "logs", f"{client.name}_execution.log"
                         )
@@ -1354,7 +1359,7 @@ def monitor_hpc_client_execution_logs():
                         exp_folder, "logs", f"{client.name}_execution.log"
                     )
                     if not os.path.exists(execution_log_path):
-                        # runtimes that prefix the log names with the client id (YInstantMessaging)
+                        # runtimes that prefix the log names with the client id (some runtimes)
                         execution_log_path = (
                             resolve_hpc_client_execution_log_path(
                                 exp,

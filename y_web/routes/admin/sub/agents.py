@@ -982,7 +982,7 @@ def agents_dashboard():
         }
     ]
 
-    if True:  # shown when microblogging or IM is installed (the platform tags filter)
+    if True:  # shown whatever the installed platforms (the platform tags filter)
         agent_resource_cards.append(
             {
                 "title": _("News Pages"),

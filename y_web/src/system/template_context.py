@@ -49,10 +49,12 @@ def register_template_context(app: Flask) -> None:
                     return dict(feed_home_url="/admin/join_simulation")
                 exp = active_exps[0]
 
-            if exp.platform_type == "forum":
-                return dict(
-                    feed_home_url=f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type=new"
-                )
+            from y_web.platforms import registry
+
+            platform = registry.for_experiment(exp)
+            home_url = platform.feed_home_url(exp.idexp) if platform else None
+            if home_url:
+                return dict(feed_home_url=home_url)
 
             feed_user_id = None
             user_id_str = str(current_user.get_id() or "")

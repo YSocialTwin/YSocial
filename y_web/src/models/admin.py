@@ -9,6 +9,7 @@ configurations, populations, agents, and infrastructure tracking tables.
 from flask_login import UserMixin
 
 from y_web import db
+from y_web.platforms.registry import FALLBACK_DEFAULT_KEY
 
 
 class Admin_users(UserMixin, db.Model):
@@ -109,7 +110,7 @@ class Exps(db.Model):
     """
     Experiment configuration and metadata.
 
-    Defines simulation experiments including platform type (microblogging/reddit),
+    Defines simulation experiments including platform type (one of the registered platforms),
     database connections, ownership, status tracking, and server configuration.
 
     exp_status values:
@@ -122,7 +123,9 @@ class Exps(db.Model):
     __bind_key__ = "db_admin"
     __tablename__ = "exps"
     idexp = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    platform_type = db.Column(db.String(50), nullable=False, default="microblogging")
+    platform_type = db.Column(
+        db.String(50), nullable=False, default=FALLBACK_DEFAULT_KEY
+    )
     exp_name = db.Column(db.String(50), nullable=False)
     # language of the LLM prompts the experiment starts from ("en" or another pack in data_schema/prompts)
     prompt_language = db.Column(
@@ -259,7 +262,9 @@ class Population(db.Model):
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
     llm_url = db.Column(db.String(100))
-    username_type = db.Column(db.String(50), nullable=False, default="microblogging")
+    username_type = db.Column(
+        db.String(50), nullable=False, default=FALLBACK_DEFAULT_KEY
+    )
     pop_type = db.Column(db.String(50), nullable=True, default=None)
 
 
@@ -376,7 +381,7 @@ class Page(db.Model):
 
 
 class ForumRssFeedResource(db.Model):
-    """Reusable RSS feed definitions for forum experiments."""
+    """Reusable RSS feed definitions for experiments that read feeds."""
 
     __bind_key__ = "db_admin"
     __tablename__ = "forum_rss_feed_resources"
@@ -396,7 +401,7 @@ class ForumRssFeedResource(db.Model):
 
 
 class ForumImageFeedResource(db.Model):
-    """Reusable subreddit-backed image feed definitions for forum experiments."""
+    """Reusable subreddit-backed image feed definitions for experiments that read feeds."""
 
     __bind_key__ = "db_admin"
     __tablename__ = "forum_image_feed_resources"
@@ -1085,7 +1090,7 @@ class FederationHuman(db.Model):
     """A person (YWeb user) enrolled in a World Simulation under the identity ``human:<user id>`` (F8, H3).
 
     ``members_json`` maps each enrolled member to ``{"account_id", "created"}``: ``created`` is false while the
-    account does not exist yet (dating asks the person for a profile first). ``status``: "active" or "inactive"
+    account does not exist yet (some platforms ask the person for a profile first). ``status``: "active" or "inactive"
     (never deletes an account: it only stops the person being offered the destinations).
     """
 

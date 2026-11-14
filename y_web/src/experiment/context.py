@@ -103,7 +103,7 @@ def register_experiment_database(app, exp_id, db_name):
     if _provider_of_experiment_id(exp_id).bind_database(app, exp_id, db_name):
         return
 
-    # A platform with its own database (dating, say) is read by its observer in read-only mode, never bound.
+    # A platform with its own database (a platform's own, say) is read by its observer in read-only mode, never bound.
     if _owns_database_experiment_id(exp_id):
         return
 
@@ -254,7 +254,7 @@ def setup_experiment_context():
             from y_web.src.models import Exps
 
             # Bind the explicit experiment referenced by the route even if it is not
-            # currently active, so direct admin/forum routes never fall back to the
+            # currently active, so direct admin/platform routes never fall back to the
             # legacy dummy bind.
             exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
             if exp:

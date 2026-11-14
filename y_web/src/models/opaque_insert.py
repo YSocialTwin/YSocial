@@ -1,13 +1,13 @@
 """Ids and ``seq`` of the rows a person (YWeb) writes into a database that does not number them itself.
 
-A YForum database has UUID string ids and a server-assigned ``seq`` (NOT NULL, UNIQUE) on 14 tables, and no database
-default for either. The ORM models of YWeb were written for integer autoincrement ids, so an insert of a forum action
+A database of an HPC runtime that numbers its own rows has UUID string ids and a server-assigned ``seq`` (NOT NULL, UNIQUE) on 14 tables, and no database
+default for either. The ORM models of YWeb were written for integer autoincrement ids, so an insert of an action
 (post, comment, vote, follow, report...) would omit both. Two hooks fix that, and only for the tables of such a
 database:
 
 * ``fill_insert`` (mapper ``before_insert``): a new UUID as ``id`` when the table has a text id and none was set;
 * ``number_inserts`` (engine ``before_execute``): the insert gets ``seq = MAX(seq) + 1`` computed by the statement
-  itself (the YForum server continues after it, see ``SequenceAllocator``), when the table has the column.
+  itself (the runtime server continues after it, see ``SequenceAllocator``), when the table has the column.
 
 ``seq`` is declared on the Core table only (``add_seq_columns``), never on the models and never created by
 ``create_all``, so queries and inserts of every other database are unchanged.
@@ -23,7 +23,7 @@ from sqlalchemy.sql.dml import Insert
 
 from y_web import db
 
-# the tables of a YForum database that carry ``seq`` (YForum ``models.SEQ_TABLES``)
+# the tables of such a database that carry ``seq`` (the runtime's ``models.SEQ_TABLES``)
 SEQ_TABLES = (
     "user_mgmt",
     "rounds",
@@ -76,7 +76,7 @@ def number_inserts(conn, clauseelement, multiparams, params, execution_options):
     """Give the ``seq`` of the table to an insert that goes to a database with that column.
 
     The number is computed by the insert itself (``MAX(seq) + 1`` of the table, in the same statement), so rows
-    inserted one after the other, or by the YForum server at the same time, never take the same value.
+    inserted one after the other, or by the runtime server at the same time, never take the same value.
     """
     if not isinstance(clauseelement, Insert):
         return clauseelement, multiparams, params
@@ -87,7 +87,7 @@ def number_inserts(conn, clauseelement, multiparams, params, execution_options):
         or not table.c.seq.info.get("yweb_forum_seq")
     ):
         return clauseelement, multiparams, params
-    from y_web.src.commons.ordering import (  # lazy: the forum package imports the models
+    from y_web.src.commons.ordering import (  # lazy: the platform package imports the models
         table_layout,
     )
 
@@ -110,7 +110,7 @@ def fill_insert(mapper, connection, target) -> None:
     if getattr(cls, "__bind_key__", None) != "db_exp":
         return
     table = mapper.local_table.name
-    from y_web.src.commons.ordering import (  # lazy: the forum package imports the models
+    from y_web.src.commons.ordering import (  # lazy: the platform package imports the models
         table_layout,
     )
 

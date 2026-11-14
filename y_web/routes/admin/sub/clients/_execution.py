@@ -38,7 +38,7 @@ def _sync_duration_fields_in_client_config(
 ) -> dict:
     """Keep all duration fields in a client config aligned with the new total.
 
-    A forum client file is validated against a strict schema: it has no ``simulation.days`` / ``num_days`` (its
+    The client file of some platforms is validated against a strict schema: it has no ``simulation.days`` / ``num_days`` (its
     run length is the top-level ``num_days``, written at every start), so they are never added there.
     """
     updated = dict(config)

@@ -31,6 +31,7 @@ from werkzeug.security import generate_password_hash
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.platforms import registry
 from y_web.routes.admin.sub.experiments import get_suggested_port
 from y_web.src.agents.platform import ensure_population_username_type_column
 from y_web.src.agents.population import generate_population
@@ -383,7 +384,7 @@ def create_tutorial_experiment():
             interests="",
             toxicity=toxicity_str,
             llm_url=None,
-            username_type="microblogging",
+            username_type=registry.default_key(),
         )
 
         db.session.add(pop)
@@ -558,7 +559,7 @@ def create_tutorial_experiment():
 
         # Create experiment config file
         config = {
-            "platform_type": "microblogging",
+            "platform_type": registry.default_key(),
             "name": experiment_name,
             "host": "127.0.0.1",
             "port": port,
@@ -579,7 +580,7 @@ def create_tutorial_experiment():
         # Create experiment record
         exp = Exps(
             exp_name=experiment_name,
-            platform_type="microblogging",
+            platform_type=registry.default_key(),
             db_name=db_name,
             owner=current_user.username,
             exp_descr="Created via tutorial wizard",

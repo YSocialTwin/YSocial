@@ -23,9 +23,9 @@ DEFAULT_SETTINGS = {
     "annotation_agent_type": True,
     "annotation_author_type": True,
     "show_post_time": True,  # show "Day X - HH:00" below each post/comment
-    "show_trending_hashtags": True,  # show the "Trending Hashtags" box (microblogging only)
-    "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
-    "show_recsys_info": False,  # box: the user's content recommender system, explained (microblogging / photo)
+    "show_trending_hashtags": True,  # show the "Trending Hashtags" box (Standard feed only)
+    "show_suggested_friends": True,  # show the "Suggested Friends" box (Standard / photo feeds)
+    "show_recsys_info": False,  # box: the user's content recommender system, explained (Standard / photo feeds)
     # Interface language of the participant pages (decision D4: set per experiment)
     "language": "",  # empty = the default language (English); otherwise a supported code
     "language_switch_allowed": False,  # let participants pick another language (cookie ys_lang_sim)
@@ -38,7 +38,7 @@ DEFAULT_SETTINGS = {
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
     "posts_per_page": 10,  # posts per page when infinite scroll is disabled
-    # Platform-specific feed defaults (forum / photo sharing)
+    # Platform-specific feed defaults (threaded / photo platforms)
     "default_forum_feed_type": "new",  # new | hot | top | most_commented
     "default_photo_feed_tab": "for_you",  # for_you | follower
     # FilterBubble (Personalized Feed) recommender parameters
@@ -59,10 +59,10 @@ DEFAULT_SETTINGS = {
     "im_public_observer_enabled": True,  # public chats readable without a participant login
     "im_participant_mode_enabled": True,  # human participants may take part (phase 9)
     "im_participant_notice": "",  # text shown once before a participant's first entry (plan 5.8, O-12)
-    "dating_allow_time_travel": True,  # let non-staff viewers pick a past round of a dating experiment
+    "dating_allow_time_travel": True,  # let non-staff viewers pick a past round of a match-making experiment
     "dating_public_observer_enabled": True,  # public profile showcase readable without a login
-    "dating_participant_mode_enabled": True,  # people may take part in a dating experiment that has human participation on
+    "dating_participant_mode_enabled": True,  # people may take part in a match-making experiment that has human participation on
     "dating_participant_notice": "",  # text shown once before a participant's first entry
-    "dating_poll_seconds": 10,  # interval of the "new rounds" check of the dating pages, clamped to 1-60
+    "dating_poll_seconds": 10,  # interval of the "new rounds" check of the match-making pages, clamped to 1-60
     "im_participant_poll_seconds": 3,  # polling interval of the chat page, clamped to 1-60
 }

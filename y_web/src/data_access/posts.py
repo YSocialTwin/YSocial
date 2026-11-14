@@ -446,7 +446,10 @@ def get_user_recent_posts(
         if exp_id is not None
         else None
     )
-    is_forum = getattr(exp, "platform_type", "") == "forum"
+    from y_web.platforms import registry  # noqa: PLC0415
+
+    provider = registry.for_experiment(exp) if exp is not None else None
+    is_forum = bool(getattr(provider, "threaded_posts", False))
 
     if is_forum:
         from y_web.src.commons.service import (  # noqa: PLC0415

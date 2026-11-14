@@ -173,7 +173,7 @@ def _ensure_experiment_orm_tables(engine) -> None:
 
     ensure_text_key_reply_inbox(
         engine
-    )  # string user ids (YForum): before create_all makes it with INTEGER
+    )  # string user ids (some runtimes): before create_all makes it with INTEGER
     if tables:
         db.metadata.create_all(bind=engine, tables=tables)
 
@@ -256,7 +256,7 @@ def _required_unmapped_columns(engine: Engine) -> Dict[str, object]:
         if col.get("default") is not None or col.get("autoincrement") is True:
             continue
         if col["name"] in allowed:
-            # a CHECK ... IN (...) column (Dating ``status``): the first listed value is the initial one ("active")
+            # a CHECK ... IN (...) column (a ``status`` column, say): the first listed value is the initial one ("active")
             extra[col["name"]] = allowed[col["name"]]
             continue
         kind = str(col.get("type", "")).upper()
@@ -361,7 +361,7 @@ def _ensure_experiment_user(
         )
         extra = _required_unmapped_columns(engine)
         if extra:
-            # a runtime that owns the table (Dating) has NOT NULL columns the YWeb model does not know: insert the
+            # a runtime that owns the table (a platform's own) has NOT NULL columns the YWeb model does not know: insert the
             # row with them, taking the defaults of the model for everything else
             _insert_user_with_extra_columns(engine, new_user, extra)
             db_session.expire_all()

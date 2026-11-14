@@ -16791,7 +16791,7 @@ msgstr ""
 "esperimento."
 
 msgid ""
-"Use the dedicated standard or forum client creation route for this "
+"Use the dedicated client creation route for this "
 "experiment."
 msgstr ""
 "Usa la rotta dedicata di creazione dei client standard o del forum per "

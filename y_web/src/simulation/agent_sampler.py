@@ -76,8 +76,8 @@ def _validator_allowed_actions():
     """
     Actions available to the validator archetype.
 
-    Forum experiments replaced legacy SHARE with more specific sharing aliases.
-    Keep the old SHARE token for microblogging, but also allow the forum
+    Some platforms replaced the legacy SHARE with more specific sharing aliases.
+    Keep the old SHARE token for the Standard runtime, but also allow the
     link/image sharing actions so validators can still behave as content curators.
     """
     return {
@@ -323,7 +323,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
     :param cl: Client instance
     :param exp: Experiment instance
     :param tid: Current time ID
-    :param FakeAgent: FakeAgent class (for microblogging) or None
+    :param FakeAgent: FakeAgent class (for the Standard runtime) or None
     :param local_random: Thread-local random.Random instance for thread safety
     :return: Tuple of (agent_name, success_flag)
     """

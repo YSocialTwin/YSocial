@@ -214,11 +214,11 @@ def start_federation(fed, *, resume=True, admin_user=None):
             db.session.commit()
             _humans.prepare_member(
                 fed, exp
-            )  # token of the microblogging human gateway, before its server starts
+            )  # token of the Standard human gateway, before its server starts
             start_server_for_experiment(exp)
             _humans.after_server_started(
                 fed, exp
-            )  # forum and photo sharing: their gateway processes
+            )  # the other platforms: their gateway processes
         for _, exp in members:
             _start_federation_clients(exp, resume=resume)
         fed.status = "running"

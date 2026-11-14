@@ -7,6 +7,5 @@
  "y_web/src/federation/human_outbox.py": 1,
  "y_web/src/federation/lifecycle.py": 1,
  "y_web/src/federation/service.py": 1,
- "y_web/src/hpc/platforms.py": 1,
- "y_web/src/system/template_context.py": 1
+ "y_web/src/hpc/platforms.py": 1
 }

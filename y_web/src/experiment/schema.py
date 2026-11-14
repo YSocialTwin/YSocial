@@ -541,10 +541,10 @@ def _normalize_hashtags_once(db_uri):
 
 
 def ensure_text_key_reply_inbox(engine) -> bool:
-    """Make ``reply_inbox_state`` hold string user ids when the participants have them (YForum databases).
+    """Make ``reply_inbox_state`` hold string user ids when the participants have them (some HPC databases).
 
-    The forum notifications keep, per user, the last reply seen. The table is created with an INTEGER user key,
-    which cannot hold the UUID ids of an HPC forum database. It only holds derived state (what was already read),
+    The notifications keep, per user, the last reply seen. The table is created with an INTEGER user key,
+    which cannot hold the UUID ids of such a database. It only holds derived state (what was already read),
     so when the key type does not fit it is rebuilt with text columns, keeping the rows that convert.
     Returns True when the table was (re)created. Databases with integer ids are left untouched.
     """

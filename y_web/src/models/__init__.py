@@ -108,7 +108,7 @@ from y_web.src.models.experiment import (  # noqa: F401
     Websites,
 )
 
-# ids and ``seq`` of the rows written into databases that do not number them (YForum): see models/opaque_insert.py
+# ids and ``seq`` of the rows written into databases that do not number them (some HPC runtimes): see models/opaque_insert.py
 from y_web.src.models.opaque_insert import (
     install as _install_opaque_insert,
 )  # noqa: E402

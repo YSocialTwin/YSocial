@@ -6,7 +6,7 @@ Sub-modules
 text_utils        — text augmentation, sentiment, toxicity, NLP helpers
 article_extractor — web article metadata extraction
 feeds             — RSS/Atom feed parsing
-avatars           — forum avatar URL resolution
+avatars           — threaded-community avatar URL resolution
 """
 
 from y_web.src.content.article_extractor import *  # noqa: F401,F403

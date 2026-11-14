@@ -104,6 +104,10 @@ PHOTO_SHARING = Platform(
     },
     needs=tuple(
         sorted(path.name for path in Path(__file__).parent.glob("test_photo_*.py"))
+    )
+    + (  # a population is tagged with a platform only when the platform is installed
+        "test_agents_platform.py",
+        "test_population_listing_platform.py",
     ),
 )
 

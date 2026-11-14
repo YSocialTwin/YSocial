@@ -5,8 +5,9 @@ import os
 import random
 
 import numpy as np
-from flask import flash, redirect, render_template, request, url_for
+from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from jinja2 import TemplateNotFound
 from sqlalchemy import (
     MetaData,
     Table,
@@ -253,8 +254,15 @@ def _opinion_configuration_internal(idexp, expected_mode):
         "standard": "admin/opinion_configuration.html",
         "hpc": "admin/opinion_configuration_hpc.html",
     }.get(expected_mode)
-    if template_name is None and expected_mode == "forum":
-        template_name = provider_template(exp, "admin/opinion_configuration_forum.html")
+    if template_name is None:
+        candidate = provider_template(
+            exp, f"admin/opinion_configuration_{expected_mode}.html"
+        )
+        try:
+            current_app.jinja_env.get_template(candidate)
+            template_name = candidate
+        except TemplateNotFound:
+            pass
     template_name = template_name or platforms.resolve(exp).opinion_template
 
     return render_template(
@@ -654,7 +662,7 @@ def _apply_opinion_distributions_to_population(context):
 
 
 def _persist_non_hpc_opinion_dynamics(context):
-    """Persist standard/forum opinion dynamics configuration to client config."""
+    """Persist opinion dynamics configuration to client config."""
     update_rule = request.form.get("update_rule", "bounded_confidence")
     opinion_dynamics = {
         "enabled": context["opinion_dynamics_enabled"],

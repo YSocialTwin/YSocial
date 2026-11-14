@@ -3,23 +3,32 @@
 from sqlalchemy import inspect, select, text
 
 from y_web import db
+from y_web.platforms import registry
 from y_web.src.models import Exps, Population_Experiment
 
-VALID_POPULATION_TYPES = {
-    "microblogging",
-    "forum",
-    "photo_sharing",
-    "instant_messaging",
-    "dating",
-}
+
+class _PopulationTypes:
+    """The platform types a population can be tagged with: the keys of the installed platforms."""
+
+    def __contains__(self, value):
+        return value in registry.keys()
+
+    def __iter__(self):
+        return iter(registry.keys())
+
+    def __len__(self):
+        return len(registry.keys())
 
 
-def normalize_population_username_type(raw_value, default="microblogging"):
+VALID_POPULATION_TYPES = _PopulationTypes()
+
+
+def normalize_population_username_type(raw_value, default=None):
     """Normalize user-provided population platform values."""
     value = (raw_value or "").strip().lower()
     if value in VALID_POPULATION_TYPES:
         return value
-    return default
+    return registry.default_key() if default is None else default
 
 
 def ensure_population_username_type_column():
@@ -33,18 +42,20 @@ def ensure_population_username_type_column():
     if "username_type" in columns:
         return
 
+    default = registry.default_key()
     ddl = (
         "ALTER TABLE population "
-        "ADD COLUMN username_type VARCHAR(50) DEFAULT 'microblogging'"
+        f"ADD COLUMN username_type VARCHAR(50) DEFAULT '{default}'"
     )
     with engine.begin() as connection:
         connection.execute(text(ddl))
         connection.execute(
             text(
                 "UPDATE population "
-                "SET username_type = 'microblogging' "
+                "SET username_type = :default "
                 "WHERE username_type IS NULL OR TRIM(username_type) = ''"
-            )
+            ),
+            {"default": default},
         )
 
 
@@ -79,7 +90,7 @@ def infer_population_username_type(population):
 def population_matches_platform(population, platform_type):
     """Whether a population can be used with the requested platform: always.
 
-    A population is not tied to a platform. The fields that only one platform reads (photo sharing, dating) are
+    A population is not tied to a platform. The fields that only one platform reads (of some platforms) are
     custom fields of its agents: generated with the population when the person asked for them, completed with the
     generator defaults when the population is first deployed on a platform that needs them
     (``population_platform_fields`` tells which it has).
@@ -93,29 +104,13 @@ def population_platform_fields(population):
     explicit = normalize_population_username_type(
         getattr(population, "username_type", None), default=""
     )
-    if explicit in {"photo_sharing", "dating"}:
+    explicit_provider = registry.get(explicit) if explicit else None
+    if explicit_provider is not None and explicit_provider.has_population_fields:
         found.add(explicit)
     try:
-        from y_web.platforms import registry
-
         for provider in registry.providers():
             if provider.carries_population_fields(population):
                 found.add(provider.key)
-    except Exception:
-        pass
-    try:
-        from y_web.src.models import Agent_Ext, Agent_Population
-
-        if db.session.scalar(
-            select(Agent_Ext.agent_id)
-            .join(Agent_Population, Agent_Population.agent_id == Agent_Ext.agent_id)
-            .where(
-                Agent_Population.population_id == population.id,
-                Agent_Ext.feature_name == "creator_tier",
-            )
-            .limit(1)
-        ):
-            found.add("photo_sharing")
     except Exception:
         pass
     return sorted(found)

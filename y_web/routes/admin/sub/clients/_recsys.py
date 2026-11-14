@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-from flask import flash, redirect, request, url_for
+from flask import current_app, flash, redirect, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -29,6 +29,16 @@ from ._crud import _get_experiment_folder_name, _get_experiment_mode
 from ._dispatch import missing_view_response, mode_view
 
 
+def _details_endpoint(mode):
+    """Endpoint of the client details page of a modality (the Standard one when it has no page of its own)."""
+    endpoint = "clientsr.client_details" + ("" if mode == "standard" else f"_{mode}")
+    return (
+        endpoint
+        if endpoint in current_app.view_functions
+        else "clientsr.client_details"
+    )
+
+
 def _update_client_simulation_internal(uid, expected_mode):
     """Update visible simulation parameters and action likelihoods."""
     check_privileges(current_user.username)
@@ -46,11 +56,7 @@ def _update_client_simulation_internal(uid, expected_mode):
     actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
         flash(_("Update route does not match the experiment modality."), "error")
-        if actual_mode == "hpc":
-            return redirect(url_for("clientsr.client_details_hpc", uid=uid))
-        if actual_mode == "forum":
-            return redirect(url_for("clientsr.client_details_forum", uid=uid))
-        return redirect(url_for("clientsr.client_details", uid=uid))
+        return redirect(url_for(_details_endpoint(actual_mode), uid=uid))
 
     def _float(name, default):
         return float(request.form.get(name, default))
@@ -416,11 +422,7 @@ def _update_recsys_internal(uid, expected_mode):
     actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
         flash(_("Update route does not match the experiment modality."), "error")
-        if actual_mode == "hpc":
-            return redirect(url_for("clientsr.client_details_hpc", uid=uid))
-        if actual_mode == "forum":
-            return redirect(url_for("clientsr.client_details_forum", uid=uid))
-        return redirect(url_for("clientsr.client_details", uid=uid))
+        return redirect(url_for(_details_endpoint(actual_mode), uid=uid))
 
     # Update client's recsys settings
     client.crecsys = recsys_type
@@ -543,11 +545,7 @@ def _update_client_llm_internal(uid, expected_mode):
     actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
         flash(_("Update route does not match the experiment modality."), "error")
-        if actual_mode == "hpc":
-            return redirect(url_for("clientsr.client_details_hpc", uid=uid))
-        if actual_mode == "forum":
-            return redirect(url_for("clientsr.client_details_forum", uid=uid))
-        return redirect(url_for("clientsr.client_details", uid=uid))
+        return redirect(url_for(_details_endpoint(actual_mode), uid=uid))
 
     user_type = request.form.get("user_type")
 

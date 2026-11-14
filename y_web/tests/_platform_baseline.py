@@ -54,6 +54,14 @@ _PLATFORM_NAME = re.compile(
     r"|\bY(?:Dating|Forum|PhotoSharing|InstantMessaging)\b",
     re.IGNORECASE,
 )
+# The only places that may still name a platform (gate G8): historical migrations, which describe the schema of
+# the day and must keep reading as they did, and the process entry point that runs before the registry exists.
+DECLARED_EXCEPTIONS = (
+    "y_web/alembic/versions/",
+    "y_web/db_init/migrations.py",
+    "y_web/migrations/",
+    "y_web/src/simulation/process_runner.py",
+)
 # Modules that belong to a single platform: they move to its repository, so their own mentions do not count.
 PLATFORM_OWNED = (
     "y_web/src/dating/",

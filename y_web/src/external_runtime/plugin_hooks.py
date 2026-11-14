@@ -30,7 +30,7 @@ Supported hook names:
     Event emitted by ``ensure_experiment_user``.
 
 ``experiment_page_widget(account_id, exp_id) -> html | None``
-    Called while a microblogging page of an experiment is rendered for a participant session. A returned string
+    Called while a Standard-server page of an experiment is rendered for a participant session. A returned string
     (trusted HTML, so the plugin must escape everything it did not write) is placed at the end of the page header,
     for example a floating button. See :func:`experiment_page_widgets`.
 

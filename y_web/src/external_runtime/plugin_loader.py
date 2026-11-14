@@ -46,6 +46,12 @@ _REGISTERED_SUITES: dict[str, dict] = (
 )  # repo_key -> {"modules": {module_id: manifest}}
 
 
+def _default_platform() -> str:
+    from y_web.platforms import registry
+
+    return registry.default_key()
+
+
 def _namespace_root_name(repo_key: str) -> str:
     return f"_ysocial_ext__{repo_key}"
 
@@ -278,12 +284,12 @@ def active_modules_context(exp_id: int) -> list[dict]:
 
         _exp = db.session.get(Exps, exp_id)
         platform = (
-            (getattr(_exp, "platform_type", None) or "microblogging")
+            (getattr(_exp, "platform_type", None) or _default_platform())
             if _exp
-            else "microblogging"
+            else _default_platform()
         )
     except Exception:
-        platform = "microblogging"
+        platform = _default_platform()
 
     results = []
     for repo_key, state in _REGISTERED_SUITES.items():
