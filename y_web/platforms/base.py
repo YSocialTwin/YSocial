@@ -237,6 +237,15 @@ class PlatformProvider:
     id: str = ""
     #: World Simulation traits (``None``: the platform does not take part in one)
     federation_traits: Optional[FederationTraits] = None
+    #: name of the runtime's server (shown on the settings pages that talk about it), e.g. its repository
+    server_label: str = ""
+    #: file of the experiment folder that holds the runtime's server configuration (``None``: ``server_config.json`` on
+    #: HPC and ``config_server.json`` otherwise)
+    server_config_name: Optional[str] = None
+    #: name shown for the platform on the memory embedding page when the runtime is HPC (``None``: ``HPC``)
+    embedding_label: Optional[str] = None
+    #: the clients read the feed assignment when they start: a running experiment must restart them to use a new one
+    feeds_read_at_client_start: bool = False
     #: human gateway of the platform's runtime (``None``: a person cannot be enrolled in it)
     human_gateway: Optional[HumanGatewayTraits] = None
     #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``

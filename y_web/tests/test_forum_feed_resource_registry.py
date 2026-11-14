@@ -2,10 +2,12 @@ import json
 from types import SimpleNamespace
 
 from y_web.routes.admin.sub.experiments._feeds import (
-    _forum_image_resource_payload,
     _forum_rss_resource_payload,
-    _selected_image_resource_ids,
     _selected_rss_resource_ids,
+)
+from y_web.routes.admin.sub.experiments._forum_feeds import (
+    _forum_image_resource_payload,
+    _selected_image_resource_ids,
 )
 
 

@@ -5826,7 +5826,7 @@ msgid ""
 " are not both present."
 msgstr ""
 
-msgid "Forum feed assignments updated successfully."
+msgid "Feed assignments updated successfully."
 msgstr ""
 
 msgid "Forum participant"
@@ -14017,7 +14017,7 @@ msgid "The two accounts are matched"
 msgstr ""
 
 msgid ""
-"The updated forum feed assignment has been saved. Running clients will "
+"The updated feed assignment has been saved. Running clients will "
 "use the new feeds after they are restarted."
 msgstr ""
 
@@ -14213,7 +14213,7 @@ msgstr ""
 msgid "This name is taken or there is no room for more participants."
 msgstr ""
 
-msgid "This page is only available for forum and instant messaging experiments."
+msgid "This page is only available for experiments that read feeds."
 msgstr ""
 
 msgid ""

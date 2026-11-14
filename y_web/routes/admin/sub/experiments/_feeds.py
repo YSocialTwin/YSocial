@@ -8,170 +8,30 @@ assignment, and experiment lifecycle control.
 
 import json
 import os
-import pathlib
-import random
-import re
-import shutil
-import socket
-import threading
-import time
-import uuid
-from collections import defaultdict
-from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlparse
-from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
-from flask import (
-    Blueprint,
-    current_app,
-    flash,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
-from flask_login import current_user, login_required, login_user
+from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
-from y_web.platforms.extension import provider_template
-from y_web.src.content.avatars import (
-    normalize_force_placeholder,
-    normalize_forum_avatar_mode,
-)
-from y_web.src.experiment.access import (
-    get_visible_experiment_query,
-    user_can_manage_experiment,
-    user_can_view_experiment,
-)
-from y_web.src.hpc.population_backup import restore_population_for_hpc_client
-from y_web.src.models import (
-    ActivityProfile,
-    Admin_users,
-    AgeClass,
-    Agent,
-    Agent_Population,
-    Agent_Profile,
-    Client,
-    Client_Execution,
-    ClientLogMetrics,
-    DownloadNotification,
-    Education,
-    Exp_stats,
-    Exp_Topic,
-    ExperimentScheduleGroup,
-    ExperimentScheduleItem,
-    ExperimentScheduleLog,
-    ExperimentScheduleStatus,
-    Exps,
-    ForumImageFeedResource,
-    ForumRssFeedResource,
-    HpcMonitorSettings,
-    Jupyter_instances,
-    Languages,
-    Leanings,
-    LogFileOffset,
-    Nationalities,
-    Ollama_Pull,
-    OpinionDistribution,
-    OpinionEvolutionCache,
-    OpinionEvolutionSampledAgents,
-    OpinionGroup,
-    Page,
-    Page_Population,
-    Population,
-    Population_Experiment,
-    Profession,
-    Rounds,
-    ServerLogMetrics,
-    Topic_List,
-    Toxicity_Levels,
-    User_Experiment,
-    User_mgmt,
-)
-from y_web.src.simulation.execution_backend import (
-    start_client_for_experiment,
-    start_server_for_experiment,
-    stop_client_for_experiment,
-    stop_server_for_experiment,
-)
-from y_web.src.system.desktop_file_handler import send_file_desktop
-from y_web.src.system.jupyter_utils import stop_process
-from y_web.src.system.miscellanea import (
-    check_privileges,
-    llm_backend_status,
-    ollama_status,
-    reload_current_user,
-)
-from y_web.src.system.path_utils import get_resource_path
+from y_web.src.commons import reddit_feeds
+from y_web.src.models import ForumRssFeedResource
+from y_web.src.system.miscellanea import check_privileges
 
-from ._blueprint import (
-    _EXP_IDS_MARKER_RE,
-    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
-    DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
-    MAX_HPC_PER_GROUP,
-    OPINION_CACHE_EXPIRY_MINUTES,
-    _schedule_check_lock,
-    experiments,
-)
+from ._blueprint import DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS, experiments
 from ._helpers import *  # noqa: F401,F403
 from ._helpers import (
     _load_forum_experiment_context,
     _load_memory_capable_experiment_context,
     _normalize_embedding_host,
     _normalize_embedding_service,
-    _normalize_image_feed_item,
-    _normalize_image_feeds_payload,
-    _normalize_rss_feed_item,
     _normalize_rss_feeds_payload,
-    _normalize_subreddit_input,
-    _parse_required_feed_limit,
     _read_experiment_embedding_settings,
     _read_feed_with_headers,
-)
-
-FORUM_IMAGE_FEED_INTERESTS = sorted(
-    [
-        "animals",
-        "art",
-        "books",
-        "celebrities",
-        "cooking",
-        "creative",
-        "cute",
-        "design",
-        "education",
-        "entertainment",
-        "fitness",
-        "food",
-        "fun",
-        "gaming",
-        "general",
-        "geek",
-        "history",
-        "humor",
-        "memes",
-        "movies",
-        "music",
-        "nature",
-        "news",
-        "pets",
-        "photography",
-        "politics",
-        "science",
-        "sports",
-        "technology",
-        "travel",
-        "tv",
-        "wholesome",
-    ]
 )
 
 
@@ -185,31 +45,10 @@ def _forum_rss_resource_payload(resource):
     }
 
 
-def _forum_image_resource_payload(resource):
-    try:
-        interests = json.loads(resource.interests or "[]")
-        if not isinstance(interests, list):
-            interests = []
-    except Exception:
-        interests = []
-    return {
-        "id": resource.id,
-        "subreddit": str(resource.subreddit or "").strip().lower(),
-        "interests": [str(label).strip() for label in interests if str(label).strip()],
-    }
-
-
 def _write_experiment_rss_feed_file(experiment_dir, resources):
     rss_feeds_path = os.path.join(experiment_dir, "rss_feeds.json")
     payload = [_forum_rss_resource_payload(resource) for resource in resources]
     with open(rss_feeds_path, "w") as handle:
-        json.dump(payload, handle, indent=2)
-
-
-def _write_experiment_image_feed_file(experiment_dir, resources):
-    image_feeds_path = os.path.join(experiment_dir, "image_feeds.json")
-    payload = [_forum_image_resource_payload(resource) for resource in resources]
-    with open(image_feeds_path, "w") as handle:
         json.dump(payload, handle, indent=2)
 
 
@@ -235,109 +74,10 @@ def _selected_rss_resource_ids(experiment_dir, resources):
     return selected
 
 
-def _selected_image_resource_ids(experiment_dir, resources):
-    image_feeds_path = os.path.join(experiment_dir, "image_feeds.json")
-    if not os.path.exists(image_feeds_path):
-        return []
-    try:
-        with open(image_feeds_path, "r") as handle:
-            persisted = json.load(handle)
-    except Exception:
-        return []
-
-    resource_by_subreddit = {
-        str(resource.subreddit or "").strip().lower(): resource.id
-        for resource in resources
-    }
-    selected = []
-    for item in persisted if isinstance(persisted, list) else []:
-        subreddit = str((item or {}).get("subreddit") or "").strip().lower()
-        resource_id = resource_by_subreddit.get(subreddit)
-        if resource_id is not None:
-            selected.append(resource_id)
-    return selected
-
-
-def _parse_image_feed_metadata(subreddit):
-    import re
-
-    import feedparser
-
-    normalized = _normalize_subreddit_input(subreddit)
-    if not normalized:
-        raise ValueError(
-            "Provide a subreddit slug, r/<name>, or a Reddit subreddit URL."
-        )
-
-    feed_url = f"https://www.reddit.com/r/{quote(normalized)}.rss"
-    feed_content = _read_feed_with_headers(feed_url)
-    feed = feedparser.parse(feed_content)
-    if feed.bozo and not feed.entries:
-        raise ValueError(f"Could not parse r/{normalized}.")
-    if not feed.entries:
-        raise ValueError(f"No posts found in r/{normalized}")
-
-    image_pattern = re.compile(r"\.(jpg|jpeg|png|gif|webp)(\?.*)?$", re.IGNORECASE)
-    image_hosts = ["i.redd.it", "i.imgur.com", "preview.redd.it"]
-    images = []
-    nsfw_count = 0
-
-    for entry in feed.entries[:50]:
-        is_nsfw = False
-        if getattr(entry, "over_18", False):
-            is_nsfw = True
-        elif "[nsfw]" in entry.get("title", "").lower():
-            is_nsfw = True
-        elif hasattr(entry, "tags"):
-            for tag in entry.tags:
-                if tag.get("term", "").lower() == "nsfw":
-                    is_nsfw = True
-                    break
-
-        if is_nsfw:
-            nsfw_count += 1
-            continue
-
-        image_url = None
-        link = entry.get("link", "")
-        if image_pattern.search(link) or any(host in link for host in image_hosts):
-            image_url = link
-
-        if not image_url and hasattr(entry, "media_content"):
-            for media in entry.media_content:
-                media_url = media.get("url", "")
-                if image_pattern.search(media_url) or any(
-                    host in media_url for host in image_hosts
-                ):
-                    image_url = media_url
-                    break
-
-        if not image_url and hasattr(entry, "media_thumbnail"):
-            for thumb in entry.media_thumbnail:
-                media_url = thumb.get("url", "")
-                if media_url:
-                    image_url = media_url
-                    break
-
-        if image_url:
-            images.append(image_url)
-
-        if len(images) >= 6:
-            break
-
-    return {
-        "subreddit": normalized,
-        "feed_url": feed_url,
-        "image_count": len(images),
-        "nsfw_filtered": nsfw_count,
-        "sample_images": images[:6],
-    }
-
-
 @experiments.route("/admin/rss_feeds/<int:uid>")
 @login_required
 def rss_feeds(uid):
-    """Display and assign reusable forum RSS feeds to an experiment."""
+    """Display and assign reusable RSS feeds to an experiment."""
     experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
     if error_response is not None:
         return error_response
@@ -377,7 +117,7 @@ def rss_feeds(uid):
 @experiments.route("/admin/update_rss_feeds/<int:uid>", methods=["POST"])
 @login_required
 def update_rss_feeds(uid):
-    """Persist assigned reusable forum RSS feeds and local URL feeds."""
+    """Persist assigned reusable RSS feeds and local URL feeds."""
     experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
     if error_response is not None:
         return error_response
@@ -410,19 +150,19 @@ def update_rss_feeds(uid):
 
     if not registry.resolve(
         experiment
-    ).news_page_feeds:  # direct article URLs are a forum notion: news pages read feeds
+    ).news_page_feeds:  # direct article URLs belong to the platforms that read feeds themselves
         urls_text = request.form.get("url_feeds_text", "")
         urls = [line.strip() for line in urls_text.splitlines() if line.strip()]
         with open(url_feeds_path, "w") as handle:
             handle.write("\n".join(urls))
 
     if (
-        str(getattr(experiment, "platform_type", "")).lower() == "forum"
+        registry.resolve(experiment).feeds_read_at_client_start
         and int(getattr(experiment, "running", 0) or 0) == 1
     ):
         flash(
             _(
-                "The updated forum feed assignment has been saved. Running clients will use the new feeds after they are restarted."
+                "The updated feed assignment has been saved. Running clients will use the new feeds after they are restarted."
             ),
             "info",
         )
@@ -434,7 +174,7 @@ def update_rss_feeds(uid):
             "success",
         )
         return redirect(url_for("experiments.experiment_details", uid=uid))
-    flash(_("Forum feed assignments updated successfully."), "success")
+    flash(_("Feed assignments updated successfully."), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -470,7 +210,7 @@ def parse_rss_feed():
 
 
 def _parse_admin_feed_metadata(feed_url, feed_content):
-    """Parse a forum feed source, accepting RSS/Atom and Reddit JSON listings."""
+    """Parse a feed source, accepting RSS/Atom and listing JSON."""
     import feedparser
 
     feed = feedparser.parse(feed_content)
@@ -487,56 +227,11 @@ def _parse_admin_feed_metadata(feed_url, feed_content):
             "entries_count": len(feed.entries),
         }
 
-    reddit_listing = _parse_reddit_json_listing(feed_url, feed_content)
+    reddit_listing = reddit_feeds.parse_json_listing(feed_url, feed_content)
     if reddit_listing is not None:
         return reddit_listing
 
     return None
-
-
-def _parse_reddit_json_listing(feed_url, feed_content):
-    """Parse Reddit listing JSON metadata while preserving the original source URL."""
-    subreddit = _normalize_subreddit_input(feed_url)
-    if not subreddit:
-        return None
-
-    parsed_url = urlparse(feed_url)
-    if not parsed_url.path.lower().endswith(".json"):
-        return None
-
-    try:
-        payload = json.loads(feed_content.decode("utf-8"))
-    except Exception:
-        return None
-
-    if not isinstance(payload, dict):
-        return None
-
-    data = payload.get("data")
-    if not isinstance(data, dict):
-        return None
-
-    children = data.get("children")
-    if not isinstance(children, list):
-        return None
-
-    site_url = f"https://www.reddit.com/r/{quote(subreddit)}/"
-
-    first_entry = children[0] if children else {}
-    first_entry_data = (
-        first_entry.get("data", {}) if isinstance(first_entry, dict) else {}
-    )
-    display_name = str(
-        first_entry_data.get("subreddit_name_prefixed") or f"r/{subreddit}"
-    ).strip()
-
-    return {
-        "name": display_name or f"r/{subreddit}",
-        "feed_url": feed_url,
-        "url_site": site_url,
-        "description": f"Reddit subreddit JSON listing for r/{subreddit}",
-        "entries_count": len(children),
-    }
 
 
 @experiments.route("/admin/upload_rss_feeds/<int:uid>", methods=["POST"])
@@ -616,395 +311,21 @@ def upload_url_feeds(uid):
         return jsonify({"error": str(exc)}), 400
 
 
-@experiments.route("/admin/forum_rss_resources")
-@login_required
-def forum_rss_resources():
-    """Manage reusable RSS feed resources for forum simulations."""
-    check_privileges(current_user.username)
-    resources = db.session.scalars(
-        select(ForumRssFeedResource).order_by(
-            ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
-        )
-    ).all()
-    return render_template(
-        provider_template("forum", "admin/forum_rss_resources.html"),
-        resources=resources,
-    )
+def _embedding_label(experiment) -> str:
+    provider = registry.resolve(experiment)
+    if provider.embedding_label:
+        return provider.embedding_label
+    return "HPC" if experiment.simulator_type == "HPC" else str(provider.label)
 
 
-@experiments.route("/admin/create_forum_rss_resource", methods=["POST"])
-@login_required
-def create_forum_rss_resource():
-    """Validate and create or update a reusable forum RSS resource."""
-    check_privileges(current_user.username)
-
-    feed_url = str(request.form.get("feed_url", "")).strip()
-    if not feed_url:
-        flash(_("RSS feed URL is required."), "error")
-        return redirect("/admin/forum_rss_resources")
-    if "://" not in feed_url:
-        feed_url = f"https://{feed_url}"
-
-    try:
-        feed_content = _read_feed_with_headers(feed_url)
-        parsed_feed = _parse_admin_feed_metadata(feed_url, feed_content)
-        if parsed_feed is None:
-            raise ValueError("Invalid RSS feed URL")
-        normalized = _normalize_rss_feed_item(parsed_feed)
-    except HTTPError as exc:
-        flash(_("Feed source returned HTTP %(code)s.", code=exc.code), "error")
-        return redirect("/admin/forum_rss_resources")
-    except URLError:
-        flash(_("Feed source could not be reached."), "error")
-        return redirect("/admin/forum_rss_resources")
-    except ValueError as exc:
-        flash(str(exc), "error")
-        return redirect("/admin/forum_rss_resources")
-    except Exception as exc:
-        flash(str(exc), "error")
-        return redirect("/admin/forum_rss_resources")
-
-    existing = db.session.scalars(
-        select(ForumRssFeedResource).filter_by(feed_url=normalized["feed_url"])
-    ).first()
-    if existing is None:
-        existing = ForumRssFeedResource(feed_url=normalized["feed_url"])
-        db.session.add(existing)
-
-    existing.name = normalized["name"]
-    existing.url_site = normalized["url_site"]
-    existing.description = normalized["description"]
-    db.session.commit()
-
-    flash(_("Reusable forum RSS feed saved."), "success")
-    return redirect("/admin/forum_rss_resources")
-
-
-@experiments.route(
-    "/admin/delete_forum_rss_resource/<int:resource_id>", methods=["POST"]
-)
-@login_required
-def delete_forum_rss_resource(resource_id):
-    """Delete a reusable forum RSS resource."""
-    check_privileges(current_user.username)
-    resource = db.session.get(ForumRssFeedResource, resource_id)
-    if resource is None:
-        flash(_("RSS feed resource not found."), "error")
-        return redirect("/admin/forum_rss_resources")
-
-    db.session.delete(resource)
-    db.session.commit()
-    flash(_("Reusable forum RSS feed deleted."), "success")
-    return redirect("/admin/forum_rss_resources")
-
-
-@experiments.route("/admin/image_feeds/<int:uid>")
-@login_required
-def image_feeds(uid):
-    """Display and assign reusable forum image feeds to an experiment."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-
-    available_image_resources = db.session.scalars(
-        select(ForumImageFeedResource).order_by(
-            ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
-        )
-    ).all()
-    selected_image_resource_ids = _selected_image_resource_ids(
-        experiment_dir, available_image_resources
-    )
-
-    return render_template(
-        "admin/image_feeds.html",
-        experiment=experiment,
-        available_image_resources=[
-            _forum_image_resource_payload(resource)
-            for resource in available_image_resources
-        ],
-        selected_image_resource_ids=selected_image_resource_ids,
-    )
-
-
-@experiments.route("/admin/update_image_feeds/<int:uid>", methods=["POST"])
-@login_required
-def update_image_feeds(uid):
-    """Persist assigned reusable forum image feeds."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-
-    selected_ids = []
-    for raw_id in request.form.getlist("image_feed_resource_ids"):
-        try:
-            selected_ids.append(int(raw_id))
-        except (TypeError, ValueError):
-            continue
-
-    resources = (
-        db.session.scalars(
-            select(ForumImageFeedResource).filter(
-                ForumImageFeedResource.id.in_(selected_ids)
-            )
-        ).all()
-        if selected_ids
-        else []
-    )
-    resource_order = {
-        resource_id: index for index, resource_id in enumerate(selected_ids)
-    }
-    resources = sorted(
-        resources,
-        key=lambda resource: resource_order.get(resource.id, len(resource_order)),
-    )
-    _write_experiment_image_feed_file(experiment_dir, resources)
-
-    if (
-        str(getattr(experiment, "platform_type", "")).lower() == "forum"
-        and int(getattr(experiment, "running", 0) or 0) == 1
-    ):
-        flash(
-            _(
-                "The updated image feed assignment has been saved. Running clients will use the new feeds after they are restarted."
-            ),
-            "info",
-        )
-    flash(_("Image feeds updated successfully."), "success")
-    return redirect(url_for("experiments.experiment_details", uid=uid))
-
-
-@experiments.route("/admin/upload_image_feeds/<int:uid>", methods=["POST"])
-@login_required
-def upload_image_feeds(uid):
-    """Bulk upload image feeds from JSON."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-
-    image_feeds_path = os.path.join(experiment_dir, "image_feeds.json")
-    if "file" not in request.files:
-        return jsonify({"error": _("No file provided")}), 400
-
-    upload = request.files["file"]
-    if upload.filename == "":
-        return jsonify({"error": _("No file selected")}), 400
-
-    try:
-        content = upload.read().decode("utf-8")
-        normalized_feeds = _normalize_image_feeds_payload(json.loads(content))
-
-        mode = request.form.get("mode", "replace")
-        if mode == "merge" and os.path.exists(image_feeds_path):
-            with open(image_feeds_path, "r") as handle:
-                existing_feeds = _normalize_image_feeds_payload(json.load(handle))
-
-            merged = []
-            by_subreddit = {}
-            for feed in existing_feeds:
-                if not isinstance(feed, dict):
-                    continue
-                subreddit = str(feed.get("subreddit", "")).strip().lower()
-                if not subreddit:
-                    continue
-                merged_feed = {
-                    "subreddit": subreddit,
-                    "interests": list(feed.get("interests") or []),
-                }
-                merged.append(merged_feed)
-                by_subreddit[subreddit] = merged_feed
-
-            for feed in normalized_feeds:
-                subreddit = feed["subreddit"]
-                if subreddit in by_subreddit:
-                    combined = []
-                    seen = set()
-                    for label in list(
-                        by_subreddit[subreddit].get("interests") or []
-                    ) + list(feed.get("interests") or []):
-                        label = str(label).strip()
-                        if not label or label in seen:
-                            continue
-                        seen.add(label)
-                        combined.append(label)
-                    by_subreddit[subreddit]["interests"] = combined
-                else:
-                    merged.append(feed)
-                    by_subreddit[subreddit] = feed
-            normalized_feeds = merged
-
-        with open(image_feeds_path, "w") as handle:
-            json.dump(normalized_feeds, handle, indent=2)
-        return jsonify({"success": True, "count": len(normalized_feeds)})
-    except json.JSONDecodeError:
-        return jsonify({"error": _("Invalid JSON format")}), 400
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@experiments.route("/admin/forum_image_resources")
-@login_required
-def forum_image_resources():
-    """Manage reusable image feed resources for forum simulations."""
-    check_privileges(current_user.username)
-    resources = db.session.scalars(
-        select(ForumImageFeedResource).order_by(
-            ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
-        )
-    ).all()
-    return render_template(
-        provider_template("forum", "admin/forum_image_resources.html"),
-        resources=[_forum_image_resource_payload(resource) for resource in resources],
-        available_interests=FORUM_IMAGE_FEED_INTERESTS,
-    )
-
-
-@experiments.route("/admin/create_forum_image_resource", methods=["POST"])
-@login_required
-def create_forum_image_resource():
-    """Validate and create or update a reusable forum image feed resource."""
-    check_privileges(current_user.username)
-
-    subreddit_input = str(request.form.get("subreddit", "")).strip()
-    selected_interests = [
-        label.strip()
-        for label in request.form.getlist("interests")
-        if str(label).strip()
-    ]
-
-    if not selected_interests:
-        flash(_("Select at least one interest for the image feed."), "error")
-        return redirect("/admin/forum_image_resources")
-
-    try:
-        parsed = _parse_image_feed_metadata(subreddit_input)
-        normalized = _normalize_image_feed_item(
-            {
-                "subreddit": parsed["subreddit"],
-                "interests": selected_interests,
-            }
-        )
-    except HTTPError as exc:
-        if exc.code == 404:
-            flash(
-                _(
-                    "r/%(subreddit_input)s does not exist.",
-                    subreddit_input=subreddit_input,
-                ),
-                "error",
-            )
-        else:
-            flash(_("Reddit returned HTTP %(code)s.", code=exc.code), "error")
-        return redirect("/admin/forum_image_resources")
-    except URLError:
-        flash(_("Reddit could not be reached. Retry later."), "error")
-        return redirect("/admin/forum_image_resources")
-    except ValueError as exc:
-        flash(str(exc), "error")
-        return redirect("/admin/forum_image_resources")
-    except Exception as exc:
-        flash(str(exc), "error")
-        return redirect("/admin/forum_image_resources")
-
-    existing = db.session.scalars(
-        select(ForumImageFeedResource).filter_by(subreddit=normalized["subreddit"])
-    ).first()
-    if existing is None:
-        existing = ForumImageFeedResource(subreddit=normalized["subreddit"])
-        db.session.add(existing)
-
-    existing.interests = json.dumps(normalized["interests"])
-    db.session.commit()
-
-    flash(_("Reusable forum image feed saved."), "success")
-    return redirect("/admin/forum_image_resources")
-
-
-@experiments.route(
-    "/admin/delete_forum_image_resource/<int:resource_id>", methods=["POST"]
-)
-@login_required
-def delete_forum_image_resource(resource_id):
-    """Delete a reusable forum image feed resource."""
-    check_privileges(current_user.username)
-    resource = db.session.get(ForumImageFeedResource, resource_id)
-    if resource is None:
-        flash(_("Image feed resource not found."), "error")
-        return redirect("/admin/forum_image_resources")
-
-    db.session.delete(resource)
-    db.session.commit()
-    flash(_("Reusable forum image feed deleted."), "success")
-    return redirect("/admin/forum_image_resources")
-
-
-@experiments.route("/admin/api/parse_image_feed", methods=["POST"])
-@login_required
-def parse_image_feed():
-    """Parse a subreddit RSS feed and extract sample image URLs."""
-    check_privileges(current_user.username)
-
-    payload = request.get_json(silent=True) or {}
-    subreddit = payload.get("subreddit", "")
-
-    try:
-        parsed = _parse_image_feed_metadata(subreddit)
-        parsed["sample_images"] = parsed["sample_images"][:5]
-        return jsonify(parsed)
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    except HTTPError as exc:
-        if exc.code == 404:
-            return (
-                jsonify(
-                    {"error": _("r/%(subreddit)s does not exist.", subreddit=subreddit)}
-                ),
-                400,
-            )
-        return (
-            jsonify(
-                {
-                    "error": (
-                        _(
-                            "Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later.",
-                            code=exc.code,
-                            subreddit=subreddit,
-                        )
-                    )
-                }
-            ),
-            400,
-        )
-    except URLError:
-        return jsonify({"error": _("Reddit could not be reached. Retry later.")}), 400
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@experiments.route("/admin/feed_limits/<int:uid>", methods=["GET"])
-@login_required
-def feed_limits(uid):
-    """Display and edit feed retrieval limits for a forum experiment."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-
-    config_path = os.path.join(experiment_dir, "config_server.json")
-    feed_limits_data = dict(DEFAULT_FEED_LIMITS)
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r") as handle:
-                config = json.load(handle)
-            if isinstance(config.get("feed_limits"), dict):
-                feed_limits_data.update(config["feed_limits"])
-        except (json.JSONDecodeError, IOError):
-            pass
-
-    return render_template(
-        "admin/feed_limits.html",
-        experiment=experiment,
-        feed_limits=feed_limits_data,
+def _server_config_name(experiment) -> str:
+    provider = registry.resolve(experiment)
+    if provider.server_config_name:
+        return provider.server_config_name
+    return (
+        "server_config.json"
+        if experiment.simulator_type == "HPC"
+        else "config_server.json"
     )
 
 
@@ -1022,30 +343,8 @@ def embedding_settings(uid):
         "admin/embedding_settings.html",
         experiment=experiment,
         embedding_settings=_read_experiment_embedding_settings(experiment_dir),
-        platform_label=(
-            "Instant Messaging"
-            if experiment.platform_type == "instant_messaging"
-            else (
-                "HPC"
-                if experiment.simulator_type == "HPC"
-                else (
-                    "Forum" if experiment.platform_type == "forum" else "Microblogging"
-                )
-            )
-        ),
-        server_label=(
-            "YInstantMessaging"
-            if experiment.platform_type == "instant_messaging"
-            else (
-                "YSimulator"
-                if experiment.simulator_type == "HPC"
-                else (
-                    "YServerReddit"
-                    if experiment.platform_type == "forum"
-                    else "YServer"
-                )
-            )
-        ),
+        platform_label=_embedding_label(experiment),
+        server_label=registry.resolve(experiment).server_label,
     )
 
 
@@ -1059,15 +358,7 @@ def update_embedding_settings(uid):
     if error_response is not None:
         return error_response
 
-    config_path = os.path.join(
-        experiment_dir,
-        (
-            "server_config.json"
-            if experiment.simulator_type == "HPC"
-            or experiment.platform_type == "instant_messaging"
-            else "config_server.json"
-        ),
-    )
+    config_path = os.path.join(experiment_dir, _server_config_name(experiment))
     config = {}
     if os.path.exists(config_path):
         try:
@@ -1109,97 +400,3 @@ def update_embedding_settings(uid):
 
     flash(_("Embedding settings updated successfully."), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
-
-
-@experiments.route("/admin/update_forum_avatar_mode/<int:uid>", methods=["POST"])
-@login_required
-def update_forum_avatar_mode(uid):
-    """Persist forum avatar mode to config_server.json."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-
-    config_path = os.path.join(experiment_dir, "config_server.json")
-    config = {}
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r") as handle:
-                config = json.load(handle)
-        except (json.JSONDecodeError, IOError):
-            config = {}
-
-    enabled_flag = (
-        str(request.form.get("use_actual_profile_pics") or "").strip().lower()
-    )
-    requested_mode = request.form.get("avatar_mode")
-    if requested_mode is not None or enabled_flag:
-        mode = normalize_forum_avatar_mode(requested_mode)
-        if enabled_flag in {"1", "true", "on", "yes"}:
-            mode = "actual"
-        config["avatar_mode"] = mode
-    if request.form.get(
-        "force_placeholder_present"
-    ):  # the switch is part of this submission
-        config["force_placeholder_avatars"] = normalize_force_placeholder(
-            request.form.get("force_placeholder_avatars")
-        )
-
-    with open(config_path, "w") as handle:
-        json.dump(config, handle, indent=2)
-
-    flash(_("Forum avatar mode updated successfully."), "success")
-    return redirect(
-        request.referrer or url_for("experiments.experiment_details", uid=uid)
-    )
-
-
-@experiments.route("/admin/update_feed_limits/<int:uid>", methods=["POST"])
-@login_required
-def update_feed_limits(uid):
-    """Update feed retrieval limits for a forum experiment."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
-    if error_response is not None:
-        return error_response
-
-    config_path = os.path.join(experiment_dir, "config_server.json")
-    config = {}
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r") as handle:
-                config = json.load(handle)
-        except (json.JSONDecodeError, IOError):
-            config = {}
-
-    try:
-        config["feed_limits"] = {
-            "rss_entries_per_feed": _parse_required_feed_limit(
-                "rss_entries_per_feed", int, "RSS entries per feed", minimum=1
-            ),
-            "reddit_entries_per_feed": _parse_required_feed_limit(
-                "reddit_entries_per_feed", int, "Reddit entries per feed", minimum=1
-            ),
-            "reddit_pages": _parse_required_feed_limit(
-                "reddit_pages", int, "Reddit pages", minimum=1
-            ),
-            "reddit_rate_limit_seconds": _parse_required_feed_limit(
-                "reddit_rate_limit_seconds",
-                float,
-                "Reddit rate limit seconds",
-                minimum=0,
-            ),
-            "db_fallback_limit": _parse_required_feed_limit(
-                "db_fallback_limit", int, "Database fallback limit", minimum=1
-            ),
-            "image_entries_per_feed": _parse_required_feed_limit(
-                "image_entries_per_feed", int, "Image entries per feed", minimum=1
-            ),
-        }
-    except ValueError as exc:
-        flash(str(exc), "error")
-        return redirect(request.referrer or url_for("experiments.feed_limits", uid=uid))
-
-    with open(config_path, "w") as handle:
-        json.dump(config, handle, indent=2)
-
-    flash(_("Feed limits updated successfully."), "success")
-    return redirect(request.referrer or url_for("experiments.feed_limits", uid=uid))

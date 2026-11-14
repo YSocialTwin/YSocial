@@ -70,6 +70,7 @@ PLATFORM_OWNED = (
     "y_web/routes/admin/sub/clients/_im.py",
     "y_web/routes/admin/sub/clients/_forum_hpc.py",
     "y_web/routes/admin/sub/experiments/_dating",
+    "y_web/routes/admin/sub/experiments/_forum",
     "y_web/routes/admin/sub/experiments/_im",
     "y_web/platforms/",
 )

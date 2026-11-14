@@ -43,6 +43,7 @@ from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
+from y_web.src.commons import reddit_feeds
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.feeds import (
     REDDIT_FEED_USER_AGENT,
@@ -380,7 +381,7 @@ def _experiment_configuration_update_required(experiment):
 
 
 def _normalize_rss_feed_item(item):
-    """Normalize a forum RSS feed definition."""
+    """Normalize an RSS feed definition."""
     if not isinstance(item, dict):
         return None
 
@@ -398,7 +399,7 @@ def _normalize_rss_feed_item(item):
 
 
 def _normalize_rss_feeds_payload(feeds):
-    """Validate and sanitize the stored forum RSS feeds payload."""
+    """Validate and sanitize the stored RSS feeds payload."""
     if not isinstance(feeds, list):
         raise ValueError("RSS feeds payload must be a JSON array.")
 
@@ -418,7 +419,7 @@ def _normalize_rss_feeds_payload(feeds):
 
 
 def _normalize_image_feed_item(item):
-    """Normalize a forum image feed definition."""
+    """Normalize an image feed definition."""
     if not isinstance(item, dict):
         return None
 
@@ -443,7 +444,7 @@ def _normalize_image_feed_item(item):
 
 
 def _normalize_image_feeds_payload(feeds):
-    """Validate and sanitize the stored forum image feeds payload."""
+    """Validate and sanitize the stored image feeds payload."""
     if not isinstance(feeds, list):
         raise ValueError("Image feeds payload must be a JSON array.")
 
@@ -468,29 +469,11 @@ def _normalize_image_feeds_payload(feeds):
     return normalized_feeds
 
 
-def _normalize_subreddit_input(value):
-    """Normalize a subreddit identifier from a slug, /r/ path, or Reddit URL."""
-    raw_value = str(value or "").strip()
-    if not raw_value:
-        return ""
-
-    lowered = raw_value.lower()
-    if lowered.startswith("http://") or lowered.startswith("https://"):
-        parsed = urlparse(raw_value)
-        host = parsed.netloc.lower()
-        if host.endswith("reddit.com"):
-            parts = [part for part in parsed.path.split("/") if part]
-            if len(parts) >= 2 and parts[0].lower() == "r":
-                return parts[1].strip().lower()
-        return ""
-
-    lowered = lowered[2:] if lowered.startswith("r/") else lowered
-    lowered = lowered.strip("/")
-    return lowered
+_normalize_subreddit_input = reddit_feeds.normalize_subreddit
 
 
 def _read_feed_with_headers(feed_url):
-    """Fetch a forum feed with explicit headers to avoid upstream blocks."""
+    """Fetch a feed with explicit headers to avoid upstream blocks."""
     last_http_error = None
     for url, headers in feed_request_variants(feed_url, FORUM_FEED_REQUEST_HEADERS):
         try:
@@ -689,14 +672,10 @@ def _load_forum_experiment_context(uid, require_manage=True):
         flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
-    if (
-        experiment.platform_type != "forum"
-        and not registry.resolve(experiment).news_page_feeds
-    ):
+    provider = registry.resolve(experiment)
+    if not (provider.feeds_read_at_client_start or provider.news_page_feeds):
         flash(
-            _(
-                "This page is only available for forum and instant messaging experiments."
-            ),
+            _("This page is only available for experiments that read feeds."),
             "warning",
         )
         return (
@@ -847,7 +826,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
 
 
 def _normalize_forum_embedding_service(value):
-    """Normalize forum memory embedding provider name."""
+    """Normalize memory embedding provider name."""
     service = str(value or "").strip().lower()
     if service in {"ollama"}:
         return service
@@ -855,7 +834,7 @@ def _normalize_forum_embedding_service(value):
 
 
 def _normalize_forum_embedding_host(value):
-    """Normalize forum memory embedding host input."""
+    """Normalize memory embedding host input."""
     host = str(value or "").strip()
     if not host:
         return ""
@@ -876,7 +855,7 @@ def _normalize_embedding_host(value):
 
 
 def _read_forum_feed_health(experiment, experiment_dir):
-    """Return configured and loaded forum feed counts for the experiment."""
+    """Return configured and loaded feed counts for the experiment."""
     health = {
         "rss_feed_count": 0,
         "image_feed_count": 0,
@@ -978,7 +957,7 @@ def _read_forum_feed_health(experiment, experiment_dir):
 
 
 def _read_forum_embedding_settings(experiment_dir):
-    """Load persisted forum memory embedding settings from config_server.json."""
+    """Load persisted memory embedding settings from config_server.json."""
     config_path = os.path.join(experiment_dir, "config_server.json")
     settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     if not os.path.exists(config_path):
@@ -1026,7 +1005,7 @@ def _read_experiment_embedding_settings(experiment_dir):
 
 
 def _read_forum_avatar_settings(experiment_dir):
-    """Load persisted forum avatar settings from config_server.json."""
+    """Load persisted avatar settings from config_server.json."""
     from y_web.src.content.avatars import normalize_forum_avatar_mode
 
     config_path = os.path.join(experiment_dir, "config_server.json")

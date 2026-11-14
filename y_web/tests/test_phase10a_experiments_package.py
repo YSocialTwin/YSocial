@@ -36,6 +36,7 @@ def test_sub_modules_exist():
         "y_web.routes.admin.sub.experiments._data",
         "y_web.routes.admin.sub.experiments._hpc",
         "y_web.routes.admin.sub.experiments._feeds",
+        "y_web.routes.admin.sub.experiments._forum_feeds",
         "y_web.routes.admin.sub.experiments._notifications",
         "y_web.routes.admin.sub.experiments._schedule",
         "y_web.routes.admin.sub.experiments._opinion",
@@ -137,16 +138,16 @@ def test_opinion_module_has_key_functions():
 
 def test_feeds_module_has_key_functions():
     """Feed-related functions must be in _feeds."""
-    from y_web.routes.admin.sub.experiments import _feeds
+    from y_web.routes.admin.sub.experiments import _feeds, _forum_feeds
 
     for fn_name in [
         "rss_feeds",
         "update_rss_feeds",
-        "image_feeds",
         "embedding_settings",
-        "feed_limits",
     ]:
         assert hasattr(_feeds, fn_name), f"_feeds missing: {fn_name}"
+    assert hasattr(_forum_feeds, "image_feeds")
+    assert hasattr(_forum_feeds, "feed_limits")
 
 
 def test_notifications_module_has_key_functions():
