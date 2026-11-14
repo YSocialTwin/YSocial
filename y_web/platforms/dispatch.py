@@ -10,7 +10,7 @@ when every provider has attached, :meth:`RouteCollector.commit` registers them i
   included: nothing changes for the platforms that have a single repository;
 * an address served by **several** providers is registered once, with a dispatcher that runs the view of the provider
   that runs the current experiment (see :func:`resolve_experiment`: the id in the address, else the values of the
-  request, else the only active experiment; with none, the preferred repository answers) and answers 404 when that
+  request, else the experiment the user last opened (session), else the only active experiment; with none, the preferred repository answers) and answers 404 when that
   provider does not serve
   the address;
 * two different addresses that claim the same endpoint name keep the first one's name; the other is registered as
@@ -81,6 +81,13 @@ def _experiment_from_request_values(arguments: Dict[str, Any]) -> Any:
     return None
 
 
+def _experiment_of_the_session(arguments: Dict[str, Any]) -> Any:
+    """The experiment the user last opened (see ``y_web.src.experiment.current``)."""
+    from y_web.src.experiment.current import current_experiment
+
+    return current_experiment()
+
+
 def _only_active_experiment(arguments: Dict[str, Any]) -> Any:
     """The experiment of a request that names none, when the application runs exactly one (what the legacy pages
     of a platform, such as ``/feed``, assume)."""
@@ -90,7 +97,13 @@ def _only_active_experiment(arguments: Dict[str, Any]) -> Any:
     return active[0] if len(active) == 1 else None
 
 
-REQUEST_RESOLVERS.extend([_experiment_from_request_values, _only_active_experiment])
+REQUEST_RESOLVERS.extend(
+    [
+        _experiment_from_request_values,
+        _experiment_of_the_session,
+        _only_active_experiment,
+    ]
+)
 
 
 def names_experiment(arguments: Dict[str, Any]) -> bool:
@@ -242,15 +255,12 @@ def _dispatcher(endpoint: str, views: Dict[str, Callable]) -> Callable:
 
         arguments = dict(request.view_args or kwargs)
         experiment = resolve_experiment(arguments)
-        if experiment is not None:
-            provider = registry.for_experiment(experiment)
-            view = views.get(provider.provider_id) if provider else None
-        elif names_experiment(arguments):
-            view = None  # an experiment that does not exist
-        else:
-            view = _preferred_view(
-                views
-            )  # nothing tells the experiment: the preferred repository answers
+        provider = registry.for_experiment(experiment) if experiment else None
+        view = views.get(provider.provider_id) if provider else None
+        if view is None and not names_experiment(arguments):
+            # the address says nothing about the experiment: what the request hints at (session, active experiment)
+            # may belong to another platform, and then the preferred repository of this one answers
+            view = _preferred_view(views)
         if view is None:
             abort(404)
         return view(*args, **kwargs)

@@ -360,7 +360,23 @@ def log_telemetry_event(user, data):
     return Telemetry(user=user).log_event(data=data)
 
 
+def choose_active_experiment(experiments):
+    """The experiment a legacy landing address leads to among the active ones of a platform (``None``: the user picks)."""
+    from y_web.src.experiment.current import choose_active_experiment as target
+
+    return target(experiments)
+
+
+def current_experiment_id():
+    """The experiment the user last opened (kept in the session), or ``None``."""
+    from y_web.src.experiment.current import current_experiment_id as target
+
+    return target()
+
+
 __all__ = [
+    "choose_active_experiment",
+    "current_experiment_id",
     "experiment_details_page",
     "log_telemetry_event",
     "mode_view",

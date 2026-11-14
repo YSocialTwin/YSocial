@@ -12,6 +12,7 @@ from flask import current_app, g, request
 from sqlalchemy import select
 
 from y_web import db
+from y_web.src.experiment.current import remember as remember_experiment
 
 
 def get_db_bind_key_for_exp(exp_id):
@@ -244,6 +245,7 @@ def setup_experiment_context():
 
     if exp_id:
         g.current_exp_id = exp_id
+        remember_experiment(exp_id)
         bind_key = get_db_bind_key_for_exp(exp_id)
 
         # Verify the bind exists
