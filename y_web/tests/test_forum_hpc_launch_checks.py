@@ -6,9 +6,12 @@ import sys
 import pytest
 
 from y_web.src.forum import validation
-from y_web.src.forum.client_config import build_client_config, parse_client_form
+from y_web.src.forum.client_config import (
+    _normalize_forum_client_config,
+    build_client_config,
+    parse_client_form,
+)
 from y_web.src.forum.experiment_config import generate_forum_server_config
-from y_web.src.hpc.client import _normalize_forum_client_config
 from y_web.tests.test_forum_hpc_experiment_creation import YFORUM
 
 

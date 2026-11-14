@@ -7,7 +7,7 @@ import sqlite3
 import pytest
 
 from y_web.src.dating import clone, validation
-from y_web.src.hpc.client import _normalize_dating_client_config
+from y_web.src.dating.client_config import _normalize_dating_client_config
 from y_web.src.hpc.platforms import get_hpc_platform
 
 pytestmark = pytest.mark.unit

@@ -62,7 +62,7 @@ def set_client_run_length(
     client_config: str, client: Any, unlimited_value: int = -1
 ) -> None:
     """Write in the client file how many days the client runs from this start (what is left of ``Client.days``)."""
-    from y_web.src.hpc.client import _set_dating_run_length
+    from y_web.src.hpc.run_length_file import _set_dating_run_length
 
     _set_dating_run_length(client_config, client, unlimited_value=unlimited_value)
 

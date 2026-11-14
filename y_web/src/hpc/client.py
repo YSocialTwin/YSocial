@@ -21,12 +21,8 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.platforms import registry
-from y_web.src.hpc._client_checks import (  # noqa: F401
-    _normalize_dating_client_config,
-    _normalize_forum_client_config,
-    _set_dating_run_length,
-)
 from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
+from y_web.src.hpc.run_length_file import _set_dating_run_length  # noqa: F401
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
 from y_web.src.system.path_utils import get_base_path, get_writable_path
