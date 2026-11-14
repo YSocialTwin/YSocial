@@ -426,6 +426,15 @@ def test_resolve_simulator_matches_the_previous_creation_logic():
     for flags in itertools.product((False, True), repeat=len(names)):
         available = dict(zip(names, flags))
         for platform in registry.keys() + ["unknown"]:
+            if platform == "microblogging":
+                # one repository per runtime (phase F9.2): the runtime asked for is the one that answers, and
+                # a platform whose only repository serves the other runtime decides itself
+                if len(registry.variants(platform)) > 1:
+                    for simulator in ("Standard", "HPC"):
+                        assert registry.choose_simulator(
+                            platform, simulator, available
+                        ) == (simulator, None)
+                continue
             for simulator in ("Standard", "HPC", "other"):
                 got, error = registry.resolve(platform).resolve_simulator(
                     simulator, available

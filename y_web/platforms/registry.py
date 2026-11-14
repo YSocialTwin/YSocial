@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from y_web.platforms.base import PlatformProvider
+from y_web.platforms.base import STANDARD, PlatformProvider
 
 _PROVIDERS: Dict[str, PlatformProvider] = {}
 #: further providers of a key that more than one repository provides (see :func:`variants`)
@@ -20,6 +20,21 @@ def _compatible_variant(existing: PlatformProvider, provider: PlatformProvider) 
     return not set(existing.simulator_types) & set(provider.simulator_types)
 
 
+def _prefer_standard(key: str) -> None:
+    """Make the provider that serves the Standard runtime the preferred one of ``key`` (the one ``get(key)`` gives).
+
+    Standard is what a platform runs on without anything else installed; the others follow in the order they were
+    registered. A key without a Standard provider keeps its first one.
+    """
+    found = variants(key)
+    standard = next((p for p in found if STANDARD in (p.simulator_types or ())), None)
+    if standard is None or standard is found[0]:
+        return
+    rest = [p for p in found if p is not standard]
+    _PROVIDERS[key] = standard
+    _EXTRA[key] = rest
+
+
 def _add(provider: PlatformProvider) -> PlatformProvider:
     """Register ``provider`` as the first provider of its key or as a variant of the ones already there."""
     key = provider.key
@@ -29,6 +44,7 @@ def _add(provider: PlatformProvider) -> PlatformProvider:
         return provider
     if all(_compatible_variant(other, provider) for other in existing):
         _EXTRA.setdefault(key, []).append(provider)
+        _prefer_standard(key)
         return provider
     clash = next(
         (o for o in existing if not _compatible_variant(o, provider)), existing[0]

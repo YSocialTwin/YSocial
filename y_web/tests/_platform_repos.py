@@ -83,7 +83,7 @@ def microblogging_file(old_relative: str) -> str:
     The pages shared with the other platforms (header, edit profile, chat panel) stayed in the core under a neutral name.
     """
     core = EXTERNAL.parent / "y_web"
-    base = EXTERNAL / "YSimulator" / "ysocial_platform"
+    base = EXTERNAL / "YServer" / "ysocial_platform"
     if old_relative.startswith("y_web/templates/"):
         relative = old_relative[len("y_web/templates/") :]
         renamed = _renamed()
@@ -99,7 +99,7 @@ def microblogging_file(old_relative: str) -> str:
     else:
         raise ValueError(old_relative)
     if not path.is_file():
-        pytest.skip("YSimulator with its platform files is not installed")
+        pytest.skip("YServer with its platform files is not installed")
     return str(path)
 
 
@@ -197,6 +197,7 @@ def core_and_platform_loader():
             ("photo_sharing", "YPhotoSharing"),
             ("forum", "YForum"),
             ("microblogging", "YSimulator"),
+            ("ysocial_server", "YServer"),
         )
         if (EXTERNAL / repo / "ysocial_platform" / "templates").is_dir()
     }

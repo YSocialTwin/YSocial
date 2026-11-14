@@ -33,10 +33,8 @@ def test_a_provider_without_id_is_identified_by_its_key_and_serves_every_runtime
 def test_two_repositories_serving_distinct_runtimes_are_variants(clean_registry):
     hpc = registry.register(_provider(id="vhpc", simulator_types=(HPC,)))
     std = registry.register(_provider(id="vstd", simulator_types=(STANDARD,)))
-    assert registry.variants("vdemo") == [hpc, std]
-    assert (
-        registry.get("vdemo") is hpc
-    )  # the first registered stays the answer of get()
+    assert registry.variants("vdemo") == [std, hpc]  # Standard is the preferred one
+    assert registry.get("vdemo") is std  # the preferred variant answers get()
     assert registry.by_id("vstd") is std and registry.by_id("vhpc") is hpc
     assert registry.for_simulator("vdemo", STANDARD) is std
     assert registry.for_simulator("vdemo", HPC) is hpc
@@ -91,7 +89,7 @@ def test_menus_list_each_platform_once_and_all_providers_list_the_variants(
 ):
     registry.register(_provider(id="vhpc", simulator_types=(HPC,)))
     registry.register(_provider(id="vstd", simulator_types=(STANDARD,)))
-    assert [p.provider_id for p in registry.providers() if p.key == "vdemo"] == ["vhpc"]
+    assert [p.provider_id for p in registry.providers() if p.key == "vdemo"] == ["vstd"]
     assert {p.provider_id for p in registry.all_providers() if p.key == "vdemo"} == {
         "vhpc",
         "vstd",

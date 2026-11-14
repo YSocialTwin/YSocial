@@ -149,7 +149,7 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_ranked_list_card.html" %}'
         in template
     )
     assert "ranked_card_title = _('Frequently Used Hashtags')" in template
@@ -264,23 +264,23 @@ def test_sidebar_ranked_list_card_is_shared_and_styled():
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_ranked_list_card.html" %}'
         in feed_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_ranked_list_card.html" %}'
         in thread_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_ranked_list_card.html" %}'
         in hashtag_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_ranked_list_card.html" %}'
         in interest_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_ranked_list_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_ranked_list_card.html" %}'
         in emotions_template
     )
     assert "ranked_card_title" in component
@@ -315,23 +315,23 @@ def test_sidebar_user_card_is_shared_and_styled():
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_user_card.html" %}'
         in feed_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_user_card.html" %}'
         in thread_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_user_card.html" %}'
         in hashtag_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_user_card.html" %}'
         in interest_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/sidebar_user_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/sidebar_user_card.html" %}'
         in emotions_template
     )
     assert "Your Profile" in component
@@ -363,19 +363,19 @@ def test_context_hero_is_shared_and_styled():
     ).read_text(encoding="utf-8")
 
     assert (
-        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/context_hero_card.html" %}'
         in thread_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/context_hero_card.html" %}'
         in hashtag_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/context_hero_card.html" %}'
         in interest_template
     )
     assert (
-        '{% include "@microblogging/microblogging/components/context_hero_card.html" %}'
+        '{% include "@ysocial_server/microblogging/components/context_hero_card.html" %}'
         in emotions_template
     )
     assert "ys-context-hero__eyebrow" in component

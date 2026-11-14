@@ -21,6 +21,14 @@ from y_web.tests.test_frontend_settings_generic_suite_panel import (  # noqa: F4
     suites_app,
 )
 
+needs_microblogging = pytest.mark.skipif(
+    not (
+        _platform_alias.installed(_platform_alias.MICROBLOGGING)
+        or _platform_alias.installed(_platform_alias.MICROBLOGGING_HPC)
+    ),
+    reason="neither YServer nor YSimulator is installed",
+)
+
 
 def _exp(app, platform, name, group=""):
     from y_web.src.models import Exps
@@ -59,6 +67,7 @@ def test_page_lists_all_three_platforms_with_groups(suites_app, logged):
     assert "Photo sharing" in html
 
 
+@needs_microblogging
 def test_get_settings_reports_capabilities(suites_app, logged):
     forum = _exp(suites_app, "forum", "f2")
     photo = _exp(suites_app, "photo_sharing", "p2")
@@ -208,6 +217,7 @@ def test_dispatch_platform_event_is_inert_without_suites(monkeypatch):
     assert plugin_loader.dispatch_platform_event(object(), 1, "photo_created", {}) == 0
 
 
+@needs_microblogging
 def test_show_suggested_friends_setting(suites_app, logged):
     forum = _exp(suites_app, "forum", "f9")
     photo = _exp(suites_app, "photo_sharing", "p9")
@@ -365,6 +375,7 @@ def test_feed_templates_with_side_boxes_compile(suites_app):
         assert suites_app.jinja_env.get_template(name) is not None
 
 
+@needs_microblogging
 def test_show_trending_hashtags_setting(suites_app, logged):
     micro = _exp(suites_app, "microblogging", "m11")
     photo = _exp(suites_app, "photo_sharing", "p11")
@@ -390,6 +401,7 @@ def test_show_trending_hashtags_setting(suites_app, logged):
         )
 
 
+@needs_microblogging
 def test_platform_only_controls_are_not_offered_to_microblogging(suites_app, logged):
     """ "Default feed ordering" is a forum control and "Default home tab" a photo one:
     microblogging keeps every other control but must not offer them."""

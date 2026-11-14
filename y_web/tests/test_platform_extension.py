@@ -14,6 +14,8 @@ from y_web.platforms.extension import (
 @pytest.fixture
 def clean_registry():
     before = dict(registry._PROVIDERS)
+    extra_before = {key: list(found) for key, found in registry._EXTRA.items()}
+    registry._EXTRA.clear()  # the other variants of the installed platforms
     # platforms of installed repositories (found by an application started earlier) are not part of these tests
     for key, provider in before.items():
         if provider.package_dir is not None:
@@ -21,6 +23,8 @@ def clean_registry():
     yield
     registry._PROVIDERS.clear()
     registry._PROVIDERS.update(before)
+    registry._EXTRA.clear()
+    registry._EXTRA.update(extra_before)
 
 
 def _platform(tmp_path, key="demo", blueprint=None):

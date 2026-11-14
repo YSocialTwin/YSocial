@@ -76,7 +76,7 @@ def test_hashtag_route_passes_active_modules_context():
     source = Path(microblogging_file(MICROBLOGGING_PY)).read_text(encoding="utf-8")
     assert "active_modules_context" in source
     render_call_start = source.index(
-        'render_template(\n        "@microblogging/microblogging/hashtag.html"'
+        'render_template(\n        "@ysocial_server/microblogging/hashtag.html"'
     )
     render_call = source[render_call_start : render_call_start + 700]
     assert "frontend_adds_on_modules=active_modules_context(exp_id)" in render_call

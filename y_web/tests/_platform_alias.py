@@ -25,6 +25,12 @@ class Platform:
     #: old module name -> module in the repository package ``ysocial_platform``
     views: Dict[str, str] = field(default_factory=dict)
     needs: Tuple[str, ...] = ()  # tests that need the repository
+    provider_id: str = (
+        ""  # id of its provider when it is not the key (a platform with several repositories)
+    )
+    routes: Tuple[
+        str, ...
+    ] = ()  # modules that only register routes (no old name to alias)
 
 
 DATING = Platform(
@@ -119,12 +125,13 @@ FORUM = Platform(
     ),
 )
 
-MICROBLOGGING = Platform(
-    repo="YSimulator",
-    key="microblogging",
+MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer
+    repo="YServer",
+    key="microblogging_server",
     old_package="",
     library="",
-    provider_class="Microblogging",
+    provider_class="MicrobloggingStandard",
+    provider_id="ysocial_server",
     views={
         "y_web.routes.social.microblogging": "routes.social_microblogging",
         "y_web.routes.interactions.microblogging": "routes.interactions_microblogging",
@@ -141,7 +148,24 @@ MICROBLOGGING = Platform(
     ),
 )
 
-PLATFORMS = (DATING, INSTANT_MESSAGING, PHOTO_SHARING, FORUM, MICROBLOGGING)
+MICROBLOGGING_HPC = Platform(  # the HPC runtime of the same platform: its routes are served next to YServer's
+    repo="YSimulator",
+    key="hpc_simulator",
+    old_package="",
+    library="",
+    provider_class="Microblogging",
+    provider_id="microblogging",
+    routes=("routes.social_microblogging", "routes.interactions_microblogging"),
+)
+
+PLATFORMS = (
+    DATING,
+    INSTANT_MESSAGING,
+    PHOTO_SHARING,
+    FORUM,
+    MICROBLOGGING,
+    MICROBLOGGING_HPC,
+)
 
 _state: Dict[str, bool] = {}
 
@@ -201,6 +225,8 @@ def _install_one(platform: Platform) -> bool:
                     sys.modules[f"{platform.old_package}.{sub.name}.{path.stem}"] = (
                         load(f"{platform.library}.{sub.name}.{path.stem}")
                     )
+    for name in platform.routes:
+        load(name)
     for old, new in platform.views.items():
         module = load(new)
         sys.modules[old] = module
@@ -213,7 +239,14 @@ def _install_one(platform: Platform) -> bool:
 
 def install() -> bool:
     """Install the aliases of every platform whose repository is present; true when all of them are."""
-    results = [_install_one(platform) for platform in PLATFORMS]
+    from y_web.platforms import dispatch
+
+    # the repositories of one platform serve some addresses together: their routes are registered together too
+    with dispatch.collecting():
+        results = []
+        for platform in PLATFORMS:
+            with dispatch.attaching(platform.provider_id or platform.key):
+                results.append(_install_one(platform))
     return all(results)
 
 
@@ -221,7 +254,7 @@ def _register(platform: Platform) -> None:
     """Register the provider of the repository when the registry has none for its key (what discovery does)."""
     from y_web.platforms import registry
 
-    if registry.get(platform.key) is not None:
+    if registry.by_id(platform.provider_id or platform.key) is not None:
         return
     module = importlib.import_module(f"{_root(platform)}.ysocial_platform.provider")
     provider = getattr(module, platform.provider_class)()
