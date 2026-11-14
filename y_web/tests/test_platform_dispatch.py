@@ -156,3 +156,20 @@ def test_a_failing_rule_is_reported_and_the_others_still_register(world):
         collector.add(bp, "d_std", "/boom", "boom", None, {"methods": ["GET"]})
     client, _ = _app(bp)
     assert client.get("/2/good").data == b"d_std:good"
+
+
+def test_the_http_method_shortcuts_are_recorded_too(world):
+    """``@blueprint.get(...)`` is how the platform repositories write most of their views."""
+    bp = Blueprint("shortcuts", __name__)
+    with dispatch.collecting():
+        for owner in ("d_hpc", "d_std"):
+            with dispatch.attaching(owner):
+                wrapped = dispatch.wrap(bp)
+                wrapped.get("/<int:exp_id>/g")(_view(f"{owner}:g", "g"))
+                wrapped.post("/<int:exp_id>/p")(_view(f"{owner}:p", "p"))
+    client, app = _app(bp)
+    assert [r.rule for r in app.url_map.iter_rules()].count("/<int:exp_id>/g") == 1
+    assert client.get("/1/g").data == b"d_hpc:g"
+    assert client.get("/2/g").data == b"d_std:g"
+    assert client.post("/2/p").data == b"d_std:p"
+    assert client.get("/2/p").status_code == 405

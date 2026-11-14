@@ -88,6 +88,24 @@ class ProviderBlueprint:
     def __getattr__(self, name: str) -> Any:
         return getattr(self._blueprint, name)
 
+    def _shortcut(self, method: str, rule: str, options: Dict[str, Any]) -> Callable:
+        return self.route(rule, methods=[method], **options)
+
+    def get(self, rule: str, **options: Any) -> Callable:
+        return self._shortcut("GET", rule, options)
+
+    def post(self, rule: str, **options: Any) -> Callable:
+        return self._shortcut("POST", rule, options)
+
+    def put(self, rule: str, **options: Any) -> Callable:
+        return self._shortcut("PUT", rule, options)
+
+    def delete(self, rule: str, **options: Any) -> Callable:
+        return self._shortcut("DELETE", rule, options)
+
+    def patch(self, rule: str, **options: Any) -> Callable:
+        return self._shortcut("PATCH", rule, options)
+
     def route(self, rule: str, **options: Any) -> Callable:
         def decorator(view):
             self.add_url_rule(rule, options.pop("endpoint", None), view, **options)
