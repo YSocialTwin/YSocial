@@ -597,6 +597,42 @@ class PlatformProvider:
         """Page of the platform the "home" link of the site goes to for this experiment, or ``None`` (the default)."""
         return None
 
+    # --- the pages the participants share (``routes/social``) ----------------------------------------------------
+    reads_server_config = False  # its experiments keep a server config file that pages read (memory, stress/reward)
+    accepts_account_id_login = False  # a login with no participant row of that name is the participant of the same id
+
+    def profile_redirect(self, exp: Any, user: Any, page: Any) -> Optional[str]:
+        """Page the platform shows a profile on when it is not the shared profile page, else ``None``."""
+        return None
+
+    def profile_picture(self, user: Any) -> Optional[str]:
+        """Picture URL the platform gives a participant, or ``None`` for the shared way of finding it."""
+        return None
+
+    def discussion_community(
+        self, article: Any, topics: Any
+    ) -> Optional[Mapping[str, Any]]:
+        """The community a discussion belongs to (platforms with communities), else ``None``."""
+        return None
+
+    def render_profile(self, exp: Any, context: Mapping[str, Any]) -> Any:
+        """The platform's own profile page for ``context`` (the shared profile context), or ``None`` for the shared one."""
+        return None
+
+    def render_edit_profile(self, exp: Any, context: Mapping[str, Any]) -> Any:
+        """The platform's own page to edit a profile (a response, possibly a redirect), or ``None`` for the shared one."""
+        return None
+
+    def page_context(
+        self, exp: Any, ui: Mapping[str, Any]
+    ) -> Optional[Mapping[str, Any]]:
+        """Extra template variables for every page of the platform's experiments, or ``None`` for no extra at all.
+
+        ``ui`` is the experiment's frontend settings. The key ``frontend_plugins`` (default ``True``) says whether
+        the pages carry the frontend plugin modules.
+        """
+        return None
+
     def observer_url(self, exp_id: int) -> Optional[str]:
         """Page an administrator opens an experiment on when the platform has no per-user feed, else ``None``."""
         return None

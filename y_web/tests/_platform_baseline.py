@@ -70,7 +70,6 @@ PLATFORM_OWNED = (
     "y_web/src/commons/",
     # the platform API wraps core functions under the names they still have (renamed with the views that use them)
     "y_web/sdk/",
-    "y_web/routes/social/",
     "y_web/routes/interactions/",
     "y_web/routes/api/",
     "y_web/routes/admin/sub/clients/_dating.py",

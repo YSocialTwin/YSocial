@@ -2,7 +2,6 @@
  "y_web/routes/admin/sub/experiments/_frontend_settings.py": 6,
  "y_web/routes/api/interview/_memory.py": 1,
  "y_web/routes/interactions/common.py": 1,
- "y_web/routes/social/helpers.py": 3,
  "y_web/src/federation/human_outbox.py": 1,
  "y_web/src/federation/lifecycle.py": 1,
  "y_web/src/federation/service.py": 1,

@@ -149,7 +149,8 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     # itself branches on platform_type (including photo_sharing) once it
     # knows the user has already completed onboarding. common_source below
     # already covers that relocated branch.
-    assert "photo_sharing" in common_source
+    # the shared profile page hands a photo profile to the platform
+    assert "profile_redirect(exp, user, page)" in common_source
     assert "ensure_experiment_user" in route_source
     assert "photo/profile" in route_source
     assert "photo/messages" in route_source

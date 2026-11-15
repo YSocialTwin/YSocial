@@ -1,5 +1,5 @@
 """
-Common/profile routes for both microblogging and forum platforms.
+Common/profile routes shared by the platforms (a platform shows its own page through the provider hooks).
 
 Routes: index, profile, profile_logged, edit_profile, update_profile_data,
         update_password.
@@ -35,10 +35,9 @@ from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_o
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _experiment_memory_enabled,
-    _forum_current_profile_pic,
-    _forum_logged_user,
-    _forum_memory_enabled,
-    _forum_profile_pic,
+    _current_profile_pic,
+    _logged_experiment_user,
+    _participant_profile_pic,
     _load_ui_settings,
     get_safe_profile_pic,
     is_admin,
@@ -110,11 +109,7 @@ def _latest_follow_action(*, follower_id, user_id):
 
 
 def _experiment_server_config(exp):
-    if not exp or getattr(exp, "platform_type", "") not in {
-        "forum",
-        "microblogging",
-        "photo_sharing",
-    }:
+    if not exp or not platforms.resolve(exp).reads_server_config:
         return {}
 
     uid = get_experiment_uid_from_db_name(
@@ -145,11 +140,7 @@ def _experiment_server_config(exp):
 
 
 def _stress_reward_enabled_for_exp(exp):
-    if not exp or getattr(exp, "platform_type", "") not in {
-        "microblogging",
-        "forum",
-        "photo_sharing",
-    }:
+    if not exp or not platforms.resolve(exp).reads_server_config:
         return False
 
     config = _experiment_server_config(exp)
@@ -333,7 +324,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not logged_user:
-        if getattr(exp, "platform_type", "") == "forum":
+        if platforms.resolve(exp).accepts_account_id_login:
             logged_id = current_user.id
         else:
             flash(_("User not found in experiment"), "error")
@@ -357,8 +348,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
 
-    if getattr(exp, "platform_type", "") == "photo_sharing":
-        return redirect(f"/{exp_id}/photo/profile/{user.id}/recent/{page}")
+    shown_elsewhere = platforms.resolve(exp).profile_redirect(exp, user, page)
+    if shown_elsewhere:
+        return redirect(shown_elsewhere)
 
     is_following = (
         _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
@@ -423,9 +415,8 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     total_followers = count_followers(user.id)
     total_followee = count_followees(user.id)
 
-    if getattr(exp, "platform_type", "") == "forum":
-        profile_pic = _forum_profile_pic(user)
-    else:
+    profile_pic = platforms.resolve(exp).profile_picture(user)
+    if profile_pic is None:
         profile_pic = ""
         if user.is_page == 1:
             pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
@@ -516,50 +507,17 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         cover_image=cover_image,
     )
 
-    if getattr(exp, "platform_type", "") == "forum":
-        forum_logged_user = _forum_logged_user()
-        mention_user_id = forum_logged_user.id if forum_logged_user else None
-        forum_mentions = (
-            get_unanswered_mentions(mention_user_id) if mention_user_id else []
-        )
-        _recsys = platforms.human_recsys(exp)
-        _suggest = getattr(_recsys, "suggested_users", None)
-        suggested_users = (
-            _suggest(forum_logged_user.username, pages=False)
-            if forum_logged_user and _suggest
-            else []
-        )
-        suggested_pages = (
-            _suggest(forum_logged_user.username, pages=True)
-            if forum_logged_user and _suggest
-            else []
-        )
-        forum_context = dict(common_context)
-        forum_context["mentions"] = forum_mentions
-        from y_web.src.commons.service import (
-            fetch_recent_active_communities,
-            fetch_user_communities,
-        )
-
-        forum_context["recent_communities"] = fetch_recent_active_communities()
-        forum_context["my_communities"] = (
-            fetch_user_communities(forum_logged_user.id) if forum_logged_user else []
-        )
-        return render_template(
-            provider_template(exp, "forum/profile.html"),
-            profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),
-            viewed_profile_pic=profile_pic,
-            profile_pic_feed=_forum_current_profile_pic(exp_id, forum_logged_user),
-            profile_delete_inline=True,
-            feed_user_id=None,
-            timeline="profile",
-            sfollow=suggested_users,
-            spages=suggested_pages,
-            forum_memory_enabled=_forum_memory_enabled(exp_id),
-            can_follow_profile=str(user.id) != str(logged_id),
-            feed_type="new",
-            **forum_context,
-        )
+    own_page = platforms.resolve(exp).render_profile(
+        exp,
+        dict(
+            common_context=common_context,
+            user=user,
+            logged_id=logged_id,
+            profile_pic=profile_pic,
+        ),
+    )
+    if own_page is not None:
+        return own_page
 
     provider = platforms.resolve(exp)
     fallback = platforms.default()
@@ -631,35 +589,21 @@ def edit_profile(exp_id, user_id):
     ]
 
     _exp_for_page = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
-    if getattr(_exp_for_page, "platform_type", "") == "forum":
-        # Forum: a user may only edit their own profile; no topics/opinions
-        # and no recommender selection on this platform.
-        if str(logged_id) != str(user_id):
-            return redirect(
-                url_for(
-                    "main.profile_logged",
-                    exp_id=exp_id,
-                    user_id=logged_id,
-                    mode="recent",
-                    page=1,
-                )
-            )
-        return render_template(
-            provider_template(_exp_for_page, "forum/edit_profile.html"),
+    own_page = platforms.resolve(_exp_for_page).render_edit_profile(
+        _exp_for_page,
+        dict(
             user=user,
             profile_pic=profile_pic,
             available_profile_pics=available_profile_pics,
-            cover_image=_get_user_cover_image(user.id),
             available_cover_images=available_cover_images,
-            is_page=user.is_page,
-            username=user.username,
-            user_id=user_id,
-            logged_username=current_user.username,
+            cover_image=_get_user_cover_image(user.id),
             logged_id=logged_id,
-            is_admin=is_admin(current_user.username),
+            user_id=user_id,
             exp_id=exp_id,
-            forum_memory_enabled=_forum_memory_enabled(exp_id),
-        )
+        ),
+    )
+    if own_page is not None:
+        return own_page
 
     # ── Topic/opinion data (same logic as onboarding GET) ─────────────────
     def _get_exp_engine_ep():

@@ -213,4 +213,9 @@ def test_forum_profile_posts_include_community_metadata_and_feed_type():
         "rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)"
         in common_source
     )
-    assert 'feed_type="new"' in common_source
+    # the forum shows the profile itself: its page (in the platform) opens on the "new" feed
+    from y_web.platforms import registry
+
+    for provider in (p for p in registry.all_providers() if p.key == "forum"):
+        profile = (provider.package_dir / "profile.py").read_text()
+        assert 'feed_type="new"' in profile

@@ -39,6 +39,17 @@ RECSYS = HumanRecsysTraits(
 
 
 class ZPlat(PlatformProvider):
+    reads_server_config = True
+
+    def profile_picture(self, user):
+        return "/z/" + user.name
+
+    def discussion_community(self, article, topics):
+        return {"slug": "z"}
+
+    def page_context(self, exp, ui):
+        return {"platform_ui": "z", "frontend_plugins": False}
+
     frontend_settings = (
         FrontendSetting("z_flag", True),
         FrontendSetting("z_rounds", 5, minimum=1, maximum=9),
@@ -377,3 +388,41 @@ def test_its_frontend_settings_are_declared_and_validated_by_the_platform(new_pl
 
     setting = {s.key: s for s in fs.declared_settings(KEY)}["z_rounds"]
     assert fs._clamped(50, setting) == 9 and fs._clamped(-3, setting) == 1
+
+
+def test_the_shared_pages_ask_the_platform_instead_of_naming_it(
+    new_platform, monkeypatch
+):
+    """Profile pictures, communities and the page context of the shared pages come from the provider's hooks."""
+    from y_web.platforms import registry
+    from y_web.routes.social import helpers
+
+    exp = SimpleNamespace(idexp=5, platform_type=KEY, simulator_type="HPC")
+    provider = registry.resolve(exp)
+    assert provider.reads_server_config is True
+    assert provider.profile_picture(SimpleNamespace(name="ann")) == "/z/ann"
+    assert provider.discussion_community(None, []) == {"slug": "z"}
+    # a platform that says nothing keeps the shared behaviour
+    generic = registry.resolve(SimpleNamespace(platform_type="nothing"))
+    assert (
+        generic.profile_picture(None) is None
+        and generic.render_profile(exp, {}) is None
+    )
+    assert generic.profile_redirect(exp, None, 1) is None
+    assert generic.accepts_account_id_login is False
+
+    monkeypatch.setattr(
+        helpers, "request", SimpleNamespace(blueprint="main", view_args={"exp_id": 5})
+    )
+    monkeypatch.setattr(
+        helpers,
+        "db",
+        SimpleNamespace(session=SimpleNamespace(get=lambda model, key: exp)),
+    )
+    monkeypatch.setattr(helpers, "_load_ui_settings", lambda exp_id: {"k": 1})
+    context = helpers._platform_ui_context()
+    assert context == {
+        "frontend_adds_on_modules": [],
+        "ui": {"k": 1},
+        "platform_ui": "z",
+    }

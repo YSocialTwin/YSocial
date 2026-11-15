@@ -45,7 +45,7 @@ def test_forum_profile_route_allows_stress_reward_context():
         encoding="utf-8"
     )
 
-    assert 'getattr(exp, "platform_type", "") not in' in source
+    assert "platforms.resolve(exp).reads_server_config" in source
     assert "stress_reward_active=stress_reward_active" in source
     assert "stress_reward_indicator=stress_reward_indicator" in source
 

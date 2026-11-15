@@ -2,7 +2,7 @@
 Shared helper functions for the social routes sub-package.
 
 These are private/helper functions that are *not* decorated with ``@main.``.
-They are imported by common.py, microblogging.py, and forum.py using
+They are imported by common.py and by the platforms (through ``y_web.sdk.social``) using
 absolute imports to avoid circular dependency with _blueprint.py.
 
 This module must NOT import from y_web.routes.social._blueprint or any other
@@ -18,6 +18,7 @@ from flask_login import current_user
 from sqlalchemy import or_, select
 
 from y_web import db
+from y_web.platforms import registry as platforms
 from y_web.src.commons.ids import opaque_id
 from y_web.src.commons.ordering import seq_or_id
 from y_web.src.content.avatars import (
@@ -186,13 +187,12 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     """Handle get discussions operation."""
     res = []
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
-    is_forum = getattr(exp, "platform_type", "") == "forum"
+    provider = platforms.resolve(exp)
 
     from y_web.src.commons.service import (
         _format_display_time,
         _format_display_time_from_created_at,
     )
-    from y_web.src.commons.service.queries import _primary_community_payload
 
     # Get experiment user ID if not provided
     if exp_user_id is None:
@@ -241,9 +241,8 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 text = c.tweet.split(":")[-1]
 
             user = db.session.scalars(select(User_mgmt).filter_by(id=c.user_id)).first()
-            if is_forum:
-                profile_pic = _forum_profile_pic(user)
-            else:
+            profile_pic = provider.profile_picture(user)
+            if profile_pic is None:
                 profile_pic = ""
                 if user.is_page == 1:
                     pg = db.session.scalars(
@@ -382,9 +381,8 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
             # Skip this post if the author doesn't exist in user_mgmt
             continue
 
-        if is_forum:
-            profile_pic = _forum_profile_pic(aa)
-        else:
+        profile_pic = provider.profile_picture(aa)
+        if profile_pic is None:
             profile_pic = ""
             if aa.is_page == 1:
                 pg = db.session.scalars(
@@ -410,9 +408,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         topics = get_topics(post.id, post.user_id)
         if len(topics) == 0:
             topics = []
-        primary_community = (
-            _primary_community_payload(article, topics) if is_forum else None
-        )
+        primary_community = provider.discussion_community(article, topics)
 
         # Get author username safely
         author_user = db.session.scalars(
@@ -503,10 +499,10 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     return res
 
 
-#### Forum helpers
+#### Participant helpers
 
 
-def _forum_logged_user():
+def _logged_experiment_user():
     user = db.session.scalars(
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
@@ -517,13 +513,13 @@ def _forum_logged_user():
     return user
 
 
-def _forum_profile_pic(user):
+def _participant_profile_pic(user):
     return resolve_forum_profile_pic(user, get_current_experiment_id())
 
 
-def _forum_current_profile_pic(exp_id, forum_user=None):
-    if forum_user is not None:
-        return resolve_forum_profile_pic(forum_user, exp_id)
+def _current_profile_pic(exp_id, participant=None):
+    if participant is not None:
+        return resolve_forum_profile_pic(participant, exp_id)
     return resolve_forum_username_avatar(current_user.username, exp_id)
 
 
@@ -533,11 +529,7 @@ def _experiment_memory_enabled(exp_id):
     if not agent_memory_plugin_installed():
         return False
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
-    if not exp or getattr(exp, "platform_type", "") not in {
-        "forum",
-        "microblogging",
-        "photo_sharing",
-    }:
+    if not exp or not platforms.resolve(exp).reads_server_config:
         return False
 
     uid = get_experiment_uid_from_db_name(
@@ -575,107 +567,37 @@ def _experiment_memory_enabled(exp_id):
     if bool(config.get("memory_enabled", False)):
         return True
 
-    platform = getattr(exp, "platform_type", "")
-    if platform in {"microblogging", "forum", "photo_sharing"}:
-        exp_dir = os.path.dirname(config_path)
-        try:
-            for entry in os.listdir(exp_dir):
-                is_standard_client = entry.startswith("client_") and entry.endswith(
-                    ".json"
-                )
-                is_hpc_client = (
-                    entry.endswith("_config.json") and entry != "server_config.json"
-                )
-                if not is_standard_client and not is_hpc_client:
-                    continue
-                client_path = os.path.join(exp_dir, entry)
-                try:
-                    with open(client_path, "r", encoding="utf-8") as client_handle:
-                        client_config = json.load(client_handle) or {}
-                    # Microblogging and HPC client configs nest under "agents"
-                    agents_cfg = client_config.get("agents")
-                    if isinstance(agents_cfg, dict) and bool(
-                        agents_cfg.get("memory_enabled")
-                    ):
-                        return True
-                    # Forum client configs use a flat "memory_enabled" key
-                    if bool(client_config.get("memory_enabled", False)):
-                        return True
-                except Exception:
-                    continue
-        except Exception:
-            return False
+    # the client configs of the platforms that read the server config
+    exp_dir = os.path.dirname(config_path)
+    try:
+        for entry in os.listdir(exp_dir):
+            is_standard_client = entry.startswith("client_") and entry.endswith(".json")
+            is_hpc_client = (
+                entry.endswith("_config.json") and entry != "server_config.json"
+            )
+            if not is_standard_client and not is_hpc_client:
+                continue
+            client_path = os.path.join(exp_dir, entry)
+            try:
+                with open(client_path, "r", encoding="utf-8") as client_handle:
+                    client_config = json.load(client_handle) or {}
+                # Most client configs nest under "agents"
+                agents_cfg = client_config.get("agents")
+                if isinstance(agents_cfg, dict) and bool(
+                    agents_cfg.get("memory_enabled")
+                ):
+                    return True
+                # Others use a flat "memory_enabled" key
+                if bool(client_config.get("memory_enabled", False)):
+                    return True
+            except Exception:
+                continue
+    except Exception:
+        return False
     return False
 
 
-def _forum_memory_enabled(exp_id):
-    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
-    if not exp or getattr(exp, "platform_type", "") != "forum":
-        return False
-    return _experiment_memory_enabled(exp_id)
-
-
-def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
-    from sqlalchemy import desc, func, or_
-
-    normalized_feed = (feed_type or "new").strip().lower()
-    if normalized_feed not in {"new", "hot", "top", "most_commented"}:
-        normalized_feed = "new"
-
-    base_query = Post.query.filter(_root_post_filter(Post.comment_to))
-    if search_query:
-        like = f"%{search_query}%"
-        base_query = (
-            base_query.outerjoin(User_mgmt, User_mgmt.id == Post.user_id)
-            .outerjoin(Articles, Articles.id == Post.news_id)
-            .filter(
-                or_(
-                    Post.tweet.ilike(like),
-                    User_mgmt.username.ilike(like),
-                    Articles.title.ilike(like),
-                    Articles.link.ilike(like),
-                )
-            )
-        )
-
-    if normalized_feed in {"top", "hot"}:
-        query = (
-            base_query.outerjoin(Reactions, Post.id == Reactions.post_id)
-            .outerjoin(Rounds, Post.round == Rounds.id)
-            .add_columns(
-                Post,
-                func.sum(
-                    (Reactions.type == "like").cast(db.Integer)
-                    - (Reactions.type == "dislike").cast(db.Integer)
-                ).label("score"),
-            )
-            .group_by(Post.id)
-            .order_by(
-                desc("score"),
-                desc(func.coalesce(Rounds.day, -1)),
-                desc(func.coalesce(Rounds.hour, -1)),
-                desc(seq_or_id(Post)),
-            )
-        )
-    elif normalized_feed == "most_commented":
-        query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            desc(func.coalesce(Rounds.day, -1)),
-            desc(func.coalesce(Rounds.hour, -1)),
-            desc(seq_or_id(Post)),
-        )
-    else:
-        query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            desc(func.coalesce(Rounds.day, -1)),
-            desc(func.coalesce(Rounds.hour, -1)),
-            desc(seq_or_id(Post)),
-        )
-
-    return normalized_feed, query.paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-
-
-def _forum_resolve_back_url(exp_id):
+def _resolve_feed_back_url(exp_id):
     back_url = (request.args.get("back") or "").strip()
     if back_url.startswith(f"/{exp_id}/rfeed") or back_url.startswith(
         f"/{exp_id}/rsearch"
@@ -690,7 +612,9 @@ def _forum_resolve_back_url(exp_id):
 # ---------------------------------------------------------------------------
 # Frontend UI settings — loaded per experiment for public-facing pages
 # ---------------------------------------------------------------------------
-from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS as _UI_DEFAULTS  # noqa: E402
+from y_web.src.experiment.frontend_defaults import (
+    DEFAULT_SETTINGS as _UI_DEFAULTS,
+)  # noqa: E402
 
 
 def _load_ui_settings(exp_id: int) -> dict:
@@ -758,13 +682,12 @@ def _content_recsys_info(recsys_type, ui=None, recsys=None):
 
 
 def _platform_ui_context():
-    """Template context for forum / photo-sharing pages.
+    """Template context for the pages a platform adds variables to (``provider.page_context``).
 
-    Microblogging routes pass ``ui`` explicitly; the forum and photo routes
-    render many templates from many places, so they receive the same
-    per-experiment settings (``/admin/frontend_settings``) from here instead:
-    ``ui`` plus the two derived forum flags that gate the annotation chips.
-    Never touches pages of other blueprints or of microblogging experiments.
+    The default platform's routes pass ``ui`` explicitly; the other platforms render many templates from many places, so
+    they receive the same per-experiment settings (``/admin/frontend_settings``) from here instead: ``ui``, the
+    frontend plugin modules (unless the platform has none on its pages) and what the platform adds.
+    Never touches pages of other blueprints or of experiments whose platform adds nothing.
     """
     try:
         if request.blueprint != "main":
@@ -775,34 +698,23 @@ def _platform_ui_context():
         from y_web.src.models import Exps  # noqa: PLC0415
 
         exp = db.session.get(Exps, int(raw))
-        if exp is None or exp.platform_type not in (
-            "forum",
-            "photo_sharing",
-            "instant_messaging",
-        ):
+        if exp is None:
             return {}
         ui = _load_ui_settings(int(raw))
-        if exp.platform_type == "instant_messaging":
-            # frontend plugin modules (microblogging/forum/photo hooks) have nothing to attach to in the chat pages
-            return {"frontend_adds_on_modules": [], "ui": ui, "platform_ui": "im"}
-        annotations = bool(ui.get("annotations_enabled", True))
+        extra = platforms.resolve(exp).page_context(exp, ui)
+        if extra is None:
+            return {}
+        extra = dict(extra)
         modules = []
-        try:
-            from y_web.src.external_runtime.plugin_loader import (  # noqa: PLC0415
-                active_modules_context,
-            )
+        if extra.pop("frontend_plugins", True):
+            try:
+                from y_web.src.external_runtime.plugin_loader import (  # noqa: PLC0415
+                    active_modules_context,
+                )
 
-            modules = active_modules_context(int(raw))
-        except Exception:
-            modules = []
-        return {
-            "frontend_adds_on_modules": modules,
-            "ui": ui,
-            "platform_ui": "forum" if exp.platform_type == "forum" else "photo",
-            "forum_show_emotions": annotations
-            and bool(ui.get("annotation_emotions", True)),
-            "forum_show_topics": annotations
-            and bool(ui.get("annotation_topics", True)),
-        }
+                modules = active_modules_context(int(raw))
+            except Exception:
+                modules = []
+        return {"frontend_adds_on_modules": modules, "ui": ui, **extra}
     except Exception:
         return {}

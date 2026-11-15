@@ -72,33 +72,40 @@ def get_avatars_dir() -> str:
 
 
 def logged_user():
-    from y_web.routes.social.helpers import _forum_logged_user as target
+    from y_web.routes.social.helpers import _logged_experiment_user as target
 
     return target()
 
 
 def profile_pic_of(user):
-    from y_web.routes.social.helpers import _forum_profile_pic as target
+    from y_web.routes.social.helpers import _participant_profile_pic as target
 
     return target(user)
 
 
 def current_profile_pic(exp_id, forum_user=None):
-    from y_web.routes.social.helpers import _forum_current_profile_pic as target
+    from y_web.routes.social.helpers import _current_profile_pic as target
 
     return target(exp_id, forum_user)
 
 
 def feed_memory_enabled(exp_id):
-    from y_web.routes.social.helpers import _forum_memory_enabled as target
+    from y_web.routes.social.helpers import _experiment_memory_enabled as target
 
     return target(exp_id)
 
 
 def resolve_back_url(exp_id):
-    from y_web.routes.social.helpers import _forum_resolve_back_url as target
+    from y_web.routes.social.helpers import _resolve_feed_back_url as target
 
     return target(exp_id)
+
+
+def primary_community(article, topics):
+    """The community payload of a discussion (``{"name", "slug", ...}``), or ``None``."""
+    from y_web.src.commons.service.queries import _primary_community_payload as target
+
+    return target(article, topics)
 
 
 def get_discussions(posts, username, page, exp_id, exp_user_id=None):
