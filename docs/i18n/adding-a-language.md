@@ -72,7 +72,7 @@ Rules for translators and agents:
 - Never concatenate translated fragments in code; if a sentence needs a link or bold part, the code already passes it as a placeholder (`wrap('b', ...)`).
 - Plurals: set the correct `Plural-Forms` header for the language in the `.po` (Babel fills it from the locale on `init`) and provide all forms.
 - Commit **both** `.po` and `.mo` (decision G0: there is no compile step in build or packaging). **Packaging:** the wheel ships `y_web/translations` and `y_web/prompts_internal*.json` as package data (`pyproject.toml`), and `scripts/packaging/check_wheel.py` fails the release build if they are missing. After adding a language, build the wheel (`python -m build --wheel`) and run `python scripts/packaging/check_wheel.py dist/ysocial-*.whl`. Plugins (including the simulation runtimes `YServer`, `YClient`, `YSimulator`, `YPhotoSharing`, `ScenarioDesign`, `TrainingModules`, `frontend_adds-on`, `reactive_agents`, `y_agents_plugins`, `y_memory_subsystem`) are installed later from the plugin page; their catalogs and prompt files arrive with the plugin itself, so they must be committed in the plugin repository (section 2.4).
-- Translate the msgids that come from the plugin registry (plugin names/descriptions in `y_web/src/external_runtime/registry.py`, `RUNTIME_TEXTS`, marked with `N_()`); they live in the core catalog.
+- Translate the msgids that come from the plugin registry (generic plugin texts in `y_web/src/external_runtime/registry.py`; platform texts declared by each platform's `ysocial_platform/provider.py` in `catalog_texts`, all marked with `N_()`); they live in the core catalog.
 
 ### 2.3 JavaScript catalogs (browser strings)
 

@@ -47,6 +47,14 @@ def _pybabel(*args):
         raise SystemExit(result.returncode)
 
 
+def _provider_modules():
+    """Platform providers declare part of the catalogue texts (``catalog_texts``): they are extracted too."""
+    return sorted(
+        str(p.relative_to(ROOT))
+        for p in (ROOT / "external").glob("*/ysocial_platform/provider.py")
+    )
+
+
 def extract(output=POT):
     _pybabel(
         "extract",
@@ -58,6 +66,7 @@ def extract(output=POT):
         "--no-location",
         "--sort-output",
         "y_web",
+        *_provider_modules(),
     )
 
 

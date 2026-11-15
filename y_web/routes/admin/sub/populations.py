@@ -1068,7 +1068,9 @@ def delete_population(uid):
                 )
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
 
-    population_admin.remove_agents_of(population)  # the agents of a population with fields of its own
+    population_admin.remove_agents_of(
+        population
+    )  # the agents of a population with fields of its own
 
     db.session.delete(population)
     db.session.commit()

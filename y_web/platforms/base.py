@@ -330,6 +330,8 @@ class PlatformProvider:
     #: a platform whose runtime is one server and one client lists them as ONE plugin entry (``runtime_keys`` are the
     #: members, in order); this is the text of that entry, declared with N_()
     runtime_pair_description: str = ""
+    #: other texts of this platform's plugin catalogue entries (declared with N_()) that the core catalogue translates
+    catalog_texts: Tuple[str, ...] = ()
     #: the pages of the agents dashboard (page builder) work with this platform's runtime
     page_resources: bool = False
     #: the plugin list shows the name and description of the catalog entry, not those of the repository's own metadata

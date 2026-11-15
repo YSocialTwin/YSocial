@@ -14,13 +14,12 @@ from pathlib import Path
 from typing import Sequence
 
 from y_web.i18n import N_
-from y_web.src.external_runtime.catalog_texts import PLATFORM_TEXTS
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 # Texts of the plugin list that live in this module or in repositories without a
 # translation catalog of their own. They are only declared here (for extraction);
 # the plugin pages translate them when they are shown.
-RUNTIME_TEXTS = PLATFORM_TEXTS + (
+_GENERIC_TEXTS = (
     N_("Simulation Runtime Stack"),
     N_("Agent Extensions"),
     N_("Frontend Extensions"),
@@ -32,6 +31,21 @@ RUNTIME_TEXTS = PLATFORM_TEXTS + (
         "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
     ),
 )
+
+
+def runtime_texts():
+    """Generic texts plus those declared by the installed platforms (``catalog_texts``)."""
+    from y_web.platforms import registry as platforms
+
+    declared = tuple(t for p in platforms.all_providers() for t in p.catalog_texts)
+    return declared + _GENERIC_TEXTS
+
+
+def __getattr__(name):
+    if name == "RUNTIME_TEXTS":
+        return runtime_texts()
+    raise AttributeError(name)
+
 
 ROOT = Path(get_writable_path())
 EXTERNAL_DIR = ROOT / "external"
