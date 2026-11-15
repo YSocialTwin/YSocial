@@ -347,16 +347,27 @@ def test_side_boxes_render_recsys_and_stats_only_when_asked(suites_app):
     assert "ys-annostats-box" not in render(
         ui={"show_annotation_stats": False}, frontend_adds_on_modules=module
     )
+    from types import SimpleNamespace
+
+    from y_web.platforms import registry
+
+    # the platform names and explains its recommender modes
+    recsys = registry.human_recsys(
+        SimpleNamespace(platform_type="microblogging", simulator_type="Standard")
+    )
+    if recsys is None:
+        pytest.skip("the microblogging platform is not installed")
     with suites_app.app_context():
         assert (
-            _content_recsys_info("ReverseChrono", {"show_recsys_info": False}) is None
+            _content_recsys_info("ReverseChrono", {"show_recsys_info": False}, recsys)
+            is None
         )
-        got = _content_recsys_info("rcp", {"show_recsys_info": True})
+        got = _content_recsys_info("rcp", {"show_recsys_info": True}, recsys)
         assert (
             got["name"] == "ReverseChronoPopularity"
             and "reacted" in got["description"].lower()
         )
-        unknown = _content_recsys_info("Whatever", {"show_recsys_info": True})
+        unknown = _content_recsys_info("Whatever", {"show_recsys_info": True}, recsys)
         assert unknown["description"] and unknown["name"] == "Whatever"
 
 

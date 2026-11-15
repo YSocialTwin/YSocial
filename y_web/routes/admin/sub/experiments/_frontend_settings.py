@@ -187,7 +187,7 @@ def _load_recsys_options(
     Pass ``all_algorithms=True`` (admin configuration context) to return every
     row that has a non-empty ``enabled`` value, regardless of experiment type.
     Pass ``include_human_only=True`` to also include rows with enabled='HumanOnly'
-    (e.g. FilterBubble/Personalized Feed for human user profiles).
+    (the personalised feed of the human profiles).
     """
     is_hpc = (simulator_type or "").upper() == "HPC"
 

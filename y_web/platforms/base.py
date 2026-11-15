@@ -155,6 +155,26 @@ class GatewayLaunch:
 
 
 @dataclass(frozen=True)
+class HumanRecsysTraits:
+    """The recommender systems of the people who use the platform's own frontend (the code lives in the platform).
+
+    ``normalize`` turns what the interface or the database stores into a canonical mode name; ``is_supported`` says
+    whether the platform implements it; ``describe`` returns the (translatable) explanation shown to participants, or
+    ``None``. ``suggested_posts(uid, mode, page, per_page, follower_ratio, exp_engine, fb_settings)`` ranks the feed
+    (``None``: the platform has no content ranking of its own), ``suggested_users(username, pages=False)`` proposes
+    people or pages to follow and ``on_interaction(exp_id, exp_user, post_id, interaction_type)`` lets a mode learn
+    from what the person does.
+    """
+
+    normalize: Callable[[Any], str]
+    is_supported: Callable[[Any], bool]
+    describe: Callable[[str], Optional[str]]
+    suggested_posts: Optional[Callable[..., Any]] = None
+    suggested_users: Optional[Callable[..., Any]] = None
+    on_interaction: Optional[Callable[..., None]] = None
+
+
+@dataclass(frozen=True)
 class HumanGatewayTraits:
     """How a person of a World Simulation gets an account on a platform and acts there (the runtime's human gateway).
 
@@ -286,6 +306,10 @@ class PlatformProvider:
     recsys_includes_standard: bool = False
     #: human gateway of the platform's runtime (``None``: a person cannot be enrolled in it)
     human_gateway: Optional[HumanGatewayTraits] = None
+    #: recommender systems of the people who use the platform's frontend (``None``: it has none)
+    human_recsys: Optional[HumanRecsysTraits] = None
+    #: recommenders the platform adds to the catalogue of the selectors (see ``recsys_catalog.ensure_catalog``)
+    recsys_catalog: Tuple[Mapping[str, Any], ...] = ()
     #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``
     #: must serve disjoint sets
     simulator_types: Optional[Tuple[str, ...]] = None

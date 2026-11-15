@@ -80,9 +80,16 @@ def test_agents_dashboard_strings_are_translated(agents_app, msgid, expected):
 
 
 def test_recommender_descriptions_follow_the_interface_language(agents_app):
-    from y_web.routes.social.helpers import _RECSYS_DESCRIPTIONS
+    from types import SimpleNamespace
 
-    english = _RECSYS_DESCRIPTIONS["ReverseChronoPopularity"]
+    from y_web.platforms import registry
+
+    recsys = registry.human_recsys(
+        SimpleNamespace(platform_type="microblogging", simulator_type="Standard")
+    )
+    if recsys is None:
+        pytest.skip("the microblogging platform is not installed")
+    english = recsys.describe("ReverseChronoPopularity")
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         italian = i18n.gettext(english)
     assert italian != english and italian.startswith("Post di altri utenti")

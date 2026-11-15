@@ -87,11 +87,6 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
 )
-from y_web.src.recsys import get_suggested_users
-from y_web.src.recsys.content_recsys import (
-    _normalize_content_recsys_mode,
-    is_supported_content_recsys_mode,
-)
 from y_web.src.system.avatars_store import get_avatars_dir
 from y_web.src.system.path_utils import get_writable_path
 
@@ -527,14 +522,16 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         forum_mentions = (
             get_unanswered_mentions(mention_user_id) if mention_user_id else []
         )
+        _recsys = platforms.human_recsys(exp)
+        _suggest = getattr(_recsys, "suggested_users", None)
         suggested_users = (
-            get_suggested_users(forum_logged_user.username, pages=False)
-            if forum_logged_user
+            _suggest(forum_logged_user.username, pages=False)
+            if forum_logged_user and _suggest
             else []
         )
         suggested_pages = (
-            get_suggested_users(forum_logged_user.username, pages=True)
-            if forum_logged_user
+            _suggest(forum_logged_user.username, pages=True)
+            if forum_logged_user and _suggest
             else []
         )
         forum_context = dict(common_context)
@@ -760,7 +757,7 @@ def edit_profile(exp_id, user_id):
         pass
 
     # Recsys options filtered by simulator_type for this experiment.
-    # Human users also get HumanOnly modes (e.g. FilterBubble/Personalized Feed).
+    # Human users also get the HumanOnly modes (the personalised feed).
     _exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     _sim_type = (_exp.simulator_type or "Standard") if _exp else "Standard"
     _is_human_profile = getattr(user, "user_type", "agent") not in (
@@ -817,9 +814,10 @@ def update_profile_data(exp_id, user_id):
     user.leaning = request.form.get("leaning")
     user.education_level = request.form.get("education_level")
     requested_recsys = request.form.get("recsys_type")
-    if requested_recsys is not None:
-        canonical_recsys = _normalize_content_recsys_mode(requested_recsys)
-        if not is_supported_content_recsys_mode(canonical_recsys):
+    _recsys = platforms.human_recsys(exp_id)
+    if requested_recsys is not None and _recsys is not None:
+        canonical_recsys = _recsys.normalize(requested_recsys)
+        if not _recsys.is_supported(canonical_recsys):
             message = "Unsupported content recommendation system."
             if request.is_json or "application/json" in request.headers.get(
                 "Accept", ""

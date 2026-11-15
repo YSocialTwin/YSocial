@@ -118,6 +118,24 @@ def _split(platform_type: Any, simulator_type: Any = None) -> Tuple[Any, Any]:
     return platform_type, simulator_type
 
 
+def human_recsys(experiment: Any):
+    """The recommender systems of the people of an experiment's frontend (``HumanRecsysTraits``), or ``None``.
+
+    ``experiment`` is an ``Exps`` row or its ``idexp``; the platform that serves the experiment provides them.
+    """
+    if experiment is not None and not hasattr(experiment, "platform_type"):
+        from sqlalchemy import select
+
+        from y_web import db
+        from y_web.src.models import Exps
+
+        experiment = db.session.scalars(
+            select(Exps).filter_by(idexp=int(experiment))
+        ).first()
+    provider = for_experiment(experiment) if experiment is not None else None
+    return getattr(provider, "human_recsys", None) if provider else None
+
+
 def for_experiment(experiment: Any) -> Optional[PlatformProvider]:
     """The provider of an experiment: its ``platform_type`` run by its ``simulator_type``."""
     return for_simulator(*_split(experiment))

@@ -6,11 +6,14 @@ The functions look the core up when called, so what the core (or a test) replace
 from __future__ import annotations
 
 
-def content_recsys_info(recsys_type, ui=None):
-    """``{"name", "label", "description"}`` of a user's content recommender system, or ``None``."""
+def content_recsys_info(recsys_type, ui=None, recsys=None):
+    """``{"name", "label", "description"}`` of a user's content recommender system, or ``None``.
+
+    ``recsys`` is the platform's own ``HumanRecsysTraits`` (``provider.human_recsys``).
+    """
     from y_web.routes.social.helpers import _content_recsys_info as target
 
-    return target(recsys_type, ui)
+    return target(recsys_type, ui, recsys)
 
 
 def experiment_memory_enabled(exp_id):
@@ -59,13 +62,6 @@ def open_experiment_session(experiment: "Exps"):
     from y_web.src.experiment.helpers import open_experiment_session as target
 
     return target(experiment)
-
-
-def get_suggested_users(username, pages=False):
-    """Get follow recommendations for a user."""
-    from y_web.src.recsys.follow_recsys import get_suggested_users as target
-
-    return target(username, pages)
 
 
 def get_avatars_dir() -> str:
@@ -120,7 +116,7 @@ def build_thread_tree(root_id, post_to_data, parent_lookup):
 
 
 def maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
-    """If the user is using FilterBubble mode, update their topic interests."""
+    """Let the recommender of the person learn from an interaction (what the platform's mode does with it)."""
     from y_web.routes.interactions.common import _maybe_update_fb_interests as target
 
     return target(exp_id, exp_user, post_id, interaction_type)
@@ -268,21 +264,6 @@ def active_modules_context(exp_id: "int") -> "list[dict]":
     return target(exp_id)
 
 
-def get_suggested_posts(
-    uid,
-    mode,
-    page=1,
-    per_page=10,
-    follower_ratio=0.6,
-    exp_engine=None,
-    fb_settings=None,
-):
-    """Get recommended posts for a user based on specified algorithm."""
-    from y_web.src.recsys import get_suggested_posts as target
-
-    return target(uid, mode, page, per_page, follower_ratio, exp_engine, fb_settings)
-
-
 def get_db_bind_key_for_exp(exp_id):
     """Get the database bind key for a specific experiment."""
     from y_web.src.experiment.context import get_db_bind_key_for_exp as target
@@ -319,8 +300,6 @@ __all__ = [
     "get_posts_associated_to_interest",
     "get_report_count",
     "get_safe_profile_pic",
-    "get_suggested_posts",
-    "get_suggested_users",
     "get_topics",
     "get_trending_emotions",
     "get_trending_hashtags",

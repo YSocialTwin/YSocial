@@ -913,17 +913,20 @@ def build_user_feed_posts(
     page: int,
     per_page: int,
     feed_type: str = "new",
+    recsys=None,
 ) -> Tuple[List[FeedPost], bool]:
-    from y_web.src.recsys import get_suggested_posts
+    """Feed of a person, ranked by ``recsys`` (the platform's ``HumanRecsysTraits``) when it ranks posts."""
 
     sys.stderr.write(
         f"[DEBUG] build_user_feed_posts called with feed_type={feed_type}, target_user_id={target_user_id}\n"
     )
     sys.stderr.flush()
 
-    recsys_posts, additional = get_suggested_posts(
-        target_user_id, recsys_type, page, per_page
-    )
+    rank = getattr(recsys, "suggested_posts", None)
+    if rank is None:
+        recsys_posts, additional = None, None
+    else:
+        recsys_posts, additional = rank(target_user_id, recsys_type, page, per_page)
 
     combined: List[Any] = []
 

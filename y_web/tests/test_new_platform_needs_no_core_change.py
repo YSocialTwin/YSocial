@@ -14,10 +14,43 @@ KEY = "zplat"
 REPO = "ZPlatform"
 
 PROVIDER = """
-from y_web.sdk import HPC, N_, PlatformProvider
+from types import SimpleNamespace
+
+from y_web.sdk import HPC, HumanRecsysTraits, N_, PlatformProvider
+
+LEARNED = []
+
+
+def _normalize(mode):
+    return "ZRank" if str(mode or "").strip().lower() in ("zrank", "zr") else "Random"
+
+
+RECSYS = HumanRecsysTraits(
+    normalize=_normalize,
+    is_supported=lambda mode: _normalize(mode) in ("ZRank", "Random"),
+    describe=lambda mode: N_("Posts of Z, best first.") if mode == "ZRank" else None,
+    suggested_posts=lambda uid, mode, page=1, per_page=10, *a, **k: (
+        SimpleNamespace(items=[("ranked", uid, mode, page, per_page)]),
+        None,
+    ),
+    suggested_users=lambda username, pages=False: [(username, pages)],
+    on_interaction=lambda *args: LEARNED.append(args),
+)
 
 
 class ZPlat(PlatformProvider):
+    recsys_catalog = (
+        {"kind": "content", "name": "ZRank", "label": "Z rank", "category": "Z",
+         "enabled": "Standard"},
+        {"kind": "follow", "name": "ZFollow", "label": "Z follow", "category": "Z",
+         "enabled": "Standard"},
+    )
+
+    @property
+    def human_recsys(self):
+        return RECSYS
+
+
     key = "zplat"
     label = N_("Z platform")
     icon = "star"
@@ -241,3 +274,73 @@ def test_the_public_registry_can_list_a_platform_too():
         }
     )
     assert problems and "platform" in problems[0]
+
+
+def _experiment():
+    return SimpleNamespace(platform_type=KEY, simulator_type="HPC")
+
+
+def test_its_recommenders_live_in_the_platform_and_the_core_only_asks(
+    new_platform, monkeypatch
+):
+    """The ranking, the modes, their explanations and what a mode learns come from ``provider.human_recsys``."""
+    from y_web.platforms import registry
+    from y_web.routes.social import helpers
+
+    recsys = registry.human_recsys(_experiment())
+    assert recsys is not None and recsys.normalize("zr") == "ZRank"
+    # a platform with no recommenders answers ``None``
+    assert registry.human_recsys(SimpleNamespace(platform_type="nothing")) is None
+
+    # no catalogue rows: the label falls back to the mode name
+    monkeypatch.setattr(
+        helpers,
+        "db",
+        SimpleNamespace(
+            select=lambda model: model,
+            session=SimpleNamespace(scalars=lambda q: SimpleNamespace(all=lambda: [])),
+        ),
+    )
+    info = helpers._content_recsys_info("zr", {"show_recsys_info": True}, recsys)
+    assert info["name"] == "ZRank" and info["description"] == "Posts of Z, best first."
+    assert helpers._content_recsys_info("zr", {"show_recsys_info": True}) is None
+
+    ranked, _more = recsys.suggested_posts(7, "zr", 2, 5)
+    assert ranked.items == [("ranked", 7, "zr", 2, 5)]
+
+
+def test_the_core_lets_the_platform_learn_from_an_interaction(
+    new_platform, monkeypatch
+):
+    from y_web.platforms import registry
+    from y_web.routes.interactions import common
+
+    recsys = registry.human_recsys(_experiment())
+    monkeypatch.setattr(registry, "human_recsys", lambda exp_id: recsys)
+    person = SimpleNamespace(id=3, recsys_type="zr")
+    common._maybe_update_fb_interests(11, person, 99, "like")
+    learned = sys.modules[type(registry.get(KEY)).__module__].LEARNED
+    assert learned == [(11, person, 99, "like")]
+
+
+def test_its_recommenders_join_the_catalogue_without_touching_the_existing_rows(
+    new_platform,
+):
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import Session
+
+    from y_web.platforms.recsys_catalog import ensure_catalog
+    from y_web.src.models import Content_Recsys, Follow_Recsys
+
+    engine = create_engine("sqlite://")
+    Content_Recsys.__table__.create(engine)
+    Follow_Recsys.__table__.create(engine)
+    with Session(engine) as session:
+        session.add(Content_Recsys(name="zrank", value="edited by hand", enabled="HPC"))
+        session.commit()
+        assert ensure_catalog(session) == 1  # ZFollow only: ZRank is already there
+        assert ensure_catalog(session) == 0  # idempotent
+        row = session.scalars(select(Content_Recsys)).one()
+        assert (row.value, row.enabled) == ("edited by hand", "HPC")
+        follow = session.scalars(select(Follow_Recsys)).one()
+        assert (follow.name, follow.enabled) == ("ZFollow", "Standard")

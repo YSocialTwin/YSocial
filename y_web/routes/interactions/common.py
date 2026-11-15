@@ -26,43 +26,22 @@ from y_web.src.models import (
     Rounds,
     User_mgmt,
 )
-from y_web.src.recsys.content_recsys import (
-    _normalize_content_recsys_mode,
-    _update_filter_bubble_interests,
-)
 
 
 def _maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
     """
-    If the user is using FilterBubble mode, update their topic interests.
-    Silently no-ops when not applicable (wrong mode, missing engine, etc.).
+    Let the recommender of the person learn from the interaction (a mode may adapt to what they do).
+
+    The platform of the experiment owns the recommenders (``provider.human_recsys``); this silently does nothing when
+    it has none, when the mode does not learn or when anything is missing: the interaction is never blocked.
     """
     try:
-        if (
-            _normalize_content_recsys_mode(getattr(exp_user, "recsys_type", ""))
-            != "FilterBubble"
-        ):
-            return
-        from flask import current_app
+        from y_web.platforms import registry
 
-        exp_engine = db.engines.get("db_exp")
-        if exp_engine is None:
-            exp_engine = db.get_engine(current_app, bind="db_exp")
-        from y_web.routes.social.helpers import _load_ui_settings
-
-        settings = _load_ui_settings(exp_id)
-        try:
-            learning_rate = float(settings.get("filter_bubble_lr", 0.05))
-        except (TypeError, ValueError):
-            learning_rate = 0.05
-        learning_rate = max(0.0, min(1.0, learning_rate))
-        _update_filter_bubble_interests(
-            user_id=exp_user.id,
-            post_id=post_id,
-            interaction_type=interaction_type,
-            exp_engine=exp_engine,
-            lr=learning_rate,
-        )
+        recsys = registry.human_recsys(exp_id)
+        learn = getattr(recsys, "on_interaction", None)
+        if learn is not None:
+            learn(exp_id, exp_user, post_id, interaction_type)
     except Exception:
         pass
 

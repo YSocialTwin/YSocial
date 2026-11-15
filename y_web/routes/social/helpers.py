@@ -716,80 +716,30 @@ def _load_ui_settings(exp_id: int) -> dict:
         return dict(_UI_DEFAULTS)
 
 
-# Plain-language explanations of the content recommender systems, keyed by canonical mode name
-# (see y_web.src.recsys.content_recsys._normalize_content_recsys_mode). Shown to participants.
-_RECSYS_DESCRIPTIONS = {
-    "Random": N_(
-        "Posts from other users in random order, regardless of you or the posts."
-    ),
-    "ReverseChrono": N_(
-        "All posts from other users, newest first. No personalisation."
-    ),
-    "ReverseChronoPopularity": N_("Posts from other users, the most reacted first."),
-    "ReverseChronoFollowers": N_(
-        "Mostly posts from the people you follow, newest first, completed with the newest posts from everybody."
-    ),
-    "ReverseChronoFollowersPopularity": N_(
-        "Mostly posts from the people you follow, the most reacted first, completed with the newest posts from everybody."
-    ),
-    "ReverseChronoComments": N_(
-        "Newest posts first; within the same hour, the most commented come first."
-    ),
-    "CommonInterests": N_(
-        "Posts about the topics you are interested in, newest first."
-    ),
-    "CommonUserInterests": N_(
-        "Posts from users who share your interests, newest first, completed with the newest posts from everybody."
-    ),
-    "SimilarUsersReactions": N_(
-        "Posts reacted to by users with your same political leaning, completed with the newest posts from everybody."
-    ),
-    "SimilarUsersPosts": N_(
-        "Posts written by users with your same political leaning, completed with the newest posts from everybody."
-    ),
-    "CollaborativeUserUser": N_(
-        "Posts liked by users who reacted to the same posts as you, newest first."
-    ),
-    "CollaborativeItemItem": N_(
-        "Posts reacted to by the people who reacted to the same posts as you, newest first."
-    ),
-    "ContentBasedFeatures": N_(
-        "Posts about your topics of interest, newest first, then the most reacted."
-    ),
-    "ContentBasedVector": N_(
-        "Posts ranked by how many of your topics of interest they cover."
-    ),
-    "HybridLinearRanker": N_(
-        "Posts ranked by how well they match your topics of interest, with a bonus for popular ones."
-    ),
-    "FilterBubble": N_(
-        "Posts are scored by your topics of interest and by how close the author's opinion is to yours. "
-        "Your interests adapt to what you like, share and comment, so over time the feed can narrow to like-minded content."
-    ),
-}
+# What the explanation says when the platform has none for the mode of the person.
 _RECSYS_FALLBACK = N_(
     "This is the algorithm that decides which posts appear in your feed and in what order."
 )
 
 
-def _content_recsys_info(recsys_type, ui=None):
+def _content_recsys_info(recsys_type, ui=None, recsys=None):
     """``{"name", "label", "description"}`` of a user's content recommender system, or ``None``.
 
-    ``None`` when the experiment's ``show_recsys_info`` setting is off, so templates can test it directly.
+    ``None`` when the experiment's ``show_recsys_info`` setting is off, so templates can test it directly, and when
+    no ``recsys`` (the ``HumanRecsysTraits`` of the platform) is given: the platform names and explains its modes.
     """
     if ui is not None and not ui.get("show_recsys_info"):
         return None
+    if recsys is None:
+        return None
     try:
         from y_web.src.models.config import Content_Recsys  # noqa: PLC0415
-        from y_web.src.recsys.content_recsys import (  # noqa: PLC0415
-            _normalize_content_recsys_mode,
-        )
 
         raw = str(recsys_type or "").strip() or "default"
-        mode = _normalize_content_recsys_mode(raw)
+        mode = recsys.normalize(raw)
         label = None
         for row in db.session.scalars(db.select(Content_Recsys)).all():
-            if _normalize_content_recsys_mode(row.name) == mode:
+            if recsys.normalize(row.name) == mode:
                 label = row.value
                 break
         if label is None:
@@ -797,7 +747,7 @@ def _content_recsys_info(recsys_type, ui=None):
         return {
             "name": mode,
             "label": label,
-            "description": gettext(_RECSYS_DESCRIPTIONS.get(mode, _RECSYS_FALLBACK)),
+            "description": gettext(recsys.describe(mode) or _RECSYS_FALLBACK),
         }
     except Exception:
         return None

@@ -402,6 +402,15 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     install_platform_extensions(app)
 
+    # the recommenders the platforms declare join the catalogue the selectors list
+    try:
+        from y_web.platforms.recsys_catalog import ensure_catalog
+
+        with app.app_context():
+            ensure_catalog()
+    except Exception as exc:  # noqa: BLE001
+        app.logger.warning("[platform recommenders] %s", exc)
+
     from y_web.src.system.avatars_store import ensure_avatars, register_avatar_route
 
     register_avatar_route(app)

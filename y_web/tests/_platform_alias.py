@@ -154,6 +154,9 @@ _FORUM_LIBRARY_TESTS = (
 
 #: tests that use the microblogging platform's settings page, offered by either of its repositories
 _MICROBLOGGING_TESTS = (
+    "test_content_recsys_mode_normalization.py",
+    "test_personalized_feed.py",
+    "test_recsys_support.py",
     "test_frontend_settings_generic_suite_panel.py",
     "test_i18n_experiment_language.py",
     "test_im_frontend_settings.py",
@@ -215,10 +218,11 @@ FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next
 MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer
     repo="YServer",
     key="microblogging_server",
-    old_package="",
-    library="",
     provider_class="MicrobloggingStandard",
     provider_id="ysocial_server",
+    # the recommender systems of the people of the frontend live in the platform (``y_web.src.recsys`` was theirs)
+    old_package="y_web.src.recsys",
+    library="recsys",
     views={
         "y_web.routes.social.microblogging": "routes.social_microblogging",
         "y_web.routes.interactions.microblogging": "routes.interactions_microblogging",
@@ -241,6 +245,8 @@ MICROBLOGGING_HPC = Platform(  # the HPC runtime of the same platform: its route
     library="",
     provider_class="Microblogging",
     provider_id="microblogging",
+    fallback_package="y_web.src.recsys",  # its own copy of the recommenders, used when YServer is absent
+    fallback_library="recsys",
     routes=("routes.social_microblogging", "routes.interactions_microblogging"),
     needs=_WORLD_SIMULATION_TESTS
     + (  # the launch table row of the HPC runtime
