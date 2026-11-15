@@ -577,18 +577,6 @@ def _experiment_memory_enabled(exp_id):
     return False
 
 
-def _resolve_feed_back_url(exp_id):
-    back_url = (request.args.get("back") or "").strip()
-    if back_url.startswith(f"/{exp_id}/rfeed") or back_url.startswith(
-        f"/{exp_id}/rsearch"
-    ):
-        return back_url
-    referrer = (request.referrer or "").strip()
-    if f"/{exp_id}/rfeed" in referrer or f"/{exp_id}/rsearch" in referrer:
-        return referrer
-    return f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new"
-
-
 # ---------------------------------------------------------------------------
 # Frontend UI settings — loaded per experiment for public-facing pages
 # ---------------------------------------------------------------------------

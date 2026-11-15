@@ -154,7 +154,7 @@ def follow(exp_id, user_id, follower_id):
                 session.query(User_mgmt).filter_by(username=acting_username).first()
             )
             if acting_user is None and acting_username:
-                # Keep the photo experiment consistent with the other platforms:
+                # Keep the experiment consistent with the other platforms:
                 # the logged-in participant must exist in the experiment DB
                 # before we record social actions for them.
                 try:
@@ -221,30 +221,15 @@ def follow(exp_id, user_id, follower_id):
             db.session.add(new_follow)
             db.session.commit()
 
+        from y_web.platforms import registry
+
         target_referrer = request.referrer or ""
-        if "/photo/suggestions" in target_referrer:
-            return redirect(
-                url_for(
-                    "main.photo_feed",
-                    exp_id=exp_id,
-                    user_id="all",
-                    timeline="feed",
-                    mode="rf",
-                    page=1,
-                    tab="for_you",
-                )
-            )
+        provider = registry.resolve(exp)
         return redirect(
-            target_referrer
-            or url_for(
-                "main.photo_feed",
-                exp_id=exp_id,
-                user_id="all",
-                timeline="feed",
-                mode="rf",
-                page=1,
-                tab="for_you",
-            )
+            provider.after_follow_url(exp_id, target_referrer)
+            or target_referrer
+            or provider.feed_home_url(exp_id)
+            or "/"
         )
     finally:
         if session is not None:

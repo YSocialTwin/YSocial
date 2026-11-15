@@ -629,6 +629,13 @@ class PlatformProvider:
 
     # --- admin: opening, starting and copying an experiment ----------------------------------------------------------
 
+    #: addresses of the platform's pages that carry no experiment id (they follow the session's current experiment)
+    experiment_free_paths: Tuple[str, ...] = ()
+
+    def after_follow_url(self, exp_id: int, referrer: str) -> Optional[str]:
+        """Where a follow or unfollow sends the visitor, or ``None`` for the page they came from."""
+        return None
+
     def feed_home_url(self, exp_id: int) -> Optional[str]:
         """Page of the platform the "home" link of the site goes to for this experiment, or ``None`` (the default)."""
         return None

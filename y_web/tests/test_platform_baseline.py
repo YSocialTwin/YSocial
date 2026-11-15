@@ -118,3 +118,12 @@ def test_no_platform_is_named_outside_the_declared_exceptions():
         if not path.startswith(baseline.DECLARED_EXCEPTIONS)
     ]
     assert not named, "\n".join(named)
+
+
+def test_no_branch_on_a_platform_remains():
+    """Gate G10: nothing in the core compares ``platform_type`` (or a platform key) with a literal."""
+    found = [
+        f"{path}: {count}"
+        for path, count in baseline.collect_platform_branches().items()
+    ]
+    assert not found, "\n".join(found)

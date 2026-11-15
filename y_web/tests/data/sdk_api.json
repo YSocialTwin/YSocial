@@ -219,8 +219,7 @@
         "maybe_update_fb_interests": "(exp_id, exp_user, post_id, interaction_type)",
         "open_experiment_session": "(experiment: \"'Exps'\")",
         "origin_community": "(source_id) -> 'str'",
-        "register_experiment_database": "(app, exp_id, db_name)",
-        "resolve_back_url": "(exp_id)"
+        "register_experiment_database": "(app, exp_id, db_name)"
       }
     },
     "template_name": {
@@ -282,6 +281,7 @@
   },
   "platform_api": "1.3",
   "provider_hooks": {
+    "after_follow_url": "(self, exp_id: 'int', referrer: 'str') -> 'Optional[str]'",
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
     "after_opinion_distribution_saved": "(self, context: 'dict') -> 'None'",
     "agent_form_context": "(self) -> 'dict'",

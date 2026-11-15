@@ -25,7 +25,19 @@ HOME = "/admin/training/modules"
 OPEN_PREFIXES = ("/static/", "/plugins/", "/uploads/", "/admin/training", "/training")
 OPEN_PATHS = ("/login", "/logout")
 # pages of an experiment that carry no exp_id: they follow the session's current experiment
-REHEARSAL_PATHS = ("/feed", "/rfeed", "/photo/feed", "/rnotifications", "/profile")
+REHEARSAL_PATHS = (
+    "/feed",
+    "/profile",
+)  # and those the platforms declare (``experiment_free_paths``)
+
+
+def _rehearsal_paths() -> tuple:
+    from y_web.platforms import registry
+
+    declared = [
+        p for provider in registry.providers() for p in provider.experiment_free_paths
+    ]
+    return REHEARSAL_PATHS + tuple(declared)
 
 
 def is_teacher(user=None) -> bool:
@@ -52,7 +64,7 @@ def teacher_gate():
     if path in OPEN_PATHS or path.startswith(OPEN_PREFIXES):
         return None
     exp_id = (request.view_args or {}).get("exp_id")
-    if exp_id is not None or path in REHEARSAL_PATHS:
+    if exp_id is not None or path in _rehearsal_paths():
         if _rehearsing(exp_id if isinstance(exp_id, int) else None):
             return None
     if request.method == "GET" and "text/html" in request.accept_mimetypes:

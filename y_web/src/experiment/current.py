@@ -61,7 +61,7 @@ def current_experiment():
 
 
 def choose_active_experiment(experiments):
-    """The experiment a legacy landing address (``/feed``, ``/rfeed``...) leads to, among the active ones of a platform.
+    """The experiment a legacy landing address (``/feed`` and the addresses the platforms declare) leads to, among the active ones of a platform.
 
     The experiment the user last opened when it is among them, else the only one; ``None`` when the choice is the
     user's (none, or several and none of them opened): the caller sends the user to the experiment picker.

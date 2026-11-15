@@ -147,16 +147,19 @@ _WORLD_SIMULATION_TESTS = (
     "test_world_simulation_ui.py",
 )
 
-#: tests of the part of the forum library that both forum repositories carry (``y_web.src.forum``)
+#: tests of the forum library (``y_web.src.forum``), which the HPC repository (YForum) provides
 _FORUM_LIBRARY_TESTS = (
-    "test_content_article_and_avatars.py",
     "test_forum_community_icons.py",
+    "test_phase8_src_forum.py",
+)
+#: tests of what the Standard repository (YServerReddit) provides: avatars, the feed service and the field groups
+_FORUM_SERVICE_TESTS = (
+    "test_content_article_and_avatars.py",
     "test_forum_opaque_ids.py",
     "test_forum_reddit_ui_templates.py",
+    "test_frontend_settings_platforms.py",
     "test_population_appearance_pictures.py",
     "test_population_custom_field_stats.py",
-    "test_frontend_settings_platforms.py",
-    "test_phase8_src_forum.py",
 )
 
 #: tests that use the microblogging platform's settings page, offered by either of its repositories
@@ -179,8 +182,6 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
     library="",
     provider_class="ForumStandard",
     provider_id="ysocial_server_reddit",
-    fallback_package="y_web.src.forum",  # its own copy of the shared part of the library, used when YForum is absent
-    fallback_library="forum",
     views={
         "y_web.routes.social.forum": "routes.social_forum",
         "y_web.routes.interactions.forum": "routes.interactions_forum",
@@ -199,8 +200,8 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
         "test_forum_feed_sidebar.py",
         "test_forum_search_suggest.py",
     )
+    + _FORUM_SERVICE_TESTS
     + _WORLD_SIMULATION_TESTS,
-    needs_any=_FORUM_LIBRARY_TESTS,
 )
 
 FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next to YServerReddit's
@@ -225,9 +226,10 @@ FORUM_HPC = Platform(  # the HPC runtime of the forum: its pages are served next
         "test_forum_experiment_config.py",
         "test_forum_reddit_ui_templates.py",
         "test_forum_roster.py",
+        "test_forum_feed_sidebar.py",
     )
+    + _FORUM_LIBRARY_TESTS
     + _WORLD_SIMULATION_TESTS,
-    needs_any=_FORUM_LIBRARY_TESTS,
 )
 
 MICROBLOGGING = Platform(  # the Standard runtime: its repository is YServer

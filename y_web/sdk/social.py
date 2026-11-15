@@ -83,12 +83,6 @@ def feed_memory_enabled(exp_id):
     return target(exp_id)
 
 
-def resolve_back_url(exp_id):
-    from y_web.routes.social.helpers import _resolve_feed_back_url as target
-
-    return target(exp_id)
-
-
 def get_discussions(posts, username, page, exp_id, exp_user_id=None):
     """Handle get discussions operation."""
     from y_web.routes.social.helpers import _get_discussions as target
@@ -302,5 +296,4 @@ __all__ = [
     "open_experiment_session",
     "origin_community",
     "register_experiment_database",
-    "resolve_back_url",
 ]

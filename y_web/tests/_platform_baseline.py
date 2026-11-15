@@ -48,9 +48,14 @@ TEMPLATES_DIR = ROOT / "y_web" / "templates"
 IT_CATALOG = ROOT / "y_web" / "translations" / "it" / "LC_MESSAGES" / "messages.po"
 
 _IGNORED_METHODS = {"HEAD", "OPTIONS"}
-_PLATFORM_BRANCH = re.compile(r"platform_type\s*(?:==|!=|\bnot\s+in\b|\bin\b)")
+# a branch on the platform: ``platform_type`` (or a platform key) compared with a literal; comparing it with another
+# value (a declared list, the platform of another experiment) is how the core stays generic and does not count
+_PLATFORM_BRANCH = re.compile(
+    r"(?:platform_type|platform_key|\.key)\s*(?:==|!=|\bnot\s+in\b|\bin\b)\s*[\(\[\{]?\s*[\"']"
+)
 _PLATFORM_NAME = re.compile(
     r"\b(?:dating|instant_messaging|photo_sharing|forum|reddit|microblogging)\b"
+    r"|\b(?:rfeed|rsearch|rnotifications)\b|/photo/"
     r"|\bY(?:Dating|Forum|PhotoSharing|InstantMessaging)\b",
     re.IGNORECASE,
 )
