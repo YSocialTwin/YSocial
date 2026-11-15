@@ -225,12 +225,18 @@ def test_a_dating_population_can_be_deployed_on_any_platform_and_the_reverse():
 # -- routes ------------------------------------------------------------------------------------------
 @pytest.fixture
 def routes(app, monkeypatch, tmp_path):
-    from y_web.routes.admin.sub import _populations_dating as dating
+    from y_web.routes.admin.sub import _populations_dating as admin_module
+    from y_web.routes.admin.sub import _populations_dating_routes as dating
     from y_web.routes.admin.sub import populations as mod
 
     flashes = []
-    for module in (mod, dating):  # the dating pages are a module of their own
-        monkeypatch.setattr(module, "check_privileges", lambda *_: None)
+    for module in (
+        mod,
+        admin_module,
+        dating,
+    ):  # the dating pages belong to the platform
+        if hasattr(module, "check_privileges"):
+            monkeypatch.setattr(module, "check_privileges", lambda *_: None)
         monkeypatch.setattr(
             module, "current_user", SimpleNamespace(username="admin", id=1)
         )
@@ -240,7 +246,9 @@ def routes(app, monkeypatch, tmp_path):
             lambda msg, cat="message": flashes.append((cat, str(msg))),
         )
     monkeypatch.setattr(mod, "ensure_population_username_type_column", lambda: None)
-    return SimpleNamespace(mod=mod, dating=dating, flashes=flashes, tmp=tmp_path)
+    return SimpleNamespace(
+        mod=mod, dating=dating, admin=admin_module, flashes=flashes, tmp=tmp_path
+    )
 
 
 def _upload(app, routes, payload: bytes, name="pop.json", **form):
@@ -356,7 +364,7 @@ def test_generate_route_creates_a_population(app, routes):
         for agent in db.session.query(Agent):
             agent.education_level, agent.leaning = "Bachelor", "Centrist"
         db.session.commit()
-        routes.mod._sync_dating_population(row)
+        routes.admin.sync(row)
         assert row.education == "Bachelor" and row.leanings == "Centrist"
 
 

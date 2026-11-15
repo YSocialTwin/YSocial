@@ -509,6 +509,19 @@ class PlatformProvider:
         """Picture a user of this platform gets when it has none of its own (``None``: the standard lookup applies)."""
         return None
 
+    #: the platform's own handling of populations in the population administration (see
+    #: :mod:`y_web.platforms.population_admin`), or ``None`` when its populations are the standard ones
+    population_admin: Optional[Any] = None
+
+    def agent_form_features(
+        self, form: Mapping[str, Any], admin_user: Any, entries: List[dict]
+    ) -> List[dict]:
+        """The structured features of the agent built by hand, with those of this platform's section of the form added.
+
+        ``ValueError`` (shown to the administrator) when the filled fields are not valid.
+        """
+        return entries
+
     def agent_form_context(self) -> dict:
         """Variables the agent-form section of this platform needs besides the page's own."""
         return {}

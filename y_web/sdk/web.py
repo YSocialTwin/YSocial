@@ -22,6 +22,13 @@ def check_privileges(username):
     return target(username)
 
 
+def unique_population_name(base_name):
+    """``base_name``, with a numeric suffix when a population already has it."""
+    from y_web.routes.admin.sub.populations import _unique_population_name as target
+
+    return target(base_name)
+
+
 def redirect_to_clients_page(experiment, current_endpoint):
     """Redirect to the creation page of the experiment when ``current_endpoint`` is not it; ``None`` when it is."""
     from y_web.routes.admin.sub.clients._crud import _redirect_to_clients_page as target

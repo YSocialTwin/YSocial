@@ -73,8 +73,6 @@ PLATFORM_OWNED = (
     "y_web/routes/admin/sub/clients/_dating.py",
     "y_web/routes/admin/sub/clients/_im.py",
     "y_web/routes/admin/sub/clients/_forum_hpc.py",
-    "y_web/routes/admin/sub/_populations_dating.py",
-    "y_web/routes/admin/sub/_agents_dating.py",
     "y_web/src/external_runtime/registry.py",
     "y_web/src/content/avatars.py",
     "y_web/src/agents/custom_field_stats.py",

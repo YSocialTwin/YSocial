@@ -2,6 +2,12 @@
 
 from y_web import db
 from y_web.src.models import (
+    Profession,
+    Nationalities,
+    Leanings,
+    Languages,
+    Education,
+    AgeClass,
     ActivityProfile,
     Admin_users,
     Agent,
@@ -51,6 +57,12 @@ from y_web.src.models import (
 )
 
 __all__ = [
+    "Profession",
+    "Nationalities",
+    "Leanings",
+    "Languages",
+    "Education",
+    "AgeClass",
     "ActivityProfile",
     "Admin_users",
     "Agent",

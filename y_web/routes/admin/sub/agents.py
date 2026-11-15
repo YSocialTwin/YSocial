@@ -475,7 +475,6 @@ def _agent_builder_context(**overrides):
         "hello_populations": [],
         "available_profile_pics": available_profile_pics,
         "available_cover_images": available_cover_images,
-        "dating_available": dating_runtime_available(),
         **_agent_optional_context(),
     }
     context.update(overrides)
@@ -1185,7 +1184,10 @@ def create_agent():
         structured_features = _parse_structured_agent_features_from_form()
         _ensure_interest_topics_exist(structured_features)
         structured_features = structured_features + _appearance_features_from_form()
-        structured_features = with_dating_features(structured_features)
+        for provider in registry.providers():
+            structured_features = provider.agent_form_features(
+                request.form, current_user, structured_features
+            )
         platform_ext = _platform_ext_from_form()
         picture_cfg = None
         if request.form.get("include_appearance") and request.form.get(
@@ -1586,9 +1588,3 @@ def delete_orphaned_agents():
         )
     )
     return agent_data()
-
-
-from ._agents_dating import (
-    _dating_runtime_available as dating_runtime_available,
-)  # noqa: E402
-from ._agents_dating import _with_dating_features as with_dating_features

@@ -22,7 +22,7 @@ from sqlalchemy import delete, func, select
 
 from y_web import db
 from y_web.i18n import gettext as _
-from y_web.platforms import registry
+from y_web.platforms import population_admin, registry
 from y_web.platforms.base import FormSectionError
 from y_web.src.agents import appearance_form as af
 from y_web.src.agents.custom_features import (
@@ -225,7 +225,7 @@ def _discard_population(population):
     """Remove a population whose generation failed, with its agents: no partial population is kept."""
     db.session.rollback()
     try:
-        discard_agents(population.id)
+        population_admin.discard_agents(population.id)
     except Exception:
         db.session.rollback()
     db.session.execute(
@@ -252,7 +252,7 @@ def _apply_appearance(population):
             )
         ).all()
     ]
-    if not _flag("include_dating"):
+    if not population_admin.own_appearance(population_admin.included(_flag)):
         pp.assign_appearance(ids, pp.appearance_config_from_form(request.form))
     if not _flag("generate_profile_pictures"):
         return None
@@ -281,8 +281,9 @@ def create_population():
     """
     check_privileges(current_user.username)
     ensure_population_username_type_column()
-    if wants_generation(request.form):
-        return _generate_dating_population()
+    own_population = population_admin.generation_response(request.form)
+    if own_population is not None:
+        return own_population
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")
     n_agents = request.form.get("n_agents")
@@ -294,15 +295,15 @@ def create_population():
     )
     # A population is not tied to a platform: the dedicated fields of a platform are optional sections of the
     # form (offered only when its simulator is installed), generated on the same agents.
-    include_dating = _flag("include_dating")
+    own_sections = population_admin.included(_flag)
     include_appearance = _flag("include_appearance")
     try:
         platform_configs = _platform_form_configs(username_type)
     except FormSectionError as exc:
         flash(str(exc), "error")
         return redirect(request.referrer)
-    if include_dating:
-        missing = runtime_missing(current_user)
+    if own_sections:
+        missing = population_admin.runtime_missing(own_sections, current_user)
         if missing:
             flash(missing, "error")
             return redirect(request.referrer)
@@ -472,8 +473,7 @@ def create_population():
             profession_backgrounds,
             platform_configs,
         )
-        if include_dating:
-            _complete_with_dating_fields(population)
+        population_admin.complete_with_fields(own_sections, population)
         appearance_job = _apply_appearance(population) if include_appearance else None
     except Exception as exc:
         _discard_population(population)
@@ -565,7 +565,7 @@ def populations_data():
     res = query.all()
 
     for pop in res:
-        sync_if_needed(pop)
+        population_admin.sync_if_needed(pop)
 
     # Get activity profiles for each population
     population_profiles = {}
@@ -677,7 +677,7 @@ def populations():
         platform_form_available=_platform_form_available(),
         any_platform_form=any(_platform_form_available().values()),
         **_appearance_form_context(),
-        **_dating_form_context(),
+        **population_admin.form_context(),
     )
 
 
@@ -689,7 +689,7 @@ def population_details(uid):
     # get population details
     population = db.session.scalars(select(Population).filter_by(id=uid)).first()
     population_row = population
-    sync_if_dating(population)
+    population_admin.sync(population)
 
     # get experiment populations along with experiment names and ids
     experiment_populations = (
@@ -989,7 +989,7 @@ def population_details(uid):
         llm_backend=llm_backend,
         crecsys=crecsys,
         frecsys=frecsys,
-        **_dating_details_context(uid, population_row),
+        **population_admin.details_context(uid, population_row),
     )
 
 
@@ -1068,7 +1068,7 @@ def delete_population(uid):
                 )
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
 
-    remove_agents_of(population)  # the agents of a population with fields of its own
+    population_admin.remove_agents_of(population)  # the agents of a population with fields of its own
 
     db.session.delete(population)
     db.session.commit()
@@ -1100,8 +1100,9 @@ def download_population(uid):
     """Download population."""
     check_privileges(current_user.username)
     ensure_population_username_type_column()
-    if _dating_population_or_none(uid) is not None:
-        return redirect(f"/admin/dating_population/{uid}/download")
+    own_download = population_admin.download_url(uid)
+    if own_download:
+        return redirect(own_download)
 
     # get all agents in the population
     agents = (
@@ -1245,8 +1246,9 @@ def upload_population():
 
     population_file = request.files["population_file"]
     # a file is either a YSocial population export or a platform's own population document: told apart by content
-    if wants_upload(request.form, population_file):
-        return _upload_dating_population()
+    own_upload = population_admin.upload_response(request.form, population_file)
+    if own_upload is not None:
+        return own_upload
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -1712,23 +1714,3 @@ def agent_media(filename):
     if filename != os.path.basename(filename) or filename.startswith("."):
         abort(404)
     return send_from_directory(pp.media_dir(), filename)
-
-
-from ._populations_dating import (  # noqa: E402,F401
-    _complete_with_dating_fields,
-    _dating_details_context,
-    _dating_form_context,
-    _dating_population_or_none,
-    _generate_dating_population,
-    _is_dating_document,
-    _sync_dating_population,
-    _upload_dating_population,
-    discard_agents,
-    is_dating,
-    remove_agents_of,
-    runtime_missing,
-    sync_if_dating,
-    sync_if_needed,
-    wants_generation,
-    wants_upload,
-)

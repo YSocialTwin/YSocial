@@ -52,6 +52,8 @@ DATING = Platform(
         "y_web.routes.admin.sub.experiments._dating_analytics": "routes.experiments_dating_analytics",
         "y_web.routes.admin.sub.experiments._dating_participants": "routes.experiments_dating_participants",
         "y_web.routes.admin.sub.experiments._dating_prompts": "routes.experiments_dating_prompts",
+        "y_web.routes.admin.sub._populations_dating": "population_admin",
+        "y_web.routes.admin.sub._populations_dating_routes": "routes.populations_dating",
     },
     needs=(
         "test_agent_form_optional_sections.py",
