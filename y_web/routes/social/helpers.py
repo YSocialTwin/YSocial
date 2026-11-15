@@ -19,6 +19,7 @@ from sqlalchemy import or_, select
 
 from y_web import db
 from y_web.platforms import registry as platforms
+from y_web.src.commons import flat_threads
 from y_web.src.commons.ids import opaque_id
 from y_web.src.commons.ordering import seq_or_id
 from y_web.src.content.text_utils import strip_tags
@@ -185,7 +186,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     provider = platforms.resolve(exp)
 
-    threads = provider.threads
+    threads = provider.threads or flat_threads
 
     # Get experiment user ID if not provided
     if exp_user_id is None:

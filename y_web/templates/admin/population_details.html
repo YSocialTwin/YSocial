@@ -11,7 +11,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" data-tut="population-overview">
-                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}{% for f in platform_fields %} <span class="ys-plat-badge is-{{ 'photo' if f == 'photo_sharing' else f }}">{{ _('Photo Sharing') if f == 'photo_sharing' else _('Dating') }}</span>{% endfor %}
+                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}{% for f in platform_fields %} <span class="ys-plat-badge is-{{ platform_catalog()[f].badge }}">{{ platform_badge_text(f) }}</span>{% endfor %}
                     </div>
                 </div>
             </div>
@@ -27,7 +27,7 @@
 
             <nav class="ys-pd-nav" aria-label="{{ _('Sections of the page') }}">
                 <a href="#sec-overview">{{ _('Overview') }}</a>
-                {% if dating %}<a href="#dating-population-details">{{ _('Dating profiles') }}</a>{% endif %}
+                {% for link in details_nav|default([]) %}<a href="{{ link.href }}">{{ _(link.label) }}</a>{% endfor %}
                 <a href="#sec-demographics">{{ _('Demographics') }}</a>
                 <a href="#sec-behaviour">{{ _('Behaviour and attributes') }}</a>
                 {% if custom_fields %}<a href="#sec-custom">{{ _('Custom fields') }}</a>{% endif %}
@@ -209,7 +209,7 @@
                     </div>
                 </div>
 
-                <div class="column is-4"{% if dating %} hidden{% endif %}>
+                <div class="column is-4"{% if details_replaces_toxicity %} hidden{% endif %}>
                     <div class="dashboard-box">
                         <div class="box-content">
  <canvas id="tox" class="ys-w100-h250"></canvas>
@@ -248,14 +248,14 @@
                     <p class="ys-pd-lead">{{ _('Fields stored with the agents that only some platforms read, in groups: appearance, Dating and Photo Sharing fields, and any other custom field. Each card shows how many agents have the field and how its values are distributed.') }}</p>
                     <div class="ys-cf-nav">
                         {% for g in custom_fields %}
-                        <a class="ys-cf-chip" href="#cf-{{ g.id }}">{% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ _('Dating') if g.badge == 'dating' else _('Photo Sharing') }}</span>{% endif %}{{ _(g.title) }}<span class="ys-cf-chip-n">{{ g.count }}</span></a>
+                        <a class="ys-cf-chip" href="#cf-{{ g.id }}">{% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ platform_badge_label(g.badge) }}</span>{% endif %}{{ _(g.title) }}<span class="ys-cf-chip-n">{{ g.count }}</span></a>
                         {% endfor %}
                     </div>
                     {% for g in custom_fields %}
                     <details class="ys-cf-group" id="cf-{{ g.id }}" data-cf-group="{{ g.id }}" {% if loop.index <= 2 %}open{% endif %}>
                         <summary>
                             <span class="ys-cf-title">{{ _(g.title) }}</span>
-                            {% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ _('Dating') if g.badge == 'dating' else _('Photo Sharing') }}</span>{% endif %}
+                            {% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ platform_badge_label(g.badge) }}</span>{% endif %}
                             <span class="ys-cf-count">{{ ngettext('%(num)d field', '%(num)d fields', g.count) }}</span>
                         </summary>
                         <div class="ys-cf-grid">

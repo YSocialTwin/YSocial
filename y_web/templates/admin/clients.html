@@ -283,7 +283,7 @@
                                             </div>
                                         </span>
                                     </div>
-                                    {% if experiment.platform_type == "microblogging" %}
+                                    {% if client_form_field(experiment.platform_type, "image") %}
                                     <div class="box-line">
                                         <span class="left">{{ _('Share and comment an Image') }}</span>
  <!--<span class="right ys-w-70"><input type="text" name="image"
@@ -389,7 +389,7 @@
                                         </span>
 
                                     </div>
-                                    {% if experiment.platform_type == "microblogging" %}
+                                    {% if client_form_field(experiment.platform_type, "news") %}
                                     <div class="box-line">
                                         <span class="left">{{ _('Share News from a Page') }}</span>
  <!-- <span class="right ys-w-70"><input type="text"
@@ -449,7 +449,7 @@
                                     {# PostgreSQL database - hide field and set default to 0 #}
                                     <input type="hidden" name="search" id="search" value="0">
                                     {% endif %}
-                                    {% if experiment.platform_type == "microblogging" %}
+                                    {% if client_form_field(experiment.platform_type, "vote") %}
                                     {% if experiment.db_name.startswith('database_') %}
                                     {# SQLite database - show Cast Vote field #}
                                     <div class="box-line">
@@ -483,7 +483,7 @@
                                     <input type="hidden" name="vote" id="vote" value="0">
                                     {% endif %}
                                     {% endif %}
-                                    {% if experiment.platform_type == "forum" %}
+                                    {% if client_form_field(experiment.platform_type, "share_link") %}
                                     <div class="box-line">
                                         <span class="left">{{ _('Share Link') }}</span>
  <span class="right ys-w-70"><input type="text"

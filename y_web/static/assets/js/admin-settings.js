@@ -673,7 +673,7 @@ var AdminSettings = (function() {
                       const checkbox = statusFilter === EXP_STATUS.COMPLETED ? 
                           '<input type="checkbox" class="exp-checkbox" data-exp-id="' + exp.idexp + '" \n                                  onchange="toggleExperimentSelection(' + exp.idexp + ', this)" \n                                  ' + (selectedExperiments.has(exp.idexp) ? 'checked' : '') + '\n                                  style="margin-right: 8px;" title="' + YI18n.t('Select for download') + '"/>' : '';
                     
-                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : exp.platform_type === 'instant_messaging' ? 'Instant Messaging' : exp.platform_type === 'dating' ? 'Dating' : 'Microblogging') + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderWorldSimulationBadge(exp) + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.world_simulation_locked ? renderWorldSimulationLock() : exp.running === 'Running' ? 
+                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + window.ysPlatform(exp.platform_type).badge_text + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderWorldSimulationBadge(exp) + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.world_simulation_locked ? renderWorldSimulationLock() : exp.running === 'Running' ? 
                                           (exp.can_manage ? '<a href="#" onclick="stopExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Stop Server') + '"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>' : '') : 
                                           '<a href="#" onclick="startExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Start Server') + '"><i class="mdi mdi-play-box-outline" style="font-size: 18px; color: #28a745;"></i></a>') + '\n                                      ' + (exp.web === 'Loaded' ? 
                                           '<a href="/admin/select_experiment/' + exp.idexp + '" title="' + YI18n.t('Loaded (click to unload)') + '"><i class="mdi mdi-select-all" style="font-size: 18px; color: #28a745;"></i></a>' : 
@@ -1397,12 +1397,21 @@ var AdminSettings = (function() {
   const hiddenInput = document.getElementById('tags-hidden');
   const tagList = [];
 
+  function platformMenu() {
+      return (window.YS_DATA_SETTINGS && window.YS_DATA_SETTINGS.platformMenu) || [];
+  }
+
+  function platformEntry(key) {
+      return platformMenu().find(function (p) { return p.key === key; }) || null;
+  }
+
   function updateButtonState() {
       const createBtn = document.getElementById('create-experiment-btn');
       if (createBtn) {
-          // Dating has no topics: the experiment can be created without them
+          // a platform without simulation topics: the experiment can be created without them
           const platformSelect = document.getElementById('platform_type_select');
-          if (tagList.length > 0 || (platformSelect && platformSelect.value === 'dating')) {
+          const chosen = platformSelect ? platformEntry(platformSelect.value) : null;
+          if (tagList.length > 0 || (chosen && !chosen.topics)) {
               createBtn.disabled = false;
           } else {
               createBtn.disabled = true;
@@ -1527,15 +1536,6 @@ var AdminSettings = (function() {
       const hpcInfoInline = document.getElementById('hpc-info-inline');
       const redisConfigBox = document.getElementById('redis-config-box');
       const platformTypeSelect = document.getElementById('platform_type_select');
-      const repoAvailability = (window.YS_DATA_SETTINGS && window.YS_DATA_SETTINGS.repoAvailability) || {};
-      const microbloggingAvailable = !!repoAvailability.microblogging;
-      const hpcAvailable = !!repoAvailability.hpc;
-      const forumAvailable = !!repoAvailability.forum;
-      const forumHpcAvailable = !!repoAvailability.forum_hpc;
-      const photoSharingAvailable = !!repoAvailability.photo_sharing;
-      const instantMessagingAvailable = !!repoAvailability.instant_messaging;
-      const datingAvailable = !!repoAvailability.dating;
-    
       // Handle Redis Configuration collapsible toggle
       const redisConfigHeader = document.getElementById('redis-config-header');
       const redisConfigContent = document.getElementById('redis-config-content');
@@ -1562,133 +1562,66 @@ var AdminSettings = (function() {
       });
       }
 
+      function setHpcToggle(checked, disabled, label, opacity) {
+          hpcToggle.checked = checked;
+          hpcToggle.disabled = disabled;
+          hpcToggleLabel.textContent = label;
+          if (hpcToggleContainer) {
+              hpcToggleContainer.style.opacity = opacity;
+          }
+      }
+
       function updateSimulatorTypeUI() {
           if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {
               return;
           }
-          const isInstantMessaging = platformTypeSelect.value === 'instant_messaging';
-          const isDating = platformTypeSelect.value === 'dating';
-          // The simulation topics are not used by the dating platform: hide the field
+          // what each platform offers (runtimes installed, form traits) comes from its provider
+          let entry = platformEntry(platformTypeSelect.value);
+          if (!entry || !entry.available) {
+              const fallback = platformMenu().find(function (p) { return p.available; });
+              if (fallback) {
+                  platformTypeSelect.value = fallback.key;
+                  entry = fallback;
+              }
+          }
+          // a platform that does not use simulation topics: hide the field
           const topicsBox = document.getElementById('simulation-topics-box');
           if (topicsBox) {
-              topicsBox.style.display = isDating ? 'none' : '';
+              topicsBox.style.display = entry && !entry.topics ? 'none' : '';
           }
           updateButtonState();
-          const isPhotoSharing = platformTypeSelect.value === 'photo_sharing' || isInstantMessaging || isDating;
-          if (!(forumAvailable || forumHpcAvailable) && platformTypeSelect.value === 'forum') {
-              platformTypeSelect.value = 'microblogging';
-          }
-          const isForum = platformTypeSelect.value === 'forum';
-          let isHPC = isPhotoSharing || (!isForum && hpcToggle.checked);
+          const hasStandard = !!entry && entry.standard !== null;
+          const hasHpc = !!entry && entry.hpc !== null;
+          const standardReady = !!(entry && entry.standard);
+          const hpcReady = !!(entry && entry.hpc);
           const remoteExperimentToggle = document.getElementById('remote_experiment_toggle');
           const remoteExperimentContainer = document.getElementById('remote-experiment-container');
           const remoteExperimentLabel = document.getElementById('remote-experiment-label');
-          const llmEnabled = llmAgentsToggle.checked;
 
-          if (isPhotoSharing) {
-              hpcToggle.checked = true;
-              hpcToggle.disabled = true;
-              hpcToggleLabel.textContent = YI18n.t('Required');
-              if (hpcToggleContainer) {
-                  hpcToggleContainer.style.opacity = '0.8';
-              }
-          } else if (isForum) {
-              // the forum runs on the Flask pair (Standard) or on YForum (HPC)
-              if (!forumHpcAvailable) {
-                  hpcToggle.checked = false;
-                  hpcToggle.disabled = true;
-                  hpcToggleLabel.textContent = YI18n.t('Unavailable for Forum');
-                  if (hpcToggleContainer) {
-                      hpcToggleContainer.style.opacity = '0.55';
-                  }
-              } else if (!forumAvailable) {
-                  hpcToggle.checked = true;
-                  hpcToggle.disabled = true;
-                  hpcToggleLabel.textContent = YI18n.t('Required');
-                  if (hpcToggleContainer) {
-                      hpcToggleContainer.style.opacity = '0.8';
-                  }
-              } else {
-                  hpcToggle.disabled = false;
-                  hpcToggleLabel.textContent = hpcToggle.checked ? YI18n.t('Enabled') : YI18n.t('Disabled');
-                  if (hpcToggleContainer) {
-                      hpcToggleContainer.style.opacity = '1';
-                  }
-              }
+          if (hasHpc && !hasStandard) {
+              // a platform with a single (HPC) runtime
+              setHpcToggle(true, true, hpcReady ? YI18n.t('Required') : YI18n.t('Unavailable'), '0.8');
+          } else if (!hpcReady) {
+              setHpcToggle(false, true, YI18n.t('Unavailable'), '0.55');
+          } else if (!standardReady) {
+              setHpcToggle(true, true, YI18n.t('Required'), '0.8');
           } else {
-              if (!hpcAvailable) {
-                  hpcToggle.checked = false;
-                  hpcToggle.disabled = true;
-                  hpcToggleLabel.textContent = YI18n.t('Unavailable');
-                  if (hpcToggleContainer) {
-                      hpcToggleContainer.style.opacity = '0.55';
-                  }
-              } else if (!microbloggingAvailable) {
-                  hpcToggle.checked = true;
-                  hpcToggle.disabled = true;
-                  hpcToggleLabel.textContent = YI18n.t('Required');
-                  if (hpcToggleContainer) {
-                      hpcToggleContainer.style.opacity = '0.8';
-                  }
-              } else {
-                  hpcToggle.disabled = false;
-                  hpcToggleLabel.textContent = hpcToggle.checked ? YI18n.t('Enabled') : YI18n.t('Disabled');
-                  if (hpcToggleContainer) {
-                      hpcToggleContainer.style.opacity = '1';
-                  }
+              hpcToggle.disabled = false;
+              hpcToggleLabel.textContent = hpcToggle.checked ? YI18n.t('Enabled') : YI18n.t('Disabled');
+              if (hpcToggleContainer) {
+                  hpcToggleContainer.style.opacity = '1';
               }
           }
 
-          isHPC = (!isForum || forumHpcAvailable) && hpcToggle.checked;
+          const isHPC = hpcReady && hpcToggle.checked;
           simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
-
-          if (!isForum && microbloggingAvailable && !hpcAvailable) {
-              hpcToggleLabel.textContent = YI18n.t('Unavailable');
-          } else if (!isForum && !microbloggingAvailable && hpcAvailable) {
-              hpcToggleLabel.textContent = YI18n.t('Required');
-          } else if (!isForum && hpcAvailable && microbloggingAvailable) {
-              hpcToggleLabel.textContent = isHPC ? YI18n.t('Enabled') : YI18n.t('Disabled');
-          }
-
-          if (platformTypeSelect) {
-              const forumOption = platformTypeSelect.querySelector('option[value="forum"]');
-              if (forumOption) {
-                  forumOption.disabled = !(forumAvailable || forumHpcAvailable);
-              }
-              const microbloggingOption = platformTypeSelect.querySelector('option[value="microblogging"]');
-              if (microbloggingOption) {
-                  microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;
-              }
-          }
-
-          if ((!isForum && !isPhotoSharing) && hpcToggleContainer) {
-              if (hpcAvailable || microbloggingAvailable) {
-                  hpcToggleContainer.style.display = 'flex';
-              } else {
-                  hpcToggleContainer.style.display = 'none';
-              }
-          } else if (hpcToggleContainer) {
-              hpcToggleContainer.style.display = 'flex';
-          }
-
-          if (platformTypeSelect) {
-              const instantMessagingOption = platformTypeSelect.querySelector('option[value="instant_messaging"]');
-              if (instantMessagingOption) {
-                  instantMessagingOption.disabled = !instantMessagingAvailable;
-              }
-              const datingOption = platformTypeSelect.querySelector('option[value="dating"]');
-              if (datingOption) {
-                  datingOption.disabled = !datingAvailable;
-              }
-              const photoSharingOption = platformTypeSelect.querySelector('option[value="photo_sharing"]');
-              if (photoSharingOption) {
-                  photoSharingOption.disabled = !photoSharingAvailable;
-              }
+          if (hpcToggleContainer) {
+              hpcToggleContainer.style.display = entry && entry.available ? 'flex' : 'none';
           }
 
           if (isHPC) {
               hpcInfoInline.style.display = 'block';
-              redisConfigBox.style.display = (isInstantMessaging || isDating || isForum) ? 'none' : 'flex';
+              redisConfigBox.style.display = entry && entry.redis ? 'flex' : 'none';
 
               // Disable remote experiment toggle for HPC
               if (remoteExperimentToggle) {

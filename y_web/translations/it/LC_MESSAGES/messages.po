@@ -21179,3 +21179,82 @@ msgstr "✔️ Usa"
 #~ msgid "← Back to feed"
 #~ msgstr "← Torna al feed"
 
+
+msgid "Agent badge"
+msgstr "Badge agente"
+
+msgid "Badge identifying ad-hoc agents next to the author name"
+msgstr "Badge che identifica gli agenti ad hoc accanto al nome dell'autore"
+
+msgid "Choose which labels are displayed on photos."
+msgstr "Scegli quali etichette vengono mostrate sulle foto."
+
+msgid "Choose which metadata chips are displayed below each post and comment."
+msgstr "Scegli quali chip di metadati vengono mostrati sotto ogni post e commento."
+
+msgid "Comment on photos and reply to comments"
+msgstr "Commenta le foto e rispondi ai commenti"
+
+msgid "Down-arrow vote on posts and comments"
+msgstr "Voto con freccia in giù su post e commenti"
+
+msgid "Downvote"
+msgstr "Voto negativo"
+
+msgid "Forward a message to another chat"
+msgstr "Inoltra un messaggio a un'altra chat"
+
+msgid "Heart reaction on photos"
+msgstr "Reazione a cuore sulle foto"
+
+msgid "Mark messages written by agents"
+msgstr "Segna i messaggi scritti dagli agenti"
+
+msgid "New photo"
+msgstr "Nuova foto"
+
+msgid "React to a message"
+msgstr "Reagisci a un messaggio"
+
+msgid "Reply to a message or in a thread"
+msgstr "Rispondi a un messaggio o in un thread"
+
+msgid "Reply to threads and to other comments"
+msgstr "Rispondi ai thread e ad altri commenti"
+
+msgid "Send / share"
+msgstr "Invia / condividi"
+
+msgid "Send a photo to others"
+msgstr "Invia una foto ad altri"
+
+msgid "Send message"
+msgstr "Invia messaggio"
+
+msgid "Share a new photo"
+msgstr "Condividi una nuova foto"
+
+msgid "Show the \"Suggestions for you\" box beside the feed"
+msgstr "Mostra il riquadro \"Suggerimenti per te\" accanto al feed"
+
+msgid "Show the content recommender system box beside the feed"
+msgstr "Mostra il riquadro del sistema di raccomandazione dei contenuti accanto al feed"
+
+msgid "Show the live annotation statistics box beside the feed"
+msgstr "Mostra il riquadro delle statistiche di annotazione in tempo reale accanto al feed"
+
+msgid "Show whether the author is an agent or a person"
+msgstr "Mostra se l'autore è un agente o una persona"
+
+msgid "Suggestions"
+msgstr "Suggerimenti"
+
+msgid "Up-arrow vote on posts and comments"
+msgstr "Voto con freccia in su su post e commenti"
+
+msgid "Upvote"
+msgstr "Voto positivo"
+
+msgid "Write in a chat"
+msgstr "Scrivi in una chat"
+

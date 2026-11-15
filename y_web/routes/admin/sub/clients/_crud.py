@@ -23,7 +23,7 @@ from sqlalchemy import delete, select
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.platforms import registry as platforms
-from y_web.platforms.base import HpcClientForm
+from y_web.platforms.base import STANDARD, HpcClientForm
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -3384,11 +3384,15 @@ def delete_client(uid):
 
     # remove the db file on the client
     BASE_PATH = get_writable_path()
-    path = f"{BASE_PATH}{os.sep}external{os.sep}YClient{os.sep}experiments{os.sep}{client.name}.db"
-    if os.path.exists(path):
-        os.remove(path)
-    else:
-        print(f"File {path} does not exist.")
+    # (the client of a Standard runtime keeps its database in the folder of its own repository)
+    exp = db.session.get(Exps, exp_id)
+    runtime = platforms.get(exp, STANDARD).standard_runtime if exp is not None else None
+    if runtime is not None:
+        path = f"{BASE_PATH}{os.sep}external{os.sep}{runtime.client_repo}{os.sep}experiments{os.sep}{client.name}.db"
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            print(f"File {path} does not exist.")
 
     # remove agent population
     db.session.execute(delete(Population_Experiment).filter_by(id_population=pop_id))

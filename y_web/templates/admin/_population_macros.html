@@ -28,9 +28,9 @@
 <div class="box-line">
     <span class="left">{{ label }}</span>
     <span class="right ys-w-70">
-        <span class="dating-range">
+        <span class="ys-range">
             <input type="number" name="{{ name }}_min" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ low }}" placeholder="{{ _('min') }}">
-            <span class="dating-range-sep">&ndash;</span>
+            <span class="ys-range-sep">&ndash;</span>
             <input type="number" name="{{ name }}_max" class="input ys-flex-input" step="{{ step }}" {% if minimum != '' %}min="{{ minimum }}"{% endif %} value="{{ high }}" placeholder="{{ _('max') }}">
         </span>
         {% if hint %}<small class="ys-label-hint">{{ hint }}</small>{% endif %}

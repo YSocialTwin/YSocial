@@ -180,7 +180,7 @@ def test_new_experiment_form_hides_description_and_experiment_type_controls():
     )
 
 
-def test_new_experiment_form_uses_repo_availability_bridge():
+def test_new_experiment_form_uses_the_platform_menu_of_the_providers():
     settings = (
         REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
     ).read_text(encoding="utf-8")
@@ -188,19 +188,15 @@ def test_new_experiment_form_uses_repo_availability_bridge():
         encoding="utf-8"
     )
 
-    assert "repoAvailability:" in settings
-    assert "const repoAvailability =" in admin_settings_js
-    assert (
-        "const microbloggingAvailable = !!repoAvailability.microblogging;"
-        in admin_settings_js
-    )
-    assert "const hpcAvailable = !!repoAvailability.hpc;" in admin_settings_js
-    assert "const forumAvailable = !!repoAvailability.forum;" in admin_settings_js
-    assert "hpcToggleLabel.textContent = YI18n.t('Required');" in admin_settings_js
-    assert (
-        "microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;"
-        in admin_settings_js
-    )
+    # the menu and the runtimes each platform offers come from the providers, not from the page
+    assert "platformMenu:" in settings
+    assert "for platform in platform_menu" in settings
+    assert "window.YS_DATA_SETTINGS.platformMenu" in admin_settings_js
+    assert "hpcToggleLabel.textContent = hpcToggle.checked" in admin_settings_js
+    assert "YI18n.t('Required')" in admin_settings_js
+    assert "entry && entry.redis" in admin_settings_js
+    for name in ("forum", "dating", "photo_sharing", "instant_messaging"):
+        assert f"'{name}'" not in admin_settings_js
 
 
 def test_copy_group_box_is_present_in_admin_settings():

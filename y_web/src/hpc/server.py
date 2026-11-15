@@ -22,6 +22,7 @@ from sklearn.utils import deprecated
 
 from y_web import db
 from y_web.platforms import registry
+from y_web.platforms.base import STANDARD
 from y_web.src.hpc.platforms import find_hpc_platform, get_hpc_platform
 from y_web.src.models import Exps
 from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
@@ -659,7 +660,11 @@ def start_server_screen(exp):
     from y_web.src.simulation.server import build_screen_command
 
     yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
-    sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
+    runtime = registry.resolve(exp.platform_type, STANDARD).standard_runtime
+    if runtime is not None:
+        sys.path.append(
+            f"{yserver_path}{os.sep}external{os.sep}{runtime.server_repo}{os.sep}"
+        )
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
 
     if "database_server.db" in exp.db_name:

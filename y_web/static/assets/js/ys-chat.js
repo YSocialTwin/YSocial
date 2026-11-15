@@ -1,27 +1,27 @@
 ;(function () {
-  const panel = document.getElementById('microblog-chat-panel')
+  const panel = document.getElementById('ys-chat-panel')
   if (!panel) return
 
   const expId = panel.dataset.expId || window.EXP_ID
   if (!expId) return
 
-  const card = document.getElementById('microblog-chat-card')
-  const collapseHandle = document.getElementById('microblog-chat-collapse-handle')
-  const collapseBadge = document.getElementById('microblog-chat-collapse-badge')
-  const collapseBtn = document.getElementById('microblog-chat-collapse')
-  const refreshBtn = document.getElementById('microblog-chat-refresh')
-  const searchInput = document.getElementById('microblog-chat-search')
-  const listEl = document.getElementById('microblog-chat-list')
-  const browserEl = document.getElementById('microblog-chat-browser')
-  const threadEl = document.getElementById('microblog-chat-thread')
-  const backBtn = document.getElementById('microblog-chat-back')
-  const messagesEl = document.getElementById('microblog-chat-messages')
-  const composeForm = document.getElementById('microblog-chat-compose')
-  const inputEl = document.getElementById('microblog-chat-input')
-  const sendBtn = document.getElementById('microblog-chat-send')
-  const targetAvatarEl = document.getElementById('microblog-chat-target-avatar')
-  const targetNameEl = document.getElementById('microblog-chat-target-name')
-  const targetSubtitleEl = document.getElementById('microblog-chat-target-subtitle')
+  const card = document.getElementById('ys-chat-card')
+  const collapseHandle = document.getElementById('ys-chat-collapse-handle')
+  const collapseBadge = document.getElementById('ys-chat-collapse-badge')
+  const collapseBtn = document.getElementById('ys-chat-collapse')
+  const refreshBtn = document.getElementById('ys-chat-refresh')
+  const searchInput = document.getElementById('ys-chat-search')
+  const listEl = document.getElementById('ys-chat-list')
+  const browserEl = document.getElementById('ys-chat-browser')
+  const threadEl = document.getElementById('ys-chat-thread')
+  const backBtn = document.getElementById('ys-chat-back')
+  const messagesEl = document.getElementById('ys-chat-messages')
+  const composeForm = document.getElementById('ys-chat-compose')
+  const inputEl = document.getElementById('ys-chat-input')
+  const sendBtn = document.getElementById('ys-chat-send')
+  const targetAvatarEl = document.getElementById('ys-chat-target-avatar')
+  const targetNameEl = document.getElementById('ys-chat-target-name')
+  const targetSubtitleEl = document.getElementById('ys-chat-target-subtitle')
 
   if (!card || !collapseHandle || !listEl || !browserEl || !threadEl || !composeForm) return
 
@@ -32,8 +32,8 @@
     currentSession: null
   }
 
-  const storageKey = `ysocial:microblog-chat:${expId}:collapsed`
-  const readStateKey = `ysocial:microblog-chat:${expId}:read-state`
+  const storageKey = `ysocial:ys-chat:${expId}:collapsed`
+  const readStateKey = `ysocial:ys-chat:${expId}:read-state`
 
   function apiGet (url) {
     return fetch(url, { credentials: 'same-origin' }).then(async (res) => {
@@ -84,9 +84,9 @@
 
   function avatarMarkup (name, profilePic) {
     if (profilePic) {
-      return `<div class="microblog-chat-avatar-image" style="background-image:url('${profilePic.replace(/'/g, '%27')}')"></div>`
+      return `<div class="ys-chat-avatar-image" style="background-image:url('${profilePic.replace(/'/g, '%27')}')"></div>`
     }
-    return `<div class="microblog-chat-avatar-fallback">${escapeHtml(initials(name))}</div>`
+    return `<div class="ys-chat-avatar-fallback">${escapeHtml(initials(name))}</div>`
   }
 
   function getAgentProfilePic (agent) {
@@ -179,7 +179,7 @@
       })
 
     if (!items.length) {
-      listEl.innerHTML = '<div class="microblog-chat-empty">' + YI18n.t('No followed agents available for chat.') + '</div>'
+      listEl.innerHTML = '<div class="ys-chat-empty">' + YI18n.t('No followed agents available for chat.') + '</div>'
       renderCollapsedBadge()
       return
     }
@@ -189,20 +189,20 @@
       const preview = session?.last_message_preview || agent.preview || agent.profession || 'Start a conversation'
       const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString(document.documentElement.lang || undefined) : ''
       return `
-        <button class="microblog-chat-list-item" type="button" data-agent-id="${agent.user_id}">
-          <div class="microblog-chat-list-avatar">${avatarMarkup(agent.username, getAgentProfilePic(agent))}</div>
-          <div class="microblog-chat-list-copy">
-            <div class="microblog-chat-list-head">
-              <span class="microblog-chat-list-name">${escapeHtml(agent.username)}</span>
-              ${stamp ? `<span class="microblog-chat-list-date">${escapeHtml(stamp)}</span>` : ''}
+        <button class="ys-chat-list-item" type="button" data-agent-id="${agent.user_id}">
+          <div class="ys-chat-list-avatar">${avatarMarkup(agent.username, getAgentProfilePic(agent))}</div>
+          <div class="ys-chat-list-copy">
+            <div class="ys-chat-list-head">
+              <span class="ys-chat-list-name">${escapeHtml(agent.username)}</span>
+              ${stamp ? `<span class="ys-chat-list-date">${escapeHtml(stamp)}</span>` : ''}
             </div>
-            <div class="microblog-chat-list-preview">${escapeHtml(preview)}</div>
+            <div class="ys-chat-list-preview">${escapeHtml(preview)}</div>
           </div>
         </button>
       `
     }).join('')
 
-    listEl.querySelectorAll('.microblog-chat-list-item').forEach(btn => {
+    listEl.querySelectorAll('.ys-chat-list-item').forEach(btn => {
       btn.addEventListener('click', () => openSession(String(btn.dataset.agentId || '').trim()))
     })
 
@@ -215,12 +215,12 @@
   function renderMessages () {
     const messages = state.currentSession?.messages || []
     if (!messages.length) {
-      messagesEl.innerHTML = '<div class="microblog-chat-empty microblog-chat-empty-thread">' + YI18n.t('No messages yet. Start the conversation.') + '</div>'
+      messagesEl.innerHTML = '<div class="ys-chat-empty ys-chat-empty-thread">' + YI18n.t('No messages yet. Start the conversation.') + '</div>'
       return
     }
     messagesEl.innerHTML = messages.map(msg => (
-      `<div class="microblog-chat-bubble-row ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">` +
-      `<div class="microblog-chat-bubble ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">${formatMessageHtml(msg.content)}</div>` +
+      `<div class="ys-chat-bubble-row ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">` +
+      `<div class="ys-chat-bubble ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">${formatMessageHtml(msg.content)}</div>` +
       '</div>'
     )).join('')
     messagesEl.scrollTop = messagesEl.scrollHeight
@@ -267,7 +267,7 @@
       } catch (err) {}
       renderList()
     } catch (err) {
-      listEl.innerHTML = `<div class="microblog-chat-empty">${err.message}</div>`
+      listEl.innerHTML = `<div class="ys-chat-empty">${err.message}</div>`
       renderCollapsedBadge()
     }
   }

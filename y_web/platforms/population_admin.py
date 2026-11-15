@@ -126,7 +126,11 @@ def form_context() -> dict:
 def details_context(uid, population) -> dict:
     context: dict = {}
     for _p, method in _each("details_context"):
-        context.update(method(uid, population))
+        for key, value in method(uid, population).items():
+            if isinstance(value, list):  # navigation links and the like add up
+                context[key] = [*context.get(key, []), *value]
+            else:
+                context[key] = value
     return context
 
 

@@ -84,7 +84,7 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "position: fixed" in base_template
     assert "margin-left: 244px" not in template
     assert "Suggestions for you" in template
-    assert "microblog-chat.js" in base_template
+    assert "ys-chat.js" in base_template
     posts_template = Path(
         str(photo_file("y_web/templates/photo/components/posts.html"))
     ).read_text(encoding="utf-8")

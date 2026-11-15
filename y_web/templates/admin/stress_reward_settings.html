@@ -112,7 +112,7 @@
                                                 ('moderation', 'protected', 'Moderation: Protected'),
                                                 ('moderation', 'sanctioned', 'Moderation: Sanctioned')
                                             ] %}
-                                            {% if experiment.platform_type != 'instant_messaging' or family in ('reaction', 'comment') %}
+                                            {% if stress_reward_family(experiment.platform_type, family) %}
                                             <tr>
                                                 <td>{{ label }}</td>
                                                 <td>

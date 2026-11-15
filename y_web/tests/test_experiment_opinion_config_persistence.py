@@ -164,7 +164,7 @@ def test_stopped_experiments_allow_client_configuration_updates():
     for template_path in template_paths:
         content = open(template_path, "r").read()
         if template_path.endswith("experiment_details_photo.html"):
-            assert "experiment_details_variant = 'photo'" in content
+            assert "'badge'" in content
             assert 'include "admin/experiment_details.html"' in content
         else:
             assert "experiment.running == 0" in content
@@ -220,9 +220,18 @@ def test_new_experiment_form_supports_photo_sharing_platform():
         "r",
     ).read()
 
-    assert 'value="photo_sharing"' in settings_template
-    assert "Photo Sharing (e.g., Instagram)" in settings_template
-    assert "photoSharingAvailable" in settings_js
+    # the menu is built from what the providers declare, and the form script follows it
+    from y_web.platforms import registry as menu_registry
+
+    entry = next(
+        e
+        for e in menu_registry.creation_menu({"photo_sharing": True})
+        if e["key"] == "photo_sharing"
+    )
+    assert entry["label"] == "Photo Sharing (e.g., Instagram)"
+    assert entry["hpc"] is True and entry["standard"] is None
+    assert "for platform in platform_menu" in settings_template
+    assert "platformMenu" in settings_js
     # the platform forces the HPC runtime and writes its own server configuration
     from y_web.platforms import registry
 

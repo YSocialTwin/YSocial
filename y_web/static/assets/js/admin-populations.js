@@ -20,13 +20,8 @@ var AdminPopulations = (function() {
   };
 
   const popDetails = window.YS_DATA_POP_DETAILS;
-  const platformLabel = (platformType) => {
-      if (platformType === 'forum') return YI18n.t('Forum');
-      if (platformType === 'photo_sharing') return YI18n.t('Photo Sharing');
-      if (platformType === 'instant_messaging') return YI18n.t('Instant Messaging');
-      if (platformType === 'dating') return YI18n.t('Dating');
-      return YI18n.t('Microblogging');
-  };
+  // the platforms say how they are called and how their badge looks (window.YS_PLATFORMS, from the page head)
+  const platformLabel = (platformType) => window.ysPlatform(platformType).badge_text;
 
   if (popDetails) {
   createChartIfPresent("ages", {
@@ -437,7 +432,7 @@ var AdminPopulations = (function() {
           if (!cell || cell.length === 0) {
             return gridjs.html('<span class="ys-text-tiny-gray">' + YI18n.t('Standard') + '</span>');
           }
-          return gridjs.html(cell.map(f => '<span class="ys-plat-badge is-' + (f === 'dating' ? 'dating' : 'photo') + '">' + platformLabel(f) + '</span>').join(' '));
+          return gridjs.html(cell.map(f => '<span class="ys-plat-badge is-' + window.ysPlatform(f).badge + '">' + platformLabel(f) + '</span>').join(' '));
         },
       },
       { id: "size", name: YI18n.t('Agents') },
@@ -622,7 +617,7 @@ var AdminPopulations = (function() {
                   id: pop.id,
                   name: pop.name,
                   size: pop.size || 0,
-                  username_type: pop.username_type || 'microblogging'
+                  username_type: pop.username_type || window.YS_DEFAULT_PLATFORM
               }));
               renderMergeAvailablePopulations();
           })
@@ -709,7 +704,7 @@ var AdminPopulations = (function() {
               id: parsedId,
               name: data.name,
               size: parseInt(data.size, 10) || 0,
-              username_type: data.username_type || 'microblogging'
+              username_type: data.username_type || window.YS_DEFAULT_PLATFORM
           });
           renderMergeSelectedPopulations();
           renderMergeAvailablePopulations();
@@ -812,20 +807,26 @@ var AdminPopulations = (function() {
       age_classes: {}
   };
 
-  // Dating selectors (same component, labels as ids) and the defaults proposed by the form
-  const DATING_FIELDS = ['d_intents', 'd_seek_woman', 'd_seek_man'];
+  // Optional platform sections declare themselves in the markup of their form slot: a switch with
+  // ``data-optional-switch`` (``data-optional-wrapper``: the block it shows, ``data-optional-fields``: the selectors of
+  // the section, same component, labels as ids) and a fieldset with ``data-plan``, the defaults the form proposes.
+  const OPTIONAL_SWITCHES = Array.from(document.querySelectorAll('[data-optional-switch]'));
+  const OPTIONAL_FIELDS = {};
+  OPTIONAL_SWITCHES.forEach(box => {
+      OPTIONAL_FIELDS[box.id] = (box.getAttribute('data-optional-fields') || '').split(',').filter(Boolean);
+  });
+  const OPTIONAL_ALL_FIELDS = [].concat(...Object.values(OPTIONAL_FIELDS));
   // Appearance selectors: an optional section of its own, independent of the platform
   const APPEARANCE_FIELDS = ['hair_color', 'hair_length', 'hair_style', 'eye_color', 'skin_tone', 'build',
       'facial_hair', 'distinctive_features', 'mood', 'photo_style'].map(k => 'd_appearance_' + k);
-  DATING_FIELDS.concat(APPEARANCE_FIELDS).forEach(f => { multiSelectData[f] = {}; });
+  OPTIONAL_ALL_FIELDS.concat(APPEARANCE_FIELDS).forEach(f => { multiSelectData[f] = {}; });
 
-  function datingDefaults() {
-      const box = document.getElementById('dating-population-sections');
-      if (!box) { return; }
-      let d = {};
-      try { d = JSON.parse(box.getAttribute('data-defaults') || '{}'); } catch (e) { d = {}; }
-      const plan = {d_intents: d.intents, d_seek_woman: (d.seeking || {}).woman, d_seek_man: (d.seeking || {}).man};
-      applyDefaultsPlan(plan);
+  function optionalDefaults() {
+      document.querySelectorAll('[data-plan]').forEach(box => {
+          let plan = {};
+          try { plan = JSON.parse(box.getAttribute('data-plan') || '{}'); } catch (e) { plan = {}; }
+          applyDefaultsPlan(plan);
+      });
   }
 
   function appearanceDefaults() {
@@ -1061,7 +1062,7 @@ var AdminPopulations = (function() {
     
       // Validate percentages before submission
       const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes']
-          .concat(isDatingPlatform() ? DATING_FIELDS : [])
+          .concat(activeOptionalFields())
           .concat(isSwitchOn('include_appearance') ? APPEARANCE_FIELDS : []);
       for (const fieldName of fieldsToValidate) {
           const data = multiSelectData[fieldName];
@@ -1294,7 +1295,7 @@ var AdminPopulations = (function() {
       document.getElementById('activity_profiles_data').value = JSON.stringify(data);
   }
 
-  // Optional platform fields (Photo Sharing, Dating): a section is shown, validated and submitted only when its
+  // Optional platform fields (declared by the platforms' forms): a section is shown, validated and submitted only when its
   // switch is on; the population itself is not tied to a platform.
   function isSwitchOn(id) {
       const box = document.getElementById(id);
@@ -1315,20 +1316,21 @@ var AdminPopulations = (function() {
       });
   }
 
-  function isDatingPlatform() {
-      return isSwitchOn('include_dating');
+  function activeOptionalFields() {
+      return [].concat(...OPTIONAL_SWITCHES.filter(box => box.checked).map(box => OPTIONAL_FIELDS[box.id]));
   }
 
   function togglePlatformFields() {
-      const dating = isDatingPlatform();
       eachPlatformSection(section => section.toggle && section.toggle());
-      const datingWrapper = document.getElementById('dating-config-wrapper');
-      if (datingWrapper) {
-          datingWrapper.classList.toggle('d-none', !dating);
-      }
-      document.querySelectorAll('[data-optional-section="dating"]').forEach(el => {
-          el.disabled = !dating;
-          el.hidden = !dating;
+      OPTIONAL_SWITCHES.forEach(box => {
+          const wrapper = document.getElementById(box.getAttribute('data-optional-wrapper'));
+          if (wrapper) {
+              wrapper.classList.toggle('d-none', !box.checked);
+          }
+          document.querySelectorAll('[data-optional-section="' + box.getAttribute('data-optional-switch') + '"]').forEach(el => {
+              el.disabled = !box.checked;
+              el.hidden = !box.checked;
+          });
       });
       const appearance = isSwitchOn('include_appearance');
       const appearanceWrapper = document.getElementById('appearance-config-wrapper');
@@ -1364,11 +1366,11 @@ var AdminPopulations = (function() {
                   updateHiddenField();
               }
       eachPlatformSection(section => section.init && section.init());
-      datingDefaults();
+      optionalDefaults();
       appearanceDefaults();
-      // image model: one of the YDating alternatives or any Hugging Face model id
+      // image model: one of the proposed alternatives or any Hugging Face model id
       document.querySelectorAll('[data-diffusion-select]').forEach(select => {
-          const text = select.closest('.dating-diffusion').querySelector('[data-diffusion-text]');
+          const text = select.closest('[data-diffusion-group]').querySelector('[data-diffusion-text]');
           select.addEventListener('change', () => {
               if (select.value === '__other__') { text.hidden = false; text.value = ''; text.focus(); }
               else { text.value = select.value; text.hidden = true; }

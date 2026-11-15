@@ -3,14 +3,13 @@
      `recsys_info` is None when it is off);
    - annotation statistics: live distributions of the user's own annotations (setting show_annotation_stats; needs the
      "Post & Comment Annotation" add-on module enabled for the experiment).
-   Include inside the right-hand column of the feed. `side_variant` is "photo" or anything else (microblogging). #}
+   Include inside the right-hand column of the feed. `side_card_class` is the CSS class of a card of the rail (default: a plain card). #}
 {% set _pa = [] %}
 {% if frontend_adds_on_modules %}
   {% for _m in frontend_adds_on_modules if _m.module_id == 'post_annotation' %}{% set _ = _pa.append(_m) %}{% endfor %}
 {% endif %}
 {% set _show_stats = ui is defined and ui and ui.show_annotation_stats and _pa %}
-{% set _photo = side_variant is defined and side_variant == 'photo' %}
-{% set _cls = 'photo-right-rail__card' if _photo else 'card ys-card-mb' %}
+{% set _cls = side_card_class if side_card_class is defined and side_card_class else 'card ys-card-mb' %}
 {% if recsys_info or _show_stats %}
 <style>
   .ys-sidebox.ys-sidebox {   /* doubled selector: wins over the host theme's own .card / rail-card rules, background excepted */

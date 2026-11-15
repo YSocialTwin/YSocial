@@ -81,7 +81,7 @@ def run_server_main():
         pass
 
     # Import and start the server
-    print(f"Starting YServer for {args.platform}...", config)
+    print(f"Starting the server for {args.platform}...", config)
     from y_server import app
 
     debug = False

@@ -9,15 +9,19 @@
   if (!groups || !groups.length || typeof Chart === 'undefined') { return; }
 
   var t = function (text) { return (window.YI18n && YI18n.t) ? YI18n.t(text) : text; };
-  var PALETTE = {
-    dating: ['#ec4899', '#f472b6', '#f9a8d4', '#db2777', '#be185d', '#fbcfe8', '#9d174d', '#fda4af'],
-    photo: ['#0ea5e9', '#38bdf8', '#7dd3fc', '#0284c7', '#0369a1', '#bae6fd', '#075985', '#67e8f9'],
-    none: ['#8b5cf6', '#a78bfa', '#c4b5fd', '#7c3aed', '#6d28d9', '#ddd6fe', '#5b21b6', '#a5b4fc']
-  };
+  // the platforms give the palette of their custom fields (window.YS_PLATFORMS); the others use this one
+  var DEFAULT_PALETTE = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#7c3aed', '#6d28d9', '#ddd6fe', '#5b21b6', '#a5b4fc'];
+  function paletteOf(badge) {
+    var found = Object.keys(window.YS_PLATFORMS || {}).map(function (k) { return window.YS_PLATFORMS[k]; }).filter(function (p) {
+      return p.badge === badge && p.palette && p.palette.length;
+    })[0];
+    return found ? found.palette : DEFAULT_PALETTE;
+  }
+
   var built = {};
 
   function colours(group, n) {
-    var base = PALETTE[group.badge] || PALETTE.none, out = [];
+    var base = paletteOf(group.badge), out = [];
     for (var i = 0; i < n; i++) { out.push(base[i % base.length]); }
     return out;
   }

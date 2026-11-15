@@ -72,7 +72,7 @@
                 <span class="left">{{ _('Image model (diffusion)') }}</span>
                 <span class="right ys-w-70">
                     {% set known = ad.models|map(attribute=0)|list %}
-                    <div class="dating-diffusion">
+                    <div class="ys-model-pick" data-diffusion-group>
                         <div class="select is-fullwidth"><select data-diffusion-select>
                             {% for m, label in ad.models %}<option value="{{ m }}" {% if m == ad.model %}selected{% endif %}>{{ _(label) }}</option>{% endfor %}
                             <option value="__other__" {% if ad.model not in known %}selected{% endif %}>{{ _('Other (a Hugging Face model id)') }}</option>

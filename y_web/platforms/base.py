@@ -368,6 +368,30 @@ class PlatformProvider:
     order: int = 1000
     #: whether the clients are created by the generic HPC route (the platform page only posts to it)
     generic_hpc_client_creation: bool = True
+    #: text of the platform's entry in the new-experiment menu, declared with N_() (default: ``label``)
+    menu_label: str = ""
+    #: text of the platform badge where it is not the label (a title-case name, say), declared with N_()
+    badge_text: str = ""
+    #: CSS modifier of the platform badge (``ys-plat-badge is-<badge>``); default: the platform key
+    badge: str = ""
+    #: colours of the charts of this platform's custom fields (hex, up to eight)
+    badge_palette: Tuple[str, ...] = ()
+    #: the HPC runtime of this platform is configured with the Redis settings of the new-experiment form
+    hpc_redis: bool = False
+    #: the new-experiment form asks for simulation topics (a platform that does not use them says so)
+    simulation_topics: bool = True
+    #: optional fields the client form of this platform shows: ``image``, ``news``, ``vote``, ``share_link``
+    client_form_fields: FrozenSet[str] = frozenset()
+    #: texts of the frontend-settings page worded for this platform: ``{setting key: (label, hint)}``, N_() strings
+    frontend_labels: Mapping[str, Tuple[str, str]] = {}
+    #: description of the annotation box of the frontend-settings page (default: the standard feed wording)
+    frontend_annotations_hint: str = ""
+    #: the feed is the standard one: pages of posts and the recommenders shared by the standard platforms
+    standard_feed: bool = False
+    #: the feed can scroll without end (the "infinite scroll" switch applies)
+    infinite_scroll: bool = False
+    #: event families of the stress/reward table this platform has (``None``: all of them)
+    stress_reward_families: Optional[Tuple[str, ...]] = None
 
     @property
     def provider_id(self) -> str:

@@ -411,6 +411,10 @@
     "photo/suggestions.html": {
       "repo": "YPhotoSharing",
       "to": "@photo_sharing/photo/suggestions.html"
+    },
+    "shared/world_simulation_dating_story.html": {
+      "repo": "YDating",
+      "to": "@dating/shared/_ws_story.html"
     }
   },
   "url_map": {

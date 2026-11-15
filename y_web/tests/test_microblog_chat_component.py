@@ -494,10 +494,10 @@ def test_microblog_chat_component_is_reusable_and_mounted():
         microblogging_file("y_web/templates/microblogging/emotions.html")
     ).read_text()
 
-    assert 'id="microblog-chat-panel"' in panel_template
-    assert 'id="microblog-chat-collapse-badge"' in panel_template
-    assert 'id="microblog-chat-list"' in panel_template
-    assert 'id="microblog-chat-compose"' in panel_template
+    assert 'id="ys-chat-panel"' in panel_template
+    assert 'id="ys-chat-collapse-badge"' in panel_template
+    assert 'id="ys-chat-list"' in panel_template
+    assert 'id="ys-chat-compose"' in panel_template
 
     for template in (
         feed_template,
@@ -510,13 +510,11 @@ def test_microblog_chat_component_is_reusable_and_mounted():
     ):
         assert "{% if experiment_memory_enabled %}" in template
         assert '{% include "shared/chat_panel.html" %}' in template
-        assert "assets/js/microblog-chat.js" in template
+        assert "assets/js/ys-chat.js" in template
 
 
 def test_microblog_chat_js_escapes_rendered_content():
-    js_source = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/microblog-chat.js")
-    ).read_text()
+    js_source = Path(str(_REPO_ROOT / "y_web/static/assets/js/ys-chat.js")).read_text()
 
     assert "function escapeHtml" in js_source
     assert "function formatMessageHtml" in js_source
@@ -524,7 +522,7 @@ def test_microblog_chat_js_escapes_rendered_content():
     assert "function markSessionRead" in js_source
     assert "function isSessionUnread" in js_source
     assert "function getUnreadSessionCount" in js_source
-    assert "microblog-chat-collapse-badge" in js_source
+    assert "ys-chat-collapse-badge" in js_source
     assert "readStateKey" in js_source
     assert "replace(/^\\s+/, '')" in js_source
     assert "${escapeHtml(preview)}" in js_source

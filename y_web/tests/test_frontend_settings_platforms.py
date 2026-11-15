@@ -155,9 +155,27 @@ def _gating(app, platform, **ui):
         "show_post_time": True,
     }
     base.update(ui)
+    # the rules are the frontend's own: its repository supplies the template that lists the selectors to hide
+    from pathlib import Path
+
+    from jinja2 import ChoiceLoader, DictLoader
+
+    repo = {"forum": "YForum", "photo": "YPhotoSharing"}[platform]
+    rules = (
+        Path(__file__).resolve().parents[2]
+        / "external"
+        / repo
+        / "ysocial_platform"
+        / "templates"
+        / "shared"
+        / "_ui_gating_rules.html"
+    ).read_text(encoding="utf-8")
+    app.jinja_loader = ChoiceLoader(
+        [app.jinja_loader, DictLoader({f"@rules_{platform}": rules})]
+    )
     with app.test_request_context("/"):
         return app.jinja_env.get_template("shared/platform_ui_gating.html").render(
-            ui=base, platform_ui=platform
+            ui=base, ui_gating_rules=f"@rules_{platform}"
         )
 
 

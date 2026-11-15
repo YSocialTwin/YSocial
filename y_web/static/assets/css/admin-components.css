@@ -3803,8 +3803,8 @@ input:checked + .slider:before {
 
 /* Dating sections of the population form (IR-D-05) */
 .ys-fieldset-reset { border: 0; margin: 0; padding: 0; min-width: 0; }
-.dating-range { display: flex; gap: 8px; align-items: center; }
-.dating-range-sep { color: #6b7280; }
+.ys-range { display: flex; gap: 8px; align-items: center; }
+.ys-range-sep { color: #6b7280; }
 .dating-weights-add { display: flex; gap: 8px; margin-top: 6px; }
 .dating-weights-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 12px; margin-top: 8px; }
 .dating-weight-row { display: flex; align-items: center; gap: 8px; font-size: 0.85em; }
@@ -3821,7 +3821,7 @@ input:checked + .slider:before {
 .ys-opt-title { font-weight: 600; }
 .ys-opt-body { padding: 4px 16px 14px; }
 .ys-opt-body.d-none { display: none; }
-.dating-diffusion .input { margin-top: .4rem; }
+[data-diffusion-group] .input { margin-top: .4rem; }
 
 /* ---- population details: KPIs, page index, custom-field groups ---- */
 .ys-pd-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 4px 0 14px; }

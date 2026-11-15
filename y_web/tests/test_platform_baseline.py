@@ -127,3 +127,16 @@ def test_no_branch_on_a_platform_remains():
         for path, count in baseline.collect_platform_branches().items()
     ]
     assert not found, "\n".join(found)
+
+
+def test_no_platform_is_named_in_the_pages_and_scripts_of_the_core():
+    """The templates and scripts ask the platform catalogue too: no branch, and names only in the declared copy."""
+    branches = [
+        f"{path}: {count}" for path, count in baseline.collect_front_branches().items()
+    ]
+    named = [
+        f"{path}: {count}"
+        for path, count in baseline.collect_front_names().items()
+        if not path.startswith(baseline.FRONT_EXCEPTIONS)
+    ]
+    assert not branches and not named, "\n".join(branches + named)

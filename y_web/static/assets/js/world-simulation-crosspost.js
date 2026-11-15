@@ -1,15 +1,15 @@
 /* F8 (H6) + P7: the members a person ticked under "Also post on" (a World Simulation they are enrolled in) and the text to post
    on each of them.
-   wsCrossposts() -> "forum,dating" (comma separated, empty when nothing is ticked, the box is absent or the post carries a
+   wsCrossposts() -> "member,member" (comma separated, empty when nothing is ticked, the box is absent or the post carries a
    link: link and image-link posts keep the direct path, which has no cross-post, so the box is hidden for them).
    wsCrosspostList() -> the same as an array; wsCrosspostReset() clears the ticks and the texts after a post.
    wsCrosspostTexts() -> JSON {member: text} of the ticked members whose text the person edited (the others get the server's
    rule text; the server also cuts every text to the limit of the platform and ignores members that were not ticked). */
 (function () {
   if (window.wsCrossposts) return;
-  var LINK_FIELDS = '#link_post, #link-url, #image-url';  // microblogging link field, forum link and image-link fields
-  // the field the person writes in, on each composer (microblogging and forum post, IM message, photo caption, dating story)
-  var SOURCE_FIELDS = '#publish, #im-text, [data-photo-share-caption], #photo-share-caption, #ws-dating-story-text';
+  // the composers mark their fields: the link fields (data-ws-link) and the field the person writes in (data-ws-source)
+  var LINK_FIELDS = '[data-ws-link]';
+  var SOURCE_FIELDS = '[data-ws-source]';
   function hasLink() {
     return Array.prototype.some.call(document.querySelectorAll(LINK_FIELDS), function (el) {
       return el.offsetParent !== null && String(el.value || '').trim() !== '';

@@ -82,7 +82,7 @@
         activeIndex = suggestions.length ? 0 : -1
         renderResults()
       } catch (error) {
-        console.error('Microblog header search failed', error)
+        console.error('Header search failed', error)
         suggestions = []
         closeResults()
       }

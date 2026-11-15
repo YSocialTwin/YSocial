@@ -6,11 +6,13 @@
 (function () {
   'use strict';
 
-  var SECTIONS = [
-    { box: 'include_appearance', wrapper: 'appearance-config-wrapper', kind: 'appearance' },
-    { box: 'include_photo_sharing', wrapper: 'photo-sharing-config-wrapper', kind: 'photo' },
-    { box: 'include_dating', wrapper: 'dating-config-wrapper', kind: 'dating' }
-  ];
+  // The platforms' sections declare themselves in the markup of their form slot: a switch with data-optional-switch
+  // (the kind of section) and data-optional-wrapper (the block it shows).
+  var SECTIONS = [{ box: 'include_appearance', wrapper: 'appearance-config-wrapper', kind: 'appearance' }].concat(
+    Array.prototype.map.call(document.querySelectorAll('[data-optional-switch]'), function (el) {
+      return { box: el.id, wrapper: el.getAttribute('data-optional-wrapper'), kind: el.getAttribute('data-optional-switch') };
+    })
+  );
 
   function on(id) {
     var el = document.getElementById(id);
@@ -39,7 +41,7 @@
       if (el) { el.addEventListener('change', sync); }
     });
     document.querySelectorAll('[data-diffusion-select]').forEach(function (select) {
-      var text = select.closest('.dating-diffusion').querySelector('[data-diffusion-text]');
+      var text = select.closest('[data-diffusion-group]').querySelector('[data-diffusion-text]');
       select.addEventListener('change', function () {
         if (select.value === '__other__') { text.hidden = false; text.value = ''; text.focus(); }
         else { text.value = select.value; text.hidden = true; }

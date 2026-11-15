@@ -99,13 +99,8 @@
                                             <input type="hidden" id="simulator_type_input" name="simulator_type" value="Standard">
                                             <div class="select" style="flex: 1 1 280px; min-width: 240px;">
                                                 <select id="platform_type_select" name="platform_type" class="w-100">
-                                                    <option value="microblogging">{{ _('Microblogging (i.e., X/BlueSky)') }}</option>
-                                                    <option value="photo_sharing" {% if not repo_availability.photo_sharing %}disabled{% endif %}>{{ _('Photo Sharing (e.g., Instagram)') }}{% if not repo_availability.photo_sharing %} - {{ _('Unavailable') }}{% endif %}</option>
-                                                    <option value="instant_messaging" {% if not repo_availability.instant_messaging %}disabled{% endif %}>{{ _('Instant Messaging (e.g., Telegram)') }}{% if not repo_availability.instant_messaging %} - {{ _('Unavailable') }}{% endif %}</option>
-                                                    <option value="dating" {% if not repo_availability.dating %}disabled{% endif %}>{{ _('Dating (swipe-based matching)') }}{% if not repo_availability.dating %} - {{ _('Unavailable') }}{% endif %}</option>
-                                                    <option value="forum" {% if not (repo_availability.forum or repo_availability.forum_hpc) %}disabled{% endif %}>{{ _('Forum (i.e., Reddit)') }}{% if not (repo_availability.forum or repo_availability.forum_hpc) %} - {{ _('Unavailable') }}{% endif %}</option>
-                                                    {% for platform in installed_platforms %}
-                                                    <option value="{{ platform.key }}">{{ platform.label }}</option>
+                                                    {% for platform in platform_menu %}
+                                                    <option value="{{ platform.key }}" {% if not platform.available %}disabled{% endif %}>{{ platform.label }}{% if not platform.available %} - {{ _('Unavailable') }}{% endif %}</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -671,7 +666,7 @@
 <script>
 var YS_DATA_SETTINGS = {
     enableNotebook: {{ enable_notebook | tojson }},
-    repoAvailability: {{ repo_availability | tojson }},
+    platformMenu: {{ platform_menu | tojson }},
     matrixExperiments: {{ matrix_experiments | tojson }}
 };
 </script>

@@ -57,6 +57,26 @@ def _declared_keys(platform_type) -> frozenset:
     return frozenset(setting.key for setting in declared_settings(platform_type))
 
 
+def _frontend_wording(platform_type: str) -> dict:
+    """What the page words differently for this platform, as its provider declares it (translated here)."""
+    provider = registry.get(platform_type)
+    if provider is None:
+        return {}
+    return {
+        "labels": {
+            key: [_(label), _(hint)]
+            for key, (label, hint) in provider.frontend_labels.items()
+        },
+        "annotations_hint": (
+            _(provider.frontend_annotations_hint)
+            if provider.frontend_annotations_hint
+            else ""
+        ),
+        "standard_feed": provider.standard_feed,
+        "infinite_scroll": provider.infinite_scroll,
+    }
+
+
 def capabilities_for(platform_type: str):
     """Sorted list of setting keys the platform supports, or ``None`` for all."""
     provider = registry.get(platform_type)
@@ -358,6 +378,7 @@ def frontend_settings_get():
                 exp.simulator_type or "Standard", all_algorithms=True
             ),
             "platform_settings": _platform_setting_specs(exp.platform_type),
+            **_frontend_wording(exp.platform_type),
         }
     )
 

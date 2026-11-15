@@ -61,6 +61,12 @@ def _server_repo_of(exp) -> str:
     return provider.server_label if provider else ""
 
 
+def _server_repo(platform_type):
+    """Repository of the Standard server of a platform (for the messages that tell what to install)."""
+    runtime = registry.resolve(platform_type, STANDARD).standard_runtime
+    return runtime.server_repo if runtime is not None else "the server"
+
+
 def _resolve_server_runtime_paths(base_path, platform_type):
     """Resolve the server package directory and entry script for a platform."""
     runtime = registry.resolve(platform_type, STANDARD).standard_runtime
@@ -569,7 +575,7 @@ def start_server(exp):
     ):
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
-            f"Please ensure YServer is cloned under external/YServer.\n"
+            f"Please ensure {_server_repo(exp.platform_type)} is cloned under external/{_server_repo(exp.platform_type)}.\n"
             f"You can install or update it from the Admin > Plugins panel."
         )
 

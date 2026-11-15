@@ -24,6 +24,9 @@ lowered with ``--ratchet``.
 ``platform_names``
     every mention of a platform (``forum``, ``dating``, ``YForum``, ...) in the core code, not counting the
     modules that belong to one platform and are the ones that will move to its repository.
+``front_branches`` / ``front_names``
+    the same two counts for the templates and the scripts of the core (``.html`` and ``.js``), with the
+    translatable texts and the comments taken out: a sentence that mentions a platform is copy, not a decision.
 
 A snapshot only *forbids losing or changing* what it recorded: new routes, columns or templates are allowed.
 After an intended change, regenerate the files with::
@@ -176,6 +179,60 @@ def _count_in_core(pattern, skip_owned: bool) -> Dict[str, int]:
     return counts
 
 
+# The pages and scripts of the core: a platform is named here only in the descriptive copy of the tutorials and in the
+# pages of the feed resources (forum feeds come from Reddit and RSS), which are not a platform of the simulation.
+FRONT_EXCEPTIONS = (
+    "y_web/static/assets/js/admin-pages-tutorial.js",
+    "y_web/static/assets/js/external-runtimes-tutorial.js",
+    "y_web/static/assets/js/external-runtime-detail-tutorial.js",
+    "y_web/static/assets/js/experiments-tutorial.js",
+    "y_web/static/assets/js/admin-feeds.js",
+    "y_web/templates/admin/rss_feeds.html",
+    "y_web/templates/admin/feed_limits.html",
+    "y_web/templates/admin/image_feeds.html",
+)
+_FRONT_BRANCH = re.compile(
+    r"(?:platform_type|platform_key|platformType|platform|variant|ws_v|\.key)\s*(?:===?|!==?|\bnot\s+in\b|\bin\b)\s*"
+    r"[\(\[\{]?\s*[\"'](?:microblogging|forum|photo_sharing|photo|instant_messaging|im|dating|hpc)[\"']"
+)
+_COPY = re.compile(
+    r"\{#.*?#\}|<!--.*?-->|/\*.*?\*/|(?<![:\"'])//[^\n]*"
+    r"|(?:\b_|\bYI18n\.t|\bgettext|\bngettext)\(\s*(?:'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\")",
+    re.DOTALL,
+)
+_FRONT_DIRS = ("templates", "static/assets/js")
+
+
+def _front_files():
+    for sub in _FRONT_DIRS:
+        for path in sorted((ROOT / "y_web" / sub).rglob("*")):
+            relative = path.relative_to(ROOT).as_posix()
+            if path.suffix not in (".html", ".js") or ".min." in path.name:
+                continue
+            if "/vendor/" in relative or path.name == "app.js":
+                continue
+            yield path, relative
+
+
+def _count_front(pattern) -> Dict[str, int]:
+    counts = {}
+    for path, relative in _front_files():
+        found = len(pattern.findall(_COPY.sub("", path.read_text(encoding="utf-8"))))
+        if found:
+            counts[relative] = found
+    return counts
+
+
+def collect_front_branches() -> Dict[str, int]:
+    """``{file: comparisons of a platform with a literal}`` in the templates and scripts of the core."""
+    return _count_front(_FRONT_BRANCH)
+
+
+def collect_front_names() -> Dict[str, int]:
+    """``{file: mentions of a platform}`` in the templates and scripts of the core (copy and comments excluded)."""
+    return _count_front(_PLATFORM_NAME)
+
+
 def collect_platform_branches() -> Dict[str, int]:
     """``{file: number of platform_type comparisons}`` for the application code (tests excluded)."""
     return _count_in_core(_PLATFORM_BRANCH, skip_owned=False)
@@ -189,6 +246,8 @@ def collect_platform_names() -> Dict[str, int]:
 BUDGETS: Dict[str, Callable[[], Dict[str, int]]] = {
     "platform_branches": collect_platform_branches,
     "platform_names": collect_platform_names,
+    "front_branches": collect_front_branches,
+    "front_names": collect_front_names,
 }
 
 

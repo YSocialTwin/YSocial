@@ -247,6 +247,9 @@ def app():
 
     # Create minimal Flask app
     app = Flask(__name__)
+    from y_web.platforms.template_globals import register_platform_globals
+
+    register_platform_globals(app)  # the admin pages ask the platforms for their labels
     app.config.update(
         {
             "TESTING": True,

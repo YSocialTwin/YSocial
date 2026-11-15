@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from y_web.platforms.base import STANDARD, PlatformProvider
+from y_web.platforms.base import HPC, STANDARD, PlatformProvider
 
 _PROVIDERS: Dict[str, PlatformProvider] = {}
 #: further providers of a key that more than one repository provides (see :func:`variants`)
@@ -218,6 +218,96 @@ def all_providers() -> List[PlatformProvider]:
         [*_PROVIDERS.values(), *(p for v in _EXTRA.values() for p in v)],
         key=lambda p: (p.order, p.key, p.provider_id),
     )
+
+
+def creation_menu(available: Mapping[str, bool]) -> List[Dict[str, Any]]:
+    """What the new-experiment form offers, one entry per platform in menu order.
+
+    Each entry says ``key``, translated ``label``, whether the platform runs ``standard`` and/or ``hpc`` (``None``:
+    it has no such runtime; a boolean: whether that runtime is installed, given ``available``), and the form traits
+    ``redis`` and ``topics``. The runtimes come from what every provider answers to :meth:`resolve_simulator`.
+    """
+    from collections import defaultdict
+
+    from flask_babel import gettext
+
+    probe = defaultdict(lambda: True)
+    menu = []
+    for provider in providers():
+        runtimes: Dict[str, bool] = {}
+        redis = False
+        topics = False
+        for variant in variants(provider.key):
+            asked = variant.simulator_types or (STANDARD, HPC)
+            found = {variant.resolve_simulator(sim, probe)[0] for sim in asked}
+            for runtime in found:
+                try:
+                    ready = variant.resolve_simulator(runtime, available)[1] is None
+                except Exception:
+                    ready = False
+                runtimes[runtime] = runtimes.get(runtime, False) or ready
+                redis = redis or (runtime == HPC and variant.hpc_redis)
+            topics = topics or variant.simulation_topics
+        menu.append(
+            {
+                "key": provider.key,
+                "label": gettext(provider.menu_label or provider.label),
+                "standard": runtimes.get(STANDARD),
+                "hpc": runtimes.get(HPC),
+                "available": any(runtimes.values()),
+                "redis": redis,
+                "topics": topics,
+            }
+        )
+    return menu
+
+
+def client_form_field(platform_type: Any, name: str) -> bool:
+    """Whether the client form of ``platform_type`` shows the optional field ``name`` (any of its providers says so)."""
+    return any(name in v.client_form_fields for v in variants(platform_type))
+
+
+def stress_reward_family(platform_type: Any, family: str) -> bool:
+    """Whether the stress/reward table of ``platform_type`` has the event family ``family``."""
+    families = resolve(platform_type).stress_reward_families
+    return families is None or family in families
+
+
+def badge_label(badge: str) -> str:
+    """Translated name of the platform that wears ``badge`` (its CSS modifier, or its key)."""
+    from flask_babel import gettext
+
+    for p in providers():
+        if (p.badge or p.key) == badge:
+            return gettext(p.badge_text or p.label)
+    return str(badge or "")
+
+
+def badge_text(platform_type: Any) -> str:
+    """Translated text of the badge of a platform type (the label of an unknown one, made readable)."""
+    from flask_babel import gettext
+
+    provider = get(platform_type)
+    if provider is None:
+        text = str(platform_type or "").strip().replace("_", " ").replace("-", " ")
+        return (text[:1].upper() + text[1:]) if text else gettext("Other")
+    return gettext(provider.badge_text or provider.label)
+
+
+def catalog() -> Dict[str, Dict[str, Any]]:
+    """``{key: {label, badge_text, icon, badge, palette}}`` of every platform, for the pages and scripts that label them."""
+    from flask_babel import gettext
+
+    return {
+        p.key: {
+            "label": gettext(p.label),
+            "badge_text": gettext(p.badge_text or p.label),
+            "icon": p.icon,
+            "badge": p.badge or p.key,
+            "palette": list(p.badge_palette),
+        }
+        for p in providers()
+    }
 
 
 def keys() -> List[str]:

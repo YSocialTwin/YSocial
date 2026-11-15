@@ -109,6 +109,10 @@ def register_template_context(app: Flask) -> None:
     )
     app.jinja_env.globals["platform_label"] = platform_label
 
+    from y_web.platforms.template_globals import register_platform_globals
+
+    register_platform_globals(app)
+
     def asset_v(filename: str) -> int:
         """Modification time of a static file, used as ``?v=`` so edited CSS/JS is never served stale from cache.
 

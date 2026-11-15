@@ -356,7 +356,7 @@ def normalize_punctuation_spacing(text):
     return normalized
 
 
-def process_reddit_post(text, allow_legacy_blankline_title=True):
+def split_title_and_body(text, allow_legacy_blankline_title=True):
     """
     Process and format threaded-community post text.
 
@@ -414,3 +414,7 @@ def process_reddit_post(text, allow_legacy_blankline_title=True):
         flags=re.IGNORECASE,
     ).lstrip()
     return title, content
+
+
+# the name the platforms that split titles already import
+process_reddit_post = split_title_and_body
