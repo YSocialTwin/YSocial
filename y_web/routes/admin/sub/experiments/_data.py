@@ -684,11 +684,7 @@ def experiment_details(uid):
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, experiment, _get_database_type())
-        cfg_name = (
-            "server_config.json"
-            if experiment.simulator_type == "HPC"
-            else "config_server.json"
-        )
+        cfg_name = registry.server_config_file(experiment)
         cfg_path = os.path.join(exp_folder, cfg_name)
         if os.path.exists(cfg_path):
             with open(cfg_path, "r") as f:
@@ -894,11 +890,7 @@ def update_experiment_name(uid):
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
-        cfg_name = (
-            "server_config.json"
-            if exp.simulator_type == "HPC"
-            else "config_server.json"
-        )
+        cfg_name = registry.server_config_file(exp)
         cfg_path = os.path.join(exp_folder, cfg_name)
 
         if os.path.exists(cfg_path):
@@ -1021,11 +1013,7 @@ def update_experiment_config(uid):
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
-        cfg_name = (
-            "server_config.json"
-            if exp.simulator_type == "HPC"
-            else "config_server.json"
-        )
+        cfg_name = registry.server_config_file(exp)
         cfg_path = os.path.join(exp_folder, cfg_name)
         if not os.path.exists(cfg_path):
             flash(
@@ -1183,11 +1171,7 @@ def stress_reward_settings(uid):
 
     config_path = os.path.join(
         experiment_dir,
-        (
-            "server_config.json"
-            if experiment.simulator_type == "HPC"
-            else "config_server.json"
-        ),
+        (registry.server_config_file(experiment)),
     )
     config = {}
     if os.path.exists(config_path):
@@ -1221,11 +1205,7 @@ def update_stress_reward_settings(uid):
 
     config_path = os.path.join(
         experiment_dir,
-        (
-            "server_config.json"
-            if experiment.simulator_type == "HPC"
-            else "config_server.json"
-        ),
+        (registry.server_config_file(experiment)),
     )
 
     try:
@@ -1426,11 +1406,7 @@ def update_experiment_topics(uid):
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
-        cfg_name = (
-            "server_config.json"
-            if exp.simulator_type == "HPC"
-            else "config_server.json"
-        )
+        cfg_name = registry.server_config_file(exp)
         cfg_path = os.path.join(exp_folder, cfg_name)
         if os.path.exists(cfg_path):
             with open(cfg_path, "r") as f:

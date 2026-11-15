@@ -681,7 +681,7 @@ def start_server_screen(exp):
     if runtime is None:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
     screen_command = build_screen_command(
-        script_path=f"{engine_root}external{os.sep}{runtime.server_repo}{os.sep}y_server_run.py",
+        script_path=f"{engine_root}external{os.sep}{runtime.server_repo}{os.sep}{runtime.server_script}",
         config_path=f"{config}",
         screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
     )

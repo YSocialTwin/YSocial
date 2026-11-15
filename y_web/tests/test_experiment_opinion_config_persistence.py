@@ -119,7 +119,7 @@ def test_hpc_server_config_generation_and_embedding_routes_support_memory():
     assert "This page is only available for Standard and Forum experiments." not in (
         helpers_source
     )
-    assert '"server_config.json"' in feeds_source
+    assert "server_config_file(" in feeds_source
 
 
 def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():

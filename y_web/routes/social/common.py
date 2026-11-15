@@ -121,11 +121,7 @@ def _experiment_server_config(exp):
         "y_web",
         "experiments",
         str(uid),
-        (
-            "server_config.json"
-            if getattr(exp, "simulator_type", "Standard") == "HPC"
-            else "config_server.json"
-        ),
+        (platforms.server_config_file(exp)),
     )
     if not os.path.exists(config_path):
         return {}

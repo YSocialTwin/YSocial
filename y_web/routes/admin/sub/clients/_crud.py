@@ -1267,11 +1267,7 @@ def _adhoc_stress_reward_config_for_experiment(exp) -> dict:
     exp_folder = os.path.join(
         get_writable_path(), "y_web", "experiments", _get_experiment_folder_name(exp)
     )
-    preferred_config_name = (
-        "server_config.json"
-        if getattr(exp, "simulator_type", "Standard") == "HPC"
-        else "config_server.json"
-    )
+    preferred_config_name = platforms.server_config_file(exp)
     candidate_paths = [
         os.path.join(exp_folder, preferred_config_name),
         os.path.join(
@@ -1486,11 +1482,7 @@ def _build_client_creation_context(idexp, recsys_mode):
                 "y_web",
                 "experiments",
                 exp_uid,
-                (
-                    "server_config.json"
-                    if getattr(exp, "simulator_type", "Standard") == "HPC"
-                    else "config_server.json"
-                ),
+                (platforms.server_config_file(exp)),
             )
             if os.path.exists(config_path):
                 with open(config_path, "r", encoding="utf-8") as config_file:
@@ -3484,11 +3476,7 @@ def _opinion_dynamics_enabled_for_client_creation(experiment):
     try:
         from y_web.src.system.path_utils import get_writable_path
 
-        config_name = (
-            "server_config.json"
-            if getattr(experiment, "simulator_type", "Standard") == "HPC"
-            else "config_server.json"
-        )
+        config_name = platforms.server_config_file(experiment)
         config_path = os.path.join(
             get_writable_path(),
             "y_web",
@@ -3525,11 +3513,7 @@ def _memory_enabled_for_client_creation(experiment):
     try:
         from y_web.src.system.path_utils import get_writable_path
 
-        config_name = (
-            "server_config.json"
-            if getattr(experiment, "simulator_type", "Standard") == "HPC"
-            else "config_server.json"
-        )
+        config_name = platforms.server_config_file(experiment)
         config_path = os.path.join(
             get_writable_path(),
             "y_web",

@@ -73,7 +73,7 @@ def _resolve_server_runtime_paths(base_path, platform_type):
     if runtime is None:
         raise NotImplementedError(f"Unsupported platform {platform_type}")
     server_dir = resolve_external_repo(base_path, runtime.server_repo)
-    return server_dir, os.path.join(server_dir, "y_server_run.py")
+    return server_dir, os.path.join(server_dir, runtime.server_script)
 
 
 def _ensure_image_post_module_in_config(config_path):

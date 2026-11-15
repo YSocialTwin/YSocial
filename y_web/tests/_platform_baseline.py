@@ -266,9 +266,6 @@ IDENTIFIER_EXCEPTIONS = (
     # the persisted ``subreddit`` column of the feed resources
     "y_web/src/models/admin.py",
     "y_web/src/models/experiment.py",
-    # the Python packages of the engines (``y_server``, ``y_client``): the contract the core runs them through
-    "y_web/src/simulation/process_runner.py",
-    "y_web/src/simulation/federation_hooks.py",
 )
 
 

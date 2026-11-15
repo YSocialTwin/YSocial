@@ -356,11 +356,7 @@ def _experiment_configuration_update_required(experiment):
         base_dir = get_writable_path()
         cfg_path = os.path.join(
             _get_experiment_folder(base_dir, experiment, _get_database_type()),
-            (
-                "server_config.json"
-                if getattr(experiment, "simulator_type", "Standard") == "HPC"
-                else "config_server.json"
-            ),
+            (registry.server_config_file(experiment)),
         )
         if not os.path.exists(cfg_path):
             return True
@@ -705,11 +701,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
 
     config_path = os.path.join(
         experiment_dir,
-        (
-            "server_config.json"
-            if experiment.simulator_type == "HPC"
-            else "config_server.json"
-        ),
+        (registry.server_config_file(experiment)),
     )
     config = {}
     if os.path.exists(config_path):

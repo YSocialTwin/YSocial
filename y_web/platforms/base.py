@@ -272,6 +272,14 @@ class StandardRuntime:
     client_takes_log_file: bool = False
     #: whether agents have activity profiles (backfilled in old agent files, pages post while their profile is on)
     activity_profiles: bool = False
+    #: entry script of the server, in the root of its repository (started with ``-c <configuration>``)
+    server_script: str = "y_server_run.py"
+    #: module of the server that exposes the Flask ``app`` the server process runs
+    server_app_module: str = "y_server"
+    #: class of the client the client process runs, as ``module:Class``
+    client_class_path: str = "y_client.clients:YClientWeb"
+    #: module of the client that takes part in a World Simulation (``None``: the client has none)
+    client_federation_module: Optional[str] = "y_client.federation"
 
 
 #: frontend settings every platform that does not offer all of them honours

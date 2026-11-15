@@ -192,6 +192,23 @@ def choose_simulator(
     return resolve(platform_type).resolve_simulator(requested, available)
 
 
+#: name of the server configuration in the folder of an experiment: Standard runtimes and HPC runtimes
+STANDARD_SERVER_CONFIG = "config_server.json"
+HPC_SERVER_CONFIG = "server_config.json"
+
+
+def server_config_file(experiment: Any) -> str:
+    """Name of the server configuration file in the folder of ``experiment``."""
+    provider = resolve(experiment)
+    if provider.server_config_name:
+        return provider.server_config_name
+    return (
+        HPC_SERVER_CONFIG
+        if getattr(experiment, "simulator_type", "Standard") == "HPC"
+        else STANDARD_SERVER_CONFIG
+    )
+
+
 def default_key() -> str:
     """Key of the default platform: the one marked ``default_platform``, else the first installed ('' if none)."""
     found = default() or next(iter(providers()), None)

@@ -3981,11 +3981,7 @@ def _load_annotation_experiment_context(
     db_path = _resolve_analytics_db_path(experiment)
     config_path = os.path.join(
         os.path.dirname(db_path),
-        (
-            "server_config.json"
-            if experiment.simulator_type == "HPC"
-            else "config_server.json"
-        ),
+        (registry.server_config_file(experiment)),
     )
     config = {}
     if os.path.exists(config_path):

@@ -14,10 +14,27 @@ import sys
 DEFAULT_ACTIVITY_PROFILE = "Always On"
 
 
+_FEDERATION_MODULE = "y_client.federation"
+
+
+def use_federation_module(name):
+    """Set the module of the client package in use that takes part in a World Simulation (``None``: it has none)."""
+    global _FEDERATION_MODULE
+    _FEDERATION_MODULE = name
+
+
 def federation_module():
-    """`y_client.federation` of the client package in use when the federation is on in this process, else None."""
+    """Federation module of the client package in use when the federation is on in this process, else None."""
+    if not _FEDERATION_MODULE:
+        return None
     try:
-        from y_client import federation
+        import importlib
+
+        package, _, name = _FEDERATION_MODULE.rpartition(".")
+        parent = importlib.import_module(package)
+        federation = getattr(parent, name, None) or importlib.import_module(
+            _FEDERATION_MODULE
+        )
     except Exception:  # noqa: BLE001 - this client package has no federation
         return None
     try:

@@ -317,14 +317,7 @@ def _embedding_label(experiment) -> str:
 
 
 def _server_config_name(experiment) -> str:
-    provider = registry.resolve(experiment)
-    if provider.server_config_name:
-        return provider.server_config_name
-    return (
-        "server_config.json"
-        if experiment.simulator_type == "HPC"
-        else "config_server.json"
-    )
+    return registry.server_config_file(experiment)
 
 
 @experiments.route("/admin/embedding_settings/<int:uid>", methods=["GET"])

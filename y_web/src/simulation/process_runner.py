@@ -48,12 +48,17 @@ def run_server_main():
     args = parser.parse_args()
 
     # Determine the correct server module based on platform
+    from y_web.platforms import registry
+    from y_web.platforms.base import STANDARD
+
+    provider = registry.get(args.platform, STANDARD)
+    server_app_module = (
+        provider.standard_runtime.server_app_module
+        if provider is not None and provider.standard_runtime is not None
+        else ""
+    )
     server_repo = args.server_repo
     if not server_repo:
-        from y_web.platforms import registry
-        from y_web.platforms.base import STANDARD
-
-        provider = registry.get(args.platform, STANDARD)
         server_repo = provider.server_label if provider else ""
     if not server_repo:
         raise NotImplementedError(f"Unsupported platform {args.platform}")
@@ -82,7 +87,9 @@ def run_server_main():
 
     # Import and start the server
     print(f"Starting the server for {args.platform}...", config)
-    from y_server import app
+    import importlib
+
+    app = importlib.import_module(server_app_module).app
 
     debug = False
     app.config["perspective_api"] = config["perspective_api"]
@@ -397,7 +404,12 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         ):
             if os.path.isdir(memory_src) and memory_src not in sys.path:
                 sys.path.insert(0, memory_src)
-        from y_client.clients import YClientWeb
+        client_runtime = registry.resolve(exp).standard_runtime
+        client_module, _, client_class_name = (
+            client_runtime.client_class_path.partition(":")
+        )
+        client_cls = getattr(importlib.import_module(client_module), client_class_name)
+        federation_hooks.use_federation_module(client_runtime.client_federation_module)
 
         # Base directory for experiment data (writable location)
         BASE_DIR = os.path.join(writable_base, "y_web")
@@ -628,10 +640,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
             client_kwargs["network"] = path
-            cl = YClientWeb(**client_kwargs)
+            cl = client_cls(**client_kwargs)
             print(f"First run (with network)", file=sys.stderr)
         else:
-            cl = YClientWeb(**client_kwargs)
+            cl = client_cls(**client_kwargs)
             if first_run:
                 print(f"First run (without network)", file=sys.stderr)
             else:
