@@ -629,6 +629,9 @@ class PlatformProvider:
     #: whether the ids of the follow rows are UUIDs whatever the runtime (the HPC runtime always has them)
     uuid_follow_ids: bool = False
 
+    #: prefixes of the custom features under which the platform keeps the appearance of an agent (besides ``appearance.``)
+    appearance_feature_prefixes: Tuple[str, ...] = ()
+
     def profile_picture(self, user: Any) -> Optional[str]:
         """Picture URL the platform gives a participant, or ``None`` for the shared way of finding it."""
         return None

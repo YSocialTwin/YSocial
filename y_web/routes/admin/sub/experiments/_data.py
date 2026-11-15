@@ -39,10 +39,6 @@ from sqlalchemy import select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
-from y_web.src.content.avatars import (
-    normalize_force_placeholder,
-    normalize_forum_avatar_mode,
-)
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -120,7 +116,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
     DEFAULT_FORUM_EMBEDDING_SETTINGS,
     FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,
@@ -646,7 +641,6 @@ def experiment_details(uid):
     current_perspective_api = ""
     embedding_settings = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
-    forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
     detoxify_download_state = refresh_detoxify_download_state()
     detoxify_ready = detoxify_download_state.get("status") == "ready"
@@ -768,12 +762,6 @@ def experiment_details(uid):
                         ),
                         "model": str(persisted_embedding.get("model") or "").strip(),
                     }
-                forum_avatar_settings["mode"] = normalize_forum_avatar_mode(
-                    config.get("avatar_mode")
-                )
-                forum_avatar_settings["force_placeholder"] = (
-                    normalize_force_placeholder(config.get("force_placeholder_avatars"))
-                )
     except Exception:
         current_perspective_api = ""
     if not detoxify_ready:
@@ -832,7 +820,6 @@ def experiment_details(uid):
         memory_module_enabled=memory_module_enabled,
         embedding_settings=embedding_settings,
         forum_embedding_settings=forum_embedding_settings,
-        forum_avatar_settings=forum_avatar_settings,
         hpc_reset_available=hpc_reset_available,
         **page_context,
     )

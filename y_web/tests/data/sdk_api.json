@@ -93,8 +93,6 @@
       "kind": "module",
       "members": {
         "default_feed_limits": "() -> 'dict'",
-        "normalize_force_placeholder": "(value)",
-        "normalize_forum_avatar_mode": "(value)",
         "normalize_image_feed_item": "(item)",
         "normalize_image_feeds_payload": "(feeds)",
         "normalize_rss_feed_item": "(item)",
@@ -187,7 +185,6 @@
         "augment_text": "(text, exp_id)",
         "build_thread_tree": "(root_id, post_to_data, parent_lookup)",
         "content_recsys_info": "(recsys_type, ui=None, recsys=None)",
-        "current_profile_pic": "(exp_id, forum_user=None)",
         "ensure_experiment_user": "(experiment: \"'Exps'\", *, account_id=None, **kwargs)",
         "experiment_db_bind": "(exp_id)",
         "experiment_memory_enabled": "(exp_id)",
@@ -219,8 +216,6 @@
         "open_experiment_session": "(experiment: \"'Exps'\")",
         "origin_community": "(source_id) -> 'str'",
         "primary_community": "(article, topics)",
-        "profile_pic_in_experiment": "(user, exp_id)",
-        "profile_pic_of": "(user)",
         "register_experiment_database": "(app, exp_id, db_name)",
         "resolve_back_url": "(exp_id)"
       }

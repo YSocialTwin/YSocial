@@ -386,9 +386,13 @@ def _shared_from(post: Post):
 
 
 def _get_profile_pic(user: User_mgmt) -> str:
-    from y_web.src.content.avatars import resolve_forum_profile_pic
+    from y_web.platforms import registry
 
-    return resolve_forum_profile_pic(user, get_current_experiment_id())
+    exp_id = get_current_experiment_id()
+    experiment = (
+        db.session.get(Exps, exp_id) if isinstance(exp_id, int) and exp_id else None
+    )
+    return registry.resolve(experiment).profile_picture_in(user, exp_id) or ""
 
 
 def _is_agent_or_page_author(user: Optional[User_mgmt]) -> bool:

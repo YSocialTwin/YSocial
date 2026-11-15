@@ -2,10 +2,10 @@
 
 The *Appearance* section of the population form describes how the agents look. It is optional and independent of
 the platform: the traits are stored as ``appearance.*`` custom features of the standard agents. A population that
-carries the Dating fields keeps its traits in ``dating.appearance.*``; both are read the same way.
+that carries the fields of a platform keeps its traits under the prefix the platform declares (``appearance_feature_prefixes``); all are read the same way.
 
 With the (default-off) picture toggle the agents also get a profile picture drawn by a text-to-image model (the same
-settings as the YDating client: style, generator, model, denoising steps). The pictures are written in the media
+settings as the platform clients: style, generator, model, denoising steps). The pictures are written in the media
 folder (``<home>/media/agents``), linked to the agent through ``Agent.profile_pic`` and served at ``/media/agents/``.
 The generation runs in a background thread and reports its progress in the notifications menu. A picture is deleted
 together with its agent (see :func:`delete_picture_file`, called by the ORM listener of ``Agent``).
@@ -27,7 +27,21 @@ from typing import Any, Dict, Iterable, List, Optional
 from y_web.src.agents import appearance_form as af
 
 MEDIA_URL_PREFIX = "/media/agents/"
-FEATURE_PREFIXES = ("appearance.", "dating.appearance.")
+STANDARD_PREFIX = "appearance."
+
+
+def feature_prefixes():
+    """The standard prefix first, then those the platforms declare for the appearance they keep with their fields."""
+    from y_web.platforms import registry
+
+    declared = []
+    for provider in registry.providers():
+        for prefix in provider.appearance_feature_prefixes:
+            if prefix not in declared and prefix != STANDARD_PREFIX:
+                declared.append(prefix)
+    return (STANDARD_PREFIX, *declared)
+
+
 STYLES = ("photorealistic", "cartoon")
 GENERATORS = ("diffusion", "stub")
 DEFAULT_MODEL = "segmind/tiny-sd"
@@ -157,9 +171,9 @@ def available() -> bool:
 
 
 def defaults() -> Dict[str, Any]:
-    """Values proposed by the form (the weights of the generator of the Dating platform)."""
+    """Values proposed by the form (the weights of the generator the platforms share)."""
     return {
-        "models": af.DIFFUSION_MODELS,  # the alternatives offered by the YDating client
+        "models": af.DIFFUSION_MODELS,  # the alternatives offered by the platform clients
         "appearance": af.APPEARANCE_DEFAULTS,
         "appearance_options": af.APPEARANCE_OPTIONS,
         "height": af.HEIGHT_DEFAULT_RANGE,
@@ -189,7 +203,7 @@ def appearance_config_from_form(form) -> Dict[str, Any]:
 
 
 def pictures_config_from_form(form) -> Dict[str, Any]:
-    """Settings of the picture generation (the fields of the YDating client)."""
+    """Settings of the picture generation (the fields of the platform clients)."""
     style = (form.get("pictures_style") or "photorealistic").strip()
     generator = (form.get("pictures_generator") or "diffusion").strip()
     if style not in STYLES:
@@ -266,7 +280,7 @@ def assign_appearance(
 
 
 def read_appearance(agent_ids: Iterable[int]) -> Dict[int, Dict[str, str]]:
-    """``{agent id: {trait: value}}``; ``appearance.*`` wins over ``dating.appearance.*``."""
+    """``{agent id: {trait: value}}``; ``appearance.*`` wins over the prefixes the platforms declare."""
     from sqlalchemy import or_, select
 
     from y_web import db
@@ -284,12 +298,15 @@ def read_appearance(agent_ids: Iterable[int]) -> Dict[int, Dict[str, str]]:
             ).where(
                 Agent_Custom_Feature.agent_id.in_(chunk),
                 or_(
-                    *[Agent_Custom_Feature.key.like(p + "%") for p in FEATURE_PREFIXES]
+                    *[
+                        Agent_Custom_Feature.key.like(p + "%")
+                        for p in feature_prefixes()
+                    ]
                 ),
             )
         ).all()
         for agent_id, key, value in sorted(
-            rows, key=lambda r: r[1].startswith("dating.")
+            rows, key=lambda r: not r[1].startswith(STANDARD_PREFIX)
         ):
             traits = out.setdefault(agent_id, {})
             name = key.split("appearance.", 1)[1]
@@ -327,7 +344,7 @@ _CLOSING = {
 def compose_prompt(
     age: Any, gender: Any, traits: Dict[str, Any], style: str = "photorealistic"
 ) -> str:
-    """English text-to-image prompt from the visible traits only (same wording as the YDating client)."""
+    """English text-to-image prompt from the visible traits only (same wording as the platform clients)."""
     if style not in STYLES:
         raise ValueError(f"unknown image style: {style}")
     values = dict(traits or {})

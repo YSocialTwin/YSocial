@@ -69,7 +69,6 @@ def test_src_content_submodules_importable():
         "y_web.src.content.text_utils",
         "y_web.src.content.article_extractor",
         "y_web.src.content.feeds",
-        "y_web.src.content.avatars",
     ]:
         assert mod in sys.modules, f"Expected module not in sys.modules: {mod}"
 
@@ -185,17 +184,6 @@ class TestCanonicalContentImports:
         from y_web.src.content.feeds import get_feed
 
         assert callable(get_feed)
-
-    def test_avatars_functions(self):
-        from y_web.src.content.avatars import (
-            deterministic_forum_avatar_url,
-            normalize_forum_avatar_mode,
-            resolve_forum_profile_pic,
-        )
-
-        assert callable(deterministic_forum_avatar_url)
-        assert callable(normalize_forum_avatar_mode)
-        assert callable(resolve_forum_profile_pic)
 
 
 # ---------------------------------------------------------------------------
@@ -371,12 +359,6 @@ class TestLegacyShimBackwardCompatibility:
 
         assert gf_shim is get_feed
 
-    def test_avatars_shim_identity(self):
-        from y_web.src.content.avatars import normalize_forum_avatar_mode
-        from y_web.src.content.avatars import normalize_forum_avatar_mode as nfam_shim
-
-        assert nfam_shim is normalize_forum_avatar_mode
-
     def test_recsys_support_shim_identity(self):
         from y_web.src.recsys import get_suggested_posts
         from y_web.src.recsys import get_suggested_posts as gsp_src
@@ -441,7 +423,6 @@ def test_no_circular_imports():
         "y_web.src.content.text_utils",
         "y_web.src.content.article_extractor",
         "y_web.src.content.feeds",
-        "y_web.src.content.avatars",
         "y_web.src.recsys",
         "y_web.src.recsys.content_recsys",
         "y_web.src.recsys.follow_recsys",

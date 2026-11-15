@@ -77,18 +77,6 @@ def logged_user():
     return target()
 
 
-def profile_pic_of(user):
-    from y_web.routes.social.helpers import _participant_profile_pic as target
-
-    return target(user)
-
-
-def current_profile_pic(exp_id, forum_user=None):
-    from y_web.routes.social.helpers import _current_profile_pic as target
-
-    return target(exp_id, forum_user)
-
-
 def feed_memory_enabled(exp_id):
     from y_web.routes.social.helpers import _experiment_memory_enabled as target
 
@@ -99,13 +87,6 @@ def resolve_back_url(exp_id):
     from y_web.routes.social.helpers import _resolve_feed_back_url as target
 
     return target(exp_id)
-
-
-def profile_pic_in_experiment(user, exp_id):
-    """The picture of ``user`` as the experiment ``exp_id`` shows it (avatar mode of the experiment)."""
-    from y_web.src.content.avatars import resolve_forum_profile_pic as target
-
-    return target(user, exp_id)
 
 
 def primary_community(article, topics):
@@ -297,7 +278,6 @@ __all__ = [
     "augment_text",
     "build_thread_tree",
     "content_recsys_info",
-    "current_profile_pic",
     "ensure_experiment_user",
     "experiment_db_bind",
     "experiment_memory_enabled",
@@ -328,7 +308,6 @@ __all__ = [
     "maybe_update_fb_interests",
     "open_experiment_session",
     "origin_community",
-    "profile_pic_of",
     "register_experiment_database",
     "resolve_back_url",
 ]

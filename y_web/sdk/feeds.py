@@ -51,22 +51,8 @@ def read_feed_with_headers(feed_url):
     return _helper("_read_feed_with_headers")(feed_url)
 
 
-def normalize_forum_avatar_mode(value):
-    from y_web.src.content.avatars import normalize_forum_avatar_mode as target
-
-    return target(value)
-
-
-def normalize_force_placeholder(value):
-    from y_web.src.content.avatars import normalize_force_placeholder as target
-
-    return target(value)
-
-
 __all__ = [
     "default_feed_limits",
-    "normalize_force_placeholder",
-    "normalize_forum_avatar_mode",
     "normalize_image_feed_item",
     "normalize_image_feeds_payload",
     "normalize_rss_feed_item",

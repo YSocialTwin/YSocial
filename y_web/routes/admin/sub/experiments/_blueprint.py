@@ -25,11 +25,6 @@ DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS = {
     "model": "",
 }
 DEFAULT_FORUM_EMBEDDING_SETTINGS = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
-DEFAULT_FORUM_AVATAR_SETTINGS = {
-    "mode": "placeholder",
-    "force_placeholder": False,
-}
-
 FORUM_FEED_REQUEST_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "

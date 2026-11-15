@@ -149,7 +149,10 @@ _WORLD_SIMULATION_TESTS = (
 
 #: tests of the part of the forum library that both forum repositories carry (``y_web.src.forum``)
 _FORUM_LIBRARY_TESTS = (
+    "test_content_article_and_avatars.py",
     "test_forum_community_icons.py",
+    "test_population_appearance_pictures.py",
+    "test_population_custom_field_stats.py",
     "test_frontend_settings_platforms.py",
     "test_phase8_src_forum.py",
 )
@@ -181,6 +184,7 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
         "y_web.routes.interactions.forum": "routes.interactions_forum",
         "y_web.routes.api.reddit": "routes.api_reddit",
         "y_web.routes.admin.sub.experiments._forum_feeds": "routes.feeds_forum",
+        "y_web.src.content.avatars": "forum.avatars",
     },
     needs=(
         "test_api_reddit_blueprint.py",

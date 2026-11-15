@@ -675,6 +675,7 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
     )
     assert registry.details_context_defaults() == {
         "forum_feed_health": None,
+        "forum_avatar_settings": None,
         "im_analytics": None,
         "im_advanced": None,
         "im_switches": None,

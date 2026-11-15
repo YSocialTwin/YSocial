@@ -21,10 +21,6 @@ from y_web import db
 from y_web.platforms import registry as platforms
 from y_web.src.commons.ids import opaque_id
 from y_web.src.commons.ordering import seq_or_id
-from y_web.src.content.avatars import (
-    resolve_forum_profile_pic,
-    resolve_forum_username_avatar,
-)
 from y_web.src.content.text_utils import process_reddit_post, strip_tags
 from y_web.src.data_access import (
     augment_text,
@@ -511,16 +507,6 @@ def _logged_experiment_user():
             select(User_mgmt).filter_by(id=opaque_id(current_user.id))
         ).first()
     return user
-
-
-def _participant_profile_pic(user):
-    return resolve_forum_profile_pic(user, get_current_experiment_id())
-
-
-def _current_profile_pic(exp_id, participant=None):
-    if participant is not None:
-        return resolve_forum_profile_pic(participant, exp_id)
-    return resolve_forum_username_avatar(current_user.username, exp_id)
 
 
 def _experiment_memory_enabled(exp_id):

@@ -38,7 +38,6 @@ from sqlalchemy import func, select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
-from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -107,7 +106,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
     DEFAULT_FORUM_EMBEDDING_SETTINGS,
     FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,

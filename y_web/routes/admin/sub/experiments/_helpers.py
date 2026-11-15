@@ -44,7 +44,6 @@ from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
 from y_web.src.commons import reddit_feeds
-from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.feeds import (
     REDDIT_FEED_USER_AGENT,
     feed_request_variants,
@@ -118,7 +117,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
     DEFAULT_FORUM_EMBEDDING_SETTINGS,
     FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,
@@ -999,24 +997,6 @@ def _read_experiment_embedding_settings(experiment_dir):
     settings["service"] = _normalize_embedding_service(persisted.get("service"))
     settings["host"] = _normalize_embedding_host(persisted.get("host"))
     settings["model"] = str(persisted.get("model") or "").strip()
-    return settings
-
-
-def _read_forum_avatar_settings(experiment_dir):
-    """Load persisted avatar settings from config_server.json."""
-    from y_web.src.content.avatars import normalize_forum_avatar_mode
-
-    config_path = os.path.join(experiment_dir, "config_server.json")
-    settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
-    if not os.path.exists(config_path):
-        return settings
-    try:
-        with open(config_path, "r") as handle:
-            config = json.load(handle)
-    except (json.JSONDecodeError, IOError):
-        return settings
-
-    settings["mode"] = normalize_forum_avatar_mode(config.get("avatar_mode"))
     return settings
 
 
