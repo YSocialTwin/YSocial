@@ -1424,10 +1424,10 @@ def agent_details(uid):
         for ext in db.session.scalars(select(Agent_Ext).filter_by(agent_id=uid)).all()
     }
     structured_features = summarize_agent_custom_features(uid)
-    from y_web.src.agents.custom_field_stats import PHOTO_FIELDS, agent_groups
+    from y_web.src.agents.custom_field_stats import agent_groups, extension_fields
 
     custom_groups = agent_groups(structured_features["custom_features"], ext_features)
-    other_ext = {k: v for k, v in ext_features.items() if k not in PHOTO_FIELDS}
+    other_ext = {k: v for k, v in ext_features.items() if k not in extension_fields()}
     back_href = (
         f"/admin/custom_agent/{custom_spec['slug']}" if custom_spec else "/admin/agents"
     )

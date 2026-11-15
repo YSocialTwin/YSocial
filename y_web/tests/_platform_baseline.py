@@ -63,6 +63,8 @@ DECLARED_EXCEPTIONS = (
     # Reddit as a place feeds come from (a host and an address layout), not as a platform of the simulation;
     # and the hash salt of the Hot ranking, which is part of the data it ranked
     "y_web/src/commons/reddit_feeds.py",
+    # the descriptions of the built-in plugin catalogue, which names the repositories it installs
+    "y_web/src/external_runtime/catalog_texts.py",
 )
 # Modules that belong to a single platform: they move to its repository, so their own mentions do not count.
 PLATFORM_OWNED = (
@@ -72,8 +74,6 @@ PLATFORM_OWNED = (
     "y_web/routes/admin/sub/clients/_dating.py",
     "y_web/routes/admin/sub/clients/_im.py",
     "y_web/routes/admin/sub/clients/_forum_hpc.py",
-    "y_web/src/external_runtime/registry.py",
-    "y_web/src/agents/custom_field_stats.py",
     "y_web/routes/admin/sub/experiments/_dating",
     "y_web/routes/admin/sub/experiments/_im",
     "y_web/platforms/",

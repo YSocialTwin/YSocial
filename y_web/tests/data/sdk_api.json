@@ -9,6 +9,9 @@
     "FederationTraits": {
       "kind": "class"
     },
+    "FieldGroup": {
+      "kind": "class"
+    },
     "FormSectionError": {
       "kind": "class"
     },

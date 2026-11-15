@@ -175,6 +175,28 @@ class FrontendSetting:
 
 
 @dataclass(frozen=True)
+class FieldGroup:
+    """A group of the custom fields of an agent that a platform reads, as the population statistics and the agent page show it.
+
+    ``prefixes`` are the key prefixes of the custom features that belong to the group (the name of the field is the
+    rest of the key; the longest prefix wins, across the platforms); ``extension_fields`` maps the names of the
+    ``Agent_Ext`` fields of the group to their readable label; ``labels`` names the fields of the group, ``blobs``
+    the ones that hold a list of which the count is shown; ``unit`` draws the values in 0..1 as a bar; ``weight``
+    orders the groups of the page.
+    """
+
+    id: str
+    title: Any
+    badge: Optional[str] = None
+    prefixes: Tuple[str, ...] = ()
+    extension_fields: Mapping[str, Any] = field(default_factory=dict)
+    labels: Mapping[str, Any] = field(default_factory=dict)
+    blobs: Mapping[str, Any] = field(default_factory=dict)
+    unit: bool = False
+    weight: int = 0
+
+
+@dataclass(frozen=True)
 class HumanRecsysTraits:
     """The recommender systems of the people who use the platform's own frontend (the code lives in the platform).
 
@@ -630,6 +652,8 @@ class PlatformProvider:
     #: whether the ids of the follow rows are UUIDs whatever the runtime (the HPC runtime always has them)
     uuid_follow_ids: bool = False
 
+    #: groups of custom fields the platform adds to the statistics of a population and to the agent page
+    field_groups: Tuple[FieldGroup, ...] = ()
     #: prefixes of the custom features under which the platform keeps the appearance of an agent (besides ``appearance.``)
     appearance_feature_prefixes: Tuple[str, ...] = ()
 

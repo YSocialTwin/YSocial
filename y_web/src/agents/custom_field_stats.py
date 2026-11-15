@@ -1,8 +1,8 @@
 """Statistics on the custom fields of the agents of a population, in blocks ordered by coherent groups.
 
-The agents of any population can carry fields that only some platform reads: the appearance (``appearance.*`` or
-``dating.appearance.*``), the Dating fields (``dating.profile.*``, ``dating.latent.*``, ``dating.affective_traits.*``,
-the rest of ``dating.*``), the Photo Sharing extensions (``Agent_Ext``) and any other custom feature a person added.
+The agents of any population can carry fields that only some platform reads: the appearance (``appearance.*`` or the
+prefixes the platforms declare), the groups of fields the platforms declare (``PlatformProvider.field_groups``, with
+their ``Agent_Ext`` extensions) and any other custom feature a person added.
 :func:`collect` returns them as groups (title, badge, blocks); each block describes one field with how many agents
 have it and either the counts per value (categorical, flag) or a histogram with summary statistics (numeric), ready
 for the Chart.js cards of the population details page.
@@ -24,24 +24,54 @@ MAX_CATEGORIES = (
 BINS = 10
 MAX_LABEL = 40
 
-# (group id, title, badge): the order of the page
-GROUPS: List[Tuple[str, str, Optional[str]]] = [
-    ("appearance", N_("Appearance"), None),
-    ("dating_profile", N_("Dating profile"), "dating"),
-    ("dating_latent", N_("Latent variables"), "dating"),
-    ("dating_affective", N_("Affective traits"), "dating"),
-    ("dating_other", N_("Other Dating fields"), "dating"),
-    ("photo_sharing", N_("Photo Sharing"), "photo"),
-    ("other", N_("Other custom fields"), None),
-]
-_TITLES = {gid: (title, badge) for gid, title, badge in GROUPS}
+_APPEARANCE = ("appearance", N_("Appearance"), None)
+_OTHER = ("other", N_("Other custom fields"), None)
 _NAMESPACE = "ns:"  # id prefix of the group of a platform that writes ``<platform key>.<field>`` keys
+
+
+def _declared() -> List[Any]:
+    """The groups the platforms declare, in the order of the page."""
+    from y_web.platforms import registry
+
+    seen: Dict[str, Any] = {}
+    for provider in registry.providers():
+        for group in provider.field_groups:
+            seen.setdefault(group.id, group)
+    return sorted(seen.values(), key=lambda g: g.weight)
+
+
+def _groups() -> List[Tuple[str, str, Optional[str]]]:
+    """(group id, title, badge) in the order of the page."""
+    return [_APPEARANCE] + [(g.id, g.title, g.badge) for g in _declared()] + [_OTHER]
+
+
+def _titles() -> Dict[str, Tuple[str, Optional[str]]]:
+    return {gid: (title, badge) for gid, title, badge in _groups()}
+
+
+def _group(gid: str):
+    return next((g for g in _declared() if g.id == gid), None)
+
+
+def extension_fields() -> Dict[str, Any]:
+    """``{name: label}`` of the ``Agent_Ext`` fields the platforms declare."""
+    out: Dict[str, Any] = {}
+    for group in _declared():
+        out.update(group.extension_fields)
+    return out
+
+
+def _extension_group(name: str) -> Optional[str]:
+    for group in _declared():
+        if name in group.extension_fields:
+            return group.id
+    return None
 
 
 def _namespace_of(key: str) -> Optional[str]:
     """The platform key a ``<platform key>.<field>`` feature belongs to (``None``: not a platform's own field)."""
     head, dot, rest = key.partition(".")
-    if not dot or not rest or head in ("appearance", "dating"):
+    if not dot or not rest or head == "appearance":
         return None
     from y_web.platforms import registry
 
@@ -50,8 +80,9 @@ def _namespace_of(key: str) -> Optional[str]:
 
 def _group_head(gid: str) -> Tuple[str, Optional[str]]:
     """(title, badge) of a group: the fixed ones, or the label of the platform a dynamic group belongs to."""
-    if gid in _TITLES:
-        return _TITLES[gid]
+    titles = _titles()
+    if gid in titles:
+        return titles[gid]
     from y_web.platforms import registry
 
     key = gid[len(_NAMESPACE) :]
@@ -62,54 +93,38 @@ def _group_head(gid: str) -> Tuple[str, Optional[str]]:
 def _ordered(gids: Iterable[str]) -> List[str]:
     """The fixed groups in page order, the groups of the platforms (by name) before ``other``."""
     present = set(gids)
-    fixed = [g for g, _t, _b in GROUPS if g in present]
-    dynamic = sorted(g for g in present if g not in _TITLES)
+    titles = _titles()
+    fixed = [g for g, _t, _b in _groups() if g in present]
+    dynamic = sorted(g for g in present if g not in titles)
     at = fixed.index("other") if "other" in fixed else len(fixed)
     return fixed[:at] + dynamic + fixed[at:]
 
 
-# readable names of the fields that carry a name of their own
-FIELD_LABELS = {
-    "creator_tier": N_("Creator tier"),
-    "story_visibility": N_("Story visibility"),
-    "is_private": N_("Private account"),
-    "is_verified": N_("Verified account"),
-    "attention_budget": N_("Attention budget"),
-    "favorite_filters": N_("Favourite filters"),
-    "bio": N_("Has a biography"),
-}
-PHOTO_FIELDS = tuple(FIELD_LABELS)
-_BLOBS = {"photos": N_("Photos per agent")}
-# readable names of the fields of the Appearance, the latent variables and the affective traits (as in the form)
+# readable names of the fields of the appearance (as in the form); the platforms name their own in ``FieldGroup.labels``
 NAME_LABELS = {
     "hair_color": N_("Hair colour"), "hair_length": N_("Hair length"), "hair_style": N_("Hair style"),
     "eye_color": N_("Eye colour"), "skin_tone": N_("Skin tone"), "build": N_("Build"),
     "facial_hair": N_("Facial hair"), "distinctive_features": N_("Distinctive features"),
     "mood": N_("Mood in photos"), "photo_style": N_("Photo style"), "height_cm": N_("Height (cm)"),
-    "glasses": N_("Wearing glasses"), "attractiveness": N_("Attractiveness"), "selectivity": N_("Selectivity"),
-    "responsiveness": N_("Responsiveness"), "sensitivity": N_("Sensitivity"),
-    "reward_sensitivity": N_("Reward sensitivity"), "resilience": N_("Resilience"),
-    "visibility_need": N_("Need for visibility"),
+    "glasses": N_("Wearing glasses"),
 }  # fmt: skip
-_LABELLED = ("appearance", "dating_latent", "dating_affective")
 _FLAGS = {"true", "false"}
 
 
 def classify(key: str) -> Tuple[str, str]:
     """(group id, name of the field inside the group) of a custom feature key."""
-    if key.startswith("appearance."):
-        return "appearance", key[len("appearance.") :]
-    if key.startswith("dating.appearance."):
-        return "appearance", key[len("dating.appearance.") :]
-    for prefix, gid in (
-        ("dating.profile.", "dating_profile"),
-        ("dating.latent.", "dating_latent"),
-        ("dating.affective_traits.", "dating_affective"),
-    ):
+    from y_web.src.agents.profile_pictures import feature_prefixes
+
+    for prefix in feature_prefixes():
         if key.startswith(prefix):
-            return gid, key[len(prefix) :]
-    if key.startswith("dating."):
-        return "dating_other", key[len("dating.") :]
+            return "appearance", key[len(prefix) :]
+    best: Optional[Tuple[str, str]] = None
+    for group in _declared():
+        for prefix in group.prefixes:
+            if key.startswith(prefix) and (best is None or len(prefix) > len(best[1])):
+                best = (group.id, prefix)
+    if best:
+        return best[0], key[len(best[1]) :]
     namespace = _namespace_of(key)
     if namespace:
         return _NAMESPACE + namespace, key[len(namespace) + 1 :]
@@ -229,20 +244,21 @@ def _list_values(raw: Any) -> Optional[List[str]]:
 def build(
     custom: Dict[str, Dict[int, Any]], ext: Dict[str, Dict[int, Any]], total: int
 ) -> List[Dict[str, Any]]:
-    """Groups from ``custom`` (``{key: {agent id: raw value}}``) and ``ext`` (the same for the Photo Sharing extensions)."""
-    grouped: Dict[str, List[Dict[str, Any]]] = {gid: [] for gid, _t, _b in GROUPS}
+    """Groups from ``custom`` (``{key: {agent id: raw value}}``) and ``ext`` (the same for the extensions of the platforms)."""
+    grouped: Dict[str, List[Dict[str, Any]]] = {gid: [] for gid, _t, _b in _groups()}
     seen_appearance: Dict[str, Dict[int, Any]] = {}
     for key in sorted(custom):
         gid, name = classify(key)
         if (
             gid == "appearance"
-        ):  # the generic traits win over the Dating ones of the same agent
+        ):  # the generic traits win over those the platforms keep with their fields
             merged = seen_appearance.setdefault(name, {})
             for agent_id, raw in custom[key].items():
                 if key.startswith("appearance.") or agent_id not in merged:
                     merged[agent_id] = raw
             continue
-        if gid == "dating_other" and name in _BLOBS:
+        group = _group(gid)
+        if group is not None and name in group.blobs:
             counts = []
             for raw in custom[key].values():
                 try:
@@ -252,7 +268,7 @@ def build(
                     )
                 except (TypeError, ValueError):
                     counts.append(None)
-            block = describe(name, counts, total, title=_BLOBS[name])
+            block = describe(name, counts, total, title=group.blobs[name])
         else:
             lists = [_list_values(r) for r in custom[key].values()]
             if lists and all(i is not None for i in lists):
@@ -267,7 +283,7 @@ def build(
                     name,
                     [_parse(r) for r in custom[key].values()],
                     total,
-                    title=NAME_LABELS.get(name) if gid in _LABELLED else None,
+                    title=group.labels.get(name) if group is not None else None,
                 )
         if block:
             if gid == "other" and "." in key:
@@ -282,16 +298,17 @@ def build(
         )
         if block:
             grouped["appearance"].append(block)
-    for name in PHOTO_FIELDS:
+    labels = extension_fields()
+    for name in labels:
         if name not in ext:
             continue
         raws = ext[name]
-        if name == "bio":
+        if name in _TEXT_PRESENCE:
             block = describe(
                 name,
                 [bool(str(r or "").strip()) for r in raws.values()],
                 total,
-                title=FIELD_LABELS[name],
+                title=labels[name],
             )
         else:
             lists = [_list_values(r) for r in raws.values()]
@@ -300,7 +317,7 @@ def build(
                     name,
                     [i for items in lists for i in items],
                     total,
-                    title=FIELD_LABELS[name],
+                    title=labels[name],
                 )
                 if block:
                     block["n"], block["coverage"] = len(lists), (
@@ -311,10 +328,10 @@ def build(
                     name,
                     [_parse(r) for r in raws.values()],
                     total,
-                    title=FIELD_LABELS[name],
+                    title=labels[name],
                 )
         if block:
-            grouped["photo_sharing"].append(block)
+            grouped.setdefault(_extension_group(name), []).append(block)
     out = []
     for gid in _ordered(grouped):
         title, badge = _group_head(gid)
@@ -361,7 +378,8 @@ def collect(agent_ids: Iterable[int]) -> List[Dict[str, Any]]:
             select(
                 Agent_Ext.agent_id, Agent_Ext.feature_name, Agent_Ext.feature_value
             ).where(
-                Agent_Ext.agent_id.in_(chunk), Agent_Ext.feature_name.in_(PHOTO_FIELDS)
+                Agent_Ext.agent_id.in_(chunk),
+                Agent_Ext.feature_name.in_(list(extension_fields())),
             )
         ):
             ext.setdefault(name, {})[agent_id] = value
@@ -369,10 +387,9 @@ def collect(agent_ids: Iterable[int]) -> List[Dict[str, Any]]:
 
 
 _LONG = 140  # longer texts are shown as a paragraph
-_UNIT_FIELDS = (
-    "dating_latent",
-    "dating_affective",
-)  # values in 0..1 are drawn as a bar
+_TEXT_PRESENCE = (
+    "bio",
+)  # extension fields of which only the presence of a text is shown
 
 
 def _pretty(name: str) -> str:
@@ -410,25 +427,28 @@ def _field(
 def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, Any]]:
     """The custom attributes of one agent in the ordered groups of the population statistics.
 
-    ``custom`` is ``{key: value}`` of its custom features and ``ext`` the same for its Photo Sharing extensions; the
+    ``custom`` is ``{key: value}`` of its custom features and ``ext`` the same for its extensions; the
     result is ``[{id, title, badge, fields}]`` for the groups that have something to show.
     """
-    grouped: Dict[str, List[Dict[str, Any]]] = {gid: [] for gid, _t, _b in GROUPS}
+    grouped: Dict[str, List[Dict[str, Any]]] = {gid: [] for gid, _t, _b in _groups()}
     appearance: Dict[str, Any] = {}
     for key in sorted(custom):
         gid, name = classify(key)
-        if gid == "appearance":  # the generic traits win over the Dating ones
+        if (
+            gid == "appearance"
+        ):  # the generic traits win over those the platforms keep with their fields
             if key.startswith("appearance.") or name not in appearance:
                 appearance[name] = custom[key]
             continue
-        if gid == "dating_other" and name in _BLOBS:
+        group = _group(gid)
+        if group is not None and name in group.blobs:
             try:
                 loaded = json.loads(custom[key])
                 count = len(loaded) if isinstance(loaded, list) else None
             except (TypeError, ValueError):
                 count = None
             entry = (
-                _field(name, count, _BLOBS[name])
+                _field(name, count, group.blobs[name])
                 if count is not None
                 else _field(name, custom[key])
             )
@@ -436,8 +456,8 @@ def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, 
             entry = _field(
                 name,
                 custom[key],
-                NAME_LABELS.get(name) if gid in _LABELLED else None,
-                unit=gid in _UNIT_FIELDS,
+                group.labels.get(name) if group is not None else None,
+                unit=bool(group and group.unit),
             )
         if entry:
             grouped.setdefault(gid, []).append(entry)
@@ -445,11 +465,12 @@ def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, 
         entry = _field(name, appearance[name], NAME_LABELS.get(name))
         if entry:
             grouped["appearance"].append(entry)
-    for name in PHOTO_FIELDS:
+    labels = extension_fields()
+    for name in labels:
         if name in ext:
-            entry = _field(name, ext[name], FIELD_LABELS[name])
+            entry = _field(name, ext[name], labels[name])
             if entry:
-                grouped["photo_sharing"].append(entry)
+                grouped.setdefault(_extension_group(name), []).append(entry)
     return [
         {
             "id": gid,

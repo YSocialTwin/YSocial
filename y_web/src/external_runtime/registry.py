@@ -14,41 +14,17 @@ from pathlib import Path
 from typing import Sequence
 
 from y_web.i18n import N_
+from y_web.src.external_runtime.catalog_texts import PLATFORM_TEXTS
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 # Texts of the plugin list that live in this module or in repositories without a
 # translation catalog of their own. They are only declared here (for extraction);
 # the plugin pages translate them when they are shown.
-RUNTIME_TEXTS = (
+RUNTIME_TEXTS = PLATFORM_TEXTS + (
     N_("Simulation Runtime Stack"),
     N_("Agent Extensions"),
     N_("Frontend Extensions"),
     N_("Backend Extensions"),
-    N_(
-        "Legacy microblogging simulator on Flask (timeline, posts, follows). Server and client are installed and updated independently from its page."
-    ),
-    N_(
-        "Legacy forum simulator on Flask (threads and replies). Server and client are installed and updated independently from its page."
-    ),
-    N_("Runs the agents of a microblogging simulation (client side)."),
-    N_("Hosts the microblogging platform the agents interact with (server side)."),
-    N_("Runs the agents of a forum simulation (client side)."),
-    N_("Hosts the forum platform the agents interact with (server side)."),
-    N_(
-        "Simulation runtime for photo-sharing experiments, with an Instagram-like platform."
-    ),
-    N_(
-        "Simulation runtime for instant-messaging experiments, with Telegram-like chats, groups, channels and forum topics."
-    ),
-    N_(
-        "Simulation runtime for Tinder-like dating experiments: profiles, swipes, mutual matches, private conversations and interchangeable matching recommenders."
-    ),
-    N_(
-        "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters."
-    ),
-    N_(
-        "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters."
-    ),
     N_(
         "SDK and coordinator of the World Simulation: synchronises several platform experiments on one clock and moves agents, attention and cross-posts between them."
     ),
@@ -259,12 +235,10 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = [
-        "microblogging",
-        "forum",
-        "photo_sharing",
-        "instant_messaging",
-        "dating",
+    from y_web.platforms import registry as platforms
+
+    # the platforms come first, in the order of the menu; the groups after them are the extensions of the application
+    ordered_groups = [p.key for p in platforms.providers()] + [
         "hpc",
         "federation",
         "agent_plugins",
@@ -604,7 +578,7 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
     # User-reported gap (2026-10-08): "when the new flag -e is not
     # specified private plugins that are already installed are still
     # visible". Root cause -- every repo actually marked private in this
-    # registry (photo_sharing, reactive_agents, frontend_adds_on,
+    # registry (reactive_agents, frontend_adds_on,
     # scenario_design) ships with an empty visible_to_usernames and no
     # override, so every request here used to fall through to "any admin
     # sees it", which defeated --development entirely for the normal
