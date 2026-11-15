@@ -204,7 +204,7 @@ def extend_simulation(id_client):
     slots = registry.resolve(exp).rounds_per_day(exp) if exp else None
     if slots is not None:
         # the runtime reads how many days to run from the client file at every start (see
-        # hpc.client._set_dating_run_length): the new total is all that has to be recorded
+        # hpc.client._write_client_run_length): the new total is all that has to be recorded
         client_execution.expected_duration_rounds = (
             -1 if new_total_days == -1 else new_total_days * slots
         )

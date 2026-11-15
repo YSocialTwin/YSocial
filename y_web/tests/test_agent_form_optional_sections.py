@@ -194,7 +194,7 @@ def test_the_template_offers_the_sections_as_the_population_form_does():
     page = (TEMPLATES / "agents.html").read_text()
     assert (
         'name="include_appearance"' in page
-        and "{% if any_platform_form or dating_available %}" in page
+        and "{% if any_platform_form %}" in page
     )
     assert "{% if platform_form_available.photo_sharing %}" in platform_template(
         "YPhotoSharing", "slots/agent_form_options.html"

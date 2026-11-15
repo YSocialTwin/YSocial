@@ -11,7 +11,7 @@ var AdminExperiments = (function() {
       }
       return element;
   };
-  const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_EXP || {};
+  const currentExperimentData = () => window.YS_DATA_EXP_DETAILS || window.YS_DATA_EXP || {};
 
   (function() {
       const toxicityToggle = document.getElementById('toxicity_annotation_toggle_exp');
@@ -1475,7 +1475,7 @@ var AdminExperiments = (function() {
 
 
 // Shared helpers for the second bundled module. These need file scope because
-// AdminExperimentsForum is wrapped in its own IIFE.
+// AdminExperimentsDetails is wrapped in its own IIFE.
 const byId = (id) => document.getElementById(id);
 const bindById = (id, eventName, handler) => {
     const element = byId(id);
@@ -1484,13 +1484,13 @@ const bindById = (id, eventName, handler) => {
     }
     return element;
 };
-const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_EXP || {};
+const currentExperimentData = () => window.YS_DATA_EXP_DETAILS || window.YS_DATA_EXP || {};
 
 /**
- * AdminExperimentsForum - Extracted from admin templates (Phase T6)
+ * AdminExperimentsDetails - Extracted from admin templates (Phase T6)
  * Auto-generated. Do not edit manually.
  */
-var AdminExperimentsForum = (function() {
+var AdminExperimentsDetails = (function() {
   // Experiment server control functions
   function startExperimentServer(expId) {
       showLoading(YI18n.t('Starting experiment server...'));

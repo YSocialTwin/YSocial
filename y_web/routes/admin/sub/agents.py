@@ -41,7 +41,7 @@ from y_web.src.models import (
     Agent_Population,
     Agent_Profile,
     Education,
-    ForumRssFeedResource,
+    RssFeedResource,
     Languages,
     Leanings,
     Nationalities,
@@ -931,8 +931,8 @@ def agents_dashboard():
 
     synthetic_agent_count = db.session.scalar(select(func.count()).select_from(Agent))
     page_count = db.session.scalar(select(func.count()).select_from(Page))
-    forum_rss_feed_count = db.session.scalar(
-        select(func.count()).select_from(ForumRssFeedResource)
+    rss_feed_count = db.session.scalar(
+        select(func.count()).select_from(RssFeedResource)
     )
     population_count = db.session.scalar(select(func.count()).select_from(Population))
     activity_profile_count = db.session.scalar(
@@ -1024,7 +1024,7 @@ def agents_dashboard():
                 "highlights": [
                     _(
                         "%(count)s reusable RSS feeds available",
-                        count=forum_rss_feed_count,
+                        count=rss_feed_count,
                     ),
                     _("Validation happens once in the dashboard workspace"),
                     _("Experiments assign feeds from the shared registry"),
@@ -1075,8 +1075,8 @@ def agents_dashboard():
         agent_resources_summary={
             "total_agents": synthetic_agent_count,
             "total_pages": page_count,
-            "forum_rss_feeds": forum_rss_feed_count,
-            "forum_image_feeds": next(
+            "rss_feeds": rss_feed_count,
+            "image_feeds": next(
                 (
                     c["image_feed_count"]
                     for c in agent_resource_cards

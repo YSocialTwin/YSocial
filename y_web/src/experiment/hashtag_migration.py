@@ -3,7 +3,7 @@
 Older experiments hold the same hashtag several times (``#Sustainability``, ``Sustainability``,
 ``sustainability``): trending lists and hashtag pages then count them apart. This brings an experiment
 database to the canonical form of :mod:`y_web.hashtag_text` (no ``#``; first spelling kept; identity
-ignores case). It is idempotent, works on Standard (integer ids) and HPC/photo (uuid ids) databases, and
+ignores case). It is idempotent, works on Standard (integer ids) and HPC (uuid ids) databases, and
 re-points the link tables to the surviving row. Texts that were cut when stored (``#c`` for
 ``#c'e...``) cannot be recovered and are left as they are.
 """
@@ -17,8 +17,17 @@ from y_web.hashtag_text import hashtag_key, normalize_hashtag
 
 logger = logging.getLogger(__name__)
 
-# link table -> column that identifies the owner of the tag
-_LINK_TABLES = {"post_hashtags": "post_id", "photo_hashtags": "photo_id"}
+
+def _link_tables():
+    """Link table -> column that identifies the owner of the tag (the standard one, then each platform's own)."""
+    from y_web.platforms import registry
+
+    tables = {"post_hashtags": "post_id"}
+    for provider in registry.providers():
+        declared = provider.content_schema
+        if declared:
+            tables[declared["hashtag_table"]] = declared["content_id_column"]
+    return tables
 
 
 def merge_duplicate_hashtags(engine):
@@ -29,7 +38,7 @@ def merge_duplicate_hashtags(engine):
         return result
     links = {
         table: owner
-        for table, owner in _LINK_TABLES.items()
+        for table, owner in _link_tables().items()
         if table in tables
         and {"hashtag_id", owner}
         <= {c["name"] for c in inspect(engine).get_columns(table)}

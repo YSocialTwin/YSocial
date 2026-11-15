@@ -110,73 +110,6 @@ _SQLITE_TABLES = {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """,
-    "photos": """
-        CREATE TABLE IF NOT EXISTS photos (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
-            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            image_url TEXT NOT NULL,
-            thumbnail_url TEXT,
-            caption TEXT,
-            alt_text TEXT,
-            filter_name TEXT,
-            location_name TEXT,
-            latitude REAL,
-            longitude REAL,
-            is_carousel INTEGER DEFAULT 0,
-            carousel_index INTEGER DEFAULT 0,
-            parent_photo_id TEXT REFERENCES photos(id) ON DELETE SET NULL,
-            num_likes INTEGER DEFAULT 0,
-            num_comments INTEGER DEFAULT 0,
-            num_shares INTEGER DEFAULT 0,
-            is_sponsored INTEGER DEFAULT 0,
-            embedding TEXT,
-            aesthetic_score REAL,
-            viral_score REAL DEFAULT 0.0,
-            sentiment_score REAL,
-            media_url TEXT,
-            is_removed INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            deleted_at DATETIME
-        )
-    """,
-    "stories": """
-        CREATE TABLE IF NOT EXISTS stories (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
-            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            media_url TEXT NOT NULL,
-            media_type TEXT DEFAULT 'carousel',
-            duration_seconds INTEGER DEFAULT 5,
-            sticker_type TEXT,
-            sticker_data TEXT,
-            caption TEXT,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            image_urls TEXT NOT NULL DEFAULT '[]',
-            view_count INTEGER DEFAULT 0,
-            expires_at DATETIME,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """,
-    "saved_photos": """
-        CREATE TABLE IF NOT EXISTS saved_photos (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
-            photo_id TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
-            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """,
-    "story_views": """
-        CREATE TABLE IF NOT EXISTS story_views (
-            id TEXT PRIMARY KEY,
-            story_id TEXT NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
-            viewer_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
-            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """,
     "stress_reward": """
         CREATE TABLE IF NOT EXISTS stress_reward (
             id TEXT PRIMARY KEY,
@@ -215,12 +148,6 @@ _SQLITE_COLUMNS = {
     "websites": {
         "fetch_images_from_url": "BOOLEAN DEFAULT 0",
         "fetch_images_timeout": "INTEGER DEFAULT 10",
-    },
-    "saved_photos": {
-        "round": "TEXT",
-    },
-    "story_views": {
-        "round": "TEXT",
     },
 }
 
@@ -283,24 +210,6 @@ _POSTGRES_TABLES = {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """,
-    "saved_photos": """
-        CREATE TABLE IF NOT EXISTS saved_photos (
-            id VARCHAR(36) PRIMARY KEY,
-            user_id VARCHAR(36) NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
-            photo_id VARCHAR(36) NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
-            round VARCHAR(36) NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """,
-    "story_views": """
-        CREATE TABLE IF NOT EXISTS story_views (
-            id VARCHAR(36) PRIMARY KEY,
-            story_id VARCHAR(36) NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
-            viewer_id VARCHAR(36) NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
-            round VARCHAR(36) NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
-            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """,
     "stress_reward": """
         CREATE TABLE IF NOT EXISTS stress_reward (
             id VARCHAR(36) PRIMARY KEY,
@@ -340,13 +249,37 @@ _POSTGRES_COLUMNS = {
         "fetch_images_from_url": "BOOLEAN DEFAULT FALSE",
         "fetch_images_timeout": "INTEGER DEFAULT 10",
     },
-    "saved_photos": {
-        "round": "VARCHAR(36)",
-    },
-    "story_views": {
-        "round": "VARCHAR(36)",
-    },
 }
+
+
+def _platform_tables(dialect: str) -> dict:
+    """Tables the installed platforms add to the experiment database (``dialect``: sqlite or postgresql)."""
+    from y_web.platforms import registry
+
+    tables = {}
+    for provider in registry.providers():
+        tables.update((provider.experiment_tables or {}).get(dialect, {}))
+    return tables
+
+
+def _platform_columns(dialect: str) -> dict:
+    """Columns the installed platforms add to existing experiment tables."""
+    from y_web.platforms import registry
+
+    columns = {}
+    for provider in registry.providers():
+        for table, added in (
+            (provider.experiment_columns or {}).get(dialect, {}).items()
+        ):
+            columns.setdefault(table, {}).update(added)
+    return columns
+
+
+def _merged_columns(core: dict, dialect: str) -> dict:
+    merged = {table: dict(columns) for table, columns in core.items()}
+    for table, columns in _platform_columns(dialect).items():
+        merged.setdefault(table, {}).update(columns)
+    return merged
 
 
 def _sqlite_existing_columns(conn: sqlite3.Connection, table: str) -> set[str]:
@@ -389,10 +322,10 @@ def ensure_sqlite_experiment_schema(db_path: str) -> bool:
             except Exception:
                 pass
 
-            for ddl in _SQLITE_TABLES.values():
+            for ddl in {**_SQLITE_TABLES, **_platform_tables("sqlite")}.values():
                 conn.execute(ddl)
 
-            for table, columns in _SQLITE_COLUMNS.items():
+            for table, columns in _merged_columns(_SQLITE_COLUMNS, "sqlite").items():
                 existing = _sqlite_existing_columns(conn, table)
                 if not existing:
                     continue  # table doesn't exist in this DB; skip
@@ -450,10 +383,12 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> bool:
             for marker in _platform_marker_tables():
                 if _postgres_existing_columns(conn, marker):
                     return False  # the database of a platform that keeps its own: never alter it
-            for ddl in _POSTGRES_TABLES.values():
+            for ddl in {**_POSTGRES_TABLES, **_platform_tables("postgresql")}.values():
                 conn.execute(text(ddl))
 
-            for table, columns in _POSTGRES_COLUMNS.items():
+            for table, columns in _merged_columns(
+                _POSTGRES_COLUMNS, "postgresql"
+            ).items():
                 existing = _postgres_existing_columns(conn, table)
                 if not existing:
                     continue  # table doesn't exist in this DB; skip

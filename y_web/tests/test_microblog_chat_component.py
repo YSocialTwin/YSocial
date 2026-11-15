@@ -25,12 +25,12 @@ def test_microblog_chat_blueprint_prefix():
 
 
 def test_microblog_chat_models_are_bound_to_experiment_db():
-    from y_web.src.models import ForumChatMessage, ForumChatSession
+    from y_web.src.models import ChatMessage, ChatSession
 
-    assert ForumChatSession.__bind_key__ == "db_exp"
-    assert ForumChatSession.__tablename__ == "forum_chat_sessions"
-    assert ForumChatMessage.__bind_key__ == "db_exp"
-    assert ForumChatMessage.__tablename__ == "forum_chat_messages"
+    assert ChatSession.__bind_key__ == "db_exp"
+    assert ChatSession.__tablename__ == "forum_chat_sessions"
+    assert ChatMessage.__bind_key__ == "db_exp"
+    assert ChatMessage.__tablename__ == "forum_chat_messages"
 
 
 def test_microblog_chat_payload_helpers_include_expected_fields():

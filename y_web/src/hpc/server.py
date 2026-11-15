@@ -659,29 +659,29 @@ def start_server_screen(exp):
     """
     from y_web.src.simulation.server import build_screen_command
 
-    yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    engine_root = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
     runtime = registry.resolve(exp.platform_type, STANDARD).standard_runtime
     if runtime is not None:
         sys.path.append(
-            f"{yserver_path}{os.sep}external{os.sep}{runtime.server_repo}{os.sep}"
+            f"{engine_root}{os.sep}external{os.sep}{runtime.server_repo}{os.sep}"
         )
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
 
     if "database_server.db" in exp.db_name:
-        config = f"{yserver_path}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
+        config = f"{engine_root}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
         config = (
-            f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
+            f"{engine_root}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
     runtime = registry.resolve(exp).standard_runtime
     if runtime is None:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
     screen_command = build_screen_command(
-        script_path=f"{yserver_path}external{os.sep}{runtime.server_repo}{os.sep}y_server_run.py",
+        script_path=f"{engine_root}external{os.sep}{runtime.server_repo}{os.sep}y_server_run.py",
         config_path=f"{config}",
         screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
     )

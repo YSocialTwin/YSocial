@@ -18,10 +18,10 @@ def test_feeds_are_selected_and_the_snapshot_is_written(im_app, monkeypatch, tmp
     exp_id, _client_id, folder = _setup(app, tmp_path, opinion=False)
     from y_web import db
     from y_web.src.im import news
-    from y_web.src.models import ForumRssFeedResource
+    from y_web.src.models import RssFeedResource
 
     with app.app_context():
-        res = ForumRssFeedResource(
+        res = RssFeedResource(
             name="BBC", feed_url="http://bbc/rss", url_site="http://bbc", description=""
         )
         db.session.add(res)

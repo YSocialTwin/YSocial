@@ -233,6 +233,82 @@ def collect_front_names() -> Dict[str, int]:
     return _count_front(_PLATFORM_NAME)
 
 
+# Identifiers (variables, functions, classes, attributes) that carry the name of a platform or of an engine, which
+# the word-bounded name patterns above do not see (``ForumChatSession``, ``is_photo_sharing``, ``toggleForumMemory``).
+# Strings, comments and the copy of the pages are left out: those are the names gate's business.
+_PLATFORM_IDENTIFIER = re.compile(
+    r"forum|reddit|photo_?sharing|instant_?messag|micro_?blog|(?<![A-Za-z])y_?(?:simulator|server|client)(?!_memory)"
+    r"|(?<![A-Za-z])dating|(?-i:[a-z]Dating)|rfeed|rsearch|rnotifications",
+    re.IGNORECASE,
+)
+_WORD = re.compile(r"[A-Za-z_$][\w$]*")
+
+
+def _python_identifiers(source: str):
+    import io
+    import tokenize
+
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(source).readline):
+            if token.type == tokenize.NAME:
+                yield token.string
+    except (tokenize.TokenError, IndentationError):
+        return
+
+
+# The only places of the core whose identifiers may still carry such a name, and why.
+IDENTIFIER_EXCEPTIONS = (
+    # Reddit and RSS as the places feeds come from (a subreddit, a listing), and the facade the SDK gives them
+    "y_web/src/content/feeds.py",
+    "y_web/src/content/text_utils.py",
+    # the SDK keeps the former names of what it renamed (ForumChatSession...), for plugins written against it
+    "y_web/sdk/",
+    # the persisted ``subreddit`` column of the feed resources
+    "y_web/src/models/admin.py",
+    "y_web/src/models/experiment.py",
+    # the Python packages of the engines (``y_server``, ``y_client``): the contract the core runs them through
+    "y_web/src/simulation/process_runner.py",
+    "y_web/src/simulation/federation_hooks.py",
+)
+
+
+def collect_platform_identifiers() -> Dict[str, int]:
+    """``{file: identifiers naming a platform or an engine}`` for the core code (strings and comments excluded)."""
+    counts = {}
+    for path in sorted((ROOT / "y_web").rglob("*.py")):
+        relative = path.relative_to(ROOT).as_posix()
+        if "/tests/" in relative or relative.startswith(
+            PLATFORM_OWNED + DECLARED_EXCEPTIONS
+        ):
+            continue
+        found = sum(
+            1
+            for name in _python_identifiers(path.read_text(encoding="utf-8"))
+            if _PLATFORM_IDENTIFIER.search(name)
+        )
+        if found:
+            counts[relative] = found
+    return counts
+
+
+_QUOTED = re.compile(r"\"(?:[^\"\\\n]|\\.)*\"|'(?:[^'\\\n]|\\.)*'")
+
+
+def collect_front_identifiers() -> Dict[str, int]:
+    """``{file: identifiers naming a platform}`` in the scripts of the core (strings, comments and copy excluded)."""
+    counts = {}
+    for path, relative in _front_files():
+        if path.suffix != ".js":
+            continue
+        code = _QUOTED.sub('""', _COPY.sub("", path.read_text(encoding="utf-8")))
+        found = sum(
+            1 for word in _WORD.findall(code) if _PLATFORM_IDENTIFIER.search(word)
+        )
+        if found:
+            counts[relative] = found
+    return counts
+
+
 def collect_platform_branches() -> Dict[str, int]:
     """``{file: number of platform_type comparisons}`` for the application code (tests excluded)."""
     return _count_in_core(_PLATFORM_BRANCH, skip_owned=False)

@@ -392,6 +392,17 @@ class PlatformProvider:
     infinite_scroll: bool = False
     #: event families of the stress/reward table this platform has (``None``: all of them)
     stress_reward_families: Optional[Tuple[str, ...]] = None
+    #: how analytics reads the content when the platform keeps it in tables of its own (``None``: the standard
+    #: ``post`` tables). Keys: ``requires`` (tables that must exist), ``signals`` (any one of them marks the
+    #: platform), ``content_table``, ``topic_table``, ``hashtag_table``, ``emotion_table``, ``content_id_column``,
+    #: ``reaction_id_column``, ``recommendation_ids_column``, ``text_column``, ``summary_expression`` (``{p}`` is the
+    #: table alias prefix), ``reported_content_type`` and ``wording`` (msgids of the analytics sentences that name
+    #: the content: ``annotated``, ``polarity``, ``polarity_by_day``, ``polarized``, ``emotions``, ``volume``)
+    content_schema: Optional[Mapping[str, Any]] = None
+    #: tables the experiment database gets for this platform: ``{"sqlite": {table: DDL}, "postgresql": {...}}``
+    experiment_tables: Optional[Mapping[str, Mapping[str, str]]] = None
+    #: columns added to existing tables: ``{"sqlite": {table: {column: definition}}, "postgresql": {...}}``
+    experiment_columns: Optional[Mapping[str, Mapping[str, Mapping[str, str]]]] = None
 
     @property
     def provider_id(self) -> str:

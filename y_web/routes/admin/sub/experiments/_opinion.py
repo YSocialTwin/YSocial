@@ -109,8 +109,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,
     OPINION_CACHE_EXPIRY_MINUTES,
     _schedule_check_lock,
@@ -3073,9 +3071,9 @@ def _resolve_experiment_db_path(experiment):
 def _resolve_network_analysis_db_path(experiment):
     """Return the experiment DB path used by network analytics.
 
-    Some platforms (photo sharing) keep their simulation state in a database of their own,
+    Some platforms keep their simulation state in a database of their own,
     while the dashboard metadata may still point to the legacy
-    database_server.db file. Network analytics must therefore prefer the photo
+    database_server.db file. Network analytics must therefore prefer that
     DB when it exists, otherwise they would inspect the wrong schema and report
     that the network-analysis tables are missing.
     """
@@ -4224,27 +4222,72 @@ def _table_columns(conn, table_name):
     }
 
 
+def _standard_content_schema():
+    """Where analytics reads the content of a platform that uses the standard ``post`` tables."""
+    return {
+        "content_table": "post",
+        "topic_table": "post_topics",
+        "hashtag_table": "post_hashtags",
+        "emotion_table": "post_emotions",
+        "content_id_column": "post_id",
+        "reaction_id_column": "post_id",
+        "recommendation_ids_column": "post_ids",
+        "text_column": "tweet",
+        "summary_expression": "COALESCE(NULLIF(TRIM({p}tweet), ''), '')",
+        "reported_content_type": None,
+        "wording": {},
+    }
+
+
+def _content_schemas():
+    """The content layouts analytics can meet: the standard one first, then those the platforms declare."""
+    schemas = [_standard_content_schema()]
+    for provider in registry.providers():
+        declared = provider.content_schema
+        if declared:
+            schemas.append({**_standard_content_schema(), **declared})
+    return schemas
+
+
+def _content_table_sets(extra_key, *others):
+    """Table sets that tell an experiment database holds annotated content of any layout."""
+    sets = []
+    for layout in _content_schemas():
+        sets.append({layout[extra_key], layout["content_table"], *others})
+    return tuple(sets)
+
+
+def _content_text(schema, key):
+    """The analytics sentence ``key`` worded for the content of the experiment (posts unless the platform says)."""
+    declared = schema["wording"].get(key)
+    if declared:
+        return _(declared)
+    return {
+        "annotated": _("Annotated Posts"),
+        "polarity": _("Current polarity breakdown across annotated posts."),
+        "polarity_by_day": _("Positive, neutral, and negative post counts by day."),
+        "polarized": _("Most Polarized Posts"),
+        "emotions": _("Current distribution of annotated posts."),
+        "volume": _("Total emotion tags versus distinct annotated posts per day."),
+    }[key]
+
+
 def _analytics_content_schema(conn):
     table_names = {
         row["name"] if isinstance(row, sqlite3.Row) else row[0]
         for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     }
-    # A true photo experiment is one built on the photo platform's own
-    # Photo model. photo_hashtags/photo_topics/photo_emotions
-    # are junction tables created ONLY by that plugin's schema, so any one
-    # of them existing is unambiguous signal -- but a bare "photos" table
-    # is NOT: a post-based experiment can carry an unrelated table
-    # of that same name (e.g. for embedded image posts) with a completely
-    # different column set. Requiring both a junction table AND "photos"
-    # itself keeps a post-based experiment that merely happens to have
-    # its own "photos" table (no matching junction tables) correctly
-    # classified as post-based, instead of the whole schema below --
-    # content_table, content_id_column, content_text_column -- being
-    # silently pointed at the wrong table with the wrong columns.
-    is_photo_sharing = "photos" in table_names and any(
-        table_name in table_names
-        for table_name in ("photo_topics", "photo_hashtags", "photo_emotions")
-    )
+    # A platform that keeps its content in tables of its own is told by those tables: its link tables are created
+    # only by its own schema, so any one of them is unambiguous -- but the content table alone is not (a
+    # post-based experiment can carry an unrelated table of that name with other columns), hence both are required.
+    layout = _standard_content_schema()
+    own_content = False
+    for candidate in _content_schemas()[1:]:
+        if set(candidate["requires"]) <= table_names and any(
+            name in table_names for name in candidate["signals"]
+        ):
+            layout, own_content = candidate, True
+            break
     reactions_columns = (
         _table_columns(conn, "reactions") if "reactions" in table_names else set()
     )
@@ -4256,32 +4299,25 @@ def _analytics_content_schema(conn):
         if "recommendations" in table_names
         else set()
     )
-    content_table = "photos" if is_photo_sharing else "post"
+    standard = _standard_content_schema()
+
+    def _own_or_standard(key):
+        return layout[key] if layout[key] in table_names else standard[key]
+
     return {
         "table_names": table_names,
-        "is_photo_sharing": is_photo_sharing,
-        "content_table": content_table,
-        "content_link_table": (
-            "photo_topics"
-            if is_photo_sharing and "photo_topics" in table_names
-            else "post_topics"
-        ),
-        "hashtag_link_table": (
-            "photo_hashtags"
-            if is_photo_sharing and "photo_hashtags" in table_names
-            else "post_hashtags"
-        ),
-        "emotion_table": (
-            "photo_emotions"
-            if is_photo_sharing and "photo_emotions" in table_names
-            else "post_emotions"
-        ),
-        # Derived from content_table itself (not the is_photo_sharing flag
-        # a second time) so this can never drift out of sync with which
-        # table was actually chosen above.
-        "content_id_column": "photo_id" if content_table == "photos" else "post_id",
+        "own_content": own_content,
+        "reported_content_type": layout["reported_content_type"],
+        "wording": layout["wording"],
+        "content_table": layout["content_table"],
+        "content_link_table": _own_or_standard("topic_table"),
+        "hashtag_link_table": _own_or_standard("hashtag_table"),
+        "emotion_table": _own_or_standard("emotion_table"),
+        "content_id_column": layout["content_id_column"],
         "reaction_content_id_column": (
-            "photo_id" if "photo_id" in reactions_columns else "post_id"
+            layout["reaction_id_column"]
+            if layout["reaction_id_column"] in reactions_columns
+            else standard["reaction_id_column"]
         ),
         "reported_content_id_column": (
             "content_id" if "content_id" in reported_columns else "to_post"
@@ -4296,14 +4332,13 @@ def _analytics_content_schema(conn):
             "content_type" if "content_type" in reported_columns else None
         ),
         "recommendation_ids_column": (
-            "photo_ids" if "photo_ids" in recommendations_columns else "post_ids"
+            layout["recommendation_ids_column"]
+            if layout["recommendation_ids_column"] in recommendations_columns
+            else standard["recommendation_ids_column"]
         ),
-        "content_text_column": "caption" if content_table == "photos" else "tweet",
-        "content_summary_expression": (
-            "COALESCE(NULLIF(TRIM(caption), ''), NULLIF(TRIM(alt_text), ''), NULLIF(TRIM(image_url), ''))"
-            if content_table == "photos"
-            else "COALESCE(NULLIF(TRIM(tweet), ''), '')"
-        ),
+        "content_text_column": layout["text_column"],
+        "content_summary_expression": layout["summary_expression"].replace("{p}", ""),
+        "content_alias_expression": layout["summary_expression"].replace("{p}", "p."),
     }
 
 
@@ -4364,7 +4399,9 @@ def _available_network_analysis_types(db_path):
         }
     if "follow" in table_names:
         available.append("follow")
-    if "mentions" in table_names and ("post" in table_names or "photos" in table_names):
+    if "mentions" in table_names and any(
+        layout["content_table"] in table_names for layout in _content_schemas()
+    ):
         available.append("mention")
     return available
 
@@ -4989,8 +5026,9 @@ def _build_topic_evolution_payload(
 
         if "reported" in table_names and reported_round_column:
             reported_content_filter = (
-                f" AND rp.{schema['reported_content_type_column']} = 'photo'"
-                if schema["reported_content_type_column"] and schema["is_photo_sharing"]
+                f" AND rp.{schema['reported_content_type_column']} = '{schema['reported_content_type']}'"
+                if schema["reported_content_type_column"]
+                and schema["reported_content_type"]
                 else ""
             )
             event_queries.append(f"""
@@ -5587,8 +5625,9 @@ def _build_hashtag_evolution_payload(
 
         if "reported" in table_names and reported_round_column:
             reported_content_filter = (
-                f" AND rp.{schema['reported_content_type_column']} = 'photo'"
-                if schema["reported_content_type_column"] and schema["is_photo_sharing"]
+                f" AND rp.{schema['reported_content_type_column']} = '{schema['reported_content_type']}'"
+                if schema["reported_content_type_column"]
+                and schema["reported_content_type"]
                 else ""
             )
             event_queries.append(f"""
@@ -6537,11 +6576,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             LIMIT 10
             """.format(
                 content_table=schema["content_table"],
-                content_text_expression=(
-                    "COALESCE(NULLIF(TRIM(p.caption), ''), NULLIF(TRIM(p.alt_text), ''), NULLIF(TRIM(p.image_url), ''))"
-                    if schema["is_photo_sharing"]
-                    else "COALESCE(NULLIF(TRIM(p.tweet), ''), '')"
-                ),
+                content_text_expression=(schema["content_alias_expression"]),
             ),
             (filter_day, filter_day, filter_hour),
         ).fetchall()
@@ -6550,11 +6585,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": (
-                _("Annotated Photos")
-                if schema["is_photo_sharing"]
-                else _("Annotated Posts")
-            ),
+            "label": (_content_text(schema, "annotated")),
             "value": _safe_int(snapshot["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
@@ -6593,11 +6624,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         "stats": stats,
         "distribution": {
             "title": _("Sentiment Distribution"),
-            "description": (
-                _("Current polarity breakdown across annotated photos.")
-                if schema["is_photo_sharing"]
-                else _("Current polarity breakdown across annotated posts.")
-            ),
+            "description": (_content_text(schema, "polarity")),
             "type": "doughnut",
             "labels": [_("Positive"), _("Neutral"), _("Negative")],
             "datasets": [
@@ -6636,11 +6663,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         },
         "secondary": {
             "title": _("Sentiment Mix Over Time"),
-            "description": (
-                _("Positive, neutral, and negative photo counts by day.")
-                if schema["is_photo_sharing"]
-                else _("Positive, neutral, and negative post counts by day.")
-            ),
+            "description": (_content_text(schema, "polarity_by_day")),
             "type": "bar",
             "labels": [_("Day %(day)s", day=int(row["day"])) for row in trend_rows],
             "datasets": [
@@ -6663,11 +6686,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True, "stacked": True},
         },
         "summary": {
-            "title": (
-                _("Most Polarized Photos")
-                if schema["is_photo_sharing"]
-                else _("Most Polarized Posts")
-            ),
+            "title": (_content_text(schema, "polarized")),
             "columns": [_("Author"), _("Compound"), _("When"), _("Content")],
             "rows": [
                 [
@@ -6773,11 +6792,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": (
-                _("Annotated Photos")
-                if schema["is_photo_sharing"]
-                else _("Annotated Posts")
-            ),
+            "label": (_content_text(schema, "annotated")),
             "value": _safe_int(stats_row["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
@@ -6816,11 +6831,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         "stats": stats,
         "distribution": {
             "title": _("Emotion Distribution"),
-            "description": (
-                _("Current distribution of annotated photos.")
-                if schema["is_photo_sharing"]
-                else _("Current distribution of annotated posts.")
-            ),
+            "description": (_content_text(schema, "emotions")),
             "type": "bar",
             "labels": [row["emotion"] for row in distribution_rows[:10]],
             "datasets": [
@@ -6851,11 +6862,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         },
         "secondary": {
             "title": _("Annotation Volume"),
-            "description": (
-                _("Total emotion tags versus distinct annotated photos per day.")
-                if schema["is_photo_sharing"]
-                else _("Total emotion tags versus distinct annotated posts per day.")
-            ),
+            "description": (_content_text(schema, "volume")),
             "type": "bar",
             "labels": [_("Day %(day)s", day=int(row["day"])) for row in secondary_rows],
             "datasets": [
@@ -6865,11 +6872,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
                     "backgroundColor": "#c084fc",
                 },
                 {
-                    "label": (
-                        _("Annotated Photos")
-                        if schema["is_photo_sharing"]
-                        else _("Annotated Posts")
-                    ),
+                    "label": (_content_text(schema, "annotated")),
                     "data": [
                         _safe_int(row["annotated_posts"]) for row in secondary_rows
                     ],
@@ -7559,9 +7562,8 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
     "emotion": {
         "label": "emotion",
         "title": N_("Emotion Statistics"),
-        "required_table_sets": (
-            {"post_emotions", "emotions", "post", "rounds"},
-            {"photo_emotions", "emotions", "photos", "rounds"},
+        "required_table_sets": lambda: _content_table_sets(
+            "emotion_table", "emotions", "rounds"
         ),
         "builder": _build_emotion_analytics_payload,
     },
@@ -7586,6 +7588,8 @@ def _render_annotation_analytics_page(expid, annotation_key):
         return error_response
 
     required_table_sets = config.get("required_table_sets")
+    if callable(required_table_sets):
+        required_table_sets = required_table_sets()
     if required_table_sets is not None:
         has_required_tables = _experiment_db_has_any_required_tables(
             db_path, required_table_sets
@@ -7657,6 +7661,8 @@ def _annotation_analytics_json(expid, annotation_key):
         )
 
     required_table_sets = config.get("required_table_sets")
+    if callable(required_table_sets):
+        required_table_sets = required_table_sets()
     if required_table_sets is not None:
         has_required_tables = _experiment_db_has_any_required_tables(
             db_path, required_table_sets
@@ -7747,10 +7753,7 @@ def topic_evolution(expid):
     if error_response is not None:
         return error_response
 
-    required_table_sets = (
-        {"post_topics", "post", "rounds", "user_mgmt"},
-        {"photo_topics", "photos", "rounds", "user_mgmt"},
-    )
+    required_table_sets = _content_table_sets("topic_table", "rounds", "user_mgmt")
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
             _(
@@ -7802,10 +7805,7 @@ def topic_evolution_data(expid):
     if error_response is not None:
         return jsonify({"error": _("Topic evolution not available")}), 400
 
-    required_table_sets = (
-        {"post_topics", "post", "rounds", "user_mgmt"},
-        {"photo_topics", "photos", "rounds", "user_mgmt"},
-    )
+    required_table_sets = _content_table_sets("topic_table", "rounds", "user_mgmt")
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         return jsonify({"error": _("Topic-evolution tables not available")}), 400
 
@@ -7844,9 +7844,8 @@ def hashtag_evolution(expid):
     if error_response is not None:
         return error_response
 
-    required_table_sets = (
-        {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"},
-        {"photo_hashtags", "hashtags", "photos", "rounds", "user_mgmt"},
+    required_table_sets = _content_table_sets(
+        "hashtag_table", "hashtags", "rounds", "user_mgmt"
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
@@ -7898,9 +7897,8 @@ def hashtag_evolution_data(expid):
     if error_response is not None:
         return jsonify({"error": _("Hashtag evolution not available")}), 400
 
-    required_table_sets = (
-        {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"},
-        {"photo_hashtags", "hashtags", "photos", "rounds", "user_mgmt"},
+    required_table_sets = _content_table_sets(
+        "hashtag_table", "hashtags", "rounds", "user_mgmt"
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         return jsonify({"error": _("Hashtag-evolution tables not available")}), 400
@@ -7939,9 +7937,8 @@ def recsys_evolution(expid):
     if error_response is not None:
         return error_response
 
-    required_table_sets = (
-        {"recommendations", "post", "rounds", "user_mgmt"},
-        {"recommendations", "photos", "rounds", "user_mgmt"},
+    required_table_sets = _content_table_sets(
+        "content_table", "recommendations", "rounds", "user_mgmt"
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
@@ -7987,9 +7984,8 @@ def recsys_evolution_data(expid):
     if error_response is not None:
         return jsonify({"error": _("Recommendation analytics not available")}), 400
 
-    required_table_sets = (
-        {"recommendations", "post", "rounds", "user_mgmt"},
-        {"recommendations", "photos", "rounds", "user_mgmt"},
+    required_table_sets = _content_table_sets(
+        "content_table", "recommendations", "rounds", "user_mgmt"
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         return (

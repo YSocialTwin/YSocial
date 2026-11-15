@@ -88,7 +88,7 @@ def test_helpers_module_has_key_functions():
         "_current_admin_user_or_none",
         "_notifications_temp_data_dir",
         "_experiment_has_started_once",
-        "_load_forum_experiment_context",
+        "_load_feed_experiment_context",
         "_serialize_download_notification",
         "get_experiment_uid_from_db_name",
         "get_suggested_port",

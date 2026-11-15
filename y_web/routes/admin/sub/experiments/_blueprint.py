@@ -24,14 +24,6 @@ DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS = {
     "host": "",
     "model": "",
 }
-DEFAULT_FORUM_EMBEDDING_SETTINGS = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
-FORUM_FEED_REQUEST_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-}
 
 # Lock to prevent concurrent schedule advancement (from HTTP endpoint and background monitor)
 _schedule_check_lock = threading.Lock()

@@ -115,8 +115,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,
     OPINION_CACHE_EXPIRY_MINUTES,
     _schedule_check_lock,
@@ -1780,7 +1778,7 @@ def generate_hpc_config(
             database_config["postgresql"] = {
                 "host": "localhost",
                 "port": 5432,
-                "database": "ysimulator",
+                "database": "ysocial",
                 "username": "postgres",
                 "password": "password",
             }
@@ -5058,7 +5056,7 @@ def _create_im_experiment_copy(
 
     if config_variations:
         current_app.logger.warning(
-            "Configuration variations are not supported for instant messaging experiments"
+            "Configuration variations are not supported for experiments of a platform with its own folder"
         )
         return False
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):

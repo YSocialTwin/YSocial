@@ -43,12 +43,7 @@ from y_web import db
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
-from y_web.src.commons import reddit_feeds
-from y_web.src.content.feeds import (
-    REDDIT_FEED_USER_AGENT,
-    feed_request_variants,
-    is_reddit_feed_url,
-)
+from y_web.src.content import feeds as feed_sources
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -117,8 +112,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,
     OPINION_CACHE_EXPIRY_MINUTES,
     _schedule_check_lock,
@@ -416,90 +409,9 @@ def _normalize_rss_feeds_payload(feeds):
     return normalized_feeds
 
 
-def _normalize_image_feed_item(item):
-    """Normalize an image feed definition."""
-    if not isinstance(item, dict):
-        return None
-
-    subreddit = _normalize_subreddit_input(item.get("subreddit", ""))
-    if not subreddit:
-        return None
-
-    interests = item.get("interests") or []
-    if not isinstance(interests, list):
-        interests = [interests]
-
-    cleaned_interests = []
-    seen_interests = set()
-    for interest in interests:
-        label = str(interest).strip()
-        if not label or label in seen_interests:
-            continue
-        seen_interests.add(label)
-        cleaned_interests.append(label)
-
-    return {"subreddit": subreddit, "interests": cleaned_interests}
-
-
-def _normalize_image_feeds_payload(feeds):
-    """Validate and sanitize the stored image feeds payload."""
-    if not isinstance(feeds, list):
-        raise ValueError("Image feeds payload must be a JSON array.")
-
-    normalized_feeds = []
-    seen_subreddits = set()
-    for item in feeds:
-        normalized = _normalize_image_feed_item(item)
-        if normalized is None:
-            continue
-        subreddit = (
-            str(normalized.get("subreddit")).strip().lower()
-            if isinstance(normalized, dict)
-            else ""
-        )
-        if not subreddit:
-            continue
-        if subreddit in seen_subreddits:
-            continue
-        seen_subreddits.add(subreddit)
-        normalized_feeds.append(normalized)
-
-    return normalized_feeds
-
-
-_normalize_subreddit_input = reddit_feeds.normalize_subreddit
-
-
-def _read_feed_with_headers(feed_url):
-    """Fetch a feed with explicit headers to avoid upstream blocks."""
-    last_http_error = None
-    for url, headers in feed_request_variants(feed_url, FORUM_FEED_REQUEST_HEADERS):
-        try:
-            response = requests.get(
-                url, headers=headers, timeout=15, allow_redirects=True
-            )
-            if response.status_code in (403, 429) and is_reddit_feed_url(feed_url):
-                last_http_error = response
-                continue  # try the next variant
-            response.raise_for_status()
-            return response.content
-        except requests.HTTPError as exc:
-            response = exc.response
-            if response is not None:
-                raise HTTPError(
-                    feed_url,
-                    response.status_code,
-                    response.reason,
-                    response.headers,
-                    None,
-                ) from exc
-            raise
-        except requests.RequestException as exc:
-            raise URLError(str(exc)) from exc
-    response = last_http_error
-    raise HTTPError(
-        feed_url, response.status_code, response.reason, response.headers, None
-    )
+_normalize_image_feed_item = feed_sources.normalize_image_feed_item
+_normalize_image_feeds_payload = feed_sources.normalize_image_feeds_payload
+_read_feed_with_headers = feed_sources.read_feed_with_headers
 
 
 def _parse_required_feed_limit(form_key, cast, label, minimum=None):
@@ -661,7 +573,7 @@ def _is_path_in_temp_data(path):
     return real_path.startswith(temp_dir + os.sep) or real_path == temp_dir
 
 
-def _load_forum_experiment_context(uid, require_manage=True):
+def _load_feed_experiment_context(uid, require_manage=True):
     """Load an experiment with news-page feeds and its writable directory."""
     check_privileges(current_user.username)
 
@@ -821,7 +733,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True, for_setting
     return experiment, experiment_dir, None
 
 
-def _normalize_forum_embedding_service(value):
+def _normalize_embedding_service(value):
     """Normalize memory embedding provider name."""
     service = str(value or "").strip().lower()
     if service in {"ollama"}:
@@ -829,7 +741,7 @@ def _normalize_forum_embedding_service(value):
     return ""
 
 
-def _normalize_forum_embedding_host(value):
+def _normalize_embedding_host(value):
     """Normalize memory embedding host input."""
     host = str(value or "").strip()
     if not host:
@@ -842,15 +754,7 @@ def _normalize_forum_embedding_host(value):
     return host
 
 
-def _normalize_embedding_service(value):
-    return _normalize_forum_embedding_service(value)
-
-
-def _normalize_embedding_host(value):
-    return _normalize_forum_embedding_host(value)
-
-
-def _read_forum_feed_health(experiment, experiment_dir):
+def _read_feed_health(experiment, experiment_dir):
     """Return configured and loaded feed counts for the experiment."""
     health = {
         "rss_feed_count": 0,
@@ -950,28 +854,6 @@ def _read_forum_feed_health(experiment, experiment_dir):
         pass
 
     return health
-
-
-def _read_forum_embedding_settings(experiment_dir):
-    """Load persisted memory embedding settings from config_server.json."""
-    config_path = os.path.join(experiment_dir, "config_server.json")
-    settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
-    if not os.path.exists(config_path):
-        return settings
-    try:
-        with open(config_path, "r") as handle:
-            config = json.load(handle)
-    except (json.JSONDecodeError, IOError):
-        return settings
-
-    persisted = config.get("memory_embeddings")
-    if not isinstance(persisted, dict):
-        return settings
-
-    settings["service"] = _normalize_forum_embedding_service(persisted.get("service"))
-    settings["host"] = _normalize_forum_embedding_host(persisted.get("host"))
-    settings["model"] = str(persisted.get("model") or "").strip()
-    return settings
 
 
 def _read_experiment_embedding_settings(experiment_dir):

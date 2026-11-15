@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from y_web.routes.admin.sub.experiments._feeds import _parse_admin_feed_metadata
-from y_web.routes.admin.sub.experiments._helpers import _normalize_subreddit_input
+from y_web.src.content.feeds import normalize_subreddit as _normalize_subreddit_input
 from y_web.tests._platform_repos import forum_file
 
 pytestmark = pytest.mark.unit
@@ -102,6 +102,7 @@ def test_parse_admin_feed_metadata_accepts_reddit_listing_json():
 
 def test_reddit_feed_fetch_uses_descriptive_user_agent_and_falls_back(monkeypatch):
     from y_web.routes.admin.sub.experiments import _helpers
+    from y_web.src.content import feeds
 
     calls = []
 
@@ -123,7 +124,7 @@ def test_reddit_feed_fetch_uses_descriptive_user_agent_and_falls_back(monkeypatc
     monkeypatch.setattr(_helpers.requests, "get", fake_get)
     url = "https://www.reddit.com/r/politics/new.json?limit=100"
     assert _helpers._read_feed_with_headers(url) == b"{}"
-    assert calls[0] == (url, _helpers.REDDIT_FEED_USER_AGENT)
+    assert calls[0] == (url, feeds.REDDIT_FEED_USER_AGENT)
     assert calls[1][0].startswith("https://old.reddit.com/r/politics/")
 
     calls.clear()

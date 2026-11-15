@@ -2,7 +2,7 @@ import json
 from types import SimpleNamespace
 
 from y_web.routes.admin.sub.experiments._feeds import (
-    _forum_rss_resource_payload,
+    _rss_resource_payload,
     _selected_rss_resource_ids,
 )
 from y_web.routes.admin.sub.experiments._forum_feeds import (
@@ -11,7 +11,7 @@ from y_web.routes.admin.sub.experiments._forum_feeds import (
 )
 
 
-def test_forum_rss_resource_payload_matches_experiment_file_shape():
+def test_rss_resource_payload_matches_experiment_file_shape():
     resource = SimpleNamespace(
         id=4,
         name="Example Feed",
@@ -20,7 +20,7 @@ def test_forum_rss_resource_payload_matches_experiment_file_shape():
         description="Example description",
     )
 
-    assert _forum_rss_resource_payload(resource) == {
+    assert _rss_resource_payload(resource) == {
         "id": 4,
         "name": "Example Feed",
         "feed_url": "https://example.com/feed.xml",

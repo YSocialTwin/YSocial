@@ -13,12 +13,12 @@ pytestmark = pytest.mark.unit
 
 
 def test_forum_chat_models_are_bound_to_experiment_db():
-    from y_web.src.models import ForumChatMessage, ForumChatSession
+    from y_web.src.models import ChatMessage, ChatSession
 
-    assert ForumChatSession.__bind_key__ == "db_exp"
-    assert ForumChatSession.__tablename__ == "forum_chat_sessions"
-    assert ForumChatMessage.__bind_key__ == "db_exp"
-    assert ForumChatMessage.__tablename__ == "forum_chat_messages"
+    assert ChatSession.__bind_key__ == "db_exp"
+    assert ChatSession.__tablename__ == "forum_chat_sessions"
+    assert ChatMessage.__bind_key__ == "db_exp"
+    assert ChatMessage.__tablename__ == "forum_chat_messages"
 
 
 def test_forum_chat_schema_tables_registered():
@@ -203,9 +203,9 @@ def test_forum_profile_posts_include_community_metadata_and_feed_type():
     common_source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text()
 
     assert '"primary_community": primary_community' in posts_source
-    assert '"display_time": display_time if is_forum else None' in posts_source
+    assert '"display_time": display_time if has_threads else None' in posts_source
     assert (
-        "article_preview = threads.article(article) if is_forum else None"
+        "article_preview = threads.article(article) if has_threads else None"
         in posts_source
     )
     assert "threads.community(article_preview, topics)" in posts_source

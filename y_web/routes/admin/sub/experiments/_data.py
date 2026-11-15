@@ -116,8 +116,6 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
     DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
     DEFAULT_FEED_LIMITS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
     MAX_HPC_PER_GROUP,
     OPINION_CACHE_EXPIRY_MINUTES,
     _schedule_check_lock,
@@ -135,8 +133,6 @@ from ._helpers import (
     _load_stress_reward_experiment_context,
     _normalize_embedding_host,
     _normalize_embedding_service,
-    _normalize_forum_embedding_host,
-    _normalize_forum_embedding_service,
     default_stress_reward_config,
     normalize_stress_reward_config,
     sync_stress_reward_client_config,
@@ -640,7 +636,6 @@ def experiment_details(uid):
     # Resolve current toggle values from persisted server config.
     current_perspective_api = ""
     embedding_settings = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
-    forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
     detoxify_download_state = refresh_detoxify_download_state()
     detoxify_ready = detoxify_download_state.get("status") == "ready"
@@ -738,7 +733,10 @@ def experiment_details(uid):
             memory_cfg = config.get("memory")
             if isinstance(memory_cfg, dict):
                 memory_module_enabled = bool(memory_cfg.get("enabled"))
-            if registry.resolve(experiment).embedding_in_details:
+            if (
+                registry.resolve(experiment).embedding_in_details
+                or registry.resolve(experiment).avatar_settings_page
+            ):
                 persisted_embedding = config.get("memory_embeddings")
                 if isinstance(persisted_embedding, dict):
                     embedding_settings = {
@@ -746,18 +744,6 @@ def experiment_details(uid):
                             persisted_embedding.get("service")
                         ),
                         "host": _normalize_embedding_host(
-                            persisted_embedding.get("host")
-                        ),
-                        "model": str(persisted_embedding.get("model") or "").strip(),
-                    }
-            if registry.resolve(experiment).avatar_settings_page:
-                persisted_embedding = config.get("memory_embeddings")
-                if isinstance(persisted_embedding, dict):
-                    forum_embedding_settings = {
-                        "service": _normalize_forum_embedding_service(
-                            persisted_embedding.get("service")
-                        ),
-                        "host": _normalize_forum_embedding_host(
                             persisted_embedding.get("host")
                         ),
                         "model": str(persisted_embedding.get("model") or "").strip(),
@@ -819,7 +805,6 @@ def experiment_details(uid):
         memory_configuration_supported=memory_configuration_supported,
         memory_module_enabled=memory_module_enabled,
         embedding_settings=embedding_settings,
-        forum_embedding_settings=forum_embedding_settings,
         hpc_reset_available=hpc_reset_available,
         **page_context,
     )
@@ -2170,12 +2155,12 @@ def client_logs(client_id):
             or not os.path.exists(log_file)
             or os.path.getsize(log_file) == 0
         ):
-            legacy_forum_log = os.path.join(exp_folder, "agent_execution.log")
+            legacy_agent_log = os.path.join(exp_folder, "agent_execution.log")
             if (
-                os.path.exists(legacy_forum_log)
-                and os.path.getsize(legacy_forum_log) > 0
+                os.path.exists(legacy_agent_log)
+                and os.path.getsize(legacy_agent_log) > 0
             ):
-                log_file = legacy_forum_log
+                log_file = legacy_agent_log
 
         # Check if log file exists
         if not log_file or not os.path.exists(log_file):

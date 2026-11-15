@@ -415,7 +415,7 @@ def test_content_schema_treats_unrelated_photos_table_as_post_based(tmp_path):
     schema = _analytics_content_schema(conn)
     conn.close()
 
-    assert schema["is_photo_sharing"] is False
+    assert schema["own_content"] is False
     assert schema["content_table"] == "post"
     assert schema["hashtag_link_table"] == "post_hashtags"
     assert schema["content_id_column"] == "post_id"
@@ -435,7 +435,7 @@ def test_content_schema_still_detects_genuine_photo_sharing_experiments(tmp_path
     schema = _analytics_content_schema(conn)
     conn.close()
 
-    assert schema["is_photo_sharing"] is True
+    assert schema["own_content"] is True
     assert schema["content_table"] == "photos"
     assert schema["hashtag_link_table"] == "photo_hashtags"
     assert schema["content_id_column"] == "photo_id"

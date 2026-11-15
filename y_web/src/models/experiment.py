@@ -154,7 +154,7 @@ class ReplyInboxState(db.Model):
     last_seen_reply_id = db.Column(db.Integer, nullable=False, default=0)
 
 
-class ForumChatSession(db.Model):
+class ChatSession(db.Model):
     """
     Persistent private chat thread between a user and a simulation agent.
 
@@ -190,14 +190,14 @@ class ForumChatSession(db.Model):
     )
 
     messages = db.relationship(
-        "ForumChatMessage",
+        "ChatMessage",
         backref="session",
         lazy=True,
         cascade="all, delete-orphan",
     )
 
 
-class ForumChatMessage(db.Model):
+class ChatMessage(db.Model):
     """One message inside a chat session."""
 
     __bind_key__ = "db_exp"

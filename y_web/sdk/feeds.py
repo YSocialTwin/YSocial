@@ -40,7 +40,9 @@ def normalize_image_feeds_payload(feeds):
 
 
 def normalize_subreddit_input(value):
-    return _helper("_normalize_subreddit_input")(value)
+    from y_web.src.content.feeds import normalize_subreddit
+
+    return normalize_subreddit(value)
 
 
 def parse_required_feed_limit(form_key, cast, label, minimum=None):

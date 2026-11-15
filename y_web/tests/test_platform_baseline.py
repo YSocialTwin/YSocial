@@ -140,3 +140,23 @@ def test_no_platform_is_named_in_the_pages_and_scripts_of_the_core():
         if not path.startswith(baseline.FRONT_EXCEPTIONS)
     ]
     assert not branches and not named, "\n".join(branches + named)
+
+
+def test_no_identifier_of_the_core_names_a_platform():
+    """Gate G11: variables, functions, classes and attributes of the core do not carry a platform or engine name."""
+    found = [
+        f"{path}: {count}"
+        for path, count in baseline.collect_platform_identifiers().items()
+        if not path.startswith(baseline.IDENTIFIER_EXCEPTIONS)
+    ]
+    assert not found, "\n".join(found)
+
+
+def test_no_identifier_of_the_scripts_names_a_platform():
+    """The scripts of the core carry no platform name in their identifiers either (tutorials and feed pages aside)."""
+    found = [
+        f"{path}: {count}"
+        for path, count in baseline.collect_front_identifiers().items()
+        if not path.startswith(baseline.FRONT_EXCEPTIONS)
+    ]
+    assert not found, "\n".join(found)

@@ -380,7 +380,7 @@ class Page(db.Model):
     )
 
 
-class ForumRssFeedResource(db.Model):
+class RssFeedResource(db.Model):
     """Reusable RSS feed definitions for experiments that read feeds."""
 
     __bind_key__ = "db_admin"
@@ -400,7 +400,7 @@ class ForumRssFeedResource(db.Model):
     )
 
 
-class ForumImageFeedResource(db.Model):
+class ImageFeedResource(db.Model):
     """Reusable subreddit-backed image feed definitions for experiments that read feeds."""
 
     __bind_key__ = "db_admin"

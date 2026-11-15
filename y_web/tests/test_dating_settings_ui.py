@@ -249,7 +249,7 @@ def test_a_restarted_client_runs_what_is_left(app, tmp_path):
     import json
 
     from y_web import db
-    from y_web.src.hpc.client import _set_dating_run_length
+    from y_web.src.hpc.client import _write_client_run_length
     from y_web.src.models import Client, Client_Execution
 
     path = tmp_path / "client_c-p.json"
@@ -264,32 +264,32 @@ def test_a_restarted_client_runs_what_is_left(app, tmp_path):
         db.session.add(ex)
         db.session.commit()
 
-        _set_dating_run_length(str(path), cli)
+        _write_client_run_length(str(path), cli)
         assert (
             json.loads(path.read_text())["num_days"] == 3
         )  # first start: the whole length
 
         ex.last_active_day, ex.last_active_hour = 2, 24  # day 2 finished
         db.session.commit()
-        _set_dating_run_length(str(path), cli)
+        _write_client_run_length(str(path), cli)
         assert json.loads(path.read_text())["num_days"] == 1
 
         cli.days = 5  # extended by two days
         db.session.commit()
-        _set_dating_run_length(str(path), cli)
+        _write_client_run_length(str(path), cli)
         assert json.loads(path.read_text())["num_days"] == 3
 
         ex.last_active_day, ex.last_active_hour = 5, 24  # everything done
         db.session.commit()
         with pytest.raises(RuntimeError):
-            _set_dating_run_length(str(path), cli)
+            _write_client_run_length(str(path), cli)
 
 
 def test_an_extended_forum_client_runs_the_days_it_lacks(app, tmp_path):
     import json
 
     from y_web import db
-    from y_web.src.hpc.client import _set_dating_run_length
+    from y_web.src.hpc.client import _write_client_run_length
     from y_web.src.models import Client, Client_Execution
 
     path = tmp_path / "client_dsd.json"
@@ -311,14 +311,14 @@ def test_an_extended_forum_client_runs_the_days_it_lacks(app, tmp_path):
         )
         db.session.commit()
 
-        _set_dating_run_length(str(path), cli, unlimited_value=0)
+        _write_client_run_length(str(path), cli, unlimited_value=0)
         written = json.loads(path.read_text())
         assert written["num_days"] == 3  # one of four already run
         assert written["simulation"] == {"name": "x"}  # keys the forum schema rejects
 
         cli.days = -1  # until stopped: YForum reads 0 so
         db.session.commit()
-        _set_dating_run_length(str(path), cli, unlimited_value=0)
+        _write_client_run_length(str(path), cli, unlimited_value=0)
         assert json.loads(path.read_text())["num_days"] == 0
 
 

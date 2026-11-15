@@ -41,8 +41,8 @@ from y_web.src.models import (
     Admin_users,
     Exps,
     Follow,
-    ForumChatMessage,
-    ForumChatSession,
+    ChatMessage,
+    ChatSession,
     User_mgmt,
 )
 from y_web.src.system import prompt_packs
@@ -278,7 +278,7 @@ def _social_chat_admin_user(exp: Exps) -> Admin_users | None:
     ).first()
 
 
-def _social_chat_message_payload(message: ForumChatMessage) -> dict:
+def _social_chat_message_payload(message: ChatMessage) -> dict:
     return {
         "id": int(message.id),
         "role": str(message.role or ""),
@@ -287,7 +287,7 @@ def _social_chat_message_payload(message: ForumChatMessage) -> dict:
     }
 
 
-def _social_chat_peer_user_id(session: ForumChatSession, owner_user_id) -> str:
+def _social_chat_peer_user_id(session: ChatSession, owner_user_id) -> str:
     owner_id = _coerce_experiment_user_id(owner_user_id)
     session_owner_id = _coerce_experiment_user_id(session.owner_user_id)
     session_target_id = _coerce_experiment_user_id(session.target_user_id)
@@ -301,7 +301,7 @@ def _social_chat_peer_user_id(session: ForumChatSession, owner_user_id) -> str:
 
 
 def _social_chat_session_payload(
-    session: ForumChatSession,
+    session: ChatSession,
     *,
     include_messages: bool = False,
     target_user_id=None,
@@ -344,7 +344,7 @@ def _social_chat_session_payload(
 
 def _social_chat_view_payload(
     exp: Exps,
-    session: ForumChatSession,
+    session: ChatSession,
     *,
     owner_user_id,
     include_messages: bool = False,
@@ -391,7 +391,7 @@ def _social_chat_render_memory_pack(snapshot: dict | None) -> str:
 
 
 def _social_chat_build_transcript(
-    session: ForumChatSession,
+    session: ChatSession,
     *,
     max_messages: int = 12,
     assistant_username: str | None = None,
@@ -423,7 +423,7 @@ def _social_chat_build_transcript(
 
 
 def _social_chat_build_memory_query(
-    session: ForumChatSession, latest_user_message: str, *, max_messages: int = 4
+    session: ChatSession, latest_user_message: str, *, max_messages: int = 4
 ) -> str:
     latest = str(latest_user_message or "").strip()
     chunks = []
@@ -444,17 +444,17 @@ def _social_chat_build_memory_query(
 
 def _social_chat_upsert_session(
     *, exp: Exps, owner_user: User_mgmt, target_user: User_mgmt
-) -> ForumChatSession:
+) -> ChatSession:
     owner_id = _coerce_experiment_user_id(owner_user.id)
     target_id = _coerce_experiment_user_id(target_user.id)
     session = (
-        ForumChatSession.query.filter(
-            (ForumChatSession.owner_user_id == owner_id)
-            & (ForumChatSession.target_user_id == target_id)
-            | (ForumChatSession.owner_user_id == target_id)
-            & (ForumChatSession.target_user_id == owner_id)
+        ChatSession.query.filter(
+            (ChatSession.owner_user_id == owner_id)
+            & (ChatSession.target_user_id == target_id)
+            | (ChatSession.owner_user_id == target_id)
+            & (ChatSession.target_user_id == owner_id)
         )
-        .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
+        .order_by(ChatSession.updated_at.desc(), ChatSession.id.desc())
         .first()
     )
     if session is not None:
@@ -467,7 +467,7 @@ def _social_chat_upsert_session(
         return session
 
     interests = _get_top_interests_for_user_in_exp(exp, target_user.id)
-    session = ForumChatSession(
+    session = ChatSession(
         owner_user_id=owner_id,
         owner_username=str(owner_user.username or ""),
         target_user_id=target_id,
@@ -481,7 +481,7 @@ def _social_chat_upsert_session(
 
 
 def _social_chat_refresh_runtime_context(
-    *, exp: Exps, target_user: User_mgmt, session: ForumChatSession, query_text: str
+    *, exp: Exps, target_user: User_mgmt, session: ChatSession, query_text: str
 ) -> dict:
     if not session.persona_snapshot:
         interests = _get_top_interests_for_user_in_exp(exp, target_user.id)
@@ -519,7 +519,7 @@ def _social_chat_generate_reply(
     exp: Exps,
     target_user: User_mgmt,
     owner_user: User_mgmt,
-    session: ForumChatSession,
+    session: ChatSession,
     user_message: str,
 ) -> tuple[str, dict]:
     admin_user = _social_chat_admin_user(exp)
@@ -664,14 +664,14 @@ def api_social_chat_bootstrap(exp_id: int):
         agents_query = agents_query.filter(User_mgmt.user_type != "user")
         agents = agents_query.order_by(User_mgmt.username.asc()).all()
     sessions = (
-        ForumChatSession.query.filter(
-            (ForumChatSession.owner_user_id == owner_id)
-            | (ForumChatSession.target_user_id == owner_id)
+        ChatSession.query.filter(
+            (ChatSession.owner_user_id == owner_id)
+            | (ChatSession.target_user_id == owner_id)
         )
         .order_by(
-            ForumChatSession.last_message_at.desc(),
-            ForumChatSession.updated_at.desc(),
-            ForumChatSession.id.desc(),
+            ChatSession.last_message_at.desc(),
+            ChatSession.updated_at.desc(),
+            ChatSession.id.desc(),
         )
         .all()
     )
@@ -779,23 +779,23 @@ def api_social_chat_open_session(exp_id: int):
         return _json_error("You can chat only with followed agents.", 403)
 
     session = (
-        ForumChatSession.query.filter(
+        ChatSession.query.filter(
             (
-                (ForumChatSession.owner_user_id == owner_id)
+                (ChatSession.owner_user_id == owner_id)
                 & (
-                    ForumChatSession.target_user_id
+                    ChatSession.target_user_id
                     == _coerce_experiment_user_id(target_user.id)
                 )
             )
             | (
                 (
-                    ForumChatSession.owner_user_id
+                    ChatSession.owner_user_id
                     == _coerce_experiment_user_id(target_user.id)
                 )
-                & (ForumChatSession.target_user_id == owner_id)
+                & (ChatSession.target_user_id == owner_id)
             )
         )
-        .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
+        .order_by(ChatSession.updated_at.desc(), ChatSession.id.desc())
         .first()
     )
     if session is None:
@@ -833,10 +833,10 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
     }
 
     session = (
-        ForumChatSession.query.filter_by(id=int(session_id))
+        ChatSession.query.filter_by(id=int(session_id))
         .filter(
-            (ForumChatSession.owner_user_id == owner_id)
-            | (ForumChatSession.target_user_id == owner_id)
+            (ChatSession.owner_user_id == owner_id)
+            | (ChatSession.target_user_id == owner_id)
         )
         .first()
     )
@@ -876,10 +876,10 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     }
 
     session = (
-        ForumChatSession.query.filter_by(id=int(session_id))
+        ChatSession.query.filter_by(id=int(session_id))
         .filter(
-            (ForumChatSession.owner_user_id == owner_id)
-            | (ForumChatSession.target_user_id == owner_id)
+            (ChatSession.owner_user_id == owner_id)
+            | (ChatSession.target_user_id == owner_id)
         )
         .first()
     )
@@ -904,7 +904,7 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     if not content:
         return _json_error("content is required.", 400)
 
-    user_msg = ForumChatMessage(
+    user_msg = ChatMessage(
         session_id=int(session.id),
         role="user",
         content=content,
@@ -925,7 +925,7 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
         db.session.rollback()
         return _json_error(f"Failed to generate reply: {exc}", 500)
 
-    assistant_msg = ForumChatMessage(
+    assistant_msg = ChatMessage(
         session_id=int(session.id),
         role="assistant",
         content=reply or "(no reply)",

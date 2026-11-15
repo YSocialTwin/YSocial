@@ -263,8 +263,11 @@ def test_photo_round_schema_includes_created_at_timestamp():
     assert '"rounds": {' in schema_source
     assert "created_at DATETIME DEFAULT CURRENT_TIMESTAMP" in schema_source
     assert "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" in schema_source
-    assert '"saved_photos": {' in schema_source
-    assert '"story_views": {' in schema_source
+    # the photo tables belong to the platform now: its provider adds them to the experiment schema
+    from y_web.src.experiment.schema import _platform_columns, _platform_tables
+
+    assert {"saved_photos", "story_views"} <= set(_platform_tables("sqlite"))
+    assert {"saved_photos", "story_views"} <= set(_platform_columns("sqlite"))
 
 
 def test_photo_media_and_avatar_helpers_resolve_browser_safe_urls():

@@ -124,7 +124,7 @@ def load_ui_settings(exp_id: int) -> dict:
 def load_feed_experiment_context(uid, require_manage=True):
     """Load an experiment with news-page feeds and its writable directory."""
     from y_web.routes.admin.sub.experiments._helpers import (
-        _load_forum_experiment_context as target,
+        _load_feed_experiment_context as target,
     )
 
     return target(uid, require_manage)
@@ -314,7 +314,7 @@ def get_db_type():
 def read_feed_health(experiment, experiment_dir):
     """Return configured and loaded feed counts for the experiment."""
     from y_web.routes.admin.sub.experiments._helpers import (
-        _read_forum_feed_health as target,
+        _read_feed_health as target,
     )
 
     return target(experiment, experiment_dir)

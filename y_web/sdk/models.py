@@ -3,8 +3,8 @@
 from y_web import db
 from y_web.src.models import (
     ImagePosts,
-    ForumRssFeedResource,
-    ForumImageFeedResource,
+    RssFeedResource,
+    ImageFeedResource,
     Profession,
     Nationalities,
     Leanings,
@@ -29,8 +29,8 @@ from y_web.src.models import (
     Exps,
     Follow,
     Follow_Recsys,
-    ForumChatMessage,
-    ForumChatSession,
+    ChatMessage,
+    ChatSession,
     Hashtags,
     Images,
     Interests,
@@ -61,6 +61,8 @@ from y_web.src.models import (
 
 __all__ = [
     "ImagePosts",
+    "RssFeedResource",
+    "ImageFeedResource",
     "ForumRssFeedResource",
     "ForumImageFeedResource",
     "Profession",
@@ -111,9 +113,17 @@ __all__ = [
     "User_mgmt",
     "Websites",
     "Articles",
+    "ChatMessage",
+    "ChatSession",
     "ForumChatMessage",
     "ForumChatSession",
     "Images",
     "ReplyInboxState",
     "Reported",
 ]
+
+# Former names of the chat models, kept for plugins written against the earlier SDK.
+ForumChatMessage = ChatMessage
+ForumChatSession = ChatSession
+ForumRssFeedResource = RssFeedResource
+ForumImageFeedResource = ImageFeedResource

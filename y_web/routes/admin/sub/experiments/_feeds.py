@@ -18,14 +18,14 @@ from sqlalchemy import select
 from y_web import db  # , app
 from y_web.i18n import gettext as _
 from y_web.platforms import registry
-from y_web.src.commons import reddit_feeds
-from y_web.src.models import ForumRssFeedResource
+from y_web.src.content import feeds as feed_sources
+from y_web.src.models import RssFeedResource
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS, experiments
 from ._helpers import *  # noqa: F401,F403
 from ._helpers import (
-    _load_forum_experiment_context,
+    _load_feed_experiment_context,
     _load_memory_capable_experiment_context,
     _normalize_embedding_host,
     _normalize_embedding_service,
@@ -35,7 +35,7 @@ from ._helpers import (
 )
 
 
-def _forum_rss_resource_payload(resource):
+def _rss_resource_payload(resource):
     return {
         "id": resource.id,
         "name": str(resource.name or "").strip(),
@@ -47,7 +47,7 @@ def _forum_rss_resource_payload(resource):
 
 def _write_experiment_rss_feed_file(experiment_dir, resources):
     rss_feeds_path = os.path.join(experiment_dir, "rss_feeds.json")
-    payload = [_forum_rss_resource_payload(resource) for resource in resources]
+    payload = [_rss_resource_payload(resource) for resource in resources]
     with open(rss_feeds_path, "w") as handle:
         json.dump(payload, handle, indent=2)
 
@@ -78,14 +78,14 @@ def _selected_rss_resource_ids(experiment_dir, resources):
 @login_required
 def rss_feeds(uid):
     """Display and assign reusable RSS feeds to an experiment."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    experiment, experiment_dir, error_response = _load_feed_experiment_context(uid)
     if error_response is not None:
         return error_response
 
     url_feeds_path = os.path.join(experiment_dir, "url_feeds.txt")
     available_rss_resources = db.session.scalars(
-        select(ForumRssFeedResource).order_by(
-            ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
+        select(RssFeedResource).order_by(
+            RssFeedResource.name.asc(), RssFeedResource.id.asc()
         )
     ).all()
     selected_rss_resource_ids = _selected_rss_resource_ids(
@@ -118,7 +118,7 @@ def rss_feeds(uid):
 @login_required
 def update_rss_feeds(uid):
     """Persist assigned reusable RSS feeds and local URL feeds."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    experiment, experiment_dir, error_response = _load_feed_experiment_context(uid)
     if error_response is not None:
         return error_response
 
@@ -132,9 +132,7 @@ def update_rss_feeds(uid):
 
     resources = (
         db.session.scalars(
-            select(ForumRssFeedResource).filter(
-                ForumRssFeedResource.id.in_(selected_ids)
-            )
+            select(RssFeedResource).filter(RssFeedResource.id.in_(selected_ids))
         ).all()
         if selected_ids
         else []
@@ -227,9 +225,9 @@ def _parse_admin_feed_metadata(feed_url, feed_content):
             "entries_count": len(feed.entries),
         }
 
-    reddit_listing = reddit_feeds.parse_json_listing(feed_url, feed_content)
-    if reddit_listing is not None:
-        return reddit_listing
+    listing = feed_sources.parse_json_listing(feed_url, feed_content)
+    if listing is not None:
+        return listing
 
     return None
 
@@ -238,7 +236,7 @@ def _parse_admin_feed_metadata(feed_url, feed_content):
 @login_required
 def upload_rss_feeds(uid):
     """Bulk upload RSS feeds from JSON."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    experiment, experiment_dir, error_response = _load_feed_experiment_context(uid)
     if error_response is not None:
         return error_response
 
@@ -275,7 +273,7 @@ def upload_rss_feeds(uid):
 @login_required
 def upload_url_feeds(uid):
     """Bulk upload URL feeds from text or JSON."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    experiment, experiment_dir, error_response = _load_feed_experiment_context(uid)
     if error_response is not None:
         return error_response
 

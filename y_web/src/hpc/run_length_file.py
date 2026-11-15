@@ -7,7 +7,7 @@ from sqlalchemy import select
 from y_web import db
 
 
-def _set_dating_run_length(
+def _write_client_run_length(
     client_config_path: str, cli, unlimited_value: int = -1
 ) -> None:
     """Write in the client file how many days the runtime runs from this start.

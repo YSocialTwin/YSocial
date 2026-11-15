@@ -540,7 +540,7 @@ def start_server(exp):
     """
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
-    yserver_path = base_path
+    engine_path = base_path
 
     # Get writable path for experiments directory
     writable_base = get_writable_path()
@@ -560,7 +560,7 @@ def start_server(exp):
         config = os.path.join(y_web_dir, "experiments", uid, "config_server.json")
 
     server_dir, script_path = _resolve_server_runtime_paths(
-        yserver_path, exp.platform_type
+        engine_path, exp.platform_type
     )
 
     # Validate that script_path exists (skip check for PyInstaller bundles)

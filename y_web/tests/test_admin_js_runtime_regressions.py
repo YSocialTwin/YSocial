@@ -31,10 +31,10 @@ def test_admin_experiments_has_no_literal_admin_placeholder_urls():
     bad_literals = [
         "fetch('/admin/experiment_trends/${YS_DATA_EXP.expId}')",
         "fetch('/admin/experiment_logs/${YS_DATA_EXP.expId}')",
-        "fetch('/admin/experiment_trends/${YS_DATA_EXP_FORUM.expId}')",
-        "fetch('/admin/experiment_logs/${YS_DATA_EXP_FORUM.expId}')",
+        "fetch('/admin/experiment_trends/${YS_DATA_EXP_DETAILS.expId}')",
+        "fetch('/admin/experiment_logs/${YS_DATA_EXP_DETAILS.expId}')",
         "url: '/admin/progress/${YS_DATA_EXP.clientId}'",
-        "url: '/admin/progress/${YS_DATA_EXP_FORUM.clientId}'",
+        "url: '/admin/progress/${YS_DATA_EXP_DETAILS.clientId}'",
     ]
     for literal in bad_literals:
         assert literal not in content
@@ -89,7 +89,7 @@ def test_admin_experiments_start_jupyter_redirects_to_lab_page():
 
 def test_admin_experiments_forum_bundle_has_shared_helpers_in_file_scope():
     experiments = (STATIC_JS_DIR / "admin-experiments.js").read_text(encoding="utf-8")
-    forum_start = experiments.index("var AdminExperimentsForum = (function() {")
+    forum_start = experiments.index("var AdminExperimentsDetails = (function() {")
 
     assert (
         experiments.index("const byId = (id) => document.getElementById(id);")
@@ -101,7 +101,7 @@ def test_admin_experiments_forum_bundle_has_shared_helpers_in_file_scope():
     )
     assert (
         experiments.index(
-            "const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_EXP || {};"
+            "const currentExperimentData = () => window.YS_DATA_EXP_DETAILS || window.YS_DATA_EXP || {};"
         )
         < forum_start
     )

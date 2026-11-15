@@ -452,7 +452,7 @@ def get_user_recent_posts(
 
     provider = registry.for_experiment(exp) if exp is not None else None
     threads = getattr(provider, "threads", None)
-    is_forum = threads is not None
+    has_threads = threads is not None
 
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     username = user.username if user else "Unknown"
@@ -545,14 +545,14 @@ def get_user_recent_posts(
                 threads.display_time(
                     getattr(c, "created_at", None), comment_day, comment_hour
                 )
-                if is_forum
+                if has_threads
                 else None
             )
             comment_topics = get_topics(c.id, c.user_id)
             if len(comment_topics) == 0:
                 comment_topics = []
             comment_title, comment_body = (
-                threads.split_title(c.tweet) if is_forum else ("", text)
+                threads.split_title(c.tweet) if has_threads else ("", text)
             )
             processed_comment = (
                 augment_text(comment_body, exp_id)
@@ -567,12 +567,12 @@ def get_user_recent_posts(
                     "profile_pic": profile_pic,
                     "shared_from": _render_shared_from(c),
                     "author_id": c.user_id,
-                    "title": comment_title if is_forum else "",
+                    "title": comment_title if has_threads else "",
                     "post": processed_comment,
                     "round": c.round,
                     "day": comment_day,
                     "hour": comment_hour,
-                    "display_time": comment_display_time if is_forum else None,
+                    "display_time": comment_display_time if has_threads else None,
                     "likes": len(
                         db.session.scalars(
                             select(Reactions).filter_by(post_id=c.id, type="like")
@@ -628,7 +628,7 @@ def get_user_recent_posts(
                 .first()
                 .name,
             }
-            article_preview = threads.article(article) if is_forum else None
+            article_preview = threads.article(article) if has_threads else None
 
         c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
@@ -639,7 +639,7 @@ def get_user_recent_posts(
             hour = c.hour
         display_time = (
             threads.display_time(getattr(post, "created_at", None), day, hour)
-            if is_forum
+            if has_threads
             else None
         )
 
@@ -657,11 +657,11 @@ def get_user_recent_posts(
         if len(topics) == 0:
             topics = []
         primary_community = (
-            threads.community(article_preview, topics) if is_forum else None
+            threads.community(article_preview, topics) if has_threads else None
         )
         title, post_body = (
             threads.split_title(post.tweet)
-            if is_forum
+            if has_threads
             else ("", post.tweet.split(":")[-1])
         )
         processed_post = augment_text(post_body, exp_id) if post_body else ""
@@ -680,12 +680,12 @@ def get_user_recent_posts(
                     ).first()
                 ),
                 "author_id": post.user_id,
-                "title": title if is_forum else "",
+                "title": title if has_threads else "",
                 "post": processed_post,
                 "round": post.round,
                 "day": day,
                 "hour": hour,
-                "display_time": display_time if is_forum else None,
+                "display_time": display_time if has_threads else None,
                 "created_at": (
                     getattr(post, "created_at", None).isoformat()
                     if getattr(post, "created_at", None)

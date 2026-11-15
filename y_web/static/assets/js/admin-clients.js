@@ -1759,9 +1759,9 @@ var AdminClients = (function() {
       }
   }
 
-  function toggleForumMemorySettings() {
+  function toggleMemorySettings() {
       const checkbox = document.getElementById('memory_enabled');
-      const fields = document.getElementById('forum_memory_config_fields');
+      const fields = document.getElementById('memory_config_fields');
       const advancedCheckbox = document.getElementById('show_memory_advanced_params');
       const advancedFields = document.getElementById('memory_advanced_params_fields');
       const experimentMemoryEnabled = !!(window.YS_DATA_CLIENTS && YS_DATA_CLIENTS.experimentMemoryEnabled);
@@ -1789,7 +1789,7 @@ var AdminClients = (function() {
           if (advancedFields) {
               advancedFields.style.display = 'none';
           }
-          syncForumMemoryControls();
+          syncMemoryControls();
           return;
       }
 
@@ -1807,8 +1807,8 @@ var AdminClients = (function() {
       });
 
       if (enabled) {
-          syncForumMemoryControls();
-          toggleForumMemoryAdvancedParams();
+          syncMemoryControls();
+          toggleMemoryAdvancedParams();
       } else {
           if (advancedCheckbox) {
               advancedCheckbox.checked = false;
@@ -1819,7 +1819,7 @@ var AdminClients = (function() {
       }
   }
 
-  function toggleForumMemoryAdvancedParams() {
+  function toggleMemoryAdvancedParams() {
       const checkbox = document.getElementById('show_memory_advanced_params');
       const memoryToggle = document.getElementById('memory_enabled');
       const fields = document.getElementById('memory_advanced_params_fields');
@@ -1832,7 +1832,7 @@ var AdminClients = (function() {
       fields.style.display = enabled ? 'block' : 'none';
   }
 
-  function syncForumMemoryControls() {
+  function syncMemoryControls() {
       const memoryToggle = document.getElementById('memory_enabled');
       const semanticToggle = document.getElementById('memory_semantic_enabled');
       const embeddingModel = document.getElementById('memory_embedding_model');
@@ -1899,14 +1899,14 @@ var AdminClients = (function() {
 
       const semanticToggle = document.getElementById('memory_semantic_enabled');
       if (semanticToggle) {
-          semanticToggle.addEventListener('change', syncForumMemoryControls);
+          semanticToggle.addEventListener('change', syncMemoryControls);
       }
     
       // Initial state
       updateNetworkInputStates();
-      toggleForumMemorySettings();
-      toggleForumMemoryAdvancedParams();
-      syncForumMemoryControls();
+      toggleMemorySettings();
+      toggleMemoryAdvancedParams();
+      syncMemoryControls();
       syncVisionModelSelectionState();
 
       const archetypeToggle = document.getElementById('enable_archetypes');
@@ -1945,8 +1945,8 @@ var AdminClients = (function() {
       toggleStandardMemorySettings,
       toggleStandardMemoryAdvancedParams,
       syncStandardEmbeddingFieldsState,
-      toggleForumMemorySettings,
-      toggleForumMemoryAdvancedParams,
+      toggleMemorySettings,
+      toggleMemoryAdvancedParams,
       applyContextPreset
   });
 })();
