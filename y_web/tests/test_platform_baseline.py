@@ -160,3 +160,11 @@ def test_no_identifier_of_the_scripts_names_a_platform():
         if not path.startswith(baseline.FRONT_EXCEPTIONS)
     ]
     assert not found, "\n".join(found)
+
+
+def test_no_selector_of_the_core_stylesheets_names_a_platform():
+    """A platform styles its own pages from its own stylesheet (``admin_css``), not from the core's."""
+    found = [
+        f"{path}: {count}" for path, count in baseline.collect_css_selectors().items()
+    ]
+    assert not found, "\n".join(found)

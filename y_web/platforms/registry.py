@@ -192,14 +192,10 @@ def choose_simulator(
     return resolve(platform_type).resolve_simulator(requested, available)
 
 
-#: platform of an experiment that does not say which one it is, when no installed provider is marked as the default
-FALLBACK_DEFAULT_KEY = "microblogging"
-
-
 def default_key() -> str:
-    """Key of the default platform (the fallback when none is installed)."""
-    found = default()
-    return found.key if found is not None else FALLBACK_DEFAULT_KEY
+    """Key of the default platform: the one marked ``default_platform``, else the first installed ('' if none)."""
+    found = default() or next(iter(providers()), None)
+    return found.key if found is not None else ""
 
 
 def default() -> Optional[PlatformProvider]:

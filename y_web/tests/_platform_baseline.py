@@ -272,6 +272,39 @@ IDENTIFIER_EXCEPTIONS = (
 )
 
 
+_CSS_PLATFORM = re.compile(
+    r"dating|\.is-photo\b|chip-photo|photo-?sharing|forum|reddit|instant|microblog|\.is-im\b|\.im-|ws-also--(?!default)",
+    re.IGNORECASE,
+)
+_CSS_FILES = (
+    "admin-clients.css",
+    "admin-components.css",
+    "admin-layout.css",
+    "admin-miscellanea.css",
+    "admin-responsive.css",
+    "admin-settings.css",
+    "admin-tutorials.css",
+    "admin-world-simulation.css",
+    "social-components.css",
+)
+
+
+def collect_css_selectors() -> Dict[str, int]:
+    """``{file: rules of the core stylesheets whose selector names a platform}`` (the theme files are not the core's)."""
+    counts = {}
+    for name in _CSS_FILES:
+        path = ROOT / "y_web" / "static" / "assets" / "css" / name
+        text = re.sub(r"/\*.*?\*/", "", path.read_text(encoding="utf-8"), flags=re.S)
+        found = sum(
+            1
+            for selector in re.findall(r"([^{};]+)\{", text)
+            if not selector.strip().startswith("@") and _CSS_PLATFORM.search(selector)
+        )
+        if found:
+            counts[f"y_web/static/assets/css/{name}"] = found
+    return counts
+
+
 def collect_platform_identifiers() -> Dict[str, int]:
     """``{file: identifiers naming a platform or an engine}`` for the core code (strings and comments excluded)."""
     counts = {}

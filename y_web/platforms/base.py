@@ -399,6 +399,8 @@ class PlatformProvider:
     #: table alias prefix), ``reported_content_type`` and ``wording`` (msgids of the analytics sentences that name
     #: the content: ``annotated``, ``polarity``, ``polarity_by_day``, ``polarized``, ``emotions``, ``volume``)
     content_schema: Optional[Mapping[str, Any]] = None
+    #: stylesheets of the platform (paths in its ``static`` folder) that the admin pages load
+    admin_css: Tuple[str, ...] = ()
     #: tables the experiment database gets for this platform: ``{"sqlite": {table: DDL}, "postgresql": {...}}``
     experiment_tables: Optional[Mapping[str, Mapping[str, str]]] = None
     #: columns added to existing tables: ``{"sqlite": {table: {column: definition}}, "postgresql": {...}}``

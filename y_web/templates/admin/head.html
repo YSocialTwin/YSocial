@@ -23,7 +23,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/app.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
-    <script src="{{ url_for('static', filename='assets/js/ys-platforms.js') }}?v=1"></script>
+    {% for href in platform_stylesheets() %}<link rel="stylesheet" href="{{ href }}"/>
+    {% endfor %}    <script src="{{ url_for('static', filename='assets/js/ys-platforms.js') }}?v=1"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-layout.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-responsive.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-tutorials.css') }}"/>

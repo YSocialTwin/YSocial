@@ -7,8 +7,28 @@ from flask import Flask
 from y_web.platforms import registry
 
 
+def platform_stylesheets() -> list:
+    """Addresses of the stylesheets the installed platforms ask the admin pages to load."""
+    from flask import url_for
+    from werkzeug.routing import BuildError
+
+    found = []
+    for provider in registry.providers():
+        for filename in provider.admin_css:
+            try:
+                found.append(
+                    url_for(
+                        f"platform_static_{provider.provider_id}", filename=filename
+                    )
+                )
+            except BuildError:
+                continue
+    return found
+
+
 def register_platform_globals(app: Flask) -> None:
     globals_ = app.jinja_env.globals
+    globals_["platform_stylesheets"] = platform_stylesheets
     globals_["platform_catalog"] = registry.catalog
     globals_["default_platform_key"] = registry.default_key
     globals_["client_form_field"] = registry.client_form_field
