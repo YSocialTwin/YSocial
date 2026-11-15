@@ -193,7 +193,7 @@ def apply_opinion_distributions_to_population(context):
 
 
 def persist_non_hpc_opinion_dynamics(context):
-    """Persist standard/forum opinion dynamics configuration to client config."""
+    """Persist the opinion dynamics configuration of a Standard-runtime client."""
     from y_web.routes.admin.sub.clients._opinion import (
         _persist_non_hpc_opinion_dynamics as target,
     )
@@ -298,7 +298,7 @@ def get_db_type():
 
 
 def read_feed_health(experiment, experiment_dir):
-    """Return configured and loaded forum feed counts for the experiment."""
+    """Return configured and loaded feed counts for the experiment."""
     from y_web.routes.admin.sub.experiments._helpers import (
         _read_forum_feed_health as target,
     )

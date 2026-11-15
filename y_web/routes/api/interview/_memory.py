@@ -13,7 +13,6 @@ from sqlalchemy import desc, func, select, text
 
 from y_web import db, prompt_store
 from y_web.src.commons.ordering import seq_or_id
-from y_web.src.content.avatars import resolve_forum_profile_pic
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -71,8 +70,11 @@ def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
     if own_avatar is not None:
         return own_avatar
 
-    if platform_type == "forum":
-        return resolve_forum_profile_pic(user, int(getattr(exp, "idexp", 0) or 0))
+    forced = registry.resolve(platform_type.strip().lower()).profile_picture_in(
+        user, int(getattr(exp, "idexp", 0) or 0)
+    )
+    if forced is not None:
+        return forced
 
     username = str(getattr(user, "username", "") or "").strip()
     if not username:
@@ -545,11 +547,10 @@ def _get_top_interests_for_user_in_exp(
 
 def _build_persona_snapshot(user: User_mgmt, interests: List[str], exp: Exps) -> str:
     vibe = (getattr(exp, "exp_descr", "") or "").strip()
-    if not vibe and getattr(exp, "platform_type", "") == "forum":
-        vibe = (
-            "casual fun subreddit; stay on-topic; short replies; "
-            "avoid unrelated politics/history unless the thread explicitly calls for it"
-        )
+    if not vibe:
+        from y_web.platforms import registry
+
+        vibe = registry.resolve(exp).default_persona_vibe or ""
 
     def _s(v: Any, default: str = "") -> str:
         if v is None:
@@ -881,7 +882,7 @@ def _build_memory_snapshot_local_db(
     rounds_index: Dict[str, int] = {}
 
     def _load_rounds(rows: Any) -> None:
-        # a round id is a UUID in HPC forum databases: its position in time is day * 24 + hour
+        # a round id is a UUID in HPC databases: its position in time is day * 24 + hour
         for rid, day, hour in rows:
             try:
                 rounds_index[str(rid)] = int(day) * 24 + int(hour)

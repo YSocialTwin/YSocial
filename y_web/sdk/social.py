@@ -101,6 +101,13 @@ def resolve_back_url(exp_id):
     return target(exp_id)
 
 
+def profile_pic_in_experiment(user, exp_id):
+    """The picture of ``user`` as the experiment ``exp_id`` shows it (avatar mode of the experiment)."""
+    from y_web.src.content.avatars import resolve_forum_profile_pic as target
+
+    return target(user, exp_id)
+
+
 def primary_community(article, topics):
     """The community payload of a discussion (``{"name", "slug", ...}``), or ``None``."""
     from y_web.src.commons.service.queries import _primary_community_payload as target

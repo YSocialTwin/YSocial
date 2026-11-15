@@ -3,7 +3,7 @@ REST API routes sub-package.
 
 Contains two Blueprints:
 
-  api_social    – microblogging chat endpoints
+  api_social    – chat endpoints of the participant pages
                   (experiment-local persistent direct messages)
   api_interview – interview server management and proxy endpoints
                   (moved from routes_api/interview.py)

@@ -40,9 +40,9 @@ DEFAULT_LOCALE = "en"
 ADMIN_COOKIE = "ys_lang"
 SIMULATION_COOKIE = "ys_lang_sim"
 
-# Blueprints that render the participant-facing simulation frontend.
+# Blueprints of the core that render the participant-facing simulation frontend (the platforms add theirs).
 SIMULATION_BLUEPRINTS = frozenset(
-    {"main", "user_actions", "api_reddit", "api_social", "api_interview"}
+    {"main", "user_actions", "api_social", "api_interview"}
 )
 
 # Native names shown in language selectors; unknown codes fall back to the code.
@@ -171,7 +171,12 @@ def normalize_language(code):
 
 def is_simulation_request():
     """True when the current request belongs to the simulation frontend."""
-    return (request.blueprint or "") in SIMULATION_BLUEPRINTS
+    name = request.blueprint or ""
+    if name in SIMULATION_BLUEPRINTS:
+        return True
+    from y_web.sdk.routes import shared_blueprint_names
+
+    return name in shared_blueprint_names()
 
 
 def _user_language():

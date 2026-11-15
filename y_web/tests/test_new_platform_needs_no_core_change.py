@@ -426,3 +426,21 @@ def test_the_shared_pages_ask_the_platform_instead_of_naming_it(
         "ui": {"k": 1},
         "platform_ui": "z",
     }
+
+
+def test_a_platform_gets_its_own_shared_blueprint_without_the_core_naming_it(
+    monkeypatch,
+):
+    """``routes.blueprint(name, url_prefix=...)`` creates the blueprint the repositories of a platform share."""
+    from y_web.sdk import routes
+
+    monkeypatch.setattr(routes, "_SHARED", {})
+    first = routes.blueprint("zapi", url_prefix="/api/z")
+    again = routes.blueprint("zapi", url_prefix="/api/z")
+    assert first is not None and again is not None
+    assert routes.shared_blueprint_names() == {"zapi"}
+    assert [b.url_prefix for b in routes.shared_blueprints()] == ["/api/z"]
+    with pytest.raises(ValueError):
+        routes.blueprint("zapi", url_prefix="/api/other")
+    with pytest.raises(KeyError):
+        routes.blueprint("unknown")

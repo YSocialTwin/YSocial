@@ -119,7 +119,9 @@
     "routes": {
       "kind": "module",
       "members": {
-        "blueprint": "(name: 'str') -> 'Any'"
+        "blueprint": "(name: 'str', url_prefix: 'str' = '') -> 'Any'",
+        "shared_blueprint_names": "() -> 'frozenset'",
+        "shared_blueprints": "() -> 'list'"
       }
     },
     "runtime": {
@@ -202,6 +204,7 @@
         "open_experiment_session": "(experiment: \"'Exps'\")",
         "origin_community": "(source_id) -> 'str'",
         "primary_community": "(article, topics)",
+        "profile_pic_in_experiment": "(user, exp_id)",
         "profile_pic_of": "(user)",
         "register_experiment_database": "(app, exp_id, db_name)",
         "resolve_back_url": "(exp_id)"
@@ -320,6 +323,7 @@
     "prepare_hpc_client_start": "(self, client_config: 'str', client: 'Any') -> 'None'",
     "prepare_hpc_server": "(self, exp_folder: 'str') -> 'None'",
     "profile_picture": "(self, user: 'Any') -> 'Optional[str]'",
+    "profile_picture_in": "(self, user: 'Any', exp_id: 'int') -> 'Optional[str]'",
     "profile_redirect": "(self, exp: 'Any', user: 'Any', page: 'Any') -> 'Optional[str]'",
     "prompts_page": "(self, simulator_type: 'str') -> 'str'",
     "register_blueprints": "(self, app: 'Any') -> 'None'",

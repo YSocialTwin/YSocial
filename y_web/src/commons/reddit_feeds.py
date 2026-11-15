@@ -7,7 +7,7 @@ fixed by that data.
 from __future__ import annotations
 
 import json
-from urllib.parse import quote, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 # Reddit answers 403 to browser-like (and to feedparser's default) User-Agents sent by scripts; this is the
 # descriptive one the simulation client uses.
@@ -101,3 +101,14 @@ def parse_json_listing(feed_url, feed_content):
         "description": f"Reddit subreddit JSON listing for r/{subreddit}",
         "entries_count": len(children),
     }
+
+
+def unwrap_media_url(url: str) -> str:
+    """The image address inside a ``reddit.com/media?url=...`` wrapper, or ``url`` itself when it is not wrapped."""
+    if url and "reddit.com/media?url=" in url:
+        wrapped = parse_qs(urlparse(url).query, keep_blank_values=True).get(
+            "url", [""]
+        )[0]
+        if wrapped:
+            return wrapped
+    return url

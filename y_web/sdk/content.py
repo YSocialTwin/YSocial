@@ -14,7 +14,7 @@ def extract_article_info(url):
 
 
 def process_reddit_post(text, allow_legacy_blankline_title=True):
-    """Process and format Reddit-style post text."""
+    """Process and format a post written as a title and a body."""
     from y_web.src.content.text_utils import process_reddit_post as target
 
     return target(text, allow_legacy_blankline_title)

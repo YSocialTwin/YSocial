@@ -128,7 +128,7 @@ def _coerce_experiment_user_id(value: Any) -> Any:
     """
     Preserve experiment user ids as opaque keys.
 
-    Standard/forum runs usually use integer ids, while HPC can use UUID strings.
+    Standard runs usually use integer ids, while HPC can use UUID strings.
     Return ints for clean integer-like values and raw strings otherwise.
     """
     if value is None:

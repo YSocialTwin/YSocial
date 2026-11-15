@@ -303,13 +303,9 @@ def _upgrade_reddit_image_url(url: str) -> str:
     if not url:
         return url
 
-    if "reddit.com/media?url=" in url:
-        parsed = urlparse(url)
-        wrapped_url = parse_qs(parsed.query, keep_blank_values=True).get("url", [""])[0]
-        if wrapped_url:
-            url = wrapped_url
+    from y_web.src.commons.reddit_feeds import unwrap_media_url
 
-    return url
+    return unwrap_media_url(url)
 
 
 def _normalize_forum_local_image_path(local_path: str) -> str:

@@ -1,7 +1,7 @@
 """
 Common interaction routes (follow, share, react, delete, cancel_notification).
 
-These routes are shared across both microblogging and forum platforms.
+These routes are shared by the platforms.
 """
 
 import uuid
@@ -114,8 +114,9 @@ def _build_follow_payload(*, exp, source_user_id, target_user_id, action, round_
         "round": round_id,
     }
     simulator_type = str(getattr(exp, "simulator_type", "") or "").strip().upper()
-    platform_type = str(getattr(exp, "platform_type", "") or "").strip().lower()
-    if simulator_type == "HPC" or platform_type == "photo_sharing":
+    from y_web.platforms import registry
+
+    if simulator_type == "HPC" or registry.resolve(exp).uuid_follow_ids:
         follow_kwargs["id"] = str(uuid.uuid4())
     return follow_kwargs
 
@@ -311,8 +312,11 @@ def share_content(exp_id):
     from y_web.src.federation import human_outbox as _ho
     from y_web.src.models import Exps
 
+    from y_web.platforms import registry
+
+    _share_exp = db.session.get(Exps, int(exp_id))
     _requested = _ho.requested_members(request.args.getlist("crosspost"))
-    if _requested and post_id:
+    if _requested and post_id and registry.resolve(_share_exp).crosspost_on_share:
         _comment = request.args.get("comment") or ""
         _sent = _ho.try_deliver(
             exp_id,
@@ -320,13 +324,12 @@ def share_content(exp_id):
             _requested,
             _comment,
             lambda t: _ho.build_action(
-                db.session.get(Exps, int(exp_id)),
-                "microblogging",
+                _share_exp,
+                _share_exp.platform_type,
                 _comment,
                 t,
                 post_id=post_id,
             ),
-            only="microblogging",
         )
         if _sent is not None:
             if not _sent:
@@ -637,8 +640,8 @@ def federation_repost_targets(exp_id):
 def federation_repost(exp_id):
     """Repost something of this platform on other platforms of the World Simulation as the logged-in person.
 
-    JSON: ``members`` (the destinations), ``post_id`` (the item reposted), ``text`` (its words) and, for the forum,
-    ``community``. The gateway only creates an item on the origin platform with ``crosspost_to``, so the repost also shows
+    JSON: ``members`` (the destinations), ``post_id`` (the item reposted), ``text`` (its words) and, for platforms with
+    communities, ``community``. The gateway only creates an item on the origin platform with ``crosspost_to``, so the repost also shows
     on the person's profile here. The destinations are recomputed server side (never trusted from the page).
     """
     from y_web.src.federation import human_outbox as _ho

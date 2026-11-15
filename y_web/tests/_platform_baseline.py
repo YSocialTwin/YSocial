@@ -60,18 +60,16 @@ DECLARED_EXCEPTIONS = (
     "y_web/alembic/versions/",
     "y_web/db_init/migrations.py",
     "y_web/migrations/",
+    # Reddit as a place feeds come from (a host and an address layout), not as a platform of the simulation;
+    # and the hash salt of the Hot ranking, which is part of the data it ranked
+    "y_web/src/commons/reddit_feeds.py",
+    "y_web/src/commons/hot_rank.py",
 )
 # Modules that belong to a single platform: they move to its repository, so their own mentions do not count.
 PLATFORM_OWNED = (
     "y_web/src/dating/",
     "y_web/src/im/",
     "y_web/src/forum/",
-    # shared helpers that keep names fixed by data (a hash salt, the host of subreddit image links)
-    "y_web/src/commons/",
-    # the platform API wraps core functions under the names they still have (renamed with the views that use them)
-    "y_web/sdk/",
-    "y_web/routes/interactions/",
-    "y_web/routes/api/",
     "y_web/routes/admin/sub/clients/_dating.py",
     "y_web/routes/admin/sub/clients/_im.py",
     "y_web/routes/admin/sub/clients/_forum_hpc.py",

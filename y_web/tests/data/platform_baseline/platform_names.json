@@ -5,5 +5,7 @@
  "y_web/db_init/migrations.py": 3,
  "y_web/migrations/add_forum_feed_resource_tables.py": 5,
  "y_web/migrations/add_frontend_settings_table.py": 1,
- "y_web/migrations/forum_chat_uuid_user_ids.py": 3
+ "y_web/migrations/forum_chat_uuid_user_ids.py": 3,
+ "y_web/src/commons/hot_rank.py": 1,
+ "y_web/src/commons/reddit_feeds.py": 15
 }

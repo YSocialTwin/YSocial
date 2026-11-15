@@ -19,13 +19,39 @@ _BLUEPRINTS = {
     "experiments": ("y_web.routes.admin.sub.experiments._blueprint", "experiments"),
     "clients": ("y_web.routes.admin.sub.clients._blueprint", "clientsr"),
     "user": ("y_web.routes.interactions._blueprint", "user"),
-    "api_reddit": ("y_web.routes.api._platform_blueprints", "api_reddit"),
 }
 
+# blueprints a platform asks for by name and address (every repository of the platform gets the same one), created on
+# first use: ``blueprint("name", url_prefix="/api/x")``
+_SHARED: dict = {}
 
-def blueprint(name: str) -> Any:
+
+def shared_blueprint_names() -> frozenset:
+    """Names of the blueprints the installed platforms asked for (they belong to the participant frontend)."""
+    return frozenset(_SHARED)
+
+
+def shared_blueprints() -> list:
+    """The blueprints the platforms asked for, for the application to register."""
+    return list(_SHARED.values())
+
+
+def blueprint(name: str, url_prefix: str = "") -> Any:
     """The blueprint of the core called ``name`` (``main``, ``population``, ``agents``, ``experiments``, ``clients``)."""
     from y_web.platforms import dispatch
 
+    if name not in _BLUEPRINTS:
+        from flask import Blueprint
+
+        existing = _SHARED.get(name)
+        if existing is None:
+            if not url_prefix:
+                raise KeyError(
+                    f"{name}: no such blueprint (give its url_prefix to create one)"
+                )
+            existing = _SHARED[name] = Blueprint(name, __name__, url_prefix=url_prefix)
+        elif url_prefix and existing.url_prefix != url_prefix:
+            raise ValueError(f"{name} is already served at {existing.url_prefix}")
+        return dispatch.wrap(existing)
     module, attribute = _BLUEPRINTS[name]
     return dispatch.wrap(getattr(importlib.import_module(module), attribute))

@@ -32,7 +32,6 @@ def register_blueprints(app):
         world_simulation,
     )
     from .api import api_interview, api_social
-    from .api._platform_blueprints import api_reddit
     from .auth import auth
     from .errors import errors
     from .i18n import i18n_bp
@@ -68,7 +67,10 @@ def register_blueprints(app):
     app.register_blueprint(world_simulation)
     app.register_blueprint(api_social)
     app.register_blueprint(api_interview)
-    app.register_blueprint(api_reddit)
+    from y_web.sdk.routes import shared_blueprints
+
+    for shared in shared_blueprints():  # the ones the platforms declare
+        app.register_blueprint(shared)
 
     # the blueprints that belong to a platform repository (its views were attached to the core's before this point)
     from y_web.platforms import registry

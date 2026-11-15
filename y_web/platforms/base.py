@@ -605,6 +605,17 @@ class PlatformProvider:
         """Page the platform shows a profile on when it is not the shared profile page, else ``None``."""
         return None
 
+    def profile_picture_in(self, user: Any, exp_id: int) -> Optional[str]:
+        """Picture URL the platform gives a participant of experiment ``exp_id``, or ``None`` for the shared way."""
+        return None
+
+    #: what an interviewed participant's persona is told the setting is, when the experiment has no description
+    default_persona_vibe: Optional[str] = None
+    #: whether the share route also publishes a post through the World Simulation gateway
+    crosspost_on_share: bool = False
+    #: whether the ids of the follow rows are UUIDs whatever the runtime (the HPC runtime always has them)
+    uuid_follow_ids: bool = False
+
     def profile_picture(self, user: Any) -> Optional[str]:
         """Picture URL the platform gives a participant, or ``None`` for the shared way of finding it."""
         return None
