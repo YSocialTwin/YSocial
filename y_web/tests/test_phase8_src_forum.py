@@ -118,21 +118,23 @@ class TestCanonicalForumPackageImports:
         assert callable(_strip_article_title_from_body)
 
     def test_service_formatters_importable(self):
-        from y_web.src.commons.service.formatters import (
-            _article_summary_needs_enrichment,
-            _author_agent_page_cache,
+        from y_web.src.commons.display_time import (
             _clock_config_cache,
-            _fetch_and_cache_og_image,
             _format_display_time,
             _format_display_time_from_created_at,
             _format_round,
             _get_experiment_dir,
+            _resolve_experiment_clock,
+        )
+        from y_web.src.commons.service.formatters import (
+            _article_summary_needs_enrichment,
+            _author_agent_page_cache,
+            _fetch_and_cache_og_image,
             _get_profile_pic,
             _is_agent_or_page_author,
             _media_type_from_url,
             _og_image_cache,
             _resolve_article,
-            _resolve_experiment_clock,
             _resolve_image,
             _resolve_image_post,
             _shared_from,

@@ -21,7 +21,7 @@ from y_web import db
 from y_web.platforms import registry as platforms
 from y_web.src.commons.ids import opaque_id
 from y_web.src.commons.ordering import seq_or_id
-from y_web.src.content.text_utils import process_reddit_post, strip_tags
+from y_web.src.content.text_utils import strip_tags
 from y_web.src.data_access import (
     augment_text,
     get_elicited_emotions,
@@ -185,10 +185,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     provider = platforms.resolve(exp)
 
-    from y_web.src.commons.service import (
-        _format_display_time,
-        _format_display_time_from_created_at,
-    )
+    threads = provider.threads
 
     # Get experiment user ID if not provided
     if exp_user_id is None:
@@ -361,11 +358,8 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         else:
             day = c.day
             hour = c.hour
-        display_time = _format_display_time_from_created_at(
-            getattr(post, "created_at", None)
-        ) or _format_display_time(
-            str(day),
-            f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+        display_time = threads.display_time(
+            getattr(post, "created_at", None), day, hour
         )
 
         # get elicited emotions names
@@ -411,7 +405,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
             select(User_mgmt).filter_by(id=post.user_id)
         ).first()
         author_username = author_user.username if author_user else "Unknown"
-        title, body = process_reddit_post(post.tweet)
+        title, body = threads.split_title(post.tweet)
         processed_body = augment_text(body, exp_id) if body else ""
 
         # Get shared post info safely

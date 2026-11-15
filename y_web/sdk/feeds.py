@@ -51,7 +51,14 @@ def read_feed_with_headers(feed_url):
     return _helper("_read_feed_with_headers")(feed_url)
 
 
+def unwrap_media_url(url):
+    from y_web.src.commons.reddit_feeds import unwrap_media_url as target
+
+    return target(url)
+
+
 __all__ = [
+    "unwrap_media_url",
     "default_feed_limits",
     "normalize_image_feed_item",
     "normalize_image_feeds_payload",

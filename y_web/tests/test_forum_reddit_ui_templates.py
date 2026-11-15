@@ -164,8 +164,10 @@ def test_create_community_wiring():
 def test_available_communities_include_joined_ones():
     from pathlib import Path
 
-    src = (
-        Path(__file__).resolve().parents[1] / "src/commons/service/queries.py"
+    import importlib
+
+    src = Path(
+        importlib.import_module("y_web.src.commons.service.queries").__file__
     ).read_text()
     assert "User_interest.interest_id == Interests.iid" in src
 
@@ -203,7 +205,11 @@ def test_communities_directory_wiring():
     assert (
         "def communities_reddit(" in routes and "def api_forum_communities(" in routes
     )
-    queries = (root / "src/commons/service/queries.py").read_text()
+    import importlib
+
+    queries = Path(
+        importlib.import_module("y_web.src.commons.service.queries").__file__
+    ).read_text()
     assert (
         "def fetch_community_directory(" in queries
         and "_fetch_new_empty_communities" in queries

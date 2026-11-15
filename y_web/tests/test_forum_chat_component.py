@@ -205,10 +205,10 @@ def test_forum_profile_posts_include_community_metadata_and_feed_type():
     assert '"primary_community": primary_community' in posts_source
     assert '"display_time": display_time if is_forum else None' in posts_source
     assert (
-        "article_preview = _resolve_article(article) if is_forum else None"
+        "article_preview = threads.article(article) if is_forum else None"
         in posts_source
     )
-    assert "_primary_community_payload(article_preview, topics)" in posts_source
+    assert "threads.community(article_preview, topics)" in posts_source
     assert (
         "rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)"
         in common_source

@@ -94,17 +94,19 @@ def _render_shared_from(post):
 
 
 def _origin_community(source_id) -> str:
-    """Slug of the community a cross-posted thread was copied from ('' when unknown): resolved like the community of a
-    feed post (subreddit of the article or image, else the topics of the post)."""
-    try:
-        from y_web.src.commons.service.queries import _build_root_post_community_map
+    """Slug of the community a cross-posted thread was copied from ('' when the platform has no communities)."""
+    from y_web.platforms import registry  # noqa: PLC0415
+    from y_web.src.experiment.context import get_current_experiment_id  # noqa: PLC0415
 
-        entries = _build_root_post_community_map([source_id]).get(source_id) or []
-        if entries:
-            return str(entries[0].get("slug") or "")
+    try:
+        exp_id = get_current_experiment_id()
+        exp = db.session.get(Exps, exp_id) if exp_id else None
+        threads = (
+            getattr(registry.for_experiment(exp), "threads", None) if exp else None
+        )
+        return threads.origin_community(source_id) if threads else ""
     except Exception:  # noqa: BLE001 - the origin line degrades to the author only
-        pass
-    return ""
+        return ""
 
 
 def _get_text_utils():
@@ -449,18 +451,8 @@ def get_user_recent_posts(
     from y_web.platforms import registry  # noqa: PLC0415
 
     provider = registry.for_experiment(exp) if exp is not None else None
-    is_forum = bool(getattr(provider, "threaded_posts", False))
-
-    if is_forum:
-        from y_web.src.commons.service import (  # noqa: PLC0415
-            _format_display_time,
-            _format_display_time_from_created_at,
-            _resolve_article,
-        )
-        from y_web.src.commons.service.queries import (  # noqa: PLC0415
-            _primary_community_payload,
-        )
-        from y_web.src.content.text_utils import process_reddit_post  # noqa: PLC0415
+    threads = getattr(provider, "threads", None)
+    is_forum = threads is not None
 
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     username = user.username if user else "Unknown"
@@ -550,17 +542,8 @@ def get_user_recent_posts(
             comment_day = comment_round.day if comment_round is not None else "None"
             comment_hour = comment_round.hour if comment_round is not None else "00"
             comment_display_time = (
-                _format_display_time_from_created_at(getattr(c, "created_at", None))
-                if is_forum
-                else None
-            ) or (
-                _format_display_time(
-                    str(comment_day),
-                    (
-                        f"{int(comment_hour):02d}"
-                        if str(comment_hour).isdigit()
-                        else str(comment_hour)
-                    ),
+                threads.display_time(
+                    getattr(c, "created_at", None), comment_day, comment_hour
                 )
                 if is_forum
                 else None
@@ -569,7 +552,7 @@ def get_user_recent_posts(
             if len(comment_topics) == 0:
                 comment_topics = []
             comment_title, comment_body = (
-                process_reddit_post(c.tweet) if is_forum else ("", text)
+                threads.split_title(c.tweet) if is_forum else ("", text)
             )
             processed_comment = (
                 augment_text(comment_body, exp_id)
@@ -645,7 +628,7 @@ def get_user_recent_posts(
                 .first()
                 .name,
             }
-            article_preview = _resolve_article(article) if is_forum else None
+            article_preview = threads.article(article) if is_forum else None
 
         c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
@@ -655,14 +638,7 @@ def get_user_recent_posts(
             day = c.day
             hour = c.hour
         display_time = (
-            _format_display_time_from_created_at(getattr(post, "created_at", None))
-            if is_forum
-            else None
-        ) or (
-            _format_display_time(
-                str(day),
-                f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
-            )
+            threads.display_time(getattr(post, "created_at", None), day, hour)
             if is_forum
             else None
         )
@@ -681,10 +657,10 @@ def get_user_recent_posts(
         if len(topics) == 0:
             topics = []
         primary_community = (
-            _primary_community_payload(article_preview, topics) if is_forum else None
+            threads.community(article_preview, topics) if is_forum else None
         )
         title, post_body = (
-            process_reddit_post(post.tweet)
+            threads.split_title(post.tweet)
             if is_forum
             else ("", post.tweet.split(":")[-1])
         )

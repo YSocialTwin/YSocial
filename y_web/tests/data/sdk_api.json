@@ -99,7 +99,8 @@
         "normalize_subreddit_input": "(value)",
         "parse_admin_feed_metadata": "(feed_url, feed_content)",
         "parse_required_feed_limit": "(form_key, cast, label, minimum=None)",
-        "read_feed_with_headers": "(feed_url)"
+        "read_feed_with_headers": "(feed_url)",
+        "unwrap_media_url": "(url)"
       }
     },
     "gettext": {
@@ -215,7 +216,6 @@
         "maybe_update_fb_interests": "(exp_id, exp_user, post_id, interaction_type)",
         "open_experiment_session": "(experiment: \"'Exps'\")",
         "origin_community": "(source_id) -> 'str'",
-        "primary_community": "(article, topics)",
         "register_experiment_database": "(app, exp_id, db_name)",
         "resolve_back_url": "(exp_id)"
       }

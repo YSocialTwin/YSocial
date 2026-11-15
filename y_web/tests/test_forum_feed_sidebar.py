@@ -6,6 +6,12 @@ from y_web.tests._platform_repos import forum_file
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _service_file(name):
+    import importlib
+
+    return str(importlib.import_module(f"y_web.src.commons.service.{name}").__file__)
+
+
 def test_sidebar_prefers_subreddit_and_deduplicates_entries():
     items = [
         {
@@ -120,9 +126,7 @@ def test_forum_post_headers_render_primary_community_links():
     js_source = Path(
         forum_file("y_web/static/assets/js/reddit/async_updates.js")
     ).read_text(encoding="utf-8")
-    query_source = Path(
-        str(_REPO_ROOT / "y_web/src/commons/service/queries.py")
-    ).read_text(encoding="utf-8")
+    query_source = Path(_service_file("queries")).read_text(encoding="utf-8")
 
     assert "primary_community" in template
     assert "forum-post-community-link" in template
@@ -131,12 +135,8 @@ def test_forum_post_headers_render_primary_community_links():
 
 
 def test_forum_queries_include_image_post_subreddit_communities():
-    query_source = Path(
-        str(_REPO_ROOT / "y_web/src/commons/service/queries.py")
-    ).read_text(encoding="utf-8")
-    formatter_source = Path(
-        str(_REPO_ROOT / "y_web/src/commons/service/formatters.py")
-    ).read_text(encoding="utf-8")
+    query_source = Path(_service_file("queries")).read_text(encoding="utf-8")
+    formatter_source = Path(_service_file("formatters")).read_text(encoding="utf-8")
 
     assert 'func.lower(ImagePosts.subreddit).label("image_subreddit")' in query_source
     assert "Post.id.in_(image_subquery)" in query_source

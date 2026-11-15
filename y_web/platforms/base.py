@@ -297,8 +297,9 @@ class PlatformProvider:
     has_population_fields: bool = False
     #: usernames of generated agents are lower-case slugs (``[a-z0-9_]``); the value is the name used when nothing is left
     slug_username_fallback: Optional[str] = None
-    #: posts are titled, timed threads (the profile post lists carry a title, display time and community)
-    threaded_posts: bool = False
+    #: posts are titled, timed threads: an object with ``display_time(created_at, day, hour)``, ``article(article)``,
+    #: ``community(article_preview, topics)``, ``split_title(text)`` and ``origin_community(post_id)`` (see the forum)
+    threads: Optional[Any] = None
     tag_runtime_sets: Tuple[Tuple[str, ...], ...] = ()
     #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
     runtime_keys: Tuple[str, ...] = ()

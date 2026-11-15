@@ -89,13 +89,6 @@ def resolve_back_url(exp_id):
     return target(exp_id)
 
 
-def primary_community(article, topics):
-    """The community payload of a discussion (``{"name", "slug", ...}``), or ``None``."""
-    from y_web.src.commons.service.queries import _primary_community_payload as target
-
-    return target(article, topics)
-
-
 def get_discussions(posts, username, page, exp_id, exp_user_id=None):
     """Handle get discussions operation."""
     from y_web.routes.social.helpers import _get_discussions as target

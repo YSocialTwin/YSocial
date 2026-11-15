@@ -2,8 +2,7 @@ from datetime import datetime
 
 import pytest
 
-import y_web.src.commons.service.formatters as _formatters
-from y_web.src.commons import service
+from y_web.src.commons import display_time as service
 
 pytestmark = pytest.mark.unit
 
@@ -15,7 +14,6 @@ def test_simulated_mode_uses_day_hour_label(monkeypatch):
         "feed_refresh": "hourly",
     }
     monkeypatch.setattr(service, "_resolve_experiment_clock", lambda: clock)
-    monkeypatch.setattr(_formatters, "_resolve_experiment_clock", lambda: clock)
 
     assert service._format_display_time("3", "7") == "Day 3 · Hour 07"
     assert (
@@ -31,7 +29,6 @@ def test_real_time_mode_uses_calendar_time(monkeypatch):
         "feed_refresh": "hourly",
     }
     monkeypatch.setattr(service, "_resolve_experiment_clock", lambda: clock)
-    monkeypatch.setattr(_formatters, "_resolve_experiment_clock", lambda: clock)
 
     rendered = service._format_display_time_from_created_at(
         datetime(2026, 3, 19, 12, 45)

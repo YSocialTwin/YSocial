@@ -63,7 +63,6 @@ DECLARED_EXCEPTIONS = (
     # Reddit as a place feeds come from (a host and an address layout), not as a platform of the simulation;
     # and the hash salt of the Hot ranking, which is part of the data it ranked
     "y_web/src/commons/reddit_feeds.py",
-    "y_web/src/commons/hot_rank.py",
 )
 # Modules that belong to a single platform: they move to its repository, so their own mentions do not count.
 PLATFORM_OWNED = (

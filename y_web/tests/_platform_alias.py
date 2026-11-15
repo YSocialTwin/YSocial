@@ -151,6 +151,8 @@ _WORLD_SIMULATION_TESTS = (
 _FORUM_LIBRARY_TESTS = (
     "test_content_article_and_avatars.py",
     "test_forum_community_icons.py",
+    "test_forum_opaque_ids.py",
+    "test_forum_reddit_ui_templates.py",
     "test_population_appearance_pictures.py",
     "test_population_custom_field_stats.py",
     "test_frontend_settings_platforms.py",
@@ -185,6 +187,11 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
         "y_web.routes.api.reddit": "routes.api_reddit",
         "y_web.routes.admin.sub.experiments._forum_feeds": "routes.feeds_forum",
         "y_web.src.content.avatars": "forum.avatars",
+        "y_web.src.commons.service": "forum.service",
+        "y_web.src.commons.service.queries": "forum.service.queries",
+        "y_web.src.commons.service.formatters": "forum.service.formatters",
+        "y_web.src.commons.service.data_classes": "forum.service.data_classes",
+        "y_web.src.commons.hot_rank": "forum.hot_rank",
     },
     needs=(
         "test_api_reddit_blueprint.py",
