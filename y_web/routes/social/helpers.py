@@ -690,9 +690,7 @@ def _forum_resolve_back_url(exp_id):
 # ---------------------------------------------------------------------------
 # Frontend UI settings — loaded per experiment for public-facing pages
 # ---------------------------------------------------------------------------
-from y_web.src.experiment.frontend_defaults import (
-    DEFAULT_SETTINGS as _UI_DEFAULTS,
-)  # noqa: E402
+from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS as _UI_DEFAULTS  # noqa: E402
 
 
 def _load_ui_settings(exp_id: int) -> dict:
@@ -703,13 +701,19 @@ def _load_ui_settings(exp_id: int) -> dict:
     (settings live in the *dashboard* DB, not the experiment DB).
     """
     try:
+        from y_web.src.experiment.frontend_defaults import (  # noqa: PLC0415
+            defaults_for,
+        )
         from y_web.src.models import ExpFrontendSettings  # noqa: PLC0415
+        from y_web.src.models import Exps  # noqa: PLC0415
 
+        exp = db.session.get(Exps, exp_id)
+        defaults = defaults_for(exp.platform_type if exp else None)
         row = db.session.get(ExpFrontendSettings, exp_id)
         if row is None:
-            return dict(_UI_DEFAULTS)
+            return defaults
         loaded = json.loads(row.settings_json or "{}")
-        merged = dict(_UI_DEFAULTS)
+        merged = dict(defaults)
         merged.update(loaded)
         return merged
     except Exception:

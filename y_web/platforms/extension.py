@@ -61,16 +61,23 @@ def _folder(provider, name: str) -> Path | None:
     return folder if folder is not None and folder.is_dir() else None
 
 
-def platform_slots(name: str) -> List[str]:
+def platform_slots(name: str, once_per_key: bool = False) -> List[str]:
     """Templates the installed platforms offer for the slot ``name`` of a core page (``slots/<name>.html``).
 
     A core page renders them with ``{% for t in platform_slots('name') %}{% include t %}{% endfor %}``; an included
-    template sees the variables of the page. A platform without the file adds nothing.
+    template sees the variables of the page. A platform without the file adds nothing. With ``once_per_key`` the
+    repositories of one platform key (a Standard and an HPC runtime) show one box between them: a box whose
+    fields have fixed ids must not appear twice.
     """
     found = []
+    served = set()
     for provider in registry.all_providers():
         folder = _folder(provider, "templates")
         if folder is not None and (folder / "slots" / f"{name}.html").is_file():
+            if once_per_key:
+                if provider.key in served:
+                    continue
+                served.add(provider.key)
             found.append(template_name(provider.provider_id, f"slots/{name}.html"))
     return found
 

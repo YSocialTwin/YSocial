@@ -39,19 +39,6 @@ def supported_platforms():
     return tuple(registry.keys())
 
 
-# Platform-specific feed orderings that replace the default recommenders.
-FORUM_FEED_TYPES = [
-    {"name": "new", "label": N_("New")},
-    {"name": "hot", "label": N_("Hot")},
-    {"name": "top", "label": N_("Top")},
-    {"name": "most_commented", "label": N_("Most commented")},
-]
-PHOTO_FEED_TABS = [
-    {"name": "for_you", "label": N_("For you (recommended)")},
-    {"name": "follower", "label": N_("Following")},
-]
-
-
 def _localized_options(items):
     """Copy of ``[{"name", "label"}]`` with the labels translated for this request."""
     options = []
@@ -66,11 +53,17 @@ def _localized_platform_label(value):
     return _(text)
 
 
+def _declared_keys(platform_type) -> frozenset:
+    return frozenset(setting.key for setting in declared_settings(platform_type))
+
+
 def capabilities_for(platform_type: str):
     """Sorted list of setting keys the platform supports, or ``None`` for all."""
     provider = registry.get(platform_type)
     caps = provider.frontend_capabilities if provider else None
-    return None if caps is None else sorted(caps)
+    if caps is None:
+        return None
+    return sorted(set(caps) | _declared_keys(platform_type))
 
 
 def excluded_capabilities_for(platform_type: str):
@@ -78,32 +71,25 @@ def excluded_capabilities_for(platform_type: str):
     provider = registry.get(platform_type)
     if provider is None or provider.frontend_capabilities is not None:
         return []
-    # the settings that only some other platform's templates read
-    return sorted(
-        {
-            key
-            for other in registry.providers()
-            for key in other.frontend_exclusive_settings
-        }
-    )
+    # the settings that only some other platform's pages read
+    own = _declared_keys(platform_type)
+    others = set()
+    for other in registry.providers():
+        if other.key == platform_type:
+            continue
+        others |= set(other.frontend_exclusive_settings)
+        others |= _declared_keys(other.key)
+    return sorted(others - own)
 
 
 # ------------------------------------------------------------------
 # Default settings: one source shared with the participant pages
 # ------------------------------------------------------------------
-from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS  # noqa: E402
-
-_ENUM_SETTINGS = {
-    "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
-    "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},
-    "im_default_view": {"latest", "start"},
-}
-
-# integer settings with a server-side range: (low, high)
-_INT_RANGES = {
-    "im_participant_poll_seconds": (1, 60),
-    "dating_poll_seconds": (1, 60),
-}
+from y_web.src.experiment.frontend_defaults import (  # noqa: E402
+    DEFAULT_SETTINGS,
+    declared_settings,
+    defaults_for,
+)
 
 
 def _language_choices() -> set:
@@ -114,16 +100,41 @@ def _language_choices() -> set:
 
 
 def _load_settings(exp_id: int) -> dict:
+    exp = db.session.get(Exps, exp_id)
+    defaults = defaults_for(exp.platform_type if exp else None)
     row = db.session.get(ExpFrontendSettings, exp_id)
     if row is None:
-        return dict(DEFAULT_SETTINGS)
+        return defaults
     try:
         loaded = json.loads(row.settings_json or "{}")
     except Exception:
         loaded = {}
-    merged = dict(DEFAULT_SETTINGS)
+    merged = dict(defaults)
     merged.update(loaded)
     return merged
+
+
+def _platform_setting_specs(platform_type) -> list:
+    """What the page needs to show and read the settings the platform owns (labels translated for this request)."""
+    return [
+        {
+            "key": setting.key,
+            "type": _setting_type(setting.default),
+            "default": setting.default,
+            "choices": _localized_options(setting.choices),
+        }
+        for setting in declared_settings(platform_type)
+    ]
+
+
+def _setting_type(default) -> str:
+    if isinstance(default, bool):
+        return "bool"
+    if isinstance(default, int):
+        return "int"
+    if isinstance(default, float):
+        return "float"
+    return "str"
 
 
 # Labels and categories of the recommender systems come from the database seed
@@ -305,6 +316,17 @@ def annotation_module_enabled(exp_id) -> bool:
         return False
 
 
+def _clamped(value, setting):
+    """``value`` inside the range its declaration gives (a bool never gets here)."""
+    if setting is None:
+        return value
+    if setting.minimum is not None:
+        value = max(type(value)(setting.minimum), value)
+    if setting.maximum is not None:
+        value = min(type(value)(setting.maximum), value)
+    return value
+
+
 # ------------------------------------------------------------------
 # GET /admin/frontend_settings/get_settings?exp_id=N  — JSON API
 # ------------------------------------------------------------------
@@ -335,8 +357,7 @@ def frontend_settings_get():
             "recsys_options": _load_recsys_options(
                 exp.simulator_type or "Standard", all_algorithms=True
             ),
-            "forum_feed_types": _localized_options(FORUM_FEED_TYPES),
-            "photo_feed_tabs": _localized_options(PHOTO_FEED_TABS),
+            "platform_settings": _platform_setting_specs(exp.platform_type),
         }
     )
 
@@ -360,10 +381,15 @@ def frontend_settings_save():
     if exp is None or exp.platform_type not in supported_platforms():
         return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
+    declared = {
+        setting.key: setting for setting in declared_settings(exp.platform_type)
+    }
+    table = defaults_for(exp.platform_type)
     safe = {}
-    for k, default in DEFAULT_SETTINGS.items():
+    for k, default in table.items():
         if k not in new_settings:
             continue
+        setting = declared.get(k)
         if isinstance(default, bool):
             safe[k] = bool(new_settings[k])
         elif isinstance(default, float):
@@ -371,21 +397,27 @@ def frontend_settings_save():
                 safe[k] = float(new_settings[k])
             except (TypeError, ValueError):
                 safe[k] = default
+            safe[k] = _clamped(safe[k], setting)
         elif isinstance(default, int):
             try:
                 safe[k] = int(new_settings[k])
             except (TypeError, ValueError):
                 safe[k] = default
-            if k in _INT_RANGES:
-                low, high = _INT_RANGES[k]
-                safe[k] = max(low, min(high, safe[k]))
+            safe[k] = _clamped(safe[k], setting)
         else:
-            # string settings (recsys names, sort mode…)
+            # string settings (recsys names, sort mode...)
             value = str(new_settings[k])
-            allowed = _language_choices() if k == "language" else _ENUM_SETTINGS.get(k)
+            if k == "language":
+                allowed = _language_choices()
+            elif setting is not None and setting.choices:
+                allowed = {item["name"] for item in setting.choices}
+            else:
+                allowed = None
             safe[k] = value if allowed is None or value in allowed else default
-            if k in ("im_participant_notice", "dating_participant_notice"):
-                safe[k] = value.strip()[:4000]
+            if setting is not None and setting.strip:
+                safe[k] = safe[k].strip()
+            if setting is not None and setting.max_length:
+                safe[k] = safe[k][: setting.max_length]
 
     if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
         safe["show_annotation_stats"] = (

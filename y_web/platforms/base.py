@@ -155,6 +155,26 @@ class GatewayLaunch:
 
 
 @dataclass(frozen=True)
+class FrontendSetting:
+    """One per-experiment setting of the participant frontend that a platform owns.
+
+    The core keeps the settings every platform has (``y_web.src.experiment.frontend_defaults``); a platform declares
+    its own here: the key, its default (the type of the default is the type of the value), the values a text setting
+    accepts (``choices``: ``{"name", "label"}`` with a translatable label), the range of a number and the length of a
+    text. The platform's own boxes of the settings page (the ``frontend_settings_boxes`` and ``frontend_settings_feed``
+    slots) show and edit them.
+    """
+
+    key: str
+    default: Any
+    choices: Tuple[Mapping[str, str], ...] = ()
+    minimum: Optional[float] = None
+    maximum: Optional[float] = None
+    max_length: Optional[int] = None
+    strip: bool = False
+
+
+@dataclass(frozen=True)
 class HumanRecsysTraits:
     """The recommender systems of the people who use the platform's own frontend (the code lives in the platform).
 
@@ -310,6 +330,8 @@ class PlatformProvider:
     human_recsys: Optional[HumanRecsysTraits] = None
     #: recommenders the platform adds to the catalogue of the selectors (see ``recsys_catalog.ensure_catalog``)
     recsys_catalog: Tuple[Mapping[str, Any], ...] = ()
+    #: the settings of the participant frontend the platform owns (``FrontendSetting``)
+    frontend_settings: Tuple[FrontendSetting, ...] = ()
     #: runtimes (``STANDARD``, ``HPC``) the provider serves; ``None`` means every runtime. Providers of one ``key``
     #: must serve disjoint sets
     simulator_types: Optional[Tuple[str, ...]] = None

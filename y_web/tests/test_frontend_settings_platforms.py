@@ -89,12 +89,19 @@ def test_get_settings_reports_capabilities(suites_app, logged):
         and "default_photo_feed_tab" in p["capabilities"]
     )
     assert m["capabilities"] is None  # microblogging keeps everything
-    assert [x["name"] for x in f["forum_feed_types"]] == [
+    forum_feed = {s["key"]: s for s in f["platform_settings"]}[
+        "default_forum_feed_type"
+    ]
+    assert [x["name"] for x in forum_feed["choices"]] == [
         "new",
         "hot",
         "top",
         "most_commented",
     ]
+    # the box of a platform is offered to that platform's experiments only
+    assert "default_photo_feed_tab" not in {s["key"] for s in f["platform_settings"]}
+    assert "default_forum_feed_type" not in {s["key"] for s in m["platform_settings"]}
+    assert "filter_bubble_alpha" in {s["key"] for s in m["platform_settings"]}
 
 
 def test_platform_specific_defaults_are_saved_and_validated(suites_app, logged):
@@ -105,7 +112,7 @@ def test_platform_specific_defaults_are_saved_and_validated(suites_app, logged):
             "exp_id": forum,
             "settings": {
                 "default_forum_feed_type": "hot",
-                "default_photo_feed_tab": "nonsense",
+                "default_photo_feed_tab": "nonsense",  # not a setting of a forum
             },
         },
     )
@@ -114,9 +121,17 @@ def test_platform_specific_defaults_are_saved_and_validated(suites_app, logged):
         f"/admin/frontend_settings/get_settings?exp_id={forum}"
     ).get_json()
     assert data["settings"]["default_forum_feed_type"] == "hot"
+    assert "default_photo_feed_tab" not in data["settings"]
+    r = logged.post(
+        "/admin/frontend_settings/save",
+        json={"exp_id": forum, "settings": {"default_forum_feed_type": "nonsense"}},
+    )
+    data = logged.get(
+        f"/admin/frontend_settings/get_settings?exp_id={forum}"
+    ).get_json()
     assert (
-        data["settings"]["default_photo_feed_tab"] == "for_you"
-    )  # invalid value falls back to the default
+        data["settings"]["default_forum_feed_type"] == "new"
+    )  # an invalid value falls back to the default
 
 
 def test_modules_declare_platforms(suites_app, logged):

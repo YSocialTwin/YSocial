@@ -12,6 +12,9 @@
     "FormSectionError": {
       "kind": "class"
     },
+    "FrontendSetting": {
+      "kind": "class"
+    },
     "GatewayLaunch": {
       "kind": "class"
     },

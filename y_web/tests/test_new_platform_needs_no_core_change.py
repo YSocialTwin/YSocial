@@ -16,7 +16,7 @@ REPO = "ZPlatform"
 PROVIDER = """
 from types import SimpleNamespace
 
-from y_web.sdk import HPC, HumanRecsysTraits, N_, PlatformProvider
+from y_web.sdk import HPC, FrontendSetting, HumanRecsysTraits, N_, PlatformProvider
 
 LEARNED = []
 
@@ -39,6 +39,14 @@ RECSYS = HumanRecsysTraits(
 
 
 class ZPlat(PlatformProvider):
+    frontend_settings = (
+        FrontendSetting("z_flag", True),
+        FrontendSetting("z_rounds", 5, minimum=1, maximum=9),
+        FrontendSetting("z_note", "", max_length=5, strip=True),
+        FrontendSetting(
+            "z_mode", "a", choices=({"name": "a", "label": N_("A")}, {"name": "b", "label": N_("B")})
+        ),
+    )
     recsys_catalog = (
         {"kind": "content", "name": "ZRank", "label": "Z rank", "category": "Z",
          "enabled": "Standard"},
@@ -344,3 +352,24 @@ def test_its_recommenders_join_the_catalogue_without_touching_the_existing_rows(
         assert (row.value, row.enabled) == ("edited by hand", "HPC")
         follow = session.scalars(select(Follow_Recsys)).one()
         assert (follow.name, follow.enabled) == ("ZFollow", "Standard")
+
+
+def test_its_frontend_settings_are_declared_and_validated_by_the_platform(new_platform):
+    """The defaults, the accepted values and the page's fields come from ``provider.frontend_settings``."""
+    from y_web.routes.admin.sub.experiments import _frontend_settings as fs
+    from y_web.src.experiment.frontend_defaults import defaults_for
+
+    defaults = defaults_for(KEY)
+    assert defaults["z_flag"] is True and defaults["z_rounds"] == 5
+    assert "z_flag" not in defaults_for("microblogging")
+    assert "z_flag" not in defaults_for(None)
+
+    specs = {s["key"]: s for s in fs._platform_setting_specs(KEY)}
+    assert specs["z_rounds"]["type"] == "int" and specs["z_flag"]["type"] == "bool"
+    assert [c["name"] for c in specs["z_mode"]["choices"]] == ["a", "b"]
+
+    # a platform never hides its own controls from itself
+    assert "z_flag" not in fs.excluded_capabilities_for(KEY)
+
+    setting = {s.key: s for s in fs.declared_settings(KEY)}["z_rounds"]
+    assert fs._clamped(50, setting) == 9 and fs._clamped(-3, setting) == 1

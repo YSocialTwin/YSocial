@@ -1,8 +1,11 @@
-"""The one table of per-experiment frontend settings and their defaults.
+"""The per-experiment frontend settings every platform has, and the defaults of all of them.
 
 Both the admin panel (``/admin/frontend_settings``, which validates what it saves against these keys) and the
-participant pages (``routes.social.helpers._load_ui_settings``) read this table, so a key can never exist on one
-side only. Stored values are merged over these defaults at read time; no migration is needed for a new key.
+participant pages (``routes.social.helpers._load_ui_settings``) read the same defaults (``defaults_for``), so a key
+can never exist on one side only. The settings a platform owns (a feed ordering, the parameters of one of its
+recommenders, the pages of an observer) are declared by its provider (``frontend_settings``) and added to these for
+the experiments of that platform. Stored values are merged over the defaults at read time; no migration is needed
+for a new key.
 """
 
 DEFAULT_SETTINGS = {
@@ -38,31 +41,29 @@ DEFAULT_SETTINGS = {
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
     "posts_per_page": 10,  # posts per page when infinite scroll is disabled
-    # Platform-specific feed defaults (threaded / photo platforms)
-    "default_forum_feed_type": "new",  # new | hot | top | most_commented
-    "default_photo_feed_tab": "for_you",  # for_you | follower
-    # FilterBubble (Personalized Feed) recommender parameters
-    "filter_bubble_alpha": 2.0,  # opinion similarity width (Gaussian)
-    "filter_bubble_beta": 0.0,  # recency decay (0 = disabled)
-    "filter_bubble_gamma": 0.0,  # engagement amplification (0 = disabled)
-    "filter_bubble_lr": 0.05,  # EMA learning rate for real-time interest update
-    "filter_bubble_sort": "score",  # ranking mode: score | recency | engagement | hybrid
-    "filter_bubble_wr": 1.0,  # weight for reactions in engagement score
-    "filter_bubble_wc": 1.5,  # weight for comments in engagement score
-    "filter_bubble_ws": 2.0,  # weight for shares in engagement score
-    # Instant messaging (read-only observer pages and, later, participant mode)
-    "im_show_forward_origin": True,  # show "Forwarded from ..." above forwarded messages
-    "im_show_reactions": True,  # show the reaction counters under each message
-    "im_show_member_roles": True,  # show owner/admin badges in member lists
-    "im_default_view": "latest",  # latest | start: where a chat opens
-    "im_allow_time_travel": True,  # let non-staff viewers pick a past round
-    "im_public_observer_enabled": True,  # public chats readable without a participant login
-    "im_participant_mode_enabled": True,  # human participants may take part (phase 9)
-    "im_participant_notice": "",  # text shown once before a participant's first entry (plan 5.8, O-12)
-    "dating_allow_time_travel": True,  # let non-staff viewers pick a past round of a match-making experiment
-    "dating_public_observer_enabled": True,  # public profile showcase readable without a login
-    "dating_participant_mode_enabled": True,  # people may take part in a match-making experiment that has human participation on
-    "dating_participant_notice": "",  # text shown once before a participant's first entry
-    "dating_poll_seconds": 10,  # interval of the "new rounds" check of the match-making pages, clamped to 1-60
-    "im_participant_poll_seconds": 3,  # polling interval of the chat page, clamped to 1-60
 }
+
+
+def declared_settings(platform_type) -> tuple:
+    """The settings the providers of ``platform_type`` declare (the first declaration of a key wins)."""
+    from y_web.platforms import registry
+
+    found = {}
+    for provider in registry.all_providers():
+        if provider.key == platform_type:
+            for setting in provider.frontend_settings:
+                found.setdefault(setting.key, setting)
+    return tuple(found.values())
+
+
+def defaults_for(platform_type=None) -> dict:
+    """Defaults of every setting an experiment of ``platform_type`` has (the common ones when ``None``)."""
+    merged = dict(DEFAULT_SETTINGS)
+    if platform_type:
+        merged.update(
+            {
+                setting.key: setting.default
+                for setting in declared_settings(platform_type)
+            }
+        )
+    return merged

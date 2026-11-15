@@ -188,7 +188,7 @@ def test_page_chrome_is_accessible_without_the_simulation_banner(observer):
 
 def test_dating_frontend_settings_are_declared():
     from y_web.routes.admin.sub.experiments import _frontend_settings as fs
-    from y_web.src.experiment.frontend_defaults import DEFAULT_SETTINGS
+    from y_web.src.experiment.frontend_defaults import defaults_for
 
     keys = {
         "dating_allow_time_travel",
@@ -197,8 +197,9 @@ def test_dating_frontend_settings_are_declared():
     }
     assert "dating" in fs.supported_platforms()
     assert keys <= set(fs.capabilities_for("dating"))
-    assert keys <= set(DEFAULT_SETTINGS)
-    assert fs._INT_RANGES["dating_poll_seconds"] == (1, 60)
+    assert keys <= set(defaults_for("dating"))
+    poll = {s.key: s for s in fs.declared_settings("dating")}["dating_poll_seconds"]
+    assert (poll.minimum, poll.maximum) == (1, 60)
 
 
 def _reader(tmp_path):

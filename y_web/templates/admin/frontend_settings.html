@@ -149,47 +149,6 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
 /* ── experiment badge ──────────────────────────────────────── */
 
-/* ── nested FilterBubble config section ───────────────────────────────── */
-#fb-config-section {
-    display: none;
-    margin: 4px 0 8px 0;
-    border: 1px solid #e0e7ff;
-    border-left: 3px solid #6366f1;
-    border-radius: 6px;
-    background: #f5f7ff;
-    padding: 14px 16px 10px;
-}
-#fb-config-section .fb-section-title {
-    font-weight: 700;
-    font-size: .78rem;
-    color: #4338ca;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-#fb-config-section .fb-inner-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0 28px;
-}
-#fb-config-section .fb-col-title {
-    font-weight: 700;
-    font-size: .75rem;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    padding: 4px 0 5px;
-    border-bottom: 1px solid #c7d2fe;
-    margin-bottom: 2px;
-}
-#fb-config-section .ys-toggle-row {
-    border-bottom-color: #e0e7ff;
-}
-#fb-config-section .ys-toggle-row:last-child { border-bottom: none; }
-
 .ys-fs-exp-badge {
     display: inline-block;
     padding: 3px 10px;
@@ -488,110 +447,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
 
 
-              <!-- ── Personalized Feed nested config (shown only when selected) ── -->
-              <div id="fb-config-section" data-cap="content_recsys">
-                <div class="fb-section-title">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                  {{ _('Personalized Feed parameters') }}
-                </div>
-                <div class="fb-inner-grid">
-
-                  <!-- Core parameters column -->
-                  <div>
-                    <div class="fb-col-title">{{ _('Core parameters') }}</div>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Opinion width (α)') }}
-                        <small>{{ _('Gaussian bandwidth for opinion alignment. Higher = narrower bubble.') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_alpha" min="0" max="20" step="0.1" value="2.0"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Recency decay (β)') }}
-                        <small>{{ _('Exponential decay over simulation rounds. 0 = disabled.') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_beta" min="0" max="1" step="0.01" value="0.0"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Engagement boost (γ)') }}
-                        <small>{{ _('Amplification of popular posts. 0 = disabled.') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_gamma" min="0" max="5" step="0.1" value="0.0"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Interest learning rate (λ)') }}
-                        <small>{{ _('EMA rate for real-time interest updates after reactions.') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_lr" min="0" max="1" step="0.01" value="0.05"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-
-                    <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:8px;">
-                      <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">{{ _('Ranking mode') }}
-                        <small>{{ _('How to order posts when scores are equal') }}</small>
-                      </span>
-                      <select id="filter_bubble_sort" class="input" style="width:100%;max-width:220px;">
-                        <option value="score">{{ _('Score only') }}</option>
-                        <option value="recency">{{ _('Recency first') }}</option>
-                        <option value="engagement">{{ _('Engagement first') }}</option>
-                        <option value="hybrid">{{ _('Hybrid (score × recency)') }}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Engagement weights column -->
-                  <div>
-                    <div class="fb-col-title">{{ _('Engagement weights') }}</div>
-                    <p style="color:#9ca3af;font-size:.8rem;margin-bottom:8px;">{{ _('Applied when engagement boost (γ) > 0.') }}</p>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Reaction weight') }} (w<sub>r</sub>)
-                        <small>{{ _('Weight for likes / reactions') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_wr" min="0" max="10" step="0.1" value="1.0"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Comment weight') }} (w<sub>c</sub>)
-                        <small>{{ _('Weight for comments / replies') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_wc" min="0" max="10" step="0.1" value="1.5"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-
-                    <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">{{ _('Share weight') }} (w<sub>s</sub>)
-                        <small>{{ _('Weight for shares / reposts') }}</small>
-                      </span>
-                      <input type="number" id="filter_bubble_ws" min="0" max="10" step="0.1" value="2.0"
-                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
-                    </div>
-                  </div>
-
-                </div><!-- /fb-inner-grid -->
-              </div><!-- /#fb-config-section -->
-              <!-- Platform-specific feed defaults: they replace the microblogging recommenders -->
-              <div class="ys-toggle-row" data-cap="default_forum_feed_type" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
-                <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  {{ _('Default feed ordering') }}
-                  <small>{{ _('Ordering of the forum feed when a participant opens it (they can still change it)') }}</small>
-                </span>
-                <select id="default_forum_feed_type" class="input" style="width:100%;max-width:380px;"></select>
-              </div>
-              <div class="ys-toggle-row" data-cap="default_photo_feed_tab" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
-                <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  {{ _('Default home tab') }}
-                  <small>{{ _('Tab of the photo feed shown when a participant opens it') }}</small>
-                </span>
-                <select id="default_photo_feed_tab" class="input" style="width:100%;max-width:380px;"></select>
-              </div>
+              {% for slot_template in platform_slots('frontend_settings_feed', once_per_key=True) %}{% include slot_template %}{% endfor %}
 
               <!-- Follow recsys -->
               <div class="ys-toggle-row" data-cap="follow_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
@@ -787,6 +643,9 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     if (small) small.textContent = row.dataset.origHint;
   }
 
+  // the settings the chosen platform declares (key, type, default, choices), as the server sends them
+  let _platformSpecs = [];
+
   function applyPlatform(platform, caps, data) {
     const allowed = caps ? new Set(caps) : null;      // null = everything (microblogging)
     // controls of other platforms that a "show everything" platform must not offer
@@ -811,8 +670,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       if (p) p.textContent = BOX_DESCRIPTIONS[id][platform] || BOX_DESCRIPTIONS[id].microblogging;
     });
     // platform-specific selects
-    _fillSimple('default_forum_feed_type', data.forum_feed_types || []);
-    _fillSimple('default_photo_feed_tab', data.photo_feed_tabs || []);
+    _platformSpecs = (data && data.platform_settings) || [];
+    _platformSpecs.forEach(sp => { if (sp.choices && sp.choices.length) _fillSimple(sp.key, sp.choices); });
     const hint = document.getElementById('posts-per-page-hint');
     if (hint) hint.textContent = platform === 'microblogging'
       ? YI18n.t('Number of posts shown per page when infinite scrolling is disabled')
@@ -948,11 +807,9 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     }
     _fill('default_content_recsys', recsys.content);
     _fill('default_follow_recsys',  recsys.follow);
-    syncFilterBubbleSection();
+    document.dispatchEvent(new Event('ys-settings-applied'));
   }
   _buildRecsysSelects();
-  document.getElementById('default_content_recsys')
-    ?.addEventListener('change', syncFilterBubbleSection);
 
   /* The statistics box needs the "Post & Comment Annotation" add-on: the toggle is selectable only while it is enabled. */
   function syncAnnotationStatsAvailability(moduleEnabled) {
@@ -978,8 +835,6 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled','language_switch_allowed',
-      'im_show_forward_origin','im_show_reactions','im_show_member_roles','im_allow_time_travel','im_public_observer_enabled','im_participant_mode_enabled',
-      'dating_allow_time_travel','dating_public_observer_enabled','dating_participant_mode_enabled',
     ];
     boolIds.forEach(key => {
       const el = document.getElementById(key);
@@ -991,34 +846,19 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     // Sync infinite scroll row visibility
     toggleInfiniteScrollControls(s['infinite_scroll_enabled'] !== false);
 
-    // FilterBubble numeric fields
-    {
-      const fbNums = ['filter_bubble_alpha','filter_bubble_beta','filter_bubble_gamma',
-                      'filter_bubble_lr','filter_bubble_wr','filter_bubble_wc','filter_bubble_ws'];
-      const fbDefaults = {filter_bubble_alpha:2.0,filter_bubble_beta:0.0,filter_bubble_gamma:0.0,
-                          filter_bubble_lr:0.05,filter_bubble_wr:1.0,filter_bubble_wc:1.5,filter_bubble_ws:2.0};
-      fbNums.forEach(key => {
-        const el = document.getElementById(key);
-        if (el) el.value = s[key] != null ? s[key] : fbDefaults[key];
-      });
-      const sortEl = document.getElementById('filter_bubble_sort');
-      if (sortEl) sortEl.value = s['filter_bubble_sort'] || 'score';
-    }
-
     // String selects
     ['default_content_recsys','default_follow_recsys','language'].forEach(key => {
       const el = document.getElementById(key);
       if (el) el.value = s[key] || '';
     });
-    ['default_forum_feed_type','default_photo_feed_tab','im_default_view'].forEach(key => {
-      const el = document.getElementById(key);
-      if (el && s[key]) el.value = s[key];
+    // the settings the platform's own boxes declare
+    _platformSpecs.forEach(sp => {
+      const el = document.getElementById(sp.key);
+      if (!el) return;
+      const v = s[sp.key] != null ? s[sp.key] : sp.default;
+      if (sp.type === 'bool') el.checked = !!v; else el.value = v;
     });
-    { const el = document.getElementById('im_participant_poll_seconds'); if (el) el.value = s['im_participant_poll_seconds'] != null ? s['im_participant_poll_seconds'] : 3; }
-    { const el = document.getElementById('dating_poll_seconds'); if (el) el.value = s['dating_poll_seconds'] != null ? s['dating_poll_seconds'] : 10; }
-    { const el = document.getElementById('im_participant_notice'); if (el) el.value = s['im_participant_notice'] || ''; }
-    { const el = document.getElementById('dating_participant_notice'); if (el) el.value = s['dating_participant_notice'] || ''; }
-    syncFilterBubbleSection();
+    document.dispatchEvent(new Event('ys-settings-applied'));
 
     // Sync master toggle visual states for children groups
     syncMasterVisual('interactions_enabled', 'interactions-children');
@@ -1031,17 +871,6 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     });
   }
 
-
-  /* ── Show/hide FilterBubble config when content recommender changes ─── */
-  function syncFilterBubbleSection() {
-    const sel   = document.getElementById('default_content_recsys');
-    const panel = document.getElementById('fb-config-section');
-    if (!sel || !panel) return;
-    const txt = (sel.options[sel.selectedIndex]?.text || '').toLowerCase();
-    const val = (sel.value || '').toLowerCase();
-    const show = txt.includes('personalized') || val.includes('filter_bubble') || val.includes('filterbubble');
-    panel.style.display = show ? 'block' : 'none';
-  }
 
   function syncMasterVisual(masterId, childrenId) {
     const master   = document.getElementById(masterId);
@@ -1093,25 +922,22 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled','language_switch_allowed',
-      'im_show_forward_origin','im_show_reactions','im_show_member_roles','im_allow_time_travel','im_public_observer_enabled','im_participant_mode_enabled',
-      'dating_allow_time_travel','dating_public_observer_enabled','dating_participant_mode_enabled',
     ];
     const out = {};
     boolIds.forEach(id => { const el = document.getElementById(id); out[id] = el ? el.checked : true; });
     // Numeric settings
     { const el = document.getElementById('posts_per_page'); out['posts_per_page'] = el ? parseInt(el.value, 10) || 10 : 10; }
-    { const el = document.getElementById('im_participant_poll_seconds'); out['im_participant_poll_seconds'] = el ? parseInt(el.value, 10) || 3 : 3; }
-    { const el = document.getElementById('dating_poll_seconds'); out['dating_poll_seconds'] = el ? parseInt(el.value, 10) || 10 : 10; }
-    { const el = document.getElementById('im_participant_notice'); out['im_participant_notice'] = el ? el.value : ''; }
-    { const el = document.getElementById('dating_participant_notice'); out['dating_participant_notice'] = el ? el.value : ''; }
-    // FilterBubble float fields
-    ['filter_bubble_alpha','filter_bubble_beta','filter_bubble_gamma',
-     'filter_bubble_lr','filter_bubble_wr','filter_bubble_wc','filter_bubble_ws'].forEach(id => {
-      const el = document.getElementById(id);
-      out[id] = el ? parseFloat(el.value) || 0 : 0;
+    // the settings the platform's own boxes declare
+    _platformSpecs.forEach(sp => {
+      const el = document.getElementById(sp.key);
+      if (!el) return;
+      if (sp.type === 'bool') out[sp.key] = el.checked;
+      else if (sp.type === 'int') out[sp.key] = parseInt(el.value, 10) || sp.default;
+      else if (sp.type === 'float') out[sp.key] = parseFloat(el.value) || 0;
+      else out[sp.key] = el.value;
     });
     // String settings (select elements)
-    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab','im_default_view','language'].forEach(id => {
+    ['default_content_recsys','default_follow_recsys','language'].forEach(id => {
       const el = document.getElementById(id);
       out[id] = el ? el.value : '';
     });
