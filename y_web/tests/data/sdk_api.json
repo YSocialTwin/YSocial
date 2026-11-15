@@ -89,6 +89,21 @@
         "population_added": "(exp_id, population_id) -> \"'list'\""
       }
     },
+    "feeds": {
+      "kind": "module",
+      "members": {
+        "default_feed_limits": "() -> 'dict'",
+        "normalize_force_placeholder": "(value)",
+        "normalize_forum_avatar_mode": "(value)",
+        "normalize_image_feed_item": "(item)",
+        "normalize_image_feeds_payload": "(feeds)",
+        "normalize_rss_feed_item": "(item)",
+        "normalize_subreddit_input": "(value)",
+        "parse_admin_feed_metadata": "(feed_url, feed_content)",
+        "parse_required_feed_limit": "(form_key, cast, label, minimum=None)",
+        "read_feed_with_headers": "(feed_url)"
+      }
+    },
     "gettext": {
       "kind": "function",
       "signature": "(message, **variables)"
@@ -251,6 +266,7 @@
         "opinion_dynamics_enabled_for_client_creation": "(experiment)",
         "persist_non_hpc_opinion_dynamics": "(context)",
         "provider_of": "(experiment)",
+        "provider_template": "(platform_or_experiment, name: 'str') -> 'str'",
         "read_feed_health": "(experiment, experiment_dir)",
         "read_json_if_exists": "(path)",
         "redirect_to_clients_page": "(experiment, current_endpoint)",

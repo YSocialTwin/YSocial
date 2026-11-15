@@ -2,6 +2,8 @@
 
 from y_web import db
 from y_web.src.models import (
+    ForumRssFeedResource,
+    ForumImageFeedResource,
     Profession,
     Nationalities,
     Leanings,
@@ -57,6 +59,8 @@ from y_web.src.models import (
 )
 
 __all__ = [
+    "ForumRssFeedResource",
+    "ForumImageFeedResource",
     "Profession",
     "Nationalities",
     "Leanings",

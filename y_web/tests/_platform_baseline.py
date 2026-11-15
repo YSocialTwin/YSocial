@@ -78,7 +78,6 @@ PLATFORM_OWNED = (
     "y_web/src/agents/custom_field_stats.py",
     "y_web/src/agents/profile_pictures.py",
     "y_web/routes/admin/sub/experiments/_dating",
-    "y_web/routes/admin/sub/experiments/_forum",
     "y_web/routes/admin/sub/experiments/_im",
     "y_web/platforms/",
 )

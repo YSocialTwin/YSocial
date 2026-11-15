@@ -180,9 +180,11 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
         "y_web.routes.social.forum": "routes.social_forum",
         "y_web.routes.interactions.forum": "routes.interactions_forum",
         "y_web.routes.api.reddit": "routes.api_reddit",
+        "y_web.routes.admin.sub.experiments._forum_feeds": "routes.feeds_forum",
     },
     needs=(
         "test_api_reddit_blueprint.py",
+        "test_forum_feed_resource_registry.py",
         "test_forum_feed_sidebar.py",
         "test_forum_search_suggest.py",
     )

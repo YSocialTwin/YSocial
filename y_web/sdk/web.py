@@ -22,6 +22,13 @@ def check_privileges(username):
     return target(username)
 
 
+def provider_template(platform_or_experiment, name: str) -> str:
+    """Name of a template of the repository that serves an experiment (or, given a platform key, the preferred one)."""
+    from y_web.platforms.extension import provider_template as target
+
+    return target(platform_or_experiment, name)
+
+
 def unique_population_name(base_name):
     """``base_name``, with a numeric suffix when a population already has it."""
     from y_web.routes.admin.sub.populations import _unique_population_name as target
@@ -382,6 +389,7 @@ def current_experiment_id():
 
 
 __all__ = [
+    "provider_template",
     "choose_active_experiment",
     "current_experiment_id",
     "experiment_details_page",

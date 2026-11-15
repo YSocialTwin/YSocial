@@ -1,0 +1,77 @@
+"""What the feed pages of a platform take from the core: reading and checking the feeds an experiment is given.
+
+The functions look the core up when called, so what the core (or a test) replaces is what a platform gets.
+"""
+
+from __future__ import annotations
+
+
+def _helper(name):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    return getattr(_helpers, name)
+
+
+def default_feed_limits() -> dict:
+    """The feed limits an experiment starts with."""
+    from y_web.routes.admin.sub.experiments._blueprint import DEFAULT_FEED_LIMITS
+
+    return dict(DEFAULT_FEED_LIMITS)
+
+
+def parse_admin_feed_metadata(feed_url, feed_content):
+    from y_web.routes.admin.sub.experiments._feeds import (
+        _parse_admin_feed_metadata as target,
+    )
+
+    return target(feed_url, feed_content)
+
+
+def normalize_rss_feed_item(item):
+    return _helper("_normalize_rss_feed_item")(item)
+
+
+def normalize_image_feed_item(item):
+    return _helper("_normalize_image_feed_item")(item)
+
+
+def normalize_image_feeds_payload(feeds):
+    return _helper("_normalize_image_feeds_payload")(feeds)
+
+
+def normalize_subreddit_input(value):
+    return _helper("_normalize_subreddit_input")(value)
+
+
+def parse_required_feed_limit(form_key, cast, label, minimum=None):
+    return _helper("_parse_required_feed_limit")(form_key, cast, label, minimum)
+
+
+def read_feed_with_headers(feed_url):
+    return _helper("_read_feed_with_headers")(feed_url)
+
+
+def normalize_forum_avatar_mode(value):
+    from y_web.src.content.avatars import normalize_forum_avatar_mode as target
+
+    return target(value)
+
+
+def normalize_force_placeholder(value):
+    from y_web.src.content.avatars import normalize_force_placeholder as target
+
+    return target(value)
+
+
+__all__ = [
+    "default_feed_limits",
+    "normalize_force_placeholder",
+    "normalize_forum_avatar_mode",
+    "normalize_image_feed_item",
+    "normalize_image_feeds_payload",
+    "normalize_rss_feed_item",
+    "normalize_subreddit_input",
+    "parse_admin_feed_metadata",
+    "parse_required_feed_limit",
+    "read_feed_with_headers",
+]
