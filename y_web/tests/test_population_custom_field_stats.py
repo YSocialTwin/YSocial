@@ -219,3 +219,38 @@ def test_agent_details_page_shows_the_picture_and_the_groups():
         and 'id="ad-custom"' in page
         and "agent_custom_groups" in page
     )
+
+
+def test_the_fields_of_a_registered_platform_get_a_group_of_its_own(monkeypatch):
+    """A platform that writes ``<its key>.<field>`` is grouped under its label, with no change to the core."""
+    from types import SimpleNamespace
+
+    from y_web.platforms import registry
+    from y_web.src.agents import custom_field_stats as cf
+
+    monkeypatch.setattr(registry, "keys", lambda: ["newplat", "dating"])
+    original_get = registry.get
+    monkeypatch.setattr(
+        registry,
+        "get",
+        lambda key, sim=None: (
+            SimpleNamespace(label="New Platform")
+            if key == "newplat"
+            else original_get(key, sim)
+        ),
+    )
+    custom = {
+        "newplat.mood": {1: "calm", 2: "calm"},
+        "x.unknown": {1: "v"},
+        "dating.profile.smokes": {1: "true"},
+    }
+    groups = cf.build(custom, {}, total=2)
+    assert [g["id"] for g in groups] == ["dating_profile", "ns:newplat", "other"]
+    new = groups[1]
+    assert new["title"] == "New Platform" and new["badge"] == "newplat"
+    assert new["blocks"][0]["key"] == "mood"
+
+    per_agent = cf.agent_groups({"newplat.mood": "calm", "x.unknown": "v"}, {})
+    assert [g["id"] for g in per_agent] == ["ns:newplat", "other"]
+    assert per_agent[0]["title"] == "New Platform"
+    assert per_agent[0]["fields"][0]["name"] == "mood"

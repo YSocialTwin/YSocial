@@ -35,6 +35,38 @@ GROUPS: List[Tuple[str, str, Optional[str]]] = [
     ("other", N_("Other custom fields"), None),
 ]
 _TITLES = {gid: (title, badge) for gid, title, badge in GROUPS}
+_NAMESPACE = "ns:"  # id prefix of the group of a platform that writes ``<platform key>.<field>`` keys
+
+
+def _namespace_of(key: str) -> Optional[str]:
+    """The platform key a ``<platform key>.<field>`` feature belongs to (``None``: not a platform's own field)."""
+    head, dot, rest = key.partition(".")
+    if not dot or not rest or head in ("appearance", "dating"):
+        return None
+    from y_web.platforms import registry
+
+    return head if head in registry.keys() else None
+
+
+def _group_head(gid: str) -> Tuple[str, Optional[str]]:
+    """(title, badge) of a group: the fixed ones, or the label of the platform a dynamic group belongs to."""
+    if gid in _TITLES:
+        return _TITLES[gid]
+    from y_web.platforms import registry
+
+    key = gid[len(_NAMESPACE) :]
+    provider = registry.get(key)
+    return (provider.label if provider else key.replace("_", " ").title()), key
+
+
+def _ordered(gids: Iterable[str]) -> List[str]:
+    """The fixed groups in page order, the groups of the platforms (by name) before ``other``."""
+    present = set(gids)
+    fixed = [g for g, _t, _b in GROUPS if g in present]
+    dynamic = sorted(g for g in present if g not in _TITLES)
+    at = fixed.index("other") if "other" in fixed else len(fixed)
+    return fixed[:at] + dynamic + fixed[at:]
+
 
 # readable names of the fields that carry a name of their own
 FIELD_LABELS = {
@@ -78,6 +110,9 @@ def classify(key: str) -> Tuple[str, str]:
             return gid, key[len(prefix) :]
     if key.startswith("dating."):
         return "dating_other", key[len("dating.") :]
+    namespace = _namespace_of(key)
+    if namespace:
+        return _NAMESPACE + namespace, key[len(namespace) + 1 :]
     return "other", key
 
 
@@ -237,7 +272,7 @@ def build(
         if block:
             if gid == "other" and "." in key:
                 block["title"] = key.replace("_", " ").replace(".", " · ")
-            grouped[gid].append(block)
+            grouped.setdefault(gid, []).append(block)
     for name in sorted(seen_appearance):
         block = describe(
             name,
@@ -281,7 +316,8 @@ def build(
         if block:
             grouped["photo_sharing"].append(block)
     out = []
-    for gid, title, badge in GROUPS:
+    for gid in _ordered(grouped):
+        title, badge = _group_head(gid)
         blocks = grouped[gid]
         if blocks:
             out.append(
@@ -404,7 +440,7 @@ def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, 
                 unit=gid in _UNIT_FIELDS,
             )
         if entry:
-            grouped[gid].append(entry)
+            grouped.setdefault(gid, []).append(entry)
     for name in sorted(appearance):
         entry = _field(name, appearance[name], NAME_LABELS.get(name))
         if entry:
@@ -415,7 +451,12 @@ def agent_groups(custom: Dict[str, Any], ext: Dict[str, Any]) -> List[Dict[str, 
             if entry:
                 grouped["photo_sharing"].append(entry)
     return [
-        {"id": gid, "title": title, "badge": badge, "fields": grouped[gid]}
-        for gid, title, badge in GROUPS
+        {
+            "id": gid,
+            "title": _group_head(gid)[0],
+            "badge": _group_head(gid)[1],
+            "fields": grouped[gid],
+        }
+        for gid in _ordered(grouped)
         if grouped[gid]
     ]
