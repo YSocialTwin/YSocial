@@ -437,41 +437,7 @@ CREATE TABLE blog_posts (
 -- ================================================
 -- DATA INSERTIONS
 -- ================================================
-
-INSERT INTO content_recsys (name, value, enabled, category) VALUES
-  ('ContentRecSys', 'Random', 'HPC,Standard', 'Global'),
-  ('ReverseChrono', '(RC) Reverse Chrono', 'HPC,Standard', 'Global'),
-  ('ReverseChronoPopularity', '(RCP) Popularity', 'HPC,Standard', 'Global'),
-  ('ReverseChronoFollowers', '(RCF) Followers', 'HPC,Standard', 'Social Timeline'),
-  ('ReverseChronoFollowersPopularity', '(FP) Followers-Popularity', 'HPC,Standard', 'Social Timeline'),
-  ('ReverseChronoComments', '(RCC) Reverse Chrono Comments', 'HPC,Standard', 'Global'),
-  ('CommonInterests', '(CI) Common Interests', 'HPC,Standard', 'Content-Based Filtering'),
-  ('CommonUserInterests', '(CUI) Common User Interests', 'HPC,Standard', 'Profile-Based User Similarity'),
-  ('SimilarUsersReactions', '(SIR) Similar Users Reactions', 'HPC,Standard', 'Behavioral User Modeling'),
-  ('SimilarUsersPosts', '(SIP) Similar Users Posts', 'HPC,Standard', 'Demographic-Based'),
-  ('ContentBasedFeatures', '(CBF) ContentBasedFeatures', 'HPC', 'Content-Based Filtering'),
-  ('ContentBasedVector', '(CBV) ContentBasedVector', 'HPC', 'Content-Based Filtering'),
-  ('CollaborativeUserUser', '(CUU) CollaborativeUserUser', 'HPC', 'Collaborative Filtering'),
-  ('CollaborativeItemItem', '(CII) CollaborativeItemItem', 'HPC', 'Collaborative Filtering'),
-  ('HybridLinearRanker', '(HLR) Hybrid Linear Ranker', 'HPC', 'Ensemble'),
-  ('FilterBubble', 'Personalized Feed', 'HumanOnly', 'Personalization'),
-  ('HotRanking', '(HOT) Hot Ranking', 'Forum', 'Reddit-style Ranking'),
-  ('TopRanking', '(TOP) Top Ranking', 'Forum', 'Reddit-style Ranking'),
-  ('MostCommented', '(MC) Most Commented', 'Forum', 'Reddit-style Ranking');
-
-INSERT INTO follow_recsys (name, value, category, enabled) VALUES
-('FollowRecSys', 'Random', 'Baseline & Exploration', 'HPC,Standard'),
-('CommonNeighbors', 'Common Neighbors', 'Local Triadic Closure', 'HPC,Standard'),
-('Jaccard', 'Jaccard', 'Local Triadic Closure', 'HPC,Standard'),
-('AdamicAdar', 'Adamic Adar', 'Local Triadic Closure', 'HPC,Standard'),
-('PreferentialAttachment', 'Preferential Attachment', 'Popularity & Activity Bias', 'HPC,Standard'),
-('Activity', 'Activity', 'Popularity & Activity Bias', 'HPC'),
-('ResourceAllocation', 'ResourceAllocation', 'Local Triadic Closure', 'HPC'),
-('CosineSimilarity', 'CosineSimilarity', 'Profile & Attribute Homophily', 'HPC'),
-('CoEngagement', 'CoEngagement', 'Behavioral Homophily', 'HPC'),
-('RandomWalkRestart', 'RandomWalkRestart', 'Graph Proximity', 'HPC'),
-('ReactionsOnContent', 'ReactionsOnContent', 'Behavioral Homophily', 'HPC'),
-('TwoHopEgoSampling', 'TwoHopEgoSampling', 'Community Approximation', 'HPC');
+-- content_recsys and follow_recsys ship empty: the recommenders are declared by the platforms
 
 INSERT INTO leanings (leaning) VALUES
 ('democrat'),

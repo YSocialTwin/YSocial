@@ -344,7 +344,11 @@ def test_its_recommenders_join_the_catalogue_without_touching_the_existing_rows(
     Content_Recsys.__table__.create(engine)
     Follow_Recsys.__table__.create(engine)
     with Session(engine) as session:
-        session.add(Content_Recsys(name="zrank", value="edited by hand", enabled="HPC"))
+        session.add(
+            Content_Recsys(
+                name="zrank", value="edited by hand", category="Mine", enabled="HPC"
+            )
+        )
         session.commit()
         assert ensure_catalog(session) == 1  # ZFollow only: ZRank is already there
         assert ensure_catalog(session) == 0  # idempotent

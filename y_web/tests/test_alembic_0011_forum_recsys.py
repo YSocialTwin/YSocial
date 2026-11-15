@@ -1,7 +1,6 @@
 """Alembic 0011: the forum-only content recommenders are added once and only for forums."""
 
 import importlib.util
-import sqlite3
 from pathlib import Path
 
 import sqlalchemy as sa
@@ -50,13 +49,19 @@ def test_a_database_without_the_table_is_left_alone(tmp_path):
     assert sa.inspect(engine).get_table_names() == []
 
 
-def test_shipped_template_has_forum_rows_hidden_from_other_catalogues():
-    conn = sqlite3.connect(ROOT / "data_schema" / "database_dashboard.db")
-    try:
-        rows = dict(conn.execute("SELECT name, enabled FROM content_recsys").fetchall())
-    finally:
-        conn.close()
-    for name in FORUM_ONLY:
-        assert rows[name] == "Forum"
-        # the other catalogues filter with a substring test on "standard" / "hpc"
-        assert "standard" not in rows[name].lower() and "hpc" not in rows[name].lower()
+def test_the_forum_declares_its_rows_hidden_from_other_catalogues():
+    import pytest
+
+    from y_web.platforms import registry
+
+    providers = [p for p in registry.all_providers() if p.key == "forum"]
+    if not providers:
+        pytest.skip("needs a forum repository")
+    for provider in providers:
+        rows = {r["name"]: r["enabled"] for r in provider.recsys_catalog}
+        for name in FORUM_ONLY:
+            assert rows[name] == "Forum"
+            # the other catalogues filter with a substring test on "standard" / "hpc"
+            assert (
+                "standard" not in rows[name].lower() and "hpc" not in rows[name].lower()
+            )
