@@ -162,9 +162,8 @@ def test_create_community_wiring():
 
 
 def test_available_communities_include_joined_ones():
-    from pathlib import Path
-
     import importlib
+    from pathlib import Path
 
     src = Path(
         importlib.import_module("y_web.src.commons.service.queries").__file__

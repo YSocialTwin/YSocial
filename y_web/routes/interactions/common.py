@@ -294,10 +294,9 @@ def share_content(exp_id):
     post_id = request.args.get("post_id")
 
     # World Simulation (F8): an enrolled person who picked other platforms shares through the runtime gateway
+    from y_web.platforms import registry
     from y_web.src.federation import human_outbox as _ho
     from y_web.src.models import Exps
-
-    from y_web.platforms import registry
 
     _share_exp = db.session.get(Exps, int(exp_id))
     _requested = _ho.requested_members(request.args.getlist("crosspost"))

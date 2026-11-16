@@ -35,8 +35,8 @@ from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_o
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _experiment_memory_enabled,
-    _logged_experiment_user,
     _load_ui_settings,
+    _logged_experiment_user,
     get_safe_profile_pic,
     is_admin,
 )

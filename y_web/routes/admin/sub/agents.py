@@ -41,7 +41,6 @@ from y_web.src.models import (
     Agent_Population,
     Agent_Profile,
     Education,
-    RssFeedResource,
     Languages,
     Leanings,
     Nationalities,
@@ -50,6 +49,7 @@ from y_web.src.models import (
     Page_Population,
     Population,
     Profession,
+    RssFeedResource,
     Topic_List,
     Toxicity_Levels,
 )

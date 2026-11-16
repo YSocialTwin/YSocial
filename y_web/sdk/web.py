@@ -313,9 +313,7 @@ def get_db_type():
 
 def read_feed_health(experiment, experiment_dir):
     """Return configured and loaded feed counts for the experiment."""
-    from y_web.routes.admin.sub.experiments._helpers import (
-        _read_feed_health as target,
-    )
+    from y_web.routes.admin.sub.experiments._helpers import _read_feed_health as target
 
     return target(experiment, experiment_dir)
 
