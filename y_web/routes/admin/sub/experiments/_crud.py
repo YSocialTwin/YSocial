@@ -159,7 +159,7 @@ def _external_repo_availability():
                 _installed(key) for key in provider.runtime_keys
             )
     # runtimes a platform checks on disk, like the launcher's own check
-    for provider in registry.providers():
+    for provider in registry.all_providers():
         try:
             availability.update(provider.extra_runtime_availability())
         except Exception:
