@@ -28,7 +28,9 @@ def test_the_default_threads_answer_what_the_feed_asks():
 def test_a_provider_without_threads_is_served_by_the_default():
     without = [p for p in registry.all_providers() if p.threads is None]
     if not without:
-        pytest.skip("no installed platform lacks threads (the platform repositories are not installed)")
+        pytest.skip(
+            "no installed platform lacks threads (the platform repositories are not installed)"
+        )
     for provider in without:
         threads = provider.threads or flat_threads
         assert callable(threads.display_time) and callable(threads.split_title)
