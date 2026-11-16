@@ -420,8 +420,12 @@ def moved_template_in_repository(spec: Dict[str, str]) -> Path:
 def repository_installed(repo: str) -> bool:
     """Whether the checkout of a platform repository (with its ``ysocial_platform/`` folder) is installed."""
     return (
-        Path(__file__).resolve().parents[2] / "external" / repo / "ysocial_platform"
-    ).is_dir()
+        Path(__file__).resolve().parents[2]
+        / "external"
+        / repo
+        / "ysocial_platform"
+        / "provider.py"
+    ).is_file()
 
 
 def without_moved(name: str, baseline):

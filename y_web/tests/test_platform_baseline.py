@@ -52,7 +52,7 @@ def test_every_core_template_still_compiles(booted_app):
     failures = []
     names = baseline.without_moved("templates", baseline.load_snapshot("templates"))
     for spec in baseline.load_moved()["templates"].values():
-        if baseline.repository_templates(
+        if baseline.repository_installed(spec["repo"]) and baseline.repository_templates(
             spec
         ).is_dir():  # moved: it compiles in its repository
             names.append(spec["to"])
@@ -107,7 +107,9 @@ def test_moved_templates_are_in_their_repository():
     missing, installed = [], False
     for old, spec in baseline.load_moved()["templates"].items():
         where = baseline.moved_template_in_repository(spec)
-        if not baseline.repository_templates(spec).is_dir():
+        if not baseline.repository_installed(spec["repo"]) or not (
+            baseline.repository_templates(spec).is_dir()
+        ):
             continue  # this repository is not installed
         installed = True
         if not where.exists():
