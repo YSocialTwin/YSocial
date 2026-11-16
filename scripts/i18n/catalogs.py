@@ -110,10 +110,16 @@ def check():
         extract(fresh)
         fresh_ids = _msgids(read_po(fresh.open("rb")))
     committed_ids = _msgids(read_po(POT.open("rb"))) if POT.is_file() else set()
-    if fresh_ids != committed_ids:
+    new_ids = fresh_ids - committed_ids
+    gone_ids = committed_ids - fresh_ids
+    if not _provider_modules():
+        # a checkout of the core alone (CI) has no platform repository: the texts the providers declare cannot be
+        # extracted there, so a committed id missing from the fresh extraction proves nothing
+        gone_ids = set()
+    if new_ids or gone_ids:
         problems.append(
-            f"messages.pot is stale ({len(fresh_ids - committed_ids)} new, "
-            f"{len(committed_ids - fresh_ids)} removed): run `catalogs.py update` and commit it"
+            f"messages.pot is stale ({len(new_ids)} new, "
+            f"{len(gone_ids)} removed): run `catalogs.py update` and commit it"
         )
     for lang in languages():
         po = TRANSLATIONS / lang / "LC_MESSAGES" / "messages.po"
