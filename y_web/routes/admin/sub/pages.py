@@ -87,7 +87,7 @@ def create_page():
                 name=name,
             )
         )
-        return page_data()
+        return redirect("/admin/pages")
 
     page = Page(
         name=name,
@@ -118,7 +118,7 @@ def create_page():
         }
     )
 
-    return page_data()
+    return redirect("/admin/pages")
 
 
 @pages.route("/admin/pages_data")
@@ -219,7 +219,7 @@ def delete_page(uid):
     if page_pop:
         # show an error message
         flash(_("Page is assigned to a population. Cannot delete."))
-        return page_data()
+        return redirect("/admin/pages")
 
     db.session.delete(page)
     db.session.commit()
@@ -232,7 +232,7 @@ def delete_page(uid):
         db.session.delete(pp)
         db.session.commit()
 
-    return page_data()
+    return redirect("/admin/pages")
 
 
 @pages.route("/admin/page_details/<int:uid>")
