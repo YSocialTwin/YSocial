@@ -52,9 +52,10 @@ def test_every_core_template_still_compiles(booted_app):
     failures = []
     names = baseline.without_moved("templates", baseline.load_snapshot("templates"))
     for spec in baseline.load_moved()["templates"].values():
-        if baseline.repository_installed(spec["repo"]) and baseline.repository_templates(
-            spec
-        ).is_dir():  # moved: it compiles in its repository
+        if (
+            baseline.repository_installed(spec["repo"])
+            and baseline.repository_templates(spec).is_dir()
+        ):  # moved: it compiles in its repository
             names.append(spec["to"])
     for name in names:
         try:
