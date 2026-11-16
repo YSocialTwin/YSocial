@@ -176,6 +176,67 @@ def _sanitize_interview_reply(
     }
 
 
+def _agent_runtime_population(exp: Exps, agent_user: User_mgmt):
+    """(population, client) the agent belonged to in the experiment; either may be ``None``.
+
+    The agent is found by name among the agents of the populations that have a client in the experiment, so the
+    interview talks to the model and the server that agent's population ran on. When the agent cannot be placed, the
+    latest client of the experiment is used.
+    """
+    from y_web import db
+    from y_web.src.models import Agent, Agent_Population, Population
+
+    clients = (
+        Client.query.filter_by(id_exp=int(exp.idexp))
+        .order_by(Client.status.desc(), Client.id.desc())
+        .all()
+    )
+    if not clients:
+        return None, None
+    chosen = None
+    username = (getattr(agent_user, "username", "") or "").strip()
+    if username:
+        try:
+            pop_ids = {
+                row[0]
+                for row in db.session.query(Agent_Population.population_id)
+                .join(Agent, Agent.id == Agent_Population.agent_id)
+                .filter(Agent.name == username)
+                .all()
+            }
+        except Exception:
+            pop_ids = set()
+        chosen = next((c for c in clients if c.population_id in pop_ids), None)
+    if chosen is None:
+        chosen = clients[0]
+    try:
+        population = db.session.get(Population, chosen.population_id)
+    except Exception:
+        population = None
+    return population, chosen
+
+
+def _default_llm_endpoint() -> Tuple[str, str]:
+    """(base_url, api_key) of the application's own LLM server (``LLM_URL``/``LLM_BACKEND``/``LLM_API_KEY``).
+
+    Used when neither the administrator nor the experiment's clients carry a server of their own, the same server
+    the model lists of the admin pages are read from.
+    """
+    import os
+
+    url = (os.getenv("LLM_URL") or "").strip()
+    if not url:
+        backend = (os.getenv("LLM_BACKEND") or "ollama").strip()
+        if backend == "vllm":
+            url = "http://127.0.0.1:8000/v1"
+        elif ":" in backend and backend not in ("ollama", "vllm"):
+            url = backend if backend.startswith("http") else f"http://{backend}/v1"
+        else:
+            url = "http://127.0.0.1:11434/v1"
+    key = (os.getenv("LLM_API_KEY") or "").strip() or "NULL"
+    return _normalize_llm_base_url(url), key
+
+
 def _resolve_llm_backend(
     *,
     backend_mode: str,
@@ -194,49 +255,46 @@ def _resolve_llm_backend(
         model = (getattr(admin_user, "llm", "") or "").strip() or "llama3.2:latest"
         base_url = _normalize_llm_base_url(getattr(admin_user, "llm_url", "") or "")
         api_key = (getattr(admin_user, "llm_api_key", "") or "").strip() or "NULL"
+        if not base_url:
+            base_url, api_key = _default_llm_endpoint()
         temperature = 0.7
         max_tokens = 450
         return mode, model, base_url, api_key, temperature, max_tokens
 
-    # agent_runtime
-    model = (getattr(agent_user, "user_type", "") or "").strip() or "llama3.2:latest"
-    base_url = _normalize_llm_base_url(getattr(exp, "llm_default", "") or "")
-    api_key = (getattr(exp, "llm_api_key_default", "") or "").strip() or "NULL"
-    try:
-        temperature = float(getattr(exp, "llm_temperature_default", 0.7) or 0.7)
-    except Exception:
-        temperature = 0.7
-    try:
-        max_tokens = int(getattr(exp, "llm_max_tokens_default", 450) or 450)
-    except Exception:
-        max_tokens = 450
+    # agent_runtime: the model and the server the agent's population ran on during the experiment
+    population, runtime_client = _agent_runtime_population(exp, agent_user)
+    model = (
+        (getattr(population, "llm", "") or "").strip()
+        or (getattr(agent_user, "user_type", "") or "").strip()
+        or "llama3.2:latest"
+    )
+    if model.lower() == "user":
+        model = (getattr(population, "llm", "") or "").strip() or "llama3.2:latest"
+    base_url = ""
+    api_key = "NULL"
+    temperature = 0.7
+    max_tokens = 450
+
+    if runtime_client is not None:
+        base_url = _normalize_llm_base_url(getattr(runtime_client, "llm", "") or "")
+        api_key = (getattr(runtime_client, "llm_api_key", "") or "").strip() or "NULL"
+        try:
+            temperature = float(
+                getattr(runtime_client, "llm_temperature", temperature) or temperature
+            )
+        except Exception:
+            pass
+        try:
+            runtime_max_tokens = getattr(runtime_client, "llm_max_tokens", max_tokens)
+            if runtime_max_tokens is not None:
+                max_tokens = int(runtime_max_tokens)
+        except Exception:
+            pass
+    if not base_url:
+        base_url = _normalize_llm_base_url(getattr(population, "llm_url", "") or "")
 
     if not base_url:
-        runtime_client = (
-            Client.query.filter_by(id_exp=int(exp.idexp))
-            .order_by(Client.status.desc(), Client.id.desc())
-            .first()
-        )
-        if runtime_client is not None:
-            base_url = _normalize_llm_base_url(getattr(runtime_client, "llm", "") or "")
-            api_key = (
-                getattr(runtime_client, "llm_api_key", "") or ""
-            ).strip() or "NULL"
-            try:
-                temperature = float(
-                    getattr(runtime_client, "llm_temperature", temperature)
-                    or temperature
-                )
-            except Exception:
-                pass
-            try:
-                runtime_max_tokens = getattr(
-                    runtime_client, "llm_max_tokens", max_tokens
-                )
-                if runtime_max_tokens is not None:
-                    max_tokens = int(runtime_max_tokens)
-            except Exception:
-                pass
+        base_url, api_key = _default_llm_endpoint()
 
     return mode, model, base_url, api_key, temperature, max_tokens
 
