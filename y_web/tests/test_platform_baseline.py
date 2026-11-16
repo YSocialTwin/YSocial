@@ -9,7 +9,14 @@ from pathlib import Path
 
 import pytest
 
+from y_web.tests import _platform_alias
 from y_web.tests import _platform_baseline as baseline
+
+_all_installed = all(_platform_alias._present(p) for p in _platform_alias.PLATFORMS)
+needs_all_platforms = pytest.mark.skipif(
+    not _all_installed,
+    reason="the baseline was taken with every platform repository installed",
+)
 
 
 @pytest.fixture(scope="module")
@@ -24,6 +31,7 @@ def test_the_snapshot_exists_and_is_not_empty(name):
     assert baseline.load_snapshot(name), f"{name}.json is empty"
 
 
+@needs_all_platforms
 @pytest.mark.parametrize("name", baseline.SNAPSHOT_NAMES)
 def test_nothing_recorded_in_the_baseline_was_lost(name, booted_app):
     problems = baseline.lost_or_changed(
@@ -38,6 +46,7 @@ def test_nothing_recorded_in_the_baseline_was_lost(name, booted_app):
     )
 
 
+@needs_all_platforms
 def test_every_core_template_still_compiles(booted_app):
     """A moved or renamed template, or a missing macro, breaks the page that includes it."""
     failures = []

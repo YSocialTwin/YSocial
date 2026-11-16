@@ -1,6 +1,7 @@
 import pytest
 
 from y_web.src.agents.population import _generate_unique_name
+from y_web.tests import _platform_alias
 
 pytestmark = pytest.mark.unit
 
@@ -28,6 +29,10 @@ class FakeForum:
         return "Jane O'Connor-Smith"
 
 
+@pytest.mark.skipif(
+    not (_platform_alias.installed(_platform_alias.FORUM) or _platform_alias.installed(_platform_alias.FORUM_HPC)),
+    reason="the slug usernames are declared by the forum platform (not installed)",
+)
 def test_forum_username_generation_uses_reddit_style_handles():
     fake = FakeForum()
     name = _generate_unique_name(fake, "female", set(), username_type="forum")

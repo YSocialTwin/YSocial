@@ -126,8 +126,36 @@ def pytest_collection_modifyitems(config, items):
         "test_agent_form_optional_sections.py::test_the_appearance_feeds_the_dating_fields",
     )
 
+    # modules the platform repositories provide under their old core names (see _platform_alias): a test that
+    # imports one is skipped where no repository does
+    platform_modules = ("y_web.src.recsys", "y_web.src.commons.service")
+    absent_modules = []
+    for module in platform_modules:
+        try:
+            __import__(module)
+        except Exception:
+            absent_modules.append(module)
+
+    def _needs_absent_module(item):
+        if not absent_modules:
+            return None
+        try:
+            import inspect
+
+            source = inspect.getsource(getattr(item, "obj", None) or item.function)
+        except Exception:
+            return None
+        return next((m for m in absent_modules if m in source), None)
+
     for item in items:
         base = Path(str(getattr(item, "fspath", "") or "")).name
+        missing_module = _needs_absent_module(item)
+        if missing_module:
+            item.add_marker(
+                pytest.mark.skip(
+                    reason=f"{missing_module} is provided by a platform repository that is not installed"
+                )
+            )
         if (
             im_repo_missing and (base.startswith("test_im_") or _needs_im_runtime(item))
         ) or (im_runtime_missing and _needs_im_runtime(item)):

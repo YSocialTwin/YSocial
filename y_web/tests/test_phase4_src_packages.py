@@ -12,6 +12,8 @@ import sys
 
 import pytest
 
+from y_web.tests import _platform_alias
+
 pytestmark = pytest.mark.unit
 
 
@@ -123,6 +125,10 @@ class TestCanonicalAgentsImports:
         result = _normalize_generated_username("John Smith", "microblogging")
         assert "John" in result or "Smith" in result
 
+    @pytest.mark.skipif(
+        not _platform_alias.installed(),
+        reason="the default platform comes from an installed platform repository",
+    )
     def test_platform_functions(self):
         from y_web.src.agents.platform import (
             normalize_population_username_type,

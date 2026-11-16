@@ -17,6 +17,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from y_web.tests import _platform_alias
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
@@ -136,6 +137,10 @@ def exp_tmpdir(tmp_path):
     return exp_dir, write_config, write_hpc_config, write_client, write_hpc_client
 
 
+@pytest.mark.skipif(
+    not _platform_alias.installed(),
+    reason="the config file names come from the platforms (no platform repository is installed)",
+)
 class TestExperimentMemoryEnabledMainPy:
     """Integration tests for y_web.routes.social.helpers._experiment_memory_enabled."""
 

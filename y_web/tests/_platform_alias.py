@@ -92,7 +92,8 @@ INSTANT_MESSAGING = Platform(
     },
     needs=tuple(
         sorted(path.name for path in Path(__file__).parent.glob("test_im_*.py"))
-    ),
+    )
+    + ("test_stress_reward_churn_settings.py",),  # its experiments are IM ones
 )
 
 PHOTO_SHARING = Platform(
