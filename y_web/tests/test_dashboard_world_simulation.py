@@ -349,13 +349,11 @@ def test_the_buttons_follow_the_state_and_point_at_the_existing_routes(
         assert f'action="{base}/{name.split("_")[1]}"' in html, name
     for name in absent:
         assert f'action="{base}/{name.split("_")[1]}"' not in html, name
-    # the frontends buttons and the link to the detail page are always there
-    assert (
-        f'action="{base}/frontends/activate"' in html
-        and f'action="{base}/frontends/deactivate"' in html
-    )
+    # one frontends icon (activate while none is active) and the link to the detail page are always there
+    assert f'action="{base}/frontends/activate"' in html
+    assert f'action="{base}/frontends/deactivate"' not in html
     assert f'href="{base}"' in html
-    assert html.count('method="post"') == len(expected) + 2
+    assert html.count('method="post"') == len(expected) + 1
     assert 'name="next" value="dashboard"' in html
 
 

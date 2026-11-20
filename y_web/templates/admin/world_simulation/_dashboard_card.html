@@ -21,10 +21,14 @@
             <form method="post" action="{{ url_for('world_simulation.command_stop', fed_id=c.id) }}" data-confirm="{{ _('Stop this World Simulation? Every member experiment stops with it.') }}"><input type="hidden" name="next" value="dashboard">
                 <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Stop') }}" aria-label="{{ _('Stop') }}"><i class="mdi mdi-stop ys-icon-md"></i></button></form>
             {% endif %}
-            <form method="post" action="{{ url_for('world_simulation.frontends_activate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Activate frontends') }}" aria-label="{{ _('Activate frontends') }}"><i class="mdi mdi-monitor-dashboard ys-icon-md"></i></button></form>
+            {# one icon, as in the experiment boxes (Load): green while a web interface is active, grey otherwise; a click switches them all #}
+            {% if c.frontends_active %}
             <form method="post" action="{{ url_for('world_simulation.frontends_deactivate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Deactivate frontends') }}" aria-label="{{ _('Deactivate frontends') }}"><i class="mdi mdi-monitor-off ys-icon-md"></i></button></form>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Deactivate frontends') }}" aria-label="{{ _('Deactivate frontends') }}"><i class="mdi mdi-select-all active ys-icon-md"></i></button></form>
+            {% else %}
+            <form method="post" action="{{ url_for('world_simulation.frontends_activate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Activate frontends') }}" aria-label="{{ _('Activate frontends') }}"><i class="mdi mdi-select-all ys-icon-md"></i></button></form>
+            {% endif %}
             <a class="link-tooltip ws-dash-ibtn" href="{{ c.detail_url }}" title="{{ _('Details') }}" aria-label="{{ _('Details') }}"><i class="mdi mdi-open-in-new ys-icon-md-brand"></i></a>
         </span>
     </div>
@@ -60,8 +64,7 @@
             <span class="ws-dash-member-name"><i class="mdi {{ m.icon }}" title="{{ m.platform }}"></i> <span title="{{ m.name }}">{{ m.name }}</span></span>
             <span class="ws-dash-member-state">
                 <span class="ws-dash-pill {{ m.badge.class }}">{{ m.badge.text }}</span>
-                {% if m.frontend_active %}<span class="ws-dash-fe is-active" title="{{ _('Web interface') }}: {{ _('Active') }}"><i class="mdi mdi-monitor-dashboard"></i></span>
-                {% else %}<span class="ws-dash-fe" title="{{ _('Web interface') }}: {{ _('Inactive') }}"><i class="mdi mdi-monitor-off"></i></span>{% endif %}
+                <span class="ws-dash-fe{% if m.frontend_active %} is-active{% endif %}" title="{{ _('Web interface') }}: {{ _('Active') if m.frontend_active else _('Inactive') }}"><i class="mdi mdi-select-all{% if m.frontend_active %} active{% endif %}"></i></span>
                 {% if m.url %}<a class="link-tooltip ws-dash-open" href="{{ m.url }}" target="_blank" rel="noopener" title="{{ _('Open') }}" aria-label="{{ _('Open') }}"><i class="mdi mdi-open-in-new"></i></a>{% endif %}
             </span>
         </div>

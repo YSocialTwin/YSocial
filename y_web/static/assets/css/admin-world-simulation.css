@@ -166,6 +166,7 @@
 .ws-dash-ibtn .mdi.ys-icon-md-brand { color: #039be5; }
 .ws-dash-ibtn:hover .mdi { color: red; }
 .ws-dash-ibtn:hover .mdi.ys-icon-md-brand { color: #0d95e8; }
+.ws-dash-ibtn .mdi.active, .ws-dash-ibtn:hover .mdi.active { color: green; }
 .ws-dash-pill { display: inline-block; color: #fff; background: #6c757d; font-size: .65em; font-weight: 600; padding: 1px 6px; border-radius: 8px; line-height: 1.4; white-space: nowrap; }
 .ws-dash-pill.ws-state-running { background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); }
 .ws-dash-pill.ws-state-starting, .ws-dash-pill.ws-state-stopping { background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); }
@@ -186,6 +187,7 @@
 .ws-dash-member-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-dash-member-state { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .ws-dash-fe { color: #b0b5be; font-size: 14px; line-height: 1; }
-.ws-dash-fe.is-active { color: #28a745; }
+.ws-dash-fe .mdi { color: #b0b5be; }
+.ws-dash-fe .mdi.active { color: green; }
 .ws-dash-open { color: #039be5; font-size: 14px; line-height: 1; }
 @media (max-width: 768px) { .ws-dash-name { max-width: 140px; } .ws-dash-head { flex-wrap: wrap; } }

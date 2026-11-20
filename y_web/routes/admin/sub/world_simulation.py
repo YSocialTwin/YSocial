@@ -407,6 +407,7 @@ def dashboard_card(fed, user):
         "coordinator_down": fed.status == "running" and coordinator is None,
         "problems": problems[:DASHBOARD_MAX_PROBLEMS],
         "problems_total": len(problems),
+        "frontends_active": any(m["frontend_active"] for m in members),
         "members": members[:DASHBOARD_MAX_MEMBERS],
         "members_more": max(0, len(members) - DASHBOARD_MAX_MEMBERS),
         "detail_url": url_for("world_simulation.detail", fed_id=fed.id),
