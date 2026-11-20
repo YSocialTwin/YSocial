@@ -22,7 +22,8 @@
                 <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Stop') }}" aria-label="{{ _('Stop') }}"><i class="mdi mdi-stop ys-icon-md"></i></button></form>
             {% endif %}
             {# one icon, as in the experiment boxes (Load): green while a web interface is active, grey otherwise; a click switches them all #}
-            {% if c.frontends_active %}
+            {% set fe_on = c.frontends_active if c.frontends_active is defined else (c.members | selectattr('frontend_active') | list | length > 0) %}
+            {% if fe_on %}
             <form method="post" action="{{ url_for('world_simulation.frontends_deactivate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
                 <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Deactivate frontends') }}" aria-label="{{ _('Deactivate frontends') }}"><i class="mdi mdi-select-all active ys-icon-md"></i></button></form>
             {% else %}
