@@ -9,23 +9,23 @@
         <span class="ws-dash-actions">
             {% if c.state in ('stopped', 'completed', 'failed') %}
             <form method="post" action="{{ url_for('world_simulation.command_start', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="button is-small is-solid green-button" type="submit" title="{{ _('Start') }}"><i class="mdi mdi-play"></i> <span>{{ _('Start') }}</span></button></form>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Start') }}" aria-label="{{ _('Start') }}"><i class="mdi mdi-play ys-icon-md"></i></button></form>
             {% elif c.state == 'running' %}
             <form method="post" action="{{ url_for('world_simulation.command_pause', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="button is-small is-light" type="submit" title="{{ _('Pause') }}"><i class="mdi mdi-pause"></i> <span>{{ _('Pause') }}</span></button></form>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Pause') }}" aria-label="{{ _('Pause') }}"><i class="mdi mdi-pause ys-icon-md"></i></button></form>
             {% elif c.state == 'paused' %}
             <form method="post" action="{{ url_for('world_simulation.command_resume', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="button is-small is-solid green-button" type="submit" title="{{ _('Resume') }}"><i class="mdi mdi-play"></i> <span>{{ _('Resume') }}</span></button></form>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Resume') }}" aria-label="{{ _('Resume') }}"><i class="mdi mdi-play ys-icon-md"></i></button></form>
             {% endif %}
             {% if c.state in ('running', 'paused', 'starting') %}
             <form method="post" action="{{ url_for('world_simulation.command_stop', fed_id=c.id) }}" data-confirm="{{ _('Stop this World Simulation? Every member experiment stops with it.') }}"><input type="hidden" name="next" value="dashboard">
-                <button class="button is-small is-solid orange-button" type="submit" title="{{ _('Stop') }}"><i class="mdi mdi-stop"></i> <span>{{ _('Stop') }}</span></button></form>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Stop') }}" aria-label="{{ _('Stop') }}"><i class="mdi mdi-stop ys-icon-md"></i></button></form>
             {% endif %}
             <form method="post" action="{{ url_for('world_simulation.frontends_activate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="button is-small is-light" type="submit" title="{{ _('Activate frontends') }}"><i class="mdi mdi-monitor-dashboard"></i> <span>{{ _('Activate frontends') }}</span></button></form>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Activate frontends') }}" aria-label="{{ _('Activate frontends') }}"><i class="mdi mdi-monitor-dashboard ys-icon-md"></i></button></form>
             <form method="post" action="{{ url_for('world_simulation.frontends_deactivate', fed_id=c.id) }}"><input type="hidden" name="next" value="dashboard">
-                <button class="button is-small is-light" type="submit" title="{{ _('Deactivate frontends') }}"><i class="mdi mdi-monitor-off"></i> <span>{{ _('Deactivate frontends') }}</span></button></form>
-            <a class="button is-small is-light" href="{{ c.detail_url }}" title="{{ _('Details') }}"><i class="mdi mdi-open-in-new"></i> <span>{{ _('Details') }}</span></a>
+                <button class="link-tooltip ws-dash-ibtn" type="submit" title="{{ _('Deactivate frontends') }}" aria-label="{{ _('Deactivate frontends') }}"><i class="mdi mdi-monitor-off ys-icon-md"></i></button></form>
+            <a class="link-tooltip ws-dash-ibtn" href="{{ c.detail_url }}" title="{{ _('Details') }}" aria-label="{{ _('Details') }}"><i class="mdi mdi-open-in-new ys-icon-md-brand"></i></a>
         </span>
     </div>
 
@@ -62,7 +62,7 @@
                 <span class="ws-dash-pill {{ m.badge.class }}">{{ m.badge.text }}</span>
                 {% if m.frontend_active %}<span class="ws-dash-fe is-active" title="{{ _('Web interface') }}: {{ _('Active') }}"><i class="mdi mdi-monitor-dashboard"></i></span>
                 {% else %}<span class="ws-dash-fe" title="{{ _('Web interface') }}: {{ _('Inactive') }}"><i class="mdi mdi-monitor-off"></i></span>{% endif %}
-                {% if m.url %}<a class="ws-dash-open" href="{{ m.url }}" target="_blank" rel="noopener" title="{{ _('Open') }}"><i class="mdi mdi-open-in-new"></i> {{ _('Open') }}</a>{% endif %}
+                {% if m.url %}<a class="link-tooltip ws-dash-open" href="{{ m.url }}" target="_blank" rel="noopener" title="{{ _('Open') }}" aria-label="{{ _('Open') }}"><i class="mdi mdi-open-in-new"></i></a>{% endif %}
             </span>
         </div>
         {% endfor %}
