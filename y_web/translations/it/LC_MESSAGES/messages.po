@@ -12852,6 +12852,18 @@ msgstr "✔️ Gioca con"
 msgid "✔️ Use"
 msgstr "✔️ Usa"
 
+#: y_web/templates/admin/frontend_settings.html
+msgid "Show the pagination buttons"
+msgstr "Mostra i pulsanti di paginazione"
+
+#: y_web/templates/admin/frontend_settings.html
+msgid ""
+"Previous / Next buttons below the feed when infinite scrolling is "
+"disabled. Switch them off to show a single page of posts."
+msgstr ""
+"Pulsanti Precedente / Successivo sotto il feed quando lo scorrimento "
+"infinito è disattivato. Disattivali per mostrare una sola pagina di post."
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 
