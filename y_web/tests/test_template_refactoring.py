@@ -81,10 +81,10 @@ class TestNewFolderStructure:
     @pytest.mark.parametrize(
         "tpl",
         [
-            "social/header.html",
+            "microblogging/header.html",
             "microblogging/feed.html",
             "microblogging/profile.html",
-            "social/edit_profile.html",
+            "microblogging/edit_profile.html",
             "microblogging/friends.html",
             "microblogging/hashtag.html",
             "microblogging/emotions.html",
@@ -558,7 +558,7 @@ class TestRouteIntegration:
         "template",
         [
             "@microblogging/microblogging/profile.html",
-            "social/edit_profile.html",
+            "@microblogging/microblogging/edit_profile.html",
             "@microblogging/microblogging/friends.html",
             "@microblogging/microblogging/hashtag.html",
             "@microblogging/microblogging/emotions.html",

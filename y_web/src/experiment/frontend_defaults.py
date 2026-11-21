@@ -41,6 +41,7 @@ DEFAULT_SETTINGS = {
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
     "posts_per_page": 10,  # posts per page when infinite scroll is disabled
+    "show_pagination_buttons": True,  # Previous/Next buttons when infinite scroll is disabled (False = one page only)
 }
 
 

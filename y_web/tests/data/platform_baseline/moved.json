@@ -603,8 +603,6 @@
     ]
   },
   "renamed_templates": {
-    "microblogging/header.html": "social/header.html",
-    "microblogging/edit_profile.html": "social/edit_profile.html",
     "microblogging/components/chat_panel.html": "shared/chat_panel.html"
   }
 }

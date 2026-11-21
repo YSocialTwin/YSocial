@@ -502,6 +502,16 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 <input type="number" id="posts_per_page" min="1" max="100" value="10"
                        style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
               </div>
+              <div id="pagination-buttons-row" class="ys-toggle-row" data-cap="show_pagination_buttons" style="margin-left:1.5rem;">
+                <span class="ys-toggle-label">
+                  {{ _('Show the pagination buttons') }}
+                  <small>{{ _('Previous / Next buttons below the feed when infinite scrolling is disabled. Switch them off to show a single page of posts.') }}</small>
+                </span>
+                <label class="switch-small">
+                  <input type="checkbox" id="show_pagination_buttons" checked>
+                  <span class="slider-small round"></span>
+                </label>
+              </div>
 
               <!-- Interface language of the participant pages -->
               <div class="ys-toggle-row" data-cap="language">
@@ -804,7 +814,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
-      'infinite_scroll_enabled','language_switch_allowed',
+      'infinite_scroll_enabled','show_pagination_buttons','language_switch_allowed',
     ];
     boolIds.forEach(key => {
       const el = document.getElementById(key);
@@ -891,7 +901,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
-      'infinite_scroll_enabled','language_switch_allowed',
+      'infinite_scroll_enabled','show_pagination_buttons','language_switch_allowed',
     ];
     const out = {};
     boolIds.forEach(id => { const el = document.getElementById(id); out[id] = el ? el.checked : true; });
@@ -1259,11 +1269,27 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
   /* ── Init ────────────────────────────────────────────────── */
   showEmpty();
+  // Deep link: /admin/frontend_settings?exp=<id> opens the settings of that experiment (a plugin sends people here).
+  (function () {
+    const wanted = parseInt(new URLSearchParams(window.location.search).get('exp'), 10);
+    const target = wanted ? ALL_EXPS.find(e => e.id === wanted) : null;
+    if (!target) return;
+    const choose = (select, value) => {
+      if (select.value === value) return;
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+    };
+    choose(typeSelect, target.type);
+    choose(groupSelect, target.group || NO_GROUP);
+    choose(expSelect, String(target.id));
+  })();
   window.toggleInfiniteScrollControls = function(enabled) {
     const row = document.getElementById('posts-per-page-row');
-    if (!row) return;
+    const buttons = document.getElementById('pagination-buttons-row');
     // Without infinite scroll the "per page" value is the batch size and is always editable.
-    row.style.display = (!currentInfiniteScroll || !enabled) ? '' : 'none';
+    const shown = (!currentInfiniteScroll || !enabled) ? '' : 'none';
+    if (row) row.style.display = shown;
+    if (buttons) buttons.style.display = shown;
   };
 
 })();

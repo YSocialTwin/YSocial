@@ -254,6 +254,41 @@ def _load_recsys_options(
     }
 
 
+def _platform_recsys_options(platform_type, options):
+    """``options`` (content/follow lists) narrowed to the recommenders of ``platform_type``.
+
+    Every provider declares its recommenders (``recsys_catalog``); the tables hold them all. A recommender declared
+    only by other platforms is hidden, one nobody declares (added by an administrator) stays, and a platform whose
+    catalogue builds on the Standard one (``recsys_includes_standard``) also gets the default platform's.
+    """
+    provider = registry.get(platform_type)
+    if provider is None:
+        return options
+
+    def names(prov, kind):
+        return {
+            str(r.get("name", "")).lower()
+            for r in prov.recsys_catalog
+            if r.get("kind", "content") == kind
+        }
+
+    result = {}
+    for kind, rows in options.items():
+        own = names(provider, kind)
+        if provider.recsys_includes_standard:
+            default = registry.default() if hasattr(registry, "default") else None
+            if default is not None:
+                own |= names(default, kind)
+        foreign = set()
+        for other in registry.all_providers():
+            if other.key == provider.key:
+                continue
+            foreign |= names(other, kind)
+        foreign -= own
+        result[kind] = [r for r in rows if str(r["name"]).lower() not in foreign]
+    return result
+
+
 # ------------------------------------------------------------------
 # GET /admin/frontend_settings  — page shell
 # ------------------------------------------------------------------
@@ -374,8 +409,11 @@ def frontend_settings_get():
             "simulator_type": exp.simulator_type or "Standard",
             "settings": _load_settings(exp_id),
             "annotation_module_enabled": annotation_module_enabled(exp_id),
-            "recsys_options": _load_recsys_options(
-                exp.simulator_type or "Standard", all_algorithms=True
+            "recsys_options": _platform_recsys_options(
+                exp.platform_type,
+                _load_recsys_options(
+                    exp.simulator_type or "Standard", all_algorithms=True
+                ),
             ),
             "platform_settings": _platform_setting_specs(exp.platform_type),
             **_frontend_wording(exp.platform_type),

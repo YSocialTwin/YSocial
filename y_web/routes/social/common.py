@@ -703,8 +703,11 @@ def edit_profile(exp_id, user_id):
         "bot",
     ) and not getattr(user, "is_page", 0)
     _recsys_opts = _load_recsys_options(_sim_type, include_human_only=_is_human_profile)
+    edit_template = platforms.resolve(_exp).edit_profile_template
+    if not edit_template:
+        abort(404)
     return render_template(
-        "social/edit_profile.html",
+        edit_template,
         profile_topics_box=bool(
             _load_ui_settings(exp_id).get("profile_topics_box", True)
         ),

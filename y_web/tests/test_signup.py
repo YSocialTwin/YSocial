@@ -7,6 +7,7 @@ import pytest
 from y_web import db
 from y_web.src import signup
 from y_web.src.models import Admin_users, Exps, User_Experiment
+from y_web.tests._platform_repos import microblogging_file
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -186,5 +187,5 @@ def test_profile_topics_and_onboarding_flags_are_honoured():
     common = (ROOT / "routes/social/common.py").read_text(encoding="utf-8")
     assert '"onboarding_enabled", True' in common
     assert 'get("profile_topics_box", True)' in common
-    tpl = (ROOT / "templates/social/edit_profile.html").read_text(encoding="utf-8")
+    tpl = pathlib.Path(microblogging_file("y_web/templates/microblogging/edit_profile.html")).read_text(encoding="utf-8")
     assert "profile_topics_box|default(true) and topics and opinion_groups" in tpl

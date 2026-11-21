@@ -902,6 +902,8 @@ class PlatformProvider:
     #: whether the runtime keeps no per-user row for the experiment: :meth:`participant_without_row` stands for it
     # the page of a participant's profile, when the platform shows one of its own on the shared profile route
     profile_template: Optional[str] = None
+    # the platform's page to edit a profile, rendered by the shared route with the shared profile context (none: 404)
+    edit_profile_template: Optional[str] = None
     # the platform that answers for a type nobody provides is the one marked default (shared pages fall back on it)
     default_platform: bool = False
 
