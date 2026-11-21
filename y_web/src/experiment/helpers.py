@@ -287,10 +287,17 @@ def _insert_user_with_extra_columns(
 
 def _adopt_default_recsys(db_session, user, recsys_type, frecsys_type) -> None:
     """A participant who already has a profile (the copy of an experiment carries its author's) and never chose a
-    recommender (``default``) follows the recommenders the experiment sets for its participants, as a new one would."""
+    recommender (``default``) follows the recommenders the experiment sets for its participants, as a new one would.
+    """
     changed = False
-    for column, wanted in (("recsys_type", recsys_type), ("frecsys_type", frecsys_type)):
-        if wanted not in (None, "", "default") and (getattr(user, column, None) or "default") == "default":
+    for column, wanted in (
+        ("recsys_type", recsys_type),
+        ("frecsys_type", frecsys_type),
+    ):
+        if (
+            wanted not in (None, "", "default")
+            and (getattr(user, column, None) or "default") == "default"
+        ):
             setattr(user, column, wanted)
             changed = True
     if changed:

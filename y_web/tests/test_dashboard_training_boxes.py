@@ -53,7 +53,12 @@ def test_experiments_of_a_module_sit_under_it_and_not_in_the_status_boxes():
 
     class Exp:
         def __init__(self, idexp, name, exp_status=None, running=0):
-            self.idexp, self.exp_name, self.exp_status, self.running = idexp, name, exp_status, running
+            self.idexp, self.exp_name, self.exp_status, self.running = (
+                idexp,
+                name,
+                exp_status,
+                running,
+            )
 
     overview = {
         "active": [{"uid": "a", "experiment_ids": [1, 2, 9]}],
@@ -69,4 +74,6 @@ def test_experiments_of_a_module_sit_under_it_and_not_in_the_status_boxes():
     ]  # 9 is not visible to this person: not listed
     assert [e["id"] for e in overview["inactive"][0]["experiments"]] == [2]
     assert dash._dashboard_hidden_ids(None, overview) >= {1, 2, 9}
-    assert dash._dashboard_hidden_ids(None, {}) == set(dash._world_simulation_member_ids())
+    assert dash._dashboard_hidden_ids(None, {}) == set(
+        dash._world_simulation_member_ids()
+    )

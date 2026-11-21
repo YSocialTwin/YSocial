@@ -284,7 +284,8 @@ def _training_overview(user):
 
 def _dashboard_hidden_ids(user, overview=None):
     """Experiments kept out of the Running / Completed / Stopped boxes: those of a World Simulation (shown in its box)
-    and those bound to a training module (shown, compactly, under the module in the Training box)."""
+    and those bound to a training module (shown, compactly, under the module in the Training box).
+    """
     hidden = set(_world_simulation_member_ids())
     overview = overview if overview is not None else _training_overview(user)
     if overview:
