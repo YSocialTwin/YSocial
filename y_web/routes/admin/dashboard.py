@@ -270,6 +270,55 @@ def _world_simulation_member_ids():
         return set()
 
 
+def _training_overview(user):
+    """The Training box data (modules with the ids of their experiments), or ``None`` when the plugin is not available."""
+    try:
+        from y_web.src.external_runtime.backend_plugins import (
+            training_dashboard_overview,
+        )
+
+        return training_dashboard_overview(user)
+    except Exception:  # noqa: BLE001 - the page must work without the plugin
+        return None
+
+
+def _dashboard_hidden_ids(user, overview=None):
+    """Experiments kept out of the Running / Completed / Stopped boxes: those of a World Simulation (shown in its box)
+    and those bound to a training module (shown, compactly, under the module in the Training box)."""
+    hidden = set(_world_simulation_member_ids())
+    overview = overview if overview is not None else _training_overview(user)
+    if overview:
+        hidden |= set(overview.get("experiment_ids") or [])
+    return hidden
+
+
+def _attach_training_experiments(overview, experiments):
+    """Give every module of the Training box its (visible) experiments as compact entries."""
+    if not overview:
+        return
+    by_id = {e.idexp: e for e in experiments}
+    for key in ("active", "inactive"):
+        for module in overview.get(key, []):
+            items = []
+            for exp_id in module.get("experiment_ids", []):
+                exp = by_id.get(exp_id)
+                if exp is None:
+                    continue
+                status = getattr(exp, "exp_status", None) or (
+                    "active" if exp.running == 1 else "stopped"
+                )
+                items.append(
+                    {
+                        "id": exp.idexp,
+                        "name": exp.exp_name,
+                        "status": {"active": "running", "completed": "completed"}.get(
+                            status, "stopped"
+                        ),
+                    }
+                )
+            module["experiments"] = items
+
+
 def _world_simulation_box(user):
     """The cards of the World Simulation box (first block of the page) or None when it is not rendered."""
     try:
@@ -310,7 +359,9 @@ def dashboard():
         all_experiments = (
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
-        hidden_ids = _world_simulation_member_ids()
+        training_overview = _training_overview(user)
+        _attach_training_experiments(training_overview, all_experiments)
+        hidden_ids = _dashboard_hidden_ids(user, training_overview or {})
         if hidden_ids:
             all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
@@ -511,15 +562,6 @@ def dashboard():
     def can_manage_experiment_for_current_user(experiment):
         return user_can_manage_experiment(user, experiment)
 
-    try:
-        from y_web.src.external_runtime.backend_plugins import (
-            training_dashboard_overview,
-        )
-
-        training_overview = training_dashboard_overview(current_user)
-    except Exception:
-        training_overview = None
-
     return render_template(
         "admin/dashboard.html",
         training_overview=training_overview,
@@ -623,7 +665,7 @@ def dashboard_experiments_by_status(status):
         all_experiments = (
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
-        hidden_ids = _world_simulation_member_ids()
+        hidden_ids = _dashboard_hidden_ids(user)
         if hidden_ids:
             all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:
@@ -761,7 +803,7 @@ def dashboard_status():
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
         all_experiments = get_visible_experiment_query(user).all()
-        hidden_ids = _world_simulation_member_ids()
+        hidden_ids = _dashboard_hidden_ids(user)
         if hidden_ids:
             all_experiments = [e for e in all_experiments if e.idexp not in hidden_ids]
     else:

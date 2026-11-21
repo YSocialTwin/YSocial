@@ -3577,6 +3577,13 @@ input:checked + .slider:before {
 .dash-module-main { min-width: 0; display: flex; flex-direction: column; }
 .dash-module-title { font-weight: 600; font-size: 0.9rem; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-module-meta { font-size: 0.75rem; color: #6b7280; }
+.dash-module-exps { list-style: none; margin: -2px 0 2px 14px; padding: 0 0 0 10px; border-left: 2px solid #eef0f3; display: flex; flex-direction: column; gap: 1px; }
+.dash-module-exps li { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; line-height: 1.5; min-width: 0; }
+.dash-module-exps a { color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dash-module-exps a:hover { color: #3d70b2; }
+.dash-exp-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; }
+.dash-exp-dot.is-running { background: #28a745; } .dash-exp-dot.is-completed { background: #3d70b2; }
+.dash-exp-state { flex: none; margin-left: auto; color: #9ca3af; font-size: 0.72rem; }
 .dash-module-empty { color: #9ca3af; font-style: italic; }
 
 /* Users page: self-registration panel (compact) */

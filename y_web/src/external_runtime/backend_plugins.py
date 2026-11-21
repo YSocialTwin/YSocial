@@ -1022,10 +1022,13 @@ def training_dashboard_overview(user) -> dict | None:
         versions = _import_from_suite(TRAINING_REPO_KEY, f"{base}.versions")
         csrf = _import_from_suite(TRAINING_REPO_KEY, f"{base}.csrf")
         db_mod = _import_from_suite(TRAINING_REPO_KEY, f"{base}.db")
+        runs_mod = _import_from_suite(TRAINING_REPO_KEY, f"{base}.runs")
         with db_mod.get_engine().connect() as conn:
             modules = versions.list_modules(conn, user)
+            experiments = runs_mod.experiments_by_module(conn)
         modules = [
             {
+                "experiment_ids": experiments.get(m["module_uid"], []),
                 "uid": m["module_uid"],
                 "title": m["title"],
                 "status": m["latest_status"],
@@ -1038,6 +1041,8 @@ def training_dashboard_overview(user) -> dict | None:
         return {
             "active": [m for m in modules if not m["archived"]],
             "inactive": [m for m in modules if m["archived"]],
+            # the experiments the dashboard shows under their modules, so not among the plain experiments
+            "experiment_ids": sorted({e for m in modules for e in m["experiment_ids"]}),
             "csrf_token": csrf.get_token(),
         }
     except Exception:

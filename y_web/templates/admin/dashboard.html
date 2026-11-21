@@ -414,6 +414,17 @@
                                             </div>
                                             <button type="button" class="button is-small is-light dash-module-toggle" data-module-uid="{{ module.uid }}" data-module-action="{{ box_action }}">{{ box_label }}</button>
                                         </div>
+                                        {% if module.experiments %}
+                                        <ul class="dash-module-exps" aria-label="{{ _('Experiments of this module') }}">
+                                            {% for e in module.experiments %}
+                                            <li>
+                                                <span class="dash-exp-dot is-{{ e.status }}" title="{{ {'running': _('Running'), 'completed': _('Completed'), 'stopped': _('Stopped')}[e.status] }}"></span>
+                                                <a href="/admin/experiment_details/{{ e.id }}" title="{{ e.name }}">{{ e.name }}</a>
+                                                <span class="dash-exp-state">{{ {'running': _('Running'), 'completed': _('Completed'), 'stopped': _('Stopped')}[e.status] }}</span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
                                         {% else %}
                                         <p class="ys-text-small dash-module-empty">{{ box_empty }}</p>
                                         {% endfor %}

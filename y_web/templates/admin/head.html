@@ -116,6 +116,10 @@
                     <i data-feather="cpu"></i>
                     <span>{{ _('Agent Resources') }}</span>
                 </a>
+                <a href="{{ url_for('experiments.frontend_settings') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-frontend-settings">
+                    <i data-feather="sliders"></i>
+                    <span>{{ _('Frontend Settings') }}</span>
+                </a>
             </div>
         </div>
 
@@ -155,6 +159,10 @@
         <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
              see backend_plugins.backend_suite_sidebar_groups()); same markup
              as the groups above. -->
+        {# Scenario Design is listed at the top of the Training group when the Training plugin is there, in Extensions otherwise #}
+        {% set sd_entries = (extension_sidebar_entries | default([])) | selectattr('repo_key', 'equalto', 'scenario_design') | list %}
+        {% set training_here = (extension_sidebar_groups | default([])) | selectattr('repo_key', 'equalto', 'training_modules') | list | length > 0 %}
+        {% set ext_entries = ((extension_sidebar_entries | default([])) | rejectattr('repo_key', 'equalto', 'scenario_design') | list) if (training_here and current_user_role != "teacher") else (extension_sidebar_entries | default([])) %}
         {% for group in extension_sidebar_groups %}
         <div class="dashboard-aside-group" id="sidebar-group-{{ group.repo_key }}">
             <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-{{ group.repo_key }}" data-group="{{ group.repo_key }}" aria-expanded="false" aria-controls="sidebar-submenu-{{ group.repo_key }}">
@@ -166,6 +174,12 @@
             </button>
             <div class="dashboard-aside-submenu" id="sidebar-submenu-{{ group.repo_key }}">
                 <div class="dashboard-aside-submenu-title">{{ group.label }}</div>
+                {% if group.repo_key == 'training_modules' and current_user_role != "teacher" %}{% for entry in sd_entries %}
+                <a href="{{ entry.url }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-ext-{{ entry.repo_key }}">
+                    <i data-feather="{{ entry.icon }}"></i>
+                    <span>{{ entry.label }}</span>
+                </a>
+                {% endfor %}{% endif %}
                 {% set ns = namespace(section=None) %}
                 {% for item in group['items'] %}
                 {% if item.section and item.section != ns.section %}{% set ns.section = item.section %}
@@ -186,6 +200,7 @@
              in its own meta/registry.json (see
              backend_plugins.backend_suite_sidebar_entries()) gets an entry
              here automatically, with no template change needed. -->
+        {% if ext_entries %}
         <div class="dashboard-aside-group" id="sidebar-group-extensions">
             <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-extensions" data-group="extensions" aria-expanded="false" aria-controls="sidebar-submenu-extensions">
                 <div>
@@ -196,11 +211,7 @@
             </button>
             <div class="dashboard-aside-submenu" id="sidebar-submenu-extensions">
                 <div class="dashboard-aside-submenu-title">{{ _('Extensions') }}</div>
-                <a href="{{ url_for('experiments.frontend_settings') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-frontend-settings">
-                    <i data-feather="sliders"></i>
-                    <span>{{ _('Frontend Settings') }}</span>
-                </a>
-                {% for entry in extension_sidebar_entries %}
+                {% for entry in ext_entries %}
                 <a href="{{ entry.url }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-ext-{{ entry.repo_key }}">
                     <i data-feather="{{ entry.icon }}"></i>
                     <span>{{ entry.label }}</span>
@@ -208,6 +219,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
 
 {% endif %}
     </div>
