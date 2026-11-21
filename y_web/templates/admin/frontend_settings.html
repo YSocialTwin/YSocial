@@ -540,7 +540,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             </div>
           </div>
 
-          {% for slot_template in platform_slots('frontend_settings_boxes') %}{% include slot_template %}{% endfor %}
+          {% for slot_template in platform_slots('frontend_settings_boxes', once_per_key=True) %}{% include slot_template %}{% endfor %}
 
           <!-- ══ BOX 5+ — Frontend plugin suites (group="frontend_plugins") ══ -->
           {% for suite in frontend_plugin_suites %}

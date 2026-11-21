@@ -708,6 +708,7 @@ def edit_profile(exp_id, user_id):
         abort(404)
     return render_template(
         edit_template,
+        ui=_load_ui_settings(exp_id),
         profile_topics_box=bool(
             _load_ui_settings(exp_id).get("profile_topics_box", True)
         ),
