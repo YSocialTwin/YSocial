@@ -285,6 +285,19 @@ def _insert_user_with_extra_columns(
         connection.execute(table.insert().values(**values))
 
 
+def _adopt_default_recsys(db_session, user, recsys_type, frecsys_type) -> None:
+    """A participant who already has a profile (the copy of an experiment carries its author's) and never chose a
+    recommender (``default``) follows the recommenders the experiment sets for its participants, as a new one would."""
+    changed = False
+    for column, wanted in (("recsys_type", recsys_type), ("frecsys_type", frecsys_type)):
+        if wanted not in (None, "", "default") and (getattr(user, column, None) or "default") == "default":
+            setattr(user, column, wanted)
+            changed = True
+    if changed:
+        db_session.commit()
+        db_session.refresh(user)
+
+
 def _ensure_experiment_user(
     experiment: Exps,
     *,
@@ -337,10 +350,12 @@ def _ensure_experiment_user(
             )
             if selected_user is not None:
                 user = selected_user
+                _adopt_default_recsys(db_session, user, recsys_type, frecsys_type)
                 return user, False
 
         user = db_session.query(User_mgmt).filter_by(username=username).first()
         if user is not None:
+            _adopt_default_recsys(db_session, user, recsys_type, frecsys_type)
             return user, False
 
         new_user = User_mgmt(
