@@ -41,6 +41,16 @@
       "repository_url": "https://github.com/YSocialTwin/YClientReddit"
     },
     {
+      "plugin_name": "YCreator",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Simulation runtime for creator-economy experiments: creators publish free and paid content, fans subscribe, tip and write, and a double-entry ledger of virtual credits keeps every transfer verifiable.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YCreator"
+    },
+    {
       "plugin_name": "YDating",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
@@ -64,7 +74,7 @@
       "plugin_name": "YForum",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "HPC forum runtime: Ray-based, for Reddit-style experiments (threads, comments, votes, follows and interchangeable content recommenders) on HPC clusters; provides its own pages and administration in YSocial.",
+      "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
       "authors": [
         "YSocialTwin"
       ],
@@ -94,7 +104,7 @@
       "plugin_name": "YServer",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
-      "description": "Standard microblogging runtime, server side: hosts the platform the agents interact with and provides its pages and administration in YSocial.",
+      "description": "Hosts the microblogging platform the agents interact with (server side).",
       "authors": [
         "YSocialTwin"
       ],
@@ -104,7 +114,7 @@
       "plugin_name": "YServerReddit",
       "category": "Simulation Runtime Stack",
       "group": "Forum",
-      "description": "Standard forum runtime, server side: hosts the platform the agents interact with and provides its pages and administration in YSocial.",
+      "description": "Hosts the forum platform the agents interact with (server side).",
       "authors": [
         "YSocialTwin"
       ],
@@ -114,7 +124,7 @@
       "plugin_name": "YMicroblogging",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "HPC microblogging runtime: Ray-based, for large-scale simulations (posts, timelines, follows) on a single machine or on HPC clusters; provides its own pages and administration in YSocial.",
+      "description": "Ray-based runtime for microblogging experiments (posts, timelines, follows) built for large-scale simulations, on a single machine or on HPC clusters.",
       "authors": [
         "YSocialTwin"
       ],
