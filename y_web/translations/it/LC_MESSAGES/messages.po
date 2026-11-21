@@ -12864,6 +12864,10 @@ msgstr ""
 "Pulsanti Precedente / Successivo sotto il feed quando lo scorrimento "
 "infinito è disattivato. Disattivali per mostrare una sola pagina di post."
 
+#: y_web/templates/admin/dashboard.html
+msgid "Experiments of this module"
+msgstr "Esperimenti di questo modulo"
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 

@@ -11587,3 +11587,7 @@ msgid ""
 "disabled. Switch them off to show a single page of posts."
 msgstr ""
 
+#: y_web/templates/admin/dashboard.html
+msgid "Experiments of this module"
+msgstr ""
+
