@@ -626,6 +626,7 @@ def _content_recsys_info(recsys_type, ui=None, recsys=None):
     if recsys is None:
         return None
     try:
+        from y_web.sdk.fixed_recsys import fixed_name, is_fixed_mode  # noqa: PLC0415
         from y_web.src.models.config import Content_Recsys  # noqa: PLC0415
 
         raw = str(recsys_type or "").strip() or "default"
@@ -636,7 +637,8 @@ def _content_recsys_info(recsys_type, ui=None, recsys=None):
                 label = row.value
                 break
         if label is None:
-            label = {"Random": "Random"}.get(mode, mode)
+            # a fixed recommender of the scenario is shown by its name
+            label = fixed_name(mode) if is_fixed_mode(mode) else {"Random": "Random"}.get(mode, mode)
         return {
             "name": mode,
             "label": label,
