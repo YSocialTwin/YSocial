@@ -320,7 +320,7 @@ def test_page_uses_the_frontend_settings_selector_and_description():
     )
     html = (base / "backend/templates/scenario_design_app.html").read_text()
     js = (base / "static/js/editor.js").read_text()
-    assert 'class="misc-section-description"' in html and "admin-components.css" in html
+    assert 'class="sd-page-head"' in html and "admin-components.css" in html
     assert ".ys-fs-selector" in html and ".ys-fs-step" in html
     for dom_id in ("sd-type-select", "sd-group-select", "sd-exp-select"):
         assert dom_id in js
