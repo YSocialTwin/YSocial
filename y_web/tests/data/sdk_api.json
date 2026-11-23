@@ -106,6 +106,17 @@
         "unwrap_media_url": "(url)"
       }
     },
+    "fixed_recsys": {
+      "kind": "module",
+      "members": {
+        "canonical": "(mode)",
+        "fixed_name": "(mode)",
+        "fixed_posts": "(mode, page, per_page, make_pagination)",
+        "fixed_recsys_names": "()",
+        "is_fixed_mode": "(mode)",
+        "ordered_post_ids": "(name)"
+      }
+    },
     "gettext": {
       "kind": "function",
       "signature": "(message, **variables)"
@@ -279,7 +290,7 @@
       }
     }
   },
-  "platform_api": "1.3",
+  "platform_api": "1.4",
   "provider_hooks": {
     "after_follow_url": "(self, exp_id: 'int', referrer: 'str') -> 'Optional[str]'",
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
