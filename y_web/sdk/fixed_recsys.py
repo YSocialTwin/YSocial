@@ -36,27 +36,35 @@ def canonical(mode):
     return FIXED_PREFIX + fixed_name(mode)
 
 
+def _exp_engine():
+    """The engine of the experiment database (the ``db_exp`` bind); ``None`` outside an experiment."""
+    return db.engines.get("db_exp")
+
+
 def fixed_recsys_names():
     """Names of the fixed recommenders defined in the current experiment database (empty when there are none)."""
+    engine = _exp_engine()
+    if engine is None:
+        return []
     try:
-        rows = db.session.execute(
-            text(f"SELECT DISTINCT recsys_name FROM {TABLE} ORDER BY recsys_name")
-        ).all()
+        with engine.connect() as connection:
+            rows = connection.execute(text(f"SELECT DISTINCT recsys_name FROM {TABLE} ORDER BY recsys_name")).all()
     except Exception:
-        db.session.rollback()
         return []
     return [r[0] for r in rows]
 
 
 def ordered_post_ids(name):
     """Ids (as stored, text) of the posts of the fixed recommender ``name``, in display order."""
+    engine = _exp_engine()
+    if engine is None:
+        return []
     try:
-        rows = db.session.execute(
-            text(f"SELECT post_id FROM {TABLE} WHERE recsys_name = :n ORDER BY position"),
-            {"n": name},
-        ).all()
+        with engine.connect() as connection:
+            rows = connection.execute(
+                text(f"SELECT post_id FROM {TABLE} WHERE recsys_name = :n ORDER BY position"), {"n": name}
+            ).all()
     except Exception:
-        db.session.rollback()
         return []
     return [str(r[0]) for r in rows]
 

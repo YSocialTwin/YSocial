@@ -19,14 +19,14 @@ class FakePost(Base):
 
 
 @pytest.fixture
-def env(monkeypatch):
-    engine = create_engine("sqlite://")
+def env(monkeypatch, tmp_path):
+    engine = create_engine(f"sqlite:///{tmp_path / 'exp.db'}")
     Base.metadata.create_all(engine)
     session = Session(engine)
     for i, c in ((1, -1), (2, -1), (3, -1), (4, 1), (5, -1)):
         session.add(FakePost(id=i, comment_to=c, tweet=f"p{i}"))
     session.commit()
-    monkeypatch.setattr(fr, "db", SimpleNamespace(session=session))
+    monkeypatch.setattr(fr, "db", SimpleNamespace(session=session, engines={"db_exp": engine}))
     monkeypatch.setattr(fr, "Post", SimpleNamespace(id=FakePost.id, query=session.query(FakePost)))
     return session
 
