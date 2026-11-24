@@ -293,3 +293,23 @@ document.addEventListener('DOMContentLoaded', function() {
 // Expose globally for use in HTML onclick attributes
 window.fetchModelsForAddUser = AdminUsers.fetchModelsForAddUser;
 window.fetchModelsForUser = AdminUsers.fetchModelsForUser;
+
+// Copy the direct sign-up link of a module / simulation (button inside the signup settings list).
+document.addEventListener('click', function (ev) {
+  var btn = ev.target.closest && ev.target.closest('.sr-copylink');
+  if (!btn) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  var link = btn.getAttribute('data-link') || '';
+  var done = function () {
+    var old = btn.getAttribute('data-label') || btn.textContent;
+    btn.setAttribute('data-label', old);
+    btn.textContent = '✓';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(done, function () { window.prompt('', link); });
+  } else {
+    window.prompt('', link);
+  }
+});

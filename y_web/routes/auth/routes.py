@@ -176,6 +176,15 @@ def login_post():
         return redirect(url_for("auth.login"))
 
 
+def _direct_target():
+    """``(kind, ref)`` from a direct link (``?module=<uid>`` / ``?experiment=<id>``), if any."""
+    for arg, kind in (("module", "training"), ("experiment", "experiment")):
+        value = (request.values.get(arg) or "").strip()
+        if value:
+            return kind, value[:64]
+    return None
+
+
 def _signup_closed():
     flash(_("Registration is not available at the moment."))
     return redirect(url_for("auth.login"))
@@ -191,8 +200,21 @@ def signup():
     import secrets
 
     token = session["signup_token"] = secrets.token_urlsafe(24)
+    all_offers = signup_logic.offers()
+    only = None
+    direct = _direct_target()
+    if direct:
+        only = signup_logic.find_offer(*direct)
+        if only is None:
+            flash(_("This activity is not open for registration at the moment."))
+            return redirect(url_for("auth.login"))
+        all_offers = [only]
     return render_template(
-        "login/register.html", offers=signup_logic.offers(), signup_token=token, form={}
+        "login/register.html",
+        offers=all_offers,
+        signup_token=token,
+        form={},
+        only=only,
     )
 
 
@@ -211,10 +233,19 @@ def signup_post():
         flash(_("Invalid or expired session. Please try again."))
         return redirect(url_for("auth.signup"))
 
+    only = None
+    direct = _direct_target()
+    if direct:
+        only = signup_logic.find_offer(*direct)
+        if only is None:
+            flash(_("This activity is not open for registration at the moment."))
+            return redirect(url_for("auth.login"))
     form = {
         "username": request.form.get("name", ""),
         "email": request.form.get("email", ""),
-        "picks": request.form.getlist("pick"),
+        "picks": [f"{only['kind']}:{only['ref']}"]
+        if only
+        else request.form.getlist("pick"),
     }
     try:
         result = signup_logic.create_account(
@@ -226,9 +257,10 @@ def signup_post():
     except signup_logic.SignupError as exc:
         return render_template(
             "login/register.html",
-            offers=signup_logic.offers(),
+            offers=[only] if only else signup_logic.offers(),
             signup_token=expected,
             form=form,
+            only=only,
             error=str(exc),
         )
 

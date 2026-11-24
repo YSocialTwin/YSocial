@@ -214,6 +214,8 @@
                                 <span class="sr-name">{{ exp.name }}</span>
                                 <span class="sr-tags">
                                     <span class="sr-tag is-sim">{{ _('Simulation') }}</span>
+                                    <button type="button" class="sr-tag sr-copylink" data-link="{{ url_for('auth.signup', experiment=exp.id, _external=True) }}" title="{{ _('Copy the direct sign-up link') }}">{{ _('Copy link') }}</button>
+
                                     <span class="sr-tag is-platform">{{ (exp.platform or '')|replace('_', ' ')|capitalize }}</span>
                                     <span class="sr-dot {{ 'is-on' if exp.active else 'is-off' }}" title="{{ _('Active') if exp.active else _('Not active') }}"></span>
                                 </span>
@@ -227,6 +229,8 @@
                                 <span class="sr-name">{{ mod.title }}</span>
                                 <span class="sr-tags">
                                     <span class="sr-tag is-training">{{ _('Training') }}</span>
+                                    <button type="button" class="sr-tag sr-copylink" data-link="{{ url_for('auth.signup', module=mod.uid, _external=True) }}" title="{{ _('Copy the direct sign-up link') }}">{{ _('Copy link') }}</button>
+
                                     <span class="sr-dot {{ 'is-on' if live else 'is-off' }}" title="{% if mod.archived %}{{ _('Archived') }}{% elif not mod.open_run %}{{ _('No open run') }}{% else %}{{ _('Active') }}{% endif %}"></span>
                                 </span>
                             </label>
@@ -234,6 +238,7 @@
                             {% endif %}
                             <p class="sr-empty" id="signup-empty" hidden>{{ _('Nothing matches your search.') }}</p>
                         </div>
+                        <p class="sr-help">{{ _('Each row has a direct sign-up link: visitors who open it see only that activity, already selected.') }}</p>
                         <p class="sr-help">{{ _('Only active ones are offered; the sign-up link appears on the login page when at least one is available.') }}</p>
                         <div id="signup-message" class="sr-message" role="status"></div>
                     </div>

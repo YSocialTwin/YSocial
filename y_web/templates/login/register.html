@@ -13,10 +13,14 @@
         {% endwith %}
         {% endif %}
 
-        <form method="POST" action="{{ url_for('auth.signup_post') }}" class="yl-form">
+        <form method="POST" action="{{ url_for('auth.signup_post', **({('module' if only.kind == 'training' else 'experiment'): only.ref} if only else {})) }}" class="yl-form">
             <input type="hidden" name="signup_token" value="{{ signup_token }}">
             <h2>{{ _('Create your account') }}</h2>
+            {% if only %}
+            <p class="yl-sub">{{ _('Create your account to join: %(name)s', name=only.label) }}</p>
+            {% else %}
             <p class="yl-sub">{{ _('Join Y Social and choose what you want to take part in.') }}</p>
+            {% endif %}
 
             <div class="yl-field">
                 <input id="yl-email" type="email" name="email" value="{{ form.get('email', '') }}" placeholder=" " autocomplete="email" maxlength="50" autofocus required>

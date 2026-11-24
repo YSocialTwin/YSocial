@@ -129,6 +129,14 @@ def offers() -> list[dict]:
     return out
 
 
+def find_offer(kind: str, ref: str) -> dict | None:
+    """The offer for one target (a direct link), or ``None`` when it is not offered right now."""
+    for offer in offers():
+        if offer["kind"] == kind and offer["ref"] == str(ref):
+            return offer
+    return None
+
+
 def is_open() -> bool:
     """The page works: switched on and at least one target to join."""
     return is_enabled() and bool(offers())

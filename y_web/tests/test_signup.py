@@ -139,6 +139,7 @@ def test_wiring_in_templates_and_routes():
     assert "signup_open() %}" in login and "auth.signup" in login
     register = (ROOT / "templates/login/register.html").read_text(encoding="utf-8")
     assert "signup_token" in register and 'name="pick"' in register
+    assert "only.ref" in register  # direct link: the form posts back to it
     users_page = (ROOT / "templates/admin/users.html").read_text(encoding="utf-8")
     assert 'id="box-self-registration"' in users_page and "signup_enabled" in users_page
     assert (
@@ -191,3 +192,64 @@ def test_profile_topics_and_onboarding_flags_are_honoured():
         microblogging_file("y_web/templates/microblogging/edit_profile.html")
     ).read_text(encoding="utf-8")
     assert "profile_topics_box|default(true) and topics and opinion_groups" in tpl
+
+
+def test_direct_link_to_one_module(app, monkeypatch):
+    from y_web.routes.auth import auth
+
+    if "auth" not in app.blueprints:
+        app.register_blueprint(auth)
+    client = app.test_client()
+    mods = [
+        {"uid": "m1", "title": "Open", "archived": False, "open_run": True},
+        {"uid": "m2", "title": "Other", "archived": False, "open_run": True},
+        {"uid": "m3", "title": "Not allowed", "archived": False, "open_run": True},
+    ]
+    monkeypatch.setattr(signup, "training_candidates", lambda: mods)
+    calls = []
+
+    class Api:
+        @staticmethod
+        def enroll(uid, account_id):
+            calls.append(uid)
+            return "enrolled"
+
+    import y_web.src.external_runtime.backend_plugins as bp
+
+    monkeypatch.setattr(bp, "training_signup_api", lambda: Api, raising=False)
+    with app.app_context():
+        signup.save(True, [], ["m1", "m2"])
+        assert signup.find_offer("training", "m1")["label"] == "Open"
+        assert signup.find_offer("training", "m3") is None
+
+    import y_web.routes.auth.routes as auth_routes
+
+    seen = {}
+    monkeypatch.setattr(
+        auth_routes,
+        "render_template",
+        lambda name, **kw: seen.update(kw) or "page",
+    )
+    client.get("/signup?module=m1")
+    assert [o["ref"] for o in seen["offers"]] == ["m1"] and seen["only"]["ref"] == "m1"
+    client.get("/signup")
+    assert [o["ref"] for o in seen["offers"]] == ["m1", "m2"] and seen["only"] is None
+
+    # a module the admin did not allow bounces to the login page
+    assert client.get("/signup?module=m3").status_code == 302
+
+    client.get("/signup?module=m1")
+    with client.session_transaction() as sess:
+        token = sess["signup_token"]
+    # tampering with the picks cannot add another activity: the link wins
+    client.post(
+        "/signup?module=m1",
+        data={
+            "signup_token": token,
+            "name": "carol",
+            "email": "c@c.org",
+            "password": "longenough",
+            "pick": ["training:m2"],
+        },
+    )
+    assert calls == ["m1"]
