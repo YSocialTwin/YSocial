@@ -25,7 +25,7 @@ from y_web.src.models import (
 
 EXPERIMENT = "experiment"
 TRAINING = "training"
-ANONYMOUS = "training_anonymous"  # modules whose direct link registers with username and password only
+ANONYMOUS = "anonymous"  # modules (kind fits the 16 characters of the column) whose direct link registers with username and password only
 ANON_DOMAIN = "anonymous.invalid"  # stand-in e-mail domain of anonymous accounts (never deliverable)
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,15}$")
