@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 09:29+0000\n"
+"POT-Creation-Date: 2026-11-24 10:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -335,9 +335,6 @@ msgid "(required)"
 msgstr ""
 
 msgid "(toxicity annotations)"
-msgstr ""
-
-msgid "(url)"
 msgstr ""
 
 msgid "(url, optional)"
@@ -724,9 +721,6 @@ msgstr ""
 msgid "Admin"
 msgstr ""
 
-msgid "Admin Dashboard"
-msgstr ""
-
 msgid "Advanced Role-Playing"
 msgstr ""
 
@@ -1049,9 +1043,6 @@ msgstr ""
 msgid "Alternative values"
 msgstr ""
 
-msgid "American"
-msgstr ""
-
 msgid "An Ollama host is required when memory embeddings are enabled."
 msgstr ""
 
@@ -1131,6 +1122,9 @@ msgstr ""
 msgid "Annotations"
 msgstr ""
 
+msgid "Anonymous registration is not available for this activity."
+msgstr ""
+
 msgid "Anonymous usage data helps improve YSocial. No personal data is collected."
 msgstr ""
 
@@ -1193,12 +1187,6 @@ msgstr ""
 msgid "Are you using YSocial for your research? Please cite us!"
 msgstr ""
 
-msgid "Argentine"
-msgstr ""
-
-msgid "Armenian"
-msgstr ""
-
 msgid "Articles'"
 msgstr ""
 
@@ -1257,9 +1245,6 @@ msgid "Attention share below which an agent is losing interest"
 msgstr ""
 
 msgid "Attractiveness"
-msgstr ""
-
-msgid "Austrian"
 msgstr ""
 
 msgid "Author"
@@ -1415,9 +1400,6 @@ msgstr ""
 msgid "Awareness needed to consider joining"
 msgstr ""
 
-msgid "Azerbaijani"
-msgstr ""
-
 msgid "Bachelor"
 msgstr ""
 
@@ -1428,9 +1410,6 @@ msgid "Back to Experiments"
 msgstr ""
 
 msgid "Back to Plugins"
-msgstr ""
-
-msgid "Back to profile"
 msgstr ""
 
 msgid "Backend Extensions"
@@ -1458,9 +1437,6 @@ msgid "Badge showing whether content was produced by an AI agent or a Human"
 msgstr ""
 
 msgid "Balance between follower and general content"
-msgstr ""
-
-msgid "Bangladeshi"
 msgstr ""
 
 msgid "Baseline & Exploration"
@@ -1505,9 +1481,6 @@ msgid "Behavioral patterns and activity characteristics."
 msgstr ""
 
 msgid "Behaviour and attributes"
-msgstr ""
-
-msgid "Belgian"
 msgstr ""
 
 msgid "Bell / mentions icon in the top bar"
@@ -1555,16 +1528,10 @@ msgstr ""
 msgid "Branch archive"
 msgstr ""
 
-msgid "Brazilian"
-msgstr ""
-
 msgid "Bridge agents"
 msgstr ""
 
 msgid "Brief explanation of the client's purpose"
-msgstr ""
-
-msgid "British"
 msgstr ""
 
 msgid "Broadcaster"
@@ -1589,12 +1556,6 @@ msgstr ""
 msgid "Brought by"
 msgstr ""
 
-msgid "Browse banner previews in small batches."
-msgstr ""
-
-msgid "Browse previews in small batches."
-msgstr ""
-
 msgid "Build"
 msgstr ""
 
@@ -1602,9 +1563,6 @@ msgid "Build the agents and information sources that populate your simulations."
 msgstr ""
 
 msgid "Built-in resource"
-msgstr ""
-
-msgid "Bulgarian"
 msgstr ""
 
 msgid "Bulk Assign Users to Experiment"
@@ -1681,9 +1639,6 @@ msgstr ""
 msgid "Category Threshold"
 msgstr ""
 
-msgid "Centrist"
-msgstr ""
-
 msgid ""
 "Chain depth: 1 for content of the platform where it was seen, +1 for each"
 " cross-post it went through."
@@ -1726,12 +1681,6 @@ msgid ""
 msgstr ""
 
 msgid "Checks"
-msgstr ""
-
-msgid "Chilean"
-msgstr ""
-
-msgid "Chinese"
 msgstr ""
 
 msgid ""
@@ -1796,18 +1745,10 @@ msgstr ""
 msgid "Choose how agent opinions are updated during the simulation."
 msgstr ""
 
-msgid ""
-"Choose how follow suggestions and content ranking are personalized for "
-"this account."
-msgstr ""
-
 msgid "Choose one of the active experiments below to enter the simulation."
 msgstr ""
 
 msgid "Choose the language of the dashboard for this user."
-msgstr ""
-
-msgid "Choose the language of the interface."
 msgstr ""
 
 msgid ""
@@ -2040,9 +1981,6 @@ msgid "Collaborative Filtering"
 msgstr ""
 
 msgid "Collapse"
-msgstr ""
-
-msgid "Colombian"
 msgstr ""
 
 msgid "Combine all enabled features"
@@ -2429,6 +2367,12 @@ msgstr ""
 msgid "Copy Group"
 msgstr ""
 
+msgid "Copy link"
+msgstr ""
+
+msgid "Copy the direct sign-up link"
+msgstr ""
+
 msgid ""
 "Core information about this synthetic population, including configuration"
 " and agent demographics."
@@ -2553,6 +2497,10 @@ msgstr ""
 msgid "Create your account"
 msgstr ""
 
+#, python-format
+msgid "Create your account to join: %(name)s"
+msgstr ""
+
 msgid "Created"
 msgstr ""
 
@@ -2579,13 +2527,22 @@ msgstr ""
 msgid "Creating agent..."
 msgstr ""
 
+msgid "Creator"
+msgstr ""
+
+msgid "Creator (creator economy)"
+msgstr ""
+
+msgid "Creator experiments are unavailable because YCreator is not present."
+msgstr ""
+
+msgid "Creator profile"
+msgstr ""
+
 msgid "Creator tier"
 msgstr ""
 
 msgid "Critical/Judgmental"
-msgstr ""
-
-msgid "Croatian"
 msgstr ""
 
 msgid "Cross-post cascades"
@@ -2706,9 +2663,6 @@ msgstr ""
 msgid "Current Model Path"
 msgstr ""
 
-msgid "Current Password"
-msgstr ""
-
 msgid "Current Recommender"
 msgstr ""
 
@@ -2800,9 +2754,6 @@ msgstr ""
 msgid "Customize agent activity patterns by hour."
 msgstr ""
 
-msgid "Czech"
-msgstr ""
-
 msgid "DB Fallback Limit"
 msgstr ""
 
@@ -2848,9 +2799,6 @@ msgstr ""
 msgid ""
 "Daily target toxicity, with moderator intervention volume shown on the "
 "secondary axis."
-msgstr ""
-
-msgid "Danish"
 msgstr ""
 
 msgid "Dashboard language"
@@ -3053,9 +3001,6 @@ msgid "Delivered or pending"
 msgstr ""
 
 msgid "Deliveries"
-msgstr ""
-
-msgid "Democrat"
 msgstr ""
 
 msgid "Demographic Information"
@@ -3312,9 +3257,6 @@ msgstr ""
 msgid "Duration & Growth"
 msgstr ""
 
-msgid "Dutch"
-msgstr ""
-
 msgid "Dynamic fill"
 msgstr ""
 
@@ -3335,6 +3277,11 @@ msgstr ""
 msgid ""
 "Each client can be deployed by imposing a starting social network among "
 "the agents of its populations."
+msgstr ""
+
+msgid ""
+"Each row has a direct sign-up link: visitors who open it see only that "
+"activity, already selected."
 msgstr ""
 
 msgid ""
@@ -3369,17 +3316,10 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#, python-format
-msgid "Edit %(username)s"
-msgstr ""
-
 msgid "Edit Client Settings"
 msgstr ""
 
 msgid "Edit LLM Prompts"
-msgstr ""
-
-msgid "Edit Profile"
 msgstr ""
 
 msgid "Edit server settings"
@@ -3405,6 +3345,9 @@ msgid "Email"
 msgstr ""
 
 msgid "Email is already in use by another user"
+msgstr ""
+
+msgid "Email or username"
 msgstr ""
 
 msgid "Email updated successfully"
@@ -3534,9 +3477,6 @@ msgid "Endpoint:"
 msgstr ""
 
 msgid "Engagement first"
-msgstr ""
-
-msgid "English"
 msgstr ""
 
 msgid "Enrol"
@@ -3672,9 +3612,6 @@ msgid ""
 msgstr ""
 
 msgid "Estimated remaining time:"
-msgstr ""
-
-msgid "Estonian"
 msgstr ""
 
 msgid "Europe/Rome"
@@ -3914,6 +3851,9 @@ msgstr ""
 msgid "Experiments grouped by project. Click to expand/collapse."
 msgstr ""
 
+msgid "Experiments of this module"
+msgstr ""
+
 msgid "Experiments per group"
 msgstr ""
 
@@ -4055,6 +3995,9 @@ msgstr ""
 msgid "False"
 msgstr ""
 
+msgid "Fan profile"
+msgstr ""
+
 msgid "Fantasy cartoon characters"
 msgstr ""
 
@@ -4065,9 +4008,6 @@ msgid "Favourite filters"
 msgstr ""
 
 msgid "Feature-rich Modeling"
-msgstr ""
-
-msgid "Feed"
 msgstr ""
 
 msgid "Feed & Profile"
@@ -4152,9 +4092,6 @@ msgid "Filter experiments by group"
 msgstr ""
 
 msgid "Finished"
-msgstr ""
-
-msgid "Finnish"
 msgstr ""
 
 msgid "First Seen"
@@ -4271,9 +4208,6 @@ msgstr ""
 msgid "Forward a message to another chat"
 msgstr ""
 
-msgid "French"
-msgstr ""
-
 msgid "Friendly/Compassionate"
 msgstr ""
 
@@ -4335,9 +4269,6 @@ msgstr ""
 msgid "Gender distribution must total 100%."
 msgstr ""
 
-msgid "General Settings"
-msgstr ""
-
 msgid "Generate"
 msgstr ""
 
@@ -4391,12 +4322,6 @@ msgid "Generating profile pictures: %(done)s of %(total)s"
 msgstr ""
 
 msgid "Geometric"
-msgstr ""
-
-msgid "Georgian"
-msgstr ""
-
-msgid "German"
 msgstr ""
 
 msgid "Get in Touch!"
@@ -4499,9 +4424,6 @@ msgid "Granularity must be slot or day."
 msgstr ""
 
 msgid "Graph Proximity"
-msgstr ""
-
-msgid "Greek"
 msgstr ""
 
 msgid "Group"
@@ -4770,9 +4692,6 @@ msgstr ""
 msgid "Human"
 msgstr ""
 
-msgid "Hungarian"
-msgstr ""
-
 msgid "Hybrid (score × recency)"
 msgstr ""
 
@@ -4856,15 +4775,9 @@ msgstr ""
 msgid "Inactive modules"
 msgstr ""
 
-msgid "Indian"
-msgstr ""
-
 msgid ""
 "Individual agent opinion trajectories over time (colored by initial "
 "opinion group)."
-msgstr ""
-
-msgid "Indonesian"
 msgstr ""
 
 msgid "Inertia"
@@ -5045,12 +4958,6 @@ msgstr ""
 msgid "Interval"
 msgstr ""
 
-msgid "Interview"
-msgstr ""
-
-msgid "Interview an LLM agent with memory context."
-msgstr ""
-
 msgid "Interview is unavailable because memory is disabled for this experiment."
 msgstr ""
 
@@ -5058,6 +4965,10 @@ msgid "Intra-block edge probability"
 msgstr ""
 
 msgid "Intra-block probability"
+msgstr ""
+
+#, python-format
+msgid "Invalid Creator settings: %(why)s"
 msgstr ""
 
 msgid "Invalid JSON format"
@@ -5196,22 +5107,7 @@ msgstr ""
 msgid "Inventive/Curious"
 msgstr ""
 
-msgid "Iranian"
-msgstr ""
-
-msgid "Irish"
-msgstr ""
-
-msgid "Israeli"
-msgstr ""
-
-msgid "Italian"
-msgstr ""
-
 msgid "Item not found"
-msgstr ""
-
-msgid "Japanese"
 msgstr ""
 
 msgid "Join"
@@ -5407,9 +5303,6 @@ msgstr ""
 msgid "Latest release"
 msgstr ""
 
-msgid "Latvian"
-msgstr ""
-
 msgid "Launch clients and open the web interface from the same control panel"
 msgstr ""
 
@@ -5447,9 +5340,6 @@ msgstr ""
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr ""
 
-msgid "Let's make some updates!"
-msgstr ""
-
 msgid "Like"
 msgstr ""
 
@@ -5460,9 +5350,6 @@ msgid "Linear"
 msgstr ""
 
 msgid "Linkedin"
-msgstr ""
-
-msgid "Lithuanian"
 msgstr ""
 
 msgid "Load"
@@ -5521,12 +5408,6 @@ msgstr ""
 msgid "Log metrics reset. Plots will update with extended data on next refresh."
 msgstr ""
 
-msgid "Log out"
-msgstr ""
-
-msgid "Log out from your account."
-msgstr ""
-
 msgid "Log-Normal"
 msgstr ""
 
@@ -5540,9 +5421,6 @@ msgid "Logo"
 msgstr ""
 
 msgid "Logo Image"
-msgstr ""
-
-msgid "Logout"
 msgstr ""
 
 msgid ""
@@ -5749,9 +5627,6 @@ msgstr ""
 msgid "Mention Network"
 msgstr ""
 
-msgid "Mentioning Posts"
-msgstr ""
-
 msgid "Merge Populations"
 msgstr ""
 
@@ -5762,9 +5637,6 @@ msgid "Messages"
 msgstr ""
 
 msgid "Method:"
-msgstr ""
-
-msgid "Mexican"
 msgstr ""
 
 msgid "Microblogging"
@@ -5956,9 +5828,6 @@ msgstr ""
 msgid "Negative"
 msgstr ""
 
-msgid "Nepalese"
-msgstr ""
-
 msgid "Network Analysis"
 msgstr ""
 
@@ -6089,9 +5958,6 @@ msgstr ""
 msgid "New Toxicity Level"
 msgstr ""
 
-msgid "New Zealander"
-msgstr ""
-
 msgid "New here?"
 msgstr ""
 
@@ -6180,9 +6046,6 @@ msgid "No active experiments available. Please contact an administrator."
 msgstr ""
 
 msgid "No active modules."
-msgstr ""
-
-msgid "No active topics for this experiment."
 msgstr ""
 
 msgid "No activity profiles available. Create some in the Miscellanea page first."
@@ -6411,9 +6274,6 @@ msgid "None."
 msgstr ""
 
 msgid "Normal"
-msgstr ""
-
-msgid "Norwegian"
 msgstr ""
 
 msgid "Not"
@@ -6801,6 +6661,9 @@ msgstr ""
 msgid "Other (a Hugging Face model id)"
 msgstr ""
 
+msgid "Other Creator fields"
+msgstr ""
+
 msgid "Other Dating fields"
 msgstr ""
 
@@ -6884,9 +6747,6 @@ msgid "Pages"
 msgstr ""
 
 msgid "Pair Limit"
-msgstr ""
-
-msgid "Palestinian"
 msgstr ""
 
 msgid "Parameters"
@@ -7153,9 +7013,6 @@ msgstr ""
 msgid "Polarity mix and compound trends"
 msgstr ""
 
-msgid "Polish"
-msgstr ""
-
 #, python-format
 msgid "Political %%"
 msgstr ""
@@ -7286,9 +7143,6 @@ msgstr ""
 msgid "Port: %(port)s"
 msgstr ""
 
-msgid "Portuguese"
-msgstr ""
-
 msgid "Positive"
 msgstr ""
 
@@ -7347,6 +7201,11 @@ msgid ""
 msgstr ""
 
 msgid "Previous"
+msgstr ""
+
+msgid ""
+"Previous / Next buttons below the feed when infinite scrolling is "
+"disabled. Switch them off to show a single page of posts."
 msgstr ""
 
 msgid "Principal Investigator"
@@ -7456,9 +7315,6 @@ msgstr ""
 msgid "Professions"
 msgstr ""
 
-msgid "Profile"
-msgstr ""
-
 msgid "Profile & Attribute Homophily"
 msgstr ""
 
@@ -7472,9 +7328,6 @@ msgid "Profile Picture"
 msgstr ""
 
 msgid "Profile Picture URL"
-msgstr ""
-
-msgid "Profile Settings"
 msgstr ""
 
 msgid "Profile picture"
@@ -7591,9 +7444,6 @@ msgid ""
 msgstr ""
 
 msgid "Provides specific instructions and input"
-msgstr ""
-
-msgid "Public profile attributes and recommendation preferences."
 msgstr ""
 
 msgid "Queue of World Simulations: one runs at a time, in order."
@@ -7740,9 +7590,6 @@ msgstr ""
 msgid "Recommendation Limit"
 msgstr ""
 
-msgid "Recommendation Preferences"
-msgstr ""
-
 msgid "Recommendation System Evolution"
 msgstr ""
 
@@ -7832,6 +7679,9 @@ msgstr ""
 msgid "Remote"
 msgstr ""
 
+msgid "Remote Creator experiments are not supported."
+msgstr ""
+
 msgid "Remote Experiment"
 msgstr ""
 
@@ -7880,9 +7730,6 @@ msgstr ""
 msgid "Rename"
 msgstr ""
 
-msgid "Repeat Password"
-msgstr ""
-
 msgid ""
 "Replace the prompts of this experiment with the ones of the selected "
 "language? Changes you made to them will be lost."
@@ -7913,9 +7760,6 @@ msgid "Repost on another platform"
 msgstr ""
 
 msgid "Reposted to"
-msgstr ""
-
-msgid "Republican"
 msgstr ""
 
 msgid "Request Logs Analysis"
@@ -8060,9 +7904,6 @@ msgstr ""
 msgid "Roleplay (simple)"
 msgstr ""
 
-msgid "Romanian"
-msgstr ""
-
 msgid "Route args:"
 msgstr ""
 
@@ -8099,9 +7940,6 @@ msgstr ""
 msgid "Runtime compatibility"
 msgstr ""
 
-msgid "Russian"
-msgstr ""
-
 msgid "SA Interactions"
 msgstr ""
 
@@ -8120,9 +7958,6 @@ msgstr ""
 msgid "Sample Size:"
 msgstr ""
 
-msgid "Saudi"
-msgstr ""
-
 msgid "Save"
 msgstr ""
 
@@ -8133,9 +7968,6 @@ msgid "Save Actions Likelihood"
 msgstr ""
 
 msgid "Save Archetypes"
-msgstr ""
-
-msgid "Save Changes"
 msgstr ""
 
 msgid "Save Configuration"
@@ -8160,9 +7992,6 @@ msgid "Save Simulation Parameters"
 msgstr ""
 
 msgid "Save Stress / Reward Settings"
-msgstr ""
-
-msgid "Save Topic Preferences"
 msgstr ""
 
 msgid "Save Topics"
@@ -8256,25 +8085,13 @@ msgstr ""
 msgid "Search plugins..."
 msgstr ""
 
-msgid "Search profiles, hashtags, and topics"
-msgstr ""
-
-msgid "Search profiles, hashtags, topics"
-msgstr ""
-
 msgid "Search simulations and modules…"
-msgstr ""
-
-msgid "Search..."
 msgstr ""
 
 msgid "Section"
 msgstr ""
 
 msgid "Sections of the page"
-msgstr ""
-
-msgid "Security"
 msgstr ""
 
 msgid "See the coordinator log below."
@@ -8720,6 +8537,9 @@ msgstr ""
 msgid "Show the live annotation statistics box beside the feed"
 msgstr ""
 
+msgid "Show the pagination buttons"
+msgstr ""
+
 msgid "Show the profile-setup wizard to users on their first login"
 msgstr ""
 
@@ -8789,6 +8609,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Simulation runtime for creator-economy experiments: creators publish free"
+" and paid content, fans subscribe, tip and write, and a double-entry "
+"ledger of virtual credits keeps every transfer verifiable."
+msgstr ""
+
+msgid ""
 "Simulation runtime for instant-messaging experiments, with Telegram-like "
 "chats, groups, channels and forum topics."
 msgstr ""
@@ -8839,12 +8665,6 @@ msgid ""
 "Slot: a member starts the next hour of simulated time only when every "
 "member has finished the current one. Day: members may be up to a day "
 "apart."
-msgstr ""
-
-msgid "Slovak"
-msgstr ""
-
-msgid "Slovenian"
 msgstr ""
 
 msgid "Slower"
@@ -8908,15 +8728,6 @@ msgid "Source Group"
 msgstr ""
 
 msgid "Source experiment not found."
-msgstr ""
-
-msgid "South African"
-msgstr ""
-
-msgid "South Korean"
-msgstr ""
-
-msgid "Spanish"
 msgstr ""
 
 msgid ""
@@ -9182,12 +8993,6 @@ msgstr ""
 msgid "Survival per platform"
 msgstr ""
 
-msgid "Swedish"
-msgstr ""
-
-msgid "Swiss"
-msgstr ""
-
 msgid ""
 "Switched off: they accept no new participants. Turn them on again at any "
 "time."
@@ -9229,9 +9034,6 @@ msgid ""
 msgstr ""
 
 msgid "Tags"
-msgstr ""
-
-msgid "Taiwanese"
 msgstr ""
 
 msgid "Target"
@@ -9306,9 +9108,6 @@ msgstr ""
 msgid "Text on %(platform)s"
 msgstr ""
 
-msgid "Thai"
-msgstr ""
-
 msgid "That platform is not a member of this World Simulation."
 msgstr ""
 
@@ -9332,6 +9131,10 @@ msgid "The Broadcaster"
 msgstr ""
 
 msgid "The Broadcaster:"
+msgstr ""
+
+#, python-format
+msgid "The Creator configuration is not valid: %(why)s"
 msgstr ""
 
 msgid "The Explorer"
@@ -9809,6 +9612,9 @@ msgstr ""
 msgid "Theta (Backfire Strength)"
 msgstr ""
 
+msgid "This activity is not open for registration at the moment."
+msgstr ""
+
 msgid ""
 "This ad hoc client requires an LLM model because at least one managed "
 "agent uses an LLM-backed behavior."
@@ -10194,9 +10000,6 @@ msgstr ""
 msgid "True"
 msgstr ""
 
-msgid "Turkish"
-msgstr ""
-
 msgid "Type"
 msgstr ""
 
@@ -10220,9 +10023,6 @@ msgid "URL is required"
 msgstr ""
 
 msgid "URL:"
-msgstr ""
-
-msgid "Ukrainian"
 msgstr ""
 
 #, python-format
@@ -10358,9 +10158,6 @@ msgstr ""
 msgid "Update Activity Rates"
 msgstr ""
 
-msgid "Update Available"
-msgstr ""
-
 msgid "Update Configuration"
 msgstr ""
 
@@ -10424,11 +10221,6 @@ msgstr ""
 msgid "Update configuration first"
 msgstr ""
 
-msgid ""
-"Update profile details, recommendations, and account security from one "
-"place."
-msgstr ""
-
 msgid "Update route does not match the experiment modality."
 msgstr ""
 
@@ -10438,12 +10230,6 @@ msgstr ""
 
 #, python-format
 msgid "Update runtime annotations in %(b)s"
-msgstr ""
-
-msgid "Update your interest and opinion for each topic."
-msgstr ""
-
-msgid "Update your password while keeping the rest of the profile unchanged."
 msgstr ""
 
 #, python-format
@@ -10505,12 +10291,6 @@ msgid "Use %(requests)s and %(clients)s to inspect runtime behavior"
 msgstr ""
 
 msgid "Use pseudonyms for authors in cross-posts"
-msgstr ""
-
-msgid "Use selected header image"
-msgstr ""
-
-msgid "Use selected profile picture"
 msgstr ""
 
 #, python-format
@@ -11017,9 +10797,6 @@ msgstr ""
 msgid "Write in a chat"
 msgstr ""
 
-msgid "Y Social"
-msgstr ""
-
 msgid "Y Social | Dashboard"
 msgstr ""
 
@@ -11148,9 +10925,6 @@ msgid "You do not have visibility on this plugin repository."
 msgstr ""
 
 msgid "You don't have permission to access this resource."
-msgstr ""
-
-msgid "You got the power!"
 msgstr ""
 
 #, python-format
@@ -11355,9 +11129,6 @@ msgid "local changes"
 msgstr ""
 
 msgid "lost interest"
-msgstr ""
-
-msgid "main navigation"
 msgstr ""
 
 msgid "manifest invalid"
@@ -11575,19 +11346,5 @@ msgid "✔️ Play with"
 msgstr ""
 
 msgid "✔️ Use"
-msgstr ""
-
-#: y_web/templates/admin/frontend_settings.html
-msgid "Show the pagination buttons"
-msgstr ""
-
-#: y_web/templates/admin/frontend_settings.html
-msgid ""
-"Previous / Next buttons below the feed when infinite scrolling is "
-"disabled. Switch them off to show a single page of posts."
-msgstr ""
-
-#: y_web/templates/admin/dashboard.html
-msgid "Experiments of this module"
 msgstr ""
 
