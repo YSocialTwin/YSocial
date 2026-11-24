@@ -365,6 +365,14 @@ def _ensure_experiment_user(
             _adopt_default_recsys(db_session, user, recsys_type, frecsys_type)
             return user, False
 
+        if (
+            user_id is not None
+            and db_session.query(User_mgmt.id).filter_by(id=user_id).first()
+            is not None
+        ):
+            # the id of the account is already another person's in this experiment (an agent of its population, or a
+            # participant of another account): take the next free one, nothing depends on the two being equal
+            user_id = None
         new_user = User_mgmt(
             id=user_id,
             email=email,
