@@ -59,6 +59,21 @@ def save(enabled: bool, experiments, modules) -> None:
     db.session.commit()
 
 
+def is_target(kind: str, ref: str) -> bool:
+    return str(ref) in selected().get(kind, set())
+
+
+def set_target(kind: str, ref: str, enabled: bool) -> None:
+    """Allow or stop offering one target, leaving the others and the global switch untouched."""
+    ref = str(ref)[:64]
+    row = db.session.scalars(select(SignupTarget).filter_by(kind=kind, ref=ref)).first()
+    if enabled and row is None:
+        db.session.add(SignupTarget(kind=kind, ref=ref))
+    elif not enabled and row is not None:
+        db.session.delete(row)
+    db.session.commit()
+
+
 def training_candidates() -> list[dict] | None:
     """Modules of the Training plugin, or ``None`` when the plugin is missing or disabled."""
     try:
@@ -117,6 +132,7 @@ def offers() -> list[dict]:
                 module["uid"] in chosen[TRAINING]
                 and not module["archived"]
                 and module["open_run"]
+                and module.get("live", True)  # the plugin says the module is published and running
             ):
                 out.append(
                     {

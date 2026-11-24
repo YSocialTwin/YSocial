@@ -253,3 +253,18 @@ def test_direct_link_to_one_module(app, monkeypatch):
         },
     )
     assert calls == ["m1"]
+
+
+def test_target_switch_and_live_requirement(app, monkeypatch):
+    mods = [{"uid": "m1", "title": "T", "archived": False, "open_run": True, "live": False}]
+    monkeypatch.setattr(signup, "training_candidates", lambda: mods)
+    with app.app_context():
+        signup.save(True, [], [])
+        signup.set_target(signup.TRAINING, "m1", True)
+        signup.set_target(signup.TRAINING, "m1", True)  # idempotent
+        assert signup.is_target(signup.TRAINING, "m1") and signup.is_enabled()
+        assert signup.offers() == []  # selected, but not published and running yet
+        mods[0]["live"] = True
+        assert [o["ref"] for o in signup.offers()] == ["m1"]
+        signup.set_target(signup.TRAINING, "m1", False)
+        assert not signup.is_target(signup.TRAINING, "m1") and signup.offers() == []
