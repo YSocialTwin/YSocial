@@ -246,9 +246,9 @@ def signup_post():
     form = {
         "username": request.form.get("name", ""),
         "email": request.form.get("email", ""),
-        "picks": [f"{only['kind']}:{only['ref']}"]
-        if only
-        else request.form.getlist("pick"),
+        "picks": (
+            [f"{only['kind']}:{only['ref']}"] if only else request.form.getlist("pick")
+        ),
     }
     try:
         result = signup_logic.create_account(

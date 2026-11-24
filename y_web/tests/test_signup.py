@@ -256,7 +256,9 @@ def test_direct_link_to_one_module(app, monkeypatch):
 
 
 def test_target_switch_and_live_requirement(app, monkeypatch):
-    mods = [{"uid": "m1", "title": "T", "archived": False, "open_run": True, "live": False}]
+    mods = [
+        {"uid": "m1", "title": "T", "archived": False, "open_run": True, "live": False}
+    ]
     monkeypatch.setattr(signup, "training_candidates", lambda: mods)
     with app.app_context():
         signup.save(True, [], [])
@@ -294,7 +296,9 @@ def test_anonymous_registration_only_for_flagged_modules(app, monkeypatch):
         assert flags == {"m1": True, "m2": False}
 
         # no email is asked: a stand-in one is stored and the username logs in
-        res = signup.create_account("ann", "", "longenough", ["training:m1"], anonymous=True)
+        res = signup.create_account(
+            "ann", "", "longenough", ["training:m1"], anonymous=True
+        )
         user = db.session.get(Admin_users, res["user_id"])
         assert user.email == "ann@anonymous.invalid" and user.role == "user"
         assert signup.find_login_user("ann").id == user.id
@@ -303,7 +307,9 @@ def test_anonymous_registration_only_for_flagged_modules(app, monkeypatch):
 
         # not for a module without the flag, nor mixed with other activities
         with pytest.raises(signup.SignupError):
-            signup.create_account("bob", "", "longenough", ["training:m2"], anonymous=True)
+            signup.create_account(
+                "bob", "", "longenough", ["training:m2"], anonymous=True
+            )
         with pytest.raises(signup.SignupError):
             signup.create_account(
                 "bob", "", "longenough", ["training:m1", "training:m2"], anonymous=True

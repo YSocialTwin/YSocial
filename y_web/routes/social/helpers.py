@@ -638,7 +638,11 @@ def _content_recsys_info(recsys_type, ui=None, recsys=None):
                 break
         if label is None:
             # a fixed recommender of the scenario is shown by its name
-            label = fixed_name(mode) if is_fixed_mode(mode) else {"Random": "Random"}.get(mode, mode)
+            label = (
+                fixed_name(mode)
+                if is_fixed_mode(mode)
+                else {"Random": "Random"}.get(mode, mode)
+            )
         return {
             "name": mode,
             "label": label,

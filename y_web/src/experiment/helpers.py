@@ -367,8 +367,7 @@ def _ensure_experiment_user(
 
         if (
             user_id is not None
-            and db_session.query(User_mgmt.id).filter_by(id=user_id).first()
-            is not None
+            and db_session.query(User_mgmt.id).filter_by(id=user_id).first() is not None
         ):
             # the id of the account is already another person's in this experiment (an agent of its population, or a
             # participant of another account): take the next free one, nothing depends on the two being equal

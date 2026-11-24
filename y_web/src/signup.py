@@ -160,7 +160,9 @@ def offers() -> list[dict]:
                 module["uid"] in chosen[TRAINING]
                 and not module["archived"]
                 and module["open_run"]
-                and module.get("live", True)  # the plugin says the module is published and running
+                and module.get(
+                    "live", True
+                )  # the plugin says the module is published and running
             ):
                 out.append(
                     {
@@ -225,9 +227,13 @@ def create_account(
     if not chosen:
         raise SignupError(_("Choose at least one of the available activities."))
     if anonymous and not (
-        len(chosen) == 1 and chosen[0]["kind"] == TRAINING and chosen[0].get("anonymous")
+        len(chosen) == 1
+        and chosen[0]["kind"] == TRAINING
+        and chosen[0].get("anonymous")
     ):
-        raise SignupError(_("Anonymous registration is not available for this activity."))
+        raise SignupError(
+            _("Anonymous registration is not available for this activity.")
+        )
 
     if (
         db.session.scalars(select(Admin_users).filter_by(email=email)).first()

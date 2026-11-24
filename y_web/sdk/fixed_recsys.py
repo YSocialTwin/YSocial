@@ -22,13 +22,13 @@ def is_fixed_mode(mode):
     return (
         isinstance(mode, str)
         and mode.strip().lower().startswith(FIXED_PREFIX)
-        and bool(mode.strip()[len(FIXED_PREFIX):].strip())
+        and bool(mode.strip()[len(FIXED_PREFIX) :].strip())
     )
 
 
 def fixed_name(mode):
     """The recommender name of a ``fixed:<name>`` value (case and spaces inside the name are kept)."""
-    return mode.strip()[len(FIXED_PREFIX):].strip()
+    return mode.strip()[len(FIXED_PREFIX) :].strip()
 
 
 def canonical(mode):
@@ -48,7 +48,9 @@ def fixed_recsys_names():
         return []
     try:
         with engine.connect() as connection:
-            rows = connection.execute(text(f"SELECT DISTINCT recsys_name FROM {TABLE} ORDER BY recsys_name")).all()
+            rows = connection.execute(
+                text(f"SELECT DISTINCT recsys_name FROM {TABLE} ORDER BY recsys_name")
+            ).all()
     except Exception:
         return []
     return [r[0] for r in rows]
@@ -62,7 +64,10 @@ def ordered_post_ids(name):
     try:
         with engine.connect() as connection:
             rows = connection.execute(
-                text(f"SELECT post_id FROM {TABLE} WHERE recsys_name = :n ORDER BY position"), {"n": name}
+                text(
+                    f"SELECT post_id FROM {TABLE} WHERE recsys_name = :n ORDER BY position"
+                ),
+                {"n": name},
             ).all()
     except Exception:
         return []
@@ -93,4 +98,6 @@ def fixed_posts(mode, page, per_page, make_pagination):
     ranked = [found[i] for i in ids if i in found]
     page = max(1, page)
     start = (page - 1) * per_page
-    return make_pagination(ranked[start:start + per_page], page, per_page, len(ranked))
+    return make_pagination(
+        ranked[start : start + per_page], page, per_page, len(ranked)
+    )
