@@ -25,6 +25,8 @@ from y_web.src.models import (
 
 EXPERIMENT = "experiment"
 TRAINING = "training"
+ANONYMOUS = "training_anonymous"  # modules whose direct link registers with username and password only
+ANON_DOMAIN = "anonymous.invalid"  # stand-in e-mail domain of anonymous accounts (never deliverable)
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,15}$")
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -38,7 +40,7 @@ def is_enabled() -> bool:
 
 def selected() -> dict[str, set[str]]:
     """The targets the administrator allowed, whether or not they are available right now."""
-    out: dict[str, set[str]] = {EXPERIMENT: set(), TRAINING: set()}
+    out: dict[str, set[str]] = {EXPERIMENT: set(), TRAINING: set(), ANONYMOUS: set()}
     for row in db.session.scalars(select(SignupTarget)).all():
         out.setdefault(row.kind, set()).add(row.ref)
     return out
@@ -51,7 +53,7 @@ def save(enabled: bool, experiments, modules) -> None:
         row = SignupSettings(id=1, enabled=bool(enabled))
         db.session.add(row)
     row.enabled = bool(enabled)
-    db.session.query(SignupTarget).delete()
+    db.session.query(SignupTarget).filter(SignupTarget.kind != ANONYMOUS).delete()
     for exp_id in sorted({str(int(e)) for e in experiments or []}):
         db.session.add(SignupTarget(kind=EXPERIMENT, ref=exp_id))
     for uid in sorted({str(m) for m in modules or [] if str(m)}):
@@ -72,6 +74,32 @@ def set_target(kind: str, ref: str, enabled: bool) -> None:
     elif not enabled and row is not None:
         db.session.delete(row)
     db.session.commit()
+
+
+def is_anonymous(ref: str) -> bool:
+    """The module accepts registration with username and password only (students, direct link)."""
+    return str(ref) in selected().get(ANONYMOUS, set())
+
+
+def set_anonymous(ref: str, enabled: bool) -> None:
+    set_target(ANONYMOUS, ref, enabled)
+
+
+def anonymous_email(username: str) -> str:
+    return f"{username.strip().lower()}@{ANON_DOMAIN}"
+
+
+def find_login_user(identifier: str):
+    """The account for a login: by e-mail, or by username for an anonymous account only."""
+    identifier = (identifier or "").strip()
+    if not identifier:
+        return None
+    user = db.session.scalars(select(Admin_users).filter_by(email=identifier)).first()
+    if user is None and "@" not in identifier:
+        user = db.session.scalars(
+            select(Admin_users).filter_by(email=anonymous_email(identifier))
+        ).first()
+    return user
 
 
 def training_candidates() -> list[dict] | None:
@@ -140,6 +168,7 @@ def offers() -> list[dict]:
                         "ref": module["uid"],
                         "label": module["title"],
                         "detail": "",
+                        "anonymous": module["uid"] in chosen[ANONYMOUS],
                     }
                 )
     return out
@@ -162,7 +191,13 @@ class SignupError(Exception):
     """A validation problem, with a message fit for the visitor."""
 
 
-def create_account(username: str, email: str, password: str, picks: list[str]) -> dict:
+def create_account(
+    username: str,
+    email: str,
+    password: str,
+    picks: list[str],
+    anonymous: bool = False,
+) -> dict:
     """Validate, create the participant and join the picked targets.
 
     ``picks`` are ``"experiment:<id>"`` / ``"training:<uid>"`` strings; each must be offered right now.
@@ -170,13 +205,15 @@ def create_account(username: str, email: str, password: str, picks: list[str]) -
     """
     username = (username or "").strip()
     email = (email or "").strip().lower()
+    if anonymous:
+        email = anonymous_email(username) if USERNAME_RE.match(username) else ""
     if not USERNAME_RE.match(username):
         raise SignupError(
             _(
                 "The username must have 3 to 15 characters: letters, digits, dots, dashes or underscores."
             )
         )
-    if not EMAIL_RE.match(email) or len(email) > 50:
+    if not anonymous and (not EMAIL_RE.match(email) or len(email) > 50):
         raise SignupError(_("Please enter a valid email address."))
     if len(password or "") < MIN_PASSWORD:
         raise SignupError(
@@ -187,6 +224,10 @@ def create_account(username: str, email: str, password: str, picks: list[str]) -
     chosen = [available[p] for p in dict.fromkeys(picks or []) if p in available]
     if not chosen:
         raise SignupError(_("Choose at least one of the available activities."))
+    if anonymous and not (
+        len(chosen) == 1 and chosen[0]["kind"] == TRAINING and chosen[0].get("anonymous")
+    ):
+        raise SignupError(_("Anonymous registration is not available for this activity."))
 
     if (
         db.session.scalars(select(Admin_users).filter_by(email=email)).first()

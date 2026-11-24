@@ -22,10 +22,12 @@
             <p class="yl-sub">{{ _('Join Y Social and choose what you want to take part in.') }}</p>
             {% endif %}
 
+            {% if not (only and only.anonymous) %}
             <div class="yl-field">
                 <input id="yl-email" type="email" name="email" value="{{ form.get('email', '') }}" placeholder=" " autocomplete="email" maxlength="50" autofocus required>
                 <label for="yl-email">{{ _('Email') }}</label>
             </div>
+            {% endif %}
             <div class="yl-field">
                 <input id="yl-name" type="text" name="name" value="{{ form.get('username', '') }}" placeholder=" " autocomplete="username" minlength="3" maxlength="15" required>
                 <label for="yl-name">{{ _('Username') }}</label>

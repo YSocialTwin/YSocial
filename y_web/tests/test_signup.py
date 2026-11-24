@@ -268,3 +268,52 @@ def test_target_switch_and_live_requirement(app, monkeypatch):
         assert [o["ref"] for o in signup.offers()] == ["m1"]
         signup.set_target(signup.TRAINING, "m1", False)
         assert not signup.is_target(signup.TRAINING, "m1") and signup.offers() == []
+
+
+def test_anonymous_registration_only_for_flagged_modules(app, monkeypatch):
+    mods = [
+        {"uid": "m1", "title": "Anon", "archived": False, "open_run": True},
+        {"uid": "m2", "title": "Plain", "archived": False, "open_run": True},
+    ]
+    monkeypatch.setattr(signup, "training_candidates", lambda: mods)
+
+    class Api:
+        @staticmethod
+        def enroll(uid, account_id):
+            return "enrolled"
+
+    import y_web.src.external_runtime.backend_plugins as bp
+
+    monkeypatch.setattr(bp, "training_signup_api", lambda: Api, raising=False)
+    with app.app_context():
+        signup.save(True, [], ["m1", "m2"])
+        signup.set_anonymous("m1", True)
+        signup.save(True, [], ["m1", "m2"])  # saving the targets keeps the flag
+        assert signup.is_anonymous("m1") and not signup.is_anonymous("m2")
+        flags = {o["ref"]: o["anonymous"] for o in signup.offers()}
+        assert flags == {"m1": True, "m2": False}
+
+        # no email is asked: a stand-in one is stored and the username logs in
+        res = signup.create_account("ann", "", "longenough", ["training:m1"], anonymous=True)
+        user = db.session.get(Admin_users, res["user_id"])
+        assert user.email == "ann@anonymous.invalid" and user.role == "user"
+        assert signup.find_login_user("ann").id == user.id
+        assert signup.find_login_user("ann@anonymous.invalid").id == user.id
+        assert signup.find_login_user("nobody") is None
+
+        # not for a module without the flag, nor mixed with other activities
+        with pytest.raises(signup.SignupError):
+            signup.create_account("bob", "", "longenough", ["training:m2"], anonymous=True)
+        with pytest.raises(signup.SignupError):
+            signup.create_account(
+                "bob", "", "longenough", ["training:m1", "training:m2"], anonymous=True
+            )
+        # without the anonymous mode the email is still mandatory
+        with pytest.raises(signup.SignupError):
+            signup.create_account("bob", "", "longenough", ["training:m1"])
+
+        # a regular account cannot be reached by username alone
+        signup.create_account("reg", "reg@x.org", "longenough", ["training:m1"])
+        assert signup.find_login_user("reg") is None
+        signup.set_anonymous("m1", False)
+        assert not signup.is_anonymous("m1")

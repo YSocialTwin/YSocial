@@ -53,11 +53,14 @@ def login_post():
     if request.method == "GET":
         return render_template("login/login.html")
 
+    from y_web.src import signup as signup_logic
+
     email = request.form.get("email")
     password = request.form.get("password")
     remember = True if request.form.get("remember") else False
 
-    user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
+    # an e-mail, or the username of an anonymous (training module) account
+    user = signup_logic.find_login_user(email)
 
     # check if the user actually exists
     # take the user-supplied password, hash it, and compare it to the hashed password in the database
@@ -253,6 +256,7 @@ def signup_post():
             form["email"],
             request.form.get("password", ""),
             form["picks"],
+            anonymous=bool(only and only.get("anonymous")),
         )
     except signup_logic.SignupError as exc:
         return render_template(
