@@ -346,6 +346,13 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     if shown_elsewhere:
         return redirect(shown_elsewhere)
 
+    # ``show_profile_links`` off: the participant sees no link to anybody's profile, and typing the address of
+    # somebody else's profile does not work either (the own profile stays reachable)
+    if str(user.id) != str(logged_id) and not _load_ui_settings(exp_id).get(
+        "show_profile_links", True
+    ):
+        abort(403)
+
     is_following = (
         _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
     )
