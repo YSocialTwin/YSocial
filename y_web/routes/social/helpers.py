@@ -18,11 +18,11 @@ from flask_login import current_user
 from sqlalchemy import or_, select
 
 from y_web import db
-from y_web.src.content.reaction_counts import count_reactions
 from y_web.platforms import registry as platforms
 from y_web.src.commons import flat_threads
 from y_web.src.commons.ids import opaque_id
 from y_web.src.commons.ordering import seq_or_id
+from y_web.src.content.reaction_counts import count_reactions
 from y_web.src.content.text_utils import strip_tags
 from y_web.src.data_access import (
     augment_text,

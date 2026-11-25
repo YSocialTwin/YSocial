@@ -266,7 +266,6 @@ def federation_crosspost_suggest(exp_id):
         return jsonify({"texts": {}})
 
 
-
 def _interaction_allowed(ui, action) -> bool:
     """Whether the experiment's frontend settings leave the interaction open (``action``: like / dislike)."""
     if not ui.get("interactions_enabled", True):

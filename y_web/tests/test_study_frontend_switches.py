@@ -9,12 +9,18 @@ import jinja2
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2] / "external"
-REPOS = [r for r in ("YServer", "YSimulator") if (ROOT / r / "ysocial_platform").is_dir()]
-pytestmark = pytest.mark.skipif(not REPOS, reason="microblogging repositories not installed")
+REPOS = [
+    r for r in ("YServer", "YSimulator") if (ROOT / r / "ysocial_platform").is_dir()
+]
+pytestmark = pytest.mark.skipif(
+    not REPOS, reason="microblogging repositories not installed"
+)
 
 
 def _env(repo):
-    loader = jinja2.FileSystemLoader(str(ROOT / repo / "ysocial_platform" / "templates"))
+    loader = jinja2.FileSystemLoader(
+        str(ROOT / repo / "ysocial_platform" / "templates")
+    )
     env = jinja2.Environment(loader=loader, extensions=["jinja2.ext.i18n"])
     env.install_null_translations(newstyle=True)
     env.filters["display_name"] = lambda v: v
@@ -33,7 +39,12 @@ def _render(repo, name, ui, **ctx):
 @pytest.mark.parametrize("repo", REPOS)
 @pytest.mark.parametrize(
     "ui, linked",
-    [(None, True), ({}, True), ({"show_profile_links": True}, True), ({"show_profile_links": False}, False)],
+    [
+        (None, True),
+        ({}, True),
+        ({"show_profile_links": True}, True),
+        ({"show_profile_links": False}, False),
+    ],
 )
 def test_suggested_friends_profile_links(repo, ui, linked):
     html = _render(
@@ -85,9 +96,14 @@ def test_search_boxes_are_wrapped_in_the_switch(repo):
 @pytest.mark.parametrize("repo", REPOS)
 def test_provider_declares_the_switches(repo):
     src = (ROOT / repo / "ysocial_platform" / "provider.py").read_text(encoding="utf-8")
-    slot = (ROOT / repo / "ysocial_platform" / "templates" / "slots" / "frontend_settings_feed.html").read_text(
-        encoding="utf-8"
-    )
+    slot = (
+        ROOT
+        / repo
+        / "ysocial_platform"
+        / "templates"
+        / "slots"
+        / "frontend_settings_feed.html"
+    ).read_text(encoding="utf-8")
     for key in ("show_search", "show_profile_links"):
         assert f'FrontendSetting("{key}", True)' in src
         assert f'id="{key}"' in slot

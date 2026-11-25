@@ -11,8 +11,8 @@ from typing import Optional
 from sqlalchemy import desc, func, or_, select
 
 from y_web import db
-from y_web.src.content.reaction_counts import count_reactions
 from y_web.src.commons.ordering import seq_or_id
+from y_web.src.content.reaction_counts import count_reactions
 from y_web.src.models import (
     Admin_users,
     Agent,

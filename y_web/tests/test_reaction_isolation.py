@@ -25,16 +25,30 @@ def world(app):
                     last_seen="2026-01-01",
                 )
             )
-        users = {n: User_mgmt(username=n, password="x", joined_on=0) for n in ("p1", "p2", "bot")}
+        users = {
+            n: User_mgmt(username=n, password="x", joined_on=0)
+            for n in ("p1", "p2", "bot")
+        }
         db.session.add_all(users.values())
         db.session.commit()
         post = Post(tweet="hello", round=rnd.id, user_id=users["bot"].id, comment_to=-1)
         db.session.add(post)
         db.session.commit()
-        for who, kind in (("bot", "like"), ("p1", "like"), ("p2", "like"), ("p2", "dislike")):
-            db.session.add(Reactions(round=rnd.id, user_id=users[who].id, post_id=post.id, type=kind))
+        for who, kind in (
+            ("bot", "like"),
+            ("p1", "like"),
+            ("p2", "like"),
+            ("p2", "dislike"),
+        ):
+            db.session.add(
+                Reactions(
+                    round=rnd.id, user_id=users[who].id, post_id=post.id, type=kind
+                )
+            )
         db.session.commit()
-        yield SimpleNamespace(app=app, post=post.id, users={n: u.id for n, u in users.items()})
+        yield SimpleNamespace(
+            app=app, post=post.id, users={n: u.id for n, u in users.items()}
+        )
 
 
 def _counts(world, monkeypatch, viewer, isolate):
@@ -45,8 +59,12 @@ def _counts(world, monkeypatch, viewer, isolate):
     monkeypatch.setattr(rc, "current_user", SimpleNamespace(username=viewer))
     with world.app.test_request_context("/7/feed"):
         request.view_args = {"exp_id": 7}
-        g.pop(rc._CACHE, None)  # a real request has its own application context, hence its own cache
-        return rc.count_reactions(world.post, "like"), rc.count_reactions(world.post, "dislike")
+        g.pop(
+            rc._CACHE, None
+        )  # a real request has its own application context, hence its own cache
+        return rc.count_reactions(world.post, "like"), rc.count_reactions(
+            world.post, "dislike"
+        )
 
 
 def test_off_by_default_everybody_sees_everything(world, monkeypatch):
@@ -55,8 +73,14 @@ def test_off_by_default_everybody_sees_everything(world, monkeypatch):
 
 
 def test_on_a_participant_sees_the_crowd_plus_their_own(world, monkeypatch):
-    assert _counts(world, monkeypatch, "p1", True) == (2, 0)  # bot + own like; p2's reactions are hidden
-    assert _counts(world, monkeypatch, "p2", True) == (2, 1)  # bot + own like; own dislike
+    assert _counts(world, monkeypatch, "p1", True) == (
+        2,
+        0,
+    )  # bot + own like; p2's reactions are hidden
+    assert _counts(world, monkeypatch, "p2", True) == (
+        2,
+        1,
+    )  # bot + own like; own dislike
 
 
 def test_on_the_others_see_only_the_crowd(world, monkeypatch):

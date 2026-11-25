@@ -42,7 +42,9 @@ def participant_user_ids() -> set:
     if not names:
         return set()
     return set(
-        db.session.scalars(select(User_mgmt.id).where(User_mgmt.username.in_(names))).all()
+        db.session.scalars(
+            select(User_mgmt.id).where(User_mgmt.username.in_(names))
+        ).all()
     )
 
 
