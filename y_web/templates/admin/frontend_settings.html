@@ -339,6 +339,16 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 </div>
               </div>
               <div style="margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">
+                <div class="ys-toggle-row" data-cap="interaction_like">
+                  <span class="ys-toggle-label">
+                    {{ _('Keep participants\' reactions apart') }}
+                    <small>{{ _('Likes and dislikes of a participant are seen only by that participant: the counters of the other users and the popularity of the posts do not change') }}</small>
+                  </span>
+                  <label class="switch-small">
+                    <input type="checkbox" id="isolate_participant_reactions">
+                    <span class="slider-small round"></span>
+                  </label>
+                </div>
                 <div class="ys-toggle-row" data-cap="notifications_menu">
                   <span class="ys-toggle-label">
                     {{ _('Notification menu') }}
@@ -809,7 +819,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     // Bool toggles
     const boolIds = [
       'interactions_enabled','interaction_post','interaction_comment',
-      'interaction_like','interaction_dislike','interaction_share',
+      'interaction_like','interaction_dislike','interaction_share','isolate_participant_reactions',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
@@ -895,7 +905,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   function collectSettings() {
     const boolIds = [
       'interactions_enabled','interaction_post','interaction_comment',
-      'interaction_like','interaction_dislike','interaction_share',
+      'interaction_like','interaction_dislike','interaction_share','isolate_participant_reactions',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',

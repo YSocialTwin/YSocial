@@ -11,6 +11,7 @@ from typing import Optional
 from sqlalchemy import desc, func, or_, select
 
 from y_web import db
+from y_web.src.content.reaction_counts import count_reactions
 from y_web.src.commons.ordering import seq_or_id
 from y_web.src.models import (
     Admin_users,
@@ -573,16 +574,8 @@ def get_user_recent_posts(
                     "day": comment_day,
                     "hour": comment_hour,
                     "display_time": comment_display_time if has_threads else None,
-                    "likes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="like")
-                        ).all()
-                    ),
-                    "dislikes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="dislike")
-                        ).all()
-                    ),
+                    "likes": count_reactions(c.id, "like"),
+                    "dislikes": count_reactions(c.id, "dislike"),
                     "is_liked": db.session.scalars(
                         select(Reactions).filter_by(
                             post_id=c.id, user_id=current_user, type="like"
@@ -691,20 +684,8 @@ def get_user_recent_posts(
                     if getattr(post, "created_at", None)
                     else None
                 ),
-                "likes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="like")
-                        ).all()
-                    )
-                ),
-                "dislikes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="dislike")
-                        ).all()
-                    )
-                ),
+                "likes": count_reactions(post.id, "like"),
+                "dislikes": count_reactions(post.id, "dislike"),
                 "is_liked": db.session.scalars(
                     select(Reactions).filter_by(
                         post_id=post.id, user_id=current_user, type="like"
@@ -801,16 +782,8 @@ def get_posts_associated_to_hashtags(
                     "hour": db.session.scalars(select(Rounds).filter_by(id=c.round))
                     .first()
                     .hour,
-                    "likes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="like")
-                        ).all()
-                    ),
-                    "dislikes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="dislike")
-                        ).all()
-                    ),
+                    "likes": count_reactions(c.id, "like"),
+                    "dislikes": count_reactions(c.id, "dislike"),
                     "is_liked": db.session.scalars(
                         select(Reactions).filter_by(
                             post_id=c.id, user_id=current_user, type="like"
@@ -893,20 +866,8 @@ def get_posts_associated_to_hashtags(
                 "round": post.round,
                 "day": day,
                 "hour": hour,
-                "likes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="like")
-                        ).all()
-                    )
-                ),
-                "dislikes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="dislike")
-                        ).all()
-                    )
-                ),
+                "likes": count_reactions(post.id, "like"),
+                "dislikes": count_reactions(post.id, "dislike"),
                 "is_liked": db.session.scalars(
                     select(Reactions).filter_by(
                         post_id=post.id, user_id=current_user, type="like"
@@ -1004,16 +965,8 @@ def get_posts_associated_to_interest(
                     "hour": db.session.scalars(select(Rounds).filter_by(id=c.round))
                     .first()
                     .hour,
-                    "likes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="like")
-                        ).all()
-                    ),
-                    "dislikes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="dislike")
-                        ).all()
-                    ),
+                    "likes": count_reactions(c.id, "like"),
+                    "dislikes": count_reactions(c.id, "dislike"),
                     "is_liked": db.session.scalars(
                         select(Reactions).filter_by(
                             post_id=c.id, user_id=current_user, type="like"
@@ -1096,20 +1049,8 @@ def get_posts_associated_to_interest(
                 "round": post.round,
                 "day": day,
                 "hour": hour,
-                "likes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="like")
-                        ).all()
-                    )
-                ),
-                "dislikes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="dislike")
-                        ).all()
-                    )
-                ),
+                "likes": count_reactions(post.id, "like"),
+                "dislikes": count_reactions(post.id, "dislike"),
                 "is_liked": db.session.scalars(
                     select(Reactions).filter_by(
                         post_id=post.id, user_id=current_user, type="like"
@@ -1224,16 +1165,8 @@ def get_posts_associated_to_emotion(
                     "hour": db.session.scalars(select(Rounds).filter_by(id=c.round))
                     .first()
                     .hour,
-                    "likes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="like")
-                        ).all()
-                    ),
-                    "dislikes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="dislike")
-                        ).all()
-                    ),
+                    "likes": count_reactions(c.id, "like"),
+                    "dislikes": count_reactions(c.id, "dislike"),
                     "is_liked": db.session.scalars(
                         select(Reactions).filter_by(
                             post_id=c.id, user_id=current_user, type="like"
@@ -1333,20 +1266,8 @@ def get_posts_associated_to_emotion(
                 "round": post.round,
                 "day": day,
                 "hour": hour,
-                "likes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="like")
-                        ).all()
-                    )
-                ),
-                "dislikes": len(
-                    list(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=post.id, type="dislike")
-                        ).all()
-                    )
-                ),
+                "likes": count_reactions(post.id, "like"),
+                "dislikes": count_reactions(post.id, "dislike"),
                 "is_liked": db.session.scalars(
                     select(Reactions).filter_by(
                         post_id=post.id, user_id=current_user, type="like"

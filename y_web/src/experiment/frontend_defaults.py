@@ -16,6 +16,9 @@ DEFAULT_SETTINGS = {
     "interaction_like": True,
     "interaction_dislike": True,
     "interaction_share": True,
+    # A participant's likes / dislikes are seen only by the participant: they leave the counters of everybody else and
+    # the popularity of the post untouched (training modules, where nobody should influence the next participant)
+    "isolate_participant_reactions": False,
     "notifications_menu": True,  # Bell / mentions icon, shown alongside interactions in the admin UI
     # Annotations
     "annotations_enabled": True,

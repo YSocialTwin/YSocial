@@ -18,6 +18,7 @@ from flask_login import current_user
 from sqlalchemy import or_, select
 
 from y_web import db
+from y_web.src.content.reaction_counts import count_reactions
 from y_web.platforms import registry as platforms
 from y_web.src.commons import flat_threads
 from y_web.src.commons.ids import opaque_id
@@ -294,16 +295,8 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     "hour": db.session.scalars(select(Rounds).filter_by(id=c.round))
                     .first()
                     .hour,
-                    "likes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="like")
-                        ).all()
-                    ),
-                    "dislikes": len(
-                        db.session.scalars(
-                            select(Reactions).filter_by(post_id=c.id, type="dislike")
-                        ).all()
-                    ),
+                    "likes": count_reactions(c.id, "like"),
+                    "dislikes": count_reactions(c.id, "dislike"),
                     "is_liked": db.session.scalars(
                         select(Reactions).filter_by(
                             post_id=c.id, user_id=exp_user_id, type="like"
@@ -446,16 +439,8 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     if getattr(post, "created_at", None)
                     else None
                 ),
-                "likes": len(
-                    db.session.scalars(
-                        select(Reactions).filter_by(post_id=post.id, type="like")
-                    ).all()
-                ),
-                "dislikes": len(
-                    db.session.scalars(
-                        select(Reactions).filter_by(post_id=post.id, type="dislike")
-                    ).all()
-                ),
+                "likes": count_reactions(post.id, "like"),
+                "dislikes": count_reactions(post.id, "dislike"),
                 "is_liked": db.session.scalars(
                     select(Reactions).filter_by(
                         post_id=post.id, user_id=exp_user_id, type="like"

@@ -6,7 +6,7 @@ These routes are shared by the platforms.
 
 import uuid
 
-from flask import flash, jsonify, redirect, request, url_for
+from flask import abort, flash, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
@@ -14,7 +14,9 @@ from sqlalchemy.exc import OperationalError
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
+from y_web.routes.social.helpers import _load_ui_settings
 from y_web.src.commons.ordering import seq_or_id
+from y_web.src.content.reaction_counts import reaction_is_isolated
 from y_web.src.experiment.helpers import open_experiment_session
 from y_web.src.models import (
     Follow,
@@ -264,6 +266,17 @@ def federation_crosspost_suggest(exp_id):
         return jsonify({"texts": {}})
 
 
+
+def _interaction_allowed(ui, action) -> bool:
+    """Whether the experiment's frontend settings leave the interaction open (``action``: like / dislike)."""
+    if not ui.get("interactions_enabled", True):
+        return False
+    key = {"like": "interaction_like", "dislike": "interaction_dislike"}.get(
+        str(action or "").lower()
+    )
+    return bool(ui.get(key, True)) if key else True
+
+
 @user.route("/<int:exp_id>/share_content")
 @login_required
 def share_content(exp_id):
@@ -278,6 +291,10 @@ def share_content(exp_id):
     Returns:
         Redirect to referrer page
     """
+    ui = _load_ui_settings(exp_id)
+    if not (ui.get("interactions_enabled", True) and ui.get("interaction_share", True)):
+        abort(403)
+
     # Get experiment user (not admin user)
     exp_user = db.session.scalars(
         select(User_mgmt).filter_by(username=current_user.username)
@@ -394,6 +411,10 @@ def react(exp_id):
     post_id = request.args.get("post_id")
     action = request.args.get("action")
 
+    ui = _load_ui_settings(exp_id)
+    if not _interaction_allowed(ui, action):
+        return {"message": "This interaction is switched off", "status": 403}, 403
+
     # Get experiment user (not admin user)
     exp_user = db.session.scalars(
         select(User_mgmt).filter_by(username=current_user.username)
@@ -448,9 +469,9 @@ def react(exp_id):
             db.session.add(reaction)
             db.session.commit()
 
-    # update the reaction count of the post
+    # update the reaction count of the post (not for the reactions kept apart: they must not move its popularity)
     post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
-    if post is not None:
+    if post is not None and not reaction_is_isolated(exp_user_id):
         post.reaction_count += 1
         db.session.commit()
 
