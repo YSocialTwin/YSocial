@@ -19892,3 +19892,17 @@ msgstr "✔️ Usa"
 #~ msgid "← Back to feed"
 #~ msgstr "← Torna al feed"
 
+
+#: y_web/templates/admin/frontend_settings.html
+msgid "Keep participants' reactions apart"
+msgstr "Mantieni separate le reazioni dei partecipanti"
+
+#: y_web/templates/admin/frontend_settings.html
+msgid ""
+"Likes and dislikes of a participant are seen only by that participant: "
+"the counters of the other users and the popularity of the posts do not "
+"change"
+msgstr ""
+"Mi piace e non mi piace di un partecipante sono visibili solo a quel "
+"partecipante: i contatori degli altri utenti e la popolarità dei post non "
+"cambiano"
