@@ -25,8 +25,10 @@ def _make_plugin(root, domain="demo", with_catalog=True):
         catalog = Catalog(locale="it", domain=domain)
         catalog.add("Modules", string="Moduli")
         catalog.add("Hello %(name)s", string="Ciao %(name)s")
+        # Recent Babel/CLDR data gives Italian three plural forms.
         catalog.add(
-            ("%(num)d step", "%(num)d steps"), string=("%(num)d passo", "%(num)d passi")
+            ("%(num)d step", "%(num)d steps"),
+            string=("%(num)d passo", "%(num)d passi", "%(num)d passi"),
         )
         with (mo_dir / f"{domain}.mo").open("wb") as fh:
             write_mo(fh, catalog)

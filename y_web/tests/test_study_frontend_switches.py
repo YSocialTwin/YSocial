@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parents[2] / "external"
 REPOS = [
     r for r in ("YServer", "YSimulator") if (ROOT / r / "ysocial_platform").is_dir()
 ]
-pytestmark = pytest.mark.skipif(
-    not REPOS, reason="microblogging repositories not installed"
-)
+pytestmark = pytest.mark.unit
+if not REPOS:
+    pytest.skip("microblogging repositories not installed", allow_module_level=True)
 
 
 def _env(repo):
