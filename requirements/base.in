@@ -45,6 +45,7 @@ networkx
 nltk>=3.8.0
 vaderSentiment>=3.3.2
 psutil
+packaging>=23.0
 bs4
 colorama>=0.4.4
 faker>=18.0.0

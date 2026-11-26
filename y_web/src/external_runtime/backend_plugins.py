@@ -385,6 +385,16 @@ def validate_backend_suite(repo_key: str) -> dict:
     info_payload, info_err = _load_json(spec.path / INFO_RELATIVE_PATH)
     if info_err:
         report["warnings"].append(f"meta/info.json: {info_err}")
+    else:
+        from y_web.src.external_runtime.requirements import (
+            info_requirement_problems,
+        )
+
+        requirement_errors, requirement_warnings = info_requirement_problems(
+            info_payload, app_version
+        )
+        report["errors"].extend(requirement_errors)
+        report["warnings"].extend(requirement_warnings)
 
     registry_payload, registry_err = _load_json(spec.path / REGISTRY_RELATIVE_PATH)
     if registry_err:

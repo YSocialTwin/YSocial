@@ -183,6 +183,7 @@ def _builtin_spec(entry: dict) -> ExternalRuntimeSpec:
         is_private=bool(entry.get("private", True)),
         visible_to_usernames=tuple(entry.get("visible_to_usernames", ())),
         description=str(entry.get("description") or "").strip(),
+        min_ysocial_version=entry.get("min_ysocial_version"),
     )
 
 

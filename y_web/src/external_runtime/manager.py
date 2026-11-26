@@ -884,6 +884,16 @@ def is_archive_install(repo: "str | Path") -> bool:
     return _read_archive_marker(path) is not None and not (path / ".git").exists()
 
 
+def _refuse_if_core_too_old(spec) -> None:
+    """Refuse an install that needs a newer YSocial, before anything is downloaded."""
+    from y_web.src.external_runtime.backend_plugins import _app_version
+    from y_web.src.external_runtime.requirements import install_requirement_problem
+
+    problem = install_requirement_problem(spec, _app_version())
+    if problem:
+        raise ExternalRuntimeError(problem)
+
+
 def install_runtime_branch_archive(
     repo_key: str,
     branch: str | None,
@@ -892,6 +902,7 @@ def install_runtime_branch_archive(
 ) -> None:
     """Install a branch from its GitHub archive: no git needed, updates re-download."""
     spec = runtime_spec(repo_key)
+    _refuse_if_core_too_old(spec)
     branch_name = _resolve_branch(spec, branch)
     if spec.path.exists():
         raise ExternalRuntimeError(f"{spec.label} already exists at {spec.path}")
@@ -1146,6 +1157,7 @@ def download_runtime_release(
     github_token: str | None = None,
 ) -> None:
     spec = runtime_spec(repo_key)
+    _refuse_if_core_too_old(spec)
     if spec.path.exists():
         raise ExternalRuntimeError(f"{spec.label} already exists at {spec.path}")
 
@@ -1179,6 +1191,7 @@ def clone_runtime_repo(
     github_token: str | None = None,
 ) -> None:
     spec = runtime_spec(repo_key)
+    _refuse_if_core_too_old(spec)
     branch_name = _resolve_branch(spec, branch)
     if not host_git_available():
         raise ExternalRuntimeError(
