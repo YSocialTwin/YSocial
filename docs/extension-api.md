@@ -44,6 +44,12 @@ the core offers is not loaded, and the administration shows its name, the versio
 extension without the two fields still loads, with a warning in the log. `max_core_version` is optional and only for a
 known limit.
 
+A core older than the extension needs is protected in two ways. The suite in `meta/registry.json` carries
+`min_app_version`, which every core since 4.0.0 checks: the plugin is not loaded and the error names both versions. The
+catalogue of the public plugin registry carries `min_ysocial_version`, and a core that is too old skips the entry. The
+list of built-in plugins is generated from the `plugin-registry` repository (`builtin.json`); an entry there may carry
+`min_ysocial_version` too, and the installer of a 4.1.0 core then refuses before downloading anything.
+
 ## Migrating an extension
 
 1. List its imports: `grep -rnE "^\s*(from|import) y_web" <repo>`.
