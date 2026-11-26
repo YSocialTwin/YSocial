@@ -348,6 +348,14 @@
       "repo": "YSimulator",
       "to": "@microblogging/microblogging/emotions.html"
     },
+    "microblogging/edit_profile.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/edit_profile.html"
+    },
+    "microblogging/header.html": {
+      "repo": "YSimulator",
+      "to": "@microblogging/microblogging/header.html"
+    },
     "microblogging/feed.html": {
       "repo": "YSimulator",
       "to": "@microblogging/microblogging/feed.html"

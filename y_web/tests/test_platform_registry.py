@@ -6,6 +6,15 @@ from y_web.platforms import PlatformProvider, registry
 from y_web.tests import _platform_alias
 from y_web.tests._platform_repos import requires_platform
 
+#: the platforms this module characterizes against the previous (pre-registry) logic. A further platform
+#: that is installed (YCreator, ...) has its own tests in its repository and must not break these tables.
+BUILT_IN = ["microblogging", "forum", "photo_sharing", "instant_messaging", "dating"]
+
+
+def _keys():
+    return [k for k in registry.keys() if k in BUILT_IN]
+
+
 #: Dating is provided by its repository: what is said about it is checked where the repository is installed
 needs_photo = pytest.mark.skipif(
     not _platform_alias.installed(_platform_alias.PHOTO_SHARING),
@@ -48,7 +57,7 @@ _needs_dating_only = pytest.mark.skipif(
 
 @needs_dating
 def test_the_built_in_platforms_are_registered_in_menu_order():
-    assert registry.keys() == [
+    assert _keys() == [
         "microblogging",
         "forum",
         "photo_sharing",
@@ -259,7 +268,7 @@ def _legacy_prompt_pack(platform, simulator):
 def test_experiment_prompt_hooks_match_the_previous_platform_logic():
     from y_web.platforms import registry
 
-    for platform in registry.keys() + ["unknown"]:
+    for platform in _keys() + ["unknown"]:
         for simulator in ("Standard", "HPC"):
             provider = registry.resolve(platform, simulator)
             types = provider.simulator_types
@@ -284,7 +293,7 @@ def test_standard_runtime_hooks_match_the_previous_platform_logic(tmp_path):
     from y_web.platforms import registry
     from y_web.src.simulation import process_runner, server
 
-    runtimes = {key: registry.get(key).standard_runtime for key in registry.keys()}
+    runtimes = {key: registry.get(key).standard_runtime for key in _keys()}
     assert {k for k, v in runtimes.items() if v} == {"microblogging", "forum"}
     for key, repos in {
         "microblogging": ("YServer", "YClient"),
@@ -311,9 +320,7 @@ def test_standard_runtime_hooks_match_the_previous_platform_logic(tmp_path):
     assert not runtimes["microblogging"].client_takes_log_file
     assert runtimes["forum"].fake_agent_module == "y_client.classes.fake_base_agent"
     synced = {
-        k
-        for k in registry.keys() + ["hpc", "unknown"]
-        if registry.syncs_stress_reward(k)
+        k for k in _keys() + ["hpc", "unknown"] if registry.syncs_stress_reward(k)
     }
     assert synced == {"microblogging", "forum", "hpc"}
 
@@ -332,7 +339,7 @@ def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
         "photo_sharing": "prompts_ygram.json",
         "instant_messaging": "prompts_im.json",
     }
-    for key in registry.keys() + ["unknown"]:
+    for key in _keys() + ["unknown"]:
         assert registry.resolve(key).hpc_client_files(folder, client, population) == (
             config,
             agents,
@@ -349,7 +356,7 @@ def test_hpc_client_start_hooks_match_the_previous_platform_logic(tmp_path):
     for hook, owners in overriding.items():
         found = {
             k
-            for k in registry.keys()
+            for k in _keys()
             if any(
                 getattr(type(p), hook) is not getattr(PlatformProvider, hook)
                 for p in registry.variants(k)
@@ -372,7 +379,7 @@ def test_hpc_server_hooks_are_overridden_by_the_expected_platforms():
     for hook, owners in expected.items():
         found = {
             k
-            for k in registry.keys()
+            for k in _keys()
             if any(
                 getattr(type(p), hook) is not getattr(PlatformProvider, hook)
                 for p in registry.variants(k)
@@ -382,9 +389,9 @@ def test_hpc_server_hooks_are_overridden_by_the_expected_platforms():
     # the platforms that validate their folder are exactly those the HPC table marks as validating
     from y_web.src.hpc.platforms import HPC_PLATFORMS
 
-    assert {k for k, v in HPC_PLATFORMS.items() if v.validates_config} == expected[
-        "validate_hpc_folder"
-    ]
+    assert {
+        k for k, v in HPC_PLATFORMS.items() if v.validates_config and k in BUILT_IN
+    } == expected["validate_hpc_folder"]
 
 
 def _legacy_resolve_simulator(platform_type, simulator_type, av):
@@ -444,7 +451,7 @@ def test_resolve_simulator_matches_the_previous_creation_logic():
     )
     for flags in itertools.product((False, True), repeat=len(names)):
         available = dict(zip(names, flags))
-        for platform in registry.keys() + ["unknown"]:
+        for platform in _keys() + ["unknown"]:
             if platform in ("microblogging", "forum"):
                 # one repository per runtime (phase F9.2): the runtime asked for is the one that answers, and
                 # a platform whose only repository serves the other runtime decides itself
@@ -621,14 +628,14 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
     from y_web.platforms import registry
     from y_web.platforms.base import PlatformProvider
 
-    assert {k: registry.get(k).observer_url(5) for k in registry.keys()} == {
+    assert {k: registry.get(k).observer_url(5) for k in _keys()} == {
         "microblogging": None,
         "forum": None,
         "photo_sharing": None,
         "instant_messaging": "/5/im",
         "dating": "/5/dating",
     }
-    cloning = {k for k in registry.keys() if registry.get(k).folder_clone()}
+    cloning = {k for k in _keys() if registry.get(k).folder_clone()}
     assert cloning == {"instant_messaging", "dating"}
     for key in cloning:
         copy_folder, new_uid = registry.get(key).folder_clone()
@@ -636,7 +643,7 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
     assert registry.resolve("unknown").folder_clone() is None
     validating = {
         k
-        for k in registry.keys()
+        for k in _keys()
         if type(registry.get(k)).validate_before_start
         is not PlatformProvider.validate_before_start
     }
@@ -648,7 +655,7 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
     # only the Standard runtime of microblogging and forum starts from the empty server database
     assert {
         (k, s)
-        for k in registry.keys()
+        for k in _keys()
         for s in ("Standard", "HPC")
         if registry.get(k).creation_rules(s).copies_clean_database
     } == {("microblogging", "Standard"), ("forum", "Standard")}
@@ -663,7 +670,7 @@ def test_experiment_lifecycle_hooks_match_the_previous_platform_logic():
 def test_experiment_page_templates_and_variables_match_the_previous_logic():
     from y_web.platforms import registry
 
-    assert {k: registry.get(k).details_template for k in registry.keys()} == {
+    assert {k: registry.get(k).details_template for k in _keys()} == {
         "microblogging": "admin/experiment_details.html",
         "forum": "@ysocial_server_reddit/admin/experiment_details_forum.html",
         "photo_sharing": "@photo_sharing/admin/experiment_details_photo.html",
@@ -673,14 +680,20 @@ def test_experiment_page_templates_and_variables_match_the_previous_logic():
     assert registry.resolve("unknown").details_template == (
         "admin/experiment_details.html"
     )
-    assert registry.details_context_defaults() == {
+    # a further installed platform (YCreator's ``creator_*``) adds its own variables: these five stay as they were
+    defaults = {
+        k: v
+        for k, v in registry.details_context_defaults().items()
+        if not k.startswith("creator_")
+    }
+    assert defaults == {
         "forum_feed_health": None,
         "forum_avatar_settings": None,
         "im_analytics": None,
         "im_advanced": None,
         "im_switches": None,
     }
-    for key in registry.keys():
+    for key in _keys():
         provider = registry.get(key)
         # a platform provides exactly the variables it names
         if not provider.details_context_keys:
@@ -703,10 +716,14 @@ def test_frontend_capabilities_match_the_previous_tables():
             / "frontend_capabilities.json"
         ).read_text()
     )
-    assert fs.supported_platforms() == tuple(registry.keys())
+    assert tuple(k for k in fs.supported_platforms() if k in BUILT_IN) == tuple(_keys())
     for platform, want in expected.items():
-        assert fs.capabilities_for(platform) == want["caps"], platform
-        assert fs.excluded_capabilities_for(platform) == want["excluded"], platform
+        # the controls of a further installed platform (YCreator's ``creator_*``) are not part of this baseline
+        own = lambda keys: (
+            keys if keys is None else [k for k in keys if not k.startswith("creator_")]
+        )
+        assert own(fs.capabilities_for(platform)) == want["caps"], platform
+        assert own(fs.excluded_capabilities_for(platform)) == want["excluded"], platform
         if "label" in want:
             assert fs._localized_platform_label(platform) == want["label"]
 
@@ -719,17 +736,15 @@ def test_client_creation_guards_follow_the_provider():
     # the Standard routes of microblogging and of forum are the only ones that create their clients
     standard = [
         k
-        for k in registry.keys() + ["unknown"]
+        for k in _keys() + ["unknown"]
         if registry.resolve(k).client_mode("Standard") == "standard"
         and registry.resolve(k).standard_runtime is not None
     ]
-    forum = [
-        k for k in registry.keys() if registry.get(k).client_mode("Standard") == "forum"
-    ]
+    forum = [k for k in _keys() if registry.get(k).client_mode("Standard") == "forum"]
     assert (standard, forum) == (["microblogging"], ["forum"])
-    assert [
-        k for k in registry.keys() if registry.get(k).inherits_client_llm_defaults
-    ] == ["forum"]
+    assert [k for k in _keys() if registry.get(k).inherits_client_llm_defaults] == [
+        "forum"
+    ]
     # the pack a generic HPC client starts from: photo and forum have their own, the rest the HPC one
     assert {
         k: registry.get(k).experiment_prompt_pack("HPC")

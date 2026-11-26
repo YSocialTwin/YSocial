@@ -51,13 +51,15 @@ def test_dating_is_one_row_of_the_hpc_platform_table():
 def test_the_other_platform_rows_are_unchanged():
     from y_web.src.hpc.platforms import HPC_PLATFORMS
 
-    assert set(HPC_PLATFORMS) == {
+    # inclusion, not equality: installing another platform (e.g. YCreator) adds a row
+    # and must not break the check on the rows of the platforms that are covered here
+    assert {
         "microblogging",
         "photo_sharing",
         "instant_messaging",
         "dating",
         "forum",
-    }
+    } <= set(HPC_PLATFORMS)
     assert HPC_PLATFORMS["instant_messaging"].validates_config is True
     assert HPC_PLATFORMS["photo_sharing"].prompts_filename == "prompts_ygram.json"
 

@@ -346,9 +346,6 @@ def test_context_hero_is_shared_and_styled():
             "y_web/templates/microblogging/components/context_hero_card.html"
         )
     ).read_text(encoding="utf-8")
-    thread_template = Path(
-        microblogging_file("y_web/templates/microblogging/thread.html")
-    ).read_text(encoding="utf-8")
     hashtag_template = Path(
         microblogging_file("y_web/templates/microblogging/hashtag.html")
     ).read_text(encoding="utf-8")
@@ -362,10 +359,7 @@ def test_context_hero_is_shared_and_styled():
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
 
-    assert (
-        '{% include "@ysocial_server/microblogging/components/context_hero_card.html" %}'
-        in thread_template
-    )
+    # the thread page of the Bluesky-style frontend (YServer 3644d72) has its own header and no longer includes the card
     assert (
         '{% include "@ysocial_server/microblogging/components/context_hero_card.html" %}'
         in hashtag_template

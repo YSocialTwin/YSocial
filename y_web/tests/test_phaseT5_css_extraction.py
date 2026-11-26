@@ -30,7 +30,10 @@ TEMPLATES_FORUM = template_path(os.path.join(REPO_ROOT, "y_web", "templates"), "
 FORUM_CSS = str(
     EXTERNAL / "YForum" / "ysocial_platform" / "static" / "css" / "forum-components.css"
 )
-TEMPLATES_MB = os.path.join(REPO_ROOT, "y_web", "templates", "social")
+# the microblogging pages (header included) live in the YServer/YSimulator repositories since the platform decoupling
+TEMPLATES_MB = template_path(
+    os.path.join(REPO_ROOT, "y_web", "templates"), "microblogging"
+)
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
 NEW_CSS_FILES = [

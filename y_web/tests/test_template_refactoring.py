@@ -81,10 +81,8 @@ class TestNewFolderStructure:
     @pytest.mark.parametrize(
         "tpl",
         [
-            "microblogging/header.html",
             "microblogging/feed.html",
             "microblogging/profile.html",
-            "microblogging/edit_profile.html",
             "microblogging/friends.html",
             "microblogging/hashtag.html",
             "microblogging/emotions.html",
@@ -96,6 +94,18 @@ class TestNewFolderStructure:
     )
     def test_microblogging_page_templates_exist(self, tpl):
         assert _exists(tpl), f"{tpl} is missing"
+
+    @pytest.mark.parametrize("repo", ["YServer", "YSimulator"])
+    @pytest.mark.parametrize(
+        "tpl", ["microblogging/header.html", "microblogging/edit_profile.html"]
+    )
+    def test_microblogging_header_and_edit_profile_live_in_the_platform(
+        self, repo, tpl
+    ):
+        """They left the core with the platform decoupling: each microblogging runtime ships its own copy."""
+        from y_web.tests._platform_repos import platform_template
+
+        assert platform_template(repo, tpl).strip(), f"{repo}: {tpl} is empty"
 
     @pytest.mark.parametrize(
         "tpl",

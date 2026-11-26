@@ -460,13 +460,15 @@ def test_platform_only_controls_are_not_offered_to_microblogging(suites_app, log
     excluded = set(m["excluded_capabilities"])
     assert {"default_forum_feed_type", "default_photo_feed_tab"} <= excluded
     # the "Instant messaging pages" and "Dating pages" boxes are not offered either
-    im_dating = {k for k in excluded if k.startswith(("im_", "dating_"))}
+    # (and the controls of any further installed platform, e.g. YCreator's ``creator_*``)
+    im_dating = {k for k in excluded if k.startswith(("im_", "dating_", "creator_"))}
     assert "im_default_view" in im_dating and "dating_poll_seconds" in im_dating
     assert excluded == {"default_forum_feed_type", "default_photo_feed_tab"} | im_dating
     assert f["excluded_capabilities"] == [] and p["excluded_capabilities"] == []
     # forum and photo sharing do not list those keys, so their boxes stay hidden too
     assert not any(
-        k.startswith(("im_", "dating_")) for k in f["capabilities"] + p["capabilities"]
+        k.startswith(("im_", "dating_", "creator_"))
+        for k in f["capabilities"] + p["capabilities"]
     )
     im = _exp(suites_app, "instant_messaging", "i_excl")
     d = _exp(suites_app, "dating", "d_excl")
