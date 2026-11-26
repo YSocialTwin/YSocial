@@ -251,6 +251,9 @@
       "Reactions": {
         "kind": "class"
       },
+      "Reported": {
+        "kind": "class"
+      },
       "Rounds": {
         "kind": "class"
       },
