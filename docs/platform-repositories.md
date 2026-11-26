@@ -106,3 +106,13 @@ The shared feed administration (`experiments/_feeds.py`, used by forum, instant 
 `forum_*` tables and migrations, population and agent fields per platform, and the federation tables still mention
 platforms by name. `y_web/tests/data/platform_baseline/platform_names.json` records how many mentions each module has; the
 budget can only go down.
+
+### Known debt: feed administration and its tutorial
+
+Feed administration (`routes/admin/sub/experiments/_feeds.py`, `src/commons/reddit_feeds.py`, `admin-feeds.js`,
+`admin-pages-tutorial.js`, the `rss_feeds`, `image_feeds` and `feed_limits` templates; about 85 mentions) stays in the core
+for now. It is not a forum-only feature: RSS feeds also serve the microblogging platform, image feeds serve photo sharing,
+and the pages are one shared admin screen. Moving it means a new admin-page hook in `PLATFORM_API`, templates and routes
+shipped by each platform, and tests that open every feed page with and without each platform. That is more than a small
+refactor and carries real regression risk, so it was left alone on purpose. The decoupling gate keeps the count from
+growing; it is a candidate for a later release.
