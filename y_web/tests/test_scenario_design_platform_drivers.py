@@ -108,3 +108,14 @@ def test_the_driver_of_an_installed_platform_is_the_one_it_declares(
     driver = discovery.driver_for(_Exp(platform, simulator))
     assert driver is not None
     assert module_part in type(driver).__module__, type(driver).__module__
+
+
+@pytest.mark.parametrize("platform", ["photo_sharing", "instant_messaging"])
+def test_platforms_without_fixed_order_recommenders_do_not_offer_them(
+    discovery, platform
+):
+    """Photo sharing and instant messaging do not serve ``fixed:<name>`` recommenders: the editor hides the choice."""
+    for simulator in ("Standard", "HPC"):
+        driver = discovery.driver_for(_Exp(platform, simulator))
+        assert driver is not None
+        assert "fixed_recsys" not in driver.info().capabilities

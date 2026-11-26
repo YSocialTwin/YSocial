@@ -155,3 +155,21 @@ def test_schema_module_runs_after_discovery(tmp_path, world, monkeypatch):
     assert discover_platforms() == {"yschema": []}
     report = discovery.run_platform_schema_migrations(Flask(__name__))
     assert report == {"yschema": {"ok": True, "error": None}}
+
+
+@pytest.mark.parametrize(
+    "api,accepted",
+    [("1.2", True), ("1.4", True), ("1.5", True), ("1.6", False), ("2.0", False)],
+)
+def test_a_platform_registers_when_its_api_is_compatible_by_semver(
+    tmp_path, world, api, accepted
+):
+    """Older minors run (a minor only adds), a newer minor or another major is refused with a message."""
+    _install(world, tmp_path, key="ycompat", api=api)
+    report = discover_platforms()
+    if accepted:
+        assert report == {"ycompat": []}
+        assert registry.get("demo") is not None
+    else:
+        assert "platform API" in report["ycompat"][0]
+        assert registry.get("demo") is None
