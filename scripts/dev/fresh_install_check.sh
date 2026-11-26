@@ -12,6 +12,7 @@
 #   WORK=/tmp/fresh PYTHON=python3.12 scripts/dev/fresh_install_check.sh
 #   WITH_YCREATOR=1 scripts/dev/fresh_install_check.sh         # also install YCreator (phase 7)
 #   VENV=/path/to/venv scripts/dev/fresh_install_check.sh      # reuse a virtual environment (skips the install)
+#   RESUME=1 WORK=<same folder> ...                            # skip the steps that already passed in that folder
 #
 # Nothing is pushed and no existing checkout is changed: every clone is new.
 
@@ -52,7 +53,7 @@ mkdir -p "$WORK"
 : > "$REPORT"
 echo "# Fresh install check" >> "$REPORT"
 echo "" >> "$REPORT"
-echo "Folder: $WORK  -  Python: $($PYTHON --version 2>&1)  -  $(date -u +%FT%TZ)" >> "$REPORT"
+echo "Folder: $WORK  -  $(date -u +%FT%TZ)" >> "$REPORT"
 echo "" >> "$REPORT"
 
 fail() {
@@ -64,8 +65,11 @@ fail() {
 run() {  # run <title> <command...>: log the command's output and stop at the first failure
   local title="$1"; shift
   echo "== $title"
-  local log="$WORK/$(echo "$title" | tr -c 'A-Za-z0-9' '_').log"
+  local key; key="$(echo "$title" | tr -c 'A-Za-z0-9' '_')"
+  local log="$WORK/$key.log"
+  if [ "${RESUME:-0}" = "1" ] && [ -f "$WORK/.done_$key" ]; then echo "- ok (earlier run): $title" >> "$REPORT"; return 0; fi
   if "$@" >"$log" 2>&1; then
+    touch "$WORK/.done_$key"
     echo "- ok: $title" >> "$REPORT"
   else
     tail -n 25 "$log"
@@ -89,6 +93,7 @@ clone_one() {
   branch="$(branch_of "$repo")"
   if [ "$repo" = "YSocial" ]; then dest="$CHECKOUT"; else dest="$CHECKOUT/external/$repo"; fi
   mkdir -p "$(dirname "$dest")"
+  if [ -d "$dest/.git" ]; then echo "$repo $branch $(git -C "$dest" rev-parse --short HEAD) (already there)" >> "$WORK/clones.txt"; return 0; fi
   local source; source="$(source_of "$repo")"
   case "$source" in /*) source="file://$source" ;; esac  # a shallow clone: only the tip of the branch is needed
   git clone -q --depth 1 --branch "$branch" --single-branch "$source" "$dest" || return 1
@@ -113,6 +118,8 @@ else
   run "requirements" "$VENV_PY" -m pip install -q -r "$CHECKOUT/requirements.txt" -r "$CHECKOUT/requirements/test.txt"
 fi
 
+echo "Python: $("$VENV_PY" --version 2>&1)" >> "$REPORT"
+
 export YSOCIAL_HOME="$CHECKOUT"
 export PYTHONPATH="$CHECKOUT:$CHECKOUT/external"
 export TMPDIR="${TMPDIR:-/tmp}"
@@ -128,14 +135,28 @@ PY
 
 echo "## Contracts and extensions on the clean install" >> "$REPORT"
 cd "$CHECKOUT" || fail "no checkout"
+# The suites below create experiments of every platform. A repository still classified as private is only offered
+# once GitHub reports it public (an anonymous request the app makes by itself, and cannot make offline), so the
+# check records that answer for them: it assumes the repositories are public, which is what the visibility
+# decision of the release is about (docs/release-4.1-report.md). ASSUME_PUBLIC=0 leaves the state alone.
+if [ "${ASSUME_PUBLIC:-1}" = "1" ]; then
+  run "assume the private repositories are public" "$VENV_PY" - <<'PY'
+import json, time
+from pathlib import Path
+from y_web.src.external_runtime.registry import supported_repos
+state = {key: {"checked_at": time.time(), "public": True} for key, spec in supported_repos().items() if spec.is_private}
+Path("external/repo_visibility.json").write_text(json.dumps(state, indent=2), encoding="utf-8")
+PY
+  echo "- assumed public: private repositories (see the smoke step above for what a plain install shows)" >> "$REPORT"
+fi
 run "contracts of the platforms and of the extensions" "$VENV_PY" -m pytest -q -p no:cacheprovider \
   y_web/tests/test_sdk_contract.py y_web/tests/test_sdk_extensions_contract.py y_web/tests/test_decoupling_gate.py \
   y_web/tests/test_platform_discovery.py
 run "Scenario Design suite" "$VENV_PY" -m pytest -q -p no:cacheprovider external/ScenarioDesign/tests
 run "Training Modules bundle, export and import" "$VENV_PY" -m pytest -q -p no:cacheprovider \
   external/TrainingModules/tests/test_bundle.py external/TrainingModules/tests/test_runs.py
-run "frontend add-ons suite" "$VENV_PY" -m pytest -q -p no:cacheprovider external/frontend_adds-on/tests
-run "reactive agents suite" "$VENV_PY" -m pytest -q -p no:cacheprovider external/reactive_agents/tests
+run "frontend add-ons suite" env PYTHONPATH="$CHECKOUT/external/frontend_adds-on:$PYTHONPATH" "$VENV_PY" -m pytest -q -p no:cacheprovider external/frontend_adds-on/tests
+run "reactive agents suite" env PYTHONPATH="$CHECKOUT/external/reactive_agents:$PYTHONPATH" "$VENV_PY" -m pytest -q -p no:cacheprovider external/reactive_agents/tests
 
 echo "" >> "$REPORT"
 echo "Everything passed." >> "$REPORT"

@@ -26,7 +26,9 @@ ADMIN_PAGES = [
     "/admin/experiments",
     "/admin/frontend_settings",
     "/admin/scenario_design/app",
-    "/admin/plugins",
+    "/admin/external_runtimes",
+    "/admin/training/library",
+    "/admin/training/health",
 ]
 
 REPORT = []
@@ -103,32 +105,52 @@ def main():
 
     @step("an experiment is created for every platform and runtime")
     def _experiments():
+        """First as a plain administrator, then with the development flag.
+
+        A private repository that is present on disk is only offered with ``--development`` (or to an allow-listed
+        administrator); the report says which platforms that hides, so the visibility decision is made on facts.
+        """
         from y_web import db
         from y_web.sdk.models import Exps
         from sqlalchemy import select
 
-        made = []
+        def create(key, provider_id, runtime):
+            name = f"fresh_{provider_id}_{runtime}".replace("-", "_")
+            reply = state["client"].post(
+                "/admin/create_experiment",
+                data={
+                    "exp_name": name,
+                    "exp_descr": "fresh install check",
+                    "platform_type": key,
+                    "simulator_type": runtime,
+                    "tags": "check",
+                },
+                follow_redirects=False,
+            )
+            assert reply.status_code in (200, 302), f"{name}: HTTP {reply.status_code}"
+            with state["app"].app_context():
+                row = db.session.scalars(select(Exps).filter_by(exp_name=name)).first()
+                return None if row is None else (row.idexp, key, row.simulator_type)
+
+        made, hidden = [], []
         for key, provider_id, runtimes in state["platforms"]:
             for runtime in runtimes or ("Standard",):
-                name = f"fresh_{provider_id}_{runtime}".replace("-", "_")
-                reply = state["client"].post(
-                    "/admin/create_experiment",
-                    data={
-                        "exp_name": name,
-                        "exp_descr": "fresh install check",
-                        "platform_type": key,
-                        "simulator_type": runtime,
-                        "tags": "check",
-                    },
-                    follow_redirects=False,
-                )
-                assert reply.status_code in (200, 302), f"{name}: HTTP {reply.status_code}"
-                with state["app"].app_context():
-                    row = db.session.scalars(select(Exps).filter_by(exp_name=name)).first()
-                    assert row is not None, f"{name}: no experiment was stored"
-                    made.append((row.idexp, key, row.simulator_type))
+                found = create(key, provider_id, runtime)
+                if found:
+                    made.append(found)
+                else:
+                    hidden.append((key, provider_id, runtime))
+        if hidden:
+            state["app"].config["DEVELOPMENT_MODE"] = True
+            for key, provider_id, runtime in hidden:
+                found = create(key, provider_id, runtime)
+                assert found is not None, f"{provider_id}/{runtime}: no experiment, even with the development flag"
+                made.append(found)
         state["experiments"] = made
-        return f"{len(made)} experiments"
+        note = ""
+        if hidden:
+            note = "; only with the development flag: " + ", ".join(f"{pid}/{rt}" for _, pid, rt in hidden)
+        return f"{len(made)} experiments{note}"
 
     @step("the details page of every experiment opens")
     def _details():
