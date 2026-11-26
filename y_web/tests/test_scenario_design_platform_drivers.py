@@ -19,10 +19,7 @@ SNAPSHOT = json.loads(
     ).read_text("utf-8")
 )
 
-pytestmark = pytest.mark.skipif(
-    not registry.runtime_spec("scenario_design").path.exists(),
-    reason="the Scenario Design suite is not installed",
-)
+pytestmark = pytest.mark.unit
 
 
 class _Exp:
@@ -32,6 +29,8 @@ class _Exp:
 
 @pytest.fixture
 def discovery(app):
+    if not registry.runtime_spec("scenario_design").path.exists():
+        pytest.skip("the Scenario Design suite is not installed")
     from y_web.src.external_runtime.backend_plugins import import_from_suite
 
     base = "modules.scenario_editor.backend.drivers"
