@@ -10,6 +10,8 @@
 #   SOURCE_BASE=https://github.com/YSocialTwin scripts/dev/fresh_install_check.sh   # clone from GitHub
 #   BRANCHES=main scripts/dev/fresh_install_check.sh           # one branch for every repository
 #   WORK=/tmp/fresh PYTHON=python3.12 scripts/dev/fresh_install_check.sh
+#   MIX=core-top|platforms-top ONLY_SMOKE=1 ...                # cross-compatibility: the new core with the old
+#                                                              # repositories (main), or the new ones with the old core
 #   WITH_YCREATOR=1 scripts/dev/fresh_install_check.sh         # also install YCreator (phase 7)
 #   VENV=/path/to/venv scripts/dev/fresh_install_check.sh      # reuse a virtual environment (skips the install)
 #   RESUME=1 WORK=<same folder> ...                            # skip the steps that already passed in that folder
@@ -80,6 +82,10 @@ run() {  # run <title> <command...>: log the command's output and stop at the fi
 
 branch_of() {  # branch_of <repository>
   if [ -n "$BRANCHES" ]; then echo "$BRANCHES"; return; fi
+  case "${MIX:-}" in
+    core-top) if [ "$1" = "YSocial" ]; then echo "pre-merge-phase5"; else echo "main"; fi; return ;;
+    platforms-top) if [ "$1" = "YSocial" ]; then echo "main"; else echo "$DEFAULT_BRANCHES" | awk -F: -v r="$1" '$1 == r {print $2}'; fi; return ;;
+  esac
   echo "$DEFAULT_BRANCHES" | awk -F: -v r="$1" '$1 == r {print $2}'
 }
 
@@ -125,13 +131,15 @@ export PYTHONPATH="$CHECKOUT:$CHECKOUT/external"
 export TMPDIR="${TMPDIR:-/tmp}"
 
 echo "## Start and use" >> "$REPORT"
-run "smoke checks" "$VENV_PY" "$CHECKOUT/scripts/dev/fresh_install_check.py" "$WORK/smoke.json"
+run "smoke checks" env FRESH_ROOT="$CHECKOUT" "$VENV_PY" "$HERE/scripts/dev/fresh_install_check.py" "$WORK/smoke.json"
 echo "" >> "$REPORT"
 "$VENV_PY" - "$WORK/smoke.json" >> "$REPORT" <<'PY'
 import json, sys
 for item in json.load(open(sys.argv[1])):
     print(f"- {'ok' if item['ok'] else 'FAILED'}: {item['step']}" + (f" ({item['detail']})" if item.get('detail') else ""))
 PY
+
+if [ "${ONLY_SMOKE:-0}" = "1" ]; then echo "" >> "$REPORT"; echo "Smoke checks passed (ONLY_SMOKE)." >> "$REPORT"; echo "Report: $REPORT"; exit 0; fi
 
 echo "## Contracts and extensions on the clean install" >> "$REPORT"
 cd "$CHECKOUT" || fail "no checkout"

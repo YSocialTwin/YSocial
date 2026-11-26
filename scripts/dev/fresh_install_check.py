@@ -17,7 +17,7 @@ import time
 import traceback
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("FRESH_ROOT") or Path(__file__).resolve().parents[2])
 sys.path[:0] = [str(ROOT), str(ROOT / "external")]
 
 PASSWORD = "fresh-install-check"

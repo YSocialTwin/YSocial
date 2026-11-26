@@ -51,6 +51,7 @@ There are four operational layers worth separating:
 6. [Adding a language](i18n/adding-a-language.md) - interface and prompt languages (English, Italian)
 7. [Multi-Platform Simulations](multi-platform-simulations.md) - design package (proposal, not implemented)
 8. [Platform repositories](platform-repositories.md) - how a platform plugs into YSocial and how to add one
+9. [Upgrading to 4.1.0](upgrade-4.1.md) - what to update together and what a half-updated installation does
 
 ## Scope of this documentation
 
