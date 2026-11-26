@@ -58,6 +58,22 @@ is regenerated with `UPDATE_SDK_API=1`.
   length, opinion dynamics, details page and context, analytics, uploads and downloads: see `y_web/platforms/base.py`.
   A platform whose hooks apply only to its HPC runtime sets `hpc_only_hooks`.
 
+## SDK versions
+
+`PLATFORM_API` is `MAJOR.MINOR` and a repository declares the one it was written for as `api_version` in
+`meta/registry.json`; an older minor still loads, a newer minor or another major is refused with a message naming both.
+
+| `PLATFORM_API` | Adds |
+| --- | --- |
+| 1.0 | the provider, routes, templates and static files of a platform |
+| 1.1 | several repositories (variants) for one platform |
+| 1.2 | `federation_traits` |
+| 1.3 | `human_gateway` |
+| 1.4 | fixed-order recommenders (`fixed_recsys` capability) |
+| 1.5 | `viewer_user(experiment)` |
+
+Extensions have their own version, `EXTENSION_API` (`docs/extension-api.md`).
+
 ## Adding a platform
 
 1. Create the repository with the layout above and a provider whose `key` is unique.
