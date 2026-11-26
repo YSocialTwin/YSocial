@@ -166,7 +166,6 @@ def test_a_teacher_logs_in_to_the_training_area(core_app):  # noqa: F811
     for entry in (
         "/admin/training/modules",
         "/admin/training/runs",
-        "/admin/training/activity",
         "/admin/training/analysis",
         "/admin/training/guide",
     ):
@@ -189,7 +188,7 @@ def test_a_teacher_logs_in_to_the_training_area(core_app):  # noqa: F811
             for g in backend_plugins.backend_suite_sidebar_groups("teacher")
             for i in g["items"]
         ]
-    assert items == ["Modules", "Runs", "Analysis", "Data & exports", "Guide"]
+    assert items == ["Modules", "Runs", "Analysis", "Guide"]
 
 
 @requires_plugin
@@ -376,20 +375,14 @@ def test_the_sidebar_lists_the_training_entries_under_their_sections(
     )
     block = html[html.index('id="sidebar-submenu-training_modules"') :]
     block = block[: block.index("</div>\n        </div>")]
-    assert re.findall(r'dashboard-aside-submenu-section">([^<]+)<', block) == [
-        "Design",
-        "Run",
-        "Results",
-        "Setup",
-        "Help",
-    ]
+    # the menu is one flat list (Training Modules 1.34: no section headings; the library, templates and
+    # "Data & exports" pages are still served but are not menu entries any more)
+    assert re.findall(r'dashboard-aside-submenu-section">([^<]+)<', block) == []
     assert [html_unescape(t) for t in re.findall(r"<span>([^<]+)</span>", block)] == [
+        "Scenario Design",  # the Scenario Design entry sits first in the Training group (core 0c8d4219)
         "Modules",
-        "Activity library",
-        "Activities Templates",
         "Runs",
         "Analysis",
-        "Data & exports",
         "Settings",
         "Guide",
     ]

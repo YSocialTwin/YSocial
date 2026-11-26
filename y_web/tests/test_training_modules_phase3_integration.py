@@ -50,6 +50,42 @@ def _client_as(app, role):
     return client
 
 
+def _run_steps(app, rid):
+    """``[(step_key, status)]`` of the first enrollment of a run, in step order, read from the database.
+
+    The student overview page that listed them (``data-step`` / ``data-status``) is gone (Training Modules 1.34): the
+    participant is sent straight to the current step.
+    """
+    from sqlalchemy import text
+
+    from y_web import db
+
+    with app.app_context():
+        with db.engines["db_admin"].connect() as conn:
+            rows = conn.execute(
+                text(
+                    "SELECT s.step_key, COALESCE(sp.status, 'locked') FROM tm_enrollment e JOIN tm_run r ON r.id = e.run_id "
+                    "JOIN tm_step s ON s.version_id = r.version_id "
+                    "LEFT JOIN tm_step_progress sp ON sp.enrollment_id = e.id AND sp.step_key = s.step_key "
+                    "WHERE e.run_id = :rid AND e.id = (SELECT MIN(id) FROM tm_enrollment WHERE run_id = :rid) "
+                    "ORDER BY s.position"
+                ),
+                {"rid": rid},
+            ).all()
+    return [(key, status) for key, status in rows]
+
+
+def _participant_csrf(client) -> str:
+    """The CSRF token of a participant's session.
+
+    The student overview page that used to carry it is gone (Training Modules 1.34, 567b57c: ``/training/runs/<id>``
+    opens straight on the current step, and starting that step is a side effect these tests want to control). The
+    token is per session, so it is read from, or put into, the session itself.
+    """
+    with client.session_transaction() as sess:
+        return sess.setdefault("tm_csrf", "tok-" + "x" * 24)
+
+
 def _post(client, url, body=None, method="post"):
     return getattr(client, method)(
         url, json=body or {}, headers={"X-CSRF-Token": "tok"}
@@ -80,7 +116,7 @@ def test_training_group_is_in_the_sidebar_for_staff_only(core_app):
         html = client.get("/admin/dashboard").get_data(as_text=True)
         assert 'id="sidebar-group-training_modules"' in html, role
         assert 'href="/admin/training/modules"' in html
-        assert 'href="/admin/training/components"' in html
+        assert 'href="/admin/training/runs"' in html
     with core_app.test_request_context("/"):
         assert backend_plugins.backend_suite_sidebar_groups("user") == []
         assert backend_plugins.backend_suite_sidebar_groups("student") == []

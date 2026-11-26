@@ -10,6 +10,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -121,10 +122,7 @@ def test_a_scored_questionnaire_is_retried_and_exported_through_the_real_core(
 
     me = app.test_client()
     assert me.post("/login", data={"email": email, "password": "x"}).status_code == 302
-    token = re.search(
-        r'name="csrf_token" value="([^"]+)"',
-        me.get(f"/training/runs/{rid}").get_data(as_text=True),
-    ).group(1)
+    token = _participant_csrf(me)
     assert (
         me.post(
             f"/training/runs/{rid}/steps/{key}/start", data={"csrf_token": token}

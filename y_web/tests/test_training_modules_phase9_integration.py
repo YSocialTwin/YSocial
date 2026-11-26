@@ -98,7 +98,10 @@ def test_deactivation_hides_everything_keeps_data_and_reactivation_resumes(
 ):
     app, admin, rid = core_app, running["admin"], running["rid"]
     me = _participant_client(app, running["email"])
-    assert me.get(f"/training/runs/{rid}").status_code == 200
+    assert me.get(f"/training/runs/{rid}").status_code in (
+        200,
+        303,
+    )  # 303: straight to the current step
     assert "sidebar-group-training_modules" in admin.get("/admin/dashboard").get_data(
         as_text=True
     )
@@ -154,7 +157,10 @@ def test_deactivation_hides_everything_keeps_data_and_reactivation_resumes(
     )
 
     _set_enabled(app, True)
-    assert me.get(f"/training/runs/{rid}").status_code == 200
+    assert me.get(f"/training/runs/{rid}").status_code in (
+        200,
+        303,
+    )  # 303: straight to the current step
     assert (
         admin.get(f"{API}/runs/{rid}/enrollments").get_json()["enrollments"][0][
             "status"
@@ -188,12 +194,12 @@ def test_simulated_uninstall_and_reinstall_resume_from_the_kept_tables(
     )
     _set_enabled(app, True)
     assert admin.get(f"{API}/runs/{rid}").get_json()["run"]["status"] == "active"
-    assert (
-        _participant_client(app, running["email"])
-        .get(f"/training/runs/{rid}")
-        .status_code
-        == 200
-    )
+    assert _participant_client(app, running["email"]).get(
+        f"/training/runs/{rid}"
+    ).status_code in (
+        200,
+        303,
+    )  # 303: straight to the current step
 
 
 @requires_plugin

@@ -9,6 +9,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -169,9 +170,8 @@ def test_students_are_registered_and_logged_into_every_simulation_of_the_module(
             .headers["Location"]
             .endswith("/training")
         )
-        assert me.get(f"/training/runs/{rid}").status_code == 200
-        with me.session_transaction() as s:
-            csrf = s["tm_csrf"]
+        assert me.get(f"/training/runs/{rid}").status_code in (200, 303)
+        csrf = _participant_csrf(me)
         for key, exp in zip(keys, exps):
             launch = me.post(
                 f"/training/runs/{rid}/steps/{key}/start", data={"csrf_token": csrf}

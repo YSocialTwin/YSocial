@@ -8,7 +8,9 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
+    _run_steps,
     requires_plugin,
 )
 from y_web.tests.test_training_modules_phase6_integration import (  # noqa: F401
@@ -134,9 +136,7 @@ def test_the_button_appears_in_the_simulation_and_moves_the_student_on(
 
     me = app.test_client()
     assert me.post("/login", data={"email": email, "password": "x"}).status_code == 302
-    me.get(f"/training/runs/{rid}")
-    with me.session_transaction() as s:
-        csrf = s["tm_csrf"]
+    csrf = _participant_csrf(me)
     launch = me.post(
         f"/training/runs/{rid}/steps/{keys[0]}/start", data={"csrf_token": csrf}
     )
@@ -161,11 +161,13 @@ def test_the_button_appears_in_the_simulation_and_moves_the_student_on(
         f"/training/runs/{rid}/steps/{keys[0]}/advance", headers={"X-CSRF-Token": csrf}
     )
     assert pressed.status_code == 200 and pressed.get_json()["status"] == "completed"
-    run_page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert (
-        'data-step="%s" data-status="completed"' % keys[0] in run_page
-        and 'data-step="%s" data-status="available"' % keys[1] in run_page
-    )
+    me.get(
+        f"/training/runs/{rid}"
+    )  # the participant's next visit refreshes the progress
+    assert dict(_run_steps(core_app, rid)) == {
+        keys[0]: "completed",
+        keys[1]: "available",
+    }
     assert 'id="tm-advance"' not in me.get(
         f"/{with_button}/feed/{user}/feed/rf/1"
     ).get_data(

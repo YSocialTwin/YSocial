@@ -9,6 +9,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -63,9 +64,7 @@ def test_the_results_of_a_participant_are_exported_with_consolidated_ids(
     me = core_app.test_client()
     assert me.post("/login", data={"email": email, "password": "x"}).status_code == 302
     assert me.get("/training").status_code == 302
-    me.get(f"/training/runs/{rid}")
-    with me.session_transaction() as s:
-        csrf = s["tm_csrf"]
+    csrf = _participant_csrf(me)
     launch = me.post(
         f"/training/runs/{rid}/steps/{keys[0]}/start", data={"csrf_token": csrf}
     )
@@ -143,7 +142,13 @@ def test_the_results_of_a_participant_are_exported_with_consolidated_ids(
         detail.status_code == 200
         and detail.get_json()["participant"]["participant_code"] == code
     )
-    page = admin.get(f"/admin/training/analysis?run={rid}")
+    assert admin.get(f"/admin/training/analysis?run={rid}").status_code == 200
+    # the former panel lives under /advanced since Training Modules 1.34
+    page = admin.get(f"/admin/training/analysis/advanced?run={rid}")
     assert page.status_code == 200 and 'id="tm-an-root"' in page.get_data(as_text=True)
     assert student.get(f"{API}/runs/{rid}/analytics/overview").status_code == 403
     assert student.get(f"/admin/training/analysis?run={rid}").status_code in (302, 403)
+    assert student.get(f"/admin/training/analysis/advanced?run={rid}").status_code in (
+        302,
+        403,
+    )

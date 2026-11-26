@@ -59,6 +59,26 @@ def test_real_plugin_manifest_is_valid_with_schema_module():
     assert [m["module_id"] for m in report["modules"]] == ["training_editor"]
 
 
+def _current_schema_version() -> int:
+    """The schema version the installed Training Modules plugin migrates to (read from its source: the plugin is
+    imported by the loader with its own path, not as a package of the core)."""
+    import re
+    from pathlib import Path
+
+    schema = (
+        Path(__file__).resolve().parents[2]
+        / "external"
+        / "TrainingModules"
+        / "modules"
+        / "training_editor"
+        / "backend"
+        / "schema.py"
+    )
+    return int(
+        re.search(r"^SCHEMA_VERSION\s*=\s*(\d+)", schema.read_text(), re.M).group(1)
+    )
+
+
 @requires_plugin
 def test_startup_registers_blueprint_and_creates_tm_tables():
     from y_web import db
@@ -74,9 +94,11 @@ def test_startup_registers_blueprint_and_creates_tm_tables():
                 .scalars()
                 .all()
             )
+        SCHEMA_VERSION = _current_schema_version()
+
         assert (
-            version == sorted(set(version)) and version[-1] == 10
-        )  # schema v10 (the dev DB copy may still hold older stamps)
+            version == sorted(set(version)) and version[-1] == SCHEMA_VERSION
+        )  # the current schema (the dev DB copy may still hold older stamps)
 
 
 @requires_plugin
@@ -106,7 +128,9 @@ def test_rerunning_the_migration_does_not_duplicate_or_lose_rows():
             )
     # the temp DB is a copy of the developer's dashboard.db, so it may hold other rows
     assert titles.count("Keep") == 1
-    assert versions == sorted(set(versions)) and versions[-1] == 10
+    SCHEMA_VERSION = _current_schema_version()
+
+    assert versions == sorted(set(versions)) and versions[-1] == SCHEMA_VERSION
 
 
 @requires_plugin

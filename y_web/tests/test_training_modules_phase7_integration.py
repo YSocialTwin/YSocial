@@ -21,7 +21,9 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
+    _run_steps,
     requires_plugin,
 )
 
@@ -199,13 +201,8 @@ def test_component_path_through_the_real_core(core_app):
         .headers["Location"]
         .endswith("/training")
     )
-    me.get(f"/training/runs/{rid}")
-    with me.session_transaction() as s:
-        csrf = s["tm_csrf"]
-    keys = re.findall(
-        r'data-step="([0-9a-f-]{36})"',
-        me.get(f"/training/runs/{rid}").get_data(as_text=True),
-    )
+    csrf = _participant_csrf(me)
+    keys = [key for key, _ in _run_steps(core_app, rid)]
     assert len(keys) == 2
 
     # component down: refused, nothing consumed
@@ -255,8 +252,8 @@ def test_component_path_through_the_real_core(core_app):
         ).status_code
         == 401
     )
-    page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert len(re.findall(r'data-step="[^"]+" data-status="completed"', page)) == 0
+    me.get(f"/training/runs/{rid}")
+    assert [st for _, st in _run_steps(core_app, rid)].count("completed") == 0
     ok = _callback(anonymous, launch_id, nonce="nonce-int-0003")
     assert ok.status_code == 200 and ok.get_json() == {"status": "accepted"}
     replay = _callback(anonymous, launch_id, nonce="nonce-int-0003")
@@ -264,8 +261,8 @@ def test_component_path_through_the_real_core(core_app):
     assert (
         _callback(anonymous, launch_id, nonce="nonce-int-0004").status_code == 409
     )  # launch already consumed
-    page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert len(re.findall(r'data-step="[^"]+" data-status="completed"', page)) == 1
+    me.get(f"/training/runs/{rid}")
+    assert [st for _, st in _run_steps(core_app, rid)].count("completed") == 1
 
     # second step: the callback is lost, the signed pull recovers it
     r = me.post(

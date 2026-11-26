@@ -2,6 +2,7 @@
 rendered by head.html with the existing group markup (E7). Fake plugin."""
 
 import json
+import re
 
 import pytest
 
@@ -174,9 +175,12 @@ def test_disabled_suite_hides_its_group(core_app, tmp_path, monkeypatch):
 def test_without_plugins_the_sidebar_has_no_plugin_group(core_app):
     html = _page(core_app, "admin")
     assert 'id="sidebar-group-training_modules"' not in html
-    assert (
-        'id="sidebar-group-extensions"' not in html
-    )  # Frontend Settings lives under Experiments: no entry left, no empty group
+    # Frontend Settings lives under Experiments, so it is not an Extensions entry. Another installed suite
+    # (Scenario Design sits in the Training group, and in Extensions when Training is absent) may have one:
+    # what must hold is that the group is never empty
+    entries = re.findall(r'id="sidebar-ext-([^"]+)"', html)
+    assert set(entries) <= {"scenario_design"}
+    assert ('id="sidebar-group-extensions"' in html) == bool(entries)
     assert 'id="sidebar-frontend-settings"' in html
 
 

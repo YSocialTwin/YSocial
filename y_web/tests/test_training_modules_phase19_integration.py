@@ -6,6 +6,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -101,10 +102,7 @@ def test_group_work_through_the_real_core(core_app):  # noqa: F811
             client.post("/login", data={"email": mail, "password": "x"}).status_code
             == 302
         )
-        return client, re.search(
-            r'name="csrf_token" value="([^"]+)"',
-            client.get(f"/training/runs/{rid}").get_data(as_text=True),
-        ).group(1)
+        return client, _participant_csrf(client)
 
     (c1, t1), (c2, t2) = login(mail1), login(mail2)
     url = f"/training/runs/{rid}/steps/{key}"

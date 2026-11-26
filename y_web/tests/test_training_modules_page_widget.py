@@ -73,9 +73,8 @@ def test_without_any_hook_pages_are_unchanged(core_app):
 
 
 def test_the_microblogging_header_calls_it():
-    from pathlib import Path
+    from y_web.tests._platform_repos import platform_template
 
-    header = (
-        Path(__file__).resolve().parents[1] / "templates" / "social" / "header.html"
-    ).read_text()
+    # the microblogging header lives in the YServer repository (it left the core with the platform decoupling)
+    header = platform_template("YServer", "microblogging/header.html")
     assert header.rstrip().endswith("{{ plugin_experiment_widgets(exp_id) }}")

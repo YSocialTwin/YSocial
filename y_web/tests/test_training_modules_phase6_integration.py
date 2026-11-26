@@ -17,6 +17,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -248,12 +249,10 @@ def test_participant_path_through_the_real_core(core_app, platform, simulator):
     )  # post_login hook
     home = me.get("/training")
     assert home.status_code == 302 and home.headers["Location"].endswith(
-        f"/training/runs/{rid}"
+        f"/training/runs/{rid}/continue"  # one training: straight into it (no overview page)
     )
-    page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert username not in page and email not in page
-    with me.session_transaction() as s:
-        csrf = s["tm_csrf"]
+    assert me.get(f"/training/runs/{rid}").status_code == 303
+    csrf = _participant_csrf(me)
     assert (
         me.post(
             f"/training/runs/{rid}/steps/{keys[1]}/start", data={"csrf_token": csrf}
@@ -265,9 +264,11 @@ def test_participant_path_through_the_real_core(core_app, platform, simulator):
         f"/training/runs/{rid}/steps/{keys[0]}/start", data={"csrf_token": csrf}
     )
     assert launch.status_code == 200
-    token = re.search(
-        r'name="auth_token" value="([^"]+)"', launch.get_data(as_text=True)
-    ).group(1)
+    first_page = launch.get_data(
+        as_text=True
+    )  # the first page of the participant is pseudonymous
+    assert username not in first_page and email not in first_page
+    token = re.search(r'name="auth_token" value="([^"]+)"', first_page).group(1)
     entered = me.post(
         "/select_experiment", data={"experiment_id": exp, "auth_token": token}
     )

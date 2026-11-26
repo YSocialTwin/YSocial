@@ -13,6 +13,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -128,8 +129,7 @@ def test_native_onboarding_end_to_end_through_the_real_core(core_app):
 
     me = app.test_client()
     assert me.post("/login", data={"email": email, "password": "x"}).status_code == 302
-    run_page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    token = re.search(r'name="csrf_token" value="([^"]+)"', run_page).group(1)
+    token = _participant_csrf(me)
     assert (
         me.post(
             f"/training/runs/{rid}/steps/{key}/start", data={"csrf_token": token}

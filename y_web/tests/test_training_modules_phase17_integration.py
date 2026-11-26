@@ -115,6 +115,16 @@ def test_wait_closing_and_panel_through_the_real_core(core_app):  # noqa: F811
     )  # only the clock opens it
     assert me.get(two + "/certificate").status_code in (403, 404, 409)
 
+    # a wait of a day: without this the participant would be timed out by the inactivity limit (60 minutes by
+    # default since Training Modules 1.34) before the clock gets there
+    assert (
+        admin.patch(
+            f"{API}/settings",
+            json={"default_inactivity_minutes": 0},
+            headers={"X-CSRF-Token": "tok"},
+        ).status_code
+        == 200
+    )
     clock["now"] += timedelta(days=1, minutes=1)
     me.get(f"/training/runs/{rid}")
     assert (

@@ -36,7 +36,30 @@ def core_app(monkeypatch, tmp_path):
         "id": exp["idexp"],
         "name": f"Scenario {exp['idexp']}",
     }
+    _empty_the_training_tables(app)
     return app
+
+
+def _empty_the_training_tables(app):
+    """The test database is a copy of the developer's dashboard.db: start from empty Training Modules tables.
+
+    Many tests count rows of ``tm_*`` tables ("exactly one event of this kind"); the runs, enrollments and events
+    the developer has made on that machine must not change the answer. Only the copy is touched.
+    """
+    from sqlalchemy import inspect, text
+
+    from y_web import db
+
+    with app.app_context():
+        engine = db.engines["db_admin"]
+        tables = [
+            t
+            for t in inspect(engine).get_table_names()
+            if t.startswith("tm_") and t != "tm_schema_version"
+        ]
+        with engine.begin() as conn:
+            for table in tables:
+                conn.execute(text(f'DELETE FROM "{table}"'))
 
 
 def _suffix():
@@ -243,11 +266,12 @@ def test_ensure_experiment_user_reuses_row_by_username_even_with_other_id(core_a
         assert again.id == first.id != account.id
 
 
-def test_ensure_experiment_user_collides_with_an_existing_agent_id(core_app):
-    """An agent (or any row) already holding the account id makes the insert of a
-    different username fail: the id spaces of agents and accounts are shared."""
-    from sqlalchemy.exc import IntegrityError
-
+def test_ensure_experiment_user_takes_the_next_free_id_when_an_agent_holds_the_account_id(
+    core_app,
+):
+    """An agent (or any row) already holding the account id: the participant gets the next free id instead
+    (core 9b54aad6); the agent's row is left as it was and the participant is found again on the next call.
+    """
     from y_web.src.experiment.helpers import (
         ensure_experiment_user,
         open_experiment_session,
@@ -259,10 +283,11 @@ def test_ensure_experiment_user_collides_with_an_existing_agent_id(core_app):
         exp = _make_experiment()
         session, engine = open_experiment_session(exp)
         try:
+            agent_name = "agent" + _suffix()
             session.add(
                 User_mgmt(
                     id=account.id,
-                    username="agent" + _suffix(),
+                    username=agent_name,
                     email="",
                     password="x",
                     user_type="user",
@@ -274,11 +299,22 @@ def test_ensure_experiment_user_collides_with_an_existing_agent_id(core_app):
             session.close()
             engine.dispose()
 
-        with pytest.raises(IntegrityError):
-            ensure_experiment_user(
-                exp,
-                user_id=account.id,
-                username=account.username,
-                email=account.email,
-                password=account.password,
-            )
+        user, created = ensure_experiment_user(
+            exp,
+            user_id=account.id,
+            username=account.username,
+            email=account.email,
+            password=account.password,
+        )
+        assert created is True
+        assert user.id != account.id
+        again, created_again = ensure_experiment_user(
+            exp,
+            user_id=account.id,
+            username=account.username,
+            email=account.email,
+            password=account.password,
+        )
+        assert created_again is False and again.id == user.id
+        rows = {u.id: u.username for u in _experiment_rows(exp)}
+        assert rows[account.id] == agent_name  # the agent keeps its id and its name

@@ -19,6 +19,7 @@ from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F4
 from y_web.tests.test_training_modules_phase3_integration import (
     API,
     _client_as,
+    _participant_csrf,
     _post,
     requires_plugin,
 )
@@ -78,9 +79,7 @@ def test_export_through_the_real_core(core_app, platform, simulator):
 
     me = core_app.test_client()
     assert me.post("/login", data={"email": email, "password": "x"}).status_code == 302
-    me.get(f"/training/runs/{rid}")
-    with me.session_transaction() as s:
-        csrf = s["tm_csrf"]
+    csrf = _participant_csrf(me)
     launch = me.post(
         f"/training/runs/{rid}/steps/{keys[0]}/start", data={"csrf_token": csrf}
     )
