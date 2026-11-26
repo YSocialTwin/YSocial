@@ -155,7 +155,7 @@ def test_uninstall_and_stop_on_window_close_wiring():
 
 def test_installer_version_matches_ysocial_version():
     version = (I.parent / "VERSION").read_text().strip()
-    assert version == "4.0.0"
+    assert re.fullmatch(r"\d+\.\d+\.\d+", version), version
     cfg = json.loads((I / "src-tauri/tauri.conf.json").read_text())
     assert cfg["version"] == version
     cargo = (I / "src-tauri/Cargo.toml").read_text()
