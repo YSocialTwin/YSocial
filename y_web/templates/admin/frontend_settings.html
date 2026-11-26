@@ -1258,6 +1258,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           if (data.ok) {
             statusEl.textContent = YI18n.t('Saved ✓');
             statusEl.className = 'ys-fs-save-status edu-status is-ok';
+            // The statistics toggle of the Annotations box follows the module at once, no page reload needed.
+            if (moduleId === 'post_annotation') syncAnnotationStatsAvailability(enabled);
             loadFrontendAddsOnSettings(expId, cardRepoKey);
           } else {
             statusEl.textContent = YI18n.t('Error: {error}', {error: data.error || 'unknown'});
