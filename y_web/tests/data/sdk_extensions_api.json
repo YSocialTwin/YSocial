@@ -150,6 +150,11 @@
         "kind": "function",
         "signature": "(user_id: \"'Any'\", *, window_rounds: \"'int'\" = 50, limit: \"'int'\" = 10) -> \"'List[str]'\""
       },
+      "get_top_interests_for_user_in_exp": {
+        "kind": "forwarder",
+        "target": "y_web.routes.api.interview._memory._get_top_interests_for_user_in_exp",
+        "target_signature": "(exp: 'Exps', user_id: 'Any', *, window_rounds: 'int' = 50, limit: 'int' = 10) -> 'List[str]'"
+      },
       "memory_server_unavailable": {
         "kind": "function",
         "signature": "(db_binding: \"'Optional[Dict[str, Any]]'\") -> \"'bool'\""
@@ -310,6 +315,15 @@
         "target": "y_web.src.external_runtime.backend_plugins.plugin_enabled",
         "target_signature": "(repo_key: 'str') -> 'bool'"
       },
+      "registered_suite_keys": {
+        "kind": "function",
+        "signature": "() -> list"
+      },
+      "registered_suite_modules": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.plugin_loader.registered_suite_modules",
+        "target_signature": "(repo_key: 'str') -> 'dict'"
+      },
       "runtime_spec": {
         "kind": "forwarder",
         "target": "y_web.src.external_runtime.registry.runtime_spec",
@@ -336,6 +350,10 @@
         "kind": "forwarder",
         "target": "y_web.routes.admin.sub.experiments._frontend_settings._load_recsys_options",
         "target_signature": "(simulator_type: str = 'Standard', all_algorithms: bool = False, include_human_only: bool = False)"
+      },
+      "load_ui_settings": {
+        "kind": "function",
+        "signature": "(exp_id: 'int') -> 'dict'"
       }
     },
     "signup": {

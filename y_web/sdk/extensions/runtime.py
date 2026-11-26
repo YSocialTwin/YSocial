@@ -2,6 +2,14 @@
 
 from ._forward import forward
 
+
+def registered_suite_keys() -> list:
+    """Keys of the plugin suites registered so far."""
+    from y_web.src.external_runtime import plugin_loader
+
+    return list(getattr(plugin_loader, "_REGISTERED_SUITES", {}))
+
+
 ensure_module_schema = forward(
     "y_web.src.external_runtime.plugin_loader",
     "ensure_module_schema",
@@ -26,6 +34,12 @@ training_component_catalog = forward(
     name="training_component_catalog",
     doc="The components a training plugin may offer; same arguments as the core function.",
 )
+registered_suite_modules = forward(
+    "y_web.src.external_runtime.plugin_loader",
+    "registered_suite_modules",
+    name="registered_suite_modules",
+    doc="The modules a registered suite offers; same arguments as the core function.",
+)
 runtime_spec = forward(
     "y_web.src.external_runtime.registry",
     "runtime_spec",
@@ -37,6 +51,8 @@ __all__ = [
     "discover_frontend_modules",
     "ensure_module_schema",
     "plugin_enabled",
+    "registered_suite_keys",
+    "registered_suite_modules",
     "runtime_spec",
     "training_component_catalog",
 ]

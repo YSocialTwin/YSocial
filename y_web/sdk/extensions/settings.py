@@ -1,5 +1,7 @@
 """The frontend settings of an experiment, as the administration pages compute them."""
 
+from y_web.sdk.web import load_ui_settings
+
 from ._forward import forward
 
 load_recsys_options = forward(
@@ -21,4 +23,9 @@ excluded_capabilities_for = forward(
     doc="The frontend capabilities a platform leaves out; same arguments as the core function.",
 )
 
-__all__ = ["capabilities_for", "excluded_capabilities_for", "load_recsys_options"]
+__all__ = [
+    "capabilities_for",
+    "excluded_capabilities_for",
+    "load_recsys_options",
+    "load_ui_settings",
+]

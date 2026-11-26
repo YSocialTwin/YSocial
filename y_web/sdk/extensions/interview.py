@@ -27,6 +27,12 @@ detect_run_id_from_experiment_db = forward(
     name="detect_run_id_from_experiment_db",
     doc="Run id found in the database of the experiment; same arguments as the core function.",
 )
+get_top_interests_for_user_in_exp = forward(
+    "y_web.routes.api.interview._memory",
+    "_get_top_interests_for_user_in_exp",
+    name="get_top_interests_for_user_in_exp",
+    doc="Top interests of a user read from a given experiment; same arguments as the core function.",
+)
 normalize_llm_base_url = forward(
     "y_web.routes.api.interview._helpers",
     "_normalize_llm_base_url",
@@ -45,6 +51,7 @@ __all__ = [
     "format_memory_pack",
     "generate_reply",
     "get_top_interests_for_user",
+    "get_top_interests_for_user_in_exp",
     "memory_server_unavailable",
     "normalize_llm_base_url",
     "resolve_llm_backend",
