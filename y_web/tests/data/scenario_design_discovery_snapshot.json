@@ -1,0 +1,188 @@
+{
+ "_note": "What the Scenario Design editor lists and which capabilities each (platform, simulator) pair has. Recorded before the platform drivers started to be found (SCENARIO_API 1.3); it must not change when a driver moves to a platform repository.",
+ "available_platforms": [
+  {
+   "capabilities": [
+    "chat_fields",
+    "keeps_source_content",
+    "multi_root",
+    "sidecar_store",
+    "topics"
+   ],
+   "label": "instant messaging",
+   "platform_key": "instant_messaging",
+   "simulator_types": null
+  },
+  {
+   "capabilities": [
+    "requires_image",
+    "seed",
+    "topics"
+   ],
+   "label": "photo sharing",
+   "platform_key": "photo_sharing",
+   "simulator_types": null
+  },
+  {
+   "capabilities": [
+    "fixed_recsys",
+    "post_attributes",
+    "real_content",
+    "seed",
+    "topics"
+   ],
+   "label": "microblogging",
+   "platform_key": "microblogging",
+   "simulator_types": [
+    "HPC"
+   ]
+  },
+  {
+   "capabilities": [
+    "fixed_recsys",
+    "post_attributes",
+    "real_content",
+    "seed",
+    "topics"
+   ],
+   "label": "forum",
+   "platform_key": "forum",
+   "simulator_types": [
+    "HPC"
+   ]
+  },
+  {
+   "capabilities": [
+    "core_orm",
+    "fixed_recsys",
+    "post_attributes",
+    "real_content",
+    "seed",
+    "topics"
+   ],
+   "label": "microblogging",
+   "platform_key": "microblogging",
+   "simulator_types": [
+    "Standard"
+   ]
+  },
+  {
+   "capabilities": [
+    "core_orm",
+    "fixed_recsys",
+    "post_attributes",
+    "real_content",
+    "seed",
+    "topics"
+   ],
+   "label": "forum",
+   "platform_key": "forum",
+   "simulator_types": [
+    "Standard"
+   ]
+  }
+ ],
+ "capabilities": {
+  "None|Standard": [
+   "core_orm",
+   "fixed_recsys",
+   "post_attributes",
+   "real_content",
+   "seed",
+   "topics"
+  ],
+  "dating|Standard": null,
+  "forum|HPC": [
+   "fixed_recsys",
+   "post_attributes",
+   "real_content",
+   "seed",
+   "topics"
+  ],
+  "forum|Standard": [
+   "core_orm",
+   "fixed_recsys",
+   "post_attributes",
+   "real_content",
+   "seed",
+   "topics"
+  ],
+  "instant_messaging|HPC": [
+   "chat_fields",
+   "keeps_source_content",
+   "multi_root",
+   "sidecar_store",
+   "topics"
+  ],
+  "instant_messaging|Standard": [
+   "chat_fields",
+   "keeps_source_content",
+   "multi_root",
+   "sidecar_store",
+   "topics"
+  ],
+  "microblogging|HPC": [
+   "fixed_recsys",
+   "post_attributes",
+   "real_content",
+   "seed",
+   "topics"
+  ],
+  "microblogging|Standard": [
+   "core_orm",
+   "fixed_recsys",
+   "post_attributes",
+   "real_content",
+   "seed",
+   "topics"
+  ],
+  "photo_sharing|HPC": [
+   "requires_image",
+   "seed",
+   "topics"
+  ],
+  "photo_sharing|Standard": [
+   "requires_image",
+   "seed",
+   "topics"
+  ]
+ },
+ "seed_menu": [
+  [
+   "photo_sharing",
+   "Standard",
+   "photo sharing",
+   true
+  ],
+  [
+   "photo_sharing",
+   "HPC",
+   "photo sharing",
+   true
+  ],
+  [
+   "microblogging",
+   "HPC",
+   "microblogging",
+   true
+  ],
+  [
+   "forum",
+   "HPC",
+   "forum",
+   true
+  ],
+  [
+   "microblogging",
+   "Standard",
+   "microblogging",
+   true
+  ],
+  [
+   "forum",
+   "Standard",
+   "forum",
+   true
+  ]
+ ]
+}
