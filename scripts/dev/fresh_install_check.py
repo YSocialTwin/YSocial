@@ -41,11 +41,23 @@ def step(name):
         started = time.time()
         try:
             detail = fn()
-            REPORT.append({"step": name, "ok": True, "detail": detail, "seconds": round(time.time() - started, 2)})
+            REPORT.append(
+                {
+                    "step": name,
+                    "ok": True,
+                    "detail": detail,
+                    "seconds": round(time.time() - started, 2),
+                }
+            )
             print(f"  ok   {name}" + (f" ({detail})" if detail else ""))
         except Exception as exc:  # noqa: BLE001 - the report must name any failure
             REPORT.append(
-                {"step": name, "ok": False, "detail": f"{type(exc).__name__}: {exc}", "trace": traceback.format_exc()}
+                {
+                    "step": name,
+                    "ok": False,
+                    "detail": f"{type(exc).__name__}: {exc}",
+                    "trace": traceback.format_exc(),
+                }
             )
             print(f"  FAIL {name}: {type(exc).__name__}: {exc}")
             finish(1)
@@ -55,8 +67,12 @@ def step(name):
 
 
 def finish(code):
-    target = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "fresh_install_report.json"
-    target.write_text(json.dumps(REPORT, indent=1, ensure_ascii=False), encoding="utf-8")
+    target = (
+        Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "fresh_install_report.json"
+    )
+    target.write_text(
+        json.dumps(REPORT, indent=1, ensure_ascii=False), encoding="utf-8"
+    )
     sys.exit(code)
 
 
@@ -83,8 +99,12 @@ def main():
 
     @step("the administrator signs in")
     def _login():
-        reply = state["client"].post("/login", data={"email": state["email"], "password": PASSWORD})
-        assert reply.status_code == 302 and "/admin" in (reply.headers.get("Location") or ""), reply.status_code
+        reply = state["client"].post(
+            "/login", data={"email": state["email"], "password": PASSWORD}
+        )
+        assert reply.status_code == 302 and "/admin" in (
+            reply.headers.get("Location") or ""
+        ), reply.status_code
 
     for page in ADMIN_PAGES:
 
@@ -98,7 +118,10 @@ def main():
     def _platforms():
         from y_web.platforms import registry
 
-        found = [(p.key, p.provider_id, tuple(p.simulator_types or ())) for p in registry.all_providers()]
+        found = [
+            (p.key, p.provider_id, tuple(p.simulator_types or ()))
+            for p in registry.all_providers()
+        ]
         assert found, "no platform provider is registered"
         state["platforms"] = found
         return ", ".join(sorted({f"{key}/{pid}" for key, pid, _ in found}))
@@ -144,20 +167,30 @@ def main():
             state["app"].config["DEVELOPMENT_MODE"] = True
             for key, provider_id, runtime in hidden:
                 found = create(key, provider_id, runtime)
-                assert found is not None, f"{provider_id}/{runtime}: no experiment, even with the development flag"
+                assert (
+                    found is not None
+                ), f"{provider_id}/{runtime}: no experiment, even with the development flag"
                 made.append(found)
         state["experiments"] = made
         note = ""
         if hidden:
-            note = "; only with the development flag: " + ", ".join(f"{pid}/{rt}" for _, pid, rt in hidden)
+            note = "; only with the development flag: " + ", ".join(
+                f"{pid}/{rt}" for _, pid, rt in hidden
+            )
         return f"{len(made)} experiments{note}"
 
     @step("the details page of every experiment opens")
     def _details():
         for exp_id, key, runtime in state["experiments"]:
-            reply = state["client"].get(f"/admin/experiment_details/{exp_id}", follow_redirects=True)
-            assert reply.status_code == 200, f"experiment {exp_id} ({key}/{runtime}): HTTP {reply.status_code}"
-            assert b"Traceback" not in reply.data, f"experiment {exp_id}: traceback in the page"
+            reply = state["client"].get(
+                f"/admin/experiment_details/{exp_id}", follow_redirects=True
+            )
+            assert (
+                reply.status_code == 200
+            ), f"experiment {exp_id} ({key}/{runtime}): HTTP {reply.status_code}"
+            assert (
+                b"Traceback" not in reply.data
+            ), f"experiment {exp_id}: traceback in the page"
 
     finish(0)
 
