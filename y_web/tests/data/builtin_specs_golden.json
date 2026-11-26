@@ -398,7 +398,7 @@
     "source": "builtin",
     "description": "Lets simulated agents react to human participants even when the simulation is not running: they answer mentions, react to posts of the people they follow and join ongoing threads. Optional extras include per-viewer content hiding, a virtual round clock for ad hoc agents, and check-ins with followed users who go quiet.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "frontend_adds_on",
@@ -420,7 +420,7 @@
     "source": "builtin",
     "description": "Optional add-ons for the participant interface, such as annotation tools and educational overlays, enabled per experiment.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "scenario_design",
@@ -442,7 +442,7 @@
     "source": "builtin",
     "description": "Design multi-round interaction scenarios — threads, posts and their timing — before running an experiment.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "training_modules",
@@ -464,6 +464,6 @@
     "source": "builtin",
     "description": "Build training courses from ordered steps — YSocial scenarios, questionnaires or external pages — assign them to students and export their activity.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   }
 ]
