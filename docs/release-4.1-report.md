@@ -41,7 +41,7 @@ The date of the release and its changelog heading are set on the day of the merg
 | frontend_adds-on | `pre-merge-phase5` | 5186cc3 | 7 |
 | reactive_agents | `pre-merge-phase5` | ce181e8 | 6 |
 | YSocial (core) | `pre-merge-phase5` | see `git rev-parse pre-merge-phase5` | 156+ |
-| YCreator | `pre-merge-hardening` (not part of the window unless phase 7 closes) | 2e13976 | 129 |
+| YCreator | `pre-merge-phase7` (enters the window only if Giulio confirms; see the phase 7 section of the plan log) | 103462a | 134 |
 
 Every branch above contains the current `main` of its repository (a fast-forward merge is possible). The commits made
 during this hardening are listed per phase in `PLAN_LOG.md` and in the live status document.
@@ -67,7 +67,7 @@ during this hardening are listed per phase in `PLAN_LOG.md` and in the live stat
   experiment, not on a real one.
 * The HPC publication adapter of Scenario Design has no end-to-end test (it needs a YSimulator database). Publish a
   scenario on an HPC experiment by hand before the release.
-* YCreator is not part of the check (phase 7 is open).
+* YCreator was checked separately in phase 7 (clean install on the top core, 146 tests, real human-gateway run); it is not in the table of the fresh install above unless `WITH_YCREATOR=1` is set.
 
 ## Findings worth a decision
 
@@ -94,7 +94,7 @@ during this hardening are listed per phase in `PLAN_LOG.md` and in the live stat
 ## Decisions that remain with Giulio
 
 * Visibility of the four extensions and of the private platform repositories (finding 1).
-* Whether YCreator enters the window (phase 7).
+* Whether YCreator enters the window (phase 7): the platform is ready; what remains is the catalogue choice (merge in the same window, or point the catalogue entry to `creator-v1`), its first version (proposed 0.1.0) and whether the internal reports `docs/g1-report.md` ... `g10-report.md` are public.
 * The date of 4.1.0 and the heading of the changelog.
 
 ## Merge window (to be run by hand, in this order)
@@ -120,7 +120,7 @@ and `git rev-list --count <branch>..origin/main` must be 0 in every repository).
    | 2 | YDating | `pre-merge-hardening` |
    | 3 | ScenarioDesign, TrainingModules, frontend_adds-on, reactive_agents | `pre-merge-phase5` |
    | 4 | YSocial (core) | `pre-merge-phase5`; then set the date in `CHANGELOG.md` (heading `[4.1.0] - <date>`), and tag `4.1.0` |
-   | 2 (conditional) | YCreator | only if phase 7 is closed; otherwise it stays on `creator-v1` |
+   | 2 (conditional) | YCreator | `pre-merge-phase7`; tag `pre-4.1-main` on its `main` before the fast-forward; if it does not enter, it stays on `creator-v1` |
 
 4. After the merge: regenerate `external/plugin_registry_cache.json` once the visibility decision is made, repeat
    `RESUME=0 scripts/dev/fresh_install_check.sh` starting from the `main` branches (`BRANCHES=main`), and delete the
