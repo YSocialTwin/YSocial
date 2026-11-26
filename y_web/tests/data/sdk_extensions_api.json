@@ -1,0 +1,372 @@
+{
+  "extension_api": "1.0",
+  "groups": {
+    "access": {
+      "check_privileges": {
+        "kind": "function",
+        "signature": "(username)"
+      },
+      "user_can_view_experiment": {
+        "kind": "function",
+        "signature": "(admin_user, experiment)"
+      }
+    },
+    "agents": {
+      "decode_opinion_feature": {
+        "kind": "forwarder",
+        "target": "y_web.src.agents.custom_features.decode_opinion_feature",
+        "target_signature": "(raw_value) -> 'dict'"
+      },
+      "list_adhoc_clients": {
+        "kind": "forwarder",
+        "target": "y_web.src.simulation.adhoc_client.list_adhoc_clients",
+        "target_signature": "(experiment) -> 'list[dict]'"
+      }
+    },
+    "content": {
+      "ContentAnnotator": {
+        "kind": "class"
+      },
+      "toxicity": {
+        "kind": "function",
+        "signature": "(text, username, post_id, db)"
+      },
+      "vader_sentiment": {
+        "kind": "function",
+        "signature": "(text)"
+      }
+    },
+    "db": {
+      "db": {
+        "kind": "value"
+      }
+    },
+    "experiments": {
+      "build_experiment_zip": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._notifications._build_single_experiment_zip",
+        "target_signature": "(eid, output_zip_path)"
+      },
+      "copy_experiment": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._crud._create_single_experiment_copy",
+        "target_signature": "(source_exp, new_exp_name, exp_group='', config_variations=None, exp_descr=None)"
+      },
+      "create_experiment": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._crud.create_experiment",
+        "target_signature": "()"
+      },
+      "delete_simulation": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._crud._delete_simulation_internal",
+        "target_signature": "(exp_id)"
+      },
+      "ensure_experiment_user": {
+        "kind": "function",
+        "signature": "(experiment: \"'Exps'\", *, account_id=None, **kwargs)"
+      },
+      "experiment_db_bind": {
+        "kind": "function",
+        "signature": "(exp_id)"
+      },
+      "get_current_experiment_id": {
+        "kind": "forwarder",
+        "target": "y_web.src.experiment.context.get_current_experiment_id",
+        "target_signature": "()"
+      },
+      "get_experiment_engine_uri": {
+        "kind": "function",
+        "signature": "(experiment: \"'Exps'\") -> \"'Optional[str]'\""
+      },
+      "migrate_moderation_schema": {
+        "kind": "forwarder",
+        "target": "y_web.migrations.add_moderation_schema.migrate_sqlite_server",
+        "target_signature": "(db_path, quiet=False)"
+      },
+      "open_experiment_session": {
+        "kind": "function",
+        "signature": "(experiment: \"'Exps'\")"
+      }
+    },
+    "federation": {
+      "population_added": {
+        "kind": "function",
+        "signature": "(exp_id, population_id) -> \"'list'\""
+      }
+    },
+    "i18n": {
+      "plugin_gettext": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.plugin_i18n.plugin_gettext",
+        "target_signature": "(domain: 'str', message: 'str', /, **variables) -> 'str'"
+      },
+      "plugin_ngettext": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.plugin_i18n.plugin_ngettext",
+        "target_signature": "(domain: 'str', singular: 'str', plural: 'str', n: 'int', /, **variables) -> 'str'"
+      }
+    },
+    "interview": {
+      "build_memory_snapshot": {
+        "kind": "function",
+        "signature": "(exp: \"'Exps'\", *, run_id: \"'Optional[str]'\", agent_user_id: \"'int'\", memory_mode: \"'Optional[str]'\" = None, query_text: \"'Optional[str]'\" = None) -> \"'Dict[str, Any]'\""
+      },
+      "build_memory_snapshot_local_db": {
+        "kind": "forwarder",
+        "target": "y_web.routes.api.interview._memory._build_memory_snapshot_local_db",
+        "target_signature": "(exp: 'Exps', *, run_id: 'Optional[str]', agent_user_id: 'int', memory_mode: 'Optional[str]' = None, query_text: 'Optional[str]' = None, reason: 'str' = 'experiment_server_unavailable') -> 'Dict[str, Any]'"
+      },
+      "build_persona_snapshot": {
+        "kind": "function",
+        "signature": "(user: \"'User_mgmt'\", interests: \"'List[str]'\", exp: \"'Exps'\") -> \"'str'\""
+      },
+      "detect_run_id_from_experiment_db": {
+        "kind": "forwarder",
+        "target": "y_web.routes.api.interview._memory._detect_run_id_from_experiment_db",
+        "target_signature": "(exp: 'Exps', *, agent_user_id: 'Optional[int]' = None) -> 'Dict[str, Any]'"
+      },
+      "detect_run_id_from_server_log": {
+        "kind": "function",
+        "signature": "(exp: \"'Exps'\", *, agent_user_id: \"'Optional[int]'\" = None, probe_memory_coverage: \"'bool'\" = True) -> \"'Dict[str, Any]'\""
+      },
+      "ensure_experiment_db_bind": {
+        "kind": "function",
+        "signature": "(exp: \"'Exps'\") -> \"'bool'\""
+      },
+      "ensure_experiment_server_db_binding": {
+        "kind": "function",
+        "signature": "(exp: \"'Exps'\") -> \"'Dict[str, Any]'\""
+      },
+      "format_memory_pack": {
+        "kind": "function",
+        "signature": "(snapshot: \"'Dict[str, Any]'\", *, max_chars: \"'int'\" = 4500, language: \"'Optional[str]'\" = None) -> \"'str'\""
+      },
+      "generate_reply": {
+        "kind": "function",
+        "signature": "(*, model: \"'str'\", base_url: \"'str'\", api_key: \"'str'\", temperature: \"'float'\", max_tokens: \"'int'\", system_message: \"'str'\", user_message: \"'str'\") -> \"'str'\""
+      },
+      "get_top_interests_for_user": {
+        "kind": "function",
+        "signature": "(user_id: \"'Any'\", *, window_rounds: \"'int'\" = 50, limit: \"'int'\" = 10) -> \"'List[str]'\""
+      },
+      "memory_server_unavailable": {
+        "kind": "function",
+        "signature": "(db_binding: \"'Optional[Dict[str, Any]]'\") -> \"'bool'\""
+      },
+      "normalize_llm_base_url": {
+        "kind": "forwarder",
+        "target": "y_web.routes.api.interview._helpers._normalize_llm_base_url",
+        "target_signature": "(url: 'str') -> 'str'"
+      },
+      "resolve_llm_backend": {
+        "kind": "function",
+        "signature": "(*, backend_mode: \"'str'\", exp: \"'Exps'\", agent_user: \"'User_mgmt'\", admin_user: \"'Admin_users'\") -> \"'Tuple[str, str, str, str, float, int]'\""
+      }
+    },
+    "models": {
+      "ActivityProfile": {
+        "kind": "class"
+      },
+      "Admin_users": {
+        "kind": "class"
+      },
+      "Agent": {
+        "kind": "class"
+      },
+      "Agent_Custom_Feature": {
+        "kind": "class"
+      },
+      "Agent_Opinion": {
+        "kind": "class"
+      },
+      "Agent_Population": {
+        "kind": "class"
+      },
+      "Articles": {
+        "kind": "class"
+      },
+      "Emotions": {
+        "kind": "class"
+      },
+      "ExpFrontendSettings": {
+        "kind": "class"
+      },
+      "Exp_Topic": {
+        "kind": "class"
+      },
+      "Exps": {
+        "kind": "class"
+      },
+      "Follow": {
+        "kind": "class"
+      },
+      "FrontendAddsOnExpModuleSettings": {
+        "kind": "class"
+      },
+      "Hashtags": {
+        "kind": "class"
+      },
+      "Images": {
+        "kind": "class"
+      },
+      "Interests": {
+        "kind": "class"
+      },
+      "Mentions": {
+        "kind": "class"
+      },
+      "OpinionGroup": {
+        "kind": "class"
+      },
+      "Population": {
+        "kind": "class"
+      },
+      "Population_Experiment": {
+        "kind": "class"
+      },
+      "Post": {
+        "kind": "class"
+      },
+      "Post_Sentiment": {
+        "kind": "class"
+      },
+      "Post_Toxicity": {
+        "kind": "class"
+      },
+      "Post_emotions": {
+        "kind": "class"
+      },
+      "Post_hashtags": {
+        "kind": "class"
+      },
+      "Post_topics": {
+        "kind": "class"
+      },
+      "Reactions": {
+        "kind": "class"
+      },
+      "Rounds": {
+        "kind": "class"
+      },
+      "StressReward": {
+        "kind": "class"
+      },
+      "Topic_List": {
+        "kind": "class"
+      },
+      "Toxicity_Levels": {
+        "kind": "class"
+      },
+      "User_interest": {
+        "kind": "class"
+      },
+      "User_mgmt": {
+        "kind": "class"
+      },
+      "Websites": {
+        "kind": "class"
+      }
+    },
+    "paths": {
+      "get_base_path": {
+        "kind": "forwarder",
+        "target": "y_web.src.system.path_utils.get_base_path",
+        "target_signature": "()"
+      },
+      "get_writable_path": {
+        "kind": "function",
+        "signature": "(relative_path='')"
+      }
+    },
+    "platforms": {
+      "HPC": {
+        "kind": "value"
+      },
+      "STANDARD": {
+        "kind": "value"
+      },
+      "content_recsys_info": {
+        "kind": "function",
+        "signature": "(recsys_type, ui=None, recsys=None)"
+      },
+      "registry": {
+        "kind": "module"
+      }
+    },
+    "runtime": {
+      "discover_frontend_modules": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.frontend_plugins.discover_frontend_modules",
+        "target_signature": "(repo_key: 'str') -> 'list[dict]'"
+      },
+      "ensure_module_schema": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.plugin_loader.ensure_module_schema",
+        "target_signature": "(repo_key: 'str', module_id: 'str', exp_id: 'int', quiet: 'bool' = True) -> 'bool'"
+      },
+      "plugin_enabled": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.backend_plugins.plugin_enabled",
+        "target_signature": "(repo_key: 'str') -> 'bool'"
+      },
+      "runtime_spec": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.registry.runtime_spec",
+        "target_signature": "(repo_key: 'str') -> 'ExternalRuntimeSpec'"
+      },
+      "training_component_catalog": {
+        "kind": "forwarder",
+        "target": "y_web.src.external_runtime.backend_plugins.training_component_catalog",
+        "target_signature": "() -> 'list[dict]'"
+      }
+    },
+    "settings": {
+      "capabilities_for": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._frontend_settings.capabilities_for",
+        "target_signature": "(platform_type: str)"
+      },
+      "excluded_capabilities_for": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._frontend_settings.excluded_capabilities_for",
+        "target_signature": "(platform_type: str)"
+      },
+      "load_recsys_options": {
+        "kind": "forwarder",
+        "target": "y_web.routes.admin.sub.experiments._frontend_settings._load_recsys_options",
+        "target_signature": "(simulator_type: str = 'Standard', all_algorithms: bool = False, include_human_only: bool = False)"
+      }
+    },
+    "signup": {
+      "TRAINING": {
+        "kind": "value"
+      },
+      "is_anonymous": {
+        "kind": "forwarder",
+        "target": "y_web.src.signup.is_anonymous",
+        "target_signature": "(ref: 'str') -> 'bool'"
+      },
+      "is_enabled": {
+        "kind": "forwarder",
+        "target": "y_web.src.signup.is_enabled",
+        "target_signature": "() -> 'bool'"
+      },
+      "is_target": {
+        "kind": "forwarder",
+        "target": "y_web.src.signup.is_target",
+        "target_signature": "(kind: 'str', ref: 'str') -> 'bool'"
+      },
+      "set_anonymous": {
+        "kind": "forwarder",
+        "target": "y_web.src.signup.set_anonymous",
+        "target_signature": "(ref: 'str', enabled: 'bool') -> 'None'"
+      },
+      "set_target": {
+        "kind": "forwarder",
+        "target": "y_web.src.signup.set_target",
+        "target_signature": "(kind: 'str', ref: 'str', enabled: 'bool') -> 'None'"
+      }
+    }
+  }
+}
