@@ -56,8 +56,15 @@ IMPORT_RE = re.compile(
 NAME_RE = re.compile("|".join(PLATFORM_NAMES), re.I)
 
 
+# the extension API mirrors names of the core by construction (e.g. ``memory_server_unavailable`` contains "y_server")
+EXCLUDED_PATHS = {("sdk", "extensions")}
+
+
 def _is_excluded(path: Path, base: Path) -> bool:
-    return any(p in EXCLUDED_DIRS for p in path.relative_to(base).parts)
+    parts = path.relative_to(base).parts
+    if any(p in EXCLUDED_DIRS for p in parts):
+        return True
+    return any(parts[: len(prefix)] == prefix for prefix in EXCLUDED_PATHS)
 
 
 def count_mentions(core: Path) -> dict:
