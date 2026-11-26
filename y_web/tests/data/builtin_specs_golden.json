@@ -275,6 +275,41 @@
     "min_ysocial_version": null
   },
   {
+    "key": "creator",
+    "group": "creator",
+    "group_label": "Creator Economy",
+    "category": "simulation_runtimes",
+    "category_label": "Simulation Runtime Stack",
+    "label": "YCreator",
+    "path": "YCreator",
+    "github_repo": "YSocialTwin/YCreator",
+    "repo_url": "https://github.com/YSocialTwin/YCreator.git",
+    "default_branch": "main",
+    "install_commands": [
+      [
+        "python",
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        "requirements.txt"
+      ]
+    ],
+    "validate_entrypoints": [
+      "run_server.py",
+      "run_client.py",
+      "requirements.txt"
+    ],
+    "validate_import": "YCreator",
+    "is_private": false,
+    "visible_to_usernames": [],
+    "trust": "official",
+    "source": "builtin",
+    "description": "Simulation runtime for creator-economy experiments: creators publish free and paid content, fans subscribe, tip and write, and a double-entry ledger of virtual credits keeps every transfer verifiable.",
+    "authors": [],
+    "min_ysocial_version": "4.1.0"
+  },
+  {
     "key": "forum_hpc",
     "group": "hpc",
     "group_label": "HPC",

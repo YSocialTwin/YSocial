@@ -41,7 +41,7 @@ The date of the release and its changelog heading are set on the day of the merg
 | frontend_adds-on | `pre-merge-phase5` | 5186cc3 | 7 |
 | reactive_agents | `pre-merge-phase5` | ce181e8 | 6 |
 | YSocial (core) | `pre-merge-phase5` | see `git rev-parse pre-merge-phase5` | 156+ |
-| YCreator | `pre-merge-phase7` (enters the window only if Giulio confirms; see the phase 7 section of the plan log) | 103462a | 134 |
+| YCreator | `pre-merge-phase7` (version 0.1.0; enters the window, decided by Giulio) | 79ed16e | 136 |
 
 Every branch above contains the current `main` of its repository (a fast-forward merge is possible). The commits made
 during this hardening are listed per phase in `PLAN_LOG.md` and in the live status document.
@@ -94,7 +94,7 @@ during this hardening are listed per phase in `PLAN_LOG.md` and in the live stat
 ## Decisions that remain with Giulio
 
 * Visibility of the four extensions and of the private platform repositories (finding 1).
-* Whether YCreator enters the window (phase 7): the platform is ready; what remains is the catalogue choice (merge in the same window, or point the catalogue entry to `creator-v1`), its first version (proposed 0.1.0) and whether the internal reports `docs/g1-report.md` ... `g10-report.md` are public.
+* YCreator enters the window (decided): catalogue option (a), version 0.1.0, reports `g1`-`g10` in `docs/internal/` (not published by the site). On the merge day, put the date in its `CHANGELOG.md` (`[0.1.0] - <date>`).
 * The date of 4.1.0 and the heading of the changelog.
 
 ## Merge window (to be run by hand, in this order)
@@ -120,13 +120,13 @@ and `git rev-list --count <branch>..origin/main` must be 0 in every repository).
    | 2 | YDating | `pre-merge-hardening` |
    | 3 | ScenarioDesign, TrainingModules, frontend_adds-on, reactive_agents | `pre-merge-phase5` |
    | 4 | YSocial (core) | `pre-merge-phase5`; then set the date in `CHANGELOG.md` (heading `[4.1.0] - <date>`), and tag `4.1.0` |
-   | 2 (conditional) | YCreator | `pre-merge-phase7`; tag `pre-4.1-main` on its `main` before the fast-forward; if it does not enter, it stays on `creator-v1` |
+   | 2 | YCreator | `pre-merge-phase7`; tag `pre-4.1-main` on its `main` before the fast-forward; in the same window the catalogue entry of `external/plugins.json` keeps pointing to `main`, which then has the platform |
 
 4. After the merge: regenerate `external/plugin_registry_cache.json` once the visibility decision is made, repeat
    `RESUME=0 scripts/dev/fresh_install_check.sh` starting from the `main` branches (`BRANCHES=main`), and delete the
    intermediate branches (`platform-decoupling`, `fixed-recsys`, `sd-agnostic`, `routing-allocation`, `frontend_v2`, the
    `pre-merge-*` ones) after a week without regressions reported.
-5. The built-in plugin list (`builtin.json`, `plugin-registry` branch `pre-merge-hardening`, commit 9f521ea) is merged in its
+5. The built-in plugin list (`builtin.json`, `plugin-registry` branch `pre-merge-phase7`, commit 2ab5696, which adds YCreator and contains 9f521ea) is merged in its
    own repository, then synchronised in the core with `scripts/packaging/sync_builtin_plugins.py`.
 
 A reset of a `main` is for Giulio to decide, never an agent: `git reset --hard pre-4.1-main` restores it from the tag.

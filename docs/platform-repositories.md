@@ -11,6 +11,7 @@ offered, and installing its repository adds it at the next start (there is no ho
 | Photo sharing | `YPhotoSharing` | HPC |
 | Instant messaging | `YInstantMessaging` | HPC |
 | Dating | `YDating` | HPC |
+| Creator economy | `YCreator` | its own runtime (Ray) |
 
 ## What a repository contains
 

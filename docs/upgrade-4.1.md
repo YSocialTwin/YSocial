@@ -13,7 +13,7 @@ installation does not break, but it does not give you the new platforms or exten
 | YSocial (core) | 4.1.0 |
 | YServer, YServerReddit, YSimulator, YForum | `api_version` 1.4 in `meta/registry.json` |
 | YPhotoSharing | `api_version` 1.5 |
-| YInstantMessaging, YDating | `api_version` 1.3 (still loads: a lower minor is accepted) |
+| YInstantMessaging, YDating, YCreator | `api_version` 1.3 (still loads: a lower minor is accepted) |
 | Scenario Design | 1.2.0 |
 | Training Modules | 1.34.0 |
 | Frontend Adds-on | 0.3.0 |
