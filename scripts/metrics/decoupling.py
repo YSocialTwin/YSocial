@@ -92,6 +92,10 @@ def _imports(repo: Path, tests: bool):
     return out
 
 
+def _outside_sdk(mod: str) -> bool:
+    return not (mod == "y_web.sdk" or mod.startswith("y_web.sdk."))
+
+
 def platform_imports(ext: Path) -> dict:
     res = {}
     for name in PLATFORM_REPOS:
@@ -101,7 +105,7 @@ def platform_imports(ext: Path) -> dict:
         outside = [
             {"module": mod, "file": f}
             for mod, f in _imports(repo, tests=False)
-            if not (mod == "y_web.sdk" or mod.startswith("y_web.sdk."))
+            if _outside_sdk(mod)
         ]
         res[name] = {"outside_sdk": len(outside), "items": outside}
     return res
@@ -114,7 +118,10 @@ def extension_imports(ext: Path) -> dict:
         if not repo.is_dir():
             continue
         items = _imports(repo, tests=False)
-        res[name] = {"internal_imports": len(items)}
+        res[name] = {
+            "internal_imports": len(items),
+            "outside_sdk": sum(1 for mod, _f in items if _outside_sdk(mod)),
+        }
     return res
 
 
