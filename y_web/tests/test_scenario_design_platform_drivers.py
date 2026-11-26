@@ -119,3 +119,27 @@ def test_platforms_without_fixed_order_recommenders_do_not_offer_them(
         driver = discovery.driver_for(_Exp(platform, simulator))
         assert driver is not None
         assert "fixed_recsys" not in driver.info().capabilities
+
+
+@pytest.mark.parametrize("simulator", ["Standard", "HPC"])
+def test_a_platform_without_a_driver_is_not_offered_and_is_refused_clearly(
+    discovery, simulator
+):
+    """YCreator does not declare a Scenario Design driver (driver contract 1.3, no adapter hook): the editor does not
+    list it and publishing for it is refused with the uniform 409, never with a traceback.
+    """
+    from y_web.src.external_runtime.backend_plugins import import_from_suite
+
+    assert "creator" not in discovery.available_platforms()
+    assert all(
+        "creator" not in driver.info().platform_keys
+        for driver in discovery.drivers_for_listing()
+    )
+    exp = _Exp("creator", simulator)
+    assert discovery.driver_for(exp) is None
+    base = import_from_suite(
+        "scenario_design", "modules.scenario_editor.backend.adapters.base"
+    )
+    with pytest.raises(base.MaterializationAdapterError) as error:
+        base.get_adapter_for(exp)
+    assert error.value.http_status == 409
