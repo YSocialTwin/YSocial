@@ -104,8 +104,9 @@ def test_plugin_sidebar_texts_are_translated(agents_app):
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         assert localize_text("training_modules", "Training") == "Formazione"
         assert localize_text("training_modules", "Modules") == "Moduli"
-        assert localize_text("training_modules", "Design") == "Progettazione"
-        assert localize_text("training_modules", "Results") == "Risultati"
+        assert localize_text("training_modules", "Analysis") == "Analisi"
+        assert localize_text("training_modules", "Settings") == "Impostazioni"
+        assert localize_text("training_modules", "Guide") == "Guida"
 
 
 def test_admin_sidebar_label_is_short_in_italian(agents_app):

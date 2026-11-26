@@ -55,6 +55,19 @@ def _provider_modules():
     )
 
 
+def _platform_sources():
+    """Pages and code of the platform repositories that have no catalog of their own.
+
+    Their templates and Python call the core ``_()``: without their texts in ``messages.pot`` the pages of those
+    platforms lose their translation. A platform that ships its own catalog (YCreator: domain ``creator``) is left out.
+    """
+    return sorted(
+        str(p.relative_to(ROOT))
+        for p in (ROOT / "external").glob("*/ysocial_platform")
+        if p.is_dir() and not (p / "translations").is_dir()
+    )
+
+
 def extract(output=POT):
     _pybabel(
         "extract",
@@ -67,6 +80,7 @@ def extract(output=POT):
         "--sort-output",
         "y_web",
         *_provider_modules(),
+        *_platform_sources(),
     )
 
 
@@ -112,9 +126,9 @@ def check():
     committed_ids = _msgids(read_po(POT.open("rb"))) if POT.is_file() else set()
     new_ids = fresh_ids - committed_ids
     gone_ids = committed_ids - fresh_ids
-    if not _provider_modules():
-        # a checkout of the core alone (CI) has no platform repository: the texts the providers declare cannot be
-        # extracted there, so a committed id missing from the fresh extraction proves nothing
+    if not _provider_modules() or not _platform_sources():
+        # a checkout of the core alone (CI) has no platform repository: the texts the providers declare and those of
+        # the platform pages cannot be extracted there, so a committed id missing from the fresh extraction proves nothing
         gone_ids = set()
     if new_ids or gone_ids:
         problems.append(
