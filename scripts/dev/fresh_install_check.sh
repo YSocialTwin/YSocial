@@ -49,7 +49,7 @@ y_agents_plugins:main
 y_memory_subsystem:main
 "
 if [ "${WITH_YCREATOR:-0}" = "1" ]; then DEFAULT_BRANCHES="$DEFAULT_BRANCHES
-YCreator:pre-merge-hardening"; fi
+YCreator:pre-merge-phase7"; fi
 
 mkdir -p "$WORK"
 : > "$REPORT"
