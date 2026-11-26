@@ -31,6 +31,16 @@ login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 
 
+def background_workers_allowed(app):
+    """Whether the application may start its periodic background threads (HPC log sync).
+
+    They are not started when the app is built for tests (``TESTING``, or any run under pytest): the test fixtures
+    wipe and rebuild the database while such a thread would still be reading it, which only produced errors in the
+    logs ("no such table", deleted settings). Nothing changes outside tests.
+    """
+    return not app.config.get("TESTING") and "PYTEST_CURRENT_TEST" not in os.environ
+
+
 def cleanup_db_jupyter_with_new_app():
     """
     Create a fresh app instance to get a valid app context, then run DB cleanup.
@@ -517,13 +527,14 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         print(f"Failed to log start event: {e}")
 
     # Start the log sync scheduler for automatic periodic log reading
-    try:
-        from y_web.src.hpc.log_sync_scheduler import init_log_sync_scheduler
+    if background_workers_allowed(app):
+        try:
+            from y_web.src.hpc.log_sync_scheduler import init_log_sync_scheduler
 
-        init_log_sync_scheduler(app)
-        print("✓ Log sync scheduler started")
-    except Exception as e:
-        print(f"Failed to start log sync scheduler: {e}")
+            init_log_sync_scheduler(app)
+            print("✓ Log sync scheduler started")
+        except Exception as e:
+            print(f"Failed to start log sync scheduler: {e}")
 
     # Start the experiment schedule monitor for automatic group advancement
     try:
