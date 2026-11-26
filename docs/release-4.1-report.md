@@ -55,7 +55,7 @@ during this hardening are listed per phase in `PLAN_LOG.md` and in the live stat
 * Platform suites: YServer 53 (6 skipped), YServerReddit 93, YForum green; YPhotoSharing, YInstantMessaging and YFederation
   were measured earlier in the phase 2 residuals.
 * Clean install (`scripts/dev/fresh_install_check.sh`, new clone of every repository, new data folder): the application
-  starts, the administrator signs in, nine administration pages open, seven experiments are created (one per platform and
+  starts, the administrator signs in, seven administration pages open, seven experiments are created (one per platform and
   runtime) and their detail pages open; the contract suites and the suites of the four extensions pass on that
   installation.
 
