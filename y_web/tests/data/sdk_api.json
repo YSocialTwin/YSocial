@@ -290,7 +290,7 @@
       }
     }
   },
-  "platform_api": "1.4",
+  "platform_api": "1.5",
   "provider_hooks": {
     "after_follow_url": "(self, exp_id: 'int', referrer: 'str') -> 'Optional[str]'",
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
@@ -369,6 +369,7 @@
     "validate_before_start": "(self, exp: 'Any') -> 'Optional[str]'",
     "validate_hpc_client": "(self, exp_folder: 'str', runtime_dir: 'str', client_config: 'str') -> 'bool'",
     "validate_hpc_folder": "(self, exp_folder: 'str', runtime_dir: 'str') -> 'None'",
+    "viewer_user": "(self, experiment: 'Any') -> 'Any'",
     "write_new_experiment_files": "(self, exp_dir: 'str', prompt_language: 'str') -> 'None'"
   }
 }

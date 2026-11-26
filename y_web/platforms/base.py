@@ -957,6 +957,15 @@ class PlatformProvider:
         """Whether stress/reward is on for the platform's pages; ``None`` leaves it to the generic setting."""
         return None
 
+    def viewer_user(self, experiment: Any) -> Any:
+        """The participant row of the logged-in user in this experiment's own schema, else ``None``.
+
+        Platforms whose users do not live in the core ``User_mgmt`` table (their own schema, admin
+        impersonation) resolve the viewer here; extensions that act on behalf of the person looking at a page
+        (annotations, say) ask this instead of importing a platform's routes.
+        """
+        return None
+
     def feeds_context(self, experiment: Any, experiment_dir: str) -> Optional[dict]:
         """What the feeds page shows besides the feed collections (platform specific), or ``None``."""
         return None
