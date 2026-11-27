@@ -36,19 +36,25 @@ def _check(name: str, current):
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node is not installed")
+@pytest.mark.skipif(
+    not all(
+        (ROOT / "external" / r / "ysocial_platform/static/js/tutorials.js").exists()
+        for r in ("YDating", "YInstantMessaging", "YForum", "YServerReddit")
+    ),
+    reason="the snapshot is taken with the platforms that own tutorial steps checked out",
+)
 def test_admin_tutorial_texts_are_unchanged():
+    """The core's tutorial steps plus the ones the installed platforms add: moving a step must not change it."""
+    scripts = [ROOT / "y_web/static/assets/js/admin-pages-tutorial.js"] + sorted(
+        (ROOT / "external").glob("*/ysocial_platform/static/js/tutorials.js")
+    )
     script = (
         "global.window={};"
-        "require(process.argv[1]);"
+        "process.argv.slice(1).forEach(function(f){require(f)});"
         "process.stdout.write(JSON.stringify({pages:window.YS_PAGE_TUTORIALS,fallback:window.YS_PAGE_TUTORIAL_FALLBACK}));"
     )
     out = subprocess.run(
-        [
-            "node",
-            "-e",
-            script,
-            str(ROOT / "y_web/static/assets/js/admin-pages-tutorial.js"),
-        ],
+        ["node", "-e", script, *map(str, scripts)],
         capture_output=True,
         text=True,
         check=True,

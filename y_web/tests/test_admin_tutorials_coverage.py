@@ -48,13 +48,17 @@ def _registry():
     node = shutil.which("node")
     if not node:
         pytest.skip("node is not available")
+    # the core's steps plus those the installed platforms add (``PlatformProvider.tutorial_scripts``)
+    scripts = [JS / "admin-pages-tutorial.js"] + sorted(
+        (ROOT.parent / "external").glob("*/ysocial_platform/static/js/tutorials.js")
+    )
     script = (
         "global.window={};const fs=require('fs');"
-        "eval(fs.readFileSync(process.argv[1],'utf8'));"
+        "process.argv.slice(1).forEach(function(f){eval(fs.readFileSync(f,'utf8'))});"
         "console.log(JSON.stringify({pages:window.YS_PAGE_TUTORIALS,fallback:window.YS_PAGE_TUTORIAL_FALLBACK}))"
     )
     out = subprocess.run(
-        [node, "-e", script, str(JS / "admin-pages-tutorial.js")],
+        [node, "-e", script, *map(str, scripts)],
         capture_output=True,
         text=True,
         check=True,
