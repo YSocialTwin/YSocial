@@ -965,6 +965,14 @@ class PlatformProvider:
         """
         return None
 
+    def tutorial_scripts(self) -> Tuple[str, ...]:
+        """Scripts of the platform (paths in its ``static`` folder) that add the guided-tour steps of its admin pages.
+
+        Each one extends ``window.YS_PAGE_TUTORIALS`` (``{page: [{selector, title, description, position}]}``) before
+        the generic tour runs (``PLATFORM_API`` 1.6). The default adds nothing.
+        """
+        return ()
+
     def feeds_context(self, experiment: Any, experiment_dir: str) -> Optional[dict]:
         """What the feeds page shows besides the feed collections (platform specific), or ``None``."""
         return None

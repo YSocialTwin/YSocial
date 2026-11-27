@@ -290,7 +290,7 @@
       }
     }
   },
-  "platform_api": "1.5",
+  "platform_api": "1.6",
   "provider_hooks": {
     "after_follow_url": "(self, exp_id: 'int', referrer: 'str') -> 'Optional[str]'",
     "after_hpc_server_started": "(self, exp: 'Any') -> 'None'",
@@ -366,6 +366,7 @@
     "stop_hpc_gateway": "(self, exp_folder: 'str') -> 'None'",
     "stress_reward_enabled": "(self, experiment: 'Any', experiment_dir: 'str', for_settings: 'bool') -> 'Optional[bool]'",
     "sync_hpc_run_length": "(self, client_config: 'str', client: 'Any') -> 'None'",
+    "tutorial_scripts": "(self) -> 'Tuple[str, ...]'",
     "validate_before_start": "(self, exp: 'Any') -> 'Optional[str]'",
     "validate_hpc_client": "(self, exp_folder: 'str', runtime_dir: 'str', client_config: 'str') -> 'bool'",
     "validate_hpc_folder": "(self, exp_folder: 'str', runtime_dir: 'str') -> 'None'",

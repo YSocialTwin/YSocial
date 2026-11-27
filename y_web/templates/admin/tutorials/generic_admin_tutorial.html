@@ -1,4 +1,5 @@
 {% set TUTORIAL_ID = 'admin_generic' %}
 {% include 'admin/tutorials/tutorial_base.html' %}
 <script src="{{ url_for('static', filename='assets/js/admin-pages-tutorial.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/generic-admin-tutorial.js') }}"></script>
+{% for src in platform_tutorial_scripts() %}<script src="{{ src }}"></script>
+{% endfor %}<script src="{{ url_for('static', filename='assets/js/generic-admin-tutorial.js') }}"></script>
