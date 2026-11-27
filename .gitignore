@@ -226,3 +226,4 @@ pilot_runs/
 
 .DS_Store
 test-reports/
+release-state/

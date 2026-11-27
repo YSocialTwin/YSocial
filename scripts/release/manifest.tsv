@@ -1,0 +1,16 @@
+# phase	directory (relative to the core; "." is the core)	source branch	tag (- for none)	merge mode (merge|ff)
+A	external/ScenarioDesign	pre-merge-phase5	v1.2.0	merge
+A	external/TrainingModules	pre-merge-phase5	v1.34.0	merge
+A	external/frontend_adds-on	pre-merge-phase5	v0.3.0	merge
+A	external/reactive_agents	pre-merge-phase5	v0.12.0	merge
+A	external/YFederation	platform-decoupling	-	merge
+B	external/YSimulator	pre-merge-phase4	v2.2.0	merge
+C	external/YServer	decouple-zero	v2.2.0	merge
+C	external/YServerReddit	decouple-zero	v2.2.0	merge
+C	external/YForum	decouple-zero	v0.1.0	merge
+C	external/YPhotoSharing	decouple-zero	v2.2.0	merge
+C	external/YInstantMessaging	decouple-zero	v0.1.0	merge
+C	external/YDating	decouple-zero	v0.1.0	merge
+C	external/YCreator	decouple-zero	v0.1.0	merge
+E	plugin-registry	pre-merge-phase7	-	ff
+D	.	decouple-zero	v4.1.0	merge
