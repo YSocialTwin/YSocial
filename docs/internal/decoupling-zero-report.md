@@ -16,7 +16,7 @@ Goal: `y_web` (the core) names no platform; adding a platform, a recommender or 
 * D2: Reddit and subreddit listings as a place feeds come from (a feed source, not a platform); may be externalized later.
 * D3: legacy names read with a `DeprecationWarning` (`y_web/legacy_names.py`) and the deprecated SDK alias `process_reddit_post`; both go with the platform API 2.0.
 * The glyph names `mdi-forum`/`mdi-reddit` of the vendored icon font.
-* D7 (open question): the "Reddit-style" hint in the interview prompt shared by all platforms; rewording changes prompt bytes (gate G4), so it is left for a product decision.
+* D7 (decided): the interview prompt shared by all platforms no longer says "Reddit-style" (now "like a real person online"); the English hash snapshot records this one intended change.
 
 ## What changed, by phase
 

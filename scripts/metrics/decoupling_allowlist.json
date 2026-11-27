@@ -14,16 +14,6 @@
       "reason": "Same deprecated alias, reached through y_web.sdk.text_utils (the very same module); removed with the platform API 2.0 (D3)."
     },
     {
-      "path": "y_web/prompts_internal.json",
-      "ignore": "Reddit-style",
-      "reason": "Style hint in the interview prompt every platform shares: rewording it would change what the agents say (G4). Open question for Giulio (D7)."
-    },
-    {
-      "path": "y_web/prompts_internal.it.json",
-      "ignore": "stile Reddit",
-      "reason": "Italian text of the same interview prompt (D7)."
-    },
-    {
       "path": "y_web/src/commons/reddit_feeds.py",
       "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
       "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
