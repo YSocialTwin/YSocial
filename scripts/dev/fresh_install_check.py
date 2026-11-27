@@ -82,9 +82,10 @@ def main():
 
     @step("the application starts on an empty data folder")
     def _start():
+        from werkzeug.security import generate_password_hash
+
         from y_web import create_app, db
         from y_web.sdk.models import Admin_users
-        from werkzeug.security import generate_password_hash
 
         app = create_app(db_type="sqlite")
         with app.app_context():
@@ -133,9 +134,10 @@ def main():
         A private repository that is present on disk is only offered with ``--development`` (or to an allow-listed
         administrator); the report says which platforms that hides, so the visibility decision is made on facts.
         """
+        from sqlalchemy import select
+
         from y_web import db
         from y_web.sdk.models import Exps
-        from sqlalchemy import select
 
         def create(key, provider_id, runtime):
             name = f"fresh_{provider_id}_{runtime}".replace("-", "_")

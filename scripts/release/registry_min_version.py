@@ -38,7 +38,10 @@ def main() -> int:
     data = json.loads(text)
     changed = []
     for entry in data["plugins"]:
-        if entry["key"] in PLATFORM_KEYS and entry.get("min_ysocial_version") != args.version:
+        if (
+            entry["key"] in PLATFORM_KEYS
+            and entry.get("min_ysocial_version") != args.version
+        ):
             entry["min_ysocial_version"] = args.version
             changed.append(entry["key"])
     missing = [k for k in PLATFORM_KEYS if k not in {e["key"] for e in data["plugins"]}]
@@ -51,7 +54,9 @@ def main() -> int:
     print("min_ysocial_version", args.version, "->", ", ".join(changed))
     if not args.dry_run:
         indent = 2
-        path.write_text(json.dumps(data, indent=indent, ensure_ascii=False) + "\n", encoding="utf-8")
+        path.write_text(
+            json.dumps(data, indent=indent, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
     return 0
 
 
