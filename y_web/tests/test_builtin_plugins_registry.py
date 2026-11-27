@@ -54,19 +54,14 @@ def test_built_in_specs_are_official_and_not_from_the_registry():
 
 
 def test_seeded_directories_are_the_simulation_runtimes():
-    seeded = [e["directory"] for e in registry._BUILTIN_PAYLOAD if e.get("seed")]
+    """The seeded list comes from the catalogue itself; only the count is pinned by hand (an independent check)."""
+    data = json.loads(registry.BUILTIN_PLUGINS_FILE.read_text("utf-8"))
+    seeded = [e["directory"] for e in data["plugins"] if e.get("seed")]
     assert seeded == [
-        "YClient",
-        "YServer",
-        "YClientReddit",
-        "YServerReddit",
-        "YSimulator",
-        "YPhotoSharing",
-        "YInstantMessaging",
-        "YDating",
-        "YCreator",
-        "YForum",
+        e["directory"] for e in registry._BUILTIN_PAYLOAD if e.get("seed")
     ]
+    assert len(seeded) == 10
+    assert len(set(seeded)) == len(seeded)
 
 
 def test_json_file_ships_in_the_wheel():

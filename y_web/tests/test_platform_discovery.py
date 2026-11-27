@@ -65,10 +65,11 @@ def test_api_compatibility():
     assert api_problem("1.2") is None
     assert api_problem("1.3") is None
     assert api_problem("1.4") is None
+    assert api_problem("1.5") is None
     assert (
-        api_problem("1.5") is None
-    )  # older providers (1.0 to 1.4) and current ones (1.5) run
-    assert api_problem("1.6") is not None  # newer than the core knows
+        api_problem("1.6") is None
+    )  # older providers (1.0 to 1.5) and current ones (1.6) run
+    assert api_problem("1.7") is not None  # newer than the core knows
     assert api_problem("2.0") is not None
     assert api_problem("x") is not None
 
@@ -159,7 +160,14 @@ def test_schema_module_runs_after_discovery(tmp_path, world, monkeypatch):
 
 @pytest.mark.parametrize(
     "api,accepted",
-    [("1.2", True), ("1.4", True), ("1.5", True), ("1.6", False), ("2.0", False)],
+    [
+        ("1.2", True),
+        ("1.4", True),
+        ("1.5", True),
+        ("1.6", True),
+        ("1.7", False),
+        ("2.0", False),
+    ],
 )
 def test_a_platform_registers_when_its_api_is_compatible_by_semver(
     tmp_path, world, api, accepted
