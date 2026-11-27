@@ -38,6 +38,9 @@ INTERNAL_PACKS = [
     "external/YPhotoSharing/YPhotoSharing/prompts_internal.json",
     "external/y_agents_plugins/src/y_agents_plugins/prompts_internal.json",
     "external/reactive_agents/src/reactive_agents/prompts_internal.json",
+    # prompts the platforms keep for their own routes (PlatformProvider.prompt_pack_roots)
+    "external/YForum/ysocial_platform/prompts/prompts_internal.json",
+    "external/YServerReddit/ysocial_platform/prompts/prompts_internal.json",
 ]
 LANG = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$")
 BRACES = re.compile(r"\{[^{}\n]*\}")

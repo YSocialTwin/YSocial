@@ -112,7 +112,10 @@ def _v2_skipped(rel: str, allowed: set) -> bool:
 def count_mentions_v2(core: Path) -> dict:
     """Whole-word platform names in y_web, minus history and declared exceptions."""
     base = core / "y_web"
-    allowed = {e["path"] for e in load_allowlist()}
+    entries = load_allowlist()
+    allowed = {e["path"] for e in entries if not e.get("ignore")}
+    # an entry with ``ignore`` exempts only the text that regular expression matches
+    ignored = {e["path"]: re.compile(e["ignore"]) for e in entries if e.get("ignore")}
     total = 0
     files = {}
     for p in sorted(base.rglob("*")):
@@ -122,9 +125,12 @@ def count_mentions_v2(core: Path) -> dict:
         if _v2_skipped(rel, allowed):
             continue
         try:
-            n = len(NAME_V2_RE.findall(p.read_text(encoding="utf-8", errors="ignore")))
+            text = p.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
+        if rel in ignored:
+            text = ignored[rel].sub("", text)
+        n = len(NAME_V2_RE.findall(text))
         if n:
             total += n
             files[rel] = n

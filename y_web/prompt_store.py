@@ -200,15 +200,38 @@ def _pack_path(language):
     return PACK_FILE.with_name(f"{PACK_FILE.stem}.{language}{PACK_FILE.suffix}")
 
 
+def _platform_roots():
+    """Folders the installed platforms keep their own internal prompts in (``PlatformProvider.prompt_pack_roots``)."""
+    try:
+        from y_web.platforms import registry
+
+        return tuple(
+            Path(root)
+            for provider in registry.providers()
+            for root in provider.prompt_pack_roots()
+        )
+    except Exception:  # noqa: BLE001 - outside the application there are no platforms
+        return ()
+
+
 def _pack(language):
     path = _pack_path(language)
-    if path not in _cache:
+    roots = _platform_roots()
+    key = (path, roots) if roots else path
+    if key not in _cache:
+        data = {}
         if path.exists():
             with open(path, encoding="utf-8") as handle:
-                _cache[path] = json.load(handle)
-        else:
-            _cache[path] = {}
-    return _cache[path]
+                data = json.load(handle)
+        # the platforms add their own keys; a key of the core is never replaced
+        for root in roots:
+            extra = root / path.name
+            if extra.exists():
+                with open(extra, encoding="utf-8") as handle:
+                    for name, text in json.load(handle).items():
+                        data.setdefault(name, text)
+        _cache[key] = data
+    return _cache[key]
 
 
 def _warn_once(language, key):

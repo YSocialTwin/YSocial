@@ -983,6 +983,14 @@ class PlatformProvider:
         """
         return None
 
+    def prompt_pack_roots(self) -> Tuple[Path, ...]:
+        """Folders of the platform that hold its own prompts (``PLATFORM_API`` 1.6).
+
+        Each folder may hold ``prompts_internal.json`` (and ``prompts_internal.<language>.json``): internal prompts
+        the platform's own routes ask the prompt store for, by key. The default has none.
+        """
+        return ()
+
     def tutorial_scripts(self) -> Tuple[str, ...]:
         """Scripts of the platform (paths in its ``static`` folder) that add the guided-tour steps of its admin pages.
 

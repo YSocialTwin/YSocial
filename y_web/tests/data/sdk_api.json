@@ -353,6 +353,7 @@
     "profile_picture": "(self, user: 'Any') -> 'Optional[str]'",
     "profile_picture_in": "(self, user: 'Any', exp_id: 'int') -> 'Optional[str]'",
     "profile_redirect": "(self, exp: 'Any', user: 'Any', page: 'Any') -> 'Optional[str]'",
+    "prompt_pack_roots": "(self) -> 'Tuple[Path, ...]'",
     "prompts_page": "(self, simulator_type: 'str') -> 'str'",
     "register_blueprints": "(self, app: 'Any') -> 'None'",
     "render_edit_profile": "(self, exp: 'Any', context: 'Mapping[str, Any]') -> 'Any'",
