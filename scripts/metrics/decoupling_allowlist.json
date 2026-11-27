@@ -80,18 +80,18 @@
     },
     {
       "path": "y_web/src/models/admin.py",
-      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
-      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])|(?<![A-Za-z])forum_(?:chat_sessions|chat_messages|rss_feed_resources|image_feed_resources)(?![a-z_])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later. Also the physical names of the forum_chat_* and forum_*_feed_resources tables, which stay as they are in every database already created (D1: no table rename)."
     },
     {
       "path": "y_web/src/models/experiment.py",
-      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
-      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])|(?<![A-Za-z])forum_(?:chat_sessions|chat_messages|rss_feed_resources|image_feed_resources)(?![a-z_])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later. Also the physical names of the forum_chat_* and forum_*_feed_resources tables, which stay as they are in every database already created (D1: no table rename)."
     },
     {
       "path": "y_web/src/experiment/schema.py",
-      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
-      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])|(?<![A-Za-z])forum_(?:chat_sessions|chat_messages|rss_feed_resources|image_feed_resources)(?![a-z_])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later. Also the physical names of the forum_chat_* and forum_*_feed_resources tables, which stay as they are in every database already created (D1: no table rename)."
     },
     {
       "path": "y_web/static/assets/css/app.css",

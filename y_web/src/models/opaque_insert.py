@@ -45,7 +45,7 @@ SEQ_TABLES = (
 @compiles(CreateColumn)
 def _skip_mapped_seq(element, compiler, **kw):
     """The mapped ``seq`` is never part of the tables YWeb creates: only the databases that have it use it."""
-    if element.element.info.get("yweb_forum_seq"):
+    if element.element.info.get("yweb_seq"):
         return None
     return compiler.visit_create_column(element, **kw)
 
@@ -68,7 +68,7 @@ def add_seq_columns() -> None:
         ):
             continue
         table.append_column(
-            Column("seq", Integer, nullable=True, info={"yweb_forum_seq": True})
+            Column("seq", Integer, nullable=True, info={"yweb_seq": True})
         )
 
 
@@ -84,7 +84,7 @@ def number_inserts(conn, clauseelement, multiparams, params, execution_options):
     if (
         table.name not in SEQ_TABLES
         or "seq" not in table.c
-        or not table.c.seq.info.get("yweb_forum_seq")
+        or not table.c.seq.info.get("yweb_seq")
     ):
         return clauseelement, multiparams, params
     from y_web.src.commons.ordering import (  # lazy: the platform package imports the models
