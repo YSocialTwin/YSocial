@@ -1,0 +1,792 @@
+{
+ "fallback": {
+  "description": "Review and edit the values in this section.",
+  "title": "Overview"
+ },
+ "pages": {
+  "about": [
+   {
+    "description": "What YSocial is, its goals and the team that develops it.",
+    "position": "auto",
+    "selector": "[data-tut=\"about-us\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The institutions that host and support the project.",
+    "position": "auto",
+    "selector": "[data-tut=\"supporting-institutions\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Research projects and funding programmes that contributed to YSocial.",
+    "position": "auto",
+    "selector": "[data-tut=\"supporting-projects\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Contact channels and the code repository: use them for questions, bug reports and contributions.",
+    "position": "auto",
+    "selector": "[data-tut=\"get-in-touch\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Publications describing the platform. Please cite them when you use YSocial in your research.",
+    "position": "auto",
+    "selector": "[data-tut=\"scientific-papers\"]",
+    "title": "@heading"
+   }
+  ],
+  "agent_details": [
+   {
+    "description": "Full profile of the agent: identity, demographics, interests, personality traits and the behaviour settings it was generated with.",
+    "position": "auto",
+    "selector": "[data-tut=\"agent-profile\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The populations this agent belongs to. Click a population to open it.",
+    "position": "auto",
+    "selector": "[data-tut=\"population-memberships\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Add this agent to another population: choose the population and confirm.",
+    "position": "auto",
+    "selector": "[data-tut=\"add-to-population\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Interests, appearance, platform-specific fields and other custom data stored with the agent, in ordered groups.",
+    "position": "auto",
+    "selector": "[data-tut=\"custom-attributes\"]",
+    "title": "@heading"
+   }
+  ],
+  "annotation_analytics": [
+   {
+    "description": "Replay the simulation over time: press play, change the speed, and every chart follows the selected moment.",
+    "position": "auto",
+    "selector": "[data-tut=\"temporal-controls\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Headline figures for the selected annotation, updated as the simulated time moves.",
+    "position": "auto",
+    "selector": "#annotation-stats-row",
+    "title": "Summary indicators"
+   },
+   {
+    "description": "How the annotation values are distributed over the content produced so far.",
+    "position": "auto",
+    "selector": "#annotationDistributionChartContainer",
+    "title": "Distribution"
+   },
+   {
+    "description": "How the annotation evolves round after round.",
+    "position": "auto",
+    "selector": "#annotationTrendChartContainer",
+    "title": "Trend over time"
+   },
+   {
+    "description": "Pick a target to see how moderators intervened on it: toxicity trend and the list of interventions.",
+    "position": "auto",
+    "selector": "[data-tut=\"moderator-target-drill-down\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Pick an author to see how the recommender system exposed their posts: reach, receiver diversity and recommended posts.",
+    "position": "auto",
+    "selector": "[data-tut=\"author-recommendation-drill-down\"]",
+    "title": "@heading"
+   }
+  ],
+  "client_details_dating": [
+   {
+    "description": "Add days to the total length of the client, then start it again: it continues from where it stopped.",
+    "position": "auto",
+    "selector": "#box-extend-simulation",
+    "title": "@heading"
+   },
+   {
+    "description": "The settings of the agents of this client. They can be changed while the client is stopped.",
+    "position": "auto",
+    "selector": "#box-client-settings",
+    "title": "@heading"
+   }
+  ],
+  "clients_dating": [
+   {
+    "description": "Choose the population and how long the client runs (30 days by default), then the models: language model, image model and recommender. The other settings have defaults that follow whether the experiment uses language models.",
+    "position": "auto",
+    "selector": "#box-new-client",
+    "title": "@heading"
+   }
+  ],
+  "custom_agent": [
+   {
+    "description": "Populations of this agent type already defined for the experiment platform. Open one to inspect its agents and deployments.",
+    "position": "auto",
+    "selector": "[data-tut=\"available-populations\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Agents of this type that are already available. Open one to see its profile.",
+    "position": "auto",
+    "selector": "[data-tut=\"available-agents\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Create a new population or agent of this type. The fields come from the plugin that provides the agent type.",
+    "position": "auto",
+    "selector": "[data-tut=\"create\"]",
+    "title": "@heading"
+   }
+  ],
+  "custom_population_details": [
+   {
+    "description": "Name, description and key attributes of this population.",
+    "position": "auto",
+    "selector": "[data-tut=\"custom-population-overview\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The experiments where this population is deployed.",
+    "position": "auto",
+    "selector": "[data-tut=\"experiment-deployments\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The agents that belong to the population.",
+    "position": "auto",
+    "selector": "[data-tut=\"assigned-agents\"]",
+    "title": "@heading"
+   }
+  ],
+  "dating_analytics": [
+   {
+    "description": "When the derived data were last built. Refresh them to read the latest rounds of a running experiment; the run itself is never modified.",
+    "position": "auto",
+    "selector": "[data-tut=\"analytics-state\"]",
+    "title": "Analytics data"
+   },
+   {
+    "description": "Headline figures of the run: agents, matches, date proposals, exits and paused profiles.",
+    "position": "auto",
+    "selector": "[data-tut=\"run-totals\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Exposure and outcome of each recommender model: like rate, matches per stack and how unequal the exposure is.",
+    "position": "auto",
+    "selector": "[data-tut=\"recommenders\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The run day by day: swipes, matches, messages and dates.",
+    "position": "auto",
+    "selector": "[data-tut=\"day-by-day\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "From proposal to outcome: how many dates were proposed, accepted, declined or expired.",
+    "position": "auto",
+    "selector": "[data-tut=\"date-funnel\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Who left and why: success (a couple formed) or frustration (churn).",
+    "position": "auto",
+    "selector": "[data-tut=\"exits\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Download any derived table as CSV, or everything in one ZIP together with the field map.",
+    "position": "auto",
+    "selector": "[data-tut=\"export\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Compare this run with another dating experiment. The comparison is clean when population and seed are the same and only the recommender differs.",
+    "position": "auto",
+    "selector": "[data-tut=\"compare\"]",
+    "title": "@heading"
+   }
+  ],
+  "dating_analytics_compare": [
+   {
+    "description": "The two experiments side by side, metric by metric.",
+    "position": "auto",
+    "selector": "#dating-compare",
+    "title": "Comparison"
+   }
+  ],
+  "dating_participants": [
+   {
+    "description": "Whether the local gateway that carries the actions of the people to the run is answering.",
+    "position": "auto",
+    "selector": "#dating-gateway-status",
+    "title": "Gateway"
+   },
+   {
+    "description": "The users assigned to this experiment who can play: whether they have entered and what they have done so far.",
+    "position": "auto",
+    "selector": "#dating-humans",
+    "title": "Participants"
+   }
+  ],
+  "dating_settings": [
+   {
+    "description": "The rules shared by every client of the experiment: the default recommender and the parameters of each model, quotas, chats and dates. You can edit them whenever the experiment is not running.",
+    "position": "auto",
+    "selector": "#box-dating-settings",
+    "title": "@heading"
+   }
+  ],
+  "download_notifications": [
+   {
+    "description": "History of exports and background jobs: status, download links and the experiments involved. Mark entries as read or remove them.",
+    "position": "auto",
+    "selector": "[data-tut=\"notifications\"]",
+    "title": "@heading"
+   }
+  ],
+  "embedding_settings": [
+   {
+    "description": "Choose the Ollama host and the embedding model that agents use for semantic memory. Without it, memory falls back to lexical retrieval.",
+    "position": "auto",
+    "selector": "[data-tut=\"memory-embeddings\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Query the host for the embedding-capable models installed on it, then pick one before saving.",
+    "position": "auto",
+    "selector": "#fetch_embedding_models",
+    "title": "Load models"
+   },
+   {
+    "description": "Short reminders about supported backends and model selection.",
+    "position": "auto",
+    "selector": "[data-tut=\"quick-reference-guide\"]",
+    "title": "@heading"
+   }
+  ],
+  "experiment_matrix": [
+   {
+    "description": "Generate many experiments at once: pick a source experiment, unlock the parameters to vary and list their values.",
+    "position": "auto",
+    "selector": "[data-tut=\"experiment-matrix\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Nested configuration of the source experiment. Unlock a value to vary it, then add the values to combine.",
+    "position": "auto",
+    "selector": "#matrix-form",
+    "title": "Parameters"
+   },
+   {
+    "description": "Shows how many experiments the chosen values will produce, so you can spot huge matrices before creating them.",
+    "position": "auto",
+    "selector": "#matrix-warning",
+    "title": "Combination count"
+   },
+   {
+    "description": "Creates one experiment for every combination, optionally assigned to a project group.",
+    "position": "auto",
+    "selector": "#matrix-submit-btn",
+    "title": "Generate experiments"
+   }
+  ],
+  "external_runtime_logs": [
+   {
+    "description": "Output of the install, update and validation operations run on this component. Check it when an operation fails.",
+    "position": "auto",
+    "selector": "[data-tut=\"operation-log\"]",
+    "title": "@heading"
+   }
+  ],
+  "feed_limits": [
+   {
+    "description": "Limits on how much content is retrieved from RSS feeds, Reddit and the database fallback during forum simulations.",
+    "position": "auto",
+    "selector": "[data-tut=\"feed-retrieval-limits\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Advice on when to raise or keep the defaults.",
+    "position": "auto",
+    "selector": "[data-tut=\"quick-reference-guide\"]",
+    "title": "@heading"
+   }
+  ],
+  "forum_image_resources": [
+   {
+    "description": "Add image sources (feeds or subreddits) once and reuse them in every forum experiment. Validate a source before saving it.",
+    "position": "auto",
+    "selector": "[data-tut=\"reusable-forum-image-resources\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "How the saved image resources are used by forum experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"usage\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The image resources already saved. Remove the ones you no longer need.",
+    "position": "auto",
+    "selector": "[data-tut=\"saved-image-resources\"]",
+    "title": "@heading"
+   }
+  ],
+  "forum_rss_resources": [
+   {
+    "description": "Add RSS or Reddit feeds once and reuse them in every forum experiment. Validate a feed before saving it.",
+    "position": "auto",
+    "selector": "[data-tut=\"reusable-forum-rss-resources\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "How the saved feeds are used by forum experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"usage\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The feeds already saved. Remove the ones you no longer need.",
+    "position": "auto",
+    "selector": "[data-tut=\"saved-rss-resources\"]",
+    "title": "@heading"
+   }
+  ],
+  "frontend_settings": [
+   {
+    "description": "Choose which interactions the web interface offers to users: reactions, sharing, comments and more.",
+    "position": "auto",
+    "selector": "[data-tut=\"user-interactions\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Control which annotations and statistics are shown next to the content.",
+    "position": "auto",
+    "selector": "[data-tut=\"annotations\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Settings for the feed and the profile pages, such as posts per page.",
+    "position": "auto",
+    "selector": "[data-tut=\"feed-profile\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Settings added by the installed plugins. They only apply when the plugin is active.",
+    "position": "auto",
+    "selector": "[id^=\"box-suite-\"]",
+    "title": "Plugin settings"
+   }
+  ],
+  "image_feeds": [
+   {
+    "description": "Select which reusable image resources this forum experiment may use.",
+    "position": "auto",
+    "selector": "[data-tut=\"forum-image-feed-assignment\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Notes about how resources are shared across experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"assignment-notes\"]",
+    "title": "@heading"
+   }
+  ],
+  "jupyter": [
+   {
+    "description": "JupyterLab embedded in the dashboard: open the notebooks of the experiment and analyse its data without leaving the page.",
+    "position": "auto",
+    "selector": ".jupyter-container",
+    "title": "Analytical environment"
+   }
+  ],
+  "opinion_configuration": [
+   {
+    "description": "Configure how opinions are initialised and how they evolve in this experiment.",
+    "position": "auto",
+    "selector": "[data-tut=\"opinion-distribution-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The opinion dimensions the agents hold. Add or remove dimensions as needed.",
+    "position": "auto",
+    "selector": "#dimensions-container",
+    "title": "Dimensions"
+   },
+   {
+    "description": "Associate each topic with the dimensions it affects.",
+    "position": "auto",
+    "selector": "#topic-configuration",
+    "title": "Topics"
+   },
+   {
+    "description": "Choose the distribution that assigns the starting opinions to the agents.",
+    "position": "auto",
+    "selector": "#distributions-grid",
+    "title": "Initial distributions"
+   },
+   {
+    "description": "Pick the rule that changes opinions after interactions and set its parameters.",
+    "position": "auto",
+    "selector": "#update-rule-configuration",
+    "title": "Update rule"
+   },
+   {
+    "description": "Store the configuration. Changes apply to the next run of the experiment.",
+    "position": "auto",
+    "selector": "#submit-btn",
+    "title": "Save"
+   }
+  ],
+  "opinion_configuration_forum": [
+   {
+    "description": "Configure how opinions are initialised and how they evolve in this experiment.",
+    "position": "auto",
+    "selector": "[data-tut=\"opinion-distribution-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The opinion dimensions the agents hold. Add or remove dimensions as needed.",
+    "position": "auto",
+    "selector": "#dimensions-container",
+    "title": "Dimensions"
+   },
+   {
+    "description": "Associate each topic with the dimensions it affects.",
+    "position": "auto",
+    "selector": "#topic-configuration",
+    "title": "Topics"
+   },
+   {
+    "description": "Choose the distribution that assigns the starting opinions to the agents.",
+    "position": "auto",
+    "selector": "#distributions-grid",
+    "title": "Initial distributions"
+   },
+   {
+    "description": "Pick the rule that changes opinions after interactions and set its parameters.",
+    "position": "auto",
+    "selector": "#update-rule-configuration",
+    "title": "Update rule"
+   },
+   {
+    "description": "Store the configuration. Changes apply to the next run of the experiment.",
+    "position": "auto",
+    "selector": "#submit-btn",
+    "title": "Save"
+   }
+  ],
+  "opinion_configuration_hpc": [
+   {
+    "description": "Configure how opinions are initialised and how they evolve in this experiment.",
+    "position": "auto",
+    "selector": "[data-tut=\"opinion-distribution-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The opinion dimensions the agents hold. Add or remove dimensions as needed.",
+    "position": "auto",
+    "selector": "#dimensions-container",
+    "title": "Dimensions"
+   },
+   {
+    "description": "Associate each topic with the dimensions it affects.",
+    "position": "auto",
+    "selector": "#topic-configuration",
+    "title": "Topics"
+   },
+   {
+    "description": "Choose the distribution that assigns the starting opinions to the agents.",
+    "position": "auto",
+    "selector": "#distributions-grid",
+    "title": "Initial distributions"
+   },
+   {
+    "description": "Pick the rule that changes opinions after interactions and set its parameters.",
+    "position": "auto",
+    "selector": "#update-rule-configuration",
+    "title": "Update rule"
+   },
+   {
+    "description": "Store the configuration. Changes apply to the next run of the experiment.",
+    "position": "auto",
+    "selector": "#submit-btn",
+    "title": "Save"
+   }
+  ],
+  "opinion_configuration_im": [
+   {
+    "description": "Configure how opinions are initialised and how they evolve in this experiment.",
+    "position": "auto",
+    "selector": "[data-tut=\"opinion-distribution-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The opinion dimensions the agents hold. Add or remove dimensions as needed.",
+    "position": "auto",
+    "selector": "#dimensions-container",
+    "title": "Dimensions"
+   },
+   {
+    "description": "Associate each topic with the dimensions it affects.",
+    "position": "auto",
+    "selector": "#topic-configuration",
+    "title": "Topics"
+   },
+   {
+    "description": "Choose the distribution that assigns the starting opinions to the agents.",
+    "position": "auto",
+    "selector": "#distributions-grid",
+    "title": "Initial distributions"
+   },
+   {
+    "description": "Pick the rule that changes opinions after interactions and set its parameters.",
+    "position": "auto",
+    "selector": "#update-rule-configuration",
+    "title": "Update rule"
+   },
+   {
+    "description": "Store the configuration. Changes apply to the next run of the experiment.",
+    "position": "auto",
+    "selector": "#submit-btn",
+    "title": "Save"
+   }
+  ],
+  "opinion_evolution": [
+   {
+    "description": "Replay the simulation over time: press play, change the speed, and every chart follows the selected moment.",
+    "position": "auto",
+    "selector": "[data-tut=\"temporal-controls\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Distribution of the agents' opinions at the selected moment.",
+    "position": "auto",
+    "selector": "[data-tut=\"opinion-distribution\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Average opinion of every opinion group over time.",
+    "position": "auto",
+    "selector": "[data-tut=\"opinion-group-trends\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The opinion trajectory of individual agents.",
+    "position": "auto",
+    "selector": "[data-tut=\"agent-opinion-evolution\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Select a target to see how propagandists influenced its opinion.",
+    "position": "auto",
+    "selector": "[data-tut=\"propaganda-target-drill-down\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Select a target to see how coordinated actors influenced its opinion.",
+    "position": "auto",
+    "selector": "[data-tut=\"master-of-puppets-target-drill-down\"]",
+    "title": "@heading"
+   }
+  ],
+  "page_details": [
+   {
+    "description": "Identity of the page (name, feed, leaning) and the figures collected for it.",
+    "position": "auto",
+    "selector": "[data-tut=\"page-overview\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Add the page to a population so that it is deployed in experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"add-to-population\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Link a topic to the page: it will post content about it.",
+    "position": "auto",
+    "selector": "[data-tut=\"add-topic-to-page\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The latest articles retrieved from the page's feed.",
+    "position": "auto",
+    "selector": "[data-tut=\"recent-news\"]",
+    "title": "@heading"
+   }
+  ],
+  "population_details": [
+   {
+    "description": "Description of the population: size, platform and the main attributes of its agents.",
+    "position": "auto",
+    "selector": "[data-tut=\"population-overview\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The experiments where this population is deployed.",
+    "position": "auto",
+    "selector": "[data-tut=\"experiment-deployments\"]",
+    "title": "@heading"
+   }
+  ],
+  "prompts": [
+   {
+    "description": "The system prompts that guide agents and pages. They are sent to the LLM before every action.",
+    "position": "auto",
+    "selector": "[data-tut=\"llm-prompts-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "How the conversation with the LLM is composed and what each prompt controls.",
+    "position": "auto",
+    "selector": "[data-tut=\"quick-reference-guide\"]",
+    "title": "@heading"
+   }
+  ],
+  "prompts_dating": [
+   {
+    "description": "The prompts the agents use. You can reword them for this experiment; the hash of each prompt is recorded with the run.",
+    "position": "auto",
+    "selector": "[data-tut=\"dating-prompts\"]",
+    "title": "@heading"
+   }
+  ],
+  "prompts_forum": [
+   {
+    "description": "The system prompts that guide agents and pages. They are sent to the LLM before every action.",
+    "position": "auto",
+    "selector": "[data-tut=\"llm-prompts-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "How the conversation with the LLM is composed and what each prompt controls.",
+    "position": "auto",
+    "selector": "[data-tut=\"quick-reference-guide\"]",
+    "title": "@heading"
+   }
+  ],
+  "prompts_hpc": [
+   {
+    "description": "The prompts used by HPC clients for every action: persona, post, reaction, comment, read and search.",
+    "position": "auto",
+    "selector": "[data-tut=\"hpc-llm-prompts-configuration\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Reminders on placeholders and how the prompts are combined.",
+    "position": "auto",
+    "selector": "[data-tut=\"hpc-prompts-guide\"]",
+    "title": "@heading"
+   }
+  ],
+  "prompts_im": [
+   {
+    "description": "The prompts the agents use in the chats. You can reword them for this experiment; only the prompts you change are saved.",
+    "position": "auto",
+    "selector": "[data-tut=\"im-prompts\"]",
+    "title": "@heading"
+   }
+  ],
+  "rss_feeds": [
+   {
+    "description": "Select which reusable RSS resources this forum experiment may use.",
+    "position": "auto",
+    "selector": "[data-tut=\"forum-rss-feed-assignment\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Notes about how feeds are shared across experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"assignment-notes\"]",
+    "title": "@heading"
+   }
+  ],
+  "select_experiment": [
+   {
+    "description": "Pick the experiment to join: the interface then opens as one of its simulated users.",
+    "position": "auto",
+    "selector": "#main-section",
+    "title": "Choose an experiment"
+   }
+  ],
+  "stress_reward_evolution": [
+   {
+    "description": "Replay the simulation over time: press play, change the speed, and every chart follows the selected moment.",
+    "position": "auto",
+    "selector": "[data-tut=\"temporal-controls\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Distribution of the agents' stress at the selected moment.",
+    "position": "auto",
+    "selector": "[data-tut=\"stress-distribution\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Distribution of the agents' reward at the selected moment.",
+    "position": "auto",
+    "selector": "[data-tut=\"reward-distribution\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Average stress and reward across the population over time.",
+    "position": "auto",
+    "selector": "[data-tut=\"average-aggregate-trends\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Select a target to see which attackers raised its stress and when.",
+    "position": "auto",
+    "selector": "[data-tut=\"stress-attacker-target-drill-down\"]",
+    "title": "@heading"
+   }
+  ],
+  "stress_reward_settings": [
+   {
+    "description": "Weights of the events that move stress and reward, coupling between the two and the optional churn rule.",
+    "position": "auto",
+    "selector": "[data-tut=\"stress-reward-settings\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "What each group of values controls.",
+    "position": "auto",
+    "selector": "[data-tut=\"quick-reference-guide\"]",
+    "title": "@heading"
+   }
+  ],
+  "visibility_settings": [
+   {
+    "description": "Grant or revoke experiment visibility to researcher users. Shared researchers can view the experiments and stop or delete them.",
+    "position": "auto",
+    "selector": "[data-tut=\"share-experiments\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Share one experiment with the selected researchers.",
+    "position": "auto",
+    "selector": "[data-tut=\"share-single-experiment\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Share all the experiments of a project group at once.",
+    "position": "auto",
+    "selector": "[data-tut=\"share-entire-group\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "Who can currently see what. Revoke a grant from this table.",
+    "position": "auto",
+    "selector": "[data-tut=\"current-researcher-visibility\"]",
+    "title": "@heading"
+   }
+  ]
+ }
+}
