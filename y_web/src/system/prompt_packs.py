@@ -20,11 +20,11 @@ from typing import Dict, List
 from y_web.src.system.path_utils import get_resource_path
 
 DEFAULT_LANGUAGE = "en"
+#: the packs the core ships; a platform ships its own in ``<its prompts folder>/packs/<language>/``
+#: (``PlatformProvider.prompt_pack_roots``), laid out as these are
 PACK_FILES = (
     "prompts.json",
-    "prompts_forum.json",
     "prompts_hpc.json",
-    "prompts_ygram.json",
     "profile_values.json",
 )
 _LANG = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$")
@@ -33,6 +33,30 @@ log = logging.getLogger(__name__)
 
 def packs_root() -> Path:
     return Path(get_resource_path(os.path.join("data_schema", "prompts")))
+
+
+def _roots() -> List[Path]:
+    """Where packs are looked for: the core's folder, then the ``packs`` folder of each installed platform."""
+    roots = [packs_root()]
+    try:
+        from y_web.platforms import registry
+
+        for provider in registry.providers():
+            for root in provider.prompt_pack_roots():
+                folder = Path(root) / "packs"
+                if folder not in roots:
+                    roots.append(folder)
+    except Exception:  # noqa: BLE001 - outside the application there are no platforms
+        pass
+    return roots
+
+
+def _locate(code: str, name: str) -> Path:
+    """The file ``name`` of language ``code`` in the first folder that has it (the core's path if none does)."""
+    for root in _roots():
+        if (root / code / name).exists():
+            return root / code / name
+    return packs_root() / code / name
 
 
 def normalize(language) -> str:
@@ -87,11 +111,11 @@ def _merge(base, over, language, where, missing):
 def load_pack(name: str, language=None) -> Dict:
     """The prompts of file ``name`` in ``language``, with English filling the keys it lacks."""
     code = normalize(language)
-    with open(packs_root() / DEFAULT_LANGUAGE / name, encoding="utf-8") as handle:
+    with open(_locate(DEFAULT_LANGUAGE, name), encoding="utf-8") as handle:
         english = json.load(handle)
     if code == DEFAULT_LANGUAGE:
         return english
-    path = packs_root() / code / name
+    path = _locate(code, name)
     if not path.exists():
         log.warning("prompt file %s has no %r version; using English", name, code)
         return english
@@ -113,9 +137,9 @@ def write_pack(name: str, destination, language=None) -> None:
     """
     code = normalize(language)
     destination = Path(destination)
-    source = packs_root() / code / name
+    source = _locate(code, name)
     if code == DEFAULT_LANGUAGE or not source.exists():
-        shutil.copyfile(packs_root() / DEFAULT_LANGUAGE / name, destination)
+        shutil.copyfile(_locate(DEFAULT_LANGUAGE, name), destination)
         return
     with open(destination, "w", encoding="utf-8") as handle:
         json.dump(load_pack(name, code), handle, ensure_ascii=False, indent=4)

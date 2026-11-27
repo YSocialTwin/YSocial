@@ -61,3 +61,40 @@ def test_admin_tutorial_texts_are_unchanged():
         timeout=60,
     ).stdout
     _check("tutorials.json", json.loads(out))
+
+
+@pytest.mark.parametrize("language", ["en", "it"])
+@pytest.mark.parametrize(
+    "name",
+    ["prompts.json", "prompts_hpc.json", "prompts_forum.json", "prompts_ygram.json"],
+)
+def test_prompt_files_written_for_an_experiment_are_byte_identical(
+    language, name, tmp_path
+):
+    """G4: the prompt file an experiment starts from is the same bytes wherever the pack lives.
+
+    The expected hashes were taken from the packs while they were in ``data_schema/prompts``.
+    """
+    import hashlib
+
+    from y_web.src.system import prompt_packs
+
+    if (
+        name == "prompts_forum.json"
+        and not (ROOT / "external/YForum/ysocial_platform/prompts/packs").exists()
+    ):
+        pytest.skip("YForum is not checked out")
+    if (
+        name == "prompts_ygram.json"
+        and not (
+            ROOT / "external/YPhotoSharing/ysocial_platform/prompts/packs"
+        ).exists()
+    ):
+        pytest.skip("YPhotoSharing is not checked out")
+    expected = json.loads((DATA / "prompt_pack_outputs.json").read_text("utf-8"))
+    destination = tmp_path / name
+    prompt_packs.write_pack(name, destination, language)
+    assert (
+        hashlib.sha256(destination.read_bytes()).hexdigest()
+        == expected[f"{language}/{name}"]
+    )

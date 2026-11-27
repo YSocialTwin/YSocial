@@ -199,6 +199,43 @@ def check_language(root, language, field_re, tokens, allow_partial=False):
     return problems
 
 
+def platform_pack_roots(root):
+    """The ``packs`` folders the platforms ship (``<repo>/ysocial_platform/prompts/packs``), one per repository."""
+    return sorted((Path(root) / "external").glob("*/ysocial_platform/prompts/packs"))
+
+
+def check_platform_packs(root, language, field_re, tokens, allow_partial=False):
+    """The packs of the platforms, laid out as the core's: ``<packs>/<language>/<file>.json`` against English."""
+    problems = []
+    for packs in platform_pack_roots(root):
+        shown = packs.relative_to(root)
+        for english in sorted((packs / "en").glob("*.json")):
+            if language == "en":
+                for where, text in _texts(json.loads(english.read_text("utf-8"))):
+                    for braces in BRACES.findall(text):
+                        if not field_re.fullmatch(braces) and re.fullmatch(
+                            r"\{[A-Za-z_][^{}\"]*\}", braces
+                        ):
+                            problems.append(
+                                f"{shown}/en/{english.name}{where}: {braces} is not a field the renderer understands"
+                            )
+                continue
+            other = packs / language / english.name
+            if not other.exists():
+                if not allow_partial:
+                    problems.append(f"{shown}/{language}/{english.name}: missing")
+                continue
+            problems += compare(
+                json.loads(english.read_text("utf-8")),
+                json.loads(other.read_text("utf-8")),
+                field_re,
+                tokens,
+                f"{shown}/{language}/{english.name}",
+                allow_partial,
+            )
+    return problems
+
+
 def check_internal(root, language, field_re, tokens, allow_partial=False):
     problems = []
     for relative in INTERNAL_PACKS:
@@ -234,6 +271,10 @@ def languages(root):
             code = path.name[len(english.stem) + 1 : -len(english.suffix)]
             if LANG.match(code):
                 found.add(code)
+    for packs in platform_pack_roots(root):
+        found.update(
+            p.name for p in packs.iterdir() if p.is_dir() and LANG.match(p.name)
+        )
     found.discard("en")
     return sorted(found)
 
@@ -242,7 +283,11 @@ def run(root, only=None, allow_partial=False):
     root = Path(root)
     field_re, tokens = _field_regex(root), _tokens(root)
     problems = check_english(root, field_re)
+    problems += check_platform_packs(root, "en", field_re, tokens)
     for language in [only] if only else languages(root):
+        problems += check_platform_packs(
+            root, language, field_re, tokens, allow_partial
+        )
         problems += check_language(root, language, field_re, tokens, allow_partial)
         problems += check_internal(root, language, field_re, tokens, allow_partial)
     return problems

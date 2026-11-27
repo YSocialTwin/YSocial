@@ -12,11 +12,19 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 @pytest.mark.parametrize("lang", ["en", "it"])
 def test_pack_caption_prompt_has_no_day_or_slot(lang):
-    data = json.loads(
-        (ROOT / "data_schema" / "prompts" / lang / "prompts_ygram.json").read_text(
-            encoding="utf-8"
-        )
+    path = (
+        ROOT
+        / "external"
+        / "YPhotoSharing"
+        / "ysocial_platform"
+        / "prompts"
+        / "packs"
+        / lang
+        / "prompts_ygram.json"
     )
+    if not path.exists():
+        pytest.skip("YPhotoSharing is not checked out")
+    data = json.loads(path.read_text(encoding="utf-8"))
     text = json.dumps(data["generate_caption"], ensure_ascii=False)
     assert "{day}" not in text and "{slot}" not in text
 

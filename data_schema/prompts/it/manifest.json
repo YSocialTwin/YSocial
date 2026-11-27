@@ -3,6 +3,10 @@
   "name": "Italian",
   "native_name": "Italiano",
   "status": "draft",
-  "files": ["prompts.json", "prompts_forum.json", "prompts_hpc.json", "prompts_ygram.json", "profile_values.json"],
+  "files": [
+    "prompts.json",
+    "prompts_hpc.json",
+    "profile_values.json"
+  ],
   "reviewed_by": null
 }

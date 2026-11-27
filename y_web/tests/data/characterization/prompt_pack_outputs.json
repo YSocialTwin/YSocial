@@ -1,0 +1,10 @@
+{
+ "en/prompts.json": "14a0930a90b936adab4cd797b08bed19128d7264543ec2382c2cb67e3b8f858f",
+ "en/prompts_forum.json": "097fdaece1b774de8eac3ce8d6e88727c5945d4eb51ae9239e49e2d72af54d95",
+ "en/prompts_hpc.json": "042b5cf34f61b051d2bf8d134a7d0b95e53cc202b7867c709bfff58fa80943ba",
+ "en/prompts_ygram.json": "aa629cafd79e8bfdeff8ad689a0306b9a40bc1a447985a837823bacbe969b492",
+ "it/prompts.json": "b56c74da43f95b320b085303ae7efb628f5125626437a082ea34fe712f833e51",
+ "it/prompts_forum.json": "1259dc9e2e9e495b02a15670d8df319c98623b1e3158f9f75abd00de53f9a50d",
+ "it/prompts_hpc.json": "b285399142c0987155ac756f0de13a8e43717deadc5a24b88d90f1d21f31c454",
+ "it/prompts_ygram.json": "d6404f9ebc21f3a588e52e21be3353b1d28189a8d51db936694b190bda4eece1"
+}

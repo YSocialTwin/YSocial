@@ -9,7 +9,8 @@ Two kinds of fingerprints are stored in ``docs/prompt-hashes.json``:
 
 ``--check`` fails when a template or a literal that existed at snapshot time can no longer be found
 byte for byte, either where it was or in any current English pack (``data_schema/prompts/en``, added
-by step 3). Moving a prompt from code to JSON is therefore allowed; changing a character is not.
+by step 3). Moving a prompt from code to JSON, or from the core to a platform's own ``ysocial_platform/prompts``
+folder, is therefore allowed; changing a character is not.
 
 Usage (from the YWeb root)::
 
@@ -156,6 +157,24 @@ def en_pack_hashes():
     return out
 
 
+def platform_prompt_hashes():
+    """Hashes of the English prompts the platforms keep in their own ``ysocial_platform/prompts`` folder.
+
+    A prompt of the core may move there (it belongs to one platform): the words stay byte for byte, the owner changes.
+    """
+    exact, normed = set(), set()
+    base = ROOT / "external"
+    if base.exists():
+        files = sorted(
+            base.glob("*/ysocial_platform/prompts/packs/en/*.json")
+        ) + sorted(base.glob(f"*/ysocial_platform/prompts/{INTERNAL_PACK_NAME}"))
+        for path in files:
+            for _, text in walk_json(json.loads(path.read_text(encoding="utf-8"))):
+                exact.add(digest(text))
+                normed.add(digest(norm(text)))
+    return exact, normed
+
+
 def absent_repos(saved):
     """External repositories the snapshot knows about but that are not checked out here (e.g. in CI, where
     ``external/`` is not part of the clone)."""
@@ -170,6 +189,7 @@ def check(saved, now, skip_repos=frozenset()):
     """
     problems = []
     packs = en_pack_hashes()
+    moved_exact, moved_norm = platform_prompt_hashes()
     code_by_repo = {}
     json_by_repo = {}
     for rel, records in now["code"].items():
@@ -185,6 +205,8 @@ def check(saved, now, skip_repos=frozenset()):
             | code_by_repo.get(repo, set())
             | json_by_repo.get(repo, set())
         )
+        if repo == "YWeb":
+            exact |= moved_exact  # moved to a platform's own repository
         for key, h in keys.items():
             if now["json"].get(rel, {}).get(key) == h or h in exact:
                 continue
@@ -197,6 +219,9 @@ def check(saved, now, skip_repos=frozenset()):
         exact = (
             pack_exact | code_by_repo.get(repo, set()) | json_by_repo.get(repo, set())
         )
+        if repo == "YWeb":
+            exact |= moved_exact
+            pack_norm = pack_norm | moved_norm
         for h, nh in records:
             if h not in exact and nh not in pack_norm:
                 problems.append(

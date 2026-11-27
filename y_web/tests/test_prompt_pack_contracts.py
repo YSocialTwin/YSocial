@@ -57,6 +57,12 @@ def _pack_files(language):
     ):
         if name.startswith("prompts") and (base / name).exists():
             yield base / name
+    # the packs the platforms ship, laid out the same way
+    yield from sorted(
+        (ROOT / "external").glob(
+            f"*/ysocial_platform/prompts/packs/{language}/prompts*.json"
+        )
+    )
 
 
 @pytest.mark.parametrize("language", [l for l in LANGUAGES if l != "en"])
