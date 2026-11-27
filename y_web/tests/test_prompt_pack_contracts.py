@@ -79,7 +79,11 @@ def test_every_text_renders_with_the_fields_it_names(language):
             rendered = ps.render(text, **fields)
             assert isinstance(rendered, str), (path.name, where)
             count += 1
-    assert count > 100
+    # the platforms' own packs live in their repositories; a clone without ``external/`` (CI) has the core's only
+    has_platform_packs = any(
+        (ROOT / "external").glob("*/ysocial_platform/prompts/packs/en/prompts*.json")
+    )
+    assert count > (100 if has_platform_packs else 50)
 
 
 @pytest.mark.skipif(not TOKENS_FILE.exists(), reason="YClient is not checked out")

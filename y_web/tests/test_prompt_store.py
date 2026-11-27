@@ -49,11 +49,21 @@ def _calls():
                 yield path.name, node
 
 
+def _platform_packs_present():
+    return bool(ps._platform_roots())
+
+
 def test_every_call_site_uses_an_existing_key_and_matching_fields():
     seen = 0
     for fname, node in _calls():
         key = node.args[0].value
-        template = ps.get(key)  # raises PromptError when the key is missing
+        try:
+            template = ps.get(key)  # raises PromptError when the key is missing
+        except ps.PromptError:
+            # a key owned by a platform pack is only known where that platform is installed
+            if not _platform_packs_present():
+                continue
+            raise
         seen += 1
         if node.func.attr == "prompt":
             passed = {k.arg for k in node.keywords if k.arg and k.arg != "language"}
