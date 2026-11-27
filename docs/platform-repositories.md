@@ -72,6 +72,29 @@ is regenerated with `UPDATE_SDK_API=1`.
 | 1.3 | `human_gateway` |
 | 1.4 | fixed-order recommenders (`fixed_recsys` capability) |
 | 1.5 | `viewer_user(experiment)` |
+| 1.6 | `tutorial_scripts()`, `prompt_pack_roots()`, `split_title_and_body` (SDK name; `process_reddit_post` is a deprecated alias) |
+
+### What a platform brings with it (1.6)
+
+The core carries no text, tour or address that belongs to one platform. A platform repository ships:
+
+* its **guided-tour steps**: scripts in its `static/` folder listed by `tutorial_scripts()`; each adds pages to
+  `window.YS_PAGE_TUTORIALS` and is loaded after the core's own steps (a page may be an alias of a core page);
+* its **prompts**: `prompt_pack_roots()` returns folders holding `prompts_internal[.<lang>].json` (internal prompts the
+  platform's routes ask `prompt_store` for; a key of the core is never replaced) and `packs/<lang>/<file>.json` (the
+  prompt packs copied into an experiment, for example `prompts_forum.json`);
+* its **runtime names**: `StandardRuntime(server_script=..., server_app_module=..., client_class_path=...,
+  client_federation_module=...)`. An empty value still falls back to the first engines' names with a
+  `DeprecationWarning` (`y_web/legacy_names.py`, removed with the platform API 2.0).
+
+The reusable RSS and image feed libraries, the image-feed assignment and the feed limits are pages of the core
+(`/admin/rss_resources`, `/admin/image_resources`, `/admin/image_feeds/<id>`, `/admin/feed_limits/<id>`): any platform
+whose experiments read feeds uses them. The old forum addresses redirect (308) from the forum repositories.
+
+`y_web/tests/test_canary_platform.py` builds a minimal platform in a temporary folder and checks that discovery alone
+makes it work; `scripts/metrics/decoupling.py` (v2) counts platform names in the core and its ceiling is 0, with the
+declared exceptions in `scripts/metrics/decoupling_allowlist.json` (Reddit as a feed source, the physical `forum_*`
+table names, deprecated aliases).
 
 Extensions have their own version, `EXTENSION_API` (`docs/extension-api.md`).
 

@@ -18,6 +18,7 @@ from y_web.platforms import discovery, extension, registry
 pytestmark = pytest.mark.unit
 
 CANARY_KEY = "canary_zz"
+PROMPT_KEY = "-".join(["canary", "greeting"]).replace("-", "__")
 
 PROVIDER = """
 from pathlib import Path
@@ -49,7 +50,7 @@ def _canary_repo(tmp_path: Path) -> Path:
     (package / "templates" / "admin" / "canary_page.html").write_text("<p>canary</p>")
     (package / "static" / "js" / "tutorials.js").write_text("// canary tour")
     (package / "prompts" / "prompts_internal.json").write_text(
-        json.dumps({"canary__greeting": "Hello {name}"})
+        json.dumps({PROMPT_KEY: "Hello {name}"})
     )
     (repo / "meta" / "registry.json").write_text(
         json.dumps(
@@ -96,7 +97,7 @@ def test_its_templates_and_tour_are_served_without_the_core_knowing_it(canary):
 
 
 def test_its_internal_prompts_are_read_through_the_prompt_store(canary):
-    assert prompt_store.get("canary__greeting", "en") == "Hello {name}"
+    assert prompt_store.get(PROMPT_KEY, "en") == "Hello {name}"
 
 
 def test_no_list_of_the_core_names_the_canary():

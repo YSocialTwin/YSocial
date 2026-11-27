@@ -380,3 +380,12 @@ Still to confirm in step 2: the exact synonyms each parser accepts (for example 
   - `_process_agent_reaction_event`: `COMMENT`, `LIKE`
   - `process_followed_post_event`: `follow`
 
+
+## 4.1.0 update: where the platform prompts live now
+
+`data_schema/prompts/<lang>/prompts_forum.json` and `prompts_ygram.json` no longer belong to the core. They are shipped by
+the platform repositories (`ysocial_platform/prompts/packs/<lang>/` in YForum, YServerReddit and YPhotoSharing) and found
+through `PlatformProvider.prompt_pack_roots()`; the six `reddit__forum_chat_*` internal prompts moved to the forum's
+`ysocial_platform/prompts/prompts_internal[.it].json`. The core keeps `prompts.json`, `prompts_hpc.json` and
+`profile_values.json`. The English prompt hashes are unchanged (`scripts/prompts/snapshot_hashes.py --check`), and
+the bytes written into an experiment by `write_pack` are pinned by `y_web/tests/data/characterization/prompt_pack_outputs.json`.

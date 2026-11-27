@@ -61,6 +61,20 @@ Nothing is downloaded or changed: update the core and restart.
   `meta/info.json`. The migration guide is `docs/extension-api.md`; the old import paths keep working during 4.1.
 * A platform that serves Scenario Design provides its own driver (`scenario_design_driver`, driver contract 1.3); the
   Standard and HPC publication adapters now live in YServer and YSimulator (`docs/adapters-move.md` in Scenario Design).
+* Platform API 1.6 (`tutorial_scripts`, `prompt_pack_roots`): the forum's prompt packs (`prompts_forum.json`), the
+  Photo Sharing pack (`prompts_ygram.json`), the six forum chat prompts and the platform tours moved to the platform
+  repositories. Update YForum, YServerReddit, YPhotoSharing, YDating and YInstantMessaging together with the core: a
+  platform written for an earlier API keeps working, but without its tour and prompts in the new places it shows no
+  tour and, for the forum, the chat prompts are missing.
+* The feed library pages have neutral addresses (`/admin/rss_resources`, `/admin/image_resources`). Old links to
+  `/admin/forum_rss_resources` and `/admin/forum_image_resources` redirect as long as the forum repository is
+  installed. A platform written for an earlier API that registers the same feed addresses must drop them: the core
+  serves them now.
+* The process flags `Y_CLIENT_SUBPROCESS`/`Y_SERVER_SUBPROCESS` are still read; the core now sets `Y_SOCIAL_SUBPROCESS`.
+  A provider that leaves `server_script`, `server_app_module` or `client_class_path` empty gets the first engines'
+  names and a `DeprecationWarning`: declare them.
+* `process_reddit_post` is a deprecated alias of `split_title_and_body` (`y_web.sdk`), removed with API 2.0.
+* No database changes: the `forum_*` table names are unchanged.
 
 ## Going back
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Decoupling to zero (platform API 1.6): `y_web` names no platform. New hooks `tutorial_scripts()` and `prompt_pack_roots()`; the platform tours, the forum and Photo Sharing prompt packs and the forum chat prompts moved to the platform repositories; runtime names (`server_script`, `server_app_module`, `client_class_path`) are declared by the providers (legacy defaults with a `DeprecationWarning`, `y_web/legacy_names.py`); the feed libraries, image-feed assignment and feed limits are core pages with neutral addresses (`/admin/rss_resources`, `/admin/image_resources`; the old forum addresses redirect); `split_title_and_body` replaces `process_reddit_post` (deprecated alias kept); neutral process flag `Y_SOCIAL_SUBPROCESS`. The metric v2 (`scripts/metrics/decoupling.py`, ceiling 0, `decoupling_allowlist.json`) and a canary-platform test guard it. Physical `forum_*` table names are unchanged. See `docs/upgrade-4.1.md`.
+
 ### Added
 
 - YCreator (creator-economy simulations: creators, fans, subscriptions, tips and a double-entry ledger of virtual credits) is a built-in simulation runtime (`builtin.json` of the plugin registry, requires YSocial 4.1.0). It is a platform like the others: it imports the core only from `y_web.sdk` (`api_version` 1.3) and declares no Scenario Design driver, so the scenario editor does not offer it.

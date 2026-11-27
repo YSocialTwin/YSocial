@@ -144,7 +144,7 @@ Known limits of the UI layer you should state in the release note: sentiment ann
 
 ### 3.1 How prompts are organised
 
-- **Prompt packs** (`data_schema/prompts/<lang>/`): `manifest.json`, `prompts.json` (microblogging agents), `prompts_forum.json`, `prompts_hpc.json` (HPC/YSimulator), `prompts_ygram.json` (photo sharing), `profile_values.json` (how agent attribute values read in the language: gender, leaning, education level, toxicity, big five, action, nationality, language, profession). English is the source; the packs are copied into the experiment/client when it is created (`y_web/src/system/prompt_packs.py`). Users' later edits to their prompts are never touched.
+- **Prompt packs** (`data_schema/prompts/<lang>/`): `manifest.json`, `prompts.json` (microblogging agents), `prompts_hpc.json` (HPC/YSimulator), `profile_values.json`; the packs a platform owns (`prompts_forum.json`, `prompts_ygram.json`) are in the platform repository, under `ysocial_platform/prompts/packs/<lang>/` (how agent attribute values read in the language: gender, leaning, education level, toxicity, big five, action, nationality, language, profession). English is the source; the packs are copied into the experiment/client when it is created (`y_web/src/system/prompt_packs.py`). Users' later edits to their prompts are never touched.
 - **Internal prompts** (`prompts_internal.<lang>.json` next to the English `prompts_internal.json`): texts that used to live in Python (annotators, interview, chat, URL summary, agent plugins). Seven locations, all required: `y_web/`, `external/YClient/y_client/`, `external/YClientReddit/y_client/`, `external/YSimulator/YSimulator/`, `external/YPhotoSharing/YPhotoSharing/`, `external/y_agents_plugins/src/y_agents_plugins/`, `external/reactive_agents/src/reactive_agents/`. A language file only needs the keys it translates.
 - **Renderer** (`prompt_store.py`, the *same file* is copied into each of those repositories; keep the copies identical): fills only the closed list of fields a caller passes (`{topic}`, `{self.age}`, `{article['title']}`, `{', '.join(items)}`, `{trust:.2f}`), never evaluates anything, raises `PromptError` if a named field is not passed, and leaves every other brace (JSON examples) untouched.
 - **Memory plugin texts** (`external/y_memory_subsystem/src/yclient_memory/prompts/<lang>.json`): section 4.
@@ -157,7 +157,7 @@ Known limits of the UI layer you should state in the release note: sentiment ann
 
    ```json
    {"language": "fr", "name": "French", "native_name": "Français", "status": "draft",
-    "files": ["prompts.json", "prompts_forum.json", "prompts_hpc.json", "prompts_ygram.json", "profile_values.json"],
+    "files": ["prompts.json", "prompts_hpc.json", "profile_values.json"],
     "reviewed_by": null}
    ```
 
