@@ -51,7 +51,7 @@ def _is_client_process(pid):
 
         is_client = (
             "client_runner"
-            in cmdline_str  # matches client_runner.py (source) and y_client_process_runner (frozen)
+            in cmdline_str  # matches client_runner.py (source) and the frozen client process runner
             or "--run-client-subprocess" in cmdline_str
             or "--client-id"
             in cmdline_str  # unique CLI arg present in all client invocations
@@ -133,7 +133,7 @@ from y_web.src.simulation.server import (  # noqa: E402,F401
 
 
 def terminate_client(cli, pause=False):
-    """Stop the y_client using PID from database
+    """Stop the platform client using PID from database
 
     Args:
         cli: the client object

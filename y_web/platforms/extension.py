@@ -9,7 +9,7 @@ never mix with the core ones:
 
 The provider id is the identity of the repository (:attr:`PlatformProvider.provider_id`): the platform key unless the
 repository declares another one. When a platform key has a single provider the key also works as a namespace
-(``@dating/...`` for a provider whose id is ``ydating``); with several repositories for one key (a Standard and an HPC
+(``@myplatform/...`` for a provider whose id is ``ymyplatform``); with several repositories for one key (a Standard and an HPC
 runtime) only the ids do, because a key would not say which repository is meant.
 
 A built-in platform has no ``package_dir`` and adds nothing: installing the extensions is a no-op for it.

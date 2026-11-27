@@ -165,7 +165,7 @@ def _clear_stale_hpc_server_pid(exp, *, exp_folder: Optional[str] = None) -> boo
 
 def start_hpc_server(exp):
     """
-    Start the y_server using subprocess.Popen.
+    Start the platform server using subprocess.Popen.
 
     This function launches a server process for an experiment. For PostgreSQL databases,
     it uses gunicorn WSGI server. For SQLite databases, it uses the standard Python
@@ -649,7 +649,7 @@ def stop_hpc_server(exp_id):
 @deprecated
 def start_server_screen(exp):
     """
-    Start the y_server in a detached screen (DEPRECATED).
+    Start the platform server in a detached screen (DEPRECATED).
 
     This function is deprecated in favor of start_server() which uses subprocess.Popen.
     It is kept for backward compatibility but should not be used in new code.

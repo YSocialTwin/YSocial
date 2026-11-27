@@ -1,7 +1,7 @@
 """Dispatch to the view a platform provider registered for a client mode.
 
 Providers living in their own repository register views such as
-``create_forum_client`` on the ``clients`` blueprint; the core resolves them by
+``create_<family>_client`` on the ``clients`` blueprint; the core resolves them by
 naming convention instead of importing them.
 """
 

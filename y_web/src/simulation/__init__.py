@@ -11,7 +11,7 @@ server           : server lifecycle (start_server, terminate_server_process,
 client           : client lifecycle (start_client, terminate_client, …)
 watchdog         : ProcessWatchdog, get_watchdog, …
 execution_backend: routing between standard and HPC backends
-process_runner   : merged y_client_process_runner + y_server_process_runner
+process_runner   : merged client and server process runners
 agent_sampler    : get_users_per_hour, sample_agents, ensure_agents_have_archetype,
                    process_agent
 

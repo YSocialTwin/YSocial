@@ -2,7 +2,7 @@
 
 A person who publishes on one platform may also post on the other platforms where they are enrolled (D2). The words are
 the person's own, shaped for each destination with a plain rule, never a model (D5): ``rule_text``, the same rule the
-agents' clients use without an LLM (``YClient/y_client/federation.py``, limits included; YWeb does not import the
+agents' clients use without an LLM (the client package's federation module, limits included; YWeb does not import the
 runtimes). The request goes to the runtime through its gateway (``crosspost_to`` of the action, the same field an agent
 sends), so the runtime marks the post for export and the coordinator forwards it only where the person has an account.
 Nothing here runs for a person who is not enrolled: every other action keeps its direct path (NFR-01).

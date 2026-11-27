@@ -924,7 +924,7 @@
 }
 
 
-/* === Extracted from opinion_configuration_forum.html === */
+/* === Extracted from the threaded-platform opinion configuration page === */
 /* Compact tag-based styling inspired by profession categories */
 .dimension-tag {
     display: inline-block;
@@ -3807,7 +3807,7 @@ input:checked + .slider:before {
     outline-offset: 2px;
 }
 
-/* Dating sections of the population form (IR-D-05) */
+/* Platform sections of the population form (IR-D-05) */
 .ys-fieldset-reset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .ys-range { display: flex; gap: 8px; align-items: center; }
 .ys-range-sep { color: #6b7280; }

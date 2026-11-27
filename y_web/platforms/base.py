@@ -222,7 +222,7 @@ class HumanGatewayTraits:
 
     The core owns the transport (loopback HTTP with a token, the runtime script when no server answers, the gateway
     process); the platform says what its gateway looks like. ``enrol`` replaces all of it for a platform whose
-    accounts are made by its own library (instant messaging) or by the person later (dating).
+    accounts are made by its own library or by the person later.
     """
 
     #: repository (under ``external/``) that holds the runtime and its gateway script
@@ -328,7 +328,7 @@ class PlatformProvider:
     #: usernames of generated agents are lower-case slugs (``[a-z0-9_]``); the value is the name used when nothing is left
     slug_username_fallback: Optional[str] = None
     #: posts are titled, timed threads: an object with ``display_time(created_at, day, hour)``, ``article(article)``,
-    #: ``community(article_preview, topics)``, ``split_title(text)`` and ``origin_community(post_id)`` (see the forum)
+    #: ``community(article_preview, topics)``, ``split_title(text)`` and ``origin_community(post_id)`` (see a threaded platform)
     threads: Optional[Any] = None
     tag_runtime_sets: Tuple[Tuple[str, ...], ...] = ()
     #: repository keys (``external_runtime``) that must be installed for the platform to be offered as a new experiment
@@ -346,7 +346,7 @@ class PlatformProvider:
     catalog_names_win: bool = False
     #: the experiment page shows the memory embedding settings of the platform
     embedding_in_details: bool = False
-    #: the experiment page shows the avatar mode and the forum-style embedding settings
+    #: the experiment page shows the avatar mode and the threaded-style embedding settings
     avatar_settings_page: bool = False
     #: plugin agents can act on the platform (they write to the Standard server's ``post`` and ``user_mgmt`` tables)
     plugin_agents: bool = False
@@ -430,7 +430,7 @@ class PlatformProvider:
     # --- admin: client pages ------------------------------------------------------------------------------------
 
     def client_mode(self, simulator_type: str) -> str:
-        """Route/template family of the clients of an experiment: ``standard``, ``forum`` or ``hpc``."""
+        """Route/template family of the clients of an experiment: a family key declared by the platform (``standard`` and ``hpc`` are the shared ones)."""
         return "hpc" if simulator_type == HPC else "standard"
 
     def opinion_mode(self, simulator_type: str) -> str:
@@ -455,7 +455,7 @@ class PlatformProvider:
 
     # --- admin: client files and execution ----------------------------------------------------------------------
 
-    #: whether the client file carries the run length in ``simulation.days`` / ``simulation.num_days`` (a forum client
+    #: whether the client file carries the run length in ``simulation.days`` / ``simulation.num_days`` (a threaded client
     #: file is validated against a strict schema that has neither)
     client_file_has_simulation_days: bool = True
     #: prompt files, besides ``prompts.json``, that a client of this platform owns in the experiment folder
@@ -634,8 +634,7 @@ class PlatformProvider:
     ) -> Tuple[str, Optional[str]]:
         """``(simulator type, error)`` for a new experiment of this platform.
 
-        ``available`` says which runtimes are installed (keys: ``microblogging``, ``hpc``, ``forum``, ``forum_hpc``,
-        ``photo_sharing``, ``instant_messaging``, ``dating``). ``error`` is the translated reason the experiment
+        ``available`` says which runtimes are installed (keyed by the runtime key each platform declares). ``error`` is the translated reason the experiment
         cannot be created, or ``None``.
         """
         return (HPC if simulator_type == HPC else STANDARD), None

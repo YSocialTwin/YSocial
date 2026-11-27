@@ -2,12 +2,11 @@
 """
 Process runner module for YSocial simulation.
 
-Merged from y_web/utils/y_server_process_runner.py and
-y_web/utils/y_client_process_runner.py.
+Merged from the former server and client process runners of ``y_web/utils``.
 
 Entry points:
-  run_server_main() — start a YServer subprocess (formerly main() in y_server_process_runner)
-  run_client_main() — start a YClient subprocess (formerly main() in y_client_process_runner)
+  run_server_main() — start a server subprocess (formerly main() of the server process runner)
+  run_client_main() — start a client subprocess (formerly main() of the client process runner)
 
 Both legacy modules are kept as thin shims for backward compatibility.
 """
@@ -42,7 +41,7 @@ def run_server_main():
     parser.add_argument(
         "--server-repo",
         default="",
-        help="Folder of the repository that provides y_server (default: declared by the platform)",
+        help="Folder of the repository that provides the server (default: declared by the platform)",
     )
 
     args = parser.parse_args()
@@ -394,7 +393,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         # Get writable path for experiment data (where experiments are stored)
         writable_base = get_writable_path()
 
-        # Add platform-specific external client modules ahead of any other y_client package.
+        # Add platform-specific external client modules ahead of any other client package.
         client_package_dir = _resolve_client_package_dir(base_path, exp.platform_type)
         if client_package_dir in sys.path:
             sys.path.remove(client_package_dir)

@@ -1421,7 +1421,7 @@ def _build_client_creation_context(idexp, recsys_mode):
     crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
     # ``recsys_mode`` is one simulator name or several (clients of some platforms get the "Standard"
-    # catalogue plus the recommenders reserved to forums, e.g. HotRanking).
+    # catalogue plus the recommenders reserved to some platforms, e.g. HotRanking).
     if isinstance(recsys_mode, str) or recsys_mode is None:
         recsys_mode = (recsys_mode,)
     recsys_modes_lower = [str(m or "").lower() for m in recsys_mode]

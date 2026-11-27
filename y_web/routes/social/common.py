@@ -781,7 +781,7 @@ def update_profile_data(exp_id, user_id):
     if request.form.get("frecsys_type") is not None:
         user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
-    # Forums have no picture/header fields: leave those untouched when absent.
+    # Some platforms have no picture/header fields: leave those untouched when absent.
     profile_pic = request.form.get("profile_pic")
     cover_image = request.form.get("cover_image")
     if "profile_pic" in request.form:

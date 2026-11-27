@@ -3,8 +3,8 @@
 A simulation repository declares a platform in the ``"platform"`` section of its ``meta/registry.json``::
 
     "platform": {
-        "key": "dating",                       # platform type stored in the experiments
-        "id": "ydating",                       # optional: identity of the repository (default: the key)
+        "key": "my_platform",                 # platform type stored in the experiments
+        "id": "ymyplatform",                     # optional: identity of the repository (default: the key)
         "api_version": "1.0",                  # PLATFORM_API the provider was written for
         "provider": "ysocial_platform.provider:DatingPlatform"   # PlatformProvider subclass
     }

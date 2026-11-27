@@ -56,7 +56,7 @@ _local_terminate_process = _terminate_process
 
 
 def _server_repo_of(exp) -> str:
-    """Folder of the repository whose y_server serves the experiment (declared by its platform)."""
+    """Folder of the repository whose server serves the experiment (declared by its platform)."""
     provider = registry.for_experiment(exp)
     return provider.server_label if provider else ""
 
@@ -525,7 +525,7 @@ def get_server_process_status(exp_id):
 
 def start_server(exp):
     """
-    Start the y_server using subprocess.Popen.
+    Start the platform server using subprocess.Popen.
 
     This function launches a server process for an experiment. For PostgreSQL databases,
     it uses gunicorn WSGI server. For SQLite databases, it uses the standard Python
