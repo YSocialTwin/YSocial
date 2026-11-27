@@ -1,4 +1,17 @@
 {
   "_note": "Declared exceptions of the zero-dependency goal. Each one needs a reason and the decision (D1-D6) that justifies it.",
-  "exceptions": []
+  "exceptions": [
+    {
+      "path": "y_web/legacy_names.py",
+      "reason": "Names of the first engines and of the old process flags, honoured with a DeprecationWarning or alongside the neutral ones (D3); removed with the platform API 2.0."
+    },
+    {
+      "path": "y_web/sdk/content.py",
+      "reason": "Deprecated SDK alias process_reddit_post of split_title_and_body, kept until the platform API 2.0 (D3)."
+    },
+    {
+      "path": "y_web/src/content/text_utils.py",
+      "reason": "Same deprecated alias, reached through y_web.sdk.text_utils (the very same module); removed with the platform API 2.0 (D3)."
+    }
+  ]
 }

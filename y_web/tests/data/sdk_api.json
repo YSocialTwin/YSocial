@@ -80,6 +80,7 @@
         "extract_article_info": "(url)",
         "normalize_hashtag": "(tag)",
         "process_reddit_post": "(text, allow_legacy_blankline_title=True)",
+        "split_title_and_body": "(text, allow_legacy_blankline_title=True)",
         "strip_tags": "(html)",
         "toxicity": "(text, username, post_id, db)",
         "vader_sentiment": "(text)"

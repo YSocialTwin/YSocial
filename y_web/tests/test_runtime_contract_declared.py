@@ -10,12 +10,46 @@ from y_web.platforms.base import StandardRuntime
 pytestmark = pytest.mark.unit
 
 
-def test_runtime_defaults_are_the_names_of_the_current_engines():
-    runtime = StandardRuntime(server_repo="S", client_repo="C", fake_agent_module="m")
+def test_a_runtime_that_declares_nothing_gets_the_legacy_names_and_a_warning():
+    with pytest.warns(DeprecationWarning):
+        runtime = StandardRuntime(
+            server_repo="S", client_repo="C", fake_agent_module="m"
+        )
     assert runtime.server_script == "y_server_run.py"
     assert runtime.server_app_module == "y_server"
     assert runtime.client_class_path == "y_client.clients:YClientWeb"
-    assert runtime.client_federation_module == "y_client.federation"
+    assert runtime.client_federation_module is None
+
+
+def test_a_runtime_that_declares_everything_gets_no_warning(recwarn):
+    runtime = StandardRuntime(
+        server_repo="S",
+        client_repo="C",
+        fake_agent_module="m",
+        server_script="run.py",
+        server_app_module="srv",
+        client_class_path="cli:Client",
+        client_federation_module="cli.fed",
+    )
+    assert not [w for w in recwarn if w.category is DeprecationWarning]
+    assert (runtime.server_script, runtime.server_app_module) == ("run.py", "srv")
+    assert runtime.client_class_path == "cli:Client"
+    assert runtime.client_federation_module == "cli.fed"
+
+
+def test_the_installed_standard_platforms_declare_their_runtime(recwarn):
+    from y_web.platforms import registry
+
+    for provider in registry.providers():
+        runtime = getattr(provider, "standard_runtime", None)
+        if runtime is not None:
+            assert runtime.server_script and runtime.server_app_module
+            assert runtime.client_class_path
+    assert not [
+        w
+        for w in recwarn
+        if w.category is DeprecationWarning and "StandardRuntime" in str(w.message)
+    ]
 
 
 def test_server_config_file_follows_the_runtime_kind_and_the_platform(monkeypatch):
@@ -39,6 +73,8 @@ def test_a_platform_names_its_own_entry_script(monkeypatch):
         client_repo="NewClient",
         fake_agent_module="m",
         server_script="run_it.py",
+        server_app_module="srv",
+        client_class_path="cli:Client",
     )
     provider = SimpleNamespace(standard_runtime=runtime)
     monkeypatch.setattr(server.registry, "resolve", lambda *a, **k: provider)
@@ -58,4 +94,4 @@ def test_the_federation_module_is_the_one_the_client_declares():
         federation_hooks.use_federation_module("a_module_that_does_not_exist")
         assert federation_hooks.federation_module() is None
     finally:
-        federation_hooks.use_federation_module("y_client.federation")
+        federation_hooks.use_federation_module(None)

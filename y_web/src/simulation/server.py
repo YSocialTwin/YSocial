@@ -737,7 +737,6 @@ def start_server(exp):
             {
                 "YSERVER_CONFIG": config,
                 "YSERVER_LOG_FILE": str(Path(config).parent / "_server.log"),
-                "Y_SERVER_SUBPROCESS": "1",
                 "Y_SOCIAL_SUBPROCESS": "1",
             }
         )
@@ -857,7 +856,6 @@ def start_server(exp):
         env = build_subprocess_env(
             {
                 "YSERVER_LOG_FILE": str(log_dir / "_server.log"),
-                "Y_SERVER_SUBPROCESS": "1",
                 "Y_SOCIAL_SUBPROCESS": "1",
             }
         )

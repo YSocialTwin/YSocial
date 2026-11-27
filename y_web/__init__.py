@@ -23,6 +23,8 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
 
+from y_web import legacy_names as _legacy_names
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -129,10 +131,8 @@ def cleanup_db_jupyter_with_new_app():
 
 def _is_simulation_subprocess():
     """Return True when running in a spawned simulation subprocess."""
-    return (
-        os.environ.get("Y_CLIENT_SUBPROCESS") == "1"
-        or os.environ.get("Y_SERVER_SUBPROCESS") == "1"
-        or os.environ.get("Y_SOCIAL_SUBPROCESS") == "1"
+    return os.environ.get("Y_SOCIAL_SUBPROCESS") == "1" or any(
+        os.environ.get(flag) == "1" for flag in _legacy_names.SUBPROCESS_FLAGS
     )
 
 

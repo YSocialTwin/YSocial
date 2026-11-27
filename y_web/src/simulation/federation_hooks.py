@@ -2,9 +2,9 @@
 
 YWeb does not run `YClient.run_simulation`: `process_runner.run_simulation` and `agent_sampler.process_agent` drive the
 slots of the Standard clients. The federation hooks that `run_simulation` of the client packages applies
-(adopt_provisioned, filter_pool, scale_actions) are applied here, with the same functions of `y_client.federation`.
+(adopt_provisioned, filter_pool, scale_actions) are applied here, with the same functions of the federation module the platform's client declares.
 
-Everything is a no-op, with no request and no random draw, when the client package has no `y_client.federation`, when
+Everything is a no-op, with no request and no random draw, when the client package has no federation module, when
 the federation is not enabled in this process (`federation.install` was not called or the section is off), or when a
 hook fails: the lists and numbers returned are then the ones received. The client module is imported when needed, never
 the SDK."""
@@ -14,7 +14,9 @@ import sys
 DEFAULT_ACTIVITY_PROFILE = "Always On"
 
 
-_FEDERATION_MODULE = "y_client.federation"
+_FEDERATION_MODULE = (
+    None  # set by the client process from the platform's runtime declaration
+)
 
 
 def use_federation_module(name):

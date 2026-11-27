@@ -141,6 +141,8 @@ def test_without_a_federation_the_hooks_return_their_inputs_and_draw_nothing(
 def test_the_module_is_none_when_the_client_package_has_no_federation_or_it_is_off(
     monkeypatch,
 ):
+    # the module the client's runtime declares (here the one the first engines use)
+    monkeypatch.setattr(hooks, "_FEDERATION_MODULE", "y_client.federation")
     monkeypatch.setitem(
         sys.modules, "y_client", None
     )  # not importable: a client package without federation

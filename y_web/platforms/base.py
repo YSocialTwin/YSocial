@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import importlib
 import os
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import SimpleNamespace
@@ -273,13 +274,30 @@ class StandardRuntime:
     #: whether agents have activity profiles (backfilled in old agent files, pages post while their profile is on)
     activity_profiles: bool = False
     #: entry script of the server, in the root of its repository (started with ``-c <configuration>``)
-    server_script: str = "y_server_run.py"
+    server_script: str = ""
     #: module of the server that exposes the Flask ``app`` the server process runs
-    server_app_module: str = "y_server"
+    server_app_module: str = ""
     #: class of the client the client process runs, as ``module:Class``
-    client_class_path: str = "y_client.clients:YClientWeb"
+    client_class_path: str = ""
     #: module of the client that takes part in a World Simulation (``None``: the client has none)
-    client_federation_module: Optional[str] = "y_client.federation"
+    client_federation_module: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        # ``PLATFORM_API`` 1.6: a platform declares these; an empty one keeps the old behaviour for now
+        from y_web import legacy_names as legacy
+
+        for name, value in (
+            ("server_script", legacy.SERVER_SCRIPT),
+            ("server_app_module", legacy.SERVER_APP_MODULE),
+            ("client_class_path", legacy.CLIENT_CLASS_PATH),
+        ):
+            if not getattr(self, name):
+                warnings.warn(
+                    f"StandardRuntime.{name} is not declared: using {value!r}, which the platform API 2.0 will not do",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
+                object.__setattr__(self, name, value)
 
 
 #: frontend settings every platform that does not offer all of them honours

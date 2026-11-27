@@ -13,11 +13,16 @@ def extract_article_info(url):
     return target(url)
 
 
-def process_reddit_post(text, allow_legacy_blankline_title=True):
-    """Process and format a post written as a title and a body."""
-    from y_web.src.content.text_utils import process_reddit_post as target
+def split_title_and_body(text, allow_legacy_blankline_title=True):
+    """Split a post written as a title and a body, and clean the markdown artifacts (``PLATFORM_API`` 1.6)."""
+    from y_web.src.content.text_utils import split_title_and_body as target
 
     return target(text, allow_legacy_blankline_title)
+
+
+def process_reddit_post(text, allow_legacy_blankline_title=True):
+    """Deprecated name of :func:`split_title_and_body`, kept until the platform API 2.0."""
+    return split_title_and_body(text, allow_legacy_blankline_title)
 
 
 def strip_tags(html):
@@ -55,6 +60,7 @@ __all__ = [
     "extract_article_info",
     "normalize_hashtag",
     "process_reddit_post",
+    "split_title_and_body",
     "strip_tags",
     "toxicity",
     "vader_sentiment",
