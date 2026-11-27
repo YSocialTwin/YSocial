@@ -65,7 +65,7 @@
     "source": "builtin",
     "description": "Hosts the microblogging platform the agents interact with (server side).",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "forum_client",
@@ -133,7 +133,7 @@
     "source": "builtin",
     "description": "Hosts the forum platform the agents interact with (server side).",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "hpc_simulator",
@@ -202,7 +202,7 @@
     "source": "builtin",
     "description": "Simulation runtime for photo-sharing experiments, with an Instagram-like platform.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "instant_messaging",
@@ -237,7 +237,7 @@
     "source": "builtin",
     "description": "Simulation runtime for instant-messaging experiments, with Telegram-like chats, groups, channels and forum topics.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "dating",
@@ -272,7 +272,7 @@
     "source": "builtin",
     "description": "Simulation runtime for Tinder-like dating experiments: profiles, swipes, mutual matches, private conversations and interchangeable matching recommenders.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "creator",
@@ -342,7 +342,7 @@
     "source": "builtin",
     "description": "Ray runtime for Reddit-style forum experiments: threads, comments, votes, follows and interchangeable content recommenders on HPC clusters.",
     "authors": [],
-    "min_ysocial_version": null
+    "min_ysocial_version": "4.1.0"
   },
   {
     "key": "federation",
