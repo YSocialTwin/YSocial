@@ -38,9 +38,8 @@ echo "  main hashes recorded in $STATE_DIR/main_hashes.txt"
 
 echo "== versions"
 if [ -f "$CORE/VERSION" ]; then v="$(tr -d '[:space:]' < "$CORE/VERSION")"; [ "$v" = "4.1.0" ] && ok "core VERSION is $v" || bad "core VERSION is $v, expected 4.1.0"; fi
-for f in external/YDating/meta/info.json external/YInstantMessaging/meta/info.json; do
-  # dev0 is fine for a -rc tag; it must go before a final v0.1.0
-  grep -q 'dev0' "$CORE/$f" && ! grep -qP '\tv0\.1\.0-rc' "$CORE/scripts/release/manifest.tsv" && warn "$f still says dev0 (run scripts/release/drop_dev_suffix.sh before tagging v0.1.0)"
+for f in external/YDating/meta/info.json external/YInstantMessaging/meta/info.json external/YFederation/meta/info.json; do
+  grep -q 'dev0' "$CORE/$f" && warn "$f still says dev0 (run scripts/release/drop_dev_suffix.sh before tagging v0.1.0)"
 done
 
 if [ "$QUICK" = "0" ]; then
