@@ -143,3 +143,20 @@ def test_a_platform_without_a_driver_is_not_offered_and_is_refused_clearly(
     with pytest.raises(base.MaterializationAdapterError) as error:
         base.get_adapter_for(exp)
     assert error.value.http_status == 409
+
+
+def test_instant_messaging_applies_scenarios_through_its_own_platform(discovery):
+    """The code that applies a plan lives in YInstantMessaging, not in the core: the driver hands it to the adapter.
+
+    (The test aliases of ``y_web.src.im`` hide a missing core module, so this checks the module the adapter really
+    uses: it must not be one of those aliases, and the plugin must not look for one.)
+    """
+    from y_web.sdk.extensions.platforms import registry as platforms
+
+    if not any(p.key == "instant_messaging" for p in platforms.all_providers()):
+        pytest.skip("YInstantMessaging is not installed")
+    driver = discovery.driver_for(_Exp("instant_messaging", "HPC"))
+    host = driver.adapter._host
+    assert host is not None
+    assert callable(host.apply_plan)
+    assert not host.__name__.startswith("y_web.src.im"), host.__name__

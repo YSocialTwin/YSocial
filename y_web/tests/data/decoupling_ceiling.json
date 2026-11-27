@@ -2,7 +2,7 @@
   "_note": "Ceilings of the decoupling gate: they can only go down. Lower a value when the code gets cleaner, never raise it.",
   "platform_mentions_in_core": 464,
   "extension_outside_sdk": {
-    "ScenarioDesign": 2,
+    "ScenarioDesign": 0,
     "TrainingModules": 0,
     "frontend_adds-on": 0,
     "reactive_agents": 0
