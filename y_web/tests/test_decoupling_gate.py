@@ -17,7 +17,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 EXTERNAL = ROOT / "external"
 CEILING = json.loads(
-    (Path(__file__).parent / "data" / "decoupling_ceiling.json").read_text(encoding="utf-8")
+    (Path(__file__).parent / "data" / "decoupling_ceiling.json").read_text(
+        encoding="utf-8"
+    )
 )
 
 
@@ -64,3 +66,21 @@ def test_core_does_not_name_platforms_more_often():
         f"y_web names platforms {count} times (ceiling {ceiling}): "
         "route platform-specific behaviour through the provider, not through a name check."
     )
+
+
+def test_core_does_not_name_platforms_more_often_v2():
+    """Whole-word measure: no false positives, history and declared exceptions left out."""
+    result = metrics.count_mentions_v2(ROOT)
+    ceiling = CEILING["platform_mentions_in_core_v2"]
+    assert result["mentions"] <= ceiling, (
+        f"y_web names platforms {result['mentions']} times by the whole-word measure (ceiling {ceiling}): "
+        "route platform-specific behaviour through the provider."
+    )
+
+
+def test_allowlist_entries_are_justified():
+    for entry in metrics.load_allowlist():
+        assert entry.get("path") and entry.get("reason"), entry
+        assert (
+            ROOT / entry["path"]
+        ).exists(), f"stale allowlist entry: {entry['path']}"

@@ -1,0 +1,4 @@
+{
+  "_note": "Declared exceptions of the zero-dependency goal. Each one needs a reason and the decision (D1-D6) that justifies it.",
+  "exceptions": []
+}
