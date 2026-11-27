@@ -207,6 +207,10 @@ def check(saved, now, skip_repos=frozenset()):
         )
         if repo == "YWeb":
             exact |= moved_exact  # moved to a platform's own repository
+            if skip_repos and rel not in now["json"]:
+                # The whole file left the core, so its prompts live in a platform repository that
+                # is not checked out here (CI): they are verified where that repository is present.
+                continue
         for key, h in keys.items():
             if now["json"].get(rel, {}).get(key) == h or h in exact:
                 continue
@@ -222,6 +226,8 @@ def check(saved, now, skip_repos=frozenset()):
         if repo == "YWeb":
             exact |= moved_exact
             pack_norm = pack_norm | moved_norm
+            if skip_repos and rel not in now["code"]:
+                continue  # file moved to a platform repository that is not checked out here
         for h, nh in records:
             if h not in exact and nh not in pack_norm:
                 problems.append(
