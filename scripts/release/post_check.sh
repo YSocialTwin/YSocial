@@ -29,8 +29,8 @@ v="$(tr -d '[:space:]' < VERSION)"; [ "$v" = "4.1.0" ] && ok "VERSION $v" || bad
 "$PY" scripts/packaging/sync_builtin_plugins.py --check-latest >/dev/null 2>&1 && ok "built-in copy equals the registry main (release gate)" || bad "built-in copy differs from the registry main (sync it)"
 if [ "$FRESH" = "1" ]; then
   echo "== clean install on main (long)"
-  sed -e 's/^\(YSocial\|ScenarioDesign\|TrainingModules\|frontend_adds-on\|reactive_agents\|YServer\|YServerReddit\|YSimulator\|YForum\|YPhotoSharing\|YInstantMessaging\|YDating\|YCreator\):.*/\1:main/' \
-      -e 's/^YCreator:pre-merge-phase7"/YCreator:main"/' -e "s#^HERE=.*#HERE=$CORE#" scripts/dev/fresh_install_check.sh > "$STATE_DIR/fresh_on_main.sh"
+  sed -e 's/:\(pre-merge-[a-z0-9]*\|decouple-zero\|platform-decoupling\)/:main/' -e "s#^HERE=.*#HERE=$CORE#" \
+      scripts/dev/fresh_install_check.sh > "$STATE_DIR/fresh_on_main.sh"
   WITH_YCREATOR=1 WORK="${WORK:-/tmp/ysocial_fresh_main}" bash "$STATE_DIR/fresh_on_main.sh" && ok "clean install" || bad "clean install (see its report.md)"
 fi
 echo; [ "$FAILED" = "0" ] && echo "post_check: OK" || { echo "post_check: $FAILED problem(s)"; exit 1; }
