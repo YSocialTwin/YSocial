@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 13:48+0000\n"
+"POT-Creation-Date: 2026-11-27 08:47+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -331,6 +331,10 @@ msgid "%(username)s avatar"
 msgstr "Avatar di %(username)s"
 
 #, python-format
+msgid "%(value)s is outside the scale %(low)s to %(high)s"
+msgstr ""
+
+#, python-format
 msgid "(%(count)s total)"
 msgstr "(%(count)s in totale)"
 
@@ -642,6 +646,9 @@ msgid ""
 msgstr ""
 "Una chat privata non è individuabile: gli agenti non vi entrano mai da soli, quindi usala solo "
 "per chat che restano quasi vuote."
+
+msgid "A publication with this idempotency key is already running."
+msgstr ""
 
 msgid "A report also blocks the profile"
 msgstr "Una segnalazione blocca anche il profilo"
@@ -2336,6 +2343,9 @@ msgstr "Non è possibile mescolare esperimenti HPC ed esperimenti standard nello
 msgid "Cannot mix Standard experiments with HPC experiments in the same group."
 msgstr "Non è possibile mescolare esperimenti standard ed esperimenti HPC nello stesso gruppo."
 
+msgid "Cannot publish while the experiment is running."
+msgstr ""
+
 msgid "Cannot remove experiments from a running group"
 msgstr "Impossibile rimuovere esperimenti da un gruppo in esecuzione"
 
@@ -3139,10 +3149,10 @@ msgstr ""
 
 msgid ""
 "Configure how many entries are retrieved from RSS feeds, Reddit endpoints, and database fallbacks"
-" during forum simulations."
+" during simulations."
 msgstr ""
 "Configura quante voci vengono recuperate da feed RSS, endpoint Reddit e fallback del database "
-"durante le simulazioni del forum."
+"durante le simulazioni."
 
 msgid ""
 "Configure how opinions are distributed across different population segments for each simulation "
@@ -5426,6 +5436,18 @@ msgid "Experiment #%(id)s"
 msgstr "Esperimento n. %(id)s"
 
 #, python-format
+msgid ""
+"Experiment %(experiment)r has no HPC database yet -- it must be started at least once (even if "
+"since stopped) before scenarios can be published to it."
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment %(experiment)r has no HPC database yet -- it must be started at least once before "
+"scenarios can be validated/published against it."
+msgstr ""
+
+#, python-format
 msgid "Experiment '%(created_names)s' successfully created as part of copied group '%(target_group)s'."
 msgstr ""
 "Esperimento '%(created_names)s' creato con successo come parte del gruppo copiato "
@@ -5874,13 +5896,13 @@ msgstr ""
 "allora il proprio valore predefinito."
 
 msgid ""
-"Fields stored with the agents that only some platforms read, in groups: appearance, Dating and "
-"Photo Sharing fields, and any other custom field. Each card shows how many agents have the field "
-"and how its values are distributed."
+"Fields stored with the agents that only some platforms read, in groups: appearance, platform-"
+"specific fields, and any other custom field. Each card shows how many agents have the field and "
+"how its values are distributed."
 msgstr ""
 "Campi salvati con gli agenti che solo alcune piattaforme leggono, in gruppi: aspetto, campi "
-"Dating e Photo Sharing e qualsiasi altro campo personalizzato. Ogni scheda mostra quanti agenti "
-"hanno il campo e come sono distribuiti i valori."
+"specifici di una piattaforma e qualsiasi altro campo personalizzato. Ogni scheda mostra quanti "
+"agenti hanno il campo e come sono distribuiti i valori."
 
 msgid "Fields you can use:"
 msgstr "Campi utilizzabili:"
@@ -6055,20 +6077,8 @@ msgstr "Forum (cioè Reddit)"
 msgid "Forum HPC experiments are unavailable because YForum is not present."
 msgstr "Gli esperimenti Forum HPC non sono disponibili perché YForum non è presente."
 
-msgid "Forum Image Feed Assignment"
-msgstr "Assegnazione dei feed di immagini del forum"
-
 msgid "Forum Image Feeds"
 msgstr "Feed di immagini del forum"
-
-msgid "Forum Image Resources"
-msgstr "Risorse di immagini del forum"
-
-msgid "Forum RSS Feed Assignment"
-msgstr "Assegnazione dei feed RSS del forum"
-
-msgid "Forum RSS Resources"
-msgstr "Risorse RSS del forum"
 
 msgid "Forum avatar mode updated successfully."
 msgstr "Modalità avatar del forum aggiornata con successo."
@@ -6936,6 +6946,9 @@ msgstr "Commento all'immagine (sistema)"
 msgid "Image Commentary (User)"
 msgstr "Commento all'immagine (utente)"
 
+msgid "Image Feed Assignment"
+msgstr "Assegnazione dei feed di immagini"
+
 msgid "Image Feed Limits"
 msgstr "Limiti dei feed di immagini"
 
@@ -6950,6 +6963,9 @@ msgstr "Modello di generazione di immagini (basato su transformer)"
 
 msgid "Image Processing"
 msgstr "Elaborazione delle immagini"
+
+msgid "Image Resources"
+msgstr "Risorse di immagini"
 
 msgid "Image Transcription (Optional)"
 msgstr "Trascrizione delle immagini (facoltativo)"
@@ -7262,10 +7278,10 @@ msgstr "Interessi (separati da virgole)"
 
 msgid ""
 "Interests remain part of the reusable resource so the same subreddit behaves consistently when "
-"reused across forum simulations."
+"reused across simulations."
 msgstr ""
 "Gli interessi restano parte della risorsa riutilizzabile, così lo stesso subreddit si comporta in"
-" modo coerente quando è riusato in più simulazioni del forum."
+" modo coerente quando è riusato in più simulazioni."
 
 msgid "Interface language"
 msgstr "Lingua dell'interfaccia"
@@ -8093,18 +8109,18 @@ msgstr "Cerca chat, utenti, gruppi, canali o post dalla barra di ricerca."
 
 msgid ""
 "Look of the agent. An attribute left empty is not assigned. The traits are stored with the agent "
-"and read by every platform that needs them (the Dating profile photos, for one)."
+"and read by every platform that needs them (the profile photos, for one)."
 msgstr ""
 "Aspetto dell'agente. Un attributo lasciato vuoto non viene assegnato. I tratti sono salvati con "
-"l'agente e letti da ogni piattaforma che ne ha bisogno (ad esempio le foto del profilo Dating)."
+"l'agente e letti da ogni piattaforma che ne ha bisogno (ad esempio le foto del profilo)."
 
 msgid ""
 "Look of the agents. An attribute with no value selected is not assigned. The traits are stored "
-"with the agent and read by every platform that needs them (the Dating profile photos, for one)."
+"with the agent and read by every platform that needs them (the profile photos, for one)."
 msgstr ""
 "Aspetto degli agenti. Un attributo senza valori selezionati non viene assegnato. I tratti sono "
 "salvati con l'agente e letti da ogni piattaforma che ne ha bisogno (ad esempio le foto del "
-"profilo Dating)."
+"profilo)."
 
 msgid "Look of the photos"
 msgstr "Aspetto delle foto"
@@ -10769,6 +10785,84 @@ msgstr "Numero giornaliero di post positivi, neutri e negativi."
 msgid "Post"
 msgstr "Post"
 
+#, python-format
+msgid "Post %(tmp_id)r, metadata %(metadata_type)r: %(message)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: %(count)s reactions are requested but the experiment has only %(available)s "
+"other agents."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: %(message)s"
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: author_user_id=%(author_user_id)r does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: author_user_id=%(author_user_id)s does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: day and hour must be non-negative integers."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: day and hour must be set together."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: emotion_id=%(emotion_id)r does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: emotion_id=%(emotion_id)s does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: generation settings are invalid."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: hashtags must be at most 20 characters."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: mentions are available only for comments and must name an experiment agent."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: not enough other agents to give it %(count)s reactions."
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: opinion must be numeric, linked to a topic, and within its selected admin scale "
+"(%(reason)s)."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: select emotions from this experiment's vocabulary."
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: the topic %(topic)r is not in this experiment and is longer than 20 characters "
+"(the limit for a new topic). Choose an existing topic or shorten it."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: topic_id=%(topic_id)r does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: topic_id=%(topic_id)s does not exist."
+msgstr ""
+
 msgid "Post ID"
 msgstr "ID del post"
 
@@ -11309,18 +11403,24 @@ msgstr "Guida rapida"
 msgid "RSS Feed"
 msgstr "Feed RSS"
 
+msgid "RSS Feed Assignment"
+msgstr "Assegnazione dei feed RSS"
+
 msgid "RSS Feed Limits"
 msgstr "Limiti dei feed RSS"
 
 msgid "RSS Feeds"
 msgstr "Feed RSS"
 
+msgid "RSS Resources"
+msgstr "Risorse RSS"
+
 msgid ""
 "RSS and Reddit JSON feed sources are now stored in the dashboard database and can be reused "
-"across multiple forum experiments."
+"across multiple experiments."
 msgstr ""
 "Le fonti di feed RSS e JSON di Reddit sono ora salvate nel database della dashboard e possono "
-"essere riusate in più esperimenti del forum."
+"essere riusate in più esperimenti."
 
 msgid "RSS feed URL is required."
 msgstr "L'URL del feed RSS è obbligatorio."
@@ -11992,32 +12092,26 @@ msgstr "Ricordi recuperati (caratteri)"
 msgid "Retry"
 msgstr "Riprova"
 
-msgid "Reusable Forum Image Resources"
-msgstr "Risorse di immagini del forum riutilizzabili"
-
-msgid "Reusable Forum RSS Resources"
-msgstr "Risorse RSS del forum riutilizzabili"
-
 msgid "Reusable Image Resources"
 msgstr "Risorse di immagini riutilizzabili"
 
 msgid "Reusable RSS Resources"
 msgstr "Risorse RSS riutilizzabili"
 
+msgid "Reusable RSS feed deleted."
+msgstr "Feed RSS riutilizzabile eliminato."
+
+msgid "Reusable RSS feed saved."
+msgstr "Feed RSS riutilizzabile salvato."
+
 msgid "Reusable RSS feeds"
 msgstr "Feed RSS riutilizzabili"
 
-msgid "Reusable forum RSS feed deleted."
-msgstr "Feed RSS riutilizzabile del forum eliminato."
+msgid "Reusable image feed deleted."
+msgstr "Feed di immagini riutilizzabile eliminato."
 
-msgid "Reusable forum RSS feed saved."
-msgstr "Feed RSS riutilizzabile del forum salvato."
-
-msgid "Reusable forum image feed deleted."
-msgstr "Feed di immagini riutilizzabile del forum eliminato."
-
-msgid "Reusable forum image feed saved."
-msgstr "Feed di immagini riutilizzabile del forum salvato."
+msgid "Reusable image feed saved."
+msgstr "Feed di immagini riutilizzabile salvato."
 
 msgid "Reusable image source"
 msgstr "Fonte di immagini riutilizzabile"
@@ -12216,11 +12310,11 @@ msgstr "Salva la configurazione"
 msgid "Save Embedding Settings"
 msgstr "Salva le impostazioni di embedding"
 
+msgid "Save Feed Assignment"
+msgstr "Salva l'assegnazione dei feed"
+
 msgid "Save Feed Limits"
 msgstr "Salva i limiti dei feed"
-
-msgid "Save Forum Feed Assignment"
-msgstr "Salva l'assegnazione dei feed del forum"
 
 msgid "Save Image Feed Assignment"
 msgstr "Salva l'assegnazione dei feed di immagini"
@@ -12295,19 +12389,19 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Saving this page still writes the standard %(file)s experiment file, so forum execution keeps the"
-" same contract."
+"Saving this page still writes the standard %(file)s experiment file, so execution keeps the same "
+"contract."
 msgstr ""
 "Salvare questa pagina scrive comunque il file standard %(file)s dell'esperimento, quindi "
-"l'esecuzione del forum mantiene lo stesso contratto."
+"l'esecuzione mantiene lo stesso contratto."
 
 #, python-format
 msgid ""
-"Saving this page still writes the standard %(file)s experiment file, so the existing forum "
-"runtime remains unchanged."
+"Saving this page still writes the standard %(file)s experiment file, so the existing runtime "
+"remains unchanged."
 msgstr ""
 "Salvare questa pagina scrive comunque il file standard %(file)s dell'esperimento, quindi il "
-"runtime del forum esistente non cambia."
+"runtime esistente non cambia."
 
 msgid "Say what you are looking for"
 msgstr "Indica cosa cerchi"
@@ -12317,6 +12411,13 @@ msgstr "Scale-free (Barabási-Albert)"
 
 msgid "Scale of the stress and reward changes; 1 is the default."
 msgstr "Scala delle variazioni di stress e ricompensa; 1 è il valore predefinito."
+
+msgid "Scenario has no threads to publish."
+msgstr ""
+
+#, python-format
+msgid "Scenario is currently being published by user %(locked_by)r."
+msgstr ""
 
 msgid "Schedule"
 msgstr "Pianificazione"
@@ -12694,19 +12795,18 @@ msgstr ""
 "suoi articoli nei canali."
 
 msgid ""
-"Select which reusable RSS resources should be assigned to this forum experiment. Feed validation "
-"and creation now live in the shared forum resource workspace."
+"Select which reusable RSS resources should be assigned to this experiment. Feed validation and "
+"creation now live in the shared resource workspace."
 msgstr ""
-"Seleziona quali risorse RSS riutilizzabili assegnare a questo esperimento del forum. La convalida"
-" e la creazione dei feed si fanno ora nell'area di lavoro condivisa delle risorse del forum."
+"Seleziona quali risorse RSS riutilizzabili assegnare a questo esperimento. La convalida e la "
+"creazione dei feed si fanno ora nell'area di lavoro condivisa delle risorse."
 
 msgid ""
-"Select which reusable subreddit image feeds should be assigned to this forum experiment. "
-"Validation and creation now live in the shared forum image resource workspace."
+"Select which reusable subreddit image feeds should be assigned to this experiment. Validation and"
+" creation now live in the shared image resource workspace."
 msgstr ""
-"Seleziona quali feed di immagini di subreddit riutilizzabili assegnare a questo esperimento del "
-"forum. La convalida e la creazione si fanno ora nell'area di lavoro condivisa delle risorse di "
-"immagini del forum."
+"Seleziona quali feed di immagini di subreddit riutilizzabili assegnare a questo esperimento. La "
+"convalida e la creazione si fanno ora nell'area di lavoro condivisa delle risorse di immagini."
 
 msgid "Select..."
 msgstr "Seleziona..."
@@ -14158,6 +14258,11 @@ msgstr ""
 msgid "The app cannot be shown right now."
 msgstr "L'app non può essere mostrata in questo momento."
 
+msgid ""
+"The base experiment changed since this scenario was last opened; reload the scenario before "
+"publishing."
+msgstr ""
+
 #, python-format
 msgid "The bundle could not be imported: %(why)s"
 msgstr "Impossibile importare il bundle: %(why)s"
@@ -14807,20 +14912,20 @@ msgstr ""
 "un client in esecuzione mantiene i prompt con cui è partito."
 
 #, python-format
-msgid "These feeds live in the dashboard DB and can be assigned to any forum experiment from %(page)s."
+msgid "These feeds live in the dashboard DB and can be assigned to any experiment from %(page)s."
 msgstr ""
 "Questi feed risiedono nel database della dashboard e si possono assegnare a qualsiasi esperimento"
-" del forum da %(page)s."
+" da %(page)s."
 
 msgid "These options are mutually exclusive."
 msgstr "Queste opzioni si escludono a vicenda."
 
 msgid ""
 "These remain experiment-specific. Provide one URL per line for sources that should be pinned "
-"directly into this forum simulation."
+"directly into this simulation."
 msgstr ""
 "Restano specifici dell'esperimento. Indica un URL per riga per le fonti da fissare direttamente "
-"in questa simulazione del forum."
+"in questa simulazione."
 
 msgid ""
 "These settings belong to the whole experiment and are shared by every client: the rules of the "
@@ -14833,11 +14938,11 @@ msgstr ""
 "popolazione si imposta in ciascun client."
 
 msgid ""
-"These settings control how much external content is ingested during a forum simulation. Higher "
-"values increase variety but also startup and refresh costs."
+"These settings control how much external content is ingested during a simulation. Higher values "
+"increase variety but also startup and refresh costs."
 msgstr ""
-"Queste impostazioni controllano quanto contenuto esterno viene acquisito durante una simulazione "
-"del forum. Valori più alti aumentano la varietà ma anche i costi di avvio e aggiornamento."
+"Queste impostazioni controllano quanto contenuto esterno viene acquisito durante una simulazione."
+" Valori più alti aumentano la varietà ma anche i costi di avvio e aggiornamento."
 
 #, python-format
 msgid "These subreddit definitions are stored in the dashboard DB and can be assigned from %(page)s."
@@ -14867,6 +14972,14 @@ msgid ""
 msgstr ""
 "Questo client ad hoc richiede un modello LLM perché almeno un agente gestito usa un comportamento"
 " basato su LLM."
+
+#, python-format
+msgid "This adapter only publishes HPC experiments, got %(simulator_type)r."
+msgstr ""
+
+#, python-format
+msgid "This adapter only publishes Standard experiments, got %(simulator_type)r."
+msgstr ""
 
 msgid "This backend cannot take part in a World Simulation."
 msgstr "Questo backend non può partecipare a una World Simulation."
@@ -14915,6 +15028,12 @@ msgid ""
 msgstr ""
 "Questo esperimento usa modelli linguistici: per impostazione predefinita gli agenti li usano per "
 "tutto, dai testi alle immagini."
+
+#, python-format
+msgid ""
+"This experiment's Standard schema cannot store a link URL longer than %(max_length)s characters; "
+"shorten the URL (e.g. remove tracking query parameters) before publishing."
+msgstr ""
 
 msgid "This interaction is switched off for the experiment."
 msgstr "Questa interazione è disattivata per l'esperimento."
@@ -15008,6 +15127,10 @@ msgstr ""
 
 msgid "Thread"
 msgstr "Discussione"
+
+#, python-format
+msgid "Thread %(tmp_id)r has no posts."
+msgstr ""
 
 msgid "Thread Context Length"
 msgstr "Lunghezza del contesto della discussione"
@@ -16032,11 +16155,9 @@ msgid "Validate And Save RSS Resource"
 msgstr "Convalida e salva la risorsa RSS"
 
 msgid ""
-"Validate a source once, save it to the dashboard database, and reuse it across multiple forum "
+"Validate a source once, save it to the dashboard database, and reuse it across multiple "
 "experiments."
-msgstr ""
-"Convalida una fonte una volta, salvala nel database della dashboard e riusala in più esperimenti "
-"del forum."
+msgstr "Convalida una fonte una volta, salvala nel database della dashboard e riusala in più esperimenti."
 
 msgid ""
 "Validate and register reusable RSS news sources. Once saved, the same feed can be assigned to "
@@ -16046,11 +16167,11 @@ msgstr ""
 "essere assegnato a più esperimenti, su ogni piattaforma che condivide notizie."
 
 msgid ""
-"Validate subreddit-based image feeds once, store them centrally, and assign them to any forum "
+"Validate subreddit-based image feeds once, store them centrally, and assign them to any "
 "experiment as needed."
 msgstr ""
 "Convalida i feed di immagini basati su subreddit una volta, memorizzali in modo centralizzato e "
-"assegnali a qualsiasi esperimento del forum quando serve."
+"assegnali a qualsiasi esperimento quando serve."
 
 #, python-format
 msgid "Validated %(label)s."
@@ -17187,6 +17308,9 @@ msgstr "algoritmi"
 msgid "an integer"
 msgstr "un numero intero"
 
+msgid "an opinion needs a topic"
+msgstr ""
+
 msgid "and"
 msgstr "e"
 
@@ -17327,6 +17451,16 @@ msgstr "experiment_id è obbligatorio"
 msgid "experiments_per_group is required"
 msgstr "experiments_per_group è obbligatorio"
 
+msgid ""
+"external/YSimulator is not installed in this environment -- cannot publish to an HPC experiment's"
+" physical schema."
+msgstr ""
+
+msgid ""
+"external/YSimulator is not installed in this environment -- cannot validate against an HPC "
+"experiment's physical schema."
+msgstr ""
+
 msgid "failed"
 msgstr "non riuscita"
 
@@ -17458,6 +17592,9 @@ msgstr "nome, città, intenzione, bio, interesse"
 
 msgid "never"
 msgstr "mai"
+
+msgid "no opinion scale is selected"
+msgstr ""
 
 msgid "none published"
 msgstr "nessuna pubblicata"
@@ -17618,6 +17755,9 @@ msgstr "collegamento simbolico"
 
 msgid "the content is not available"
 msgstr "il contenuto non è disponibile"
+
+msgid "the value is not a number"
+msgstr ""
 
 msgid "the web interface of this experiment is not active"
 msgstr "l'interfaccia web di questo esperimento non è attiva"
@@ -25996,4 +26136,144 @@ msgstr "✔️ Usa"
 
 #~ msgid "← Back to feed"
 #~ msgstr "← Torna al feed"
+
+#~ msgid ""
+#~ "Configure how many entries are retrieved from RSS"
+#~ " feeds, Reddit endpoints, and database fallbacks during"
+#~ " forum simulations."
+#~ msgstr ""
+#~ "Configura quante voci vengono recuperate da feed "
+#~ "RSS, endpoint Reddit e fallback del database durante"
+#~ " le simulazioni del forum."
+
+#~ msgid "Forum Image Feed Assignment"
+#~ msgstr "Assegnazione dei feed di immagini del forum"
+
+#~ msgid "Forum RSS Feed Assignment"
+#~ msgstr "Assegnazione dei feed RSS del forum"
+
+#~ msgid ""
+#~ "Interests remain part of the reusable resource so"
+#~ " the same subreddit behaves consistently when reused"
+#~ " across forum simulations."
+#~ msgstr ""
+#~ "Gli interessi restano parte della risorsa riutilizzabile,"
+#~ " così lo stesso subreddit si comporta in modo "
+#~ "coerente quando è riusato in più simulazioni del "
+#~ "forum."
+
+#~ msgid ""
+#~ "RSS and Reddit JSON feed sources are now "
+#~ "stored in the dashboard database and can be "
+#~ "reused across multiple forum experiments."
+#~ msgstr ""
+#~ "Le fonti di feed RSS e JSON di Reddit "
+#~ "sono ora salvate nel database della dashboard e "
+#~ "possono essere riusate in più esperimenti del forum."
+
+#~ msgid "Save Forum Feed Assignment"
+#~ msgstr "Salva l'assegnazione dei feed del forum"
+
+#~ msgid ""
+#~ "Saving this page still writes the standard %(file)s"
+#~ " experiment file, so forum execution keeps the "
+#~ "same contract."
+#~ msgstr ""
+#~ "Salvare questa pagina scrive comunque il file "
+#~ "standard %(file)s dell'esperimento, quindi l'esecuzione del "
+#~ "forum mantiene lo stesso contratto."
+
+#~ msgid ""
+#~ "Saving this page still writes the standard %(file)s"
+#~ " experiment file, so the existing forum runtime "
+#~ "remains unchanged."
+#~ msgstr ""
+#~ "Salvare questa pagina scrive comunque il file "
+#~ "standard %(file)s dell'esperimento, quindi il runtime del"
+#~ " forum esistente non cambia."
+
+#~ msgid ""
+#~ "Select which reusable RSS resources should be "
+#~ "assigned to this forum experiment. Feed validation "
+#~ "and creation now live in the shared forum "
+#~ "resource workspace."
+#~ msgstr ""
+#~ "Seleziona quali risorse RSS riutilizzabili assegnare a "
+#~ "questo esperimento del forum. La convalida e la "
+#~ "creazione dei feed si fanno ora nell'area di "
+#~ "lavoro condivisa delle risorse del forum."
+
+#~ msgid ""
+#~ "Select which reusable subreddit image feeds should "
+#~ "be assigned to this forum experiment. Validation and"
+#~ " creation now live in the shared forum image "
+#~ "resource workspace."
+#~ msgstr ""
+#~ "Seleziona quali feed di immagini di subreddit "
+#~ "riutilizzabili assegnare a questo esperimento del forum."
+#~ " La convalida e la creazione si fanno ora "
+#~ "nell'area di lavoro condivisa delle risorse di "
+#~ "immagini del forum."
+
+#~ msgid ""
+#~ "These remain experiment-specific. Provide one URL "
+#~ "per line for sources that should be pinned "
+#~ "directly into this forum simulation."
+#~ msgstr ""
+#~ "Restano specifici dell'esperimento. Indica un URL per "
+#~ "riga per le fonti da fissare direttamente in "
+#~ "questa simulazione del forum."
+
+#~ msgid ""
+#~ "These settings control how much external content is"
+#~ " ingested during a forum simulation. Higher values "
+#~ "increase variety but also startup and refresh costs."
+#~ msgstr ""
+#~ "Queste impostazioni controllano quanto contenuto esterno "
+#~ "viene acquisito durante una simulazione del forum. "
+#~ "Valori più alti aumentano la varietà ma anche "
+#~ "i costi di avvio e aggiornamento."
+
+#~ msgid ""
+#~ "Fields stored with the agents that only some "
+#~ "platforms read, in groups: appearance, Dating and "
+#~ "Photo Sharing fields, and any other custom field."
+#~ " Each card shows how many agents have the "
+#~ "field and how its values are distributed."
+#~ msgstr ""
+#~ "Campi salvati con gli agenti che solo alcune "
+#~ "piattaforme leggono, in gruppi: aspetto, campi Dating "
+#~ "e Photo Sharing e qualsiasi altro campo "
+#~ "personalizzato. Ogni scheda mostra quanti agenti hanno "
+#~ "il campo e come sono distribuiti i valori."
+
+#~ msgid "Forum Image Resources"
+#~ msgstr "Risorse di immagini del forum"
+
+#~ msgid "Forum RSS Resources"
+#~ msgstr "Risorse RSS del forum"
+
+#~ msgid ""
+#~ "Look of the agent. An attribute left empty is"
+#~ " not assigned. The traits are stored with the "
+#~ "agent and read by every platform that needs "
+#~ "them (the Dating profile photos, for one)."
+#~ msgstr ""
+#~ "Aspetto dell'agente. Un attributo lasciato vuoto non "
+#~ "viene assegnato. I tratti sono salvati con l'agente"
+#~ " e letti da ogni piattaforma che ne ha "
+#~ "bisogno (ad esempio le foto del profilo Dating)."
+
+#~ msgid ""
+#~ "Look of the agents. An attribute with no value"
+#~ " selected is not assigned. The traits are stored"
+#~ " with the agent and read by every platform "
+#~ "that needs them (the Dating profile photos, for "
+#~ "one)."
+#~ msgstr ""
+#~ "Aspetto degli agenti. Un attributo senza valori "
+#~ "selezionati non viene assegnato. I tratti sono "
+#~ "salvati con l'agente e letti da ogni piattaforma "
+#~ "che ne ha bisogno (ad esempio le foto del "
+#~ "profilo Dating)."
 

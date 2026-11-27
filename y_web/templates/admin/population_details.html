@@ -245,7 +245,7 @@
                 <div class="column is-12">
                     <hr style="margin: 2em 0;">
                     <h3 class="title is-5 is-thin text-center">{{ _('Custom fields') }}</h3>
-                    <p class="ys-pd-lead">{{ _('Fields stored with the agents that only some platforms read, in groups: appearance, Dating and Photo Sharing fields, and any other custom field. Each card shows how many agents have the field and how its values are distributed.') }}</p>
+                    <p class="ys-pd-lead">{{ _('Fields stored with the agents that only some platforms read, in groups: appearance, platform-specific fields, and any other custom field. Each card shows how many agents have the field and how its values are distributed.') }}</p>
                     <div class="ys-cf-nav">
                         {% for g in custom_fields %}
                         <a class="ys-cf-chip" href="#cf-{{ g.id }}">{% if g.badge %}<span class="ys-plat-badge is-{{ g.badge }}">{{ platform_badge_label(g.badge) }}</span>{% endif %}{{ _(g.title) }}<span class="ys-cf-chip-n">{{ g.count }}</span></a>

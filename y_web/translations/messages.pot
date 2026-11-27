@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-26 13:48+0000\n"
+"POT-Creation-Date: 2026-11-27 08:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -337,6 +337,10 @@ msgid "%(username)s avatar"
 msgstr ""
 
 #, python-format
+msgid "%(value)s is outside the scale %(low)s to %(high)s"
+msgstr ""
+
+#, python-format
 msgid "(%(count)s total)"
 msgstr ""
 
@@ -619,6 +623,9 @@ msgstr ""
 msgid ""
 "A private chat cannot be discovered: agents never join it on their own, "
 "so use it only for chats that stay almost empty."
+msgstr ""
+
+msgid "A publication with this idempotency key is already running."
 msgstr ""
 
 msgid "A report also blocks the profile"
@@ -2280,6 +2287,9 @@ msgstr ""
 msgid "Cannot mix Standard experiments with HPC experiments in the same group."
 msgstr ""
 
+msgid "Cannot publish while the experiment is running."
+msgstr ""
+
 msgid "Cannot remove experiments from a running group"
 msgstr ""
 
@@ -3059,7 +3069,7 @@ msgstr ""
 
 msgid ""
 "Configure how many entries are retrieved from RSS feeds, Reddit "
-"endpoints, and database fallbacks during forum simulations."
+"endpoints, and database fallbacks during simulations."
 msgstr ""
 
 msgid ""
@@ -5277,6 +5287,19 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Experiment %(experiment)r has no HPC database yet -- it must be started "
+"at least once (even if since stopped) before scenarios can be published "
+"to it."
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment %(experiment)r has no HPC database yet -- it must be started "
+"at least once before scenarios can be validated/published against it."
+msgstr ""
+
+#, python-format
+msgid ""
 "Experiment '%(created_names)s' successfully created as part of copied "
 "group '%(target_group)s'."
 msgstr ""
@@ -5722,8 +5745,8 @@ msgstr ""
 
 msgid ""
 "Fields stored with the agents that only some platforms read, in groups: "
-"appearance, Dating and Photo Sharing fields, and any other custom field. "
-"Each card shows how many agents have the field and how its values are "
+"appearance, platform-specific fields, and any other custom field. Each "
+"card shows how many agents have the field and how its values are "
 "distributed."
 msgstr ""
 
@@ -5897,19 +5920,7 @@ msgstr ""
 msgid "Forum HPC experiments are unavailable because YForum is not present."
 msgstr ""
 
-msgid "Forum Image Feed Assignment"
-msgstr ""
-
 msgid "Forum Image Feeds"
-msgstr ""
-
-msgid "Forum Image Resources"
-msgstr ""
-
-msgid "Forum RSS Feed Assignment"
-msgstr ""
-
-msgid "Forum RSS Resources"
 msgstr ""
 
 msgid "Forum avatar mode updated successfully."
@@ -6743,6 +6754,9 @@ msgstr ""
 msgid "Image Commentary (User)"
 msgstr ""
 
+msgid "Image Feed Assignment"
+msgstr ""
+
 msgid "Image Feed Limits"
 msgstr ""
 
@@ -6756,6 +6770,9 @@ msgid "Image Generation Model (Transformer-based)"
 msgstr ""
 
 msgid "Image Processing"
+msgstr ""
+
+msgid "Image Resources"
 msgstr ""
 
 msgid "Image Transcription (Optional)"
@@ -7061,7 +7078,7 @@ msgstr ""
 
 msgid ""
 "Interests remain part of the reusable resource so the same subreddit "
-"behaves consistently when reused across forum simulations."
+"behaves consistently when reused across simulations."
 msgstr ""
 
 msgid "Interface language"
@@ -7874,13 +7891,13 @@ msgstr ""
 msgid ""
 "Look of the agent. An attribute left empty is not assigned. The traits "
 "are stored with the agent and read by every platform that needs them (the"
-" Dating profile photos, for one)."
+" profile photos, for one)."
 msgstr ""
 
 msgid ""
 "Look of the agents. An attribute with no value selected is not assigned. "
 "The traits are stored with the agent and read by every platform that "
-"needs them (the Dating profile photos, for one)."
+"needs them (the profile photos, for one)."
 msgstr ""
 
 msgid "Look of the photos"
@@ -10485,6 +10502,87 @@ msgstr ""
 msgid "Post"
 msgstr ""
 
+#, python-format
+msgid "Post %(tmp_id)r, metadata %(metadata_type)r: %(message)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: %(count)s reactions are requested but the experiment has"
+" only %(available)s other agents."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: %(message)s"
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: author_user_id=%(author_user_id)r does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: author_user_id=%(author_user_id)s does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: day and hour must be non-negative integers."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: day and hour must be set together."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: emotion_id=%(emotion_id)r does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: emotion_id=%(emotion_id)s does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: generation settings are invalid."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: hashtags must be at most 20 characters."
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: mentions are available only for comments and must name "
+"an experiment agent."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: not enough other agents to give it %(count)s reactions."
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: opinion must be numeric, linked to a topic, and within "
+"its selected admin scale (%(reason)s)."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: select emotions from this experiment's vocabulary."
+msgstr ""
+
+#, python-format
+msgid ""
+"Post %(tmp_id)r: the topic %(topic)r is not in this experiment and is "
+"longer than 20 characters (the limit for a new topic). Choose an existing"
+" topic or shorten it."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: topic_id=%(topic_id)r does not exist."
+msgstr ""
+
+#, python-format
+msgid "Post %(tmp_id)r: topic_id=%(topic_id)s does not exist."
+msgstr ""
+
 msgid "Post ID"
 msgstr ""
 
@@ -11010,15 +11108,21 @@ msgstr ""
 msgid "RSS Feed"
 msgstr ""
 
+msgid "RSS Feed Assignment"
+msgstr ""
+
 msgid "RSS Feed Limits"
 msgstr ""
 
 msgid "RSS Feeds"
 msgstr ""
 
+msgid "RSS Resources"
+msgstr ""
+
 msgid ""
 "RSS and Reddit JSON feed sources are now stored in the dashboard database"
-" and can be reused across multiple forum experiments."
+" and can be reused across multiple experiments."
 msgstr ""
 
 msgid "RSS feed URL is required."
@@ -11668,31 +11772,25 @@ msgstr ""
 msgid "Retry"
 msgstr ""
 
-msgid "Reusable Forum Image Resources"
-msgstr ""
-
-msgid "Reusable Forum RSS Resources"
-msgstr ""
-
 msgid "Reusable Image Resources"
 msgstr ""
 
 msgid "Reusable RSS Resources"
 msgstr ""
 
+msgid "Reusable RSS feed deleted."
+msgstr ""
+
+msgid "Reusable RSS feed saved."
+msgstr ""
+
 msgid "Reusable RSS feeds"
 msgstr ""
 
-msgid "Reusable forum RSS feed deleted."
+msgid "Reusable image feed deleted."
 msgstr ""
 
-msgid "Reusable forum RSS feed saved."
-msgstr ""
-
-msgid "Reusable forum image feed deleted."
-msgstr ""
-
-msgid "Reusable forum image feed saved."
+msgid "Reusable image feed saved."
 msgstr ""
 
 msgid "Reusable image source"
@@ -11887,10 +11985,10 @@ msgstr ""
 msgid "Save Embedding Settings"
 msgstr ""
 
-msgid "Save Feed Limits"
+msgid "Save Feed Assignment"
 msgstr ""
 
-msgid "Save Forum Feed Assignment"
+msgid "Save Feed Limits"
 msgstr ""
 
 msgid "Save Image Feed Assignment"
@@ -11965,13 +12063,13 @@ msgstr ""
 #, python-format
 msgid ""
 "Saving this page still writes the standard %(file)s experiment file, so "
-"forum execution keeps the same contract."
+"execution keeps the same contract."
 msgstr ""
 
 #, python-format
 msgid ""
 "Saving this page still writes the standard %(file)s experiment file, so "
-"the existing forum runtime remains unchanged."
+"the existing runtime remains unchanged."
 msgstr ""
 
 msgid "Say what you are looking for"
@@ -11981,6 +12079,13 @@ msgid "Scale Free (Barabási-Albert)"
 msgstr ""
 
 msgid "Scale of the stress and reward changes; 1 is the default."
+msgstr ""
+
+msgid "Scenario has no threads to publish."
+msgstr ""
+
+#, python-format
+msgid "Scenario is currently being published by user %(locked_by)r."
 msgstr ""
 
 msgid "Schedule"
@@ -12342,15 +12447,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Select which reusable RSS resources should be assigned to this forum "
-"experiment. Feed validation and creation now live in the shared forum "
-"resource workspace."
+"Select which reusable RSS resources should be assigned to this "
+"experiment. Feed validation and creation now live in the shared resource "
+"workspace."
 msgstr ""
 
 msgid ""
 "Select which reusable subreddit image feeds should be assigned to this "
-"forum experiment. Validation and creation now live in the shared forum "
-"image resource workspace."
+"experiment. Validation and creation now live in the shared image resource"
+" workspace."
 msgstr ""
 
 msgid "Select..."
@@ -13777,6 +13882,11 @@ msgstr ""
 msgid "The app cannot be shown right now."
 msgstr ""
 
+msgid ""
+"The base experiment changed since this scenario was last opened; reload "
+"the scenario before publishing."
+msgstr ""
+
 #, python-format
 msgid "The bundle could not be imported: %(why)s"
 msgstr ""
@@ -14383,7 +14493,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"These feeds live in the dashboard DB and can be assigned to any forum "
+"These feeds live in the dashboard DB and can be assigned to any "
 "experiment from %(page)s."
 msgstr ""
 
@@ -14392,7 +14502,7 @@ msgstr ""
 
 msgid ""
 "These remain experiment-specific. Provide one URL per line for sources "
-"that should be pinned directly into this forum simulation."
+"that should be pinned directly into this simulation."
 msgstr ""
 
 msgid ""
@@ -14404,8 +14514,8 @@ msgstr ""
 
 msgid ""
 "These settings control how much external content is ingested during a "
-"forum simulation. Higher values increase variety but also startup and "
-"refresh costs."
+"simulation. Higher values increase variety but also startup and refresh "
+"costs."
 msgstr ""
 
 #, python-format
@@ -14431,6 +14541,14 @@ msgstr ""
 msgid ""
 "This ad hoc client requires an LLM model because at least one managed "
 "agent uses an LLM-backed behavior."
+msgstr ""
+
+#, python-format
+msgid "This adapter only publishes HPC experiments, got %(simulator_type)r."
+msgstr ""
+
+#, python-format
+msgid "This adapter only publishes Standard experiments, got %(simulator_type)r."
 msgstr ""
 
 msgid "This backend cannot take part in a World Simulation."
@@ -14471,6 +14589,13 @@ msgstr ""
 msgid ""
 "This experiment uses language models: by default the agents use them for "
 "everything, from the texts to the images."
+msgstr ""
+
+#, python-format
+msgid ""
+"This experiment's Standard schema cannot store a link URL longer than "
+"%(max_length)s characters; shorten the URL (e.g. remove tracking query "
+"parameters) before publishing."
 msgstr ""
 
 msgid "This interaction is switched off for the experiment."
@@ -14563,6 +14688,10 @@ msgid ""
 msgstr ""
 
 msgid "Thread"
+msgstr ""
+
+#, python-format
+msgid "Thread %(tmp_id)r has no posts."
 msgstr ""
 
 msgid "Thread Context Length"
@@ -15568,7 +15697,7 @@ msgstr ""
 
 msgid ""
 "Validate a source once, save it to the dashboard database, and reuse it "
-"across multiple forum experiments."
+"across multiple experiments."
 msgstr ""
 
 msgid ""
@@ -15579,7 +15708,7 @@ msgstr ""
 
 msgid ""
 "Validate subreddit-based image feeds once, store them centrally, and "
-"assign them to any forum experiment as needed."
+"assign them to any experiment as needed."
 msgstr ""
 
 #, python-format
@@ -16659,6 +16788,9 @@ msgstr ""
 msgid "an integer"
 msgstr ""
 
+msgid "an opinion needs a topic"
+msgstr ""
+
 msgid "and"
 msgstr ""
 
@@ -16799,6 +16931,16 @@ msgstr ""
 msgid "experiments_per_group is required"
 msgstr ""
 
+msgid ""
+"external/YSimulator is not installed in this environment -- cannot "
+"publish to an HPC experiment's physical schema."
+msgstr ""
+
+msgid ""
+"external/YSimulator is not installed in this environment -- cannot "
+"validate against an HPC experiment's physical schema."
+msgstr ""
+
 msgid "failed"
 msgstr ""
 
@@ -16931,6 +17073,9 @@ msgid "name, city, intent, bio, interest"
 msgstr ""
 
 msgid "never"
+msgstr ""
+
+msgid "no opinion scale is selected"
 msgstr ""
 
 msgid "none published"
@@ -17093,6 +17238,9 @@ msgid "symlink"
 msgstr ""
 
 msgid "the content is not available"
+msgstr ""
+
+msgid "the value is not a number"
 msgstr ""
 
 msgid "the web interface of this experiment is not active"

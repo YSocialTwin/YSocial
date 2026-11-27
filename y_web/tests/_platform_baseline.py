@@ -71,6 +71,8 @@ DECLARED_EXCEPTIONS = (
     # Reddit as a place feeds come from (a host and an address layout), not as a platform of the simulation;
     # and the hash salt of the Hot ranking, which is part of the data it ranked
     "y_web/src/commons/reddit_feeds.py",
+    # the shared feed libraries: Reddit is one of the places a feed can come from (D2)
+    "y_web/routes/admin/sub/experiments/_feed_resources.py",
     # the descriptions of the built-in plugin catalogue, which names the repositories it installs
 )
 # Modules that belong to a single platform: they move to its repository, so their own mentions do not count.
@@ -190,6 +192,8 @@ FRONT_EXCEPTIONS = (
     "y_web/templates/admin/rss_feeds.html",
     "y_web/templates/admin/feed_limits.html",
     "y_web/templates/admin/image_feeds.html",
+    "y_web/templates/admin/rss_resources.html",
+    "y_web/templates/admin/image_resources.html",
 )
 _FRONT_BRANCH = re.compile(
     r"(?:platform_type|platform_key|platformType|platform|variant|ws_v|\.key)\s*(?:===?|!==?|\bnot\s+in\b|\bin\b)\s*"
@@ -260,6 +264,7 @@ def _python_identifiers(source: str):
 IDENTIFIER_EXCEPTIONS = (
     # Reddit and RSS as the places feeds come from (a subreddit, a listing), and the facade the SDK gives them
     "y_web/src/content/feeds.py",
+    "y_web/routes/admin/sub/experiments/_feed_resources.py",
     "y_web/src/content/text_utils.py",
     # the SDK keeps the former names of what it renamed (ForumChatSession...), for plugins written against it
     "y_web/sdk/",

@@ -1030,7 +1030,7 @@ def agents_dashboard():
                     _("Experiments assign feeds from the shared registry"),
                 ],
                 "cta_label": _("Manage RSS Resources"),
-                "cta_href": "/admin/forum_rss_resources",
+                "cta_href": "/admin/rss_resources",
                 "secondary_label": _(
                     "Create feed entries centrally, then reuse them across simulations without revalidating the same source each time."
                 ),

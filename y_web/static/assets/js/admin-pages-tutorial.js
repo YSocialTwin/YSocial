@@ -61,7 +61,7 @@
             { selector: '[data-tut="operation-log"]', title: '@heading', description: 'Output of the install, update and validation operations run on this component. Check it when an operation fails.', position: 'auto' }
         ],
         feed_limits: [
-            { selector: '[data-tut="feed-retrieval-limits"]', title: '@heading', description: 'Limits on how much content is retrieved from RSS feeds, Reddit and the database fallback during forum simulations.', position: 'auto' },
+            { selector: '[data-tut="feed-retrieval-limits"]', title: '@heading', description: 'Limits on how much content is retrieved from RSS feeds, Reddit and the database fallback during simulations.', position: 'auto' },
             { selector: '[data-tut="quick-reference-guide"]', title: '@heading', description: 'Advice on when to raise or keep the defaults.', position: 'auto' }
         ],
         frontend_settings: [
@@ -71,8 +71,13 @@
             { selector: '[id^="box-suite-"]', title: 'Plugin settings', description: 'Settings added by the installed plugins. They only apply when the plugin is active.', position: 'auto' }
         ],
         image_feeds: [
-            { selector: '[data-tut="forum-image-feed-assignment"]', title: '@heading', description: 'Select which reusable image resources this forum experiment may use.', position: 'auto' },
+            { selector: '[data-tut="image-feed-assignment"]', title: '@heading', description: 'Select which reusable image resources this experiment may use.', position: 'auto' },
             { selector: '[data-tut="assignment-notes"]', title: '@heading', description: 'Notes about how resources are shared across experiments.', position: 'auto' }
+        ],
+        image_resources: [
+            { selector: '[data-tut="reusable-image-resources"]', title: '@heading', description: 'Add image sources (feeds or subreddits) once and reuse them in every experiment. Validate a source before saving it.', position: 'auto' },
+            { selector: '[data-tut="usage"]', title: '@heading', description: 'How the saved image resources are used by experiments.', position: 'auto' },
+            { selector: '[data-tut="saved-image-resources"]', title: '@heading', description: 'The image resources already saved. Remove the ones you no longer need.', position: 'auto' }
         ],
         jupyter: [
             { selector: '.jupyter-container', title: 'Analytical environment', description: 'JupyterLab embedded in the dashboard: open the notebooks of the experiment and analyse its data without leaving the page.', position: 'auto' }
@@ -112,8 +117,13 @@
             { selector: '[data-tut="hpc-prompts-guide"]', title: '@heading', description: 'Reminders on placeholders and how the prompts are combined.', position: 'auto' }
         ],
         rss_feeds: [
-            { selector: '[data-tut="forum-rss-feed-assignment"]', title: '@heading', description: 'Select which reusable RSS resources this forum experiment may use.', position: 'auto' },
+            { selector: '[data-tut="rss-feed-assignment"]', title: '@heading', description: 'Select which reusable RSS resources this experiment may use.', position: 'auto' },
             { selector: '[data-tut="assignment-notes"]', title: '@heading', description: 'Notes about how feeds are shared across experiments.', position: 'auto' }
+        ],
+        rss_resources: [
+            { selector: '[data-tut="reusable-rss-resources"]', title: '@heading', description: 'Add RSS or Reddit feeds once and reuse them in every experiment. Validate a feed before saving it.', position: 'auto' },
+            { selector: '[data-tut="usage"]', title: '@heading', description: 'How the saved feeds are used by experiments.', position: 'auto' },
+            { selector: '[data-tut="saved-rss-resources"]', title: '@heading', description: 'The feeds already saved. Remove the ones you no longer need.', position: 'auto' }
         ],
         stress_reward_evolution: [
             { selector: '[data-tut="temporal-controls"]', title: '@heading', description: 'Replay the simulation over time: press play, change the speed, and every chart follows the selected moment.', position: 'auto' },
@@ -139,10 +149,8 @@
 
     // pages built from the same template family share one tour
     var aliases = {
-        opinion_configuration_forum: 'opinion_configuration',
         opinion_configuration_hpc: 'opinion_configuration',
-        opinion_configuration_im: 'opinion_configuration',
-        prompts_forum: 'prompts'
+        opinion_configuration_im: 'opinion_configuration'
     };
     Object.keys(aliases).forEach(function (k) { pages[k] = pages[aliases[k]]; });
 

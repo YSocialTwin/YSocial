@@ -4,7 +4,7 @@
             id: 'plugins-overview',
             selector: '#external-runtimes-main',
             title: 'Plugins',
-            description: 'The list of plugins available to this installation, with what each one does and whether it is installed. Microblogging and Forum each stand for a server and a client.',
+            description: 'The list of plugins available to this installation, with what each one does and whether it is installed. A platform plugin may stand for a server and a client.',
             position: 'top'
         },
         {
@@ -25,7 +25,7 @@
             id: 'plugins-remove',
             selector: '[data-external-runtime-remove]',
             title: 'Remove',
-            description: 'Deletes the local files of the plugin after a confirmation. For Microblogging and Forum it removes both server and client; to remove only one, use the plugin page.',
+            description: 'Deletes the local files of the plugin after a confirmation. For a plugin with both a server and a client it removes both; to remove only one, use the plugin page.',
             position: 'left'
         }
     ];

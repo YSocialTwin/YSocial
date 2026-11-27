@@ -18,7 +18,7 @@
             id: 'detail-component',
             selector: '.ext-component-title',
             title: 'Server and client are independent',
-            description: 'Microblogging and Forum have a server and a client. Each has its own block below: install, update or remove one without touching the other.',
+            description: 'A plugin may have a server and a client. Each has its own block below: install, update or remove one without touching the other.',
             position: 'top'
         },
         {

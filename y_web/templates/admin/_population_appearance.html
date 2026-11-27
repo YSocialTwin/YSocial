@@ -3,7 +3,7 @@
 {% from 'admin/_population_macros.html' import pctselect, drange with context %}
 {% set ad = appearance_defaults %}
 <fieldset id="appearance-population-sections" class="ys-fieldset-reset" data-optional-section="appearance" data-defaults='{{ ad|tojson }}' disabled>
-    <div class="form-section-description">{{ _('Look of the agents. An attribute with no value selected is not assigned. The traits are stored with the agent and read by every platform that needs them (the Dating profile photos, for one).') }}</div>
+    <div class="form-section-description">{{ _('Look of the agents. An attribute with no value selected is not assigned. The traits are stored with the agent and read by every platform that needs them (the profile photos, for one).') }}</div>
     {{ pctselect('d_appearance_hair_color', _('Hair colour'), ad.appearance_options.hair_color) }}
     {{ pctselect('d_appearance_hair_length', _('Hair length'), ad.appearance_options.hair_length) }}
     {{ pctselect('d_appearance_hair_style', _('Hair style'), ad.appearance_options.hair_style) }}

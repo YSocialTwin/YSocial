@@ -5,8 +5,8 @@ from y_web.routes.admin.sub.experiments._feeds import (
     _rss_resource_payload,
     _selected_rss_resource_ids,
 )
-from y_web.routes.admin.sub.experiments._forum_feeds import (
-    _forum_image_resource_payload,
+from y_web.routes.admin.sub.experiments._feed_resources import (
+    _image_resource_payload,
     _selected_image_resource_ids,
 )
 
@@ -29,10 +29,10 @@ def test_rss_resource_payload_matches_experiment_file_shape():
     }
 
 
-def test_forum_image_resource_payload_normalizes_interests():
+def test_image_resource_payload_normalizes_interests():
     resource = SimpleNamespace(id=7, subreddit="Memes", interests='["fun", " memes "]')
 
-    assert _forum_image_resource_payload(resource) == {
+    assert _image_resource_payload(resource) == {
         "id": 7,
         "subreddit": "memes",
         "interests": ["fun", "memes"],

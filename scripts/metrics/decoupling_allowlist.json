@@ -22,6 +22,81 @@
       "path": "y_web/prompts_internal.it.json",
       "ignore": "stile Reddit",
       "reason": "Italian text of the same interview prompt (D7)."
+    },
+    {
+      "path": "y_web/src/commons/reddit_feeds.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/src/content/feeds.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/sdk/feeds.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/routes/admin/sub/experiments/_feed_resources.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/static/assets/js/admin-feeds.js",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/templates/admin/image_feeds.html",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/templates/admin/feed_limits.html",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/templates/admin/rss_feeds.html",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/templates/admin/image_resources.html",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/templates/admin/rss_resources.html",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/static/assets/js/admin-pages-tutorial.js",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/src/models/admin.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/src/models/experiment.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/src/experiment/schema.py",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])",
+      "reason": "Reddit (and its subreddit listings) as a place feeds come from: a feed source, not a platform of the simulation. Declared exception D2; it may be externalized later."
+    },
+    {
+      "path": "y_web/static/assets/css/app.css",
+      "ignore": "(?i)(?<![A-Za-z])(?:sub)?reddit(?![a-z])|mdi-forum(?:-outline)?",
+      "reason": "Names of two glyphs of the vendored Material Design Icons font (mdi-forum, mdi-reddit): the font's own class names, not platform code."
     }
   ]
 }

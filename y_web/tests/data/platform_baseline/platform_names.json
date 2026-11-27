@@ -6,5 +6,6 @@
  "y_web/migrations/add_forum_feed_resource_tables.py": 5,
  "y_web/migrations/add_frontend_settings_table.py": 1,
  "y_web/migrations/forum_chat_uuid_user_ids.py": 3,
+ "y_web/routes/admin/sub/experiments/_feed_resources.py": 10,
  "y_web/src/commons/reddit_feeds.py": 15
 }

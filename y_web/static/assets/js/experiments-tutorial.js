@@ -42,7 +42,7 @@
             title: '➕ Create New Experiment',
             description: `<p>Set up a <b>new simulation experiment</b>:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li><b>Platform Type</b> - Choose microblogging or forum style</li>
+                    <li><b>Platform Type</b> - Choose the platform the experiment simulates</li>
                     <li><b>Name & Description</b> - Identify your experiment</li>
                     <li><b>LLM Agents</b> - Enable AI-driven agent behavior</li>
                     <li><b>Topics</b> - Define conversation topics for the simulation</li>

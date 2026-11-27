@@ -306,7 +306,7 @@
   ],
   "feed_limits": [
    {
-    "description": "Limits on how much content is retrieved from RSS feeds, Reddit and the database fallback during forum simulations.",
+    "description": "Limits on how much content is retrieved from RSS feeds, Reddit and the database fallback during simulations.",
     "position": "auto",
     "selector": "[data-tut=\"feed-retrieval-limits\"]",
     "title": "@heading"
@@ -315,46 +315,6 @@
     "description": "Advice on when to raise or keep the defaults.",
     "position": "auto",
     "selector": "[data-tut=\"quick-reference-guide\"]",
-    "title": "@heading"
-   }
-  ],
-  "forum_image_resources": [
-   {
-    "description": "Add image sources (feeds or subreddits) once and reuse them in every forum experiment. Validate a source before saving it.",
-    "position": "auto",
-    "selector": "[data-tut=\"reusable-forum-image-resources\"]",
-    "title": "@heading"
-   },
-   {
-    "description": "How the saved image resources are used by forum experiments.",
-    "position": "auto",
-    "selector": "[data-tut=\"usage\"]",
-    "title": "@heading"
-   },
-   {
-    "description": "The image resources already saved. Remove the ones you no longer need.",
-    "position": "auto",
-    "selector": "[data-tut=\"saved-image-resources\"]",
-    "title": "@heading"
-   }
-  ],
-  "forum_rss_resources": [
-   {
-    "description": "Add RSS or Reddit feeds once and reuse them in every forum experiment. Validate a feed before saving it.",
-    "position": "auto",
-    "selector": "[data-tut=\"reusable-forum-rss-resources\"]",
-    "title": "@heading"
-   },
-   {
-    "description": "How the saved feeds are used by forum experiments.",
-    "position": "auto",
-    "selector": "[data-tut=\"usage\"]",
-    "title": "@heading"
-   },
-   {
-    "description": "The feeds already saved. Remove the ones you no longer need.",
-    "position": "auto",
-    "selector": "[data-tut=\"saved-rss-resources\"]",
     "title": "@heading"
    }
   ],
@@ -386,15 +346,35 @@
   ],
   "image_feeds": [
    {
-    "description": "Select which reusable image resources this forum experiment may use.",
+    "description": "Select which reusable image resources this experiment may use.",
     "position": "auto",
-    "selector": "[data-tut=\"forum-image-feed-assignment\"]",
+    "selector": "[data-tut=\"image-feed-assignment\"]",
     "title": "@heading"
    },
    {
     "description": "Notes about how resources are shared across experiments.",
     "position": "auto",
     "selector": "[data-tut=\"assignment-notes\"]",
+    "title": "@heading"
+   }
+  ],
+  "image_resources": [
+   {
+    "description": "Add image sources (feeds or subreddits) once and reuse them in every experiment. Validate a source before saving it.",
+    "position": "auto",
+    "selector": "[data-tut=\"reusable-image-resources\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "How the saved image resources are used by experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"usage\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The image resources already saved. Remove the ones you no longer need.",
+    "position": "auto",
+    "selector": "[data-tut=\"saved-image-resources\"]",
     "title": "@heading"
    }
   ],
@@ -696,15 +676,35 @@
   ],
   "rss_feeds": [
    {
-    "description": "Select which reusable RSS resources this forum experiment may use.",
+    "description": "Select which reusable RSS resources this experiment may use.",
     "position": "auto",
-    "selector": "[data-tut=\"forum-rss-feed-assignment\"]",
+    "selector": "[data-tut=\"rss-feed-assignment\"]",
     "title": "@heading"
    },
    {
     "description": "Notes about how feeds are shared across experiments.",
     "position": "auto",
     "selector": "[data-tut=\"assignment-notes\"]",
+    "title": "@heading"
+   }
+  ],
+  "rss_resources": [
+   {
+    "description": "Add RSS or Reddit feeds once and reuse them in every experiment. Validate a feed before saving it.",
+    "position": "auto",
+    "selector": "[data-tut=\"reusable-rss-resources\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "How the saved feeds are used by experiments.",
+    "position": "auto",
+    "selector": "[data-tut=\"usage\"]",
+    "title": "@heading"
+   },
+   {
+    "description": "The feeds already saved. Remove the ones you no longer need.",
+    "position": "auto",
+    "selector": "[data-tut=\"saved-rss-resources\"]",
     "title": "@heading"
    }
   ],

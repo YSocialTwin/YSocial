@@ -187,7 +187,6 @@ FORUM = Platform(  # the Standard runtime: its repository is YServerReddit
         "y_web.routes.social.forum": "routes.social_forum",
         "y_web.routes.interactions.forum": "routes.interactions_forum",
         "y_web.routes.api.reddit": "routes.api_reddit",
-        "y_web.routes.admin.sub.experiments._forum_feeds": "routes.feeds_forum",
         "y_web.src.content.avatars": "forum.avatars",
         "y_web.src.commons.service": "forum.service",
         "y_web.src.commons.service.queries": "forum.service.queries",

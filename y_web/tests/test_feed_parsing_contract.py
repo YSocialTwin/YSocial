@@ -4,7 +4,6 @@ import pytest
 
 from y_web.routes.admin.sub.experiments._feeds import _parse_admin_feed_metadata
 from y_web.src.content.feeds import normalize_subreddit as _normalize_subreddit_input
-from y_web.tests._platform_repos import forum_file
 
 pytestmark = pytest.mark.unit
 
@@ -41,9 +40,9 @@ def test_image_feeds_template_allows_reddit_urls():
     assert "https://www.reddit.com/r/memes/" in content
 
 
-def test_forum_image_resource_template_keeps_parse_preview_flow():
+def test_image_resource_template_keeps_parse_preview_flow():
     content = Path(
-        forum_file("y_web/templates/admin/forum_image_resources.html")
+        REPO_ROOT / "y_web" / "templates" / "admin" / "image_resources.html"
     ).read_text(encoding="utf-8")
 
     assert 'onclick="parseSubreddit()"' in content
@@ -59,9 +58,9 @@ def test_rss_feed_parser_prefers_feed_metadata_link():
     assert '"url_site": site_url or site_host' in content
 
 
-def test_forum_rss_resource_template_mentions_json_and_direct_urls():
+def test_rss_resource_template_mentions_json_and_direct_urls():
     content = Path(
-        forum_file("y_web/templates/admin/forum_rss_resources.html")
+        REPO_ROOT / "y_web" / "templates" / "admin" / "rss_resources.html"
     ).read_text(encoding="utf-8")
 
     assert "Reddit JSON listing feeds" in content

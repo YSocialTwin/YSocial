@@ -4,6 +4,7 @@ from . import (
     _crud,
     _data,
     _external_runtimes,
+    _feed_resources,
     _feeds,
     _frontend_settings,
     _hpc,

@@ -7,7 +7,7 @@
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box" data-tut="forum-image-feed-assignment">
+                    <div class="dashboard-box" data-tut="image-feed-assignment">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Image Feeds') }}
                     </div>
                 </div>
@@ -16,9 +16,9 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">{{ _('Forum Image Feed Assignment') }}</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Image Feed Assignment') }}</h3>
                         <p class="ys-text-small">
-                            {{ _('Select which reusable subreddit image feeds should be assigned to this forum experiment. Validation and creation now live in the shared forum image resource workspace.') }}
+                            {{ _('Select which reusable subreddit image feeds should be assigned to this experiment. Validation and creation now live in the shared image resource workspace.') }}
                         </p>
                         <p class="ys-label-hint">
                             {{ _('Shared image resources can still be created from a subreddit name, %(name)s, or a Reddit subreddit URL such as %(url)s.', name=wrap('code', 'r/name'), url=wrap('code', 'https://www.reddit.com/r/memes/')) }}
@@ -28,7 +28,7 @@
                             <div class="box-line">
                                 <span class="left">{{ _('Reusable Image Resources') }}</span>
                                 <span class="right ys-w-70">
-                                    <a href="/admin/forum_image_resources" class="button is-small">{{ _('Manage Shared Image Resources') }}</a>
+                                    <a href="/admin/image_resources" class="button is-small">{{ _('Manage Shared Image Resources') }}</a>
                                 </span>
                             </div>
 
@@ -75,7 +75,7 @@
                             </div>
                             {% else %}
                             <div class="notification is-light" style="margin-bottom: 1rem;">
-                                {{ _('No reusable image resources are available yet. Create them first in %(link)s.', link=wrap('a', _('Forum Image Resources'), href='/admin/forum_image_resources')) }}
+                                {{ _('No reusable image resources are available yet. Create them first in %(link)s.', link=wrap('a', _('Image Resources'), href='/admin/image_resources')) }}
                             </div>
                             {% endif %}
 
@@ -97,12 +97,12 @@
                             <hr>
                             <p>
                                 <b>{{ _('Runtime compatibility') }}</b><br>
-                                {{ _('Saving this page still writes the standard %(file)s experiment file, so forum execution keeps the same contract.', file=wrap('code', 'image_feeds.json')) }}
+                                {{ _('Saving this page still writes the standard %(file)s experiment file, so execution keeps the same contract.', file=wrap('code', 'image_feeds.json')) }}
                             </p>
                             <hr>
                             <p>
                                 <b>{{ _('Interest tagging') }}</b><br>
-                                {{ _('Interests remain part of the reusable resource so the same subreddit behaves consistently when reused across forum simulations.') }}
+                                {{ _('Interests remain part of the reusable resource so the same subreddit behaves consistently when reused across simulations.') }}
                             </p>
                         </div>
                     </div>

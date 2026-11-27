@@ -84,14 +84,6 @@
       "repo": "YPhotoSharing",
       "to": "@photo_sharing/admin/experiment_details_photo.html"
     },
-    "admin/forum_image_resources.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/forum_image_resources.html"
-    },
-    "admin/forum_rss_resources.html": {
-      "repo": "YForum",
-      "to": "@forum/admin/forum_rss_resources.html"
-    },
     "admin/opinion_configuration_forum.html": {
       "repo": "YServerReddit",
       "to": "@ysocial_server_reddit/admin/opinion_configuration_forum.html"
@@ -611,6 +603,8 @@
     ]
   },
   "renamed_templates": {
-    "microblogging/components/chat_panel.html": "shared/chat_panel.html"
+    "microblogging/components/chat_panel.html": "shared/chat_panel.html",
+    "admin/forum_rss_resources.html": "admin/rss_resources.html",
+    "admin/forum_image_resources.html": "admin/image_resources.html"
   }
 }
