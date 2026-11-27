@@ -9,8 +9,8 @@ C	external/YServer	decouple-zero	v2.2.0	merge
 C	external/YServerReddit	decouple-zero	v2.2.0	merge
 C	external/YForum	decouple-zero	v0.1.0	merge
 C	external/YPhotoSharing	decouple-zero	v2.2.0	merge
-C	external/YInstantMessaging	decouple-zero	v0.1.0	merge
-C	external/YDating	decouple-zero	v0.1.0	merge
+C	external/YInstantMessaging	decouple-zero	v0.1.0-rc1	merge
+C	external/YDating	decouple-zero	v0.1.0-rc1	merge
 C	external/YCreator	decouple-zero	v0.1.0	merge
 E	plugin-registry	pre-merge-phase7	-	ff
 D	.	decouple-zero	v4.1.0	merge
